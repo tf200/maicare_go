@@ -1,0 +1,346 @@
+package db
+
+import (
+	"context"
+	"maicare_go/util"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stretchr/testify/require"
+)
+
+func createRandomEmployee(t *testing.T) EmployeeProfile {
+	// Create prerequisite records
+	location := CreateRandomLocation(t)
+	user := CreateRandomUser(t)
+
+	arg := CreateEmployeeProfileParams{
+		UserID:                    user.ID,
+		FirstName:                 util.RandomString(5),
+		LastName:                  util.RandomString(5),
+		Position:                  util.RandomPgText(),
+		Department:                util.RandomPgText(),
+		EmployeeNumber:            util.RandomPgText(),
+		EmploymentNumber:          util.RandomPgText(),
+		PrivateEmailAddress:       util.RandomPgText(),
+		EmailAddress:              util.RandomPgText(),
+		AuthenticationPhoneNumber: util.RandomPgText(),
+		PrivatePhoneNumber:        util.RandomPgText(),
+		WorkPhoneNumber:           util.RandomPgText(),
+		DateOfBirth: pgtype.Date{
+			Time:  time.Now(),
+			Valid: true,
+		},
+		HomeTelephoneNumber: util.RandomPgText(),
+		IsSubcontractor:     util.RandomPgBool(),
+		Gender:              util.RandomPgText(),
+		LocationID: pgtype.Int8{
+			Int64: location.ID,
+			Valid: true,
+		},
+		HasBorrowed:  false,
+		OutOfService: util.RandomPgBool(),
+		IsArchived:   util.RandomPgBool(),
+	}
+
+	employee, err := testQueries.CreateEmployeeProfile(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, employee)
+
+	// Verify all fields match
+	require.Equal(t, arg.UserID, employee.UserID)
+	require.Equal(t, arg.FirstName, employee.FirstName)
+	require.Equal(t, arg.LastName, employee.LastName)
+	require.Equal(t, arg.Position, employee.Position)
+	require.Equal(t, arg.Department, employee.Department)
+	require.Equal(t, arg.EmployeeNumber, employee.EmployeeNumber)
+	require.Equal(t, arg.EmploymentNumber, employee.EmploymentNumber)
+	require.Equal(t, arg.PrivateEmailAddress, employee.PrivateEmailAddress)
+	require.Equal(t, arg.EmailAddress, employee.EmailAddress)
+	require.Equal(t, arg.AuthenticationPhoneNumber, employee.AuthenticationPhoneNumber)
+	require.Equal(t, arg.PrivatePhoneNumber, employee.PrivatePhoneNumber)
+	require.Equal(t, arg.WorkPhoneNumber, employee.WorkPhoneNumber)
+	require.Equal(t, arg.DateOfBirth.Time.Format("2006-01-02"), employee.DateOfBirth.Time.Format("2006-01-02"))
+	require.Equal(t, arg.HomeTelephoneNumber, employee.HomeTelephoneNumber)
+	require.Equal(t, arg.IsSubcontractor, employee.IsSubcontractor)
+	require.Equal(t, arg.Gender, employee.Gender)
+	require.Equal(t, arg.LocationID, employee.LocationID)
+	require.Equal(t, arg.HasBorrowed, employee.HasBorrowed)
+	require.Equal(t, arg.OutOfService, employee.OutOfService)
+	require.Equal(t, arg.IsArchived, employee.IsArchived)
+
+	// Verify auto-generated fields
+	require.NotZero(t, employee.ID)
+	require.NotZero(t, employee.Created)
+
+	// Verify foreign key constraints
+	require.Equal(t, location.ID, employee.LocationID.Int64)
+	require.True(t, employee.LocationID.Valid)
+	return employee
+
+}
+
+func TestCreateEmployeeProfile(t *testing.T) {
+	createRandomEmployee(t)
+}
+
+func TestListEmployeeProfile(t *testing.T) {
+	// Create multiple employees with random statuses
+	numEmployees := 20
+	var wg sync.WaitGroup
+	errCh := make(chan error, numEmployees)
+	employeeCh := make(chan EmployeeProfile, numEmployees)
+
+	// Create employees concurrently
+	for i := 0; i < numEmployees; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			// Randomly set archived and out of service
+			emp := createRandomEmployee(t)
+			employeeCh <- emp
+		}()
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+	close(errCh)
+	close(employeeCh)
+
+	// Check for any errors during creation
+	for err := range errCh {
+		require.NoError(t, err, "error creating employee")
+	}
+
+	testCases := []struct {
+		name         string
+		params       ListEmployeeProfileParams
+		expectedLen  int
+		checkResults func(t *testing.T, results []ListEmployeeProfileRow)
+	}{
+		{
+			name: "List all employees with limit 5",
+			params: ListEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				Limit:               5,
+				Offset:              0,
+			},
+			expectedLen: 5,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				require.NotEmpty(t, results)
+			},
+		},
+		{
+			name: "List with offset",
+			params: ListEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				Limit:               5,
+				Offset:              5,
+			},
+			expectedLen: 5,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				require.NotEmpty(t, results)
+			},
+		},
+		{
+			name: "Exclude archived only",
+			params: ListEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				Limit:               10,
+				Offset:              0,
+			},
+			expectedLen: 10,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				for _, emp := range results {
+					require.False(t, emp.IsArchived.Bool, "should not include archived employees")
+				}
+			},
+		},
+		{
+			name: "Exclude out of service only",
+			params: ListEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+				Limit:               10,
+				Offset:              0,
+			},
+			expectedLen: 10,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				for _, emp := range results {
+					require.False(t, emp.OutOfService.Bool, "should not include out of service employees")
+				}
+			},
+		},
+		{
+			name: "Exclude both archived and out of service",
+			params: ListEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+				Limit:               10,
+				Offset:              0,
+			},
+			expectedLen: 10,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				for _, emp := range results {
+					require.False(t, emp.IsArchived.Bool, "should not include archived employees")
+					require.False(t, emp.OutOfService.Bool, "should not include out of service employees")
+				}
+			},
+		},
+		{
+			name: "Check ordering",
+			params: ListEmployeeProfileParams{
+				Limit:  10,
+				Offset: 0,
+			},
+			expectedLen: 10,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				for i := 1; i < len(results); i++ {
+					require.True(t, results[i-1].Created.Time.After(results[i].Created.Time) ||
+						results[i-1].Created.Time.Equal(results[i].Created.Time),
+						"results should be ordered by created DESC")
+				}
+			},
+		},
+		{
+			name: "Check offset beyond total",
+			params: ListEmployeeProfileParams{
+				Limit:  10,
+				Offset: 1000, // very large offset
+			},
+			expectedLen: 0,
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				require.Empty(t, results)
+			},
+		},
+	}
+
+	// Run all test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			results, err := testQueries.ListEmployeeProfile(context.Background(), tc.params)
+			require.NoError(t, err)
+
+			// Check length matches expected
+			require.Len(t, results, tc.expectedLen)
+
+			// Run test-specific checks
+			tc.checkResults(t, results)
+
+			// Common validations
+			for _, emp := range results {
+				require.NotEmpty(t, emp.ID)
+				require.NotEmpty(t, emp.UserID)
+				require.NotEmpty(t, emp.FirstName)
+				require.NotEmpty(t, emp.LastName)
+				require.NotZero(t, emp.Created)
+			}
+		})
+	}
+}
+
+func TestCountEmployeeProfile(t *testing.T) {
+	// Get initial count before adding test data
+	initialCount, err := testQueries.CountEmployeeProfile(context.Background(), CountEmployeeProfileParams{
+		IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
+		IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+	})
+	require.NoError(t, err)
+
+	// Create test data
+	numEmployees := 20
+	var wg sync.WaitGroup
+	for i := 0; i < numEmployees; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			createRandomEmployee(t)
+		}()
+	}
+	wg.Wait()
+
+	testCases := []struct {
+		name       string
+		params     CountEmployeeProfileParams
+		checkCount func(t *testing.T, count int64)
+	}{
+		{
+			name: "Count all employees",
+			params: CountEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+			},
+			checkCount: func(t *testing.T, count int64) {
+				require.Equal(t, initialCount+int64(numEmployees), count,
+					"should match initial count plus newly created employees")
+			},
+		},
+		{
+			name: "Count non-archived employees",
+			params: CountEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+			},
+			checkCount: func(t *testing.T, count int64) {
+				require.Less(t, count, initialCount+int64(numEmployees))
+				require.GreaterOrEqual(t, count, initialCount)
+			},
+		},
+		{
+			name: "Count non-out-of-service employees",
+			params: CountEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+			},
+			checkCount: func(t *testing.T, count int64) {
+				require.Less(t, count, initialCount+int64(numEmployees))
+				require.GreaterOrEqual(t, count, initialCount)
+			},
+		},
+		{
+			name: "Filter by department",
+			params: CountEmployeeProfileParams{
+				Department: pgtype.Text{String: "IT", Valid: true},
+			},
+			checkCount: func(t *testing.T, count int64) {
+				require.GreaterOrEqual(t, count, int64(0))
+				require.LessOrEqual(t, count, initialCount+int64(numEmployees))
+			},
+		},
+		{
+			name: "Filter by non-existent department",
+			params: CountEmployeeProfileParams{
+				Department: pgtype.Text{String: "NonExistentDepartment", Valid: true},
+			},
+			checkCount: func(t *testing.T, count int64) {
+				require.Equal(t, int64(0), count)
+			},
+		},
+		{
+			name: "Count with all filters",
+			params: CountEmployeeProfileParams{
+				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
+				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+				Department:          pgtype.Text{String: "IT", Valid: true},
+				Position:            pgtype.Text{String: "Developer", Valid: true},
+			},
+			checkCount: func(t *testing.T, count int64) {
+				require.GreaterOrEqual(t, count, int64(0))
+				require.LessOrEqual(t, count, initialCount+int64(numEmployees))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			count, err := testQueries.CountEmployeeProfile(context.Background(), tc.params)
+			require.NoError(t, err)
+			tc.checkCount(t, count)
+		})
+	}
+}
