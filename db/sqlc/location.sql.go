@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createLocation = `-- name: CreateLocation :one
@@ -22,9 +20,9 @@ INSERT INTO location (
 `
 
 type CreateLocationParams struct {
-	Name     string      `json:"name"`
-	Address  string      `json:"address"`
-	Capacity pgtype.Int4 `json:"capacity"`
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Capacity *int32 `json:"capacity"`
 }
 
 func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error) {
@@ -37,4 +35,33 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 		&i.Capacity,
 	)
 	return i, err
+}
+
+const listLocations = `-- name: ListLocations :many
+SELECT id, name, address, capacity FROM location
+`
+
+func (q *Queries) ListLocations(ctx context.Context) ([]Location, error) {
+	rows, err := q.db.Query(ctx, listLocations)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Location
+	for rows.Next() {
+		var i Location
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Address,
+			&i.Capacity,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

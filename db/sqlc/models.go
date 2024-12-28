@@ -12,8 +12,8 @@ type AiGeneratedReport struct {
 	ID         int64              `json:"id"`
 	ReportType string             `json:"report_type"`
 	Title      string             `json:"title"`
-	Content    pgtype.Text        `json:"content"`
-	UserID     pgtype.Int8        `json:"user_id"`
+	Content    *string            `json:"content"`
+	UserID     *int64             `json:"user_id"`
 	UserType   string             `json:"user_type"`
 	StartDate  pgtype.Timestamptz `json:"start_date"`
 	EndDate    pgtype.Timestamptz `json:"end_date"`
@@ -24,14 +24,14 @@ type AiGeneratedReport struct {
 type AiGeneratedWeeklyReport struct {
 	ID         int64              `json:"id"`
 	ReportText string             `json:"report_text"`
-	GoalID     pgtype.Int8        `json:"goal_id"`
+	GoalID     *int64             `json:"goal_id"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type Assessment struct {
 	ID       int64              `json:"id"`
-	Content  pgtype.Text        `json:"content"`
-	DomainID pgtype.Int8        `json:"domain_id"`
+	Content  *string            `json:"content"`
+	DomainID *int64             `json:"domain_id"`
 	Level    int32              `json:"level"`
 	Updated  pgtype.Timestamptz `json:"updated"`
 	Created  pgtype.Timestamptz `json:"created"`
@@ -53,19 +53,19 @@ type Assignment struct {
 }
 
 type AttachmentFile struct {
-	ID      pgtype.UUID        `json:"id"`
+	Uuid    pgtype.UUID        `json:"uuid"`
 	Name    string             `json:"name"`
 	File    string             `json:"file"`
 	Size    int32              `json:"size"`
 	IsUsed  bool               `json:"is_used"`
-	Tag     pgtype.Text        `json:"tag"`
+	Tag     *string            `json:"tag"`
 	Updated pgtype.Timestamptz `json:"updated"`
 	Created pgtype.Timestamptz `json:"created"`
 }
 
 type CarePlan struct {
 	ID          int64              `json:"id"`
-	ClientID    pgtype.Int8        `json:"client_id"`
+	ClientID    *int64             `json:"client_id"`
 	Description string             `json:"description"`
 	StartDate   pgtype.Date        `json:"start_date"`
 	EndDate     pgtype.Date        `json:"end_date"`
@@ -80,10 +80,10 @@ type CarePlanDomain struct {
 
 type CareplanAtachement struct {
 	ID          int64              `json:"id"`
-	CareplanID  pgtype.Int8        `json:"careplan_id"`
+	CareplanID  *int64             `json:"careplan_id"`
 	Attachement string             `json:"attachement"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	Name        pgtype.Text        `json:"name"`
+	Name        *string            `json:"name"`
 }
 
 type Certification struct {
@@ -108,7 +108,7 @@ type ClientAllergy struct {
 	AllergyType string             `json:"allergy_type"`
 	Severity    string             `json:"severity"`
 	Reaction    string             `json:"reaction"`
-	Notes       pgtype.Text        `json:"notes"`
+	Notes       *string            `json:"notes"`
 	Created     pgtype.Timestamptz `json:"created"`
 }
 
@@ -117,54 +117,53 @@ type ClientCurrentLevel struct {
 	ClientID int64              `json:"client_id"`
 	DomainID int64              `json:"domain_id"`
 	Level    int32              `json:"level"`
-	Content  pgtype.Text        `json:"content"`
+	Content  *string            `json:"content"`
 	Created  pgtype.Timestamptz `json:"created"`
 }
 
 type ClientDetail struct {
 	ID                    int64              `json:"id"`
 	UserID                int64              `json:"user_id"`
-	FirstName             pgtype.Text        `json:"first_name"`
-	LastName              pgtype.Text        `json:"last_name"`
+	FirstName             string             `json:"first_name"`
+	LastName              string             `json:"last_name"`
 	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
 	Identity              bool               `json:"identity"`
-	Status                pgtype.Text        `json:"status"`
-	Bsn                   pgtype.Text        `json:"bsn"`
-	Source                pgtype.Text        `json:"source"`
-	Birthplace            pgtype.Text        `json:"birthplace"`
-	Email                 pgtype.Text        `json:"email"`
-	PhoneNumber           pgtype.Text        `json:"phone_number"`
-	Organisation          pgtype.Text        `json:"organisation"`
-	Departement           pgtype.Text        `json:"departement"`
-	Gender                pgtype.Text        `json:"gender"`
-	Filenumber            pgtype.Int4        `json:"filenumber"`
-	ProfilePicture        pgtype.Text        `json:"profile_picture"`
-	City                  pgtype.Text        `json:"city"`
-	Zipcode               pgtype.Text        `json:"zipcode"`
-	Infix                 pgtype.Text        `json:"infix"`
-	Streetname            pgtype.Text        `json:"streetname"`
-	StreetNumber          pgtype.Text        `json:"street_number"`
+	Status                *string            `json:"status"`
+	Bsn                   *string            `json:"bsn"`
+	Source                *string            `json:"source"`
+	Birthplace            *string            `json:"birthplace"`
+	Email                 string             `json:"email"`
+	PhoneNumber           *string            `json:"phone_number"`
+	Organisation          *string            `json:"organisation"`
+	Departement           *string            `json:"departement"`
+	Gender                string             `json:"gender"`
+	Filenumber            int32              `json:"filenumber"`
+	ProfilePicture        *string            `json:"profile_picture"`
+	Infix                 *string            `json:"infix"`
 	Created               pgtype.Timestamptz `json:"created"`
-	SenderID              pgtype.Int8        `json:"sender_id"`
-	LocationID            pgtype.Int8        `json:"location_id"`
+	SenderID              *int64             `json:"sender_id"`
+	LocationID            *int64             `json:"location_id"`
 	IdentityAttachmentIds []byte             `json:"identity_attachment_ids"`
-	DepartureReason       pgtype.Text        `json:"departure_reason"`
-	DepartureReport       pgtype.Text        `json:"departure_report"`
+	DepartureReason       *string            `json:"departure_reason"`
+	DepartureReport       *string            `json:"departure_report"`
 	GpsPosition           []byte             `json:"gps_position"`
 	MaturityDomains       []byte             `json:"maturity_domains"`
+	Addresses             []byte             `json:"addresses"`
+	LegalMeasure          *string            `json:"legal_measure"`
+	HasUntakenMedications bool               `json:"has_untaken_medications"`
 }
 
 type ClientDiagnosis struct {
 	ID                  int64              `json:"id"`
-	Title               pgtype.Text        `json:"title"`
+	Title               *string            `json:"title"`
 	ClientID            int64              `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
 	Description         string             `json:"description"`
 	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
-	Severity            pgtype.Text        `json:"severity"`
+	Severity            *string            `json:"severity"`
 	Status              string             `json:"status"`
 	DiagnosingClinician string             `json:"diagnosing_clinician"`
-	Notes               pgtype.Text        `json:"notes"`
+	Notes               *string            `json:"notes"`
 	Created             pgtype.Timestamptz `json:"created"`
 }
 
@@ -173,8 +172,8 @@ type ClientDocument struct {
 	UserID           int64              `json:"user_id"`
 	Documents        string             `json:"documents"`
 	UploadedAt       pgtype.Timestamptz `json:"uploaded_at"`
-	OriginalFilename pgtype.Text        `json:"original_filename"`
-	FileSize         pgtype.Int8        `json:"file_size"`
+	OriginalFilename *string            `json:"original_filename"`
+	FileSize         *int64             `json:"file_size"`
 	Created          pgtype.Timestamptz `json:"created"`
 	Label            string             `json:"label"`
 }
@@ -182,13 +181,13 @@ type ClientDocument struct {
 type ClientEmergencyContact struct {
 	ID               int64              `json:"id"`
 	ClientID         int64              `json:"client_id"`
-	FirstName        pgtype.Text        `json:"first_name"`
-	LastName         pgtype.Text        `json:"last_name"`
-	Email            pgtype.Text        `json:"email"`
-	PhoneNumber      pgtype.Text        `json:"phone_number"`
-	Address          pgtype.Text        `json:"address"`
-	Relationship     pgtype.Text        `json:"relationship"`
-	RelationStatus   pgtype.Text        `json:"relation_status"`
+	FirstName        *string            `json:"first_name"`
+	LastName         *string            `json:"last_name"`
+	Email            *string            `json:"email"`
+	PhoneNumber      *string            `json:"phone_number"`
+	Address          *string            `json:"address"`
+	Relationship     *string            `json:"relationship"`
+	RelationStatus   *string            `json:"relation_status"`
 	Created          pgtype.Timestamptz `json:"created"`
 	IsVerified       bool               `json:"is_verified"`
 	Uuid             pgtype.UUID        `json:"uuid"`
@@ -212,7 +211,7 @@ type ClientGoal struct {
 	GoalName         string             `json:"goal_name"`
 	GoalDetails      string             `json:"goal_details"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	AdministeredByID pgtype.Int8        `json:"administered_by_id"`
+	AdministeredByID *int64             `json:"administered_by_id"`
 }
 
 type ClientMedication struct {
@@ -221,11 +220,11 @@ type ClientMedication struct {
 	Dosage           string             `json:"dosage"`
 	StartDate        pgtype.Date        `json:"start_date"`
 	EndDate          pgtype.Date        `json:"end_date"`
-	Notes            pgtype.Text        `json:"notes"`
+	Notes            *string            `json:"notes"`
 	SelfAdministered bool               `json:"self_administered"`
 	Slots            []byte             `json:"slots"`
 	ClientID         int64              `json:"client_id"`
-	AdministeredByID pgtype.Int8        `json:"administered_by_id"`
+	AdministeredByID *int64             `json:"administered_by_id"`
 	IsCritical       bool               `json:"is_critical"`
 	Updated          pgtype.Timestamptz `json:"updated"`
 	Created          pgtype.Timestamptz `json:"created"`
@@ -234,8 +233,8 @@ type ClientMedication struct {
 type ClientMedicationRecord struct {
 	ID                 int64              `json:"id"`
 	ClientMedicationID int64              `json:"client_medication_id"`
-	Status             pgtype.Text        `json:"status"`
-	Reason             pgtype.Text        `json:"reason"`
+	Status             *string            `json:"status"`
+	Reason             *string            `json:"reason"`
 	Time               pgtype.Timestamptz `json:"time"`
 	Updated            pgtype.Timestamptz `json:"updated"`
 	Created            pgtype.Timestamptz `json:"created"`
@@ -245,7 +244,7 @@ type ClientState struct {
 	ID       int64              `json:"id"`
 	Value    int32              `json:"value"`
 	Type     string             `json:"type"`
-	Content  pgtype.Text        `json:"content"`
+	Content  *string            `json:"content"`
 	ClientID int64              `json:"client_id"`
 	Updated  pgtype.Timestamptz `json:"updated"`
 	Created  pgtype.Timestamptz `json:"created"`
@@ -289,7 +288,7 @@ type ConsentDeclaration struct {
 	ProposedAssistanceDescription string             `json:"proposed_assistance_description"`
 	StatementByRepresentative     string             `json:"statement_by_representative"`
 	ParentGuardianSignatureDate   pgtype.Date        `json:"parent_guardian_signature_date"`
-	JuvenileName                  pgtype.Text        `json:"juvenile_name"`
+	JuvenileName                  *string            `json:"juvenile_name"`
 	JuvenileSignatureDate         pgtype.Date        `json:"juvenile_signature_date"`
 	RepresentativeName            string             `json:"representative_name"`
 	RepresentativeSignatureDate   pgtype.Date        `json:"representative_signature_date"`
@@ -317,25 +316,25 @@ type ContactRelationship struct {
 
 type Contract struct {
 	ID              int64              `json:"id"`
-	TypeID          pgtype.Int8        `json:"type_id"`
+	TypeID          *int64             `json:"type_id"`
 	Status          string             `json:"status"`
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
-	Tax             pgtype.Int4        `json:"tax"`
+	Tax             *int32             `json:"tax"`
 	Price           pgtype.Numeric     `json:"price"`
 	PriceFrequency  string             `json:"price_frequency"`
-	Hours           pgtype.Int4        `json:"hours"`
+	Hours           *int32             `json:"hours"`
 	HoursType       string             `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        int64              `json:"client_id"`
-	SenderID        pgtype.Int8        `json:"sender_id"`
+	SenderID        *int64             `json:"sender_id"`
 	AttachmentIds   []byte             `json:"attachment_ids"`
 	FinancingAct    string             `json:"financing_act"`
 	FinancingOption string             `json:"financing_option"`
-	DepartureReason pgtype.Text        `json:"departure_reason"`
-	DepartureReport pgtype.Text        `json:"departure_report"`
+	DepartureReason *string            `json:"departure_reason"`
+	DepartureReport *string            `json:"departure_report"`
 	Updated         pgtype.Timestamptz `json:"updated"`
 	Created         pgtype.Timestamptz `json:"created"`
 }
@@ -358,7 +357,7 @@ type ContractWorkingHour struct {
 	ContractID int64              `json:"contract_id"`
 	Minutes    int32              `json:"minutes"`
 	Datetime   pgtype.Timestamptz `json:"datetime"`
-	Notes      pgtype.Text        `json:"notes"`
+	Notes      *string            `json:"notes"`
 }
 
 type CustomUser struct {
@@ -366,15 +365,15 @@ type CustomUser struct {
 	Password       string             `json:"password"`
 	LastLogin      pgtype.Timestamptz `json:"last_login"`
 	IsSuperuser    bool               `json:"is_superuser"`
-	Username       string             `json:"username"`
+	Username       *string            `json:"username"`
 	FirstName      string             `json:"first_name"`
 	LastName       string             `json:"last_name"`
 	Email          string             `json:"email"`
 	IsStaff        bool               `json:"is_staff"`
 	IsActive       bool               `json:"is_active"`
 	DateJoined     pgtype.Timestamptz `json:"date_joined"`
-	ProfilePicture pgtype.Text        `json:"profile_picture"`
-	PhoneNumber    pgtype.Int8        `json:"phone_number"`
+	ProfilePicture *string            `json:"profile_picture"`
+	PhoneNumber    *int64             `json:"phone_number"`
 }
 
 type DataSharingStatement struct {
@@ -391,7 +390,7 @@ type DataSharingStatement struct {
 	ParentGuardianSignatureName            string             `json:"parent_guardian_signature_name"`
 	ParentGuardianSignature                string             `json:"parent_guardian_signature"`
 	ParentGuardianSignatureDate            pgtype.Date        `json:"parent_guardian_signature_date"`
-	JuvenileName                           pgtype.Text        `json:"juvenile_name"`
+	JuvenileName                           *string            `json:"juvenile_name"`
 	JuvenileSignatureDate                  pgtype.Date        `json:"juvenile_signature_date"`
 	InstitutionRepresentativeName          string             `json:"institution_representative_name"`
 	InstitutionRepresentativeSignature     string             `json:"institution_representative_signature"`
@@ -414,12 +413,12 @@ type DbSetting struct {
 type DomainGoal struct {
 	ID                                 int64              `json:"id"`
 	Title                              string             `json:"title"`
-	Desc                               pgtype.Text        `json:"desc"`
-	DomainID                           pgtype.Int8        `json:"domain_id"`
+	Desc                               *string            `json:"desc"`
+	DomainID                           *int64             `json:"domain_id"`
 	ClientID                           int64              `json:"client_id"`
-	CreatedByID                        pgtype.Int8        `json:"created_by_id"`
-	ReviewedByID                       pgtype.Int8        `json:"reviewed_by_id"`
-	SelectedMaturityMatrixAssessmentID pgtype.Int8        `json:"selected_maturity_matrix_assessment_id"`
+	CreatedByID                        *int64             `json:"created_by_id"`
+	ReviewedByID                       *int64             `json:"reviewed_by_id"`
+	SelectedMaturityMatrixAssessmentID *int64             `json:"selected_maturity_matrix_assessment_id"`
 	IsApproved                         bool               `json:"is_approved"`
 	Updated                            pgtype.Timestamptz `json:"updated"`
 	Created                            pgtype.Timestamptz `json:"created"`
@@ -428,9 +427,9 @@ type DomainGoal struct {
 type DomainObjective struct {
 	ID       int64              `json:"id"`
 	Title    string             `json:"title"`
-	Desc     pgtype.Text        `json:"desc"`
+	Desc     *string            `json:"desc"`
 	Rating   float64            `json:"rating"`
-	GoalID   pgtype.Int8        `json:"goal_id"`
+	GoalID   *int64             `json:"goal_id"`
 	ClientID int64              `json:"client_id"`
 	Updated  pgtype.Timestamptz `json:"updated"`
 	Created  pgtype.Timestamptz `json:"created"`
@@ -460,33 +459,33 @@ type EmployeeProfile struct {
 	UserID                    int64              `json:"user_id"`
 	FirstName                 string             `json:"first_name"`
 	LastName                  string             `json:"last_name"`
-	Position                  pgtype.Text        `json:"position"`
-	Department                pgtype.Text        `json:"department"`
-	EmployeeNumber            pgtype.Text        `json:"employee_number"`
-	EmploymentNumber          pgtype.Text        `json:"employment_number"`
-	PrivateEmailAddress       pgtype.Text        `json:"private_email_address"`
-	EmailAddress              pgtype.Text        `json:"email_address"`
-	AuthenticationPhoneNumber pgtype.Text        `json:"authentication_phone_number"`
-	PrivatePhoneNumber        pgtype.Text        `json:"private_phone_number"`
-	WorkPhoneNumber           pgtype.Text        `json:"work_phone_number"`
+	Position                  *string            `json:"position"`
+	Department                *string            `json:"department"`
+	EmployeeNumber            *string            `json:"employee_number"`
+	EmploymentNumber          *string            `json:"employment_number"`
+	PrivateEmailAddress       *string            `json:"private_email_address"`
+	EmailAddress              *string            `json:"email_address"`
+	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string            `json:"private_phone_number"`
+	WorkPhoneNumber           *string            `json:"work_phone_number"`
 	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
-	HomeTelephoneNumber       pgtype.Text        `json:"home_telephone_number"`
+	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
 	Created                   pgtype.Timestamptz `json:"created"`
-	IsSubcontractor           pgtype.Bool        `json:"is_subcontractor"`
-	Gender                    pgtype.Text        `json:"gender"`
-	LocationID                pgtype.Int8        `json:"location_id"`
+	IsSubcontractor           *bool              `json:"is_subcontractor"`
+	Gender                    *string            `json:"gender"`
+	LocationID                *int64             `json:"location_id"`
 	HasBorrowed               bool               `json:"has_borrowed"`
-	OutOfService              pgtype.Bool        `json:"out_of_service"`
-	IsArchived                pgtype.Bool        `json:"is_archived"`
+	OutOfService              *bool              `json:"out_of_service"`
+	IsArchived                bool               `json:"is_archived"`
 }
 
 type Expense struct {
 	ID            int64              `json:"id"`
 	Amount        pgtype.Numeric     `json:"amount"`
 	Tax           float64            `json:"tax"`
-	Desc          pgtype.Text        `json:"desc"`
+	Desc          *string            `json:"desc"`
 	AttachmentIds []byte             `json:"attachment_ids"`
-	LocationID    pgtype.Int8        `json:"location_id"`
+	LocationID    *int64             `json:"location_id"`
 	Updated       pgtype.Timestamptz `json:"updated"`
 	Created       pgtype.Timestamptz `json:"created"`
 }
@@ -498,13 +497,13 @@ type Experience struct {
 	CompanyName string             `json:"company_name"`
 	StartDate   pgtype.Date        `json:"start_date"`
 	EndDate     pgtype.Date        `json:"end_date"`
-	Description pgtype.Text        `json:"description"`
+	Description *string            `json:"description"`
 	Created     pgtype.Timestamptz `json:"created"`
 }
 
 type Feedback struct {
 	ID           int64              `json:"id"`
-	AuthorID     pgtype.Int8        `json:"author_id"`
+	AuthorID     *int64             `json:"author_id"`
 	ClientID     int64              `json:"client_id"`
 	Date         pgtype.Date        `json:"date"`
 	FeedbackText string             `json:"feedback_text"`
@@ -527,10 +526,10 @@ type GoalHistory struct {
 
 type GoalsReport struct {
 	ID           int64              `json:"id"`
-	GoalID       pgtype.Int8        `json:"goal_id"`
+	GoalID       *int64             `json:"goal_id"`
 	Title        string             `json:"title"`
 	ReportText   string             `json:"report_text"`
-	Rating       pgtype.Int4        `json:"rating"`
+	Rating       *int32             `json:"rating"`
 	CreatedAtSys pgtype.Timestamptz `json:"created_at_sys"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
@@ -559,7 +558,7 @@ type Incident struct {
 	ID                      int64              `json:"id"`
 	EmployeeFullname        string             `json:"employee_fullname"`
 	EmployeePosition        string             `json:"employee_position"`
-	LocationID              pgtype.Int8        `json:"location_id"`
+	LocationID              *int64             `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []byte             `json:"inform_who"`
 	IncidentDate            pgtype.Date        `json:"incident_date"`
@@ -576,26 +575,26 @@ type Incident struct {
 	UseProhibitedSubstances bool               `json:"use_prohibited_substances"`
 	OtherNotifications      bool               `json:"other_notifications"`
 	SeverityOfIncident      string             `json:"severity_of_incident"`
-	IncidentExplanation     pgtype.Text        `json:"incident_explanation"`
+	IncidentExplanation     *string            `json:"incident_explanation"`
 	RecurrenceRisk          string             `json:"recurrence_risk"`
-	IncidentPreventSteps    pgtype.Text        `json:"incident_prevent_steps"`
-	IncidentTakenMeasures   pgtype.Text        `json:"incident_taken_measures"`
+	IncidentPreventSteps    *string            `json:"incident_prevent_steps"`
+	IncidentTakenMeasures   *string            `json:"incident_taken_measures"`
 	Technical               []byte             `json:"technical"`
 	Organizational          []byte             `json:"organizational"`
 	MeseWorker              []byte             `json:"mese_worker"`
 	ClientOptions           []byte             `json:"client_options"`
-	OtherCause              pgtype.Text        `json:"other_cause"`
-	CauseExplanation        pgtype.Text        `json:"cause_explanation"`
+	OtherCause              *string            `json:"other_cause"`
+	CauseExplanation        *string            `json:"cause_explanation"`
 	PhysicalInjury          string             `json:"physical_injury"`
-	PhysicalInjuryDesc      pgtype.Text        `json:"physical_injury_desc"`
+	PhysicalInjuryDesc      *string            `json:"physical_injury_desc"`
 	PsychologicalDamage     string             `json:"psychological_damage"`
-	PsychologicalDamageDesc pgtype.Text        `json:"psychological_damage_desc"`
+	PsychologicalDamageDesc *string            `json:"psychological_damage_desc"`
 	NeededConsultation      string             `json:"needed_consultation"`
 	Succession              []byte             `json:"succession"`
-	SuccessionDesc          pgtype.Text        `json:"succession_desc"`
+	SuccessionDesc          *string            `json:"succession_desc"`
 	Other                   bool               `json:"other"`
-	OtherDesc               pgtype.Text        `json:"other_desc"`
-	AdditionalAppointments  pgtype.Text        `json:"additional_appointments"`
+	OtherDesc               *string            `json:"other_desc"`
+	AdditionalAppointments  *string            `json:"additional_appointments"`
 	EmployeeAbsenteeism     []byte             `json:"employee_absenteeism"`
 	ClientID                int64              `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
@@ -610,10 +609,10 @@ type IncidentDetail struct {
 	DateOfIncident   pgtype.Timestamptz `json:"date_of_incident"`
 	Location         string             `json:"location"`
 	Description      string             `json:"description"`
-	ActionTaken      pgtype.Text        `json:"action_taken"`
+	ActionTaken      *string            `json:"action_taken"`
 	FollowUpRequired bool               `json:"follow_up_required"`
 	FollowUpDate     pgtype.Date        `json:"follow_up_date"`
-	Notes            pgtype.Text        `json:"notes"`
+	Notes            *string            `json:"notes"`
 	Status           string             `json:"status"`
 }
 
@@ -631,7 +630,7 @@ type Invoice struct {
 	InvoiceDetails  []byte             `json:"invoice_details"`
 	TotalAmount     pgtype.Numeric     `json:"total_amount"`
 	PdfAttachmentID pgtype.UUID        `json:"pdf_attachment_id"`
-	ExtraContent    pgtype.Text        `json:"extra_content"`
+	ExtraContent    *string            `json:"extra_content"`
 	ClientID        int64              `json:"client_id"`
 	Updated         pgtype.Timestamptz `json:"updated"`
 	Created         pgtype.Timestamptz `json:"created"`
@@ -639,8 +638,8 @@ type Invoice struct {
 
 type InvoiceContract struct {
 	ID          int64              `json:"id"`
-	InvoiceID   pgtype.Int8        `json:"invoice_id"`
-	ContractID  pgtype.Int8        `json:"contract_id"`
+	InvoiceID   *int64             `json:"invoice_id"`
+	ContractID  *int64             `json:"contract_id"`
 	PreVatTotal pgtype.Numeric     `json:"pre_vat_total"`
 	VatRate     pgtype.Numeric     `json:"vat_rate"`
 	VatAmount   pgtype.Numeric     `json:"vat_amount"`
@@ -651,7 +650,7 @@ type InvoiceContract struct {
 
 type InvoiceHistory struct {
 	ID            int64              `json:"id"`
-	PaymentMethod pgtype.Text        `json:"payment_method"`
+	PaymentMethod *string            `json:"payment_method"`
 	Amount        pgtype.Numeric     `json:"amount"`
 	Updated       pgtype.Timestamptz `json:"updated"`
 	Created       pgtype.Timestamptz `json:"created"`
@@ -659,10 +658,10 @@ type InvoiceHistory struct {
 }
 
 type Location struct {
-	ID       int64       `json:"id"`
-	Name     string      `json:"name"`
-	Address  string      `json:"address"`
-	Capacity pgtype.Int4 `json:"capacity"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Capacity *int32 `json:"capacity"`
 }
 
 type MaturityMatrix struct {
@@ -687,8 +686,8 @@ type Measurement struct {
 type Notification struct {
 	ID       int64              `json:"id"`
 	Event    string             `json:"event"`
-	Title    pgtype.Text        `json:"title"`
-	Content  pgtype.Text        `json:"content"`
+	Title    *string            `json:"title"`
+	Content  *string            `json:"content"`
 	IsRead   bool               `json:"is_read"`
 	Metadata []byte             `json:"metadata"`
 	Created  pgtype.Timestamptz `json:"created"`
@@ -700,14 +699,14 @@ type ObjectiveHistory struct {
 	Week        int32       `json:"week"`
 	Date        pgtype.Date `json:"date"`
 	ObjectiveID int64       `json:"objective_id"`
-	Content     pgtype.Text `json:"content"`
+	Content     *string     `json:"content"`
 }
 
 type ObjectiveProgressReport struct {
 	ID          int64              `json:"id"`
 	ObjectiveID int64              `json:"objective_id"`
 	Title       string             `json:"title"`
-	ReportText  pgtype.Text        `json:"report_text"`
+	ReportText  *string            `json:"report_text"`
 	Rating      float64            `json:"rating"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
@@ -715,7 +714,7 @@ type ObjectiveProgressReport struct {
 type Observation struct {
 	ID              int64              `json:"id"`
 	ClientID        int64              `json:"client_id"`
-	Category        pgtype.Text        `json:"category"`
+	Category        *string            `json:"category"`
 	Date            pgtype.Date        `json:"date"`
 	ObservationText string             `json:"observation_text"`
 	Created         pgtype.Timestamptz `json:"created"`
@@ -739,9 +738,9 @@ type ProgressReport struct {
 	ID             int64              `json:"id"`
 	ClientID       int64              `json:"client_id"`
 	Date           pgtype.Timestamptz `json:"date"`
-	Title          pgtype.Text        `json:"title"`
+	Title          *string            `json:"title"`
 	ReportText     string             `json:"report_text"`
-	AuthorID       pgtype.Int8        `json:"author_id"`
+	AuthorID       *int64             `json:"author_id"`
 	Type           string             `json:"type"`
 	EmotionalState string             `json:"emotional_state"`
 	Created        pgtype.Timestamptz `json:"created"`
@@ -750,8 +749,8 @@ type ProgressReport struct {
 type ProtectedEmail struct {
 	Uuid      pgtype.UUID        `json:"uuid"`
 	Email     string             `json:"email"`
-	Subject   pgtype.Text        `json:"subject"`
-	Content   pgtype.Text        `json:"content"`
+	Subject   *string            `json:"subject"`
+	Content   *string            `json:"content"`
 	EmailType string             `json:"email_type"`
 	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
 	Metadata  []byte             `json:"metadata"`
@@ -820,18 +819,31 @@ type SelectedMaturityMatrixAssessment struct {
 }
 
 type Sender struct {
-	ID           int64       `json:"id"`
-	Types        string      `json:"types"`
-	Name         string      `json:"name"`
-	Address      pgtype.Text `json:"address"`
-	PostalCode   pgtype.Text `json:"postal_code"`
-	Place        pgtype.Text `json:"place"`
-	Land         pgtype.Text `json:"land"`
-	Kvknumber    pgtype.Text `json:"kvknumber"`
-	Btwnumber    pgtype.Text `json:"btwnumber"`
-	PhoneNumber  pgtype.Text `json:"phone_number"`
-	ClientNumber pgtype.Text `json:"client_number"`
-	EmailAdress  pgtype.Text `json:"email_adress"`
+	ID           int64              `json:"id"`
+	Types        string             `json:"types"`
+	Name         string             `json:"name"`
+	Address      *string            `json:"address"`
+	PostalCode   *string            `json:"postal_code"`
+	Place        *string            `json:"place"`
+	Land         *string            `json:"land"`
+	Kvknumber    *string            `json:"kvknumber"`
+	Btwnumber    *string            `json:"btwnumber"`
+	PhoneNumber  *string            `json:"phone_number"`
+	ClientNumber *string            `json:"client_number"`
+	EmailAdress  *string            `json:"email_adress"`
+	Contacts     []byte             `json:"contacts"`
+	IsArchived   bool               `json:"is_archived"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type SenderAudit struct {
+	ID        int64              `json:"id"`
+	SenderID  int64              `json:"sender_id"`
+	ChangedBy string             `json:"changed_by"`
+	ChangedAt pgtype.Timestamptz `json:"changed_at"`
+	OldData   []byte             `json:"old_data"`
+	NewData   []byte             `json:"new_data"`
 }
 
 type SenderContactRelation struct {
@@ -893,29 +905,29 @@ type YouthCareIntake struct {
 	ServiceChoice               string             `json:"service_choice"`
 	FinancingActs               string             `json:"financing_acts"`
 	FinancingOptions            string             `json:"financing_options"`
-	FinancingOther              pgtype.Text        `json:"financing_other"`
+	FinancingOther              *string            `json:"financing_other"`
 	RegistrationReason          string             `json:"registration_reason"`
 	CurrentSituationBackground  string             `json:"current_situation_background"`
 	PreviousAidAgenciesInvolved bool               `json:"previous_aid_agencies_involved"`
-	PreviousAidAgenciesDetails  pgtype.Text        `json:"previous_aid_agencies_details"`
+	PreviousAidAgenciesDetails  *string            `json:"previous_aid_agencies_details"`
 	MedicalConditions           bool               `json:"medical_conditions"`
-	MedicalConditionsDetails    pgtype.Text        `json:"medical_conditions_details"`
+	MedicalConditionsDetails    *string            `json:"medical_conditions_details"`
 	MedicationUse               bool               `json:"medication_use"`
-	MedicationDetails           pgtype.Text        `json:"medication_details"`
+	MedicationDetails           *string            `json:"medication_details"`
 	AllergiesOrDietaryNeeds     bool               `json:"allergies_or_dietary_needs"`
-	AllergiesOrDietaryDetails   pgtype.Text        `json:"allergies_or_dietary_details"`
+	AllergiesOrDietaryDetails   *string            `json:"allergies_or_dietary_details"`
 	Addictions                  bool               `json:"addictions"`
-	AddictionsDetails           pgtype.Text        `json:"addictions_details"`
+	AddictionsDetails           *string            `json:"addictions_details"`
 	SchoolOrDaytimeActivities   bool               `json:"school_or_daytime_activities"`
-	SchoolDaytimeName           pgtype.Text        `json:"school_daytime_name"`
-	CurrentClassLevel           pgtype.Text        `json:"current_class_level"`
-	SchoolContactPerson         pgtype.Text        `json:"school_contact_person"`
-	SchoolContactPhone          pgtype.Text        `json:"school_contact_phone"`
-	SchoolContactEmail          pgtype.Text        `json:"school_contact_email"`
-	ImportantPeople             pgtype.Text        `json:"important_people"`
+	SchoolDaytimeName           *string            `json:"school_daytime_name"`
+	CurrentClassLevel           *string            `json:"current_class_level"`
+	SchoolContactPerson         *string            `json:"school_contact_person"`
+	SchoolContactPhone          *string            `json:"school_contact_phone"`
+	SchoolContactEmail          *string            `json:"school_contact_email"`
+	ImportantPeople             *string            `json:"important_people"`
 	ExternalSupervisorsInvolved bool               `json:"external_supervisors_involved"`
-	ExternalSupervisorsDetails  pgtype.Text        `json:"external_supervisors_details"`
-	SpecialCircumstances        pgtype.Text        `json:"special_circumstances"`
+	ExternalSupervisorsDetails  *string            `json:"external_supervisors_details"`
+	SpecialCircumstances        *string            `json:"special_circumstances"`
 	Updated                     pgtype.Timestamptz `json:"updated"`
 	Created                     pgtype.Timestamptz `json:"created"`
 }

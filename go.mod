@@ -3,6 +3,7 @@ module maicare_go
 go 1.23.4
 
 require (
+	github.com/Backblaze/blazer v0.7.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.4.0

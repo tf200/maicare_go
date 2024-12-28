@@ -4,7 +4,6 @@ package api
 import "github.com/gin-gonic/gin"
 
 func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
-
 	employeeGroup := baseRouter.Group("/employee")
 	employeeGroup.Use(AuthMiddleware(server.tokenMaker))
 	{

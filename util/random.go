@@ -46,11 +46,8 @@ func RandomPgText() pgtype.Text {
 	}
 }
 
-func RandomPgBool() pgtype.Bool {
-	return pgtype.Bool{
-		Bool:  false,
-		Valid: true,
-	}
+func RandomBool() bool {
+	return rand.Float32() < 0.5
 }
 
 func RandomPgInt8() pgtype.Int8 {

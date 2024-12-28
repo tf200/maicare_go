@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"maicare_go/util"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,22 +13,16 @@ func CreateRandomUser(t *testing.T) *CustomUser {
 	hashedPassword, err := util.HashPassword("t2aha000")
 	require.NoError(t, err)
 	arg := CreateUserParams{
-		Password:    hashedPassword,
-		Username:    util.RandomString(5),
-		Email:       util.RandomEmail(),
-		FirstName:   util.RandomString(5),
-		LastName:    util.RandomString(5),
-		IsSuperuser: true,
-		IsStaff:     true,
-		IsActive:    true,
-		ProfilePicture: pgtype.Text{
-			String: util.GetRandomImageURL(),
-			Valid:  true,
-		},
-		PhoneNumber: pgtype.Int8{
-			Int64: 4532485,
-			Valid: true,
-		},
+		Password:       hashedPassword,
+		Username:       util.StringPtr(util.RandomString(5)),
+		Email:          util.RandomEmail(),
+		FirstName:      util.RandomString(5),
+		LastName:       util.RandomString(5),
+		IsSuperuser:    true,
+		IsStaff:        true,
+		IsActive:       true,
+		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
+		PhoneNumber:    util.IntPtr(456),
 	}
 
 	user, err := testQueries.CreateUser(context.Background(), arg)
@@ -77,7 +71,6 @@ func TestGetUserByID(t *testing.T) {
 	require.Equal(t, created_user.ProfilePicture, retrieved_user.ProfilePicture)
 	require.Equal(t, created_user.PhoneNumber, retrieved_user.PhoneNumber)
 	require.Equal(t, created_user.DateJoined, retrieved_user.DateJoined)
-
 }
 
 func TestGetUserByUsername(t *testing.T) {
@@ -101,5 +94,4 @@ func TestGetUserByUsername(t *testing.T) {
 	require.Equal(t, created_user.ProfilePicture, retrieved_user.ProfilePicture)
 	require.Equal(t, created_user.PhoneNumber, retrieved_user.PhoneNumber)
 	require.Equal(t, created_user.DateJoined, retrieved_user.DateJoined)
-
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"maicare_go/api"
+	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/util"
 
@@ -23,8 +24,13 @@ func main() {
 	defer conn.Close()
 
 	store := db.NewStore(conn)
+	b2Client, err := bucket.NewB2Client(config)
 
-	server, err := api.NewServer(store)
+	if err != nil {
+		log.Fatalf("unable to create b2 client: %v", err)
+	}
+
+	server, err := api.NewServer(store, b2Client)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

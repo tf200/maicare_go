@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -20,35 +21,32 @@ func TestCreateEmployeeWithAccountTx(t *testing.T) {
 	employeeArg := CreateEmployeeProfileParams{
 		FirstName:                 util.RandomString(5),
 		LastName:                  util.RandomString(5),
-		Position:                  util.RandomPgText(),
-		Department:                util.RandomPgText(),
-		EmployeeNumber:            util.RandomPgText(),
-		EmploymentNumber:          util.RandomPgText(),
-		PrivateEmailAddress:       util.RandomPgText(),
-		EmailAddress:              util.RandomPgText(),
-		AuthenticationPhoneNumber: util.RandomPgText(),
-		PrivatePhoneNumber:        util.RandomPgText(),
-		WorkPhoneNumber:           util.RandomPgText(),
+		Position:                  util.StringPtr(util.RandomString(5)),
+		Department:                util.StringPtr(util.RandomString(5)),
+		EmployeeNumber:            util.StringPtr(util.RandomString(5)),
+		EmploymentNumber:          util.StringPtr(util.RandomString(5)),
+		PrivateEmailAddress:       util.StringPtr(util.RandomString(5)),
+		EmailAddress:              util.StringPtr(util.RandomString(5)),
+		AuthenticationPhoneNumber: util.StringPtr(util.RandomString(5)),
+		PrivatePhoneNumber:        util.StringPtr(util.RandomString(5)),
+		WorkPhoneNumber:           util.StringPtr(util.RandomString(5)),
 		DateOfBirth: pgtype.Date{
 			Time:  time.Now(),
 			Valid: true,
 		},
-		HomeTelephoneNumber: util.RandomPgText(),
-		IsSubcontractor:     util.RandomPgBool(),
-		Gender:              util.RandomPgText(),
-		LocationID: pgtype.Int8{
-			Int64: location.ID,
-			Valid: true,
-		},
-		HasBorrowed:  false,
-		OutOfService: util.RandomPgBool(),
-		IsArchived:   util.RandomPgBool(),
+		HomeTelephoneNumber: util.StringPtr(util.RandomString(5)),
+		IsSubcontractor:     util.BoolPtr(util.RandomBool()),
+		Gender:              util.StringPtr(util.RandomString(5)),
+		LocationID:          util.IntPtr(location.ID),
+		HasBorrowed:         false,
+		OutOfService:        util.BoolPtr(util.RandomBool()),
+		IsArchived:          util.RandomBool(),
 	}
 	userArg := CreateUserParams{
-		Username:    util.RandomString(5),
+		Username:    util.StringPtr(util.RandomString(5)),
 		FirstName:   employeeArg.FirstName,
 		LastName:    employeeArg.LastName,
-		Email:       employeeArg.EmailAddress.String,
+		Email:       *employeeArg.EmailAddress,
 		Password:    "password123",
 		IsActive:    true,
 		IsStaff:     false,
@@ -86,5 +84,67 @@ func TestCreateEmployeeWithAccountTx(t *testing.T) {
 	// Verify IDs were generated
 	require.NotZero(t, result.User.ID)
 	require.NotZero(t, result.Employee.ID)
+}
 
+func TestCreateClientwithAccountTx(t *testing.T) {
+	store := NewStore(testDB)
+	location := CreateRandomLocation(t)
+	clientArg := CreateClientDetailsParams{
+		FirstName:             util.RandomString(6),
+		LastName:              util.RandomString(6),
+		Email:                 util.RandomEmail(),
+		DateOfBirth:           pgtype.Date{Time: time.Now(), Valid: true},
+		Identity:              false,
+		Status:                util.StringPtr("active"),
+		Bsn:                   util.StringPtr(util.RandomString(9)),
+		Source:                util.StringPtr("web"),
+		Birthplace:            util.StringPtr(util.RandomString(6)),
+		PhoneNumber:           util.StringPtr(util.RandomString(10)),
+		Organisation:          util.StringPtr(util.RandomString(6)),
+		Departement:           util.StringPtr(util.RandomString(6)),
+		Gender:                "male",
+		Filenumber:            1235,
+		ProfilePicture:        util.StringPtr(util.GetRandomImageURL()),
+		Infix:                 util.StringPtr(util.RandomString(6)),
+		SenderID:              util.IntPtr(1),
+		LocationID:            util.IntPtr(location.ID),
+		IdentityAttachmentIds: []byte(util.RandomString(5)),
+		DepartureReason:       util.StringPtr(util.RandomString(6)),
+		DepartureReport:       util.StringPtr(util.RandomString(6)),
+		GpsPosition:           []byte(util.RandomString(5)),
+		MaturityDomains:       []byte(util.RandomString(5)),
+		Addresses:             []byte(util.RandomString(5)),
+		LegalMeasure:          util.StringPtr(util.RandomString(6)),
+		HasUntakenMedications: false,
+	}
+
+	userArg := CreateUserParams{
+		Username:    util.StringPtr(util.RandomString(5)),
+		FirstName:   clientArg.FirstName,
+		LastName:    clientArg.LastName,
+		Email:       clientArg.Email,
+		Password:    "password123",
+		IsActive:    true,
+		IsStaff:     false,
+		IsSuperuser: false,
+	}
+
+	arg := CreateClientWithAccountTxParams{
+		CreateClientParams: clientArg,
+		CreateUserParams:   userArg,
+	}
+	client, err := store.CreateClientWithAccountTx(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, client)
+	require.Equal(t, clientArg.FirstName, client.Client.FirstName)
+	require.Equal(t, clientArg.LastName, client.Client.LastName)
+	require.Equal(t, clientArg.Email, client.Client.Email)
+	require.Equal(t, clientArg.PhoneNumber, client.Client.PhoneNumber)
+	require.Equal(t, clientArg.DateOfBirth, client.Client.DateOfBirth)
+	require.Equal(t, clientArg.Gender, client.Client.Gender)
+	require.Equal(t, clientArg.IdentityAttachmentIds, client.Client.IdentityAttachmentIds)
+	require.Equal(t, clientArg.DepartureReason, client.Client.DepartureReason)
+	require.Equal(t, clientArg.DepartureReport, client.Client.DepartureReport)
+	require.Equal(t, clientArg.GpsPosition, client.Client.GpsPosition)
+	require.Equal(t, clientArg.MaturityDomains, client.Client.MaturityDomains)
 }

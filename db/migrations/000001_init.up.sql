@@ -33,7 +33,7 @@ CREATE TABLE custom_user (
     password VARCHAR(128) NOT NULL,
     last_login TIMESTAMPTZ NULL,
     is_superuser BOOLEAN NOT NULL DEFAULT FALSE,
-    username VARCHAR(150) NOT NULL UNIQUE,
+    username VARCHAR(150)  NULL UNIQUE,
     first_name VARCHAR(150) NOT NULL,
     last_name VARCHAR(150) NOT NULL,
     email VARCHAR(254) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE custom_user (
 CREATE INDEX custom_user_username_idx ON custom_user(username);
 CREATE INDEX custom_user_email_idx ON custom_user(email);
 
--- Sessions Table
+
 CREATE TABLE "sessions" (
     "id" uuid PRIMARY KEY,
     "refresh_token" varchar NOT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE notification (
 
 
 CREATE TABLE attachment_file (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "uuid" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     "file" VARCHAR(255) NOT NULL,
     "size" INTEGER NOT NULL DEFAULT 0,
@@ -173,35 +173,49 @@ CREATE TABLE sender (
     btwnumber VARCHAR(20) NULL,
     phone_number VARCHAR(20) NULL,
     client_number VARCHAR(20) NULL,
-    email_adress VARCHAR(20) NULL
+    email_adress VARCHAR(20) NULL,
+    contacts JSONB NOT NULL DEFAULT '[]',
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX sender_types_idx ON sender(types);
+
+CREATE TABLE sender_audit (
+    id BIGSERIAL PRIMARY KEY,
+    sender_id BIGINT NOT NULL REFERENCES sender(id),
+    changed_by VARCHAR(50) NOT NULL, -- 
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_data JSONB NOT NULL,
+    new_data JSONB NOT NULL
+
+);
+
+CREATE INDEX idx_sender_audit_sender_id ON sender_audit(sender_id);
+CREATE INDEX idx_sender_audit_changed_at ON sender_audit(changed_at DESC);
+CREATE INDEX idx_sender_audit_changed_by ON sender_audit(changed_by);
 
 
 CREATE TABLE client_details (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
-    first_name VARCHAR(100) NULL,
-    last_name VARCHAR(100) NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
     "identity" BOOLEAN NOT NULL DEFAULT FALSE,
-    status VARCHAR(20) NULL CHECK (status IN ('In Care', 'On Waiting List', 'Out Of Care')) DEFAULT 'On Waiting List',
-    bsn VARCHAR(100) NULL,
+    "status" VARCHAR(20) NULL CHECK (status IN ('In Care', 'On Waiting List', 'Out Of Care')) DEFAULT 'On Waiting List',
+    bsn VARCHAR(50) NULL,        -- Reduced length assuming it's a social security number
     source VARCHAR(100) NULL,
     birthplace VARCHAR(100) NULL,
-    email VARCHAR(100) NULL,
+    email VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NULL,
     organisation VARCHAR(100) NULL,
     departement VARCHAR(100) NULL,
-    gender VARCHAR(100) NULL,
-    filenumber INTEGER NULL,
+    gender VARCHAR(100) NOT NULL,
+    filenumber INTEGER NOT NULL,
     profile_picture VARCHAR(100) NULL,
-    city VARCHAR(100) NULL,
-    zipcode VARCHAR(100) NULL,
     infix VARCHAR(100) NULL,
-    streetname VARCHAR(100) NULL,
-    street_number VARCHAR(100) NULL,
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE CASCADE,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
@@ -209,7 +223,10 @@ CREATE TABLE client_details (
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
     gps_position JSONB NOT NULL DEFAULT '[]',
-    maturity_domains JSONB NOT NULL DEFAULT '[]'
+    maturity_domains JSONB NOT NULL DEFAULT '[]',
+    addresses JSONB NOT NULL DEFAULT '[]',
+    legal_measure VARCHAR(255) NULL,
+    has_untaken_medications BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX client_details_user_id_idx ON client_details(user_id);
@@ -404,7 +421,7 @@ CREATE TABLE invoice (
     )) DEFAULT 'concept',
     invoice_details JSONB NULL DEFAULT '[]',
     total_amount DECIMAL(20,2) NOT NULL DEFAULT 0,
-    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file(id) ON DELETE SET NULL,
+    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     extra_content TEXT NULL DEFAULT '',
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -628,7 +645,7 @@ CREATE TABLE collaboration_agreement (
     healthcare_institution_phone VARCHAR(100) NOT NULL,
     healthcare_institution_function VARCHAR(100) NOT NULL,
     contact_agreements TEXT NOT NULL,
-    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file(id) ON DELETE SET NULL,
+    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     attention_risks JSONB NOT NULL DEFAULT '[]',
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -680,7 +697,7 @@ CREATE TABLE risk_assessment (
     regular_evaluation_plan VARCHAR(255) NOT NULL,
     success_criteria VARCHAR(255) NOT NULL,
     time_table VARCHAR(255) NOT NULL,
-    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file(id) ON DELETE SET NULL,
+    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -708,7 +725,7 @@ CREATE TABLE consent_declaration (
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file(id) ON DELETE SET NULL
+    pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL
 );
 
 CREATE INDEX consent_declaration_client_id_idx ON consent_declaration(client_id);
@@ -857,13 +874,13 @@ CREATE TABLE employee_profile (
     work_phone_number VARCHAR(100) NULL,
     date_of_birth DATE NULL,
     home_telephone_number VARCHAR(100) NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
+    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_subcontractor BOOLEAN NULL,
     gender VARCHAR(100) NULL,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,
-    is_archived BOOLEAN NULL DEFAULT FALSE
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 

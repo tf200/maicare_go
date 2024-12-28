@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"net/http"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/util"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -14,7 +15,7 @@ import (
 )
 
 type LoginUserRequest struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -30,7 +31,7 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUserByUsername(ctx, req.Username)
+	user, err := server.store.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, gin.H{
@@ -51,7 +52,7 @@ func (server *Server) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error": "incorrect password",
 		})
-		log.Printf("failed password check for user %s: %v", req.Username, err)
+		log.Printf("failed password check for user: %v", err)
 		return
 	}
 
@@ -60,7 +61,7 @@ func (server *Server) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "error generating access token",
 		})
-		log.Printf("failed to create access token for user %s: %v", user.Username, err)
+		log.Printf("failed to create access token for user : %v", err)
 		return
 	}
 
@@ -69,30 +70,20 @@ func (server *Server) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "error generating refresh token",
 		})
-		log.Printf("failed to create refresh token for user %s: %v", user.Username, err)
+		log.Printf("failed to create refresh token for user : %v", err)
 		return
 	}
 
 	_, err = server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID: pgtype.UUID{
-			Bytes: refreshPayload.ID,
-			Valid: true,
-		},
+		ID:           pgtype.UUID{Bytes: refreshPayload.ID, Valid: true},
 		RefreshToken: refreshToken,
 		UserAgent:    "",
 		ClientIp:     "",
 		IsBlocked:    false,
-		ExpiresAt: pgtype.Timestamptz{
-			Time:  refreshPayload.ExpiresAt,
-			Valid: true,
-		},
-		CreatedAt: pgtype.Timestamptz{
-			Time:  refreshPayload.IssuedAt,
-			Valid: true,
-		},
-		UserID: user.ID,
+		ExpiresAt:    pgtype.Timestamptz{Time: refreshPayload.ExpiresAt, Valid: true},
+		CreatedAt:    pgtype.Timestamptz{Time: refreshPayload.IssuedAt, Valid: true},
+		UserID:       user.ID,
 	})
-
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Code {

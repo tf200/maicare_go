@@ -12,6 +12,9 @@ type Config struct {
 	SecretKey            string        `mapstructure:"SECRET_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	B2Key                string        `mapstructure:"B2_KEY"`
+	B2KeyID              string        `mapstructure:"B2_KEY_ID"`
+	B2Bucket             string        `mapstructure:"B2_BUCKET"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

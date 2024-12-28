@@ -6,3 +6,8 @@ INSERT INTO location (
 ) VALUES (
     $1, $2, $3
 ) RETURNING *;
+
+
+
+-- name: ListLocations :many
+SELECT * FROM location;

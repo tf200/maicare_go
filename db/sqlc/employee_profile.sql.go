@@ -31,11 +31,11 @@ WHERE
 `
 
 type CountEmployeeProfileParams struct {
-	IncludeArchived     pgtype.Bool `json:"include_archived"`
-	IncludeOutOfService pgtype.Bool `json:"include_out_of_service"`
-	Department          pgtype.Text `json:"department"`
-	Position            pgtype.Text `json:"position"`
-	LocationID          pgtype.Int8 `json:"location_id"`
+	IncludeArchived     *bool   `json:"include_archived"`
+	IncludeOutOfService *bool   `json:"include_out_of_service"`
+	Department          *string `json:"department"`
+	Position            *string `json:"position"`
+	LocationID          *int64  `json:"location_id"`
 }
 
 func (q *Queries) CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error) {
@@ -83,23 +83,23 @@ type CreateEmployeeProfileParams struct {
 	UserID                    int64       `json:"user_id"`
 	FirstName                 string      `json:"first_name"`
 	LastName                  string      `json:"last_name"`
-	Position                  pgtype.Text `json:"position"`
-	Department                pgtype.Text `json:"department"`
-	EmployeeNumber            pgtype.Text `json:"employee_number"`
-	EmploymentNumber          pgtype.Text `json:"employment_number"`
-	PrivateEmailAddress       pgtype.Text `json:"private_email_address"`
-	EmailAddress              pgtype.Text `json:"email_address"`
-	AuthenticationPhoneNumber pgtype.Text `json:"authentication_phone_number"`
-	PrivatePhoneNumber        pgtype.Text `json:"private_phone_number"`
-	WorkPhoneNumber           pgtype.Text `json:"work_phone_number"`
+	Position                  *string     `json:"position"`
+	Department                *string     `json:"department"`
+	EmployeeNumber            *string     `json:"employee_number"`
+	EmploymentNumber          *string     `json:"employment_number"`
+	PrivateEmailAddress       *string     `json:"private_email_address"`
+	EmailAddress              *string     `json:"email_address"`
+	AuthenticationPhoneNumber *string     `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string     `json:"private_phone_number"`
+	WorkPhoneNumber           *string     `json:"work_phone_number"`
 	DateOfBirth               pgtype.Date `json:"date_of_birth"`
-	HomeTelephoneNumber       pgtype.Text `json:"home_telephone_number"`
-	IsSubcontractor           pgtype.Bool `json:"is_subcontractor"`
-	Gender                    pgtype.Text `json:"gender"`
-	LocationID                pgtype.Int8 `json:"location_id"`
+	HomeTelephoneNumber       *string     `json:"home_telephone_number"`
+	IsSubcontractor           *bool       `json:"is_subcontractor"`
+	Gender                    *string     `json:"gender"`
+	LocationID                *int64      `json:"location_id"`
 	HasBorrowed               bool        `json:"has_borrowed"`
-	OutOfService              pgtype.Bool `json:"out_of_service"`
-	IsArchived                pgtype.Bool `json:"is_archived"`
+	OutOfService              *bool       `json:"out_of_service"`
+	IsArchived                bool        `json:"is_archived"`
 }
 
 func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error) {
@@ -172,19 +172,23 @@ WHERE
     END) AND
     (ep.department = $5 OR $5 IS NULL) AND
     (ep.position = $6 OR $6 IS NULL) AND
-    (ep.location_id = $7 OR $7 IS NULL)
+    (ep.location_id = $7 OR $7 IS NULL) AND
+    ($8::TEXT IS NULL OR 
+        ep.first_name ILIKE '%' || $8 || '%' OR 
+        ep.last_name ILIKE '%' || $8 || '%')
 ORDER BY ep.created DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListEmployeeProfileParams struct {
-	Limit               int32       `json:"limit"`
-	Offset              int32       `json:"offset"`
-	IncludeArchived     pgtype.Bool `json:"include_archived"`
-	IncludeOutOfService pgtype.Bool `json:"include_out_of_service"`
-	Department          pgtype.Text `json:"department"`
-	Position            pgtype.Text `json:"position"`
-	LocationID          pgtype.Int8 `json:"location_id"`
+	Limit               int32   `json:"limit"`
+	Offset              int32   `json:"offset"`
+	IncludeArchived     *bool   `json:"include_archived"`
+	IncludeOutOfService *bool   `json:"include_out_of_service"`
+	Department          *string `json:"department"`
+	Position            *string `json:"position"`
+	LocationID          *int64  `json:"location_id"`
+	Search              *string `json:"search"`
 }
 
 type ListEmployeeProfileRow struct {
@@ -192,25 +196,25 @@ type ListEmployeeProfileRow struct {
 	UserID                    int64              `json:"user_id"`
 	FirstName                 string             `json:"first_name"`
 	LastName                  string             `json:"last_name"`
-	Position                  pgtype.Text        `json:"position"`
-	Department                pgtype.Text        `json:"department"`
-	EmployeeNumber            pgtype.Text        `json:"employee_number"`
-	EmploymentNumber          pgtype.Text        `json:"employment_number"`
-	PrivateEmailAddress       pgtype.Text        `json:"private_email_address"`
-	EmailAddress              pgtype.Text        `json:"email_address"`
-	AuthenticationPhoneNumber pgtype.Text        `json:"authentication_phone_number"`
-	PrivatePhoneNumber        pgtype.Text        `json:"private_phone_number"`
-	WorkPhoneNumber           pgtype.Text        `json:"work_phone_number"`
+	Position                  *string            `json:"position"`
+	Department                *string            `json:"department"`
+	EmployeeNumber            *string            `json:"employee_number"`
+	EmploymentNumber          *string            `json:"employment_number"`
+	PrivateEmailAddress       *string            `json:"private_email_address"`
+	EmailAddress              *string            `json:"email_address"`
+	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string            `json:"private_phone_number"`
+	WorkPhoneNumber           *string            `json:"work_phone_number"`
 	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
-	HomeTelephoneNumber       pgtype.Text        `json:"home_telephone_number"`
+	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
 	Created                   pgtype.Timestamptz `json:"created"`
-	IsSubcontractor           pgtype.Bool        `json:"is_subcontractor"`
-	Gender                    pgtype.Text        `json:"gender"`
-	LocationID                pgtype.Int8        `json:"location_id"`
+	IsSubcontractor           *bool              `json:"is_subcontractor"`
+	Gender                    *string            `json:"gender"`
+	LocationID                *int64             `json:"location_id"`
 	HasBorrowed               bool               `json:"has_borrowed"`
-	OutOfService              pgtype.Bool        `json:"out_of_service"`
-	IsArchived                pgtype.Bool        `json:"is_archived"`
-	ProfilePicture            pgtype.Text        `json:"profile_picture"`
+	OutOfService              *bool              `json:"out_of_service"`
+	IsArchived                bool               `json:"is_archived"`
+	ProfilePicture            *string            `json:"profile_picture"`
 }
 
 func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error) {
@@ -222,6 +226,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		arg.Department,
 		arg.Position,
 		arg.LocationID,
+		arg.Search,
 	)
 	if err != nil {
 		return nil, err

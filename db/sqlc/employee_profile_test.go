@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"sync"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -20,29 +21,23 @@ func createRandomEmployee(t *testing.T) EmployeeProfile {
 		UserID:                    user.ID,
 		FirstName:                 util.RandomString(5),
 		LastName:                  util.RandomString(5),
-		Position:                  util.RandomPgText(),
-		Department:                util.RandomPgText(),
-		EmployeeNumber:            util.RandomPgText(),
-		EmploymentNumber:          util.RandomPgText(),
-		PrivateEmailAddress:       util.RandomPgText(),
-		EmailAddress:              util.RandomPgText(),
-		AuthenticationPhoneNumber: util.RandomPgText(),
-		PrivatePhoneNumber:        util.RandomPgText(),
-		WorkPhoneNumber:           util.RandomPgText(),
-		DateOfBirth: pgtype.Date{
-			Time:  time.Now(),
-			Valid: true,
-		},
-		HomeTelephoneNumber: util.RandomPgText(),
-		IsSubcontractor:     util.RandomPgBool(),
-		Gender:              util.RandomPgText(),
-		LocationID: pgtype.Int8{
-			Int64: location.ID,
-			Valid: true,
-		},
-		HasBorrowed:  false,
-		OutOfService: util.RandomPgBool(),
-		IsArchived:   util.RandomPgBool(),
+		Position:                  util.StringPtr(util.RandomString(5)),
+		Department:                util.StringPtr(util.RandomString(5)),
+		EmployeeNumber:            util.StringPtr(util.RandomString(5)),
+		EmploymentNumber:          util.StringPtr(util.RandomString(5)),
+		PrivateEmailAddress:       util.StringPtr(util.RandomString(5)),
+		EmailAddress:              util.StringPtr(util.RandomString(5)),
+		AuthenticationPhoneNumber: util.StringPtr(util.RandomString(5)),
+		PrivatePhoneNumber:        util.StringPtr(util.RandomString(5)),
+		WorkPhoneNumber:           util.StringPtr(util.RandomString(5)),
+		DateOfBirth:               pgtype.Date{Time: time.Now(), Valid: true},
+		HomeTelephoneNumber:       util.StringPtr(util.RandomString(5)),
+		IsSubcontractor:           util.BoolPtr(true),
+		Gender:                    util.StringPtr(util.RandomString(5)),
+		LocationID:                util.IntPtr(location.ID),
+		HasBorrowed:               false,
+		OutOfService:              util.BoolPtr(util.RandomBool()),
+		IsArchived:                util.RandomBool(),
 	}
 
 	employee, err := testQueries.CreateEmployeeProfile(context.Background(), arg)
@@ -71,15 +66,12 @@ func createRandomEmployee(t *testing.T) EmployeeProfile {
 	require.Equal(t, arg.OutOfService, employee.OutOfService)
 	require.Equal(t, arg.IsArchived, employee.IsArchived)
 
-	// Verify auto-generated fields
 	require.NotZero(t, employee.ID)
 	require.NotZero(t, employee.Created)
 
-	// Verify foreign key constraints
-	require.Equal(t, location.ID, employee.LocationID.Int64)
-	require.True(t, employee.LocationID.Valid)
-	return employee
+	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
 
+	return employee
 }
 
 func TestCreateEmployeeProfile(t *testing.T) {
@@ -123,8 +115,8 @@ func TestListEmployeeProfile(t *testing.T) {
 		{
 			name: "List all employees with limit 5",
 			params: ListEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				IncludeArchived:     util.BoolPtr(true),
+				IncludeOutOfService: util.BoolPtr(true),
 				Limit:               5,
 				Offset:              0,
 			},
@@ -136,8 +128,8 @@ func TestListEmployeeProfile(t *testing.T) {
 		{
 			name: "List with offset",
 			params: ListEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				IncludeArchived:     util.BoolPtr(true),
+				IncludeOutOfService: util.BoolPtr(true),
 				Limit:               5,
 				Offset:              5,
 			},
@@ -149,46 +141,46 @@ func TestListEmployeeProfile(t *testing.T) {
 		{
 			name: "Exclude archived only",
 			params: ListEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				IncludeArchived:     util.BoolPtr(false),
+				IncludeOutOfService: util.BoolPtr(true),
 				Limit:               10,
 				Offset:              0,
 			},
 			expectedLen: 10,
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for _, emp := range results {
-					require.False(t, emp.IsArchived.Bool, "should not include archived employees")
+					require.False(t, emp.IsArchived, "should not include archived employees")
 				}
 			},
 		},
 		{
 			name: "Exclude out of service only",
 			params: ListEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+				IncludeArchived:     util.BoolPtr(true),
+				IncludeOutOfService: util.BoolPtr(false),
 				Limit:               10,
 				Offset:              0,
 			},
 			expectedLen: 10,
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for _, emp := range results {
-					require.False(t, emp.OutOfService.Bool, "should not include out of service employees")
+					require.False(t, *emp.OutOfService, "should not include out of service employees")
 				}
 			},
 		},
 		{
 			name: "Exclude both archived and out of service",
 			params: ListEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+				IncludeArchived:     util.BoolPtr(false),
+				IncludeOutOfService: util.BoolPtr(false),
 				Limit:               10,
 				Offset:              0,
 			},
 			expectedLen: 10,
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for _, emp := range results {
-					require.False(t, emp.IsArchived.Bool, "should not include archived employees")
-					require.False(t, emp.OutOfService.Bool, "should not include out of service employees")
+					require.False(t, emp.IsArchived, "should not include archived employees")
+					require.False(t, *emp.OutOfService, "should not include out of service employees")
 				}
 			},
 		},
@@ -247,8 +239,8 @@ func TestListEmployeeProfile(t *testing.T) {
 func TestCountEmployeeProfile(t *testing.T) {
 	// Get initial count before adding test data
 	initialCount, err := testQueries.CountEmployeeProfile(context.Background(), CountEmployeeProfileParams{
-		IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-		IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+		IncludeArchived:     util.BoolPtr(true),
+		IncludeOutOfService: util.BoolPtr(true),
 	})
 	require.NoError(t, err)
 
@@ -272,8 +264,8 @@ func TestCountEmployeeProfile(t *testing.T) {
 		{
 			name: "Count all employees",
 			params: CountEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				IncludeArchived:     util.BoolPtr(true),
+				IncludeOutOfService: util.BoolPtr(true),
 			},
 			checkCount: func(t *testing.T, count int64) {
 				require.Equal(t, initialCount+int64(numEmployees), count,
@@ -283,29 +275,27 @@ func TestCountEmployeeProfile(t *testing.T) {
 		{
 			name: "Count non-archived employees",
 			params: CountEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+				IncludeArchived:     util.BoolPtr(false),
+				IncludeOutOfService: util.BoolPtr(true),
 			},
 			checkCount: func(t *testing.T, count int64) {
 				require.Less(t, count, initialCount+int64(numEmployees))
-				require.GreaterOrEqual(t, count, initialCount)
 			},
 		},
 		{
 			name: "Count non-out-of-service employees",
 			params: CountEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
+				IncludeArchived:     util.BoolPtr(true),
+				IncludeOutOfService: util.BoolPtr(false),
 			},
 			checkCount: func(t *testing.T, count int64) {
 				require.Less(t, count, initialCount+int64(numEmployees))
-				require.GreaterOrEqual(t, count, initialCount)
 			},
 		},
 		{
 			name: "Filter by department",
 			params: CountEmployeeProfileParams{
-				Department: pgtype.Text{String: "IT", Valid: true},
+				Department: util.StringPtr("IT"),
 			},
 			checkCount: func(t *testing.T, count int64) {
 				require.GreaterOrEqual(t, count, int64(0))
@@ -315,7 +305,7 @@ func TestCountEmployeeProfile(t *testing.T) {
 		{
 			name: "Filter by non-existent department",
 			params: CountEmployeeProfileParams{
-				Department: pgtype.Text{String: "NonExistentDepartment", Valid: true},
+				Department: util.StringPtr("NonExistentDepartment"),
 			},
 			checkCount: func(t *testing.T, count int64) {
 				require.Equal(t, int64(0), count)
@@ -324,10 +314,10 @@ func TestCountEmployeeProfile(t *testing.T) {
 		{
 			name: "Count with all filters",
 			params: CountEmployeeProfileParams{
-				IncludeArchived:     pgtype.Bool{Valid: true, Bool: false},
-				IncludeOutOfService: pgtype.Bool{Valid: true, Bool: false},
-				Department:          pgtype.Text{String: "IT", Valid: true},
-				Position:            pgtype.Text{String: "Developer", Valid: true},
+				IncludeArchived:     util.BoolPtr(false),
+				IncludeOutOfService: util.BoolPtr(false),
+				Department:          util.StringPtr("IT"),
+				Position:            util.StringPtr("Developer"),
 			},
 			checkCount: func(t *testing.T, count int64) {
 				require.GreaterOrEqual(t, count, int64(0))

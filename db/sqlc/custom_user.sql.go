@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -30,16 +28,16 @@ RETURNING id, password, last_login, is_superuser, username, first_name, last_nam
 `
 
 type CreateUserParams struct {
-	Password       string      `json:"password"`
-	Username       string      `json:"username"`
-	FirstName      string      `json:"first_name"`
-	LastName       string      `json:"last_name"`
-	Email          string      `json:"email"`
-	IsSuperuser    bool        `json:"is_superuser"`
-	IsStaff        bool        `json:"is_staff"`
-	IsActive       bool        `json:"is_active"`
-	ProfilePicture pgtype.Text `json:"profile_picture"`
-	PhoneNumber    pgtype.Int8 `json:"phone_number"`
+	Password       string  `json:"password"`
+	Username       *string `json:"username"`
+	FirstName      string  `json:"first_name"`
+	LastName       string  `json:"last_name"`
+	Email          string  `json:"email"`
+	IsSuperuser    bool    `json:"is_superuser"`
+	IsStaff        bool    `json:"is_staff"`
+	IsActive       bool    `json:"is_active"`
+	ProfilePicture *string `json:"profile_picture"`
+	PhoneNumber    *int64  `json:"phone_number"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomUser, error) {
@@ -55,6 +53,32 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 		arg.ProfilePicture,
 		arg.PhoneNumber,
 	)
+	var i CustomUser
+	err := row.Scan(
+		&i.ID,
+		&i.Password,
+		&i.LastLogin,
+		&i.IsSuperuser,
+		&i.Username,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.IsStaff,
+		&i.IsActive,
+		&i.DateJoined,
+		&i.ProfilePicture,
+		&i.PhoneNumber,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, profile_picture, phone_number FROM custom_user
+WHERE email= $1 LIMIT 1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CustomUser, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i CustomUser
 	err := row.Scan(
 		&i.ID,
@@ -105,7 +129,7 @@ SELECT id, password, last_login, is_superuser, username, first_name, last_name, 
 WHERE username= $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (CustomUser, error) {
+func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (CustomUser, error) {
 	row := q.db.QueryRow(ctx, getUserByUsername, username)
 	var i CustomUser
 	err := row.Scan(

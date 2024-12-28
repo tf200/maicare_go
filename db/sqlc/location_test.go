@@ -2,21 +2,18 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"maicare_go/util"
+
 	"github.com/stretchr/testify/require"
 )
 
 func CreateRandomLocation(t *testing.T) *Location {
 	arg := CreateLocationParams{
-		Name:    util.RandomString(5),
-		Address: util.RandomString(8),
-		Capacity: pgtype.Int4{
-			Int32: 25,
-			Valid: true,
-		},
+		Name:     util.RandomString(5),
+		Address:  util.RandomString(8),
+		Capacity: util.Int32Ptr(25),
 	}
 
 	location, err := testQueries.CreateLocation(context.Background(), arg)
@@ -35,4 +32,17 @@ func CreateRandomLocation(t *testing.T) *Location {
 
 func TestCreateLocation(t *testing.T) {
 	CreateRandomLocation(t)
+}
+
+func TestListLocations(t *testing.T) {
+	for i := 0; i < 4; i++ {
+		CreateRandomLocation(t)
+	}
+
+	locations, err := testQueries.ListLocations(context.Background())
+	require.NoError(t, err)
+
+	for _, location := range locations {
+		require.NotEmpty(t, location)
+	}
 }

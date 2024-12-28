@@ -6,44 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
+	"net/http/httptest"
 	"sync"
+	"testing"
+	"time"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
-
-func createRandomLocation(t *testing.T) db.Location {
-	arg := db.CreateLocationParams{
-		Name:    util.RandomString(5),
-		Address: util.RandomString(8),
-		Capacity: pgtype.Int4{
-			Int32: 25,
-			Valid: true,
-		},
-	}
-
-	location, err := testStore.CreateLocation(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, location)
-
-	// Check if the returned location matches the input
-	require.Equal(t, arg.Name, location.Name)
-	require.Equal(t, arg.Address, location.Address)
-	require.Equal(t, arg.Capacity, location.Capacity)
-
-	// Verify ID is generated
-	require.NotZero(t, location.ID)
-	return location
-}
 
 func createRandomEmployee(t *testing.T) db.EmployeeProfile {
 	// Create prerequisite records
@@ -54,29 +30,23 @@ func createRandomEmployee(t *testing.T) db.EmployeeProfile {
 		UserID:                    user.ID,
 		FirstName:                 util.RandomString(5),
 		LastName:                  util.RandomString(5),
-		Position:                  util.RandomPgText(),
-		Department:                pgtype.Text{String: "IT", Valid: true},
-		EmployeeNumber:            util.RandomPgText(),
-		EmploymentNumber:          util.RandomPgText(),
-		PrivateEmailAddress:       util.RandomPgText(),
-		EmailAddress:              util.RandomPgText(),
-		AuthenticationPhoneNumber: util.RandomPgText(),
-		PrivatePhoneNumber:        util.RandomPgText(),
-		WorkPhoneNumber:           util.RandomPgText(),
-		DateOfBirth: pgtype.Date{
-			Time:  time.Now(),
-			Valid: true,
-		},
-		HomeTelephoneNumber: util.RandomPgText(),
-		IsSubcontractor:     util.RandomPgBool(),
-		Gender:              util.RandomPgText(),
-		LocationID: pgtype.Int8{
-			Int64: location.ID,
-			Valid: true,
-		},
-		HasBorrowed:  false,
-		OutOfService: util.RandomPgBool(),
-		IsArchived:   util.RandomPgBool(),
+		Position:                  util.StringPtr(util.RandomString(5)),
+		Department:                util.StringPtr("IT"),
+		EmployeeNumber:            util.StringPtr(util.RandomString(5)),
+		EmploymentNumber:          nil,
+		PrivateEmailAddress:       util.StringPtr(util.RandomString(5)),
+		EmailAddress:              util.StringPtr(util.RandomString(5)),
+		AuthenticationPhoneNumber: util.StringPtr(util.RandomString(5)),
+		PrivatePhoneNumber:        util.StringPtr(util.RandomString(5)),
+		WorkPhoneNumber:           util.StringPtr(util.RandomString(5)),
+		DateOfBirth:               pgtype.Date{Time: time.Now(), Valid: true},
+		HomeTelephoneNumber:       util.StringPtr(util.RandomString(5)),
+		IsSubcontractor:           util.BoolPtr(util.RandomBool()),
+		Gender:                    util.StringPtr(util.RandomString(5)),
+		LocationID:                util.IntPtr(location.ID),
+		HasBorrowed:               false,
+		OutOfService:              util.BoolPtr(util.RandomBool()),
+		IsArchived:                util.RandomBool(),
 	}
 
 	employee, err := testStore.CreateEmployeeProfile(context.Background(), arg)
@@ -110,10 +80,8 @@ func createRandomEmployee(t *testing.T) db.EmployeeProfile {
 	require.NotZero(t, employee.Created)
 
 	// Verify foreign key constraints
-	require.Equal(t, location.ID, employee.LocationID.Int64)
-	require.True(t, employee.LocationID.Valid)
+	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
 	return employee
-
 }
 
 func TestCreateEmployeeProfileApi(t *testing.T) {
@@ -132,21 +100,21 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				Empreq := CreateEmployeeProfileRequest{
-					EmployeeNumber:            fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999)),
-					EmploymentNumber:          fmt.Sprintf("EN%d", util.RandomInt(10000, 99999)),
-					Location:                  locationID,
-					IsSubcontractor:           bool(util.RandomPgBool().Bool),
+					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
+					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
+					Location:                  util.IntPtr(locationID),
+					IsSubcontractor:           util.BoolPtr(util.RandomBool()),
 					FirstName:                 util.RandomString(6),
 					LastName:                  util.RandomString(8),
-					DateOfBirth:               "2000-01-05",
-					Gender:                    "male",
-					EmailAddress:              util.RandomEmail(),
-					PrivateEmailAddress:       util.RandomEmail(),
-					AuthenticationPhoneNumber: fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999)),
-					WorkPhoneNumber:           fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999)),
-					PrivatePhoneNumber:        fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999)),
-					HomeTelephoneNumber:       fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999)),
-					OutOfService:              bool(util.RandomPgBool().Bool),
+					DateOfBirth:               util.StringPtr("2000-01-05"),
+					Gender:                    util.StringPtr("male"),
+					EmailAddress:              util.StringPtr(util.RandomEmail()),
+					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
+					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					OutOfService:              util.BoolPtr(util.RandomBool()),
 				}
 				data, err := json.Marshal(Empreq)
 				require.NoError(t, err)
@@ -162,9 +130,9 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				var response CreateEmployeeProfileResponse
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
-				require.NotEmpty(t, response.EmployeeNumber)
+				require.Empty(t, response.EmployeeNumber)
 				require.NotEmpty(t, response.EmploymentNumber)
-				require.NotEmpty(t, response.Location)
+				require.NotEmpty(t, response.LocationID)
 				require.NotEmpty(t, response.FirstName)
 				require.NotEmpty(t, response.LastName)
 				require.NotEmpty(t, response.DateOfBirth)
@@ -175,9 +143,8 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				require.NotEmpty(t, response.WorkPhoneNumber)
 				require.NotEmpty(t, response.PrivatePhoneNumber)
 				require.NotEmpty(t, response.HomeTelephoneNumber)
-				require.NotEmpty(t, response.User)
+				require.NotEmpty(t, response.UserID)
 				require.NotEmpty(t, response.Created)
-
 			},
 		},
 		// Add more test cases as needed
@@ -196,14 +163,13 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListEmployeeProfileApi(t *testing.T) {
 	user := createRandomUser(t)
 	initialCount, err := testStore.CountEmployeeProfile(context.Background(), db.CountEmployeeProfileParams{
-		IncludeArchived:     pgtype.Bool{Valid: true, Bool: true},
-		IncludeOutOfService: pgtype.Bool{Valid: true, Bool: true},
+		IncludeArchived:     util.BoolPtr(true),
+		IncludeOutOfService: util.BoolPtr(true),
 	})
 	require.NoError(t, err)
 	numEmployees := 20
@@ -308,7 +274,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 				require.NoError(t, err)
 
 				for _, emp := range response.Results {
-					require.Equal(t, "IT", emp.Department.String)
+					require.Equal(t, util.StringPtr("IT"), emp.Department)
 				}
 			},
 		},

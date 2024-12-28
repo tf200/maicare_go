@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	db "maicare_go/db/sqlc"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	db "maicare_go/db/sqlc"
+	"maicare_go/util"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,22 +20,16 @@ func createRandomUser(t *testing.T) *db.CustomUser {
 
 	arg := db.CreateUserParams{
 		Password: hashedPassword,
-		// Username:    util.RandomString(5),
-		Username:    "taha",
-		Email:       util.RandomEmail(),
-		FirstName:   util.RandomString(5),
-		LastName:    util.RandomString(5),
-		IsSuperuser: true,
-		IsStaff:     true,
-		IsActive:    true,
-		ProfilePicture: pgtype.Text{
-			String: util.GetRandomImageURL(),
-			Valid:  true,
-		},
-		PhoneNumber: pgtype.Int8{
-			Int64: 4532485,
-			Valid: true,
-		},
+		Username: util.StringPtr(util.RandomString(9)),
+		// Username:    "taha",
+		Email:          util.RandomEmail(),
+		FirstName:      util.RandomString(5),
+		LastName:       util.RandomString(5),
+		IsSuperuser:    true,
+		IsStaff:        true,
+		IsActive:       true,
+		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
+		PhoneNumber:    util.IntPtr(5862),
 	}
 
 	user, err := testStore.CreateUser(context.Background(), arg)
@@ -69,7 +63,7 @@ func TestLogin(t *testing.T) {
 			name: "OK",
 			buildRequest: func() (*http.Request, error) {
 				loginReq := LoginUserRequest{
-					Username: user.Username,
+					Email:    user.Email,
 					Password: "t2aha000",
 				}
 				data, err := json.Marshal(loginReq)
@@ -98,7 +92,7 @@ func TestLogin(t *testing.T) {
 			name: "UserNotFound",
 			buildRequest: func() (*http.Request, error) {
 				loginReq := LoginUserRequest{
-					Username: "nonexistent",
+					Email:    "nonexistent@email.com",
 					Password: "password123",
 				}
 				data, err := json.Marshal(loginReq)
@@ -121,7 +115,7 @@ func TestLogin(t *testing.T) {
 			name: "WrongPassword",
 			buildRequest: func() (*http.Request, error) {
 				loginReq := LoginUserRequest{
-					Username: user.Username,
+					Email:    user.Email,
 					Password: "wrongpassword",
 				}
 				data, err := json.Marshal(loginReq)

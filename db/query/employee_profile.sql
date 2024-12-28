@@ -46,7 +46,10 @@ WHERE
     END) AND
     (ep.department = sqlc.narg('department') OR sqlc.narg('department') IS NULL) AND
     (ep.position = sqlc.narg('position') OR sqlc.narg('position') IS NULL) AND
-    (ep.location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL)
+    (ep.location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
+    (sqlc.narg('search')::TEXT IS NULL OR 
+        ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR 
+        ep.last_name ILIKE '%' || sqlc.narg('search') || '%')
 ORDER BY ep.created DESC
 LIMIT $1 OFFSET $2;
 
