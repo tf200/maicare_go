@@ -1,4 +1,4 @@
-// auth_routes.go
+
 package api
 
 import "github.com/gin-gonic/gin"
@@ -6,7 +6,5 @@ import "github.com/gin-gonic/gin"
 func (server *Server) setupAuthRoutes(baseRouter *gin.RouterGroup) {
 
 	baseRouter.POST("/token", server.Login)
-	// Add other auth routes
-	// auth.POST("/refresh", server.RefreshToken)
-	// auth.POST("/logout", server.Logout)
+
 }

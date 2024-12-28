@@ -14,16 +14,31 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// LoginUserRequest represents the login request payload
 type LoginUserRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required" example:"user@example.com"`
+	Password string `json:"password" binding:"required" example:"password123"`
 }
 
+// LoginUserResponse represents the login response
 type LoginUserResponse struct {
-	RefreshToken string `json:"refresh"`
-	AccessToken  string `json:"access"`
+	RefreshToken string `json:"refresh" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	AccessToken  string `json:"access" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
+// @Summary Generate authentication tokens
+// @Description Authenticate user and return access and refresh tokens
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body LoginUserRequest true "Login credentials"
+// @Success 200 {object} LoginUserResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /token [post]
 func (server *Server) Login(ctx *gin.Context) {
 	var req LoginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
