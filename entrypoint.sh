@@ -12,8 +12,9 @@ B2_KEY_ID=${B2_KEY_ID}
 B2_BUCKET=${B2_BUCKET}
 EOF
 
-# Optionally, you can echo the contents for debugging (remove in production)
-# cat /app/app.env
+# Echo the contents for debugging
+echo "Generated app.env contents:"
+cat /app/app.env
 
 # Execute the main application
 exec /app/main
