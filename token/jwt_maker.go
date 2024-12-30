@@ -11,25 +11,39 @@ import (
 const minSecretKeySize = 32
 
 type JWTMaker struct {
-	secretKey string
+	accessTokenKey  string
+	refreshTokenKey string
 }
 
-func NewJWTMaker(secretKey string) (Maker, error) {
-	if len(secretKey) < minSecretKeySize {
+func NewJWTMaker(accessTokenKey string, refreshTokenKey string) (Maker, error) {
+	if len(accessTokenKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
-	return &JWTMaker{secretKey}, nil
+	if len(refreshTokenKey) < minSecretKeySize {
+		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
+	}
+	return &JWTMaker{accessTokenKey, refreshTokenKey}, nil
 }
 
-func (maker *JWTMaker) CreateToken(user_id int64, duration time.Duration) (string, *Payload, error) {
-	payload, err := NewPayload(user_id, duration)
+func (maker *JWTMaker) CreateToken(user_id int64, duration time.Duration, tokenType TokenType) (string, *Payload, error) {
+	payload, err := NewPayload(user_id, duration, tokenType)
 	if err != nil {
 		return "", payload, err
 	}
 
+	var secretKey string
+	switch tokenType {
+	case AccessToken:
+		secretKey = maker.accessTokenKey
+	case RefreshToken:
+		secretKey = maker.refreshTokenKey
+	default:
+		return "", payload, fmt.Errorf("unsupported token type: %v", tokenType)
+	}
+
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
-	token, err := jwtToken.SignedString([]byte(maker.secretKey))
+	token, err := jwtToken.SignedString([]byte(secretKey))
 	if err != nil {
 		return "", payload, fmt.Errorf("failed to create token: %w", err)
 	}
@@ -43,7 +57,20 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 		if !ok {
 			return nil, ErrInvalidToken
 		}
-		return []byte(maker.secretKey), nil
+
+		claims, ok := token.Claims.(*Payload)
+		if !ok {
+			return nil, ErrInvalidToken
+		}
+
+		switch claims.TokenType {
+		case AccessToken:
+			return []byte(maker.accessTokenKey), nil
+		case RefreshToken:
+			return []byte(maker.refreshTokenKey), nil
+		default:
+			return nil, fmt.Errorf("unknown token type: %v", claims.TokenType)
+		}
 	}
 
 	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)

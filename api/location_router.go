@@ -8,7 +8,7 @@ func (server *Server) setupLocationRoutes(baseRouter *gin.RouterGroup) {
 	locationGroup := baseRouter.Group("/")
 	locationGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
-		locationGroup.GET("location/", server.ListLocationsApi)
+		locationGroup.GET("location", server.ListLocationsApi) // removed trailing slash for consistency
 	}
 
 }

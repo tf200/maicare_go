@@ -1,4 +1,5 @@
 package api
+
 // @title Maicare API
 // @version 1.0
 // @description This is the Maicare server API documentation.
@@ -28,7 +29,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-
 type Server struct {
 	store      *db.Store
 	router     *gin.Engine
@@ -43,7 +43,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client) (*Server, error) {
 		return nil, fmt.Errorf("cannot load env %v", err)
 	}
 
-	tokenMaker, err := token.NewJWTMaker(config.SecretKey)
+	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create tokenmaker %v", err)
 	}

@@ -1,9 +1,113 @@
 basePath: /
 definitions:
+  api.CreateEmployeeProfileRequest:
+    properties:
+      authentication_phone_number:
+        type: string
+      date_of_birth:
+        type: string
+      email_address:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      home_telephone_number:
+        type: string
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location:
+        type: integer
+      out_of_service:
+        type: boolean
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      work_phone_number:
+        type: string
+    required:
+    - authentication_phone_number
+    - date_of_birth
+    - email_address
+    - employment_number
+    - first_name
+    - gender
+    - home_telephone_number
+    - last_name
+    - location
+    - private_email_address
+    - private_phone_number
+    - work_phone_number
+    type: object
+  api.CreateEmployeeProfileResponse:
+    properties:
+      authentication_phone_number:
+        type: string
+      created:
+        type: string
+      date_of_birth:
+        type: string
+      department:
+        type: string
+      email_address:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
+        type: string
+    type: object
   api.ErrorResponse:
     properties:
       error:
         example: error message
+        type: string
+    type: object
+  api.ListLocationsResponse:
+    properties:
+      address:
+        type: string
+      capacity:
+        type: integer
+      id:
+        type: integer
+      name:
         type: string
     type: object
   api.LoginUserRequest:
@@ -27,6 +131,110 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
+  api.RefreshTokenRequest:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    required:
+    - token
+    type: object
+  api.RefreshTokenResponse:
+    properties:
+      access:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  db.EmployeeProfile:
+    properties:
+      authentication_phone_number:
+        type: string
+      created:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_birth:
+        $ref: '#/definitions/pgtype.Date'
+      department:
+        type: string
+      email_address:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
+        type: string
+    type: object
+  pagination.Response-db_EmployeeProfile:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/db.EmployeeProfile'
+        type: array
+    type: object
+  pgtype.Date:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Timestamptz:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
+    type: object
 info:
   contact:
     email: your-email@domain.com
@@ -39,6 +247,165 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
+  /employee/employees_create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new employee profile with associated user account
+      parameters:
+      - description: Employee profile details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateEmployeeProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.CreateEmployeeProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create employee profile
+      tags:
+      - employees
+  /employee/employees_list:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of employee profiles with optional filters
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Include archived employees
+        in: query
+        name: is_archived
+        type: boolean
+      - description: Include out of service employees
+        in: query
+        name: out_of_service
+        type: boolean
+      - description: Filter by department
+        in: query
+        name: department
+        type: string
+      - description: Filter by position
+        in: query
+        name: position
+        type: string
+      - description: Filter by location ID
+        in: query
+        name: location_id
+        type: integer
+      - description: Search term for employee name or number
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Response-db_EmployeeProfile'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List employee profiles
+      tags:
+      - employees
+  /location:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all locations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.ListLocationsResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all locations
+      tags:
+      - locations
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh access token using refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.RefreshTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - authentication
   /token:
     post:
       consumes:

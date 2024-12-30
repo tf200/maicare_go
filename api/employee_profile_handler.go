@@ -55,6 +55,17 @@ type CreateEmployeeProfileResponse struct {
 	IsArchived                bool      `json:"is_archived"`
 }
 
+// @Summary Create employee profile
+// @Description Create a new employee profile with associated user account
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param request body CreateEmployeeProfileRequest true "Employee profile details"
+// @Success 201 {object} CreateEmployeeProfileResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /employee/employees_create [post]
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	var req CreateEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -146,6 +157,26 @@ type ListEmployeeRequest struct {
 	Search              *string `form:"search"`
 }
 
+
+
+// @Summary List employee profiles
+// @Description Get a paginated list of employee profiles with optional filters
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Param is_archived query bool false "Include archived employees"
+// @Param out_of_service query bool false "Include out of service employees"
+// @Param department query string false "Filter by department"
+// @Param position query string false "Filter by position"
+// @Param location_id query integer false "Filter by location ID"
+// @Param search query string false "Search term for employee name or number"
+// @Success 200 {object} pagination.Response[db.EmployeeProfile]
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /employee/employees_list [get]
 func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 	var req ListEmployeeRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {

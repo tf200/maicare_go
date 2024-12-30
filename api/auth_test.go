@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/token"
 	"maicare_go/util"
 
 	"github.com/stretchr/testify/require"
@@ -124,6 +125,78 @@ func TestLogin(t *testing.T) {
 				}
 
 				req, err := http.NewRequest(http.MethodPost, "/token", bytes.NewReader(data))
+				if err != nil {
+					return nil, err
+				}
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestRefreshTokenHandler(t *testing.T) {
+	token, _, err := testServer.tokenMaker.CreateToken(1, testServer.config.RefreshTokenDuration, token.RefreshToken)
+	require.NoError(t, err)
+	testCases := []struct {
+		name          string
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			buildRequest: func() (*http.Request, error) {
+				RefreshReq := RefreshTokenRequest{
+					Token: token,
+				}
+				data, err := json.Marshal(RefreshReq)
+				if err != nil {
+					return nil, err
+				}
+
+				req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewReader(data))
+				if err != nil {
+					return nil, err
+				}
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response RefreshTokenResponse
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.AccessToken)
+			},
+		},
+		{
+			name: "InvalidToken",
+			buildRequest: func() (*http.Request, error) {
+				RefreshReq := RefreshTokenRequest{
+					Token: "invalid",
+				}
+				data, err := json.Marshal(RefreshReq)
+				if err != nil {
+					return nil, err
+				}
+				req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}

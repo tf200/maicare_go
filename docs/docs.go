@@ -23,6 +23,254 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/employee/employees_create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new employee profile with associated user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Create employee profile",
+                "parameters": [
+                    {
+                        "description": "Employee profile details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateEmployeeProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateEmployeeProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employee/employees_list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of employee profiles with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "List employee profiles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include archived employees",
+                        "name": "is_archived",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include out of service employees",
+                        "name": "out_of_service",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by department",
+                        "name": "department",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by position",
+                        "name": "position",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by location ID",
+                        "name": "location_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for employee name or number",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pagination.Response-db_EmployeeProfile"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/location": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a list of all locations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "locations"
+                ],
+                "summary": "List all locations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.ListLocationsResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh": {
+            "post": {
+                "description": "Refresh access token using refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Refresh access token",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.RefreshTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/token": {
             "post": {
                 "description": "Authenticate user and return access and refresh tokens",
@@ -89,12 +337,164 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.CreateEmployeeProfileRequest": {
+            "type": "object",
+            "required": [
+                "authentication_phone_number",
+                "date_of_birth",
+                "email_address",
+                "employment_number",
+                "first_name",
+                "gender",
+                "home_telephone_number",
+                "last_name",
+                "location",
+                "private_email_address",
+                "private_phone_number",
+                "work_phone_number"
+            ],
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string",
                     "example": "error message"
+                }
+            }
+        },
+        "api.ListLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -125,6 +525,162 @@ const docTemplate = `{
                 "refresh": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "api.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "token"
+            ],
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "api.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "db.EmployeeProfile": {
+            "type": "object",
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "date_of_birth": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "pagination.Response-db_EmployeeProfile": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.EmployeeProfile"
+                    }
+                }
+            }
+        },
+        "pgtype.Date": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pgtype.InfinityModifier": {
+            "type": "integer",
+            "enum": [
+                1,
+                0,
+                -1
+            ],
+            "x-enum-varnames": [
+                "Infinity",
+                "Finite",
+                "NegativeInfinity"
+            ]
+        },
+        "pgtype.Timestamptz": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
                 }
             }
         }

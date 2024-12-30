@@ -17,4 +17,7 @@ server:
 mockdb:
 	mockgen -package mockdb -destination=db/mock/store.go github.com/rokunisan/chat_app/db/sqlc Store
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb rest_post
+swagger:
+	swag init --parseDependency --output ./docs --generalInfo server.go --dir ./api
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post

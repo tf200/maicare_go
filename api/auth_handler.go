@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/token"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -71,7 +72,7 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "error generating access token",
@@ -80,7 +81,7 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, server.config.RefreshTokenDuration)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, server.config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "error generating refresh token",
@@ -117,6 +118,61 @@ func (server *Server) Login(ctx *gin.Context) {
 	res := LoginUserResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// RefreshTokenRequest represents the refresh token request payload
+type RefreshTokenRequest struct {
+	Token string `json:"token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+}
+
+// RefreshTokenResponse represents the refresh token response
+type RefreshTokenResponse struct {
+	AccessToken string `json:"access" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+}
+
+// @Summary Refresh access token
+// @Description Refresh access token using refresh token
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body RefreshTokenRequest true "Refresh token"
+// @Success 200 {object} RefreshTokenResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /refresh [post]
+func (server *Server) RefreshToken(ctx *gin.Context) {
+	var req RefreshTokenRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := server.tokenMaker.VerifyToken(req.Token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid token",
+		})
+		log.Printf("failed to verify refresh token: %v", err)
+		return
+	}
+
+	accessToken, _, err := server.tokenMaker.CreateToken(payload.UserId, server.config.AccessTokenDuration, token.AccessToken)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "error generating access token",
+		})
+		log.Printf("failed to create access token for user : %v", err)
+		return
+	}
+
+	res := RefreshTokenResponse{
+		AccessToken: accessToken,
 	}
 
 	ctx.JSON(http.StatusOK, res)
