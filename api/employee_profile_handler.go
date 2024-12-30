@@ -62,8 +62,7 @@ type CreateEmployeeProfileResponse struct {
 // @Produce json
 // @Param request body CreateEmployeeProfileRequest true "Employee profile details"
 // @Success 201 {object} CreateEmployeeProfileResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400,401,404,409,500 {object} Response[any]
 // @Security BearerAuth
 // @Router /employee/employees_create [post]
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
@@ -157,8 +156,6 @@ type ListEmployeeRequest struct {
 	Search              *string `form:"search"`
 }
 
-
-
 // @Summary List employee profiles
 // @Description Get a paginated list of employee profiles with optional filters
 // @Tags employees
@@ -173,8 +170,7 @@ type ListEmployeeRequest struct {
 // @Param location_id query integer false "Filter by location ID"
 // @Param search query string false "Search term for employee name or number"
 // @Success 200 {object} pagination.Response[db.EmployeeProfile]
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400,401,404,409,500 {object} Response[any]
 // @Security BearerAuth
 // @Router /employee/employees_list [get]
 func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {

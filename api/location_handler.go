@@ -20,8 +20,7 @@ type ListLocationsResponse struct {
 // @Accept json
 // @Produce json
 // @Success 200 {array} ListLocationsResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /location [get]
 func (server *Server) ListLocationsApi(ctx *gin.Context) {
 	locations, err := server.store.ListLocations(ctx)

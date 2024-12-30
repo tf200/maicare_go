@@ -12,10 +12,22 @@ import (
 func CreateRandomUser(t *testing.T) *CustomUser {
 	hashedPassword, err := util.HashPassword("t2aha000")
 	require.NoError(t, err)
+	// arg := CreateUserParams{
+	// 	Password:       hashedPassword,
+	// 	Username:       util.StringPtr(util.RandomString(5)),
+	// 	Email:          util.RandomEmail(),
+	// 	FirstName:      util.RandomString(5),
+	// 	LastName:       util.RandomString(5),
+	// 	IsSuperuser:    true,
+	// 	IsStaff:        true,
+	// 	IsActive:       true,
+	// 	ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
+	// 	PhoneNumber:    util.IntPtr(456),
+	// }
 	arg := CreateUserParams{
 		Password:       hashedPassword,
 		Username:       util.StringPtr(util.RandomString(5)),
-		Email:          util.RandomEmail(),
+		Email:          "testemail@gmail.com",
 		FirstName:      util.RandomString(5),
 		LastName:       util.RandomString(5),
 		IsSuperuser:    true,
