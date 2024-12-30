@@ -72,7 +72,7 @@ func TestLogin(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/token", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -101,7 +101,7 @@ func TestLogin(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/token", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -124,7 +124,7 @@ func TestLogin(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/token", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/auth/token", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -170,7 +170,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -196,7 +196,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 				if err != nil {
 					return nil, err
 				}
-				req, err := http.NewRequest(http.MethodPost, "/refresh", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/auth/refresh", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
