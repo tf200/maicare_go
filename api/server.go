@@ -24,6 +24,7 @@ import (
 	"maicare_go/token"
 	"maicare_go/util"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -70,6 +71,13 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client) (*Server, error) {
 func (server *Server) setupRoutes() {
 	router := gin.Default()
 
+	corsConf := cors.DefaultConfig()
+	corsConf.AllowOrigins = []string{"*"}
+	corsConf.AllowCredentials = true
+	corsConf.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	corsConf.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+
+	router.Use(cors.New(corsConf))
 	// Add swagger endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
