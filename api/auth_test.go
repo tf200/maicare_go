@@ -83,10 +83,12 @@ func TestLogin(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
 				var response LoginUserResponse
-				err := json.NewDecoder(recorder.Body).Decode(&response)
+				res := SuccessResponse(response, "login successful")
+				err := json.NewDecoder(recorder.Body).Decode(&res)
+
 				require.NoError(t, err)
-				require.NotEmpty(t, response.AccessToken)
-				require.NotEmpty(t, response.RefreshToken)
+				require.NotEmpty(t, res.Data.AccessToken)
+				require.NotEmpty(t, res.Data.RefreshToken)
 			},
 		},
 		{
@@ -181,9 +183,10 @@ func TestRefreshTokenHandler(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
 				var response RefreshTokenResponse
-				err := json.NewDecoder(recorder.Body).Decode(&response)
+				res := SuccessResponse(response, "Refresh token")
+				err := json.NewDecoder(recorder.Body).Decode(&res)
 				require.NoError(t, err)
-				require.NotEmpty(t, response.AccessToken)
+				require.NotEmpty(t, res.Data.AccessToken)
 			},
 		},
 		{
