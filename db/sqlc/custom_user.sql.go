@@ -12,68 +12,44 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO custom_user (
     password,
-    username,
-    first_name,
-    last_name,
     email,
-    is_superuser,
-    is_staff,
     is_active,
-    profile_picture,
-    phone_number
+    profile_picture
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+    $1, $2, $3, $4
 )
-RETURNING id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, profile_picture, phone_number
+RETURNING id, password, last_login, email, is_active, date_joined, profile_picture
 `
 
 type CreateUserParams struct {
 	Password       string  `json:"password"`
-	Username       *string `json:"username"`
-	FirstName      string  `json:"first_name"`
-	LastName       string  `json:"last_name"`
 	Email          string  `json:"email"`
-	IsSuperuser    bool    `json:"is_superuser"`
-	IsStaff        bool    `json:"is_staff"`
 	IsActive       bool    `json:"is_active"`
 	ProfilePicture *string `json:"profile_picture"`
-	PhoneNumber    *int64  `json:"phone_number"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomUser, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Password,
-		arg.Username,
-		arg.FirstName,
-		arg.LastName,
 		arg.Email,
-		arg.IsSuperuser,
-		arg.IsStaff,
 		arg.IsActive,
 		arg.ProfilePicture,
-		arg.PhoneNumber,
 	)
 	var i CustomUser
 	err := row.Scan(
 		&i.ID,
 		&i.Password,
 		&i.LastLogin,
-		&i.IsSuperuser,
-		&i.Username,
-		&i.FirstName,
-		&i.LastName,
 		&i.Email,
-		&i.IsStaff,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
-		&i.PhoneNumber,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, profile_picture, phone_number FROM custom_user
+SELECT id, password, last_login, email, is_active, date_joined, profile_picture FROM custom_user
 WHERE email= $1 LIMIT 1
 `
 
@@ -84,22 +60,16 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CustomUser,
 		&i.ID,
 		&i.Password,
 		&i.LastLogin,
-		&i.IsSuperuser,
-		&i.Username,
-		&i.FirstName,
-		&i.LastName,
 		&i.Email,
-		&i.IsStaff,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
-		&i.PhoneNumber,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, profile_picture, phone_number FROM custom_user
+SELECT id, password, last_login, email, is_active, date_joined, profile_picture FROM custom_user
 WHERE id = $1 LIMIT 1
 `
 
@@ -110,42 +80,10 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (CustomUser, error)
 		&i.ID,
 		&i.Password,
 		&i.LastLogin,
-		&i.IsSuperuser,
-		&i.Username,
-		&i.FirstName,
-		&i.LastName,
 		&i.Email,
-		&i.IsStaff,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
-		&i.PhoneNumber,
-	)
-	return i, err
-}
-
-const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, profile_picture, phone_number FROM custom_user
-WHERE username= $1 LIMIT 1
-`
-
-func (q *Queries) GetUserByUsername(ctx context.Context, username *string) (CustomUser, error) {
-	row := q.db.QueryRow(ctx, getUserByUsername, username)
-	var i CustomUser
-	err := row.Scan(
-		&i.ID,
-		&i.Password,
-		&i.LastLogin,
-		&i.IsSuperuser,
-		&i.Username,
-		&i.FirstName,
-		&i.LastName,
-		&i.Email,
-		&i.IsStaff,
-		&i.IsActive,
-		&i.DateJoined,
-		&i.ProfilePicture,
-		&i.PhoneNumber,
 	)
 	return i, err
 }

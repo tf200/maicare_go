@@ -8,7 +8,7 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 	employeeGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
 		employeeGroup.POST("/employees_create/", server.CreateEmployeeProfileApi)
-		employeeGroup.GET("employees_list/", server.ListEmployeeProfileApi)
+		employeeGroup.GET("/employees_list/", server.ListEmployeeProfileApi)
 	}
 	// Add other auth routes
 	// auth.POST("/refresh", server.RefreshToken)

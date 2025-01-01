@@ -21,7 +21,7 @@ type CreateEmployeeProfileRequest struct {
 	LastName                  string  `json:"last_name" binding:"required"`
 	DateOfBirth               *string `json:"date_of_birth" binding:"required"`
 	Gender                    *string `json:"gender" binding:"required"`
-	EmailAddress              *string `json:"email_address" binding:"required,email"`
+	Email                     string  `json:"email_address" binding:"required,email"`
 	PrivateEmailAddress       *string `json:"private_email_address" binding:"required,email"`
 	AuthenticationPhoneNumber *string `json:"authentication_phone_number" binding:"required"`
 	WorkPhoneNumber           *string `json:"work_phone_number" binding:"required"`
@@ -40,7 +40,7 @@ type CreateEmployeeProfileResponse struct {
 	EmployeeNumber            *string   `json:"employee_number"`
 	EmploymentNumber          *string   `json:"employment_number"`
 	PrivateEmailAddress       *string   `json:"private_email_address"`
-	EmailAddress              *string   `json:"email_address"`
+	Email                     string    `json:"email_address"`
 	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
 	PrivatePhoneNumber        *string   `json:"private_phone_number"`
 	WorkPhoneNumber           *string   `json:"work_phone_number"`
@@ -88,13 +88,9 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		ctx,
 		db.CreateEmployeeWithAccountTxParams{
 			CreateUserParams: db.CreateUserParams{
-				Username:    util.StringPtr(util.GenerateUsername(req.FirstName, req.LastName)),
-				Password:    hashedPassword,
-				FirstName:   req.FirstName,
-				LastName:    req.LastName,
-				Email:       *req.EmailAddress,
-				IsActive:    true,
-				PhoneNumber: util.IntPtr(562), // TO DO
+				Password: hashedPassword,
+				Email:    req.Email,
+				IsActive: true,
 			},
 
 			CreateEmployeeParams: db.CreateEmployeeProfileParams{
@@ -106,7 +102,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				IsSubcontractor:           req.IsSubcontractor,
 				DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
 				Gender:                    req.Gender,
-				EmailAddress:              req.EmailAddress,
+				Email:                     req.Email,
 				PrivateEmailAddress:       req.PrivateEmailAddress,
 				AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
 				WorkPhoneNumber:           req.WorkPhoneNumber,
@@ -129,7 +125,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		IsSubcontractor:           employee.Employee.IsSubcontractor,
 		DateOfBirth:               employee.Employee.DateOfBirth.Time,
 		Gender:                    employee.Employee.Gender,
-		EmailAddress:              employee.Employee.EmailAddress,
+		Email:                     employee.Employee.Email,
 		PrivateEmailAddress:       employee.Employee.PrivateEmailAddress,
 		AuthenticationPhoneNumber: employee.Employee.AuthenticationPhoneNumber,
 		WorkPhoneNumber:           employee.Employee.WorkPhoneNumber,

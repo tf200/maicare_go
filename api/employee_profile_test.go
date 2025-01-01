@@ -35,7 +35,7 @@ func createRandomEmployee(t *testing.T) db.EmployeeProfile {
 		EmployeeNumber:            util.StringPtr(util.RandomString(5)),
 		EmploymentNumber:          nil,
 		PrivateEmailAddress:       util.StringPtr(util.RandomString(5)),
-		EmailAddress:              util.StringPtr(util.RandomString(5)),
+		Email:                     util.RandomEmail(),
 		AuthenticationPhoneNumber: util.StringPtr(util.RandomString(5)),
 		PrivatePhoneNumber:        util.StringPtr(util.RandomString(5)),
 		WorkPhoneNumber:           util.StringPtr(util.RandomString(5)),
@@ -62,7 +62,7 @@ func createRandomEmployee(t *testing.T) db.EmployeeProfile {
 	require.Equal(t, arg.EmployeeNumber, employee.EmployeeNumber)
 	require.Equal(t, arg.EmploymentNumber, employee.EmploymentNumber)
 	require.Equal(t, arg.PrivateEmailAddress, employee.PrivateEmailAddress)
-	require.Equal(t, arg.EmailAddress, employee.EmailAddress)
+	require.Equal(t, arg.Email, employee.Email)
 	require.Equal(t, arg.AuthenticationPhoneNumber, employee.AuthenticationPhoneNumber)
 	require.Equal(t, arg.PrivatePhoneNumber, employee.PrivatePhoneNumber)
 	require.Equal(t, arg.WorkPhoneNumber, employee.WorkPhoneNumber)
@@ -108,7 +108,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					LastName:                  util.RandomString(8),
 					DateOfBirth:               util.StringPtr("2000-01-05"),
 					Gender:                    util.StringPtr("male"),
-					EmailAddress:              util.StringPtr(util.RandomEmail()),
+					Email:                     util.RandomEmail(),
 					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
 					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
@@ -137,7 +137,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				require.NotEmpty(t, response.LastName)
 				require.NotEmpty(t, response.DateOfBirth)
 				require.NotEmpty(t, response.Gender)
-				require.NotEmpty(t, response.EmailAddress)
+				require.NotEmpty(t, response.Email)
 				require.NotEmpty(t, response.PrivateEmailAddress)
 				require.NotEmpty(t, response.AuthenticationPhoneNumber)
 				require.NotEmpty(t, response.WorkPhoneNumber)

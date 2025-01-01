@@ -8,7 +8,7 @@ INSERT INTO employee_profile (
     employee_number,
     employment_number,
     private_email_address,
-    email_address,
+    email,
     authentication_phone_number,
     private_phone_number,
     work_phone_number,
@@ -71,3 +71,8 @@ WHERE
     (department = sqlc.narg('department') OR sqlc.narg('department') IS NULL) AND
     (position = sqlc.narg('position') OR sqlc.narg('position') IS NULL) AND
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL);
+
+
+
+
+-- name: GetEmployeeProfileByUserID :one

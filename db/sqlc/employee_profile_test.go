@@ -26,7 +26,7 @@ func createRandomEmployee(t *testing.T) EmployeeProfile {
 		EmployeeNumber:            util.StringPtr(util.RandomString(5)),
 		EmploymentNumber:          util.StringPtr(util.RandomString(5)),
 		PrivateEmailAddress:       util.StringPtr(util.RandomString(5)),
-		EmailAddress:              util.StringPtr(util.RandomString(5)),
+		Email:                     util.RandomEmail(),
 		AuthenticationPhoneNumber: util.StringPtr(util.RandomString(5)),
 		PrivatePhoneNumber:        util.StringPtr(util.RandomString(5)),
 		WorkPhoneNumber:           util.StringPtr(util.RandomString(5)),
@@ -53,7 +53,7 @@ func createRandomEmployee(t *testing.T) EmployeeProfile {
 	require.Equal(t, arg.EmployeeNumber, employee.EmployeeNumber)
 	require.Equal(t, arg.EmploymentNumber, employee.EmploymentNumber)
 	require.Equal(t, arg.PrivateEmailAddress, employee.PrivateEmailAddress)
-	require.Equal(t, arg.EmailAddress, employee.EmailAddress)
+	require.Equal(t, arg.Email, employee.Email)
 	require.Equal(t, arg.AuthenticationPhoneNumber, employee.AuthenticationPhoneNumber)
 	require.Equal(t, arg.PrivatePhoneNumber, employee.PrivatePhoneNumber)
 	require.Equal(t, arg.WorkPhoneNumber, employee.WorkPhoneNumber)

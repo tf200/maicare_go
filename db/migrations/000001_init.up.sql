@@ -30,21 +30,15 @@ CREATE TABLE location (
 
 CREATE TABLE custom_user (
     id BIGSERIAL PRIMARY KEY,
-    password VARCHAR(128) NOT NULL,
+    "password" VARCHAR(128) NOT NULL,
     last_login TIMESTAMPTZ NULL,
-    is_superuser BOOLEAN NOT NULL DEFAULT FALSE,
-    username VARCHAR(150)  NULL UNIQUE,
-    first_name VARCHAR(150) NOT NULL,
-    last_name VARCHAR(150) NOT NULL,
     email VARCHAR(254) NOT NULL,
-    is_staff BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     date_joined TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    profile_picture VARCHAR(100) NULL,
-    phone_number BIGINT NULL
+    profile_picture VARCHAR(100) NULL
+
 );
 
-CREATE INDEX custom_user_username_idx ON custom_user(username);
 CREATE INDEX custom_user_email_idx ON custom_user(email);
 
 
@@ -868,7 +862,7 @@ CREATE TABLE employee_profile (
     employee_number VARCHAR(50) NULL,
     employment_number VARCHAR(50) NULL,
     private_email_address VARCHAR(254) NULL,
-    email_address VARCHAR(254) NULL,
+    email VARCHAR(254) NOT NULL,
     authentication_phone_number VARCHAR(100) NULL,
     private_phone_number VARCHAR(100) NULL,
     work_phone_number VARCHAR(100) NULL,

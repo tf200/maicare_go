@@ -20,32 +20,20 @@ func createRandomUser(t *testing.T) *db.CustomUser {
 	require.NoError(t, err)
 
 	arg := db.CreateUserParams{
-		Password: hashedPassword,
-		Username: util.StringPtr(util.RandomString(9)),
-		// Username:    "taha",
+		Password:       hashedPassword,
 		Email:          util.RandomEmail(),
-		FirstName:      util.RandomString(5),
-		LastName:       util.RandomString(5),
-		IsSuperuser:    true,
-		IsStaff:        true,
 		IsActive:       true,
 		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
-		PhoneNumber:    util.IntPtr(5862),
 	}
 
 	user, err := testStore.CreateUser(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
-	require.Equal(t, arg.Username, user.Username)
 	require.Equal(t, arg.Email, user.Email)
-	require.Equal(t, arg.FirstName, user.FirstName)
-	require.Equal(t, arg.LastName, user.LastName)
-	require.Equal(t, arg.IsSuperuser, user.IsSuperuser)
-	require.Equal(t, arg.IsStaff, user.IsStaff)
+
 	require.Equal(t, arg.IsActive, user.IsActive)
 	require.Equal(t, arg.ProfilePicture, user.ProfilePicture)
-	require.Equal(t, arg.PhoneNumber, user.PhoneNumber)
 
 	require.NotZero(t, user.ID)
 

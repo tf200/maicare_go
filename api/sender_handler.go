@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	db "maicare_go/db/sqlc"
@@ -130,6 +131,7 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 		Search:          req.Search,
 		IncludeArchived: req.IncludeArchived,
 	}
+	log.Printf("arg: %v", arg)
 
 	// Fetch senders from the database
 	senders, err := server.store.ListSenders(ctx, arg)

@@ -364,16 +364,10 @@ type CustomUser struct {
 	ID             int64              `json:"id"`
 	Password       string             `json:"password"`
 	LastLogin      pgtype.Timestamptz `json:"last_login"`
-	IsSuperuser    bool               `json:"is_superuser"`
-	Username       *string            `json:"username"`
-	FirstName      string             `json:"first_name"`
-	LastName       string             `json:"last_name"`
 	Email          string             `json:"email"`
-	IsStaff        bool               `json:"is_staff"`
 	IsActive       bool               `json:"is_active"`
 	DateJoined     pgtype.Timestamptz `json:"date_joined"`
 	ProfilePicture *string            `json:"profile_picture"`
-	PhoneNumber    *int64             `json:"phone_number"`
 }
 
 type DataSharingStatement struct {
@@ -464,7 +458,7 @@ type EmployeeProfile struct {
 	EmployeeNumber            *string            `json:"employee_number"`
 	EmploymentNumber          *string            `json:"employment_number"`
 	PrivateEmailAddress       *string            `json:"private_email_address"`
-	EmailAddress              *string            `json:"email_address"`
+	Email                     string             `json:"email"`
 	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
 	PrivatePhoneNumber        *string            `json:"private_phone_number"`
 	WorkPhoneNumber           *string            `json:"work_phone_number"`

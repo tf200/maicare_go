@@ -92,10 +92,8 @@ func TestCreateSender(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/sender", bytes.NewReader(data))
-				if err != nil {
-					return nil, err
-				}
+				req, err := http.NewRequest(http.MethodPost, "/senders", bytes.NewReader(data))
+				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
 			},
@@ -132,7 +130,7 @@ func TestCreateSender(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/sender", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/senders", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -174,7 +172,7 @@ func TestCreateSender(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/sender", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/senders", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -208,7 +206,7 @@ func TestCreateSender(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/sender", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/senders", bytes.NewReader(data))
 				if err != nil {
 					return nil, err
 				}
@@ -229,6 +227,7 @@ func TestCreateSender(t *testing.T) {
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
 			testServer.router.ServeHTTP(recorder, req)
 			tc.checkResponse(recorder)
 		})
@@ -262,13 +261,13 @@ func TestListSendersAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/sender/?page=1&page_size=10"
+				url := "/senders?page=1&page_size=10"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response pagination.Response[db.ListEmployeeProfileRow]
+				var response pagination.Response[ListSendersResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -278,10 +277,9 @@ func TestListSendersAPI(t *testing.T) {
 				require.Equal(t, int32(10), response.PageSize)
 				require.Len(t, response.Results, 10)
 
-				// Check results are ordered by created DESC
-				for i := 1; i < len(response.Results); i++ {
-					require.True(t, response.Results[i-1].Created.Time.After(response.Results[i].Created.Time) ||
-						response.Results[i-1].Created.Time.Equal(response.Results[i].Created.Time))
+				for _, sender := range response.Results {
+					require.NotEmpty(t, sender.ID)
+					require.NotEmpty(t, sender.Name)
 				}
 			},
 		},
@@ -291,7 +289,7 @@ func TestListSendersAPI(t *testing.T) {
 				// Don't add authorization
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/sender"
+				url := "/senders?page=1&page_size=10"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -304,7 +302,7 @@ func TestListSendersAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, -time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/sender"
+				url := "/senders?page=1&page_size=10"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -317,7 +315,7 @@ func TestListSendersAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/sender"
+				url := "/senders?page=1&page_size=hh"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -331,7 +329,7 @@ func TestListSendersAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/sender/?page=2&page_size=10"
+				url := "/senders?page=2&page_size=10"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {

@@ -61,7 +61,7 @@ INSERT INTO employee_profile (
     employee_number,
     employment_number,
     private_email_address,
-    email_address,
+    email,
     authentication_phone_number,
     private_phone_number,
     work_phone_number,
@@ -76,7 +76,7 @@ INSERT INTO employee_profile (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email_address, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
+) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
 `
 
 type CreateEmployeeProfileParams struct {
@@ -88,7 +88,7 @@ type CreateEmployeeProfileParams struct {
 	EmployeeNumber            *string     `json:"employee_number"`
 	EmploymentNumber          *string     `json:"employment_number"`
 	PrivateEmailAddress       *string     `json:"private_email_address"`
-	EmailAddress              *string     `json:"email_address"`
+	Email                     string      `json:"email"`
 	AuthenticationPhoneNumber *string     `json:"authentication_phone_number"`
 	PrivatePhoneNumber        *string     `json:"private_phone_number"`
 	WorkPhoneNumber           *string     `json:"work_phone_number"`
@@ -112,7 +112,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 		arg.EmployeeNumber,
 		arg.EmploymentNumber,
 		arg.PrivateEmailAddress,
-		arg.EmailAddress,
+		arg.Email,
 		arg.AuthenticationPhoneNumber,
 		arg.PrivatePhoneNumber,
 		arg.WorkPhoneNumber,
@@ -136,7 +136,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 		&i.EmployeeNumber,
 		&i.EmploymentNumber,
 		&i.PrivateEmailAddress,
-		&i.EmailAddress,
+		&i.Email,
 		&i.AuthenticationPhoneNumber,
 		&i.PrivatePhoneNumber,
 		&i.WorkPhoneNumber,
@@ -155,7 +155,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT 
-    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email_address, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
     u.profile_picture as profile_picture
 FROM employee_profile ep
 JOIN custom_user u ON ep.user_id = u.id
@@ -201,7 +201,7 @@ type ListEmployeeProfileRow struct {
 	EmployeeNumber            *string            `json:"employee_number"`
 	EmploymentNumber          *string            `json:"employment_number"`
 	PrivateEmailAddress       *string            `json:"private_email_address"`
-	EmailAddress              *string            `json:"email_address"`
+	Email                     string             `json:"email"`
 	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
 	PrivatePhoneNumber        *string            `json:"private_phone_number"`
 	WorkPhoneNumber           *string            `json:"work_phone_number"`
@@ -245,7 +245,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 			&i.EmployeeNumber,
 			&i.EmploymentNumber,
 			&i.PrivateEmailAddress,
-			&i.EmailAddress,
+			&i.Email,
 			&i.AuthenticationPhoneNumber,
 			&i.PrivatePhoneNumber,
 			&i.WorkPhoneNumber,
