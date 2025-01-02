@@ -28,7 +28,7 @@ type GetEmployeeProfileResponse struct {
 // @Produce json
 // @Success 200 {object} Response[GetEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
-// @Router /employee/profile [get]
+// @Router /employees/profile [get]
 func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
 	log.Printf("Payload: %v", payload)
@@ -103,7 +103,7 @@ type CreateEmployeeProfileResponse struct {
 // @Success 201 {object} CreateEmployeeProfileResponse
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Security BearerAuth
-// @Router /employee/employees_create [post]
+// @Router /employees/employees_create [post]
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	var req CreateEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -207,7 +207,7 @@ type ListEmployeeRequest struct {
 // @Success 200 {object} pagination.Response[db.EmployeeProfile]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Security BearerAuth
-// @Router /employee/employees_list [get]
+// @Router /employees/employees_list [get]
 func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 	var req ListEmployeeRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
