@@ -1,24 +1,8 @@
-CREATE TABLE permission (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL
-);
-
-CREATE INDEX permission_name_idx ON permission(name);
-
-
 CREATE TABLE "group" (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE group_permissions (
-    group_id BIGINT NOT NULL REFERENCES "group"(id) ON DELETE CASCADE,
-    permission_id BIGINT NOT NULL REFERENCES permission(id) ON DELETE CASCADE,
-    PRIMARY KEY (group_id, permission_id)
-);
-
-CREATE INDEX group_id_desc_idx ON "group"(id DESC);
-CREATE INDEX group_name_idx ON "group"(name);
 
 CREATE TABLE location (
     id BIGSERIAL PRIMARY KEY,
@@ -28,20 +12,20 @@ CREATE TABLE location (
 );
 
 -- Table: Roles
-CREATE TABLE Roles (
+CREATE TABLE roles (
     id SERIAL PRIMARY KEY,       
     "name" VARCHAR(255) NOT NULL UNIQUE 
 );
 
 -- Table: Permissions
-CREATE TABLE Permissions (
+CREATE TABLE permissions (
     id SERIAL PRIMARY KEY,       
     "name" VARCHAR(255) NOT NULL,  
     "resource" VARCHAR(255) NOT NULL 
 );
 
 -- Table: Role_Permissions
-CREATE TABLE Role_Permissions (
+CREATE TABLE role_Permissions (
     role_id INT NOT NULL,        -- Role ID
     permission_id INT NOT NULL,  -- Permission ID
     PRIMARY KEY (role_id, permission_id),
@@ -54,7 +38,7 @@ CREATE TABLE custom_user (
     "password" VARCHAR(128) NOT NULL,
     last_login TIMESTAMPTZ NULL,
     email VARCHAR(254) NOT NULL,
-    role_id INT NOT NULL REFERENCES Roles(id) ON DELETE CASCADE,
+    role_id INT NOT NULL REFERENCES Roles(id) ON DELETE CASCADE DEFAULT 1,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     date_joined TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     profile_picture VARCHAR(100) NULL

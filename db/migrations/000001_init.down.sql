@@ -74,3 +74,6 @@ DROP TABLE IF EXISTS "public"."weekly_report_summary" CASCADE;
 DROP TABLE IF EXISTS "public"."youth_care_intake" CASCADE;
 DROP TABLE IF EXISTS "public"."sessions" CASCADE;
 DROP TABLE IF EXISTS "public"."sender_audit" CASCADE;
+DROP TABLE IF EXISTS "public"."roles" CASCADE;
+DROP TABLE IF EXISTS "public"."role_permissions" CASCADE;
+DROP TABLE IF EXISTS "public"."permissions" CASCADE;

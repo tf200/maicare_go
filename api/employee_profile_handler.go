@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -11,6 +12,44 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+// GetEmployeeProfileResponse represents the response for GetEmployeeProfileApi
+type GetEmployeeProfileResponse struct {
+	UserID     int64  `json:"user_id"`
+	EmployeeID int64  `json:"employee_id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	RoleID     int32  `json:"role_id"`
+}
+
+// @Summary Get employee profile by user ID
+// @Description Get employee profile by user ID
+// @Tags employees
+// @Produce json
+// @Success 200 {object} Response[GetEmployeeProfileResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employee/profile [get]
+func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	log.Printf("Payload: %v", payload)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	profile, err := server.store.GetEmployeeProfileByUserID(ctx, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(GetEmployeeProfileResponse{
+		UserID:     profile.UserID,
+		EmployeeID: profile.EmployeeID,
+		FirstName:  profile.FirstName,
+		LastName:   profile.LastName,
+		RoleID:     profile.RoleID,
+	}, "Employee profile retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
 
 type CreateEmployeeProfileRequest struct {
 	EmployeeNumber            *string `json:"employee_number"`

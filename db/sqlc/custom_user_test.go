@@ -29,6 +29,7 @@ func CreateRandomUser(t *testing.T) *CustomUser {
 		Email:          "testemail@gmail.com",
 		IsActive:       true,
 		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
+		RoleID:         1,
 	}
 
 	user, err := testQueries.CreateUser(context.Background(), arg)

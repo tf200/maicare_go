@@ -68,10 +68,10 @@ func GetAuthPayload(ctx *gin.Context) (*token.Payload, error) {
 		return nil, errors.New("authorization payload not found")
 	}
 
-	tokenPayload, ok := payload.(token.Payload)
+	tokenPayload, ok := payload.(*token.Payload)
 	if !ok {
 		return nil, errors.New("invalid authorization payload type")
 	}
 
-	return &tokenPayload, nil
+	return tokenPayload, nil
 }

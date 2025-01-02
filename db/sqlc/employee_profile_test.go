@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomEmployee(t *testing.T) EmployeeProfile {
+func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 	// Create prerequisite records
 	location := CreateRandomLocation(t)
 	user := CreateRandomUser(t)
@@ -71,7 +71,7 @@ func createRandomEmployee(t *testing.T) EmployeeProfile {
 
 	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
 
-	return employee
+	return employee, user
 }
 
 func TestCreateEmployeeProfile(t *testing.T) {
@@ -91,7 +91,7 @@ func TestListEmployeeProfile(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			// Randomly set archived and out of service
-			emp := createRandomEmployee(t)
+			emp, _ := createRandomEmployee(t)
 			employeeCh <- emp
 		}()
 	}
@@ -333,4 +333,16 @@ func TestCountEmployeeProfile(t *testing.T) {
 			tc.checkCount(t, count)
 		})
 	}
+}
+
+func TestGetEmployeeProfileByUserID(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	employee2, err := testQueries.GetEmployeeProfileByUserID(context.Background(), employee.UserID)
+	require.NoError(t, err)
+	require.NotEmpty(t, employee2)
+	require.Equal(t, employee.ID, employee2.EmployeeID)
+	require.Equal(t, employee.UserID, employee2.UserID)
+	require.Equal(t, employee.FirstName, employee2.FirstName)
+	require.Equal(t, employee.LastName, employee2.LastName)
+	require.Equal(t, user.RoleID, employee2.RoleID)
 }

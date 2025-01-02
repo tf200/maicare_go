@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomEmployee(t *testing.T) db.EmployeeProfile {
+func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 	// Create prerequisite records
 	location := createRandomLocation(t)
 	user := createRandomUser(t)
@@ -81,7 +81,7 @@ func createRandomEmployee(t *testing.T) db.EmployeeProfile {
 
 	// Verify foreign key constraints
 	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
-	return employee
+	return employee, user
 }
 
 func TestCreateEmployeeProfileApi(t *testing.T) {
@@ -304,6 +304,55 @@ func TestListEmployeeProfileApi(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestGetEmployeeProfileApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				req, err := http.NewRequest(http.MethodGet, "/employees/profile", nil)
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response Response[GetEmployeeProfileResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+
+				require.Equal(t, employee.ID, response.Data.EmployeeID)
+				require.Equal(t, employee.UserID, response.Data.UserID)
+				require.Equal(t, employee.FirstName, response.Data.FirstName)
+				require.Equal(t, employee.LastName, response.Data.LastName)
+
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
 			request, err := tc.buildRequest()
 			require.NoError(t, err)
 

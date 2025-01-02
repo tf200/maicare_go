@@ -20,4 +20,7 @@ mockdb:
 swagger:
 	swag init --parseDependency --output ./docs --generalInfo server.go --dir ./api
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post
+roles:
+	python3 roles/seed.py
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles

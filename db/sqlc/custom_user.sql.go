@@ -14,17 +14,19 @@ INSERT INTO custom_user (
     password,
     email,
     is_active,
+    role_id,
     profile_picture
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
-RETURNING id, password, last_login, email, is_active, date_joined, profile_picture
+RETURNING id, password, last_login, email, role_id, is_active, date_joined, profile_picture
 `
 
 type CreateUserParams struct {
 	Password       string  `json:"password"`
 	Email          string  `json:"email"`
 	IsActive       bool    `json:"is_active"`
+	RoleID         int32   `json:"role_id"`
 	ProfilePicture *string `json:"profile_picture"`
 }
 
@@ -33,6 +35,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 		arg.Password,
 		arg.Email,
 		arg.IsActive,
+		arg.RoleID,
 		arg.ProfilePicture,
 	)
 	var i CustomUser
@@ -41,6 +44,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
+		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
@@ -49,7 +53,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, password, last_login, email, is_active, date_joined, profile_picture FROM custom_user
+SELECT id, password, last_login, email, role_id, is_active, date_joined, profile_picture FROM custom_user
 WHERE email= $1 LIMIT 1
 `
 
@@ -61,6 +65,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CustomUser,
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
+		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
@@ -69,7 +74,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CustomUser,
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, password, last_login, email, is_active, date_joined, profile_picture FROM custom_user
+SELECT id, password, last_login, email, role_id, is_active, date_joined, profile_picture FROM custom_user
 WHERE id = $1 LIMIT 1
 `
 
@@ -81,6 +86,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (CustomUser, error)
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
+		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,

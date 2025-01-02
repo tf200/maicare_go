@@ -365,6 +365,7 @@ type CustomUser struct {
 	Password       string             `json:"password"`
 	LastLogin      pgtype.Timestamptz `json:"last_login"`
 	Email          string             `json:"email"`
+	RoleID         int32              `json:"role_id"`
 	IsActive       bool               `json:"is_active"`
 	DateJoined     pgtype.Timestamptz `json:"date_joined"`
 	ProfilePicture *string            `json:"profile_picture"`
@@ -543,11 +544,6 @@ type GroupAccess struct {
 	Created    pgtype.Timestamptz `json:"created"`
 }
 
-type GroupPermission struct {
-	GroupID      int64 `json:"group_id"`
-	PermissionID int64 `json:"permission_id"`
-}
-
 type Incident struct {
 	ID                      int64              `json:"id"`
 	EmployeeFullname        string             `json:"employee_fullname"`
@@ -715,8 +711,9 @@ type Observation struct {
 }
 
 type Permission struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID       int32  `json:"id"`
+	Name     string `json:"name"`
+	Resource string `json:"resource"`
 }
 
 type PhysicalState struct {
@@ -804,6 +801,16 @@ type RiskAssessment struct {
 	PdfAttachmentID                pgtype.UUID        `json:"pdf_attachment_id"`
 	Updated                        pgtype.Timestamptz `json:"updated"`
 	Created                        pgtype.Timestamptz `json:"created"`
+}
+
+type Role struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+type RolePermission struct {
+	RoleID       int32 `json:"role_id"`
+	PermissionID int32 `json:"permission_id"`
 }
 
 type SelectedMaturityMatrixAssessment struct {

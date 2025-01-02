@@ -93,6 +93,19 @@ definitions:
       work_phone_number:
         type: string
     type: object
+  api.GetEmployeeProfileResponse:
+    properties:
+      employee_id:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+      role_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
   api.ListLocationsResponse:
     properties:
       address:
@@ -147,6 +160,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetEmployeeProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_LoginUserResponse:
     properties:
       data:
@@ -175,7 +197,7 @@ definitions:
         $ref: '#/definitions/pgtype.Date'
       department:
         type: string
-      email_address:
+      email:
         type: string
       employee_number:
         type: string
@@ -463,6 +485,39 @@ paths:
       security:
       - BearerAuth: []
       summary: List employee profiles
+      tags:
+      - employees
+  /employee/profile:
+    get:
+      description: Get employee profile by user ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetEmployeeProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get employee profile by user ID
       tags:
       - employees
   /location:

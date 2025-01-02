@@ -153,6 +153,39 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 	return i, err
 }
 
+const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
+SELECT 
+    cu.id as user_id,
+    ep.id as employee_id,
+    ep.first_name,
+    ep.last_name,
+    cu.role_id
+FROM custom_user cu
+JOIN employee_profile ep ON ep.user_id = cu.id
+WHERE cu.id = $1
+`
+
+type GetEmployeeProfileByUserIDRow struct {
+	UserID     int64  `json:"user_id"`
+	EmployeeID int64  `json:"employee_id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	RoleID     int32  `json:"role_id"`
+}
+
+func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeProfileByUserID, id)
+	var i GetEmployeeProfileByUserIDRow
+	err := row.Scan(
+		&i.UserID,
+		&i.EmployeeID,
+		&i.FirstName,
+		&i.LastName,
+		&i.RoleID,
+	)
+	return i, err
+}
+
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT 
     ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,

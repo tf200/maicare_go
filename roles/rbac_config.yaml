@@ -1,33 +1,21 @@
 resources:
-  - path: /user
+  - path: /employee/profile
     methods:
       - name: create
       - name: read
       - name: update
       - name: delete
-  - path: /post
-    methods:
-      - name: create
-      - name: read
-      - name: update
-      - name: delete
+  # - path: /post
+  #   methods:
+  #     - name: create
+  #     - name: read
+  #     - name: update
+  #     - name: delete
 
 roles:
   - name: admin
     permissions:
-      - resource: /user
+      - resource: /employee/profile
         methods: [create, read, update, delete]
-      - resource: /post
-        methods: [create, read, update, delete]
-  - name: manager
-    permissions:
-      - resource: /user
-        methods: [create, read]
-      - resource: /post
-        methods: [create, read]
-  - name: viewer
-    permissions:
-      - resource: /user
-        methods: [read]
-      - resource: /post
-        methods: [read]
+      # - resource: /post
+      #   methods: [create, read, update, delete]

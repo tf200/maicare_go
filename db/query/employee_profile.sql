@@ -76,3 +76,12 @@ WHERE
 
 
 -- name: GetEmployeeProfileByUserID :one
+SELECT 
+    cu.id as user_id,
+    ep.id as employee_id,
+    ep.first_name,
+    ep.last_name,
+    cu.role_id
+FROM custom_user cu
+JOIN employee_profile ep ON ep.user_id = cu.id
+WHERE cu.id = $1;
