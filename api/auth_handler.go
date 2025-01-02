@@ -17,8 +17,8 @@ import (
 
 // LoginUserRequest represents the login request payload
 type LoginUserRequest struct {
-	Email    string `json:"email" binding:"required" example:"user@example.com"`
-	Password string `json:"password" binding:"required" example:"password123"`
+	Email    string `json:"email" binding:"required" example:"testemail@gmail.com"`
+	Password string `json:"password" binding:"required" example:"t2aha000"`
 }
 
 // LoginUserResponse represents the login response

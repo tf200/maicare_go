@@ -106,6 +106,15 @@ definitions:
       user_id:
         type: integer
     type: object
+  api.GetPermissionsByRoleIDApiResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      resource:
+        type: string
+    type: object
   api.ListLocationsResponse:
     properties:
       address:
@@ -120,10 +129,10 @@ definitions:
   api.LoginUserRequest:
     properties:
       email:
-        example: user@example.com
+        example: testemail@gmail.com
         type: string
       password:
-        example: password123
+        example: t2aha000
         type: string
     required:
     - email
@@ -182,6 +191,17 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.RefreshTokenResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetPermissionsByRoleIDApiResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetPermissionsByRoleIDApiResponse'
+        type: array
       message:
         type: string
       success:
@@ -563,6 +583,37 @@ paths:
       summary: List all locations
       tags:
       - locations
+  /roles/{role_id}/permissions:
+    get:
+      description: Get all permissions associated with a role ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetPermissionsByRoleIDApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get permissions by role ID
+      tags:
+      - roles
 security:
 - Bearer: []
 securityDefinitions:

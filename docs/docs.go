@@ -448,6 +448,53 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/roles/{role_id}/permissions": {
+            "get": {
+                "description": "Get all permissions associated with a role ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get permissions by role ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_GetPermissionsByRoleIDApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -606,6 +653,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetPermissionsByRoleIDApiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListLocationsResponse": {
             "type": "object",
             "properties": {
@@ -632,11 +693,11 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "user@example.com"
+                    "example": "testemail@gmail.com"
                 },
                 "password": {
                     "type": "string",
-                    "example": "password123"
+                    "example": "t2aha000"
                 }
             }
         },
@@ -719,6 +780,23 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.RefreshTokenResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_GetPermissionsByRoleIDApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GetPermissionsByRoleIDApiResponse"
+                    }
                 },
                 "message": {
                     "type": "string"

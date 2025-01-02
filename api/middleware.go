@@ -23,6 +23,12 @@ var (
 	ErrInvalidAuthFormat = errors.New("invalid authorization header format")
 )
 
+type RoleID int32
+
+const (
+	RoleAdmin RoleID = 1
+)
+
 // AuthMiddleware handles authentication using Bearer tokens
 func AuthMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

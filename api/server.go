@@ -86,6 +86,7 @@ func (server *Server) setupRoutes() {
 
 	// Setup routes from different modules
 	server.setupAuthRoutes(baseRouter)
+	server.setupRolesRoutes(baseRouter)
 	server.setupEmployeeRoutes(baseRouter)
 	server.setupLocationRoutes(baseRouter)
 	server.setupAttachementRoutes(baseRouter)

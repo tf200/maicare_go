@@ -32,3 +32,30 @@ func (q *Queries) CheckRolePermission(ctx context.Context, arg CheckRolePermissi
 	err := row.Scan(&exists)
 	return exists, err
 }
+
+const getPermissionsByRoleID = `-- name: GetPermissionsByRoleID :many
+SELECT p.id, p.name, p.resource
+FROM permissions p
+JOIN role_permissions rp ON p.id = rp.permission_id
+WHERE rp.role_id = $1
+`
+
+func (q *Queries) GetPermissionsByRoleID(ctx context.Context, roleID int32) ([]Permission, error) {
+	rows, err := q.db.Query(ctx, getPermissionsByRoleID, roleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Permission
+	for rows.Next() {
+		var i Permission
+		if err := rows.Scan(&i.ID, &i.Name, &i.Resource); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
