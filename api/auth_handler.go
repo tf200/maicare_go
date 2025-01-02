@@ -33,9 +33,14 @@ type LoginUserResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body LoginUserRequest true "Login credentials"
-// @Success 200 {object} Response[LoginUserResponse]
-// @Failure 400,401,404,409,500 {object} Response[any]
+// @Success 200 {object} Response[LoginUserResponse] "Successfully authenticated"
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - User not found"
+// @Failure 409 {object} Response[any] "Conflict - Account status issue"
+// @Failure 500 {object} Response[any] "Internal server error"
 // @Router /auth/token [post]
+// @Security -
 func (server *Server) Login(ctx *gin.Context) {
 	var req LoginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -126,6 +131,7 @@ type RefreshTokenResponse struct {
 // @Success 200 {object} Response[RefreshTokenResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /auth/refresh [post]
+// @Security -
 func (server *Server) RefreshToken(ctx *gin.Context) {
 	var req RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

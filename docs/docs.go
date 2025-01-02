@@ -25,6 +25,11 @@ const docTemplate = `{
     "paths": {
         "/auth/refresh": {
             "post": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
                 "description": "Refresh access token using refresh token",
                 "consumes": [
                     "application/json"
@@ -89,6 +94,11 @@ const docTemplate = `{
         },
         "/auth/token": {
             "post": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
                 "description": "Authenticate user and return access and refresh tokens",
                 "consumes": [
                     "application/json"
@@ -113,37 +123,37 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Successfully authenticated",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_LoginUserResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad request - Invalid input",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Unauthorized - Invalid credentials",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Not found - User not found",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "Conflict - Account status issue",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -856,11 +866,17 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "Bearer": {
+            "description": "Add 'Bearer ' prefix before your JWT token for authentication",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
         }
-    }
+    },
+    "security": [
+        {
+            "Bearer": []
+        }
+    ]
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it

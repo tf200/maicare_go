@@ -4,17 +4,18 @@ package api
 // @version 1.0
 // @description This is the Maicare server API documentation.
 // @termsOfService http://swagger.io/terms/
-
 // @contact.name API Support
 // @contact.email your-email@domain.com
-
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
 // @BasePath /
-// @securityDefinitions.apikey Bearer
+
+// @securityDefinitions.apiKey Bearer
 // @in header
 // @name Authorization
+// @description Add 'Bearer ' prefix before your JWT token for authentication
+
+// @Security Bearer
 import (
 	"fmt"
 

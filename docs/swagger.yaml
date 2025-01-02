@@ -328,6 +328,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
       summary: Refresh access token
       tags:
       - authentication
@@ -347,29 +349,31 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Successfully authenticated
           schema:
             $ref: '#/definitions/api.Response-api_LoginUserResponse'
         "400":
-          description: Bad Request
+          description: Bad request - Invalid input
           schema:
             $ref: '#/definitions/api.Response-any'
         "401":
-          description: Unauthorized
+          description: Unauthorized - Invalid credentials
           schema:
             $ref: '#/definitions/api.Response-any'
         "404":
-          description: Not Found
+          description: Not found - User not found
           schema:
             $ref: '#/definitions/api.Response-any'
         "409":
-          description: Conflict
+          description: Conflict - Account status issue
           schema:
             $ref: '#/definitions/api.Response-any'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
       summary: Generate authentication tokens
       tags:
       - authentication
@@ -559,8 +563,11 @@ paths:
       summary: List all locations
       tags:
       - locations
+security:
+- Bearer: []
 securityDefinitions:
   Bearer:
+    description: Add 'Bearer ' prefix before your JWT token for authentication
     in: header
     name: Authorization
     type: apiKey

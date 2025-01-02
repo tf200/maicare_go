@@ -36,11 +36,13 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err)) // comment gere
 		return
 	}
+	log.Print("here: ")
 	profile, err := server.store.GetEmployeeProfileByUserID(ctx, payload.UserId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	log.Print("Profile: ", profile)
 	res := SuccessResponse(GetEmployeeProfileResponse{
 		UserID:     profile.UserID,
 		EmployeeID: profile.EmployeeID,
