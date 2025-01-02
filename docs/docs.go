@@ -151,7 +151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/employees_create": {
+        "/employees/employees_create": {
             "post": {
                 "security": [
                     {
@@ -220,7 +220,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/employees_list": {
+        "/employees/employees_list": {
             "get": {
                 "security": [
                     {
@@ -328,7 +328,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee/profile": {
+        "/employees/profile": {
             "get": {
                 "description": "Get employee profile by user ID",
                 "produces": [

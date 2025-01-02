@@ -373,7 +373,7 @@ paths:
       summary: Generate authentication tokens
       tags:
       - authentication
-  /employee/employees_create:
+  /employees/employees_create:
     post:
       consumes:
       - application/json
@@ -417,7 +417,7 @@ paths:
       summary: Create employee profile
       tags:
       - employees
-  /employee/employees_list:
+  /employees/employees_list:
     get:
       consumes:
       - application/json
@@ -487,7 +487,7 @@ paths:
       summary: List employee profiles
       tags:
       - employees
-  /employee/profile:
+  /employees/profile:
     get:
       description: Get employee profile by user ID
       produces:

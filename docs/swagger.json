@@ -144,7 +144,7 @@
                 }
             }
         },
-        "/employee/employees_create": {
+        "/employees/employees_create": {
             "post": {
                 "security": [
                     {
@@ -213,7 +213,7 @@
                 }
             }
         },
-        "/employee/employees_list": {
+        "/employees/employees_list": {
             "get": {
                 "security": [
                     {
@@ -321,7 +321,7 @@
                 }
             }
         },
-        "/employee/profile": {
+        "/employees/profile": {
             "get": {
                 "description": "Get employee profile by user ID",
                 "produces": [
