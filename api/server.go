@@ -60,7 +60,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client) (*Server, error) {
 	docs.SwaggerInfo.Title = "Maicare API"
 	docs.SwaggerInfo.Description = "This is the Maicare server API documentation."
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "https://maicare-go.onrender.com" // This will use your configured server address
+	docs.SwaggerInfo.Host = "maicare-go.onrender.com" // This will use your configured server address
 	docs.SwaggerInfo.BasePath = "/"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 

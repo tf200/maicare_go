@@ -1,0 +1,33 @@
+resources:
+  - path: /user
+    methods:
+      - name: create
+      - name: read
+      - name: update
+      - name: delete
+  - path: /post
+    methods:
+      - name: create
+      - name: read
+      - name: update
+      - name: delete
+
+roles:
+  - name: admin
+    permissions:
+      - resource: /user
+        methods: [create, read, update, delete]
+      - resource: /post
+        methods: [create, read, update, delete]
+  - name: manager
+    permissions:
+      - resource: /user
+        methods: [create, read]
+      - resource: /post
+        methods: [create, read]
+  - name: viewer
+    permissions:
+      - resource: /user
+        methods: [read]
+      - resource: /post
+        methods: [read]

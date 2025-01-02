@@ -27,12 +27,34 @@ CREATE TABLE location (
     capacity INTEGER NULL
 );
 
+-- Table: Roles
+CREATE TABLE Roles (
+    id SERIAL PRIMARY KEY,       
+    "name" VARCHAR(255) NOT NULL UNIQUE 
+);
+
+-- Table: Permissions
+CREATE TABLE Permissions (
+    id SERIAL PRIMARY KEY,       
+    "name" VARCHAR(255) NOT NULL,  
+    "resource" VARCHAR(255) NOT NULL 
+);
+
+-- Table: Role_Permissions
+CREATE TABLE Role_Permissions (
+    role_id INT NOT NULL,        -- Role ID
+    permission_id INT NOT NULL,  -- Permission ID
+    PRIMARY KEY (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES Roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES Permissions(id) ON DELETE CASCADE
+);
 
 CREATE TABLE custom_user (
     id BIGSERIAL PRIMARY KEY,
     "password" VARCHAR(128) NOT NULL,
     last_login TIMESTAMPTZ NULL,
     email VARCHAR(254) NOT NULL,
+    role_id INT NOT NULL REFERENCES Roles(id) ON DELETE CASCADE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     date_joined TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     profile_picture VARCHAR(100) NULL
