@@ -62,13 +62,13 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, int64(user.RoleID), server.config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, int32(user.RoleID), server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, int64(user.RoleID), server.config.RefreshTokenDuration, token.RefreshToken)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, int32(user.RoleID), server.config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

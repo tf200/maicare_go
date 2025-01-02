@@ -33,7 +33,7 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
 	log.Printf("Payload: %v", payload)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err)) // comment gere
 		return
 	}
 	profile, err := server.store.GetEmployeeProfileByUserID(ctx, payload.UserId)
