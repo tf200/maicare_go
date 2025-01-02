@@ -14,6 +14,6 @@ func (t TokenType) String() string {
 }
 
 type Maker interface {
-	CreateToken(user_id int64, duration time.Duration, tokenType TokenType) (string, *Payload, error)
+	CreateToken(user_id int64, role_id int64, duration time.Duration, tokenType TokenType) (string, *Payload, error)
 	VerifyToken(token string) (*Payload, error)
 }

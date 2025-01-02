@@ -143,7 +143,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRefreshTokenHandler(t *testing.T) {
-	token, _, err := testServer.tokenMaker.CreateToken(1, testServer.config.RefreshTokenDuration, token.RefreshToken)
+	token, _, err := testServer.tokenMaker.CreateToken(1, 1, testServer.config.RefreshTokenDuration, token.RefreshToken)
 	require.NoError(t, err)
 	testCases := []struct {
 		name          string

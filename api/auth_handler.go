@@ -62,13 +62,13 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, int64(user.RoleID), server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, server.config.RefreshTokenDuration, token.RefreshToken)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, int64(user.RoleID), server.config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -141,7 +141,7 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(payload.UserId, server.config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := server.tokenMaker.CreateToken(payload.UserId, payload.RoleID, server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "error generating access token",

@@ -75,3 +75,58 @@ func GetAuthPayload(ctx *gin.Context) (*token.Payload, error) {
 
 	return tokenPayload, nil
 }
+
+// func RBACMiddleware() gin.HandlerFunc {
+// 	return func(ctx *gin.Context) {
+// 		payload, err := GetAuthPayload(ctx)
+// 		if err != nil {
+// 			ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+// 			return
+// 		}
+
+// 		// Get the role from the payload
+// 		role := payload.RoleID
+
+// 		// Check if the role is authorized to access the resource
+// 		if !isAuthorized(role, ctx.Request.URL.Path) {
+// 			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse(errors.New("forbidden")))
+// 			return
+// 		}
+
+// 		// Continue if the role is authorized
+// 		ctx.Next()
+// 	}
+// }
+
+// func mapHTTPMethodToPermission(method string) string {
+// 	switch method {
+// 	case "POST":
+// 		return "create"
+// 	case "GET":
+// 		return "read"
+// 	case "PUT", "PATCH":
+// 		return "update"
+// 	case "DELETE":
+// 		return "delete"
+// 	default:
+// 		return "read" // Default to read permission for unknown methods
+// 	}
+// }
+
+// func isAuthorized(roleID int32, resourcePath string, method string, store *db.Store) bool {
+// 	// Convert HTTP method to permission name
+// 	permissionName := mapHTTPMethodToPermission(method)
+
+// 	// Query to check if the role has the required permission for the resource
+// 	hasPermission, err := store.CheckRolePermission(ctx, db.CheckRolePermissionParams{
+// 		RoleID:   roleID,
+// 		Resource: resourcePath,
+// 		Name:     permissionName,
+// 	})
+// 	if err != nil {
+// 		return false
+
+// 	}
+
+// 	return hasPermission
+// }
