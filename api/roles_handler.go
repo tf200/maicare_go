@@ -12,6 +12,7 @@ type GetPermissionsByRoleIDApiResponse struct {
 	ID       int32  `json:"id"`
 	Name     string `json:"name"`
 	Resource string `json:"resource"`
+	Method   string `json:"method"`
 }
 
 // @Summary Get permissions by role ID
@@ -40,6 +41,7 @@ func (server *Server) GetPermissionsByRoleIDApi(ctx *gin.Context) {
 			ID:       p.ID,
 			Name:     p.Name,
 			Resource: p.Resource,
+			Method:   p.Method,
 		})
 	}
 

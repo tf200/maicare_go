@@ -714,6 +714,7 @@ type Permission struct {
 	ID       int32  `json:"id"`
 	Name     string `json:"name"`
 	Resource string `json:"resource"`
+	Method   string `json:"method"`
 }
 
 type PhysicalState struct {

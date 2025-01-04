@@ -21,7 +21,8 @@ CREATE TABLE roles (
 CREATE TABLE permissions (
     id SERIAL PRIMARY KEY,       
     "name" VARCHAR(255) NOT NULL,  
-    "resource" VARCHAR(255) NOT NULL 
+    "resource" VARCHAR(255) NOT NULL,
+    "method" VARCHAR(255) NOT NULL
 );
 
 -- Table: Role_Permissions
@@ -42,7 +43,6 @@ CREATE TABLE custom_user (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     date_joined TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     profile_picture VARCHAR(100) NULL
-
 );
 
 CREATE INDEX custom_user_email_idx ON custom_user(email);

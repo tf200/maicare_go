@@ -15,26 +15,24 @@ SELECT EXISTS (
     FROM role_permissions rp
     JOIN permissions p ON p.id = rp.permission_id
     WHERE rp.role_id = $1
-    AND p.resource = $2
-    AND p.name = $3
-) AS exists
+    AND p.name = $2
+) AS has_permission
 `
 
 type CheckRolePermissionParams struct {
-	RoleID   int32  `json:"role_id"`
-	Resource string `json:"resource"`
-	Name     string `json:"name"`
+	RoleID int32  `json:"role_id"`
+	Name   string `json:"name"`
 }
 
 func (q *Queries) CheckRolePermission(ctx context.Context, arg CheckRolePermissionParams) (bool, error) {
-	row := q.db.QueryRow(ctx, checkRolePermission, arg.RoleID, arg.Resource, arg.Name)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
+	row := q.db.QueryRow(ctx, checkRolePermission, arg.RoleID, arg.Name)
+	var has_permission bool
+	err := row.Scan(&has_permission)
+	return has_permission, err
 }
 
 const getPermissionsByRoleID = `-- name: GetPermissionsByRoleID :many
-SELECT p.id, p.name, p.resource
+SELECT p.id, p.name, p.resource, p.method
 FROM permissions p
 JOIN role_permissions rp ON p.id = rp.permission_id
 WHERE rp.role_id = $1
@@ -49,7 +47,12 @@ func (q *Queries) GetPermissionsByRoleID(ctx context.Context, roleID int32) ([]P
 	var items []Permission
 	for rows.Next() {
 		var i Permission
-		if err := rows.Scan(&i.ID, &i.Name, &i.Resource); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Resource,
+			&i.Method,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

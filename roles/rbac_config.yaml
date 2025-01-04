@@ -1,21 +1,15 @@
-resources:
-  - path: /employee/profile
-    methods:
-      - name: create
-      - name: read
-      - name: update
-      - name: delete
-  # - path: /post
-  #   methods:
-  #     - name: create
-  #     - name: read
-  #     - name: update
-  #     - name: delete
+permissions:
+  - name: EMPLOYEE_CREATE
+    resource: /employee/profile
+    method: [POST]
+  - name: EMPLOYEE_VIEW
+    resource: /employee/profile
+    method: [GET]
 
 roles:
   - name: admin
+    id: 1
+    description: "Admin role"
     permissions:
-      - resource: /employee/profile
-        methods: [create, read, update, delete]
-      # - resource: /post
-      #   methods: [create, read, update, delete]
+      - EMPLOYEE_CREATE
+      - EMPLOYEE_VIEW

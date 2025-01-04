@@ -21,6 +21,6 @@ swagger:
 	swag init --parseDependency --output ./docs --generalInfo server.go --dir ./api
 
 roles:
-	python3 roles/seed.py
+	cd roles && python3 seed.py && cd ..
 
 .PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles
