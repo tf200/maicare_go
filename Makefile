@@ -22,5 +22,7 @@ swagger:
 
 roles:
 	cd roles && python3 seed.py && cd ..
+admin:
+	python3 admin.py
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin

@@ -50,7 +50,7 @@ WHERE
     (sqlc.narg('search')::TEXT IS NULL OR 
         ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR 
         ep.last_name ILIKE '%' || sqlc.narg('search') || '%')
-ORDER BY ep.created DESC
+ORDER BY ep.created_at DESC
 LIMIT $1 OFFSET $2;
 
 
@@ -78,6 +78,7 @@ WHERE
 -- name: GetEmployeeProfileByUserID :one
 SELECT 
     cu.id as user_id,
+    cu.email as email,
     ep.id as employee_id,
     ep.first_name,
     ep.last_name,

@@ -77,7 +77,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 
 	// Verify auto-generated fields
 	require.NotZero(t, employee.ID)
-	require.NotZero(t, employee.Created)
+	require.NotZero(t, employee.CreatedAt)
 
 	// Verify foreign key constraints
 	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
@@ -213,8 +213,8 @@ func TestListEmployeeProfileApi(t *testing.T) {
 
 				// Check results are ordered by created DESC
 				for i := 1; i < len(response.Results); i++ {
-					require.True(t, response.Results[i-1].Created.Time.After(response.Results[i].Created.Time) ||
-						response.Results[i-1].Created.Time.Equal(response.Results[i].Created.Time))
+					require.True(t, response.Results[i-1].CreatedAt.Time.After(response.Results[i].CreatedAt.Time) ||
+						response.Results[i-1].CreatedAt.Time.Equal(response.Results[i].CreatedAt.Time))
 				}
 			},
 		},

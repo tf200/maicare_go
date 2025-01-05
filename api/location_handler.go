@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ListLocationsResponse represents a location in the list
 type ListLocationsResponse struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
@@ -17,11 +18,13 @@ type ListLocationsResponse struct {
 // @Description Get a list of all locations
 // @Tags locations
 // @Security BearerAuth
-// @Accept json
 // @Produce json
-// @Success 200 {array} ListLocationsResponse
-// @Failure 400,401,404,409,500 {object} Response[any]
-// @Router /location [get]
+// @Success 200 {object} Response[[]ListLocationsResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /locations [get]
+// @Router /locations [get]
 func (server *Server) ListLocationsApi(ctx *gin.Context) {
 	locations, err := server.store.ListLocations(ctx)
 
@@ -29,14 +32,16 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := []ListLocationsResponse{}
+	list := []ListLocationsResponse{}
 	for _, location := range locations {
-		res = append(res, ListLocationsResponse{
+		list = append(list, ListLocationsResponse{
 			ID:       location.ID,
 			Name:     location.Name,
 			Address:  location.Address,
 			Capacity: location.Capacity,
 		})
+
+		res := SuccessResponse(list, "Locations retrieved successfully")
 
 		ctx.JSON(http.StatusOK, res)
 	}

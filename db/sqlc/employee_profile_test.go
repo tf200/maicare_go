@@ -67,7 +67,7 @@ func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 	require.Equal(t, arg.IsArchived, employee.IsArchived)
 
 	require.NotZero(t, employee.ID)
-	require.NotZero(t, employee.Created)
+	require.NotZero(t, employee.CreatedAt)
 
 	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
 
@@ -193,8 +193,8 @@ func TestListEmployeeProfile(t *testing.T) {
 			expectedLen: 10,
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for i := 1; i < len(results); i++ {
-					require.True(t, results[i-1].Created.Time.After(results[i].Created.Time) ||
-						results[i-1].Created.Time.Equal(results[i].Created.Time),
+					require.True(t, results[i-1].CreatedAt.Time.After(results[i].CreatedAt.Time) ||
+						results[i-1].CreatedAt.Time.Equal(results[i].CreatedAt.Time),
 						"results should be ordered by created DESC")
 				}
 			},
@@ -230,7 +230,7 @@ func TestListEmployeeProfile(t *testing.T) {
 				require.NotEmpty(t, emp.UserID)
 				require.NotEmpty(t, emp.FirstName)
 				require.NotEmpty(t, emp.LastName)
-				require.NotZero(t, emp.Created)
+				require.NotZero(t, emp.CreatedAt)
 			}
 		})
 	}
@@ -345,4 +345,5 @@ func TestGetEmployeeProfileByUserID(t *testing.T) {
 	require.Equal(t, employee.FirstName, employee2.FirstName)
 	require.Equal(t, employee.LastName, employee2.LastName)
 	require.Equal(t, user.RoleID, employee2.RoleID)
+	require.Equal(t, employee.Email, employee2.Email)
 }

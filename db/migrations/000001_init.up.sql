@@ -874,7 +874,7 @@ CREATE TABLE employee_profile (
     work_phone_number VARCHAR(100) NULL,
     date_of_birth DATE NULL,
     home_telephone_number VARCHAR(100) NULL,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_subcontractor BOOLEAN NULL,
     gender VARCHAR(100) NULL,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,

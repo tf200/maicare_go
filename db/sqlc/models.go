@@ -465,7 +465,7 @@ type EmployeeProfile struct {
 	WorkPhoneNumber           *string            `json:"work_phone_number"`
 	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
 	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
-	Created                   pgtype.Timestamptz `json:"created"`
+	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
 	IsSubcontractor           *bool              `json:"is_subcontractor"`
 	Gender                    *string            `json:"gender"`
 	LocationID                *int64             `json:"location_id"`

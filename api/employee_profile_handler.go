@@ -19,6 +19,7 @@ type GetEmployeeProfileResponse struct {
 	EmployeeID int64  `json:"employee_id"`
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
+	Email      string `json:"email"`
 	RoleID     int32  `json:"role_id"`
 }
 
@@ -48,6 +49,7 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		EmployeeID: profile.EmployeeID,
 		FirstName:  profile.FirstName,
 		LastName:   profile.LastName,
+		Email:      profile.Email,
 		RoleID:     profile.RoleID,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
@@ -175,7 +177,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		OutOfService:              employee.Employee.OutOfService,
 		HasBorrowed:               employee.Employee.HasBorrowed,
 		UserID:                    employee.User.ID,
-		Created:                   employee.Employee.Created.Time,
+		Created:                   employee.Employee.CreatedAt.Time,
 		IsArchived:                employee.Employee.IsArchived,
 		LocationID:                employee.Employee.LocationID,
 	}

@@ -76,7 +76,7 @@ INSERT INTO employee_profile (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
+) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
 `
 
 type CreateEmployeeProfileParams struct {
@@ -142,7 +142,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 		&i.WorkPhoneNumber,
 		&i.DateOfBirth,
 		&i.HomeTelephoneNumber,
-		&i.Created,
+		&i.CreatedAt,
 		&i.IsSubcontractor,
 		&i.Gender,
 		&i.LocationID,
@@ -156,6 +156,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
 SELECT 
     cu.id as user_id,
+    cu.email as email,
     ep.id as employee_id,
     ep.first_name,
     ep.last_name,
@@ -167,6 +168,7 @@ WHERE cu.id = $1
 
 type GetEmployeeProfileByUserIDRow struct {
 	UserID     int64  `json:"user_id"`
+	Email      string `json:"email"`
 	EmployeeID int64  `json:"employee_id"`
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
@@ -178,6 +180,7 @@ func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (Get
 	var i GetEmployeeProfileByUserIDRow
 	err := row.Scan(
 		&i.UserID,
+		&i.Email,
 		&i.EmployeeID,
 		&i.FirstName,
 		&i.LastName,
@@ -188,7 +191,7 @@ func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (Get
 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT 
-    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
     u.profile_picture as profile_picture
 FROM employee_profile ep
 JOIN custom_user u ON ep.user_id = u.id
@@ -209,7 +212,7 @@ WHERE
     ($8::TEXT IS NULL OR 
         ep.first_name ILIKE '%' || $8 || '%' OR 
         ep.last_name ILIKE '%' || $8 || '%')
-ORDER BY ep.created DESC
+ORDER BY ep.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -240,7 +243,7 @@ type ListEmployeeProfileRow struct {
 	WorkPhoneNumber           *string            `json:"work_phone_number"`
 	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
 	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
-	Created                   pgtype.Timestamptz `json:"created"`
+	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
 	IsSubcontractor           *bool              `json:"is_subcontractor"`
 	Gender                    *string            `json:"gender"`
 	LocationID                *int64             `json:"location_id"`
@@ -284,7 +287,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 			&i.WorkPhoneNumber,
 			&i.DateOfBirth,
 			&i.HomeTelephoneNumber,
-			&i.Created,
+			&i.CreatedAt,
 			&i.IsSubcontractor,
 			&i.Gender,
 			&i.LocationID,
