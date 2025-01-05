@@ -388,7 +388,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/location": {
+        "/locations": {
             "get": {
                 "security": [
                     {
@@ -396,9 +396,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Get a list of all locations",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -410,14 +407,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/api.ListLocationsResponse"
-                            }
+                            "$ref": "#/definitions/api.Response-array_api_ListLocationsResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad request",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -428,20 +422,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/api.Response-any"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -636,6 +618,9 @@ const docTemplate = `{
         "api.GetEmployeeProfileResponse": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "employee_id": {
                     "type": "integer"
                 },
@@ -809,13 +794,30 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_api_ListLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListLocationsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "db.EmployeeProfile": {
             "type": "object",
             "properties": {
                 "authentication_phone_number": {
                     "type": "string"
                 },
-                "created": {
+                "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "date_of_birth": {

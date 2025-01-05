@@ -95,6 +95,8 @@ definitions:
     type: object
   api.GetEmployeeProfileResponse:
     properties:
+      email:
+        type: string
       employee_id:
         type: integer
       first_name:
@@ -209,11 +211,22 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_ListLocationsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListLocationsResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   db.EmployeeProfile:
     properties:
       authentication_phone_number:
         type: string
-      created:
+      created_at:
         $ref: '#/definitions/pgtype.Timestamptz'
       date_of_birth:
         $ref: '#/definitions/pgtype.Date'
@@ -546,10 +559,8 @@ paths:
       summary: Get employee profile by user ID
       tags:
       - employees
-  /location:
+  /locations:
     get:
-      consumes:
-      - application/json
       description: Get a list of all locations
       produces:
       - application/json
@@ -557,27 +568,17 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/api.ListLocationsResponse'
-            type: array
+            $ref: '#/definitions/api.Response-array_api_ListLocationsResponse'
         "400":
-          description: Bad Request
+          description: Bad request
           schema:
             $ref: '#/definitions/api.Response-any'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/api.Response-any'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
       security:
