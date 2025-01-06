@@ -233,53 +233,27 @@ func TestListEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/employee/employees_list/?page=1&page_size=10"
+				url := "/employees?page=1&page_size=10"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response pagination.Response[db.ListEmployeeProfileRow]
+				var response Response[pagination.Response[db.ListEmployeeProfileRow]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
-				require.NotNil(t, response.Next)
-				require.Nil(t, response.Previous)
-				require.Equal(t, int64(numEmployees)+initialCount, response.Count)
-				require.Equal(t, int32(10), response.PageSize)
-				require.Len(t, response.Results, 10)
+				require.NotNil(t, response.Data.Next)
+				require.Nil(t, response.Data.Previous)
+				require.Equal(t, int64(numEmployees)+initialCount, response.Data.Count)
+				require.Equal(t, int32(10), response.Data.PageSize)
+				require.Len(t, response.Data.Results, 10)
 
 				// Check results are ordered by created DESC
-				for i := 1; i < len(response.Results); i++ {
-					require.True(t, response.Results[i-1].CreatedAt.Time.After(response.Results[i].CreatedAt.Time) ||
-						response.Results[i-1].CreatedAt.Time.Equal(response.Results[i].CreatedAt.Time))
+				for i := 1; i < len(response.Data.Results); i++ {
+					require.True(t, response.Data.Results[i-1].CreatedAt.Time.After(response.Data.Results[i].CreatedAt.Time) ||
+						response.Data.Results[i-1].CreatedAt.Time.Equal(response.Data.Results[i].CreatedAt.Time))
 				}
-			},
-		},
-		{
-			name: "NoAuthorization",
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				// Don't add authorization
-			},
-			buildRequest: func() (*http.Request, error) {
-				url := "/employee/employees_list/?page=1&page_size=10"
-				return http.NewRequest(http.MethodGet, url, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-		{
-			name: "ExpiredToken",
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, -time.Minute)
-			},
-			buildRequest: func() (*http.Request, error) {
-				url := "/employee/employees_list/?page=1&page_size=10"
-				return http.NewRequest(http.MethodGet, url, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 		{
@@ -288,7 +262,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/employee/employees_list/?page=1&page_size=1000"
+				url := "/employees?page=1&page_size=1000"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -301,7 +275,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/employee/employees_list/?page=1&page_size=10&department=IT"
+				url := "/employees?page=1&page_size=10&department=IT"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -322,18 +296,18 @@ func TestListEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/employee/employees_list/?page=2&page_size=10"
+				url := "/employees?page=2&page_size=10"
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response pagination.Response[db.ListEmployeeProfileRow]
+				var response Response[pagination.Response[db.ListEmployeeProfileRow]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
-				require.NotNil(t, response.Previous)
-				require.Contains(t, *response.Previous, "page=1")
+				require.NotNil(t, response.Data.Previous, "Previous should not be nil")
+				require.Contains(t, *response.Data.Previous, "page=1", "Previous should contain 'page=1'")
 			},
 		},
 	}

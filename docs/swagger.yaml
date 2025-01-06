@@ -50,10 +50,10 @@ definitions:
     properties:
       authentication_phone_number:
         type: string
-      created:
-        type: string
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
       date_of_birth:
-        type: string
+        $ref: '#/definitions/pgtype.Date'
       department:
         type: string
       email:
@@ -117,6 +117,55 @@ definitions:
       name:
         type: string
       resource:
+        type: string
+    type: object
+  api.ListEmployeeResponse:
+    properties:
+      authentication_phone_number:
+        type: string
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_birth:
+        $ref: '#/definitions/pgtype.Date'
+      department:
+        type: string
+      email:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      profile_picture:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
         type: string
     type: object
   api.ListLocationsResponse:
@@ -231,54 +280,16 @@ definitions:
       success:
         type: boolean
     type: object
-  db.EmployeeProfile:
+  api.Response-pagination_Response-api_ListEmployeeResponse:
     properties:
-      authentication_phone_number:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListEmployeeResponse'
+      message:
         type: string
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      date_of_birth:
-        $ref: '#/definitions/pgtype.Date'
-      department:
-        type: string
-      email:
-        type: string
-      employee_number:
-        type: string
-      employment_number:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_borrowed:
+      success:
         type: boolean
-      home_telephone_number:
-        type: string
-      id:
-        type: integer
-      is_archived:
-        type: boolean
-      is_subcontractor:
-        type: boolean
-      last_name:
-        type: string
-      location_id:
-        type: integer
-      out_of_service:
-        type: boolean
-      position:
-        type: string
-      private_email_address:
-        type: string
-      private_phone_number:
-        type: string
-      user_id:
-        type: integer
-      work_phone_number:
-        type: string
     type: object
-  pagination.Response-db_EmployeeProfile:
+  pagination.Response-api_ListEmployeeResponse:
     properties:
       count:
         type: integer
@@ -290,7 +301,7 @@ definitions:
         type: string
       results:
         items:
-          $ref: '#/definitions/db.EmployeeProfile'
+          $ref: '#/definitions/api.ListEmployeeResponse'
         type: array
     type: object
   pgtype.Date:
@@ -422,48 +433,6 @@ paths:
       tags:
       - authentication
   /employees:
-    post:
-      consumes:
-      - application/json
-      description: Create a new employee profile with associated user account
-      parameters:
-      - description: Employee profile details
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateEmployeeProfileRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateEmployeeProfileResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create employee profile
-      tags:
-      - employees
-  /employees/employees_list:
     get:
       consumes:
       - application/json
@@ -507,7 +476,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pagination.Response-db_EmployeeProfile'
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -528,9 +497,48 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      security:
-      - BearerAuth: []
       summary: List employee profiles
+      tags:
+      - employees
+    post:
+      consumes:
+      - application/json
+      description: Create a new employee profile with associated user account
+      parameters:
+      - description: Employee profile details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateEmployeeProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateEmployeeProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create employee profile
       tags:
       - employees
   /employees/profile:

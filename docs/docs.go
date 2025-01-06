@@ -162,76 +162,7 @@ const docTemplate = `{
             }
         },
         "/employees": {
-            "post": {
-                "description": "Create a new employee profile with associated user account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "employees"
-                ],
-                "summary": "Create employee profile",
-                "parameters": [
-                    {
-                        "description": "Employee profile details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CreateEmployeeProfileRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateEmployeeProfileResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/employees/employees_list": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Get a paginated list of employee profiles with optional filters",
                 "consumes": [
                     "application/json"
@@ -297,7 +228,69 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pagination.Response-db_EmployeeProfile"
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new employee profile with associated user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Create employee profile",
+                "parameters": [
+                    {
+                        "description": "Employee profile details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateEmployeeProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateEmployeeProfileResponse"
                         }
                     },
                     "400": {
@@ -548,11 +541,11 @@ const docTemplate = `{
                 "authentication_phone_number": {
                     "type": "string"
                 },
-                "created": {
-                    "type": "string"
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "date_of_birth": {
-                    "type": "string"
+                    "$ref": "#/definitions/pgtype.Date"
                 },
                 "department": {
                     "type": "string"
@@ -649,6 +642,80 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ListEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "date_of_birth": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "work_phone_number": {
                     "type": "string"
                 }
             }
@@ -823,78 +890,21 @@ const docTemplate = `{
                 }
             }
         },
-        "db.EmployeeProfile": {
+        "api.Response-pagination_Response-api_ListEmployeeResponse": {
             "type": "object",
             "properties": {
-                "authentication_phone_number": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListEmployeeResponse"
+                },
+                "message": {
                     "type": "string"
                 },
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "date_of_birth": {
-                    "$ref": "#/definitions/pgtype.Date"
-                },
-                "department": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employee_number": {
-                    "type": "string"
-                },
-                "employment_number": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "has_borrowed": {
+                "success": {
                     "type": "boolean"
-                },
-                "home_telephone_number": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "out_of_service": {
-                    "type": "boolean"
-                },
-                "position": {
-                    "type": "string"
-                },
-                "private_email_address": {
-                    "type": "string"
-                },
-                "private_phone_number": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "work_phone_number": {
-                    "type": "string"
                 }
             }
         },
-        "pagination.Response-db_EmployeeProfile": {
+        "pagination.Response-api_ListEmployeeResponse": {
             "type": "object",
             "properties": {
                 "count": {
@@ -912,7 +922,7 @@ const docTemplate = `{
                 "results": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/db.EmployeeProfile"
+                        "$ref": "#/definitions/api.ListEmployeeResponse"
                     }
                 }
             }

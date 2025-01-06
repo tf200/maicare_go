@@ -6,7 +6,7 @@ permissions:
     resource: /employees
     method: [POST]
   - name: EMPLOYEE_VIEW
-    resource: /employee/profile
+    resource: /employees
     method: [GET]
 
 roles:
