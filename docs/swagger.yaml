@@ -23,6 +23,7 @@ definitions:
       last_name:
         type: string
       location:
+        example: 1
         type: integer
       out_of_service:
         type: boolean
@@ -31,6 +32,7 @@ definitions:
       private_phone_number:
         type: string
       role_id:
+        example: 1
         type: integer
       work_phone_number:
         type: string
@@ -454,8 +456,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      security:
-      - BearerAuth: []
       summary: Create employee profile
       tags:
       - employees

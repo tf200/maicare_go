@@ -163,11 +163,6 @@ const docTemplate = `{
         },
         "/employees": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Create a new employee profile with associated user account",
                 "consumes": [
                     "application/json"
@@ -520,7 +515,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "out_of_service": {
                     "type": "boolean"
@@ -532,7 +528,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "work_phone_number": {
                     "type": "string"

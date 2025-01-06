@@ -59,7 +59,7 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 type CreateEmployeeProfileRequest struct {
 	EmployeeNumber            *string `json:"employee_number"`
 	EmploymentNumber          *string `json:"employment_number"`
-	Location                  *int64  `json:"location"`
+	Location                  *int64  `json:"location" example:"1"`
 	IsSubcontractor           *bool   `json:"is_subcontractor"`
 	FirstName                 string  `json:"first_name" binding:"required"`
 	LastName                  string  `json:"last_name" binding:"required"`
@@ -72,7 +72,7 @@ type CreateEmployeeProfileRequest struct {
 	PrivatePhoneNumber        *string `json:"private_phone_number"`
 	HomeTelephoneNumber       *string `json:"home_telephone_number"`
 	OutOfService              *bool   `json:"out_of_service"`
-	RoleID                    int32   `json:"role_id" binding:"required"`
+	RoleID                    int32   `json:"role_id" binding:"required" example:"1"`
 }
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
@@ -109,7 +109,6 @@ type CreateEmployeeProfileResponse struct {
 // @Param request body CreateEmployeeProfileRequest true "Employee profile details"
 // @Success 201 {object} Response[CreateEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
-// @Security BearerAuth
 // @Router /employees [post]
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	var req CreateEmployeeProfileRequest
