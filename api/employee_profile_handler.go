@@ -65,7 +65,7 @@ type CreateEmployeeProfileRequest struct {
 	LastName                  string  `json:"last_name" binding:"required"`
 	DateOfBirth               *string `json:"date_of_birth"`
 	Gender                    *string `json:"gender"`
-	Email                     string  `json:"email_address" binding:"required,email"`
+	Email                     string  `json:"email" binding:"required,email"`
 	PrivateEmailAddress       *string `json:"private_email_address" binding:"email"`
 	AuthenticationPhoneNumber *string `json:"authentication_phone_number"`
 	WorkPhoneNumber           *string `json:"work_phone_number"`
@@ -73,6 +73,8 @@ type CreateEmployeeProfileRequest struct {
 	HomeTelephoneNumber       *string `json:"home_telephone_number"`
 	OutOfService              *bool   `json:"out_of_service"`
 	RoleID                    int32   `json:"role_id" binding:"required" example:"1"`
+	Position                  *string `json:"position"`
+	Department                *string `json:"department"`
 }
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
@@ -86,7 +88,7 @@ type CreateEmployeeProfileResponse struct {
 	EmployeeNumber            *string   `json:"employee_number"`
 	EmploymentNumber          *string   `json:"employment_number"`
 	PrivateEmailAddress       *string   `json:"private_email_address"`
-	Email                     string    `json:"email_address"`
+	Email                     string    `json:"email"`
 	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
 	PrivatePhoneNumber        *string   `json:"private_phone_number"`
 	WorkPhoneNumber           *string   `json:"work_phone_number"`
@@ -155,6 +157,8 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				PrivatePhoneNumber:        req.PrivatePhoneNumber,
 				HomeTelephoneNumber:       req.HomeTelephoneNumber,
 				OutOfService:              req.OutOfService,
+				Position:                  req.Position,
+				Department:                req.Department,
 			},
 		},
 	)

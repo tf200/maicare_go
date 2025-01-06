@@ -478,7 +478,7 @@ const docTemplate = `{
         "api.CreateEmployeeProfileRequest": {
             "type": "object",
             "required": [
-                "email_address",
+                "email",
                 "first_name",
                 "last_name",
                 "role_id"
@@ -490,7 +490,10 @@ const docTemplate = `{
                 "date_of_birth": {
                     "type": "string"
                 },
-                "email_address": {
+                "department": {
+                    "type": "string"
+                },
+                "email": {
                     "type": "string"
                 },
                 "employee_number": {
@@ -520,6 +523,9 @@ const docTemplate = `{
                 },
                 "out_of_service": {
                     "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
                 },
                 "private_email_address": {
                     "type": "string"
@@ -551,7 +557,7 @@ const docTemplate = `{
                 "department": {
                     "type": "string"
                 },
-                "email_address": {
+                "email": {
                     "type": "string"
                 },
                 "employee_number": {

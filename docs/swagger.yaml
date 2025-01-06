@@ -6,7 +6,9 @@ definitions:
         type: string
       date_of_birth:
         type: string
-      email_address:
+      department:
+        type: string
+      email:
         type: string
       employee_number:
         type: string
@@ -27,6 +29,8 @@ definitions:
         type: integer
       out_of_service:
         type: boolean
+      position:
+        type: string
       private_email_address:
         type: string
       private_phone_number:
@@ -37,7 +41,7 @@ definitions:
       work_phone_number:
         type: string
     required:
-    - email_address
+    - email
     - first_name
     - last_name
     - role_id
@@ -52,7 +56,7 @@ definitions:
         type: string
       department:
         type: string
-      email_address:
+      email:
         type: string
       employee_number:
         type: string
