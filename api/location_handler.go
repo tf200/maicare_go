@@ -17,7 +17,6 @@ type ListLocationsResponse struct {
 // @Summary List all locations
 // @Description Get a list of all locations
 // @Tags locations
-// @Security BearerAuth
 // @Produce json
 // @Success 200 {object} Response[[]ListLocationsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
