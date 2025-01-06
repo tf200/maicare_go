@@ -55,24 +55,27 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// CreateEmployeeProfileRequest represents the request for CreateEmployeeProfileApi
 type CreateEmployeeProfileRequest struct {
 	EmployeeNumber            *string `json:"employee_number"`
-	EmploymentNumber          *string `json:"employment_number" binding:"required"`
-	Location                  *int64  `json:"location" binding:"required"`
+	EmploymentNumber          *string `json:"employment_number"`
+	Location                  *int64  `json:"location"`
 	IsSubcontractor           *bool   `json:"is_subcontractor"`
 	FirstName                 string  `json:"first_name" binding:"required"`
 	LastName                  string  `json:"last_name" binding:"required"`
-	DateOfBirth               *string `json:"date_of_birth" binding:"required"`
-	Gender                    *string `json:"gender" binding:"required"`
+	DateOfBirth               *string `json:"date_of_birth"`
+	Gender                    *string `json:"gender"`
 	Email                     string  `json:"email_address" binding:"required,email"`
-	PrivateEmailAddress       *string `json:"private_email_address" binding:"required,email"`
-	AuthenticationPhoneNumber *string `json:"authentication_phone_number" binding:"required"`
-	WorkPhoneNumber           *string `json:"work_phone_number" binding:"required"`
-	PrivatePhoneNumber        *string `json:"private_phone_number" binding:"required"`
-	HomeTelephoneNumber       *string `json:"home_telephone_number" binding:"required"`
+	PrivateEmailAddress       *string `json:"private_email_address" binding:"email"`
+	AuthenticationPhoneNumber *string `json:"authentication_phone_number"`
+	WorkPhoneNumber           *string `json:"work_phone_number"`
+	PrivatePhoneNumber        *string `json:"private_phone_number"`
+	HomeTelephoneNumber       *string `json:"home_telephone_number"`
 	OutOfService              *bool   `json:"out_of_service"`
+	RoleID                    int32   `json:"role_id" binding:"required"`
 }
 
+// CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
 type CreateEmployeeProfileResponse struct {
 	ID                        int64     `json:"id"`
 	UserID                    int64     `json:"user_id"`
@@ -89,7 +92,7 @@ type CreateEmployeeProfileResponse struct {
 	WorkPhoneNumber           *string   `json:"work_phone_number"`
 	DateOfBirth               time.Time `json:"date_of_birth"`
 	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
-	Created                   time.Time `json:"created"`
+	CreatedAt                 time.Time `json:"created"`
 	IsSubcontractor           *bool     `json:"is_subcontractor"`
 	Gender                    *string   `json:"gender"`
 	LocationID                *int64    `json:"location_id"`
@@ -104,10 +107,10 @@ type CreateEmployeeProfileResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateEmployeeProfileRequest true "Employee profile details"
-// @Success 201 {object} CreateEmployeeProfileResponse
+// @Success 201 {object} Response[CreateEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Security BearerAuth
-// @Router /employees/employees_create [post]
+// @Router /employees [post]
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	var req CreateEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -134,6 +137,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				Password: hashedPassword,
 				Email:    req.Email,
 				IsActive: true,
+				RoleID:   req.RoleID,
 			},
 
 			CreateEmployeeParams: db.CreateEmployeeProfileParams{
@@ -159,7 +163,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := CreateEmployeeProfileResponse{
+	res := SuccessResponse(CreateEmployeeProfileResponse{
 		ID:                        employee.Employee.ID,
 		EmployeeNumber:            employee.Employee.EmployeeNumber,
 		EmploymentNumber:          employee.Employee.EmploymentNumber,
@@ -177,10 +181,10 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		OutOfService:              employee.Employee.OutOfService,
 		HasBorrowed:               employee.Employee.HasBorrowed,
 		UserID:                    employee.User.ID,
-		Created:                   employee.Employee.CreatedAt.Time,
+		CreatedAt:                 employee.Employee.CreatedAt.Time,
 		IsArchived:                employee.Employee.IsArchived,
 		LocationID:                employee.Employee.LocationID,
-	}
+	}, "Employee profile created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
 }

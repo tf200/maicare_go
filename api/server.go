@@ -85,6 +85,7 @@ func (server *Server) setupRoutes() {
 	baseRouter := router.Group("/")
 
 	// Setup routes from different modules
+	server.setupTestRoutes(baseRouter)
 	server.setupAuthRoutes(baseRouter)
 	server.setupRolesRoutes(baseRouter)
 	server.setupEmployeeRoutes(baseRouter)

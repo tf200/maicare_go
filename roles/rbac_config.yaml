@@ -1,6 +1,9 @@
 permissions:
+  - name: TEST_VIEW
+    resource: /test
+    method: [GET]
   - name: EMPLOYEE_CREATE
-    resource: /employee/profile
+    resource: /employees
     method: [POST]
   - name: EMPLOYEE_VIEW
     resource: /employee/profile
@@ -11,5 +14,11 @@ roles:
     id: 1
     description: "Admin role"
     permissions:
+      - TEST_VIEW
       - EMPLOYEE_CREATE
       - EMPLOYEE_VIEW
+  - name: test
+    id: 2
+    description: "Test role"
+    permissions:
+      - EMPLOYEE_CREATE

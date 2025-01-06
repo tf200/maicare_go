@@ -96,7 +96,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute, 1)
 			},
 			buildRequest: func() (*http.Request, error) {
 				Empreq := CreateEmployeeProfileRequest{
@@ -115,11 +115,12 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					OutOfService:              util.BoolPtr(util.RandomBool()),
+					RoleID:                    1,
 				}
 				data, err := json.Marshal(Empreq)
 				require.NoError(t, err)
 
-				req, err := http.NewRequest(http.MethodPost, "/employee/employees_create/", bytes.NewReader(data))
+				req, err := http.NewRequest(http.MethodPost, "/employees", bytes.NewReader(data))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
@@ -127,26 +128,63 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response CreateEmployeeProfileResponse
+				var response Response[CreateEmployeeProfileResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
-				require.Empty(t, response.EmployeeNumber)
-				require.NotEmpty(t, response.EmploymentNumber)
-				require.NotEmpty(t, response.LocationID)
-				require.NotEmpty(t, response.FirstName)
-				require.NotEmpty(t, response.LastName)
-				require.NotEmpty(t, response.DateOfBirth)
-				require.NotEmpty(t, response.Gender)
-				require.NotEmpty(t, response.Email)
-				require.NotEmpty(t, response.PrivateEmailAddress)
-				require.NotEmpty(t, response.AuthenticationPhoneNumber)
-				require.NotEmpty(t, response.WorkPhoneNumber)
-				require.NotEmpty(t, response.PrivatePhoneNumber)
-				require.NotEmpty(t, response.HomeTelephoneNumber)
-				require.NotEmpty(t, response.UserID)
-				require.NotEmpty(t, response.Created)
+				require.Empty(t, response.Data.EmployeeNumber)
+				require.NotEmpty(t, response.Data.EmploymentNumber)
+				require.NotEmpty(t, response.Data.LocationID)
+				require.NotEmpty(t, response.Data.FirstName)
+				require.NotEmpty(t, response.Data.LastName)
+				require.NotEmpty(t, response.Data.DateOfBirth)
+				require.NotEmpty(t, response.Data.Gender)
+				require.NotEmpty(t, response.Data.Email)
+				require.NotEmpty(t, response.Data.PrivateEmailAddress)
+				require.NotEmpty(t, response.Data.AuthenticationPhoneNumber)
+				require.NotEmpty(t, response.Data.WorkPhoneNumber)
+				require.NotEmpty(t, response.Data.PrivatePhoneNumber)
+				require.NotEmpty(t, response.Data.HomeTelephoneNumber)
+				require.NotEmpty(t, response.Data.UserID)
+				require.NotEmpty(t, response.Data.CreatedAt)
 			},
 		},
+		{
+			name: "NoPermission",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute, 2)
+			},
+			buildRequest: func() (*http.Request, error) {
+				Empreq := CreateEmployeeProfileRequest{
+					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
+					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
+					Location:                  util.IntPtr(locationID),
+					IsSubcontractor:           util.BoolPtr(util.RandomBool()),
+					FirstName:                 util.RandomString(6),
+					LastName:                  util.RandomString(8),
+					DateOfBirth:               util.StringPtr("2000-01-05"),
+					Gender:                    util.StringPtr("male"),
+					Email:                     util.RandomEmail(),
+					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
+					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
+					OutOfService:              util.BoolPtr(util.RandomBool()),
+					RoleID:                    1,
+				}
+				data, err := json.Marshal(Empreq)
+				require.NoError(t, err)
+
+				req, err := http.NewRequest(http.MethodPost, "/employees", bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusForbidden, recorder.Code)
+			},
+		},
+
 		// Add more test cases as needed
 	}
 

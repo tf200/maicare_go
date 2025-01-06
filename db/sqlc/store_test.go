@@ -46,6 +46,7 @@ func TestCreateEmployeeWithAccountTx(t *testing.T) {
 		Email:    employeeArg.Email,
 		Password: "password123",
 		IsActive: true,
+		RoleID:   1,
 	}
 
 	// Create transaction params

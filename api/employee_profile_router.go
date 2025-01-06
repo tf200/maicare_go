@@ -7,7 +7,7 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 	employeeGroup := baseRouter.Group("/employees")
 	employeeGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
-		employeeGroup.POST("/employees_create/", server.CreateEmployeeProfileApi)
+		employeeGroup.POST("", RBACMiddleware(server.store, "EMPLOYEE_CREATE"), server.CreateEmployeeProfileApi)
 		employeeGroup.GET("/employees_list/", server.ListEmployeeProfileApi)
 		employeeGroup.GET("/profile", server.GetEmployeeProfileApi)
 	}

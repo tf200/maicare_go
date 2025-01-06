@@ -161,7 +161,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/employees/employees_create": {
+        "/employees": {
             "post": {
                 "security": [
                     {
@@ -194,7 +194,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.CreateEmployeeProfileResponse"
+                            "$ref": "#/definitions/api.Response-api_CreateEmployeeProfileResponse"
                         }
                     },
                     "400": {
@@ -483,18 +483,10 @@ const docTemplate = `{
         "api.CreateEmployeeProfileRequest": {
             "type": "object",
             "required": [
-                "authentication_phone_number",
-                "date_of_birth",
                 "email_address",
-                "employment_number",
                 "first_name",
-                "gender",
-                "home_telephone_number",
                 "last_name",
-                "location",
-                "private_email_address",
-                "private_phone_number",
-                "work_phone_number"
+                "role_id"
             ],
             "properties": {
                 "authentication_phone_number": {
@@ -538,6 +530,9 @@ const docTemplate = `{
                 },
                 "private_phone_number": {
                     "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
                 },
                 "work_phone_number": {
                     "type": "string"
@@ -727,6 +722,20 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateEmployeeProfileResponse"
+                },
                 "message": {
                     "type": "string"
                 },

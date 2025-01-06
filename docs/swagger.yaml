@@ -30,21 +30,15 @@ definitions:
         type: string
       private_phone_number:
         type: string
+      role_id:
+        type: integer
       work_phone_number:
         type: string
     required:
-    - authentication_phone_number
-    - date_of_birth
     - email_address
-    - employment_number
     - first_name
-    - gender
-    - home_telephone_number
     - last_name
-    - location
-    - private_email_address
-    - private_phone_number
-    - work_phone_number
+    - role_id
     type: object
   api.CreateEmployeeProfileResponse:
     properties:
@@ -168,6 +162,15 @@ definitions:
   api.Response-any:
     properties:
       data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateEmployeeProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateEmployeeProfileResponse'
       message:
         type: string
       success:
@@ -412,7 +415,7 @@ paths:
       summary: Generate authentication tokens
       tags:
       - authentication
-  /employees/employees_create:
+  /employees:
     post:
       consumes:
       - application/json
@@ -430,7 +433,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.CreateEmployeeProfileResponse'
+            $ref: '#/definitions/api.Response-api_CreateEmployeeProfileResponse'
         "400":
           description: Bad Request
           schema:
