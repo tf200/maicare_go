@@ -596,8 +596,6 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
-      security:
-      - BearerAuth: []
       summary: List all locations
       tags:
       - locations

@@ -378,11 +378,6 @@ const docTemplate = `{
         },
         "/locations": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Get a list of all locations",
                 "produces": [
                     "application/json"
