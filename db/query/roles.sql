@@ -13,3 +13,8 @@ SELECT p.id, p.name, p.resource, p.method
 FROM permissions p
 JOIN role_permissions rp ON p.id = rp.permission_id
 WHERE rp.role_id = $1;
+
+
+-- name: GetRoleByID :one
+SELECT * FROM roles
+WHERE id = $1 LIMIT 1;

@@ -62,3 +62,15 @@ func (q *Queries) GetPermissionsByRoleID(ctx context.Context, roleID int32) ([]P
 	}
 	return items, nil
 }
+
+const getRoleByID = `-- name: GetRoleByID :one
+SELECT id, name FROM roles
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetRoleByID(ctx context.Context, id int32) (Role, error) {
+	row := q.db.QueryRow(ctx, getRoleByID, id)
+	var i Role
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}

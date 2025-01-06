@@ -30,17 +30,17 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	list := []ListLocationsResponse{}
-	for _, location := range locations {
-		list = append(list, ListLocationsResponse{
+	responseLocations := make([]ListLocationsResponse, len(locations))
+	for i, location := range locations {
+		responseLocations[i] = ListLocationsResponse{
 			ID:       location.ID,
 			Name:     location.Name,
 			Address:  location.Address,
 			Capacity: location.Capacity,
-		})
-
-		res := SuccessResponse(list, "Locations retrieved successfully")
-
-		ctx.JSON(http.StatusOK, res)
+		}
 	}
+
+	res := SuccessResponse(responseLocations, "Locations retrieved successfully")
+
+	ctx.JSON(http.StatusOK, res)
 }

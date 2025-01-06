@@ -7,6 +7,7 @@ func (server *Server) setupRolesRoutes(baseRouter *gin.RouterGroup) {
 	rolesgroup.Use(AuthMiddleware(server.tokenMaker))
 	{
 		rolesgroup.GET("/:role_id/permissions", server.GetPermissionsByRoleIDApi)
+		rolesgroup.GET("/user", server.GetRoleByIDApi)
 
 	}
 

@@ -16,3 +16,10 @@ func TestGetPermissionsByRoleID(t *testing.T) {
 	}
 
 }
+
+func TestGetRoleByID(t *testing.T) {
+	role, err := testQueries.GetRoleByID(context.Background(), 1)
+	require.NoError(t, err)
+	require.NotEmpty(t, role)
+	require.Equal(t, role.ID, int32(1))
+}
