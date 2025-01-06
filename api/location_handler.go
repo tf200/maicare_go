@@ -24,7 +24,6 @@ type ListLocationsResponse struct {
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /locations [get]
-// @Router /locations [get]
 func (server *Server) ListLocationsApi(ctx *gin.Context) {
 	locations, err := server.store.ListLocations(ctx)
 
