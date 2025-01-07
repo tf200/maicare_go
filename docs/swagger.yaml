@@ -119,6 +119,13 @@ definitions:
       resource:
         type: string
     type: object
+  api.GetRoleByIDApiResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   api.ListEmployeeResponse:
     properties:
       authentication_phone_number:
@@ -235,6 +242,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetRoleByIDApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetRoleByIDApiResponse'
       message:
         type: string
       success:
@@ -628,6 +644,31 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get permissions by role ID
+      tags:
+      - roles
+  /roles/user:
+    get:
+      description: Get a role by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetRoleByIDApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get role by ID
       tags:
       - roles
 security:

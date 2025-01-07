@@ -414,6 +414,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/roles/user": {
+            "get": {
+                "description": "Get a role by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get role by ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetRoleByIDApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/roles/{role_id}/permissions": {
             "get": {
                 "description": "Get all permissions associated with a role ID",
@@ -641,6 +679,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetRoleByIDApiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -814,6 +863,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetRoleByIDApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetRoleByIDApiResponse"
                 },
                 "message": {
                     "type": "string"

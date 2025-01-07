@@ -1,10 +1,14 @@
 package api
 
 import (
+	"errors"
+	"fmt"
+	"maicare_go/token"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 // GetPermissionsByRoleIDApiResponse represents a response for GetPermissionsByRoleIDApi
@@ -57,24 +61,38 @@ type GetRoleByIDApiResponse struct {
 // @Summary Get role by ID
 // @Description Get a role by ID
 // @Tags roles
-// @Param role_id path int true "Role ID"
 // @Produce json
 // @Success 200 {object} Response[GetRoleByIDApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/user [get]
-
 func (server *Server) GetRoleByIDApi(ctx *gin.Context) {
-	id := ctx.Param("role_id")
-	roleID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	// Get the auth payload from context
+	value, exists := ctx.Get(authorizationPayloadKey)
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("authorization payload not found")))
 		return
 	}
-	role, err := server.store.GetRoleByID(ctx, int32(roleID))
+
+	// Type assert to get the payload
+	payload, ok := value.(*token.Payload)
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("invalid authorization payload type")))
+		return
+	}
+
+	// Get role ID from payload
+	roleID := payload.RoleID
+
+	role, err := server.store.GetRoleByID(ctx, roleID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("role with ID %d not found", roleID)))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
 	response := GetRoleByIDApiResponse{
 		ID:   role.ID,
 		Name: role.Name,
