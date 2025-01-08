@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	db "maicare_go/db/sqlc"
@@ -125,10 +126,13 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		return
 	}
 
-	parsedDate, err := time.Parse("2006-01-02", *req.DateOfBirth)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	var parsedDate time.Time
+	if req.DateOfBirth != nil {
+		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
 	}
 
 	employee, err := server.store.CreateEmployeeWithAccountTx(
@@ -315,4 +319,212 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 	response := pagination.NewResponse(ctx, req.Request, responseEmployees, totalCount)
 	res := SuccessResponse(response, "Employee profiles retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
+}
+
+// GetEmployeeProfileByIDApiResponse represents the response for GetEmployeeProfileByIDApi
+type GetEmployeeProfileByIDApiResponse struct {
+	ID                        int64              `json:"id"`
+	UserID                    int64              `json:"user_id"`
+	FirstName                 string             `json:"first_name"`
+	LastName                  string             `json:"last_name"`
+	Position                  *string            `json:"position"`
+	Department                *string            `json:"department"`
+	EmployeeNumber            *string            `json:"employee_number"`
+	EmploymentNumber          *string            `json:"employment_number"`
+	PrivateEmailAddress       *string            `json:"private_email_address"`
+	Email                     string             `json:"email"`
+	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string            `json:"private_phone_number"`
+	WorkPhoneNumber           *string            `json:"work_phone_number"`
+	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
+	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
+	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
+	IsSubcontractor           *bool              `json:"is_subcontractor"`
+	Gender                    *string            `json:"gender"`
+	LocationID                *int64             `json:"location_id"`
+	HasBorrowed               bool               `json:"has_borrowed"`
+	OutOfService              *bool              `json:"out_of_service"`
+	IsArchived                bool               `json:"is_archived"`
+	ProfilePicture            *string            `json:"profile_picture"`
+	RoleID                    int32              `json:"role_id"`
+}
+
+// @Summary Get employee profile by  ID
+// @Description Get employee profile by ID
+// @Tags employees
+// @Produce json
+// @Success 200 {object} Response[GetEmployeeProfileByIDApiResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id} [get]
+func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	employee, err := server.store.GetEmployeeProfileByID(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(GetEmployeeProfileByIDApiResponse{
+		ID:                        employee.ID,
+		UserID:                    employee.UserID,
+		FirstName:                 employee.FirstName,
+		LastName:                  employee.LastName,
+		Position:                  employee.Position,
+		Department:                employee.Department,
+		EmployeeNumber:            employee.EmployeeNumber,
+		EmploymentNumber:          employee.EmploymentNumber,
+		PrivateEmailAddress:       employee.PrivateEmailAddress,
+		Email:                     employee.Email,
+		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
+		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
+		WorkPhoneNumber:           employee.WorkPhoneNumber,
+		DateOfBirth:               employee.DateOfBirth,
+		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
+		CreatedAt:                 employee.CreatedAt,
+		IsSubcontractor:           employee.IsSubcontractor,
+		Gender:                    employee.Gender,
+		LocationID:                employee.LocationID,
+		HasBorrowed:               employee.HasBorrowed,
+		OutOfService:              employee.OutOfService,
+		IsArchived:                employee.IsArchived,
+		ProfilePicture:            employee.ProfilePicture,
+		RoleID:                    employee.RoleID,
+	}, "Employee profile retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateEmployeeProfileRequest represents the request for UpdateEmployeeProfileApi
+
+type UpdateEmployeeProfileRequest struct {
+	FirstName                 *string `json:"first_name"`
+	LastName                  *string `json:"last_name"`
+	Position                  *string `json:"position"`
+	Department                *string `json:"department"`
+	EmployeeNumber            *string `json:"employee_number"`
+	EmploymentNumber          *string `json:"employment_number"`
+	PrivateEmailAddress       *string `json:"private_email_address"`
+	Email                     *string `json:"email"`
+	AuthenticationPhoneNumber *string `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string `json:"private_phone_number"`
+	WorkPhoneNumber           *string `json:"work_phone_number"`
+	DateOfBirth               *string `json:"date_of_birth"`
+	HomeTelephoneNumber       *string `json:"home_telephone_number"`
+	IsSubcontractor           *bool   `json:"is_subcontractor"`
+	Gender                    *string `json:"gender"`
+	LocationID                *int64  `json:"location_id"`
+	HasBorrowed               *bool   `json:"has_borrowed"`
+	OutOfService              *bool   `json:"out_of_service"`
+	IsArchived                *bool   `json:"is_archived"`
+}
+
+// UpdateEmployeeProfileResponse represents the response for UpdateEmployeeProfileApi
+
+type UpdateEmployeeProfileResponse struct {
+	ID                        int64              `json:"id"`
+	UserID                    int64              `json:"user_id"`
+	FirstName                 string             `json:"first_name"`
+	LastName                  string             `json:"last_name"`
+	Position                  *string            `json:"position"`
+	Department                *string            `json:"department"`
+	EmployeeNumber            *string            `json:"employee_number"`
+	EmploymentNumber          *string            `json:"employment_number"`
+	PrivateEmailAddress       *string            `json:"private_email_address"`
+	Email                     string             `json:"email"`
+	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string            `json:"private_phone_number"`
+	WorkPhoneNumber           *string            `json:"work_phone_number"`
+	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
+	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
+	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
+	IsSubcontractor           *bool              `json:"is_subcontractor"`
+	Gender                    *string            `json:"gender"`
+	LocationID                *int64             `json:"location_id"`
+	HasBorrowed               bool               `json:"has_borrowed"`
+	OutOfService              *bool              `json:"out_of_service"`
+	IsArchived                bool               `json:"is_archived"`
+}
+
+// @Summary Update employee profile by ID
+// @Description Update employee profile by ID
+// @Tags employees
+// @Produce json
+// @Success 200 {object} Response[UpdateEmployeeProfileResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id} [put]
+func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req UpdateEmployeeProfileRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var parsedDate time.Time
+	if req.DateOfBirth != nil {
+		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+	}
+	employee, err := server.store.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
+		ID:                        employeeID,
+		FirstName:                 req.FirstName,
+		LastName:                  req.LastName,
+		Position:                  req.Position,
+		Department:                req.Department,
+		EmployeeNumber:            req.EmployeeNumber,
+		EmploymentNumber:          req.EmploymentNumber,
+		PrivateEmailAddress:       req.PrivateEmailAddress,
+		Email:                     req.Email,
+		AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
+		PrivatePhoneNumber:        req.PrivatePhoneNumber,
+		WorkPhoneNumber:           req.WorkPhoneNumber,
+		DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
+		HomeTelephoneNumber:       req.HomeTelephoneNumber,
+		IsSubcontractor:           req.IsSubcontractor,
+		Gender:                    req.Gender,
+		LocationID:                req.LocationID,
+		HasBorrowed:               req.HasBorrowed,
+		OutOfService:              req.OutOfService,
+		IsArchived:                req.IsArchived,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(UpdateEmployeeProfileResponse{
+		ID:                        employee.ID,
+		UserID:                    employee.UserID,
+		FirstName:                 employee.FirstName,
+		LastName:                  employee.LastName,
+		Position:                  employee.Position,
+		Department:                employee.Department,
+		EmployeeNumber:            employee.EmployeeNumber,
+		EmploymentNumber:          employee.EmploymentNumber,
+		PrivateEmailAddress:       employee.PrivateEmailAddress,
+		Email:                     employee.Email,
+		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
+		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
+		WorkPhoneNumber:           employee.WorkPhoneNumber,
+		DateOfBirth:               employee.DateOfBirth,
+		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
+		CreatedAt:                 employee.CreatedAt,
+		IsSubcontractor:           employee.IsSubcontractor,
+		Gender:                    employee.Gender,
+		LocationID:                employee.LocationID,
+		HasBorrowed:               employee.HasBorrowed,
+		OutOfService:              employee.OutOfService,
+		IsArchived:                employee.IsArchived,
+	}, "Employee profile updated successfully")
+	ctx.JSON(http.StatusOK, res)
+
 }

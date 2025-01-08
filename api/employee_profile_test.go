@@ -326,7 +326,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 	}
 }
 
-func TestGetEmployeeProfileApi(t *testing.T) {
+func TestGetEmployeeProfileByID(t *testing.T) {
 	employee, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
@@ -340,7 +340,8 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req, err := http.NewRequest(http.MethodGet, "/employees/profile", nil)
+				url := fmt.Sprintf("/employees/%d", employee.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
@@ -348,14 +349,70 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[GetEmployeeProfileResponse]
+				var response Response[GetEmployeeProfileByIDApiResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
-				require.Equal(t, employee.ID, response.Data.EmployeeID)
+				require.Equal(t, employee.ID, response.Data.ID)
 				require.Equal(t, employee.UserID, response.Data.UserID)
 				require.Equal(t, employee.FirstName, response.Data.FirstName)
 				require.Equal(t, employee.LastName, response.Data.LastName)
+
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateEmployeeProfile(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				updatereq := UpdateEmployeeProfileRequest{
+					EmployeeNumber:   nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
+					EmploymentNumber: util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999)))}
+				data, err := json.Marshal(updatereq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/employees/%d", employee.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response Response[UpdateEmployeeProfileResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+
+				require.Equal(t, employee.ID, response.Data.ID)
+				require.Equal(t, employee.UserID, response.Data.UserID)
+				require.Equal(t, employee.FirstName, response.Data.FirstName)
+				require.Equal(t, employee.LastName, response.Data.LastName)
+				require.NotEqual(t, employee.EmploymentNumber, response.Data.EmploymentNumber)
 
 			},
 		},

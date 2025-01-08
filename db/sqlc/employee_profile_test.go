@@ -347,3 +347,34 @@ func TestGetEmployeeProfileByUserID(t *testing.T) {
 	require.Equal(t, user.RoleID, employee2.RoleID)
 	require.Equal(t, employee.Email, employee2.Email)
 }
+
+func TestGetEmployeeProfileByID(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	employee2, err := testQueries.GetEmployeeProfileByID(context.Background(), employee.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, employee2)
+	require.Equal(t, employee.ID, employee2.ID)
+	require.Equal(t, employee.UserID, employee2.UserID)
+	require.Equal(t, employee.FirstName, employee2.FirstName)
+	require.Equal(t, employee.LastName, employee2.LastName)
+	require.Equal(t, user.RoleID, employee2.RoleID)
+	require.Equal(t, employee.Email, employee2.Email)
+}
+
+func TestUpdateEmployeeProfile(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+
+	arg := UpdateEmployeeProfileParams{
+		ID:          employee.ID,
+		FirstName:   util.StringPtr(util.RandomString(5)),
+		DateOfBirth: pgtype.Date{Time: time.Date(1958, 1, 15, 0, 0, 0, 0, time.UTC), Valid: true},
+	}
+	updatedEmployee, err := testQueries.UpdateEmployeeProfile(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedEmployee)
+	require.NotEqual(t, employee.FirstName, updatedEmployee.FirstName)
+	require.NotEqual(t, employee.DateOfBirth, updatedEmployee.DateOfBirth)
+	require.Equal(t, employee.ID, updatedEmployee.ID)
+	require.Equal(t, employee.UserID, updatedEmployee.UserID)
+	require.Equal(t, employee.LastName, updatedEmployee.LastName)
+}

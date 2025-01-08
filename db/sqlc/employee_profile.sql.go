@@ -153,6 +153,75 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 	return i, err
 }
 
+const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
+SELECT 
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
+    cu.profile_picture as profile_picture,
+    cu.role_id
+FROM employee_profile ep
+JOIN custom_user cu ON ep.user_id = cu.id
+WHERE ep.id = $1
+`
+
+type GetEmployeeProfileByIDRow struct {
+	ID                        int64              `json:"id"`
+	UserID                    int64              `json:"user_id"`
+	FirstName                 string             `json:"first_name"`
+	LastName                  string             `json:"last_name"`
+	Position                  *string            `json:"position"`
+	Department                *string            `json:"department"`
+	EmployeeNumber            *string            `json:"employee_number"`
+	EmploymentNumber          *string            `json:"employment_number"`
+	PrivateEmailAddress       *string            `json:"private_email_address"`
+	Email                     string             `json:"email"`
+	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string            `json:"private_phone_number"`
+	WorkPhoneNumber           *string            `json:"work_phone_number"`
+	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
+	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
+	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
+	IsSubcontractor           *bool              `json:"is_subcontractor"`
+	Gender                    *string            `json:"gender"`
+	LocationID                *int64             `json:"location_id"`
+	HasBorrowed               bool               `json:"has_borrowed"`
+	OutOfService              *bool              `json:"out_of_service"`
+	IsArchived                bool               `json:"is_archived"`
+	ProfilePicture            *string            `json:"profile_picture"`
+	RoleID                    int32              `json:"role_id"`
+}
+
+func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmployeeProfileByIDRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeProfileByID, id)
+	var i GetEmployeeProfileByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Position,
+		&i.Department,
+		&i.EmployeeNumber,
+		&i.EmploymentNumber,
+		&i.PrivateEmailAddress,
+		&i.Email,
+		&i.AuthenticationPhoneNumber,
+		&i.PrivatePhoneNumber,
+		&i.WorkPhoneNumber,
+		&i.DateOfBirth,
+		&i.HomeTelephoneNumber,
+		&i.CreatedAt,
+		&i.IsSubcontractor,
+		&i.Gender,
+		&i.LocationID,
+		&i.HasBorrowed,
+		&i.OutOfService,
+		&i.IsArchived,
+		&i.ProfilePicture,
+		&i.RoleID,
+	)
+	return i, err
+}
+
 const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
 SELECT 
     cu.id as user_id,
@@ -304,4 +373,104 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateEmployeeProfile = `-- name: UpdateEmployeeProfile :one
+UPDATE employee_profile
+SET
+    first_name = COALESCE($1, first_name),
+    last_name = COALESCE($2, last_name),
+    position = COALESCE($3, position),
+    department = COALESCE($4, department),
+    employee_number = COALESCE($5, employee_number),
+    employment_number = COALESCE($6, employment_number),
+    private_email_address = COALESCE($7, private_email_address),
+    email = COALESCE($8, email),
+    authentication_phone_number = COALESCE($9, authentication_phone_number),
+    private_phone_number = COALESCE($10, private_phone_number),
+    work_phone_number = COALESCE($11, work_phone_number),
+    date_of_birth = COALESCE($12, date_of_birth),
+    home_telephone_number = COALESCE($13, home_telephone_number),
+    is_subcontractor = COALESCE($14, is_subcontractor),
+    gender = COALESCE($15, gender),
+    location_id = COALESCE($16, location_id),
+    has_borrowed = COALESCE($17, has_borrowed),
+    out_of_service = COALESCE($18, out_of_service),
+    is_archived = COALESCE($19, is_archived)
+WHERE id = $20
+RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
+`
+
+type UpdateEmployeeProfileParams struct {
+	FirstName                 *string     `json:"first_name"`
+	LastName                  *string     `json:"last_name"`
+	Position                  *string     `json:"position"`
+	Department                *string     `json:"department"`
+	EmployeeNumber            *string     `json:"employee_number"`
+	EmploymentNumber          *string     `json:"employment_number"`
+	PrivateEmailAddress       *string     `json:"private_email_address"`
+	Email                     *string     `json:"email"`
+	AuthenticationPhoneNumber *string     `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string     `json:"private_phone_number"`
+	WorkPhoneNumber           *string     `json:"work_phone_number"`
+	DateOfBirth               pgtype.Date `json:"date_of_birth"`
+	HomeTelephoneNumber       *string     `json:"home_telephone_number"`
+	IsSubcontractor           *bool       `json:"is_subcontractor"`
+	Gender                    *string     `json:"gender"`
+	LocationID                *int64      `json:"location_id"`
+	HasBorrowed               *bool       `json:"has_borrowed"`
+	OutOfService              *bool       `json:"out_of_service"`
+	IsArchived                *bool       `json:"is_archived"`
+	ID                        int64       `json:"id"`
+}
+
+func (q *Queries) UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error) {
+	row := q.db.QueryRow(ctx, updateEmployeeProfile,
+		arg.FirstName,
+		arg.LastName,
+		arg.Position,
+		arg.Department,
+		arg.EmployeeNumber,
+		arg.EmploymentNumber,
+		arg.PrivateEmailAddress,
+		arg.Email,
+		arg.AuthenticationPhoneNumber,
+		arg.PrivatePhoneNumber,
+		arg.WorkPhoneNumber,
+		arg.DateOfBirth,
+		arg.HomeTelephoneNumber,
+		arg.IsSubcontractor,
+		arg.Gender,
+		arg.LocationID,
+		arg.HasBorrowed,
+		arg.OutOfService,
+		arg.IsArchived,
+		arg.ID,
+	)
+	var i EmployeeProfile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Position,
+		&i.Department,
+		&i.EmployeeNumber,
+		&i.EmploymentNumber,
+		&i.PrivateEmailAddress,
+		&i.Email,
+		&i.AuthenticationPhoneNumber,
+		&i.PrivatePhoneNumber,
+		&i.WorkPhoneNumber,
+		&i.DateOfBirth,
+		&i.HomeTelephoneNumber,
+		&i.CreatedAt,
+		&i.IsSubcontractor,
+		&i.Gender,
+		&i.LocationID,
+		&i.HasBorrowed,
+		&i.OutOfService,
+		&i.IsArchived,
+	)
+	return i, err
 }

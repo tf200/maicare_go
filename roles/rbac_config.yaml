@@ -8,6 +8,9 @@ permissions:
   - name: EMPLOYEE_VIEW
     resource: /employees
     method: [GET]
+  - name: EMPLOYEE_UPDATE
+    resource: /employees
+    method: [PUT]
 
 roles:
   - name: admin
@@ -17,6 +20,7 @@ roles:
       - TEST_VIEW
       - EMPLOYEE_CREATE
       - EMPLOYEE_VIEW
+      - EMPLOYEE_UPDATE
   - name: test
     id: 2
     description: "Test role"

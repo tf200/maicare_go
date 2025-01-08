@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/token"
@@ -79,11 +80,14 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
+	clientIP := ctx.ClientIP()
+	userAgent := ctx.Request.UserAgent()
+
 	_, err = server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           pgtype.UUID{Bytes: refreshPayload.ID, Valid: true},
+		ID:           refreshPayload.ID,
 		RefreshToken: refreshToken,
-		UserAgent:    "",
-		ClientIp:     "",
+		UserAgent:    userAgent,
+		ClientIp:     clientIP,
 		IsBlocked:    false,
 		ExpiresAt:    pgtype.Timestamptz{Time: refreshPayload.ExpiresAt, Valid: true},
 		CreatedAt:    pgtype.Timestamptz{Time: refreshPayload.IssuedAt, Valid: true},
@@ -144,6 +148,28 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error": "invalid token",
 		})
+		return
+	}
+
+	session, err := server.store.GetSessionByID(ctx, payload.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+	if session.IsBlocked {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("blocked session")))
+		return
+	}
+
+	if session.RefreshToken != req.Token {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("mismatched session token")))
+		return
+	}
+	if time.Now().After(session.ExpiresAt.Time) {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("expired session")))
 		return
 	}
 

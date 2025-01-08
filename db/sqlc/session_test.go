@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateSession(t *testing.T) {
+func createRandomSession(t *testing.T) Session {
 	user := CreateRandomUser(t)
 
 	uuid, err := uuid.NewRandom()
@@ -22,10 +22,7 @@ func TestCreateSession(t *testing.T) {
 	expireTime := now.Add(24 * time.Hour) // Session expires in 24 hours
 
 	arg := CreateSessionParams{
-		ID: pgtype.UUID{
-			Bytes: uuid,
-			Valid: true,
-		},
+		ID:           uuid,
 		RefreshToken: util.RandomString(16),
 		UserAgent:    util.RandomString(5),
 		ClientIp:     util.RandomString(5),
@@ -60,4 +57,18 @@ func TestCreateSession(t *testing.T) {
 
 	// Verify session was created with correct user
 	require.Equal(t, user.ID, session.UserID)
+	return session
+}
+
+func TestCreateSession(t *testing.T) {
+	createRandomSession(t)
+}
+
+func TestGetSessionByID(t *testing.T) {
+	session1 := createRandomSession(t)
+	session2, err := testQueries.GetSessionByID(context.Background(), session1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, session2)
+	require.Equal(t, session1.ID, session2.ID)
+
 }

@@ -59,7 +59,7 @@ func (server *Server) UploadHandler(ctx *gin.Context) {
 	res := UploadHandlerResponse{
 		Message:   "File uploaded successfully",
 		FileURL:   fileURL,
-		FileID:    string(attachment.Uuid.Bytes[:]),
+		FileID:    attachment.Uuid.String(),
 		CreatedAt: attachment.Created.Time.Format("2006-01-02 15:04:05"),
 	}
 

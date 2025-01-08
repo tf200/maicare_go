@@ -5,6 +5,7 @@
 package db
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -53,7 +54,7 @@ type Assignment struct {
 }
 
 type AttachmentFile struct {
-	Uuid    pgtype.UUID        `json:"uuid"`
+	Uuid    uuid.UUID          `json:"uuid"`
 	Name    string             `json:"name"`
 	File    string             `json:"file"`
 	Size    int32              `json:"size"`
@@ -739,7 +740,7 @@ type ProgressReport struct {
 }
 
 type ProtectedEmail struct {
-	Uuid      pgtype.UUID        `json:"uuid"`
+	Uuid      uuid.UUID          `json:"uuid"`
 	Email     string             `json:"email"`
 	Subject   *string            `json:"subject"`
 	Content   *string            `json:"content"`
@@ -855,7 +856,7 @@ type SenderContactRelation struct {
 }
 
 type Session struct {
-	ID           pgtype.UUID        `json:"id"`
+	ID           uuid.UUID          `json:"id"`
 	RefreshToken string             `json:"refresh_token"`
 	UserAgent    string             `json:"user_agent"`
 	ClientIp     string             `json:"client_ip"`
@@ -866,7 +867,7 @@ type Session struct {
 }
 
 type TemporaryFile struct {
-	ID         pgtype.UUID        `json:"id"`
+	ID         uuid.UUID          `json:"id"`
 	File       string             `json:"file"`
 	UploadedAt pgtype.Timestamptz `json:"uploaded_at"`
 }
