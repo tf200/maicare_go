@@ -11,6 +11,96 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addEducationToEmployeeProfile = `-- name: AddEducationToEmployeeProfile :one
+INSERT INTO employee_education (
+    employee_id,
+    institution_name,
+    degree,
+    field_of_study,
+    start_date,
+    end_date
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+) RETURNING id, employee_id, institution_name, degree, field_of_study, start_date, end_date, created_at
+`
+
+type AddEducationToEmployeeProfileParams struct {
+	EmployeeID      int64       `json:"employee_id"`
+	InstitutionName string      `json:"institution_name"`
+	Degree          string      `json:"degree"`
+	FieldOfStudy    string      `json:"field_of_study"`
+	StartDate       pgtype.Date `json:"start_date"`
+	EndDate         pgtype.Date `json:"end_date"`
+}
+
+func (q *Queries) AddEducationToEmployeeProfile(ctx context.Context, arg AddEducationToEmployeeProfileParams) (EmployeeEducation, error) {
+	row := q.db.QueryRow(ctx, addEducationToEmployeeProfile,
+		arg.EmployeeID,
+		arg.InstitutionName,
+		arg.Degree,
+		arg.FieldOfStudy,
+		arg.StartDate,
+		arg.EndDate,
+	)
+	var i EmployeeEducation
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.InstitutionName,
+		&i.Degree,
+		&i.FieldOfStudy,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const addEmployeeExperience = `-- name: AddEmployeeExperience :one
+INSERT INTO employee_experience (
+    employee_id,
+    job_title,
+    company_name,
+    start_date,
+    end_date,
+    description
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+) RETURNING id, employee_id, job_title, company_name, start_date, end_date, description, created_at
+`
+
+type AddEmployeeExperienceParams struct {
+	EmployeeID  int64       `json:"employee_id"`
+	JobTitle    string      `json:"job_title"`
+	CompanyName string      `json:"company_name"`
+	StartDate   pgtype.Date `json:"start_date"`
+	EndDate     pgtype.Date `json:"end_date"`
+	Description *string     `json:"description"`
+}
+
+func (q *Queries) AddEmployeeExperience(ctx context.Context, arg AddEmployeeExperienceParams) (EmployeeExperience, error) {
+	row := q.db.QueryRow(ctx, addEmployeeExperience,
+		arg.EmployeeID,
+		arg.JobTitle,
+		arg.CompanyName,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Description,
+	)
+	var i EmployeeExperience
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.JobTitle,
+		&i.CompanyName,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Description,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const countEmployeeProfile = `-- name: CountEmployeeProfile :one
 SELECT COUNT(*) 
 FROM employee_profile ep
@@ -229,19 +319,29 @@ SELECT
     ep.id as employee_id,
     ep.first_name,
     ep.last_name,
-    cu.role_id
+    cu.role_id,
+    json_agg(json_build_object(
+        'id', p.id,
+        'name', p.name,
+        'resource', p.resource,
+        'method', p.method
+    )) AS permissions
 FROM custom_user cu
 JOIN employee_profile ep ON ep.user_id = cu.id
+JOIN role_permissions rp ON rp.role_id = cu.role_id
+JOIN permissions p ON p.id = rp.permission_id
 WHERE cu.id = $1
+GROUP BY cu.id, cu.email, ep.id, ep.first_name, ep.last_name, cu.role_id
 `
 
 type GetEmployeeProfileByUserIDRow struct {
-	UserID     int64  `json:"user_id"`
-	Email      string `json:"email"`
-	EmployeeID int64  `json:"employee_id"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-	RoleID     int32  `json:"role_id"`
+	UserID      int64  `json:"user_id"`
+	Email       string `json:"email"`
+	EmployeeID  int64  `json:"employee_id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	RoleID      int32  `json:"role_id"`
+	Permissions []byte `json:"permissions"`
 }
 
 func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error) {
@@ -254,8 +354,75 @@ func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (Get
 		&i.FirstName,
 		&i.LastName,
 		&i.RoleID,
+		&i.Permissions,
 	)
 	return i, err
+}
+
+const listEducations = `-- name: ListEducations :many
+SELECT id, employee_id, institution_name, degree, field_of_study, start_date, end_date, created_at FROM employee_education WHERE employee_id = $1
+`
+
+func (q *Queries) ListEducations(ctx context.Context, employeeID int64) ([]EmployeeEducation, error) {
+	rows, err := q.db.Query(ctx, listEducations, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EmployeeEducation
+	for rows.Next() {
+		var i EmployeeEducation
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.InstitutionName,
+			&i.Degree,
+			&i.FieldOfStudy,
+			&i.StartDate,
+			&i.EndDate,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEmployeeExperience = `-- name: ListEmployeeExperience :many
+SELECT id, employee_id, job_title, company_name, start_date, end_date, description, created_at FROM employee_experience WHERE employee_id = $1
+`
+
+func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) ([]EmployeeExperience, error) {
+	rows, err := q.db.Query(ctx, listEmployeeExperience, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EmployeeExperience
+	for rows.Next() {
+		var i EmployeeExperience
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.JobTitle,
+			&i.CompanyName,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Description,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
@@ -373,6 +540,94 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateEmployeeEducation = `-- name: UpdateEmployeeEducation :one
+UPDATE employee_education
+SET
+    institution_name = COALESCE($2, institution_name),
+    degree = COALESCE($3, degree),
+    field_of_study = COALESCE($4, field_of_study),
+    start_date = COALESCE($5, start_date),
+    end_date = COALESCE($6, end_date)
+WHERE id = $1
+RETURNING id, employee_id, institution_name, degree, field_of_study, start_date, end_date, created_at
+`
+
+type UpdateEmployeeEducationParams struct {
+	ID              int64       `json:"id"`
+	InstitutionName *string     `json:"institution_name"`
+	Degree          *string     `json:"degree"`
+	FieldOfStudy    *string     `json:"field_of_study"`
+	StartDate       pgtype.Date `json:"start_date"`
+	EndDate         pgtype.Date `json:"end_date"`
+}
+
+func (q *Queries) UpdateEmployeeEducation(ctx context.Context, arg UpdateEmployeeEducationParams) (EmployeeEducation, error) {
+	row := q.db.QueryRow(ctx, updateEmployeeEducation,
+		arg.ID,
+		arg.InstitutionName,
+		arg.Degree,
+		arg.FieldOfStudy,
+		arg.StartDate,
+		arg.EndDate,
+	)
+	var i EmployeeEducation
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.InstitutionName,
+		&i.Degree,
+		&i.FieldOfStudy,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateEmployeeExperience = `-- name: UpdateEmployeeExperience :one
+UPDATE employee_experience
+SET
+    job_title = COALESCE($2, job_title),
+    company_name = COALESCE($3, company_name),
+    start_date = COALESCE($4, start_date),
+    end_date = COALESCE($5, end_date),
+    description = COALESCE($6, description)
+WHERE id = $1
+RETURNING id, employee_id, job_title, company_name, start_date, end_date, description, created_at
+`
+
+type UpdateEmployeeExperienceParams struct {
+	ID          int64       `json:"id"`
+	JobTitle    *string     `json:"job_title"`
+	CompanyName *string     `json:"company_name"`
+	StartDate   pgtype.Date `json:"start_date"`
+	EndDate     pgtype.Date `json:"end_date"`
+	Description *string     `json:"description"`
+}
+
+func (q *Queries) UpdateEmployeeExperience(ctx context.Context, arg UpdateEmployeeExperienceParams) (EmployeeExperience, error) {
+	row := q.db.QueryRow(ctx, updateEmployeeExperience,
+		arg.ID,
+		arg.JobTitle,
+		arg.CompanyName,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Description,
+	)
+	var i EmployeeExperience
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.JobTitle,
+		&i.CompanyName,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Description,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateEmployeeProfile = `-- name: UpdateEmployeeProfile :one

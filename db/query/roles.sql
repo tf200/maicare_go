@@ -18,3 +18,10 @@ WHERE rp.role_id = $1;
 -- name: GetRoleByID :one
 SELECT * FROM roles
 WHERE id = $1 LIMIT 1;
+
+
+-- name: AssignRoleToUser :one
+UPDATE custom_user
+SET role_id = $1
+WHERE id = $2
+RETURNING id, role_id;

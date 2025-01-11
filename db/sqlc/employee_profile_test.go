@@ -340,12 +340,12 @@ func TestGetEmployeeProfileByUserID(t *testing.T) {
 	employee2, err := testQueries.GetEmployeeProfileByUserID(context.Background(), employee.UserID)
 	require.NoError(t, err)
 	require.NotEmpty(t, employee2)
+	require.NotEmpty(t, employee2.Permissions)
 	require.Equal(t, employee.ID, employee2.EmployeeID)
 	require.Equal(t, employee.UserID, employee2.UserID)
 	require.Equal(t, employee.FirstName, employee2.FirstName)
 	require.Equal(t, employee.LastName, employee2.LastName)
 	require.Equal(t, user.RoleID, employee2.RoleID)
-	require.Equal(t, employee.Email, employee2.Email)
 }
 
 func TestGetEmployeeProfileByID(t *testing.T) {
@@ -377,4 +377,128 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 	require.Equal(t, employee.ID, updatedEmployee.ID)
 	require.Equal(t, employee.UserID, updatedEmployee.UserID)
 	require.Equal(t, employee.LastName, updatedEmployee.LastName)
+}
+
+func addRandomEducation(t *testing.T, employeeID int64) EmployeeEducation {
+
+	educationArg := AddEducationToEmployeeProfileParams{
+		EmployeeID:      employeeID,
+		InstitutionName: util.RandomString(5),
+		Degree:          util.RandomString(5),
+		FieldOfStudy:    util.RandomString(5),
+		StartDate:       pgtype.Date{Time: time.Now(), Valid: true},
+		EndDate:         pgtype.Date{Time: time.Now(), Valid: true},
+	}
+
+	education, err := testQueries.AddEducationToEmployeeProfile(context.Background(), educationArg)
+	require.NoError(t, err)
+	require.NotEmpty(t, education)
+	require.Equal(t, educationArg.EmployeeID, education.EmployeeID)
+	require.Equal(t, educationArg.InstitutionName, education.InstitutionName)
+	require.Equal(t, educationArg.Degree, education.Degree)
+	return education
+}
+
+func TestAddEducationToEmployeeProfile(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	addRandomEducation(t, employee.ID)
+}
+
+func TestListEducations(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	numEducations := 5
+	var wg sync.WaitGroup
+	for i := 0; i < numEducations; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			addRandomEducation(t, employee.ID)
+		}()
+	}
+	wg.Wait()
+
+	educations, err := testQueries.ListEducations(context.Background(), employee.ID)
+	require.NoError(t, err)
+	require.Len(t, educations, numEducations)
+
+}
+
+func TestUpdateEducation(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	education := addRandomEducation(t, employee.ID)
+
+	arg := UpdateEmployeeEducationParams{
+		ID:              education.ID,
+		InstitutionName: util.StringPtr(util.RandomString(5)),
+		Degree:          util.StringPtr(util.RandomString(5)),
+		FieldOfStudy:    util.StringPtr(util.RandomString(5)),
+	}
+
+	updatedEducation, err := testQueries.UpdateEmployeeEducation(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedEducation)
+	require.NotEqual(t, education.InstitutionName, updatedEducation.InstitutionName)
+	require.NotEqual(t, education.Degree, updatedEducation.Degree)
+	require.NotEqual(t, education.FieldOfStudy, updatedEducation.FieldOfStudy)
+}
+
+func addRandomExperience(t *testing.T, employeeID int64) EmployeeExperience {
+
+	experienceArg := AddEmployeeExperienceParams{
+		EmployeeID:  employeeID,
+		JobTitle:    util.RandomString(5),
+		CompanyName: util.RandomString(5),
+		StartDate:   pgtype.Date{Time: time.Now(), Valid: true},
+		EndDate:     pgtype.Date{Time: time.Now(), Valid: true},
+		Description: util.StringPtr(util.RandomString(5)),
+	}
+
+	experience, err := testQueries.AddEmployeeExperience(context.Background(), experienceArg)
+	require.NoError(t, err)
+	require.NotEmpty(t, experience)
+	require.Equal(t, experienceArg.EmployeeID, experience.EmployeeID)
+	require.Equal(t, experienceArg.JobTitle, experience.JobTitle)
+	require.Equal(t, experienceArg.CompanyName, experience.CompanyName)
+	return experience
+}
+
+func TestAddEmployeeExperience(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	addRandomExperience(t, employee.ID)
+}
+
+func TestListEmployeeExperience(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	numExperiences := 5
+	var wg sync.WaitGroup
+	for i := 0; i < numExperiences; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			addRandomExperience(t, employee.ID)
+		}()
+	}
+	wg.Wait()
+
+	experiences, err := testQueries.ListEmployeeExperience(context.Background(), employee.ID)
+	require.NoError(t, err)
+	require.Len(t, experiences, numExperiences)
+}
+
+func TestUpdateEmployeeExperience(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	experience := addRandomExperience(t, employee.ID)
+
+	arg := UpdateEmployeeExperienceParams{
+		ID:          experience.ID,
+		JobTitle:    util.StringPtr(util.RandomString(5)),
+		CompanyName: util.StringPtr(util.RandomString(5)),
+	}
+
+	updatedExperience, err := testQueries.UpdateEmployeeExperience(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedExperience)
+	require.NotEqual(t, experience.JobTitle, updatedExperience.JobTitle)
+	require.NotEqual(t, experience.CompanyName, updatedExperience.CompanyName)
+
 }

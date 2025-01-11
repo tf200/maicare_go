@@ -82,10 +82,19 @@ SELECT
     ep.id as employee_id,
     ep.first_name,
     ep.last_name,
-    cu.role_id
+    cu.role_id,
+    json_agg(json_build_object(
+        'id', p.id,
+        'name', p.name,
+        'resource', p.resource,
+        'method', p.method
+    )) AS permissions
 FROM custom_user cu
 JOIN employee_profile ep ON ep.user_id = cu.id
-WHERE cu.id = $1;
+JOIN role_permissions rp ON rp.role_id = cu.role_id
+JOIN permissions p ON p.id = rp.permission_id
+WHERE cu.id = $1
+GROUP BY cu.id, cu.email, ep.id, ep.first_name, ep.last_name, cu.role_id;
 
 
 -- name: GetEmployeeProfileByID :one
@@ -121,4 +130,63 @@ SET
     out_of_service = COALESCE(sqlc.narg('out_of_service'), out_of_service),
     is_archived = COALESCE(sqlc.narg('is_archived'), is_archived)
 WHERE id = sqlc.arg('id')
+RETURNING *;
+
+
+-- name: AddEducationToEmployeeProfile :one
+INSERT INTO employee_education (
+    employee_id,
+    institution_name,
+    degree,
+    field_of_study,
+    start_date,
+    end_date
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+) RETURNING *;
+
+
+-- name: ListEducations :many
+SELECT * FROM employee_education WHERE employee_id = $1;
+
+-- name: UpdateEmployeeEducation :one
+UPDATE employee_education
+SET
+    institution_name = COALESCE(sqlc.narg('institution_name'), institution_name),
+    degree = COALESCE(sqlc.narg('degree'), degree),
+    field_of_study = COALESCE(sqlc.narg('field_of_study'), field_of_study),
+    start_date = COALESCE(sqlc.narg('start_date'), start_date),
+    end_date = COALESCE(sqlc.narg('end_date'), end_date)
+WHERE id = $1
+RETURNING *;
+
+
+
+
+-- name: AddEmployeeExperience :one
+INSERT INTO employee_experience (
+    employee_id,
+    job_title,
+    company_name,
+    start_date,
+    end_date,
+    description
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+) RETURNING *;
+
+
+-- name: ListEmployeeExperience :many
+SELECT * FROM employee_experience WHERE employee_id = $1;
+
+
+-- name: UpdateEmployeeExperience :one
+UPDATE employee_experience
+SET
+    job_title = COALESCE(sqlc.narg('job_title'), job_title),
+    company_name = COALESCE(sqlc.narg('company_name'), company_name),
+    start_date = COALESCE(sqlc.narg('start_date'), start_date),
+    end_date = COALESCE(sqlc.narg('end_date'), end_date),
+    description = COALESCE(sqlc.narg('description'), description)
+WHERE id = $1
 RETURNING *;

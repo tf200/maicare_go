@@ -431,3 +431,183 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 		})
 	}
 }
+
+func createRandomEducation(t *testing.T) (int64, int64) {
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder) int64
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				addEducationReq := AddEducationToEmployeeProfileRequest{
+					Degree:          "BsC",
+					FieldOfStudy:    "Computer Science",
+					InstitutionName: "University of Ghana",
+					StartDate:       "2018-01-01",
+					EndDate:         "2022-01-01",
+				}
+				data, err := json.Marshal(addEducationReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/employees/%d/education", employee.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) int64 {
+				require.Equal(t, http.StatusCreated, recorder.Code)
+
+				var response Response[AddEducationToEmployeeProfileResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+
+				require.Equal(t, "BsC", response.Data.Degree)
+				require.Equal(t, "Computer Science", response.Data.FieldOfStudy)
+				require.Equal(t, "University of Ghana", response.Data.InstitutionName)
+				require.Equal(t, "2018-01-01", response.Data.StartDate)
+				require.Equal(t, "2022-01-01", response.Data.EndDate)
+				return response.Data.ID
+
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+
+		})
+	}
+	return employee.ID, user.ID
+}
+
+func TestAddEducationToEmployeeProfileApi(t *testing.T) {
+	createRandomEducation(t)
+}
+
+func TestListEmployeeEducationApi(t *testing.T) {
+	employeeID, userID := createRandomEducation(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/employees/%d/education", employeeID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response Response[[]ListEmployeeEducationResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+
+				require.NotEmpty(t, response.Data)
+
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+// to do test UpdateEmployeeEducationApi
+
+func TestAddEmployeeExperienceApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				addExperienceReq := AddEmployeeExperienceRequest{
+					CompanyName: "Google",
+					JobTitle:    "Software Engineer",
+					StartDate:   "2018-01-01",
+					EndDate:     "2022-01-01",
+					Description: util.StringPtr("Worked on the search engine"),
+				}
+				data, err := json.Marshal(addExperienceReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/employees/%d/experience", employee.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusCreated, recorder.Code)
+
+				var response Response[AddEmployeeExperienceResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+
+				require.Equal(t, "Google", response.Data.CompanyName)
+				require.Equal(t, "Software Engineer", response.Data.JobTitle)
+				require.Equal(t, "2018-01-01T00:00:00Z", response.Data.StartDate)
+				require.Equal(t, "2022-01-01T00:00:00Z", response.Data.EndDate)
+				require.Equal(t, util.StringPtr("Worked on the search engine"), response.Data.Description)
+
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+
+		})
+	}
+
+}
+
+// to do test list employee experience

@@ -16,12 +16,13 @@ import (
 
 // GetEmployeeProfileResponse represents the response for GetEmployeeProfileApi
 type GetEmployeeProfileResponse struct {
-	UserID     int64  `json:"user_id"`
-	EmployeeID int64  `json:"employee_id"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-	Email      string `json:"email"`
-	RoleID     int32  `json:"role_id"`
+	UserID      int64  `json:"user_id"`
+	Email       string `json:"email"`
+	EmployeeID  int64  `json:"employee_id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	RoleID      int32  `json:"role_id"`
+	Permissions []byte `json:"permissions"`
 }
 
 // @Summary Get employee profile by user ID
@@ -46,12 +47,13 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	}
 	log.Print("Profile: ", profile)
 	res := SuccessResponse(GetEmployeeProfileResponse{
-		UserID:     profile.UserID,
-		EmployeeID: profile.EmployeeID,
-		FirstName:  profile.FirstName,
-		LastName:   profile.LastName,
-		Email:      profile.Email,
-		RoleID:     profile.RoleID,
+		UserID:      profile.UserID,
+		EmployeeID:  profile.EmployeeID,
+		FirstName:   profile.FirstName,
+		LastName:    profile.LastName,
+		Email:       profile.Email,
+		RoleID:      profile.RoleID,
+		Permissions: profile.Permissions,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -527,4 +529,416 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 	}, "Employee profile updated successfully")
 	ctx.JSON(http.StatusOK, res)
 
+}
+
+// AddEducationToEmployeeProfileRequest represents the request for AddEducationToEmployeeProfileApi
+type AddEducationToEmployeeProfileRequest struct {
+	InstitutionName string `json:"institution_name" binding:"required"`
+	Degree          string `json:"degree" binding:"required"`
+	FieldOfStudy    string `json:"field_of_study" binding:"required"`
+	StartDate       string `json:"start_date" binding:"required" time_format:"2006-01-02"`
+	EndDate         string `json:"end_date" binding:"required" time_format:"2006-01-02"`
+}
+
+// AddEducationToEmployeeProfileResponse represents the response for AddEducationToEmployeeProfileApi
+type AddEducationToEmployeeProfileResponse struct {
+	ID              int64  `json:"id"`
+	EmployeeID      int64  `json:"employee_id"`
+	InstitutionName string `json:"institution_name"`
+	Degree          string `json:"degree"`
+	FieldOfStudy    string `json:"field_of_study"`
+	StartDate       string `json:"start_date"`
+	EndDate         string `json:"end_date"`
+}
+
+// @Summary Add education to employee profile
+// @Description Add education to employee profile
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param request body AddEducationToEmployeeProfileRequest true "Education details"
+// @Success 201 {object} Response[AddEducationToEmployeeProfileResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req AddEducationToEmployeeProfileRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	parsedStartDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	parsedEndDate, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.AddEducationToEmployeeProfileParams{
+		EmployeeID:      employeeID,
+		InstitutionName: req.InstitutionName,
+		Degree:          req.Degree,
+		FieldOfStudy:    req.FieldOfStudy,
+		StartDate:       pgtype.Date{Time: parsedStartDate, Valid: true},
+		EndDate:         pgtype.Date{Time: parsedEndDate, Valid: true},
+	}
+	education, err := server.store.AddEducationToEmployeeProfile(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(AddEducationToEmployeeProfileResponse{
+		ID:              education.ID,
+		EmployeeID:      education.EmployeeID,
+		InstitutionName: education.InstitutionName,
+		Degree:          education.Degree,
+		FieldOfStudy:    education.FieldOfStudy,
+		StartDate:       education.StartDate.Time.Format("2006-01-02"),
+		EndDate:         education.EndDate.Time.Format("2006-01-02"),
+	}, "Education added to employee profile successfully")
+	ctx.JSON(http.StatusCreated, res)
+
+}
+
+// ListEmployeeEducationResponse represents the response for ListEmployeeEducationApi
+type ListEmployeeEducationResponse struct {
+	ID              int64  `json:"id"`
+	EmployeeID      int64  `json:"employee_id"`
+	InstitutionName string `json:"institution_name"`
+	Degree          string `json:"degree"`
+	FieldOfStudy    string `json:"field_of_study"`
+	StartDate       string `json:"start_date"`
+	EndDate         string `json:"end_date"`
+}
+
+// @Summary List education for employee profile
+// @Description Get a list of education for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Success 200 {object} Response[ListEmployeeEducationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/education [get]
+func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	educations, err := server.store.ListEducations(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	responseEducations := make([]ListEmployeeEducationResponse, len(educations))
+	for i, education := range educations {
+		responseEducations[i] = ListEmployeeEducationResponse{
+			ID:              education.ID,
+			EmployeeID:      education.EmployeeID,
+			InstitutionName: education.InstitutionName,
+			Degree:          education.Degree,
+			FieldOfStudy:    education.FieldOfStudy,
+			StartDate:       education.StartDate.Time.Format("2006-01-02"),
+			EndDate:         education.EndDate.Time.Format("2006-01-02"),
+		}
+	}
+	res := SuccessResponse(responseEducations, "Employee education retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateEmployeeEducationRequest represents the request for UpdateEmployeeEducationApi
+type UpdateEmployeeEducationRequest struct {
+	InstitutionName *string `json:"institution_name"`
+	Degree          *string `json:"degree"`
+	FieldOfStudy    *string `json:"field_of_study"`
+	StartDate       *string `json:"start_date" time_format:"2006-01-02"`
+	EndDate         *string `json:"end_date" time_format:"2006-01-02"`
+}
+
+// UpdateEmployeeEducationResponse represents the response for UpdateEmployeeEducationApi
+type UpdateEmployeeEducationResponse struct {
+	ID              int64  `json:"id"`
+	InstitutionName string `json:"institution_name"`
+	Degree          string `json:"degree"`
+	FieldOfStudy    string `json:"field_of_study"`
+	StartDate       string `json:"start_date"`
+	EndDate         string `json:"end_date"`
+}
+
+// @Summary Update education for employee profile
+// @Description Update education for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param education_id path int true "Education ID"
+// @Param request body UpdateEmployeeEducationRequest true "Education details"
+// @Success 200 {object} Response[UpdateEmployeeEducationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/education/{education_id} [put]
+func (server *Server) UpdateEmployeeEducationApi(ctx *gin.Context) {
+	id := ctx.Param(":education_id")
+	educationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req UpdateEmployeeEducationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var parsedStartDate time.Time
+	if req.StartDate != nil {
+		parsedStartDate, err = time.Parse("2006-01-02", *req.StartDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+	}
+	var parsedEndDate time.Time
+	if req.EndDate != nil {
+		parsedEndDate, err = time.Parse("2006-01-02", *req.EndDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+	}
+	education, err := server.store.UpdateEmployeeEducation(ctx, db.UpdateEmployeeEducationParams{
+		ID:              educationID,
+		InstitutionName: req.InstitutionName,
+		Degree:          req.Degree,
+		FieldOfStudy:    req.FieldOfStudy,
+		StartDate:       pgtype.Date{Time: parsedStartDate, Valid: true},
+		EndDate:         pgtype.Date{Time: parsedEndDate, Valid: true},
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(UpdateEmployeeEducationResponse{
+		ID:              education.ID,
+		InstitutionName: education.InstitutionName,
+		Degree:          education.Degree,
+		FieldOfStudy:    education.FieldOfStudy,
+		StartDate:       education.StartDate.Time.Format("2006-01-02"),
+		EndDate:         education.EndDate.Time.Format("2006-01-02"),
+	}, "Education updated successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// AddEmployeeExperienceRequest represents the request for AddEmployeeExperienceApi
+type AddEmployeeExperienceRequest struct {
+	JobTitle    string  `json:"job_title" binding:"required"`
+	CompanyName string  `json:"company_name" binding:"required"`
+	StartDate   string  `json:"start_date" binding:"required" time_format:"2006-01-02"`
+	EndDate     string  `json:"end_date" binding:"required" time_format:"2006-01-02"`
+	Description *string `json:"description"`
+}
+
+// AddEmployeeExperienceResponse represents the response for AddEmployeeExperienceApi
+type AddEmployeeExperienceResponse struct {
+	ID          int64   `json:"id"`
+	EmployeeID  int64   `json:"employee_id"`
+	JobTitle    string  `json:"job_title"`
+	CompanyName string  `json:"company_name"`
+	StartDate   string  `json:"start_date"`
+	EndDate     string  `json:"end_date"`
+	Description *string `json:"description"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+// @Summary Add experience to employee profile
+// @Description Add experience to employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param request body AddEmployeeExperienceRequest true "Experience details"
+// @Success 201 {object} Response[AddEmployeeExperienceResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/experience [post]
+func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req AddEmployeeExperienceRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	parsedStartDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	parsedEndDate, err := time.Parse("2006-01-02", req.EndDate)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.AddEmployeeExperienceParams{
+		EmployeeID:  employeeID,
+		JobTitle:    req.JobTitle,
+		CompanyName: req.CompanyName,
+		StartDate:   pgtype.Date{Time: parsedStartDate, Valid: true},
+		EndDate:     pgtype.Date{Time: parsedEndDate, Valid: true},
+		Description: req.Description,
+	}
+	experience, err := server.store.AddEmployeeExperience(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(AddEmployeeExperienceResponse{
+		ID:          experience.ID,
+		EmployeeID:  experience.EmployeeID,
+		JobTitle:    experience.JobTitle,
+		CompanyName: experience.CompanyName,
+		StartDate:   experience.StartDate.Time.Format(time.RFC3339),
+		EndDate:     experience.EndDate.Time.Format(time.RFC3339),
+		Description: experience.Description,
+		CreatedAt:   experience.CreatedAt.Time.Format(time.RFC3339),
+	}, "Experience added to employee profile successfully")
+	ctx.JSON(http.StatusCreated, res)
+
+}
+
+// ListEmployeeExperienceResponse represents the response for ListEmployeeExperienceApi
+type ListEmployeeExperienceResponse struct {
+	ID          int64   `json:"id"`
+	EmployeeID  int64   `json:"employee_id"`
+	JobTitle    string  `json:"job_title"`
+	CompanyName string  `json:"company_name"`
+	StartDate   string  `json:"start_date"`
+	EndDate     string  `json:"end_date"`
+	Description *string `json:"description"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	experiences, err := server.store.ListEmployeeExperience(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	responseExperiences := make([]ListEmployeeExperienceResponse, len(experiences))
+	for i, experience := range experiences {
+		responseExperiences[i] = ListEmployeeExperienceResponse{
+			ID:          experience.ID,
+			EmployeeID:  experience.EmployeeID,
+			JobTitle:    experience.JobTitle,
+			CompanyName: experience.CompanyName,
+			StartDate:   experience.StartDate.Time.Format(time.RFC3339),
+			EndDate:     experience.EndDate.Time.Format(time.RFC3339),
+			Description: experience.Description,
+			CreatedAt:   experience.CreatedAt.Time.Format(time.RFC3339),
+		}
+	}
+	res := SuccessResponse(responseExperiences, "Employee experience retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateEmployeeExperienceRequest represents the request for UpdateEmployeeExperienceApi
+type UpdateEmployeeExperienceRequest struct {
+	JobTitle    *string `json:"job_title"`
+	CompanyName *string `json:"company_name"`
+	StartDate   *string `json:"start_date" time_format:"2006-01-02"`
+	EndDate     *string `json:"end_date" time_format:"2006-01-02"`
+	Description *string `json:"description"`
+}
+
+// UpdateEmployeeExperienceResponse represents the response for UpdateEmployeeExperienceApi
+type UpdateEmployeeExperienceResponse struct {
+	ID          int64   `json:"id"`
+	EmployeeID  int64   `json:"employee_id"`
+	JobTitle    string  `json:"job_title"`
+	CompanyName string  `json:"company_name"`
+	StartDate   string  `json:"start_date"`
+	EndDate     string  `json:"end_date"`
+	Description *string `json:"description"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+// @Summary Update experience for employee profile
+// @Description Update experience for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param experience_id path int true "Experience ID"
+// @Param request body UpdateEmployeeExperienceRequest true "Experience details"
+// @Success 200 {object} Response[UpdateEmployeeExperienceResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/experience/{experience_id} [put]
+func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
+	id := ctx.Param(":experience_id")
+	experienceID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req UpdateEmployeeExperienceRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var parsedStartDate time.Time
+	if req.StartDate != nil {
+		parsedStartDate, err = time.Parse("2006-01-02", *req.StartDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+	}
+	var parsedEndDate time.Time
+	if req.EndDate != nil {
+		parsedEndDate, err = time.Parse("2006-01-02", *req.EndDate)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+	}
+	experience, err := server.store.UpdateEmployeeExperience(ctx, db.UpdateEmployeeExperienceParams{
+		ID:          experienceID,
+		JobTitle:    req.JobTitle,
+		CompanyName: req.CompanyName,
+		StartDate:   pgtype.Date{Time: parsedStartDate, Valid: true},
+		EndDate:     pgtype.Date{Time: parsedEndDate, Valid: true},
+		Description: req.Description,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(UpdateEmployeeExperienceResponse{
+		ID:          experience.ID,
+		EmployeeID:  experience.EmployeeID,
+		JobTitle:    experience.JobTitle,
+		CompanyName: experience.CompanyName,
+		StartDate:   experience.StartDate.Time.Format("2006-01-02"),
+		EndDate:     experience.EndDate.Time.Format("2006-01-02"),
+		Description: experience.Description,
+		CreatedAt:   experience.CreatedAt.Time.Format("2006-01-02"),
+	}, "Experience updated successfully")
+	ctx.JSON(http.StatusOK, res)
 }

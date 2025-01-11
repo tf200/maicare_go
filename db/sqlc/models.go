@@ -50,7 +50,7 @@ type Assignment struct {
 	StartDatetime pgtype.Timestamptz `json:"start_datetime"`
 	EndDatetime   pgtype.Timestamptz `json:"end_datetime"`
 	Status        string             `json:"status"`
-	Created       pgtype.Timestamptz `json:"created"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
 type AttachmentFile struct {
@@ -93,7 +93,7 @@ type Certification struct {
 	Name       string             `json:"name"`
 	IssuedBy   string             `json:"issued_by"`
 	DateIssued pgtype.Date        `json:"date_issued"`
-	Created    pgtype.Timestamptz `json:"created"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type ClientAgreement struct {
@@ -431,16 +431,6 @@ type DomainObjective struct {
 	Created  pgtype.Timestamptz `json:"created"`
 }
 
-type Education struct {
-	ID              int64       `json:"id"`
-	EmployeeID      int64       `json:"employee_id"`
-	InstitutionName string      `json:"institution_name"`
-	Degree          string      `json:"degree"`
-	FieldOfStudy    string      `json:"field_of_study"`
-	StartDate       pgtype.Date `json:"start_date"`
-	EndDate         pgtype.Date `json:"end_date"`
-}
-
 type EmotionalState struct {
 	ID               int64              `json:"id"`
 	ClientID         int64              `json:"client_id"`
@@ -448,6 +438,28 @@ type EmotionalState struct {
 	StateDescription string             `json:"state_description"`
 	Intensity        int32              `json:"intensity"`
 	Created          pgtype.Timestamptz `json:"created"`
+}
+
+type EmployeeEducation struct {
+	ID              int64              `json:"id"`
+	EmployeeID      int64              `json:"employee_id"`
+	InstitutionName string             `json:"institution_name"`
+	Degree          string             `json:"degree"`
+	FieldOfStudy    string             `json:"field_of_study"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	EndDate         pgtype.Date        `json:"end_date"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+}
+
+type EmployeeExperience struct {
+	ID          int64              `json:"id"`
+	EmployeeID  int64              `json:"employee_id"`
+	JobTitle    string             `json:"job_title"`
+	CompanyName string             `json:"company_name"`
+	StartDate   pgtype.Date        `json:"start_date"`
+	EndDate     pgtype.Date        `json:"end_date"`
+	Description *string            `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type EmployeeProfile struct {
@@ -484,17 +496,6 @@ type Expense struct {
 	LocationID    *int64             `json:"location_id"`
 	Updated       pgtype.Timestamptz `json:"updated"`
 	Created       pgtype.Timestamptz `json:"created"`
-}
-
-type Experience struct {
-	ID          int64              `json:"id"`
-	EmployeeID  int64              `json:"employee_id"`
-	JobTitle    string             `json:"job_title"`
-	CompanyName string             `json:"company_name"`
-	StartDate   pgtype.Date        `json:"start_date"`
-	EndDate     pgtype.Date        `json:"end_date"`
-	Description *string            `json:"description"`
-	Created     pgtype.Timestamptz `json:"created"`
 }
 
 type Feedback struct {

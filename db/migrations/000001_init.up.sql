@@ -34,6 +34,7 @@ CREATE TABLE role_Permissions (
     FOREIGN KEY (permission_id) REFERENCES Permissions(id) ON DELETE CASCADE
 );
 
+-- Table: Custom_User
 CREATE TABLE custom_user (
     id BIGSERIAL PRIMARY KEY,
     "password" VARCHAR(128) NOT NULL,
@@ -47,7 +48,7 @@ CREATE TABLE custom_user (
 
 CREATE INDEX custom_user_email_idx ON custom_user(email);
 
-
+-- Table: Session
 CREATE TABLE "sessions" (
     "id" uuid PRIMARY KEY,
     "refresh_token" varchar NOT NULL,
@@ -891,6 +892,18 @@ CREATE INDEX idx_employee_profile_is_archived ON employee_profile(is_archived);
 CREATE INDEX idx_employee_profile_out_of_service ON employee_profile(out_of_service);
 
 
+-- Table: EmployeeEducation
+CREATE TABLE employee_education (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    institution_name VARCHAR(255) NOT NULL,
+    degree VARCHAR(100) NOT NULL,
+    field_of_study VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX education_employee_id_idx ON employee_education(employee_id);
 
 CREATE TABLE certification (
     id BIGSERIAL PRIMARY KEY,
@@ -898,13 +911,13 @@ CREATE TABLE certification (
     name VARCHAR(255) NOT NULL,
     issued_by VARCHAR(255) NOT NULL,
     date_issued DATE NOT NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX certification_employee_id_idx ON certification(employee_id);
 
-
-CREATE TABLE experience (
+-- Table: EmployeeExperience
+CREATE TABLE employee_experience (
     id BIGSERIAL PRIMARY KEY,
     employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     job_title VARCHAR(255) NOT NULL,
@@ -912,18 +925,12 @@ CREATE TABLE experience (
     start_date DATE NOT NULL,
     end_date DATE NULL,
     description TEXT NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE education (
-    id BIGSERIAL PRIMARY KEY,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
-    institution_name VARCHAR(255) NOT NULL,
-    degree VARCHAR(100) NOT NULL,
-    field_of_study VARCHAR(100) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NULL
-);
+CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
+
+
 
 CREATE TABLE assignment (
     id BIGSERIAL PRIMARY KEY,
@@ -931,12 +938,11 @@ CREATE TABLE assignment (
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     start_datetime TIMESTAMPTZ NOT NULL,
     end_datetime TIMESTAMPTZ NOT NULL,
-    status VARCHAR(50) NOT NULL CHECK (status IN ('Confirmed', 'Pending', 'Cancelled')),
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    "status" VARCHAR(50) NOT NULL CHECK (status IN ('Confirmed', 'Pending', 'Cancelled')),
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX experience_employee_id_idx ON experience(employee_id);
-CREATE INDEX education_employee_id_idx ON education(employee_id);
+
 CREATE INDEX assignment_employee_id_idx ON assignment(employee_id);
 CREATE INDEX assignment_client_id_idx ON assignment(client_id);
 

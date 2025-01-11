@@ -2,14 +2,20 @@ permissions:
   - name: TEST_VIEW
     resource: /test
     method: [GET]
-  - name: EMPLOYEE_CREATE
+  - name: EMPLOYEE.CREATE
     resource: /employees
     method: [POST]
-  - name: EMPLOYEE_VIEW
+  - name: EMPLOYEE.VIEW
     resource: /employees
     method: [GET]
-  - name: EMPLOYEE_UPDATE
+  - name: EMPLOYEE.UPDATE
     resource: /employees
+    method: [PUT]
+  - name: EMPLOYEE.DELETE
+    resource: /employees
+    method: [DELETE]
+  - name: ROLES.UPDATE
+    resource: /roles/asign
     method: [PUT]
 
 roles:
@@ -17,12 +23,14 @@ roles:
     id: 1
     description: "Admin role"
     permissions:
-      - TEST_VIEW
-      - EMPLOYEE_CREATE
-      - EMPLOYEE_VIEW
-      - EMPLOYEE_UPDATE
+      - TEST.VIEW
+      - EMPLOYEE.CREATE
+      - EMPLOYEE.VIEW
+      - EMPLOYEE.UPDATE
+      - EMPLOYEE.DELETE
+      - ROLES.UPDATE
   - name: test
     id: 2
     description: "Test role"
     permissions:
-      - EMPLOYEE_CREATE
+      - EMPLOYEE.CREATE

@@ -23,3 +23,17 @@ func TestGetRoleByID(t *testing.T) {
 	require.NotEmpty(t, role)
 	require.Equal(t, role.ID, int32(1))
 }
+
+func TestAssignRoleToUser(t *testing.T) {
+	user := CreateRandomUser(t)
+	updatedUser, err := testQueries.AssignRoleToUser(context.Background(),
+		AssignRoleToUserParams{
+			RoleID: 2,
+			ID:     user.ID,
+		})
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedUser)
+	require.Equal(t, updatedUser.ID, user.ID)
+	require.Equal(t, updatedUser.RoleID, int32(2))
+
+}

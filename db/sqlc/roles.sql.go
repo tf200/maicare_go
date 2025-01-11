@@ -9,6 +9,30 @@ import (
 	"context"
 )
 
+const assignRoleToUser = `-- name: AssignRoleToUser :one
+UPDATE custom_user
+SET role_id = $1
+WHERE id = $2
+RETURNING id, role_id
+`
+
+type AssignRoleToUserParams struct {
+	RoleID int32 `json:"role_id"`
+	ID     int64 `json:"id"`
+}
+
+type AssignRoleToUserRow struct {
+	ID     int64 `json:"id"`
+	RoleID int32 `json:"role_id"`
+}
+
+func (q *Queries) AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) (AssignRoleToUserRow, error) {
+	row := q.db.QueryRow(ctx, assignRoleToUser, arg.RoleID, arg.ID)
+	var i AssignRoleToUserRow
+	err := row.Scan(&i.ID, &i.RoleID)
+	return i, err
+}
+
 const checkRolePermission = `-- name: CheckRolePermission :one
 SELECT EXISTS (
     SELECT 1

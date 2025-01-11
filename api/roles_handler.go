@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	db "maicare_go/db/sqlc"
 	"maicare_go/token"
 	"net/http"
 	"strconv"
@@ -53,6 +54,7 @@ func (server *Server) GetPermissionsByRoleIDApi(ctx *gin.Context) {
 
 }
 
+// GetRoleByIDApiResponse represents a response for GetRoleByIDApi
 type GetRoleByIDApiResponse struct {
 	ID   int32  `json:"id"`
 	Name string `json:"name"`
@@ -99,4 +101,50 @@ func (server *Server) GetRoleByIDApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Role retrieved successfully"))
+}
+
+// AssignRoleToUserParams represents a request for AssignRoleToUserApi
+type AssignRoleToUserParams struct {
+	ID     int64 `json:"id"`
+	RoleID int32 `json:"role_id"`
+}
+
+// AssignRoleToUserApiResponse represents a response for AssignRoleToUserApi
+type AssignRoleToUserApiResponse struct {
+	ID     int64 `json:"id"`
+	RoleID int32 `json:"role_id"`
+}
+
+// @Summary Assign role to user
+// @Description Assign a role to a user
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param input body AssignRoleToUserParams true "Assign role to user"
+// @Success 200 {object} Response[AssignRoleToUserApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /roles/assign [put]
+func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
+	var req AssignRoleToUserParams
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.AssignRoleToUserParams{
+		ID:     req.ID,
+		RoleID: req.RoleID,
+	}
+
+	updatedUser, err := server.store.AssignRoleToUser(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := AssignRoleToUserApiResponse{
+		ID:     updatedUser.ID,
+		RoleID: updatedUser.RoleID,
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Role assigned to user successfully"))
 }

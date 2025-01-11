@@ -1,5 +1,92 @@
 basePath: /
 definitions:
+  api.AddEducationToEmployeeProfileRequest:
+    properties:
+      degree:
+        type: string
+      end_date:
+        type: string
+      field_of_study:
+        type: string
+      institution_name:
+        type: string
+      start_date:
+        type: string
+    required:
+    - degree
+    - end_date
+    - field_of_study
+    - institution_name
+    - start_date
+    type: object
+  api.AddEducationToEmployeeProfileResponse:
+    properties:
+      degree:
+        type: string
+      employee_id:
+        type: integer
+      end_date:
+        type: string
+      field_of_study:
+        type: string
+      id:
+        type: integer
+      institution_name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.AddEmployeeExperienceRequest:
+    properties:
+      company_name:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      job_title:
+        type: string
+      start_date:
+        type: string
+    required:
+    - company_name
+    - end_date
+    - job_title
+    - start_date
+    type: object
+  api.AddEmployeeExperienceResponse:
+    properties:
+      company_name:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      employee_id:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      job_title:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.AssignRoleToUserApiResponse:
+    properties:
+      id:
+        type: integer
+      role_id:
+        type: integer
+    type: object
+  api.AssignRoleToUserParams:
+    properties:
+      id:
+        type: integer
+      role_id:
+        type: integer
+    type: object
   api.CreateEmployeeProfileRequest:
     properties:
       authentication_phone_number:
@@ -154,6 +241,10 @@ definitions:
         type: string
       last_name:
         type: string
+      permissions:
+        items:
+          type: integer
+        type: array
       role_id:
         type: integer
       user_id:
@@ -175,6 +266,23 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.ListEmployeeEducationResponse:
+    properties:
+      degree:
+        type: string
+      employee_id:
+        type: integer
+      end_date:
+        type: string
+      field_of_study:
+        type: string
+      id:
+        type: integer
+      institution_name:
+        type: string
+      start_date:
         type: string
     type: object
   api.ListEmployeeResponse:
@@ -280,6 +388,33 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_AddEducationToEmployeeProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AddEducationToEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_AddEmployeeExperienceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AddEmployeeExperienceResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_AssignRoleToUserApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AssignRoleToUserApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateEmployeeProfileResponse:
     properties:
       data:
@@ -316,6 +451,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_ListEmployeeEducationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListEmployeeEducationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_LoginUserResponse:
     properties:
       data:
@@ -329,6 +473,24 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.RefreshTokenResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateEmployeeEducationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateEmployeeEducationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateEmployeeExperienceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateEmployeeExperienceResponse'
       message:
         type: string
       success:
@@ -373,6 +535,66 @@ definitions:
         type: string
       success:
         type: boolean
+    type: object
+  api.UpdateEmployeeEducationRequest:
+    properties:
+      degree:
+        type: string
+      end_date:
+        type: string
+      field_of_study:
+        type: string
+      institution_name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.UpdateEmployeeEducationResponse:
+    properties:
+      degree:
+        type: string
+      end_date:
+        type: string
+      field_of_study:
+        type: string
+      id:
+        type: integer
+      institution_name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.UpdateEmployeeExperienceRequest:
+    properties:
+      company_name:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      job_title:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.UpdateEmployeeExperienceResponse:
+    properties:
+      company_name:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      employee_id:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      job_title:
+        type: string
+      start_date:
+        type: string
     type: object
   api.UpdateEmployeeProfileResponse:
     properties:
@@ -738,6 +960,190 @@ paths:
       summary: Update employee profile by ID
       tags:
       - employees
+  /employees/{id}/education:
+    get:
+      description: Get a list of education for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListEmployeeEducationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List education for employee profile
+      tags:
+      - employees
+  /employees/{id}/education/{education_id}:
+    put:
+      description: Update education for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Education ID
+        in: path
+        name: education_id
+        required: true
+        type: integer
+      - description: Education details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateEmployeeEducationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateEmployeeEducationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update education for employee profile
+      tags:
+      - employees
+  /employees/{id}/experience:
+    post:
+      description: Add experience to employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Experience details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddEmployeeExperienceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_AddEmployeeExperienceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add experience to employee profile
+      tags:
+      - employees
+  /employees/{id}/experience/{experience_id}:
+    put:
+      description: Update experience for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Experience ID
+        in: path
+        name: experience_id
+        required: true
+        type: integer
+      - description: Experience details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateEmployeeExperienceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateEmployeeExperienceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update experience for employee profile
+      tags:
+      - employees
   /employees/profile:
     get:
       description: Get employee profile by user ID
@@ -825,6 +1231,40 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get permissions by role ID
+      tags:
+      - roles
+  /roles/assign:
+    put:
+      consumes:
+      - application/json
+      description: Assign a role to a user
+      parameters:
+      - description: Assign role to user
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.AssignRoleToUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_AssignRoleToUserApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Assign role to user
       tags:
       - roles
   /roles/user:
