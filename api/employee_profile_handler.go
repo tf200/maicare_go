@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,15 +15,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Permission struct {
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Resource string `json:"resource"`
+	Method   string `json:"method"`
+}
+
 // GetEmployeeProfileResponse represents the response for GetEmployeeProfileApi
 type GetEmployeeProfileResponse struct {
-	UserID      int64  `json:"user_id"`
-	Email       string `json:"email"`
-	EmployeeID  int64  `json:"employee_id"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	RoleID      int32  `json:"role_id"`
-	Permissions []byte `json:"permissions"`
+	UserID      int64        `json:"user_id"`
+	Email       string       `json:"email"`
+	EmployeeID  int64        `json:"employee_id"`
+	FirstName   string       `json:"first_name"`
+	LastName    string       `json:"last_name"`
+	RoleID      int32        `json:"role_id"`
+	Permissions []Permission `json:"permissions"`
 }
 
 // @Summary Get employee profile by user ID
@@ -45,7 +53,12 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	log.Print("Profile: ", profile)
+	var permissions []Permission
+	if err := json.Unmarshal(profile.Permissions, &permissions); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	res := SuccessResponse(GetEmployeeProfileResponse{
 		UserID:      profile.UserID,
 		EmployeeID:  profile.EmployeeID,
@@ -53,7 +66,7 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		LastName:    profile.LastName,
 		Email:       profile.Email,
 		RoleID:      profile.RoleID,
-		Permissions: profile.Permissions,
+		Permissions: permissions,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
