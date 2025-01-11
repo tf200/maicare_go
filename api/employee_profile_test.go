@@ -326,7 +326,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 	}
 }
 
-func TestGetEmployeeProfileByID(t *testing.T) {
+func TestGetEmployeeProfileByIDApi(t *testing.T) {
 	employee, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
@@ -376,7 +376,7 @@ func TestGetEmployeeProfileByID(t *testing.T) {
 	}
 }
 
-func TestUpdateEmployeeProfile(t *testing.T) {
+func TestUpdateEmployeeProfileApi(t *testing.T) {
 	employee, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
@@ -430,6 +430,57 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
+}
+
+func TestGetEmployeeProfileApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				req, err := http.NewRequest(http.MethodGet, "/employees/profile", nil)
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response Response[GetEmployeeProfileResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+				require.Equal(t, employee.ID, response.Data.EmployeeID)
+				require.Equal(t, employee.UserID, response.Data.UserID)
+				require.Equal(t, employee.FirstName, response.Data.FirstName)
+				require.Equal(t, employee.LastName, response.Data.LastName)
+				require.Equal(t, user.RoleID, response.Data.RoleID)
+				require.NotEmpty(t, response.Data.Permissions)
+
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+
 }
 
 func createRandomEducation(t *testing.T) (int64, int64) {

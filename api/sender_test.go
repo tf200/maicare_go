@@ -53,7 +53,7 @@ func createRandomSender(t *testing.T) db.Sender {
 	return sender
 }
 
-func TestCreateSender(t *testing.T) {
+func TestCreateSenderApi(t *testing.T) {
 	userID := rand.Int63()
 	testCases := []struct {
 		name          string
@@ -100,11 +100,11 @@ func TestCreateSender(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response CreateSenderResponse
+				var response Response[CreateSenderResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
-				require.NotEmpty(t, response.ID)
-				require.Equal(t, "Test Company", response.Name)
+				require.NotEmpty(t, response.Data.ID)
+				require.Equal(t, "Test Company", response.Data.Name)
 			},
 		},
 		{
@@ -267,17 +267,17 @@ func TestListSendersAPI(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response pagination.Response[ListSendersResponse]
+				var response Response[pagination.Response[ListSendersResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
-				require.NotNil(t, response.Next)
-				require.Nil(t, response.Previous)
-				require.Equal(t, int64(numSenders)+initialCount, response.Count)
-				require.Equal(t, int32(10), response.PageSize)
-				require.Len(t, response.Results, 10)
+				require.NotNil(t, response.Data.Next)
+				require.Nil(t, response.Data.Previous)
+				require.Equal(t, int64(numSenders)+initialCount, response.Data.Count)
+				require.Equal(t, int32(10), response.Data.PageSize)
+				require.Len(t, response.Data.Results, 10)
 
-				for _, sender := range response.Results {
+				for _, sender := range response.Data.Results {
 					require.NotEmpty(t, sender.ID)
 					require.NotEmpty(t, sender.Name)
 				}
@@ -335,12 +335,12 @@ func TestListSendersAPI(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response pagination.Response[db.ListEmployeeProfileRow]
+				var response Response[pagination.Response[db.ListEmployeeProfileRow]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
-				require.NotNil(t, response.Previous)
-				require.Contains(t, *response.Previous, "page=1")
+				require.NotNil(t, response.Data.Previous)
+				require.Contains(t, *response.Data.Previous, "page=1")
 			},
 		},
 	}

@@ -925,6 +925,58 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/senders": {
+            "post": {
+                "description": "Create a new sender",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "senders"
+                ],
+                "summary": "Create a new sender",
+                "parameters": [
+                    {
+                        "description": "Sender data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateSenderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateSenderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1055,6 +1107,20 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.Contact": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
                 }
             }
         },
@@ -1196,6 +1262,101 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateSenderRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "types"
+            ],
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Contact"
+                    }
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string",
+                    "enum": [
+                        "main_provider",
+                        "local_authority",
+                        "particular_party",
+                        "healthcare_institution"
+                    ]
+                }
+            }
+        },
+        "api.CreateSenderResponse": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Contact"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetEmployeeProfileByIDApiResponse": {
             "type": "object",
             "properties": {
@@ -1291,7 +1452,7 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/api.Permission"
                     }
                 },
                 "role_id": {
@@ -1447,6 +1608,50 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListSendersResponse": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Contact"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                }
+            }
+        },
         "api.LoginUserRequest": {
             "type": "object",
             "required": [
@@ -1474,6 +1679,23 @@ const docTemplate = `{
                 "refresh": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "api.Permission": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "method": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
                 }
             }
         },
@@ -1557,6 +1779,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateSenderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateSenderResponse"
                 },
                 "message": {
                     "type": "string"
@@ -1731,6 +1967,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-api_ListSendersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListSendersResponse"
                 },
                 "message": {
                     "type": "string"
@@ -1922,6 +2172,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListEmployeeResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-api_ListSendersResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListSendersResponse"
                     }
                 }
             }

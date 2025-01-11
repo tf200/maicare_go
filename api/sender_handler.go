@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -12,12 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Contact represents a contact information.
 type Contact struct {
 	Name        *string `json:"name"`
 	Email       *string `json:"email" binding:"email"`
 	PhoneNumber *string `json:"phone_number"`
 }
 
+// CreateSenderRequest represents a request to create a new sender.
 type CreateSenderRequest struct {
 	Types        string    `json:"types" binding:"required,oneof=main_provider local_authority particular_party healthcare_institution"`
 	Name         string    `json:"name" binding:"required"`
@@ -32,6 +33,7 @@ type CreateSenderRequest struct {
 	Contacts     []Contact `json:"contacts" binding:"dive"`
 }
 
+// CreateSenderResponse represents a response to a request to create a new sender.
 type CreateSenderResponse struct {
 	ID           int64     `json:"id"`
 	Types        string    `json:"types"`
@@ -47,6 +49,16 @@ type CreateSenderResponse struct {
 	Contacts     []Contact `json:"contacts"`
 }
 
+// CreateSenderApi creates a new sender.
+// @Summary Create a new sender
+// @Description Create a new sender
+// @Tags senders
+// @Accept json
+// @Produce json
+// @Param request body CreateSenderRequest true "Sender data"
+// @Success 201 {object} Response[CreateSenderResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /senders [post]
 func (server *Server) CreateSenderApi(ctx *gin.Context) {
 	var req CreateSenderRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -77,7 +89,7 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 		return
 	}
 
-	rsp := CreateSenderResponse{
+	rsp := SuccessResponse(CreateSenderResponse{
 		ID:           sender.ID,
 		Types:        sender.Types,
 		Name:         sender.Name,
@@ -90,17 +102,19 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 		PhoneNumber:  sender.PhoneNumber,
 		ClientNumber: sender.ClientNumber,
 		Contacts:     req.Contacts,
-	}
+	}, "Sender created successfully")
 
 	ctx.JSON(http.StatusCreated, rsp)
 }
 
+// GetSenderRequest represents a request to get a sender by ID.
 type ListSendersRequest struct {
 	pagination.Request
 	IncludeArchived *bool   `form:"include_archived"`
 	Search          *string `form:"search"`
 }
 
+// GetSenderResponse represents a response to a request to get a sender by ID.
 type ListSendersResponse struct {
 	ID           int64     `json:"id"`
 	Types        string    `json:"types"`
@@ -116,6 +130,18 @@ type ListSendersResponse struct {
 	Contacts     []Contact `json:"contacts"`
 }
 
+// ListSendersAPI returns a list of senders.
+// @Summary List senders
+// @Description List senders
+// @Tags senders
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
+// @Param search query string false "Search"
+// @Param include_archived query bool false "Include archived"
+// @Success 200 {object} Response[pagination.Response[ListSendersResponse]]
+// @Failure 400,404,500 {object} Response[any]
 func (server *Server) ListSendersAPI(ctx *gin.Context) {
 	var req ListSendersRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
@@ -140,17 +166,14 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 		return
 	}
 
-	var responseSenders []ListSendersResponse
-	for _, sender := range senders {
-		var contacts []Contact
-
-		if sender.Contacts != nil {
-			if err := json.Unmarshal(sender.Contacts, &contacts); err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to parse contacts: %w", err)))
-				return
-			}
+	responseSenders := make([]ListSendersResponse, len(senders))
+	for i, sender := range senders {
+		contacts := make([]Contact, 0)
+		if err := json.Unmarshal(sender.Contacts, &contacts); err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
 		}
-		responseSenders = append(responseSenders, ListSendersResponse{
+		responseSenders[i] = ListSendersResponse{
 			ID:           sender.ID,
 			Types:        sender.Types,
 			Name:         sender.Name,
@@ -163,8 +186,7 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 			PhoneNumber:  sender.PhoneNumber,
 			ClientNumber: sender.ClientNumber,
 			Contacts:     contacts,
-		})
-
+		}
 	}
 
 	totalCount, err := server.store.CountSenders(ctx, req.IncludeArchived)
@@ -174,6 +196,7 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 	}
 
 	response := pagination.NewResponse(ctx, req.Request, responseSenders, totalCount)
+	res := SuccessResponse(response, "Senders retrieved successfully")
 
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, res)
 }

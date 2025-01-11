@@ -17,6 +17,13 @@ permissions:
   - name: ROLES.UPDATE
     resource: /roles/asign
     method: [PUT]
+  - name: SENDER.CREATE
+    resource: /senders
+    method: [POST]
+  - name: SENDER.VIEW
+    resource: /senders
+    method: [GET]
+  
 
 roles:
   - name: admin
@@ -29,6 +36,8 @@ roles:
       - EMPLOYEE.UPDATE
       - EMPLOYEE.DELETE
       - ROLES.UPDATE
+      - SENDER.CREATE
+      - SENDER.VIEW
   - name: test
     id: 2
     description: "Test role"

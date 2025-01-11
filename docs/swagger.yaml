@@ -87,6 +87,15 @@ definitions:
       role_id:
         type: integer
     type: object
+  api.Contact:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
   api.CreateEmployeeProfileRequest:
     properties:
       authentication_phone_number:
@@ -180,6 +189,70 @@ definitions:
       work_phone_number:
         type: string
     type: object
+  api.CreateSenderRequest:
+    properties:
+      BTWnumber:
+        type: string
+      KVKnumber:
+        type: string
+      address:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        enum:
+        - main_provider
+        - local_authority
+        - particular_party
+        - healthcare_institution
+        type: string
+    required:
+    - name
+    - types
+    type: object
+  api.CreateSenderResponse:
+    properties:
+      BTWnumber:
+        type: string
+      KVKnumber:
+        type: string
+      address:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      id:
+        type: integer
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        type: string
+    type: object
   api.GetEmployeeProfileByIDApiResponse:
     properties:
       authentication_phone_number:
@@ -243,7 +316,7 @@ definitions:
         type: string
       permissions:
         items:
-          type: integer
+          $ref: '#/definitions/api.Permission'
         type: array
       role_id:
         type: integer
@@ -345,6 +418,35 @@ definitions:
       name:
         type: string
     type: object
+  api.ListSendersResponse:
+    properties:
+      BTWnumber:
+        type: string
+      KVKnumber:
+        type: string
+      address:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      id:
+        type: integer
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        type: string
+    type: object
   api.LoginUserRequest:
     properties:
       email:
@@ -364,6 +466,17 @@ definitions:
         type: string
       refresh:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  api.Permission:
+    properties:
+      id:
+        type: integer
+      method:
+        type: string
+      name:
+        type: string
+      resource:
         type: string
     type: object
   api.RefreshTokenRequest:
@@ -419,6 +532,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateSenderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateSenderResponse'
       message:
         type: string
       success:
@@ -531,6 +653,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListSendersResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListSendersResponse'
       message:
         type: string
       success:
@@ -656,6 +787,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListEmployeeResponse'
+        type: array
+    type: object
+  pagination.Response-api_ListSendersResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListSendersResponse'
         type: array
     type: object
   pgtype.Date:
@@ -1292,6 +1438,40 @@ paths:
       summary: Get role by ID
       tags:
       - roles
+  /senders:
+    post:
+      consumes:
+      - application/json
+      description: Create a new sender
+      parameters:
+      - description: Sender data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateSenderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateSenderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new sender
+      tags:
+      - senders
 security:
 - Bearer: []
 securityDefinitions:
