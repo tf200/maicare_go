@@ -7,7 +7,9 @@ func (server *Server) setupSenderRoutes(baseRouter *gin.RouterGroup) {
 	senders.Use(AuthMiddleware(server.tokenMaker))
 	{
 		senders.POST("", RBACMiddleware(server.store, "SENDER.CREATE"), server.CreateSenderApi) // POST /senders
-		senders.GET("", RBACMiddleware(server.store, "SENDER.VIEW"), server.ListSendersAPI)     // GET /senders
+		senders.GET("", RBACMiddleware(server.store, "SENDER.VIEW"), server.ListSendersAPI)
+		senders.PUT("/:id", RBACMiddleware(server.store, "SENDER.UPDATE"), server.UpdateSenderApi) // PUT /senders/:id
+		// GET /senders
 		// Future endpoints:
 		// senders.GET("/:id", server.GetSenderAPI)    // GET /senders/:id
 		// senders.PUT("/:id", server.UpdateSenderAPI) // PUT /senders/:id

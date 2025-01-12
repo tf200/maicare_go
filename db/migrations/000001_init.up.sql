@@ -184,7 +184,7 @@ CREATE TABLE sender (
     btwnumber VARCHAR(20) NULL,
     phone_number VARCHAR(20) NULL,
     client_number VARCHAR(20) NULL,
-    email_adress VARCHAR(20) NULL,
+    email_address VARCHAR(20) NULL,
     contacts JSONB NOT NULL DEFAULT '[]',
     is_archived BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

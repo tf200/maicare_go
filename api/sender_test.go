@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -20,9 +21,23 @@ import (
 )
 
 func createRandomSender(t *testing.T) db.Sender {
+	// Define a slice of Contact structs
+	contacts := []Contact{
+		{
+			Name:        util.StringPtr("Test Contact"),
+			Email:       util.StringPtr("test@example.com"),
+			PhoneNumber: util.StringPtr("1234567890"),
+		},
+	}
+
+	// Marshal the contacts slice into JSON
+	contactsJSON, err := json.Marshal(contacts)
+	require.NoError(t, err)
+
+	// Create the CreateSenderParams
 	arg := db.CreateSenderParams{
 		Types:        "main_provider",
-		Name:         util.RandomString(5),
+		Name:         "MAICARE",
 		Address:      util.StringPtr("test"),
 		PostalCode:   util.StringPtr("test"),
 		Place:        util.StringPtr("test"),
@@ -31,13 +46,16 @@ func createRandomSender(t *testing.T) db.Sender {
 		Btwnumber:    util.StringPtr("test"),
 		PhoneNumber:  util.StringPtr("test"),
 		ClientNumber: util.StringPtr("test"),
-		EmailAdress:  util.StringPtr("test"),
-		Contacts:     []byte(`[{"name": "Test Contact", "email": "test@example.com", "phone": "1234567890"}]`),
+		EmailAddress: util.StringPtr("test"),
+		Contacts:     contactsJSON, // Use the marshaled JSON
 	}
 
+	// Create the sender in the database
 	sender, err := testStore.CreateSender(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, sender)
+
+	// Verify the fields
 	require.Equal(t, arg.Types, sender.Types)
 	require.Equal(t, arg.Name, sender.Name)
 	require.Equal(t, arg.Address, sender.Address)
@@ -48,11 +66,22 @@ func createRandomSender(t *testing.T) db.Sender {
 	require.Equal(t, arg.Btwnumber, sender.Btwnumber)
 	require.Equal(t, arg.PhoneNumber, sender.PhoneNumber)
 	require.Equal(t, arg.ClientNumber, sender.ClientNumber)
-	require.Equal(t, arg.EmailAdress, sender.EmailAdress)
-	require.Equal(t, arg.Contacts, sender.Contacts)
+	require.Equal(t, arg.EmailAddress, sender.EmailAddress)
+
+	// Unmarshal the expected and actual Contacts fields for comparison
+	var expectedContacts []Contact
+	err = json.Unmarshal(arg.Contacts, &expectedContacts)
+	require.NoError(t, err)
+
+	var actualContacts []Contact
+	err = json.Unmarshal(sender.Contacts, &actualContacts)
+	require.NoError(t, err)
+
+	// Compare the unmarshaled Contacts
+	require.Equal(t, expectedContacts, actualContacts)
+
 	return sender
 }
-
 func TestCreateSenderApi(t *testing.T) {
 	userID := rand.Int63()
 	testCases := []struct {
@@ -357,4 +386,59 @@ func TestListSendersAPI(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
+}
+
+func TestUpdateSenderApi(t *testing.T) {
+	sender := createRandomSender(t)
+	contacts := make([]Contact, 0)
+	err := json.Unmarshal(sender.Contacts, &contacts)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, sender.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				updateSenderReq := UpdateSenderRequest{
+					Name: util.StringPtr("Updated Company2"),
+				}
+				data, err := json.Marshal(updateSenderReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/senders/%d", sender.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[UpdateSenderResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+				require.Equal(t, sender.ID, response.Data.ID)
+				require.Equal(t, "Updated Company2", response.Data.Name)
+				require.Equal(t, sender.Types, response.Data.Types)
+
+				require.Equal(t, contacts, response.Data.Contacts)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+
 }

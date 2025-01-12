@@ -23,6 +23,9 @@ permissions:
   - name: SENDER.VIEW
     resource: /senders
     method: [GET]
+  - name: SENDER.UPDATE
+    resource: /senders
+    method: [PUT]
   
 
 roles:
@@ -38,6 +41,7 @@ roles:
       - ROLES.UPDATE
       - SENDER.CREATE
       - SENDER.VIEW
+      - SENDER.UPDATE
   - name: test
     id: 2
     description: "Test role"

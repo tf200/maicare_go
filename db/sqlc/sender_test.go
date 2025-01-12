@@ -22,7 +22,7 @@ func createRandomSenders(t *testing.T) Sender {
 		Btwnumber:    util.StringPtr("test"),
 		PhoneNumber:  util.StringPtr("test"),
 		ClientNumber: util.StringPtr("test"),
-		EmailAdress:  util.StringPtr("test"),
+		EmailAddress: util.StringPtr("test"),
 		Contacts:     []byte(`[{"name": "Test Contact", "email": "test@example.com", "phone": "1234567890"}]`),
 	}
 
@@ -39,7 +39,7 @@ func createRandomSenders(t *testing.T) Sender {
 	require.Equal(t, arg.Btwnumber, sender.Btwnumber)
 	require.Equal(t, arg.PhoneNumber, sender.PhoneNumber)
 	require.Equal(t, arg.ClientNumber, sender.ClientNumber)
-	require.Equal(t, arg.EmailAdress, sender.EmailAdress)
+	require.Equal(t, arg.EmailAddress, sender.EmailAddress)
 	require.Equal(t, arg.Contacts, sender.Contacts)
 	return sender
 }
@@ -148,4 +148,29 @@ func TestCountSenders(t *testing.T) {
 			tc.checkCount(t, count)
 		})
 	}
+}
+
+func TestUpdateSender(t *testing.T) {
+	sender := createRandomSenders(t)
+	arg := UpdateSenderParams{
+		ID:           sender.ID,
+		Name:         util.StringPtr(util.RandomString(5)),
+		Address:      util.StringPtr("test"),
+		PostalCode:   util.StringPtr("test"),
+		Place:        util.StringPtr("test"),
+		Land:         util.StringPtr("test"),
+		Kvknumber:    util.StringPtr("test"),
+		Btwnumber:    util.StringPtr("test"),
+		ClientNumber: util.StringPtr("test"),
+		EmailAddress: util.StringPtr("test"),
+		Contacts:     []byte(`[{"name": "Test Contact", "email": "example@gmail.com", "phone": "1234567890"}]`),
+	}
+	updatedSender, err := testQueries.UpdateSender(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedSender)
+	require.Equal(t, arg.ID, updatedSender.ID)
+	require.NotNil(t, arg.Name)
+	require.Equal(t, *arg.Name, updatedSender.Name)
+	require.NotEqual(t, sender.Name, updatedSender.Name)
+	require.NotEqual(t, sender.Contacts, updatedSender.Contacts)
 }

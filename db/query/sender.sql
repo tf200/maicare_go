@@ -10,7 +10,7 @@ INSERT INTO sender (
     btwnumber,
     phone_number,
     client_number,
-    email_adress,
+    email_address,
     contacts
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
@@ -43,4 +43,25 @@ WHERE (
 );
 
 
+
+-- name: UpdateSender :one
+UPDATE sender
+SET 
+    name = COALESCE(sqlc.narg('name'), name),
+    address = COALESCE(sqlc.narg('address'), address),
+    postal_code = COALESCE(sqlc.narg('postal_code'), postal_code),
+    place = COALESCE(sqlc.narg('place'), place),
+    land = COALESCE(sqlc.narg('land'), land),
+    kvknumber = COALESCE(sqlc.narg('kvknumber'), kvknumber),
+    btwnumber = COALESCE(sqlc.narg('btwnumber'), btwnumber),
+    phone_number = COALESCE(sqlc.narg('phone_number'), phone_number),
+    client_number = COALESCE(sqlc.narg('client_number'), client_number),
+    email_address = COALESCE(sqlc.narg('email_address'), email_address),
+    contacts = COALESCE(sqlc.narg('contacts')::JSONB, contacts),
+    updated_at = NOW(),
+    is_archived = COALESCE(sqlc.narg('is_archived'), is_archived),
+    types = COALESCE(sqlc.narg('types'), types)
+WHERE 
+    id = sqlc.arg('id')
+RETURNING *;
 

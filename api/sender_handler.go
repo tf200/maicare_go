@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
@@ -47,6 +49,8 @@ type CreateSenderResponse struct {
 	PhoneNumber  *string   `json:"phone_number"`
 	ClientNumber *string   `json:"client_number"`
 	Contacts     []Contact `json:"contacts"`
+	CreatedAt    string    `json:"created_at"`
+	UpdatedAt    string    `json:"updated_at"`
 }
 
 // CreateSenderApi creates a new sender.
@@ -65,7 +69,7 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	contacts, err := json.Marshal(req.Contacts)
+	contactsParam, err := json.Marshal(req.Contacts)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -82,9 +86,15 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 		Btwnumber:    req.BTWNumber,
 		PhoneNumber:  req.PhoneNumber,
 		ClientNumber: req.ClientNumber,
-		Contacts:     contacts,
+		Contacts:     contactsParam,
 	})
 	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	contactsResp := make([]Contact, len(req.Contacts))
+	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -101,7 +111,9 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 		BTWNumber:    sender.Btwnumber,
 		PhoneNumber:  sender.PhoneNumber,
 		ClientNumber: sender.ClientNumber,
-		Contacts:     req.Contacts,
+		Contacts:     contactsResp,
+		CreatedAt:    sender.CreatedAt.Time.Format(time.RFC3339),
+		UpdatedAt:    sender.UpdatedAt.Time.Format(time.RFC3339),
 	}, "Sender created successfully")
 
 	ctx.JSON(http.StatusCreated, rsp)
@@ -128,6 +140,8 @@ type ListSendersResponse struct {
 	PhoneNumber  *string   `json:"phone_number"`
 	ClientNumber *string   `json:"client_number"`
 	Contacts     []Contact `json:"contacts"`
+	CreatedAt    string    `json:"created_at"`
+	UpdatedAt    string    `json:"updated_at"`
 }
 
 // ListSendersAPI returns a list of senders.
@@ -186,6 +200,8 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 			PhoneNumber:  sender.PhoneNumber,
 			ClientNumber: sender.ClientNumber,
 			Contacts:     contacts,
+			CreatedAt:    sender.CreatedAt.Time.Format(time.RFC3339),
+			UpdatedAt:    sender.UpdatedAt.Time.Format(time.RFC3339),
 		}
 	}
 
@@ -197,6 +213,128 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 
 	response := pagination.NewResponse(ctx, req.Request, responseSenders, totalCount)
 	res := SuccessResponse(response, "Senders retrieved successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateSenderRequest represents a request to update a sender.
+type UpdateSenderRequest struct {
+	Name         *string   `json:"name"`
+	Address      *string   `json:"address"`
+	PostalCode   *string   `json:"postal_code"`
+	Place        *string   `json:"place"`
+	Land         *string   `json:"land"`
+	Kvknumber    *string   `json:"kvknumber"`
+	Btwnumber    *string   `json:"btwnumber"`
+	PhoneNumber  *string   `json:"phone_number"`
+	ClientNumber *string   `json:"client_number"`
+	EmailAddress *string   `json:"email_address"`
+	Contacts     []Contact `json:"contacts"`
+	IsArchived   *bool     `json:"is_archived"`
+	Types        *string   `json:"types" binding:"omitempty,oneof=main_provider local_authority particular_party healthcare_institution"`
+}
+
+// UpdateSenderResponse represents a response to a request to update a sender.
+type UpdateSenderResponse struct {
+	ID           int64     `json:"id"`
+	Types        string    `json:"types"`
+	Name         string    `json:"name"`
+	Address      *string   `json:"address"`
+	PostalCode   *string   `json:"postal_code"`
+	Place        *string   `json:"place"`
+	Land         *string   `json:"land"`
+	Kvknumber    *string   `json:"kvknumber"`
+	Btwnumber    *string   `json:"btwnumber"`
+	PhoneNumber  *string   `json:"phone_number"`
+	ClientNumber *string   `json:"client_number"`
+	EmailAddress *string   `json:"email_address"`
+	Contacts     []Contact `json:"contacts"`
+	IsArchived   bool      `json:"is_archived"`
+	CreatedAt    string    `json:"created_at"`
+	UpdatedAt    string    `json:"updated_at"`
+}
+
+// @Summary Update a sender
+// @Description Update a sender
+// @Tags senders
+// @Accept json
+// @Produce json
+// @Param id path int true "Sender ID"
+// @Param request body UpdateSenderRequest true "Sender data"
+// @Success 200 {object} Response[UpdateSenderResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /senders/{id} [put]
+func (server *Server) UpdateSenderApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	senderID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateSenderRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Initialize update params with the ID
+	params := db.UpdateSenderParams{
+		ID:           senderID,
+		Name:         req.Name,
+		Address:      req.Address,
+		PostalCode:   req.PostalCode,
+		Place:        req.Place,
+		Land:         req.Land,
+		Kvknumber:    req.Kvknumber,
+		Btwnumber:    req.Btwnumber,
+		PhoneNumber:  req.PhoneNumber,
+		ClientNumber: req.ClientNumber,
+		EmailAddress: req.EmailAddress,
+		IsArchived:   req.IsArchived,
+		Types:        req.Types,
+	}
+
+	// Only include contacts in the update if it's provided in the request
+	if req.Contacts != nil {
+		contactsParam, err := json.Marshal(req.Contacts)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		params.Contacts = contactsParam
+	}
+
+	updatedSender, err := server.store.UpdateSender(ctx, params)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var contactsResp []Contact
+	if err := json.Unmarshal(updatedSender.Contacts, &contactsResp); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(UpdateSenderResponse{
+		ID:           updatedSender.ID,
+		Types:        updatedSender.Types,
+		Name:         updatedSender.Name,
+		Address:      updatedSender.Address,
+		PostalCode:   updatedSender.PostalCode,
+		Place:        updatedSender.Place,
+		Land:         updatedSender.Land,
+		Kvknumber:    updatedSender.Kvknumber,
+		Btwnumber:    updatedSender.Btwnumber,
+		PhoneNumber:  updatedSender.PhoneNumber,
+		ClientNumber: updatedSender.ClientNumber,
+		EmailAddress: updatedSender.EmailAddress,
+		Contacts:     contactsResp,
+		IsArchived:   updatedSender.IsArchived,
+		CreatedAt:    updatedSender.CreatedAt.Time.Format(time.RFC3339),
+		UpdatedAt:    updatedSender.UpdatedAt.Time.Format(time.RFC3339),
+	}, "Sender updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

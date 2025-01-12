@@ -40,11 +40,11 @@ INSERT INTO sender (
     btwnumber,
     phone_number,
     client_number,
-    email_adress,
+    email_address,
     contacts
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-) RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_adress, contacts, is_archived, created_at, updated_at
+) RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at
 `
 
 type CreateSenderParams struct {
@@ -58,7 +58,7 @@ type CreateSenderParams struct {
 	Btwnumber    *string `json:"btwnumber"`
 	PhoneNumber  *string `json:"phone_number"`
 	ClientNumber *string `json:"client_number"`
-	EmailAdress  *string `json:"email_adress"`
+	EmailAddress *string `json:"email_address"`
 	Contacts     []byte  `json:"contacts"`
 }
 
@@ -74,7 +74,7 @@ func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sen
 		arg.Btwnumber,
 		arg.PhoneNumber,
 		arg.ClientNumber,
-		arg.EmailAdress,
+		arg.EmailAddress,
 		arg.Contacts,
 	)
 	var i Sender
@@ -90,7 +90,7 @@ func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sen
 		&i.Btwnumber,
 		&i.PhoneNumber,
 		&i.ClientNumber,
-		&i.EmailAdress,
+		&i.EmailAddress,
 		&i.Contacts,
 		&i.IsArchived,
 		&i.CreatedAt,
@@ -100,7 +100,7 @@ func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sen
 }
 
 const getSenderById = `-- name: GetSenderById :one
-SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_adress, contacts, is_archived, created_at, updated_at FROM sender
+SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at FROM sender
 WHERE id = $1 LIMIT 1
 `
 
@@ -119,7 +119,7 @@ func (q *Queries) GetSenderById(ctx context.Context, id int64) (Sender, error) {
 		&i.Btwnumber,
 		&i.PhoneNumber,
 		&i.ClientNumber,
-		&i.EmailAdress,
+		&i.EmailAddress,
 		&i.Contacts,
 		&i.IsArchived,
 		&i.CreatedAt,
@@ -129,7 +129,7 @@ func (q *Queries) GetSenderById(ctx context.Context, id int64) (Sender, error) {
 }
 
 const listSenders = `-- name: ListSenders :many
-SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_adress, contacts, is_archived, created_at, updated_at FROM sender
+SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at FROM sender
 WHERE 
    (CASE WHEN $3::boolean THEN true ELSE NOT is_archived END)
    AND ($4::TEXT IS NULL OR name ILIKE '%' || $4 || '%')
@@ -170,7 +170,7 @@ func (q *Queries) ListSenders(ctx context.Context, arg ListSendersParams) ([]Sen
 			&i.Btwnumber,
 			&i.PhoneNumber,
 			&i.ClientNumber,
-			&i.EmailAdress,
+			&i.EmailAddress,
 			&i.Contacts,
 			&i.IsArchived,
 			&i.CreatedAt,
@@ -184,4 +184,82 @@ func (q *Queries) ListSenders(ctx context.Context, arg ListSendersParams) ([]Sen
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateSender = `-- name: UpdateSender :one
+UPDATE sender
+SET 
+    name = COALESCE($1, name),
+    address = COALESCE($2, address),
+    postal_code = COALESCE($3, postal_code),
+    place = COALESCE($4, place),
+    land = COALESCE($5, land),
+    kvknumber = COALESCE($6, kvknumber),
+    btwnumber = COALESCE($7, btwnumber),
+    phone_number = COALESCE($8, phone_number),
+    client_number = COALESCE($9, client_number),
+    email_address = COALESCE($10, email_address),
+    contacts = COALESCE($11::JSONB, contacts),
+    updated_at = NOW(),
+    is_archived = COALESCE($12, is_archived),
+    types = COALESCE($13, types)
+WHERE 
+    id = $14
+RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at
+`
+
+type UpdateSenderParams struct {
+	Name         *string `json:"name"`
+	Address      *string `json:"address"`
+	PostalCode   *string `json:"postal_code"`
+	Place        *string `json:"place"`
+	Land         *string `json:"land"`
+	Kvknumber    *string `json:"kvknumber"`
+	Btwnumber    *string `json:"btwnumber"`
+	PhoneNumber  *string `json:"phone_number"`
+	ClientNumber *string `json:"client_number"`
+	EmailAddress *string `json:"email_address"`
+	Contacts     []byte  `json:"contacts"`
+	IsArchived   *bool   `json:"is_archived"`
+	Types        *string `json:"types"`
+	ID           int64   `json:"id"`
+}
+
+func (q *Queries) UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sender, error) {
+	row := q.db.QueryRow(ctx, updateSender,
+		arg.Name,
+		arg.Address,
+		arg.PostalCode,
+		arg.Place,
+		arg.Land,
+		arg.Kvknumber,
+		arg.Btwnumber,
+		arg.PhoneNumber,
+		arg.ClientNumber,
+		arg.EmailAddress,
+		arg.Contacts,
+		arg.IsArchived,
+		arg.Types,
+		arg.ID,
+	)
+	var i Sender
+	err := row.Scan(
+		&i.ID,
+		&i.Types,
+		&i.Name,
+		&i.Address,
+		&i.PostalCode,
+		&i.Place,
+		&i.Land,
+		&i.Kvknumber,
+		&i.Btwnumber,
+		&i.PhoneNumber,
+		&i.ClientNumber,
+		&i.EmailAddress,
+		&i.Contacts,
+		&i.IsArchived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

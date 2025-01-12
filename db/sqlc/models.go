@@ -834,7 +834,7 @@ type Sender struct {
 	Btwnumber    *string            `json:"btwnumber"`
 	PhoneNumber  *string            `json:"phone_number"`
 	ClientNumber *string            `json:"client_number"`
-	EmailAdress  *string            `json:"email_adress"`
+	EmailAddress *string            `json:"email_address"`
 	Contacts     []byte             `json:"contacts"`
 	IsArchived   bool               `json:"is_archived"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
