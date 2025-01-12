@@ -99,42 +99,57 @@ definitions:
   api.CreateEmployeeProfileRequest:
     properties:
       authentication_phone_number:
+        example: "1234567890"
         type: string
       date_of_birth:
+        example: "2000-01-01"
         type: string
       department:
+        example: IT
         type: string
       email:
+        example: emai@exe.com
         type: string
       employee_number:
+        example: "123456"
         type: string
       employment_number:
+        example: "123456"
         type: string
       first_name:
+        example: fara
         type: string
       gender:
         type: string
       home_telephone_number:
+        example: "1234567890"
         type: string
       is_subcontractor:
+        example: false
         type: boolean
       last_name:
+        example: joe
         type: string
       location:
         example: 1
         type: integer
       out_of_service:
+        example: false
         type: boolean
       position:
+        example: developer
         type: string
       private_email_address:
+        example: joe@ex.com
         type: string
       private_phone_number:
+        example: "1234567890"
         type: string
       role_id:
         example: 1
         type: integer
       work_phone_number:
+        example: "1234567890"
         type: string
     required:
     - email
@@ -238,6 +253,8 @@ definitions:
         items:
           $ref: '#/definitions/api.Contact'
         type: array
+      created_at:
+        type: string
       id:
         type: integer
       land:
@@ -251,6 +268,8 @@ definitions:
       postal_code:
         type: string
       types:
+        type: string
+      updated_at:
         type: string
     type: object
   api.GetEmployeeProfileByIDApiResponse:
@@ -432,6 +451,8 @@ definitions:
         items:
           $ref: '#/definitions/api.Contact'
         type: array
+      created_at:
+        type: string
       id:
         type: integer
       land:
@@ -445,6 +466,8 @@ definitions:
       postal_code:
         type: string
       types:
+        type: string
+      updated_at:
         type: string
     type: object
   api.LoginUserRequest:
@@ -627,6 +650,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateSenderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateSenderResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_GetPermissionsByRoleIDApiResponse:
     properties:
       data:
@@ -772,6 +804,79 @@ definitions:
       user_id:
         type: integer
       work_phone_number:
+        type: string
+    type: object
+  api.UpdateSenderRequest:
+    properties:
+      address:
+        type: string
+      btwnumber:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      email_address:
+        type: string
+      is_archived:
+        type: boolean
+      kvknumber:
+        type: string
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        enum:
+        - main_provider
+        - local_authority
+        - particular_party
+        - healthcare_institution
+        type: string
+    type: object
+  api.UpdateSenderResponse:
+    properties:
+      address:
+        type: string
+      btwnumber:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      created_at:
+        type: string
+      email_address:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      kvknumber:
+        type: string
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        type: string
+      updated_at:
         type: string
     type: object
   pagination.Response-api_ListEmployeeResponse:
@@ -1470,6 +1575,45 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create a new sender
+      tags:
+      - senders
+  /senders/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a sender
+      parameters:
+      - description: Sender ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Sender data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateSenderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateSenderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a sender
       tags:
       - senders
 security:

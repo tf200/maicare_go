@@ -73,24 +73,24 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 
 // CreateEmployeeProfileRequest represents the request for CreateEmployeeProfileApi
 type CreateEmployeeProfileRequest struct {
-	EmployeeNumber            *string `json:"employee_number"`
-	EmploymentNumber          *string `json:"employment_number"`
+	EmployeeNumber            *string `json:"employee_number" example:"123456"`
+	EmploymentNumber          *string `json:"employment_number" example:"123456"`
 	Location                  *int64  `json:"location" example:"1"`
-	IsSubcontractor           *bool   `json:"is_subcontractor"`
-	FirstName                 string  `json:"first_name" binding:"required"`
-	LastName                  string  `json:"last_name" binding:"required"`
-	DateOfBirth               *string `json:"date_of_birth"`
-	Gender                    *string `json:"gender"`
-	Email                     string  `json:"email" binding:"required,email"`
-	PrivateEmailAddress       *string `json:"private_email_address" binding:"email"`
-	AuthenticationPhoneNumber *string `json:"authentication_phone_number"`
-	WorkPhoneNumber           *string `json:"work_phone_number"`
-	PrivatePhoneNumber        *string `json:"private_phone_number"`
-	HomeTelephoneNumber       *string `json:"home_telephone_number"`
-	OutOfService              *bool   `json:"out_of_service"`
+	IsSubcontractor           *bool   `json:"is_subcontractor" example:"false"`
+	FirstName                 string  `json:"first_name" binding:"required" example:"fara"`
+	LastName                  string  `json:"last_name" binding:"required" example:"joe"`
+	DateOfBirth               *string `json:"date_of_birth" example:"2000-01-01"`
+	Gender                    *string `json:"gender" exmple:"man"`
+	Email                     string  `json:"email" binding:"required,email" example:"emai@exe.com"`
+	PrivateEmailAddress       *string `json:"private_email_address" binding:"email" example:"joe@ex.com"`
+	AuthenticationPhoneNumber *string `json:"authentication_phone_number" example:"1234567890"`
+	WorkPhoneNumber           *string `json:"work_phone_number" example:"1234567890"`
+	PrivatePhoneNumber        *string `json:"private_phone_number" example:"1234567890"`
+	HomeTelephoneNumber       *string `json:"home_telephone_number" example:"1234567890"`
+	OutOfService              *bool   `json:"out_of_service" example:"false"`
 	RoleID                    int32   `json:"role_id" binding:"required" example:"1"`
-	Position                  *string `json:"position"`
-	Department                *string `json:"department"`
+	Position                  *string `json:"position" example:"developer"`
+	Department                *string `json:"department" example:"IT"`
 }
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
