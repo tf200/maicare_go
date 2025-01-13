@@ -14,9 +14,18 @@ permissions:
   - name: EMPLOYEE.DELETE
     resource: /employees
     method: [DELETE]
+  - name: ROLES.VIEW
+    resource: /roles
+    method: [GET]
+  - name: ROLES.CREATE
+    resource: /roles
+    method: [POST]  
   - name: ROLES.UPDATE
     resource: /roles/asign
     method: [PUT]
+  - name: ROLES.DELETE
+    resource: /roles
+    method: [DELETE]  
   - name: SENDER.CREATE
     resource: /senders
     method: [POST]
@@ -26,6 +35,12 @@ permissions:
   - name: SENDER.UPDATE
     resource: /senders
     method: [PUT]
+  - name: LOCATION.CREATE
+    resource: /locations
+    method: [POST]
+  - name: LOCATION.VIEW
+    resource: /locations
+    method: [GET]
   - name: DASHBOARD.VIEW
     resource: /dashboard
     method: [GET]
@@ -46,6 +61,8 @@ roles:
       - SENDER.VIEW
       - SENDER.UPDATE
       - DASHBOARD.VIEW
+      - LOCATION.CREATE
+      - LOCATION.VIEW
   - name: test
     id: 2
     description: "Test role"

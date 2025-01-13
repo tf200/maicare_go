@@ -1604,10 +1604,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "date_of_birth": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "department": {
                     "type": "string"

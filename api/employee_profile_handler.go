@@ -224,29 +224,29 @@ type ListEmployeeRequest struct {
 
 // ListEmployeeResponse represents the response for ListEmployeeProfileApi
 type ListEmployeeResponse struct {
-	ID                        int64              `json:"id"`
-	UserID                    int64              `json:"user_id"`
-	FirstName                 string             `json:"first_name"`
-	LastName                  string             `json:"last_name"`
-	Position                  *string            `json:"position"`
-	Department                *string            `json:"department"`
-	EmployeeNumber            *string            `json:"employee_number"`
-	EmploymentNumber          *string            `json:"employment_number"`
-	PrivateEmailAddress       *string            `json:"private_email_address"`
-	Email                     string             `json:"email"`
-	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string            `json:"private_phone_number"`
-	WorkPhoneNumber           *string            `json:"work_phone_number"`
-	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
-	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
-	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
-	IsSubcontractor           *bool              `json:"is_subcontractor"`
-	Gender                    *string            `json:"gender"`
-	LocationID                *int64             `json:"location_id"`
-	HasBorrowed               bool               `json:"has_borrowed"`
-	OutOfService              *bool              `json:"out_of_service"`
-	IsArchived                bool               `json:"is_archived"`
-	ProfilePicture            *string            `json:"profile_picture"`
+	ID                        int64     `json:"id"`
+	UserID                    int64     `json:"user_id"`
+	FirstName                 string    `json:"first_name"`
+	LastName                  string    `json:"last_name"`
+	Position                  *string   `json:"position"`
+	Department                *string   `json:"department"`
+	EmployeeNumber            *string   `json:"employee_number"`
+	EmploymentNumber          *string   `json:"employment_number"`
+	PrivateEmailAddress       *string   `json:"private_email_address"`
+	Email                     string    `json:"email"`
+	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string   `json:"private_phone_number"`
+	WorkPhoneNumber           *string   `json:"work_phone_number"`
+	DateOfBirth               time.Time `json:"date_of_birth"`
+	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
+	CreatedAt                 time.Time `json:"created_at"`
+	IsSubcontractor           *bool     `json:"is_subcontractor"`
+	Gender                    *string   `json:"gender"`
+	LocationID                *int64    `json:"location_id"`
+	HasBorrowed               bool      `json:"has_borrowed"`
+	OutOfService              *bool     `json:"out_of_service"`
+	IsArchived                bool      `json:"is_archived"`
+	ProfilePicture            *string   `json:"profile_picture"`
 }
 
 // @Summary List employee profiles
@@ -318,9 +318,9 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 			AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
 			PrivatePhoneNumber:        employee.PrivatePhoneNumber,
 			WorkPhoneNumber:           employee.WorkPhoneNumber,
-			DateOfBirth:               employee.DateOfBirth,
+			DateOfBirth:               employee.DateOfBirth.Time,
 			HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-			CreatedAt:                 employee.CreatedAt,
+			CreatedAt:                 employee.CreatedAt.Time,
 			IsSubcontractor:           employee.IsSubcontractor,
 			Gender:                    employee.Gender,
 			LocationID:                employee.LocationID,

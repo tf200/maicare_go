@@ -1,6 +1,7 @@
 package api
 
 import (
+	db "maicare_go/db/sqlc"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -42,5 +43,44 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 
 	res := SuccessResponse(responseLocations, "Locations retrieved successfully")
 
+	ctx.JSON(http.StatusOK, res)
+}
+
+// CreateLocationRequest represents a request to create a location
+type CreateLocationRequest struct {
+	Name     string `json:"name" binding:"required"`
+	Address  string `json:"address" binding:"required"`
+	Capacity *int32 `json:"capacity"`
+}
+
+// CreateLocationResponse represents a response for CreateLocationApi
+type CreateLocationResponse struct {
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Capacity *int32 `json:"capacity"`
+}
+
+func (server *Server) CreateLocationApi(ctx *gin.Context) {
+	var req CreateLocationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	location, err := server.store.CreateLocation(ctx, db.CreateLocationParams{
+		Name:     req.Name,
+		Address:  req.Address,
+		Capacity: req.Capacity,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(CreateLocationResponse{
+		ID:       location.ID,
+		Name:     location.Name,
+		Address:  location.Address,
+		Capacity: location.Capacity,
+	}, "Location created successfully")
 	ctx.JSON(http.StatusOK, res)
 }

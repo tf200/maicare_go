@@ -93,7 +93,7 @@ func TestGetRoleByIDApi(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			request, err := tc.buildRequest()
 			require.NoError(t, err)
-
+			
 			tc.setupAuth(t, request, testServer.tokenMaker)
 			testServer.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
