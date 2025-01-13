@@ -11,3 +11,14 @@ INSERT INTO location (
 
 -- name: ListLocations :many
 SELECT * FROM location;
+
+
+
+-- name: UpdateLocation :one
+UPDATE location
+SET
+    name = COALESCE(sqlc.narg('name'), name),
+    address = COALESCE(sqlc.narg('address'), address),
+    capacity = COALESCE(sqlc.narg('capacity'), capacity)
+WHERE id = $1
+RETURNING *;

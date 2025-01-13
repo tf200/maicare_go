@@ -239,7 +239,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[pagination.Response[db.ListEmployeeProfileRow]]
+				var response Response[pagination.Response[ListEmployeeResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -251,8 +251,8 @@ func TestListEmployeeProfileApi(t *testing.T) {
 
 				// Check results are ordered by created DESC
 				for i := 1; i < len(response.Data.Results); i++ {
-					require.True(t, response.Data.Results[i-1].CreatedAt.Time.After(response.Data.Results[i].CreatedAt.Time) ||
-						response.Data.Results[i-1].CreatedAt.Time.Equal(response.Data.Results[i].CreatedAt.Time))
+					require.True(t, response.Data.Results[i-1].CreatedAt.After(response.Data.Results[i].CreatedAt) ||
+						response.Data.Results[i-1].CreatedAt.Equal(response.Data.Results[i].CreatedAt))
 				}
 			},
 		},
@@ -302,7 +302,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[pagination.Response[db.ListEmployeeProfileRow]]
+				var response Response[pagination.Response[ListEmployeeResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 

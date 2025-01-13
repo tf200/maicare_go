@@ -41,6 +41,9 @@ permissions:
   - name: LOCATION.VIEW
     resource: /locations
     method: [GET]
+  - name: LOCATION.UPDATE
+    resource: /locations
+    method: [PUT]
   - name: DASHBOARD.VIEW
     resource: /dashboard
     method: [GET]
@@ -63,6 +66,7 @@ roles:
       - DASHBOARD.VIEW
       - LOCATION.CREATE
       - LOCATION.VIEW
+      - LOCATION.UPDATE
   - name: test
     id: 2
     description: "Test role"

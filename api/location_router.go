@@ -5,11 +5,12 @@ import "github.com/gin-gonic/gin"
 
 func (server *Server) setupLocationRoutes(baseRouter *gin.RouterGroup) {
 
-	locationGroup := baseRouter.Group("")
+	locationGroup := baseRouter.Group("/locations")
 	locationGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
-		locationGroup.GET("/locations", server.ListLocationsApi)
-		locationGroup.POST("/locations", RBACMiddleware(server.store, "LOCATION.CREATE"), server.CreateLocationApi)
+		locationGroup.GET("", server.ListLocationsApi)
+		locationGroup.POST("", RBACMiddleware(server.store, "LOCATION.CREATE"), server.CreateLocationApi)
+		locationGroup.PUT("/:id", RBACMiddleware(server.store, "LOCATION.UPDATE"), server.UpdateLocationApi)
 	}
 
 }

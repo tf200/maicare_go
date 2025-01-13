@@ -65,3 +65,37 @@ func (q *Queries) ListLocations(ctx context.Context) ([]Location, error) {
 	}
 	return items, nil
 }
+
+const updateLocation = `-- name: UpdateLocation :one
+UPDATE location
+SET
+    name = COALESCE($2, name),
+    address = COALESCE($3, address),
+    capacity = COALESCE($4, capacity)
+WHERE id = $1
+RETURNING id, name, address, capacity
+`
+
+type UpdateLocationParams struct {
+	ID       int64   `json:"id"`
+	Name     *string `json:"name"`
+	Address  *string `json:"address"`
+	Capacity *int32  `json:"capacity"`
+}
+
+func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) (Location, error) {
+	row := q.db.QueryRow(ctx, updateLocation,
+		arg.ID,
+		arg.Name,
+		arg.Address,
+		arg.Capacity,
+	)
+	var i Location
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.Capacity,
+	)
+	return i, err
+}

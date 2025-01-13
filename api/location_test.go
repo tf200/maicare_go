@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,6 +67,59 @@ func TestCreateLocationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var locationRes Response[CreateLocationResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&locationRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, locationRes.Data)
+				require.NotEmpty(t, locationRes.Data.ID)
+				require.NotEmpty(t, locationRes.Data.Name)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+
+}
+
+func TestUpdateLocationApi(t *testing.T) {
+	user := createRandomUser(t)
+	location := createRandomLocation(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				locationReq := UpdateLocationRequest{
+					Name: util.StringPtr("Updated Name"),
+				}
+				reqBody, err := json.Marshal(locationReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/locations/%d", location.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(reqBody))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var locationRes Response[UpdateLocationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&locationRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, locationRes.Data)

@@ -95,28 +95,28 @@ type CreateEmployeeProfileRequest struct {
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
 type CreateEmployeeProfileResponse struct {
-	ID                        int64              `json:"id"`
-	UserID                    int64              `json:"user_id"`
-	FirstName                 string             `json:"first_name"`
-	LastName                  string             `json:"last_name"`
-	Position                  *string            `json:"position"`
-	Department                *string            `json:"department"`
-	EmployeeNumber            *string            `json:"employee_number"`
-	EmploymentNumber          *string            `json:"employment_number"`
-	PrivateEmailAddress       *string            `json:"private_email_address"`
-	Email                     string             `json:"email"`
-	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string            `json:"private_phone_number"`
-	WorkPhoneNumber           *string            `json:"work_phone_number"`
-	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
-	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
-	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
-	IsSubcontractor           *bool              `json:"is_subcontractor"`
-	Gender                    *string            `json:"gender"`
-	LocationID                *int64             `json:"location_id"`
-	HasBorrowed               bool               `json:"has_borrowed"`
-	OutOfService              *bool              `json:"out_of_service"`
-	IsArchived                bool               `json:"is_archived"`
+	ID                        int64     `json:"id"`
+	UserID                    int64     `json:"user_id"`
+	FirstName                 string    `json:"first_name"`
+	LastName                  string    `json:"last_name"`
+	Position                  *string   `json:"position"`
+	Department                *string   `json:"department"`
+	EmployeeNumber            *string   `json:"employee_number"`
+	EmploymentNumber          *string   `json:"employment_number"`
+	PrivateEmailAddress       *string   `json:"private_email_address"`
+	Email                     string    `json:"email"`
+	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string   `json:"private_phone_number"`
+	WorkPhoneNumber           *string   `json:"work_phone_number"`
+	DateOfBirth               time.Time `json:"date_of_birth"`
+	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
+	CreatedAt                 time.Time `json:"created_at"`
+	IsSubcontractor           *bool     `json:"is_subcontractor"`
+	Gender                    *string   `json:"gender"`
+	LocationID                *int64    `json:"location_id"`
+	HasBorrowed               bool      `json:"has_borrowed"`
+	OutOfService              *bool     `json:"out_of_service"`
+	IsArchived                bool      `json:"is_archived"`
 }
 
 // @Summary Create employee profile
@@ -192,7 +192,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		FirstName:                 employee.Employee.FirstName,
 		LastName:                  employee.Employee.LastName,
 		IsSubcontractor:           employee.Employee.IsSubcontractor,
-		DateOfBirth:               employee.Employee.DateOfBirth,
+		DateOfBirth:               employee.Employee.DateOfBirth.Time,
 		Gender:                    employee.Employee.Gender,
 		Email:                     employee.Employee.Email,
 		PrivateEmailAddress:       employee.Employee.PrivateEmailAddress,
@@ -203,7 +203,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		OutOfService:              employee.Employee.OutOfService,
 		HasBorrowed:               employee.Employee.HasBorrowed,
 		UserID:                    employee.User.ID,
-		CreatedAt:                 employee.Employee.CreatedAt,
+		CreatedAt:                 employee.Employee.CreatedAt.Time,
 		IsArchived:                employee.Employee.IsArchived,
 		LocationID:                employee.Employee.LocationID,
 	}, "Employee profile created successfully")
@@ -338,30 +338,30 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 
 // GetEmployeeProfileByIDApiResponse represents the response for GetEmployeeProfileByIDApi
 type GetEmployeeProfileByIDApiResponse struct {
-	ID                        int64              `json:"id"`
-	UserID                    int64              `json:"user_id"`
-	FirstName                 string             `json:"first_name"`
-	LastName                  string             `json:"last_name"`
-	Position                  *string            `json:"position"`
-	Department                *string            `json:"department"`
-	EmployeeNumber            *string            `json:"employee_number"`
-	EmploymentNumber          *string            `json:"employment_number"`
-	PrivateEmailAddress       *string            `json:"private_email_address"`
-	Email                     string             `json:"email"`
-	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string            `json:"private_phone_number"`
-	WorkPhoneNumber           *string            `json:"work_phone_number"`
-	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
-	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
-	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
-	IsSubcontractor           *bool              `json:"is_subcontractor"`
-	Gender                    *string            `json:"gender"`
-	LocationID                *int64             `json:"location_id"`
-	HasBorrowed               bool               `json:"has_borrowed"`
-	OutOfService              *bool              `json:"out_of_service"`
-	IsArchived                bool               `json:"is_archived"`
-	ProfilePicture            *string            `json:"profile_picture"`
-	RoleID                    int32              `json:"role_id"`
+	ID                        int64     `json:"id"`
+	UserID                    int64     `json:"user_id"`
+	FirstName                 string    `json:"first_name"`
+	LastName                  string    `json:"last_name"`
+	Position                  *string   `json:"position"`
+	Department                *string   `json:"department"`
+	EmployeeNumber            *string   `json:"employee_number"`
+	EmploymentNumber          *string   `json:"employment_number"`
+	PrivateEmailAddress       *string   `json:"private_email_address"`
+	Email                     string    `json:"email"`
+	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string   `json:"private_phone_number"`
+	WorkPhoneNumber           *string   `json:"work_phone_number"`
+	DateOfBirth               time.Time `json:"date_of_birth"`
+	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
+	CreatedAt                 time.Time `json:"created_at"`
+	IsSubcontractor           *bool     `json:"is_subcontractor"`
+	Gender                    *string   `json:"gender"`
+	LocationID                *int64    `json:"location_id"`
+	HasBorrowed               bool      `json:"has_borrowed"`
+	OutOfService              *bool     `json:"out_of_service"`
+	IsArchived                bool      `json:"is_archived"`
+	ProfilePicture            *string   `json:"profile_picture"`
+	RoleID                    int32     `json:"role_id"`
 }
 
 // @Summary Get employee profile by  ID
@@ -397,9 +397,9 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
 		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
 		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		DateOfBirth:               employee.DateOfBirth,
+		DateOfBirth:               employee.DateOfBirth.Time,
 		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		CreatedAt:                 employee.CreatedAt,
+		CreatedAt:                 employee.CreatedAt.Time,
 		IsSubcontractor:           employee.IsSubcontractor,
 		Gender:                    employee.Gender,
 		LocationID:                employee.LocationID,
@@ -883,14 +883,14 @@ type UpdateEmployeeExperienceRequest struct {
 
 // UpdateEmployeeExperienceResponse represents the response for UpdateEmployeeExperienceApi
 type UpdateEmployeeExperienceResponse struct {
-	ID          int64   `json:"id"`
-	EmployeeID  int64   `json:"employee_id"`
-	JobTitle    string  `json:"job_title"`
-	CompanyName string  `json:"company_name"`
-	StartDate   string  `json:"start_date"`
-	EndDate     string  `json:"end_date"`
-	Description *string `json:"description"`
-	CreatedAt   string  `json:"created_at"`
+	ID          int64     `json:"id"`
+	EmployeeID  int64     `json:"employee_id"`
+	JobTitle    string    `json:"job_title"`
+	CompanyName string    `json:"company_name"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Description *string   `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // @Summary Update experience for employee profile
@@ -948,10 +948,10 @@ func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
 		EmployeeID:  experience.EmployeeID,
 		JobTitle:    experience.JobTitle,
 		CompanyName: experience.CompanyName,
-		StartDate:   experience.StartDate.Time.Format("2006-01-02"),
-		EndDate:     experience.EndDate.Time.Format("2006-01-02"),
+		StartDate:   experience.StartDate.Time,
+		EndDate:     experience.EndDate.Time,
 		Description: experience.Description,
-		CreatedAt:   experience.CreatedAt.Time.Format("2006-01-02"),
+		CreatedAt:   experience.CreatedAt.Time,
 	}, "Experience updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }

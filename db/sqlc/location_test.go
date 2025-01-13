@@ -46,3 +46,18 @@ func TestListLocations(t *testing.T) {
 		require.NotEmpty(t, location)
 	}
 }
+
+func TestUpdateLocation(t *testing.T) {
+	location := CreateRandomLocation(t)
+
+	arg := UpdateLocationParams{
+		ID:   location.ID,
+		Name: util.StringPtr("Updated Name"),
+	}
+
+	updatedLocation, err := testQueries.UpdateLocation(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedLocation)
+	require.NotEqual(t, location.Name, updatedLocation.Name)
+	require.Equal(t, location.ID, updatedLocation.ID)
+}
