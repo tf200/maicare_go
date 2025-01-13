@@ -162,9 +162,9 @@ definitions:
       authentication_phone_number:
         type: string
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       date_of_birth:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       department:
         type: string
       email:
@@ -202,6 +202,29 @@ definitions:
       user_id:
         type: integer
       work_phone_number:
+        type: string
+    type: object
+  api.CreateLocationRequest:
+    properties:
+      address:
+        type: string
+      capacity:
+        type: integer
+      name:
+        type: string
+    required:
+    - address
+    - name
+    type: object
+  api.CreateLocationResponse:
+    properties:
+      address:
+        type: string
+      capacity:
+        type: integer
+      id:
+        type: integer
+      name:
         type: string
     type: object
   api.CreateSenderRequest:
@@ -277,9 +300,9 @@ definitions:
       authentication_phone_number:
         type: string
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       date_of_birth:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       department:
         type: string
       email:
@@ -560,6 +583,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateLocationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateSenderResponse:
     properties:
       data:
@@ -645,6 +677,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdateEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateLocationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateLocationResponse'
       message:
         type: string
       success:
@@ -804,6 +845,26 @@ definitions:
       user_id:
         type: integer
       work_phone_number:
+        type: string
+    type: object
+  api.UpdateLocationRequest:
+    properties:
+      address:
+        type: string
+      capacity:
+        type: integer
+      name:
+        type: string
+    type: object
+  api.UpdateLocationResponse:
+    properties:
+      address:
+        type: string
+      capacity:
+        type: integer
+      id:
+        type: integer
+      name:
         type: string
     type: object
   api.UpdateSenderRequest:
@@ -1451,6 +1512,78 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: List all locations
+      tags:
+      - locations
+    post:
+      consumes:
+      - application/json
+      description: Create a new location
+      parameters:
+      - description: Create location
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateLocationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateLocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a location
+      tags:
+      - locations
+  /locations/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a location
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update location
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateLocationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateLocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a location
       tags:
       - locations
   /roles/{role_id}/permissions:
