@@ -44,6 +44,9 @@ permissions:
   - name: LOCATION.UPDATE
     resource: /locations
     method: [PUT]
+  - name: LOCATION.DELETE
+    resource: /locations
+    method: [DELETE]
   - name: DASHBOARD.VIEW
     resource: /dashboard
     method: [GET]
@@ -67,6 +70,7 @@ roles:
       - LOCATION.CREATE
       - LOCATION.VIEW
       - LOCATION.UPDATE
+      - LOCATION.DELETE
   - name: test
     id: 2
     description: "Test role"

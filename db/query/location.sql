@@ -22,3 +22,9 @@ SET
     capacity = COALESCE(sqlc.narg('capacity'), capacity)
 WHERE id = $1
 RETURNING *;
+
+
+-- name: DeleteLocation :one
+DELETE FROM location
+WHERE id = $1
+RETURNING *;

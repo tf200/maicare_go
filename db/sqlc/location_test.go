@@ -61,3 +61,12 @@ func TestUpdateLocation(t *testing.T) {
 	require.NotEqual(t, location.Name, updatedLocation.Name)
 	require.Equal(t, location.ID, updatedLocation.ID)
 }
+
+func TestDeleteLocation(t *testing.T) {
+	location := CreateRandomLocation(t)
+
+	deletedLocation, err := testQueries.DeleteLocation(context.Background(), location.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, deletedLocation)
+	require.Equal(t, location.ID, deletedLocation.ID)
+}

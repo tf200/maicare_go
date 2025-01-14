@@ -37,6 +37,24 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 	return i, err
 }
 
+const deleteLocation = `-- name: DeleteLocation :one
+DELETE FROM location
+WHERE id = $1
+RETURNING id, name, address, capacity
+`
+
+func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error) {
+	row := q.db.QueryRow(ctx, deleteLocation, id)
+	var i Location
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.Capacity,
+	)
+	return i, err
+}
+
 const listLocations = `-- name: ListLocations :many
 SELECT id, name, address, capacity FROM location
 `
