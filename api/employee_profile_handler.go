@@ -280,6 +280,9 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 		IncludeArchived:     req.IncludeArchived,
 		IncludeOutOfService: req.IncludeOutOfService,
 		Search:              req.Search,
+		Department:          req.Department,
+		Position:            req.Position,
+		LocationID:          req.LocationID,
 	}
 
 	employees, err := server.store.ListEmployeeProfile(ctx, arg)

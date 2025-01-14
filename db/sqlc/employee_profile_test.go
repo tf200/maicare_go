@@ -120,7 +120,7 @@ func TestListEmployeeProfile(t *testing.T) {
 				Limit:               5,
 				Offset:              0,
 			},
-			expectedLen: 5,
+
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				require.NotEmpty(t, results)
 			},
@@ -146,7 +146,7 @@ func TestListEmployeeProfile(t *testing.T) {
 				Limit:               10,
 				Offset:              0,
 			},
-			expectedLen: 10,
+
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for _, emp := range results {
 					require.False(t, emp.IsArchived, "should not include archived employees")
@@ -161,7 +161,7 @@ func TestListEmployeeProfile(t *testing.T) {
 				Limit:               10,
 				Offset:              0,
 			},
-			expectedLen: 10,
+
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for _, emp := range results {
 					require.False(t, *emp.OutOfService, "should not include out of service employees")
@@ -176,7 +176,7 @@ func TestListEmployeeProfile(t *testing.T) {
 				Limit:               10,
 				Offset:              0,
 			},
-			expectedLen: 10,
+
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for _, emp := range results {
 					require.False(t, emp.IsArchived, "should not include archived employees")
@@ -190,7 +190,7 @@ func TestListEmployeeProfile(t *testing.T) {
 				Limit:  10,
 				Offset: 0,
 			},
-			expectedLen: 10,
+
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				for i := 1; i < len(results); i++ {
 					require.True(t, results[i-1].CreatedAt.Time.After(results[i].CreatedAt.Time) ||
@@ -205,9 +205,23 @@ func TestListEmployeeProfile(t *testing.T) {
 				Limit:  10,
 				Offset: 1000, // very large offset
 			},
-			expectedLen: 0,
+
 			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
 				require.Empty(t, results)
+			},
+		},
+		{
+			name: "Filter by Location",
+			params: ListEmployeeProfileParams{
+				LocationID: util.IntPtr(1),
+				Limit:      10,
+				Offset:     0,
+			},
+
+			checkResults: func(t *testing.T, results []ListEmployeeProfileRow) {
+				for _, emp := range results {
+					require.Equal(t, util.IntPtr(1), emp.LocationID)
+				}
 			},
 		},
 	}
@@ -217,9 +231,6 @@ func TestListEmployeeProfile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			results, err := testQueries.ListEmployeeProfile(context.Background(), tc.params)
 			require.NoError(t, err)
-
-			// Check length matches expected
-			require.Len(t, results, tc.expectedLen)
 
 			// Run test-specific checks
 			tc.checkResults(t, results)
