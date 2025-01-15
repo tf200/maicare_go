@@ -183,3 +183,41 @@ func (server *Server) DeleteLocationApi(ctx *gin.Context) {
 	}, "Location deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// GetLocationResponse represents a response for GetLocationApi
+type GetLocationResponse struct {
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Capacity *int32 `json:"capacity"`
+}
+
+// @Summary Get a location
+// @Description Get a location
+// @Tags locations
+// @Accept json
+// @Produce json
+// @Param id path int true "Location ID"
+// @Success 200 {object} Response[GetLocationResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /locations/{id} [get]
+func (server *Server) GetLocationApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	locationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	location, err := server.store.GetLocation(ctx, locationID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(GetLocationResponse{
+		ID:       location.ID,
+		Name:     location.Name,
+		Address:  location.Address,
+		Capacity: location.Capacity,
+	}, "Location retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}

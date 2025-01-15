@@ -370,6 +370,17 @@ definitions:
       user_id:
         type: integer
     type: object
+  api.GetLocationResponse:
+    properties:
+      address:
+        type: string
+      capacity:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   api.GetPermissionsByRoleIDApiResponse:
     properties:
       id:
@@ -628,6 +639,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetLocationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetLocationResponse'
       message:
         type: string
       success:
@@ -1592,6 +1612,38 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Delete a location
+      tags:
+      - locations
+    get:
+      consumes:
+      - application/json
+      description: Get a location
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetLocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a location
       tags:
       - locations
     put:

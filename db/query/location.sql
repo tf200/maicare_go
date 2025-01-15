@@ -12,7 +12,9 @@ INSERT INTO location (
 -- name: ListLocations :many
 SELECT * FROM location;
 
-
+-- name: GetLocation :one
+SELECT * FROM location
+WHERE id = $1;
 
 -- name: UpdateLocation :one
 UPDATE location

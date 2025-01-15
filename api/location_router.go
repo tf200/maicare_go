@@ -11,6 +11,7 @@ func (server *Server) setupLocationRoutes(baseRouter *gin.RouterGroup) {
 		locationGroup.GET("", server.ListLocationsApi)
 		locationGroup.POST("", RBACMiddleware(server.store, "LOCATION.CREATE"), server.CreateLocationApi)
 		locationGroup.PUT("/:id", RBACMiddleware(server.store, "LOCATION.UPDATE"), server.UpdateLocationApi)
+		locationGroup.GET("/:id", server.GetLocationApi)
 		locationGroup.DELETE("/:id", RBACMiddleware(server.store, "LOCATION.DELETE"), server.DeleteLocationApi)
 	}
 
