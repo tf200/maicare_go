@@ -642,7 +642,7 @@ type ListEmployeeEducationResponse struct {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Success 200 {object} Response[ListEmployeeEducationResponse]
+// @Success 200 {object} Response[[]ListEmployeeEducationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/education [get]
 func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {

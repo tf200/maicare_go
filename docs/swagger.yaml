@@ -130,7 +130,7 @@ definitions:
       last_name:
         example: joe
         type: string
-      location:
+      location_id:
         example: 1
         type: integer
       out_of_service:
@@ -476,6 +476,13 @@ definitions:
       name:
         type: string
     type: object
+  api.ListRolesApiResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   api.ListSendersResponse:
     properties:
       BTWnumber:
@@ -662,15 +669,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ListEmployeeEducationResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListEmployeeEducationResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_LoginUserResponse:
     properties:
       data:
@@ -745,11 +743,33 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_ListEmployeeEducationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListEmployeeEducationResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_ListLocationsResponse:
     properties:
       data:
         items:
           $ref: '#/definitions/api.ListLocationsResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListRolesApiResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListRolesApiResponse'
         type: array
       message:
         type: string
@@ -974,6 +994,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.UploadHandlerResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
+    type: object
   pagination.Response-api_ListEmployeeResponse:
     properties:
       count:
@@ -1044,6 +1075,29 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
+  /attachments/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to the server
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UploadHandlerResponse'
+      security:
+      - Bearer: []
+      summary: Upload a file
+      tags:
+      - attachments
   /auth/refresh:
     post:
       consumes:
@@ -1321,7 +1375,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListEmployeeEducationResponse'
+            $ref: '#/definitions/api.Response-array_api_ListEmployeeEducationResponse'
         "400":
           description: Bad Request
           schema:
@@ -1684,6 +1738,31 @@ paths:
       summary: Update a location
       tags:
       - locations
+  /roles:
+    get:
+      description: List all roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListRolesApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List roles
+      tags:
+      - roles
   /roles/{role_id}/permissions:
     get:
       description: Get all permissions associated with a role ID

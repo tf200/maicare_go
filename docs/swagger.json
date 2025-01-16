@@ -16,6 +16,43 @@
     },
     "basePath": "/",
     "paths": {
+        "/attachments/upload": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Upload a file to the server",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "attachments"
+                ],
+                "summary": "Upload a file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UploadHandlerResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/refresh": {
             "post": {
                 "security": [
@@ -490,7 +527,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListEmployeeEducationResponse"
+                            "$ref": "#/definitions/api.Response-array_api_ListEmployeeEducationResponse"
                         }
                     },
                     "400": {
@@ -987,6 +1024,44 @@
                 }
             }
         },
+        "/roles": {
+            "get": {
+                "description": "List all roles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "List roles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_ListRolesApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/roles/assign": {
             "put": {
                 "description": "Assign a role to a user",
@@ -1433,7 +1508,7 @@
                     "type": "string",
                     "example": "joe"
                 },
-                "location": {
+                "location_id": {
                     "type": "integer",
                     "example": 1
                 },
@@ -1946,6 +2021,17 @@
                 }
             }
         },
+        "api.ListRolesApiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListSendersResponse": {
             "type": "object",
             "properties": {
@@ -2230,20 +2316,6 @@
                 }
             }
         },
-        "api.Response-api_ListEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListEmployeeEducationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_LoginUserResponse": {
             "type": "object",
             "properties": {
@@ -2359,6 +2431,23 @@
                 }
             }
         },
+        "api.Response-array_api_ListEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListEmployeeEducationResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-array_api_ListLocationsResponse": {
             "type": "object",
             "properties": {
@@ -2366,6 +2455,23 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListLocationsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListRolesApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListRolesApiResponse"
                     }
                 },
                 "message": {
@@ -2704,6 +2810,23 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "api.UploadHandlerResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
                 }
             }
         },
