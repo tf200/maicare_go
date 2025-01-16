@@ -21,7 +21,7 @@ func NewStore(connPool *pgxpool.Pool) *Store {
 type TxFn func(queries *Queries) error
 
 // ExecTx executes a function within a database transaction
-func (store *Store) execTx(ctx context.Context, fn TxFn) error {
+func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 	tx, err := store.connPool.Begin(ctx)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ type CreateEmployeeWithAccountTxResult struct {
 func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateEmployeeWithAccountTxParams) (CreateEmployeeWithAccountTxResult, error) {
 	var result CreateEmployeeWithAccountTxResult
 
-	err := store.execTx(ctx, func(q *Queries) error {
+	err := store.ExecTx(ctx, func(q *Queries) error {
 		var err error
 		result.User, err = q.CreateUser(ctx, arg.CreateUserParams)
 		if err != nil {
@@ -72,34 +72,3 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 	return result, err
 }
 
-type CreateClientWithAccountTxParams struct {
-	CreateUserParams   CreateUserParams
-	CreateClientParams CreateClientDetailsParams
-}
-
-type CreateClientWithAccountTxResult struct {
-	User   CustomUser
-	Client ClientDetail
-}
-
-func (store *Store) CreateClientWithAccountTx(ctx context.Context, arg CreateClientWithAccountTxParams) (CreateClientWithAccountTxResult, error) {
-	var result CreateClientWithAccountTxResult
-
-	err := store.execTx(ctx, func(q *Queries) error {
-		var err error
-		result.User, err = q.CreateUser(ctx, arg.CreateUserParams)
-		if err != nil {
-			return err
-		}
-
-		arg.CreateClientParams.UserID = result.User.ID
-		result.Client, err = q.CreateClientDetails(ctx, arg.CreateClientParams)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	return result, err
-}

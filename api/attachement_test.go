@@ -16,9 +16,18 @@ import (
 
 func createRandomFile(t *testing.T) (string, []byte) {
 	filename := fmt.Sprintf("test-%d.pdf", time.Now().UnixNano())
-	content := make([]byte, 100)
-	_, err := rand.Read(content)
+
+	// Create a minimal valid PDF file
+	content := []byte("%PDF-1.5\n%¥±ë\n\n1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj")
+
+	// Add some random content after the PDF header
+	randomContent := make([]byte, 100)
+	_, err := rand.Read(randomContent)
 	require.NoError(t, err)
+
+	// Combine the PDF header with random content
+	content = append(content, randomContent...)
+
 	return filename, content
 }
 
@@ -61,14 +70,14 @@ func TestUploadHandler(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response UploadHandlerResponse
+				var response Response[UploadHandlerResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
-				require.NotEmpty(t, response.FileURL)
-				require.NotEmpty(t, response.FileID)
-				require.NotEmpty(t, response.CreatedAt)
+				require.NotEmpty(t, response.Data.FileURL)
+				require.NotEmpty(t, response.Data.FileID)
+				require.NotEmpty(t, response.Data.CreatedAt)
 				require.Equal(t, "File uploaded successfully", response.Message)
-				require.Contains(t, response.FileURL, filename)
+
 			},
 		},
 		{

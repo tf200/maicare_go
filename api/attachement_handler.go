@@ -2,36 +2,97 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
+	"time"
 
+	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
 )
 
-type UploadHandlerResponse struct {
-	Message   string `json:"message"`
-	FileURL   string `json:"file_url"`
-	FileID    string `json:"file_id"`
-	CreatedAt string `json:"created_at"`
+const maxFileSize int64 = 10 << 20 // 10 MB
+
+var allowedMimeTypes = map[string]bool{
+	// Images
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/gif":  true,
+
+	// PDF
+	"application/pdf": true,
+
+	// Microsoft Office Documents
+	"application/msword": true, // .doc
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true, // .docx
+	"application/vnd.ms-excel": true, // .xls
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true, // .xlsx
+
+	// OpenDocument Formats
+	"application/vnd.oasis.opendocument.text":        true, // .odt
+	"application/vnd.oasis.opendocument.spreadsheet": true, // .ods
 }
 
-func (server *Server) UploadHandler(ctx *gin.Context) {
+// UploadHandler handles file uploads
+type UploadHandlerResponse struct {
+	FileURL   string    `json:"file_url"`
+	FileID    string    `json:"file_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Size      int64     `json:"size"`
+}
+
+// UploadHandler uploads a file to the server
+// @Summary Upload a file
+// @Description Upload a file to the server
+// @Tags attachments
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "File to upload"
+// @Success 200 {object} UploadHandlerResponse
+// @Router /attachments/upload [post]
+// @Security Bearer
+func (server *Server) UploadHandlerApi(ctx *gin.Context) {
+	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
 	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
+		if strings.Contains(err.Error(), "request body too large") {
+			ctx.JSON(http.StatusRequestEntityTooLarge, errorResponse(fmt.Errorf("file size exceeds maximum limit of 10MB")))
+			return
+		}
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	defer file.Close()
 
-	// Check if file is empty
-	if header.Size == 0 {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("file cannot be empty")))
+	// Basic validations
+	if err := bucket.ValidateFile(header, maxFileSize); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	filename := header.Filename
+	filename := bucket.GenerateUniqueFilename(header.Filename)
+
+	buff := make([]byte, 512)
+	_, err = file.Read(buff)
+	if err != nil && err != io.EOF {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("error reading file: %v", err)))
+		return
+	}
+
+	// Reset file pointer after reading
+	if _, err := file.Seek(0, 0); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("error resetting file: %v", err)))
+		return
+	}
+
+	// Verify content type
+	contentType := http.DetectContentType(buff)
+	if !allowedMimeTypes[contentType] {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("unsupported file type: %s", contentType)))
+		return
+	}
 
 	err = server.b2Client.UploadToB2(ctx.Request.Context(), file, filename)
 	if err != nil {
@@ -56,12 +117,12 @@ func (server *Server) UploadHandler(ctx *gin.Context) {
 		return
 	}
 
-	res := UploadHandlerResponse{
-		Message:   "File uploaded successfully",
+	res := SuccessResponse(UploadHandlerResponse{
 		FileURL:   fileURL,
 		FileID:    attachment.Uuid.String(),
-		CreatedAt: attachment.Created.Time.Format("2006-01-02 15:04:05"),
-	}
+		CreatedAt: attachment.Created.Time,
+		Size:      int64(attachment.Size),
+	}, "File uploaded successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

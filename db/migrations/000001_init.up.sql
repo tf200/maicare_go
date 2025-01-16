@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+CREATE EXTENSION IF NOT EXISTS pg_jsonschema;
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -224,13 +224,29 @@ CREATE TABLE client_details (
     organisation VARCHAR(100) NULL,
     departement VARCHAR(100) NULL,
     gender VARCHAR(100) NOT NULL,
-    filenumber INTEGER NOT NULL,
+    filenumber VANOT NULL,
     profile_picture VARCHAR(100) NULL,
     infix VARCHAR(100) NULL,
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE CASCADE,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
-    identity_attachment_ids JSONB NOT NULL DEFAULT '[]',
+    identity_attachments JSONB NOT NULL DEFAULT '[]' CHECK (
+        jsonb_matches_schema('{
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    -- Add your specific structure here
+                    -- Example: "id": { "type": "string" },
+                    -- Example: "type": { "type": "string" }
+                },
+                "required": [
+                    -- List required fields here
+                    -- Example: "id", "type"
+                ]
+            }
+        }', identity_attachment_ids)
+    ),
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
     gps_position JSONB NOT NULL DEFAULT '[]',

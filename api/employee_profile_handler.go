@@ -75,7 +75,7 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 type CreateEmployeeProfileRequest struct {
 	EmployeeNumber            *string `json:"employee_number" example:"123456"`
 	EmploymentNumber          *string `json:"employment_number" example:"123456"`
-	Location                  *int64  `json:"location" example:"1"`
+	LocationID                *int64  `json:"location_id" example:"1"`
 	IsSubcontractor           *bool   `json:"is_subcontractor" example:"false"`
 	FirstName                 string  `json:"first_name" binding:"required" example:"fara"`
 	LastName                  string  `json:"last_name" binding:"required" example:"joe"`
@@ -165,7 +165,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				LastName:                  req.LastName,
 				EmployeeNumber:            req.EmployeeNumber,
 				EmploymentNumber:          req.EmploymentNumber,
-				LocationID:                req.Location,
+				LocationID:                req.LocationID,
 				IsSubcontractor:           req.IsSubcontractor,
 				DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
 				Gender:                    req.Gender,

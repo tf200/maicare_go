@@ -102,7 +102,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				Empreq := CreateEmployeeProfileRequest{
 					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
 					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
-					Location:                  util.IntPtr(locationID),
+					LocationID:                util.IntPtr(locationID),
 					IsSubcontractor:           util.BoolPtr(util.RandomBool()),
 					FirstName:                 util.RandomString(6),
 					LastName:                  util.RandomString(8),
@@ -157,7 +157,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				Empreq := CreateEmployeeProfileRequest{
 					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
 					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
-					Location:                  util.IntPtr(locationID),
+					LocationID:                util.IntPtr(locationID),
 					IsSubcontractor:           util.BoolPtr(util.RandomBool()),
 					FirstName:                 util.RandomString(6),
 					LastName:                  util.RandomString(8),

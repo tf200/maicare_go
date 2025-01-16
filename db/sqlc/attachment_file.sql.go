@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createAttachment = `-- name: CreateAttachment :one
@@ -37,6 +39,31 @@ func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentPara
 		arg.Size,
 		arg.Tag,
 	)
+	var i AttachmentFile
+	err := row.Scan(
+		&i.Uuid,
+		&i.Name,
+		&i.File,
+		&i.Size,
+		&i.IsUsed,
+		&i.Tag,
+		&i.Updated,
+		&i.Created,
+	)
+	return i, err
+}
+
+const setAttachmentAsUsed = `-- name: SetAttachmentAsUsed :one
+UPDATE attachment_file
+SET
+    is_used = true
+WHERE
+    uuid = $1
+RETURNING uuid, name, file, size, is_used, tag, updated, created
+`
+
+func (q *Queries) SetAttachmentAsUsed(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, setAttachmentAsUsed, argUuid)
 	var i AttachmentFile
 	err := row.Scan(
 		&i.Uuid,

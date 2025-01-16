@@ -68,3 +68,5 @@ func TestCreateClientDetails(t *testing.T) {
 	require.Equal(t, arg.LegalMeasure, client.LegalMeasure)
 	require.Equal(t, arg.HasUntakenMedications, client.HasUntakenMedications)
 }
+
+

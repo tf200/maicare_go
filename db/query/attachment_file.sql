@@ -13,3 +13,10 @@ INSERT INTO attachment_file (
 
 
 
+-- name: SetAttachmentAsUsed :one
+UPDATE attachment_file
+SET
+    is_used = true
+WHERE
+    uuid = $1
+RETURNING *;

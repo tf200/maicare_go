@@ -138,7 +138,7 @@ type ClientDetail struct {
 	Organisation          *string            `json:"organisation"`
 	Departement           *string            `json:"departement"`
 	Gender                string             `json:"gender"`
-	Filenumber            int32              `json:"filenumber"`
+	Filenumber            interface{}        `json:"filenumber"`
 	ProfilePicture        *string            `json:"profile_picture"`
 	Infix                 *string            `json:"infix"`
 	Created               pgtype.Timestamptz `json:"created"`
