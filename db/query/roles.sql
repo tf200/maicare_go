@@ -25,3 +25,8 @@ UPDATE custom_user
 SET role_id = $1
 WHERE id = $2
 RETURNING id, role_id;
+
+
+-- name: ListRoles :many
+SELECT * FROM roles
+ORDER BY id;

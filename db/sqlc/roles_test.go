@@ -37,3 +37,13 @@ func TestAssignRoleToUser(t *testing.T) {
 	require.Equal(t, updatedUser.RoleID, int32(2))
 
 }
+
+func TestListRoles(t *testing.T) {
+	roles, err := testQueries.ListRoles(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, roles)
+	for _, role := range roles {
+		require.NotEmpty(t, role)
+	}
+
+}

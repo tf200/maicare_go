@@ -148,3 +148,33 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Role assigned to user successfully"))
 }
+
+// ListRolesApiResponse represents a response for ListRolesApi
+type ListRolesApiResponse struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+// @Summary List roles
+// @Description List all roles
+// @Tags roles
+// @Produce json
+// @Success 200 {object} Response[[]ListRolesApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /roles [get]
+func (server *Server) ListRolesApi(ctx *gin.Context) {
+	roles, err := server.store.ListRoles(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	response := make([]ListRolesApiResponse, len(roles))
+	for i, role := range roles {
+		response[i] = ListRolesApiResponse{
+			ID:   role.ID,
+			Name: role.Name,
+		}
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Roles retrieved successfully"))
+}
