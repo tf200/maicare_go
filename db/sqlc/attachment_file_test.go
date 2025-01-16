@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateAttachment(t *testing.T) {
+func createRandomAttachmentFile(t *testing.T) AttachmentFile {
 	tagvalue := "test"
 	arg := CreateAttachmentParams{
 		Name: util.RandomString(5),
@@ -29,4 +29,9 @@ func TestCreateAttachment(t *testing.T) {
 
 	require.NotZero(t, attachment.Uuid)
 	require.NotZero(t, attachment.Created)
+	return attachment
+}
+
+func TestCreateAttachment(t *testing.T) {
+	createRandomAttachmentFile(t)
 }

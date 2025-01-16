@@ -1399,6 +1399,52 @@ paths:
       summary: List education for employee profile
       tags:
       - employees
+    post:
+      consumes:
+      - application/json
+      description: Add education to employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Education details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddEducationToEmployeeProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_AddEducationToEmployeeProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add education to employee profile
+      tags:
+      - employees
   /employees/{id}/education/{education_id}:
     put:
       description: Update education for employee profile

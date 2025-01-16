@@ -13,7 +13,6 @@ import (
 
 const createClientDetails = `-- name: CreateClientDetails :one
 INSERT INTO client_details (
-    user_id,
     first_name,
     last_name,
     date_of_birth,
@@ -42,12 +41,11 @@ INSERT INTO client_details (
     has_untaken_medications
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
-) RETURNING id, user_id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+) RETURNING id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type CreateClientDetailsParams struct {
-	UserID                int64       `json:"user_id"`
 	FirstName             string      `json:"first_name"`
 	LastName              string      `json:"last_name"`
 	DateOfBirth           pgtype.Date `json:"date_of_birth"`
@@ -61,7 +59,7 @@ type CreateClientDetailsParams struct {
 	Organisation          *string     `json:"organisation"`
 	Departement           *string     `json:"departement"`
 	Gender                string      `json:"gender"`
-	Filenumber            interface{} `json:"filenumber"`
+	Filenumber            string      `json:"filenumber"`
 	ProfilePicture        *string     `json:"profile_picture"`
 	Infix                 *string     `json:"infix"`
 	SenderID              *int64      `json:"sender_id"`
@@ -78,7 +76,6 @@ type CreateClientDetailsParams struct {
 
 func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error) {
 	row := q.db.QueryRow(ctx, createClientDetails,
-		arg.UserID,
 		arg.FirstName,
 		arg.LastName,
 		arg.DateOfBirth,
@@ -109,7 +106,6 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 	var i ClientDetail
 	err := row.Scan(
 		&i.ID,
-		&i.UserID,
 		&i.FirstName,
 		&i.LastName,
 		&i.DateOfBirth,

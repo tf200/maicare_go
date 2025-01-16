@@ -210,7 +210,6 @@ CREATE INDEX idx_sender_audit_changed_by ON sender_audit(changed_by);
 
 CREATE TABLE client_details (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
@@ -224,7 +223,7 @@ CREATE TABLE client_details (
     organisation VARCHAR(100) NULL,
     departement VARCHAR(100) NULL,
     gender VARCHAR(100) NOT NULL,
-    filenumber VANOT NULL,
+    filenumber VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(100) NULL,
     infix VARCHAR(100) NULL,
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
@@ -240,7 +239,6 @@ CREATE TABLE client_details (
     has_untaken_medications BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX client_details_user_id_idx ON client_details(user_id);
 CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);
 CREATE INDEX client_details_location_id_idx ON client_details(location_id);
 

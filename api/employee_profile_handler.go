@@ -576,6 +576,7 @@ type AddEducationToEmployeeProfileResponse struct {
 // @Param request body AddEducationToEmployeeProfileRequest true "Education details"
 // @Success 201 {object} Response[AddEducationToEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/education [post]
 func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	employeeID, err := strconv.ParseInt(id, 10, 64)

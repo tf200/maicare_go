@@ -124,7 +124,6 @@ type ClientCurrentLevel struct {
 
 type ClientDetail struct {
 	ID                    int64              `json:"id"`
-	UserID                int64              `json:"user_id"`
 	FirstName             string             `json:"first_name"`
 	LastName              string             `json:"last_name"`
 	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
@@ -138,7 +137,7 @@ type ClientDetail struct {
 	Organisation          *string            `json:"organisation"`
 	Departement           *string            `json:"departement"`
 	Gender                string             `json:"gender"`
-	Filenumber            interface{}        `json:"filenumber"`
+	Filenumber            string             `json:"filenumber"`
 	ProfilePicture        *string            `json:"profile_picture"`
 	Infix                 *string            `json:"infix"`
 	Created               pgtype.Timestamptz `json:"created"`
