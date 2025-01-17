@@ -156,6 +156,7 @@ type ListSendersResponse struct {
 // @Param include_archived query bool false "Include archived"
 // @Success 200 {object} Response[pagination.Response[ListSendersResponse]]
 // @Failure 400,404,500 {object} Response[any]
+// @Router /senders [get]
 func (server *Server) ListSendersAPI(ctx *gin.Context) {
 	var req ListSendersRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {

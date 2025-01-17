@@ -2191,6 +2191,49 @@ paths:
       tags:
       - roles
   /senders:
+    get:
+      consumes:
+      - application/json
+      description: List senders
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Search
+        in: query
+        name: search
+        type: string
+      - description: Include archived
+        in: query
+        name: include_archived
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListSendersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List senders
+      tags:
+      - senders
     post:
       consumes:
       - application/json
