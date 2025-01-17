@@ -513,3 +513,59 @@ func TestUpdateEmployeeExperience(t *testing.T) {
 	require.NotEqual(t, experience.CompanyName, updatedExperience.CompanyName)
 
 }
+
+func addRandomCertification(t *testing.T, employeeID int64) Certification {
+	certificationArg := AddEmployeeCertificationParams{
+		EmployeeID: employeeID,
+		Name:       util.RandomString(5),
+		IssuedBy:   util.RandomString(5),
+		DateIssued: pgtype.Date{Time: time.Now(), Valid: true},
+	}
+
+	certification, err := testQueries.AddEmployeeCertification(context.Background(), certificationArg)
+	require.NoError(t, err)
+	require.NotEmpty(t, certification)
+	require.Equal(t, certificationArg.EmployeeID, certification.EmployeeID)
+	require.Equal(t, certificationArg.Name, certification.Name)
+	require.Equal(t, certificationArg.IssuedBy, certification.IssuedBy)
+	return certification
+}
+
+func TestAddEmployeeCertification(t *testing.T) {
+	emplyee, _ := createRandomEmployee(t)
+	addRandomCertification(t, emplyee.ID)
+}
+
+func TestListEmployeeCertifications(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	numCertifications := 5
+	var wg sync.WaitGroup
+	for i := 0; i < numCertifications; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			addRandomCertification(t, employee.ID)
+		}()
+	}
+	wg.Wait()
+
+	certifications, err := testQueries.ListEmployeeCertifications(context.Background(), employee.ID)
+	require.NoError(t, err)
+	require.Len(t, certifications, numCertifications)
+}
+
+func TestUpdateEmployeeCertification(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	certification := addRandomCertification(t, employee.ID)
+
+	arg := UpdateEmployeeCertificationParams{
+		ID:   certification.ID,
+		Name: util.StringPtr(util.RandomString(5)),
+	}
+
+	updatedCertification, err := testQueries.UpdateEmployeeCertification(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedCertification)
+	require.NotEqual(t, certification.Name, updatedCertification.Name)
+	require.Equal(t, certification.IssuedBy, updatedCertification.IssuedBy)
+}

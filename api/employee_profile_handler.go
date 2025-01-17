@@ -967,3 +967,180 @@ func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
 	}, "Experience updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// AddEmployeeCertificationRequest represents the request for AddEmployeeCertificationApi
+type AddEmployeeCertificationRequest struct {
+	Name       string `json:"name"`
+	IssuedBy   string `json:"issued_by"`
+	DateIssued string `json:"date_issued" time_format:"2006-01-02"`
+}
+
+// AddEmployeeCertificationResponse represents the response for AddEmployeeCertificationApi
+type AddEmployeeCertificationResponse struct {
+	ID         int64              `json:"id"`
+	EmployeeID int64              `json:"employee_id"`
+	Name       string             `json:"name"`
+	IssuedBy   string             `json:"issued_by"`
+	DateIssued pgtype.Date        `json:"date_issued"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+// @Summary Add certification to employee profile
+// @Description Add certification to employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param request body AddEmployeeCertificationRequest true "Certification details"
+// @Success 201 {object} Response[AddEmployeeCertificationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/certification [post]
+func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req AddEmployeeCertificationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	parsedDate, err := time.Parse("2006-01-02", req.DateIssued)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.AddEmployeeCertificationParams{
+		EmployeeID: employeeID,
+		Name:       req.Name,
+		IssuedBy:   req.IssuedBy,
+		DateIssued: pgtype.Date{Time: parsedDate, Valid: true},
+	}
+	certification, err := server.store.AddEmployeeCertification(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(AddEmployeeCertificationResponse{
+		ID:         certification.ID,
+		EmployeeID: certification.EmployeeID,
+		Name:       certification.Name,
+		IssuedBy:   certification.IssuedBy,
+		DateIssued: certification.DateIssued,
+		CreatedAt:  certification.CreatedAt,
+	}, "Certification added to employee profile successfully")
+	ctx.JSON(http.StatusCreated, res)
+}
+
+// ListEmployeeCertificationResponse represents the response for ListEmployeeCertificationApi
+type ListEmployeeCertificationResponse struct {
+	ID         int64       `json:"id"`
+	EmployeeID int64       `json:"employee_id"`
+	Name       string      `json:"name"`
+	IssuedBy   string      `json:"issued_by"`
+	DateIssued pgtype.Date `json:"date_issued"`
+}
+
+// @Summary List certifications for employee profile
+// @Description Get a list of certifications for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Success 200 {object} Response[[]ListEmployeeCertificationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/certification [get]
+func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	certifications, err := server.store.ListEmployeeCertifications(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	responseCertifications := make([]ListEmployeeCertificationResponse, len(certifications))
+	for i, certification := range certifications {
+		responseCertifications[i] = ListEmployeeCertificationResponse{
+			ID:         certification.ID,
+			EmployeeID: certification.EmployeeID,
+			Name:       certification.Name,
+			IssuedBy:   certification.IssuedBy,
+			DateIssued: certification.DateIssued,
+		}
+	}
+	res := SuccessResponse(responseCertifications, "Employee certifications retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateEmployeeCertificationRequest represents the request for UpdateEmployeeCertificationApi
+type UpdateEmployeeCertificationRequest struct {
+	Name       *string `json:"name"`
+	IssuedBy   *string `json:"issued_by"`
+	DateIssued *string `json:"date_issued" time_format:"2006-01-02"`
+}
+
+// UpdateEmployeeCertificationResponse represents the response for UpdateEmployeeCertificationApi
+type UpdateEmployeeCertificationResponse struct {
+	ID         int64              `json:"id"`
+	EmployeeID int64              `json:"employee_id"`
+	Name       string             `json:"name"`
+	IssuedBy   string             `json:"issued_by"`
+	DateIssued pgtype.Date        `json:"date_issued"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+// @Summary Update certification for employee profile
+// @Description Update certification for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param certification_id path int true "Certification ID"
+// @Param request body UpdateEmployeeCertificationRequest true "Certification details"
+// @Success 200 {object} Response[UpdateEmployeeCertificationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/certification/{certification_id} [put]
+func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
+	id := ctx.Param(":certification_id")
+	certificationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req UpdateEmployeeCertificationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var parsedDate time.Time
+	if req.DateIssued != nil {
+		parsedDate, err = time.Parse("2006-01-02", *req.DateIssued)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+	}
+
+	certification, err := server.store.UpdateEmployeeCertification(ctx, db.UpdateEmployeeCertificationParams{
+		ID:         certificationID,
+		Name:       req.Name,
+		IssuedBy:   req.IssuedBy,
+		DateIssued: pgtype.Date{Time: parsedDate, Valid: true},
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(UpdateEmployeeCertificationResponse{
+		ID:         certification.ID,
+		EmployeeID: certification.EmployeeID,
+		Name:       certification.Name,
+		IssuedBy:   certification.IssuedBy,
+		DateIssued: certification.DateIssued,
+		CreatedAt:  certification.CreatedAt,
+	}, "Certification updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}

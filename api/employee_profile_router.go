@@ -21,6 +21,10 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 		employeeGroup.GET("/:id/experience", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeExperienceApi)
 		employeeGroup.PUT("/:id/experience/:experience_id", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.UpdateEmployeeExperienceApi)
 
+		employeeGroup.POST("/:id/certification", RBACMiddleware(server.store, "EMPLOYEE.CREATE"), server.AddEmployeeCertificationApi)
+		employeeGroup.GET("/:id/certification", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeCertificationApi)
+		employeeGroup.PUT("/:id/certification/:certification_id", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.UpdateEmployeeCertificationApi)
+
 	}
 	// Add other auth routes
 	// auth.POST("/refresh", server.RefreshToken)

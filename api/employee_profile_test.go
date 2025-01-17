@@ -661,4 +661,56 @@ func TestAddEmployeeExperienceApi(t *testing.T) {
 
 }
 
-// to do test list employee experience
+func TestAddEmployeeCertificationApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				addCertificationReq := AddEmployeeCertificationRequest{
+					Name:       "AWS Certified Developer",
+					IssuedBy:   "AWS",
+					DateIssued: "2022-01-01",
+				}
+				data, err := json.Marshal(addCertificationReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/employees/%d/certification", employee.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusCreated, recorder.Code)
+
+				var response Response[AddEmployeeCertificationResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+
+				require.Equal(t, "AWS Certified Developer", response.Data.Name)
+				require.Equal(t, "AWS", response.Data.IssuedBy)
+				require.Equal(t, "2022-01-01", response.Data.DateIssued.Time.Format("2006-01-02"))
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}

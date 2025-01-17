@@ -1,15 +1,27 @@
 # Stage 1: Builder
 FROM golang:1.23.4-alpine3.21 AS builder
+
+# Set the working directory
 WORKDIR /app
+
+# Copy the go.mod and go.sum files first to cache dependencies
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the application source code
 COPY . .
+
+ENV GOPROXY=https://proxy.golang.org,direct
+
+# Build the Go application
 RUN go build -o main main.go
 
 # Stage 2: Final Image
 FROM alpine:latest
 
-# Install any necessary packages (optional)
-# RUN apk add --no-cache bash
-
+# Set the working directory
 WORKDIR /app
 
 # Copy the compiled binary from the builder stage

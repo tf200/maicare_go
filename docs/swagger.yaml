@@ -36,6 +36,30 @@ definitions:
       start_date:
         type: string
     type: object
+  api.AddEmployeeCertificationRequest:
+    properties:
+      date_issued:
+        type: string
+      issued_by:
+        type: string
+      name:
+        type: string
+    type: object
+  api.AddEmployeeCertificationResponse:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_issued:
+        $ref: '#/definitions/pgtype.Date'
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      issued_by:
+        type: string
+      name:
+        type: string
+    type: object
   api.AddEmployeeExperienceRequest:
     properties:
       company_name:
@@ -399,6 +423,19 @@ definitions:
       name:
         type: string
     type: object
+  api.ListEmployeeCertificationResponse:
+    properties:
+      date_issued:
+        $ref: '#/definitions/pgtype.Date'
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      issued_by:
+        type: string
+      name:
+        type: string
+    type: object
   api.ListEmployeeEducationResponse:
     properties:
       degree:
@@ -598,6 +635,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_AddEmployeeCertificationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AddEmployeeCertificationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_AddEmployeeExperienceResponse:
     properties:
       data:
@@ -706,6 +752,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateEmployeeCertificationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateEmployeeCertificationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateEmployeeEducationResponse:
     properties:
       data:
@@ -756,6 +811,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.GetPermissionsByRoleIDApiResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListEmployeeCertificationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListEmployeeCertificationResponse'
         type: array
       message:
         type: string
@@ -823,6 +889,30 @@ definitions:
         type: string
       success:
         type: boolean
+    type: object
+  api.UpdateEmployeeCertificationRequest:
+    properties:
+      date_issued:
+        type: string
+      issued_by:
+        type: string
+      name:
+        type: string
+    type: object
+  api.UpdateEmployeeCertificationResponse:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_issued:
+        $ref: '#/definitions/pgtype.Date'
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      issued_by:
+        type: string
+      name:
+        type: string
     type: object
   api.UpdateEmployeeEducationRequest:
     properties:
@@ -1388,6 +1478,139 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update employee profile by ID
+      tags:
+      - employees
+  /employees/{id}/certification:
+    get:
+      description: Get a list of certifications for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListEmployeeCertificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List certifications for employee profile
+      tags:
+      - employees
+    post:
+      description: Add certification to employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Certification details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddEmployeeCertificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_AddEmployeeCertificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add certification to employee profile
+      tags:
+      - employees
+  /employees/{id}/certification/{certification_id}:
+    put:
+      description: Update certification for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Certification ID
+        in: path
+        name: certification_id
+        required: true
+        type: integer
+      - description: Certification details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateEmployeeCertificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateEmployeeCertificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update certification for employee profile
       tags:
       - employees
   /employees/{id}/education:

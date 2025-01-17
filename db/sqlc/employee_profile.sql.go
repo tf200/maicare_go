@@ -56,6 +56,44 @@ func (q *Queries) AddEducationToEmployeeProfile(ctx context.Context, arg AddEduc
 	return i, err
 }
 
+const addEmployeeCertification = `-- name: AddEmployeeCertification :one
+INSERT INTO certification (
+    employee_id,
+    name,
+    issued_by,
+    date_issued
+) VALUES (
+    $1, $2, $3, $4
+) 
+RETURNING id, employee_id, name, issued_by, date_issued, created_at
+`
+
+type AddEmployeeCertificationParams struct {
+	EmployeeID int64       `json:"employee_id"`
+	Name       string      `json:"name"`
+	IssuedBy   string      `json:"issued_by"`
+	DateIssued pgtype.Date `json:"date_issued"`
+}
+
+func (q *Queries) AddEmployeeCertification(ctx context.Context, arg AddEmployeeCertificationParams) (Certification, error) {
+	row := q.db.QueryRow(ctx, addEmployeeCertification,
+		arg.EmployeeID,
+		arg.Name,
+		arg.IssuedBy,
+		arg.DateIssued,
+	)
+	var i Certification
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.Name,
+		&i.IssuedBy,
+		&i.DateIssued,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const addEmployeeExperience = `-- name: AddEmployeeExperience :one
 INSERT INTO employee_experience (
     employee_id,
@@ -392,6 +430,37 @@ func (q *Queries) ListEducations(ctx context.Context, employeeID int64) ([]Emplo
 	return items, nil
 }
 
+const listEmployeeCertifications = `-- name: ListEmployeeCertifications :many
+SELECT id, employee_id, name, issued_by, date_issued, created_at FROM certification WHERE employee_id = $1
+`
+
+func (q *Queries) ListEmployeeCertifications(ctx context.Context, employeeID int64) ([]Certification, error) {
+	rows, err := q.db.Query(ctx, listEmployeeCertifications, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Certification
+	for rows.Next() {
+		var i Certification
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.Name,
+			&i.IssuedBy,
+			&i.DateIssued,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEmployeeExperience = `-- name: ListEmployeeExperience :many
 SELECT id, employee_id, job_title, company_name, start_date, end_date, description, created_at FROM employee_experience WHERE employee_id = $1
 `
@@ -540,6 +609,42 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateEmployeeCertification = `-- name: UpdateEmployeeCertification :one
+UPDATE certification
+SET
+    name = COALESCE($2, name),
+    issued_by = COALESCE($3, issued_by),
+    date_issued = COALESCE($4, date_issued)
+WHERE id = $1
+RETURNING id, employee_id, name, issued_by, date_issued, created_at
+`
+
+type UpdateEmployeeCertificationParams struct {
+	ID         int64       `json:"id"`
+	Name       *string     `json:"name"`
+	IssuedBy   *string     `json:"issued_by"`
+	DateIssued pgtype.Date `json:"date_issued"`
+}
+
+func (q *Queries) UpdateEmployeeCertification(ctx context.Context, arg UpdateEmployeeCertificationParams) (Certification, error) {
+	row := q.db.QueryRow(ctx, updateEmployeeCertification,
+		arg.ID,
+		arg.Name,
+		arg.IssuedBy,
+		arg.DateIssued,
+	)
+	var i Certification
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.Name,
+		&i.IssuedBy,
+		&i.DateIssued,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateEmployeeEducation = `-- name: UpdateEmployeeEducation :one

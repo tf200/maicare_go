@@ -26,7 +26,7 @@ func CreateRandomUser(t *testing.T) *CustomUser {
 	// }
 	arg := CreateUserParams{
 		Password:       hashedPassword,
-		Email:          "testemail@gmail.com",
+		Email:          util.RandomEmail(),
 		IsActive:       true,
 		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
 		RoleID:         1,
