@@ -11,7 +11,7 @@ REFRESH_TOKEN_DURATION=${REFRESH_TOKEN_DURATION:-24h}
 B2_KEY=${B2_KEY:-K003dk/vnwXGlPZ5cQ+A4dAgpMC6MQw}
 B2_KEY_ID=${B2_KEY_ID:-003247f6d308a9c0000000001}
 B2_BUCKET=${B2_BUCKET:-maicare}
-HOST=${HOST:-maicare-back.onrender.com/}
+HOST=${HOST:-maicare-back.onrender.com}
 EOF
 
 # Run the main application
