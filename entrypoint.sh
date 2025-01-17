@@ -1,22 +1,18 @@
 #!/bin/sh
 
-# Generate app.env from environment variables
-# cat <<EOF > /app/app.env
-# DB_SOURCE=${DB_SOURCE}
-# SERVER_ADDRESS=${SERVER_ADDRESS}
-# ACCESS_TOKEN_SECRET_KEY=${ACCESS_TOKEN_SECRET_KEY}
-# REFRESH_TOKEN_SECRET_KEY=${REFRESH_TOKEN_SECRET_KEY}
-# ACCESS_TOKEN_DURATION=${ACCESS_TOKEN_DURATION}
-# REFRESH_TOKEN_DURATION=${REFRESH_TOKEN_DURATION}
-# B2_KEY=${B2_KEY}
-# B2_KEY_ID=${B2_KEY_ID}
-# B2_BUCKET=${B2_BUCKET}
-# HOST=${HOST}
-# EOF
+# Create the app.env file dynamically
+cat <<EOF > /app/app.env
+DB_SOURCE=${DB_SOURCE:-postgresql://user:jCjVBejKHMCUC5VjtLbTz69hVgJBfUHC@dpg-ct8ncs68ii6s73cd8oug-a.oregon-postgres.render.com/mdev_z2v5}
+SERVER_ADDRESS=${SERVER_ADDRESS:-0.0.0.0:8080}
+ACCESS_TOKEN_SECRET_KEY=${ACCESS_TOKEN_SECRET_KEY:-a717538c5f8fae42b6d11df5562fc9cf9d3315f5924c3bcfd41983c9fd7f499b}
+REFRESH_TOKEN_SECRET_KEY=${REFRESH_TOKEN_SECRET_KEY:-78047b77a3e0af5edb34401fa59ee6dbf623c66a0010aef85007ae923edd8094}
+ACCESS_TOKEN_DURATION=${ACCESS_TOKEN_DURATION:-900s}
+REFRESH_TOKEN_DURATION=${REFRESH_TOKEN_DURATION:-24h}
+B2_KEY=${B2_KEY:-K003dk/vnwXGlPZ5cQ+A4dAgpMC6MQw}
+B2_KEY_ID=${B2_KEY_ID:-003247f6d308a9c0000000001}
+B2_BUCKET=${B2_BUCKET:-maicare}
+HOST=${HOST:-maicare-back.onrender.com/}
+EOF
 
-# # Echo the contents for debugging
-# echo "Generated app.env contents:"
-# cat /app/app.env
-
-# Execute the main application
+# Run the main application
 exec /app/main
