@@ -1,12 +1,12 @@
 package api
 
-
 // Response represents a generic API response
 type Response[T any] struct {
 	Success bool   `json:"success"`
-	Message string `json:"message,omitempty"`
-	Data    T      `json:"data,omitempty"`
+	Message string `json:"message"`
+	Data    T      `json:"data"`
 }
+
 // SuccessResponse creates a successful response with data
 func SuccessResponse[T any](data T, message string) Response[T] {
 	return Response[T]{

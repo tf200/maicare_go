@@ -1,4 +1,5 @@
 app.env
 venv/
 admin.py
-
+dev.env
+entrypoint.sh
