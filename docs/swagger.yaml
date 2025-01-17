@@ -416,6 +416,25 @@ definitions:
       start_date:
         type: string
     type: object
+  api.ListEmployeeExperienceResponse:
+    properties:
+      company_name:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      employee_id:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      job_title:
+        type: string
+      start_date:
+        type: string
+    type: object
   api.ListEmployeeResponse:
     properties:
       authentication_phone_number:
@@ -748,6 +767,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.ListEmployeeEducationResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListEmployeeExperienceResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListEmployeeExperienceResponse'
         type: array
       message:
         type: string
@@ -1496,6 +1526,44 @@ paths:
       tags:
       - employees
   /employees/{id}/experience:
+    get:
+      description: Get a list of experience for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListEmployeeExperienceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List experience for employee profile
+      tags:
+      - employees
     post:
       description: Add experience to employee profile
       parameters:

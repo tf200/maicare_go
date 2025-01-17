@@ -16,6 +16,7 @@ type Config struct {
 	B2Key                 string        `mapstructure:"B2_KEY"`
 	B2KeyID               string        `mapstructure:"B2_KEY_ID"`
 	B2Bucket              string        `mapstructure:"B2_BUCKET"`
+	Host                  string        `mapstructure:"HOST"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

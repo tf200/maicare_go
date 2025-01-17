@@ -847,6 +847,14 @@ type ListEmployeeExperienceResponse struct {
 	CreatedAt   string  `json:"created_at"`
 }
 
+// @Summary List experience for employee profile
+// @Description Get a list of experience for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Success 200 {object} Response[[]ListEmployeeExperienceResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/experience [get]
 func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	employeeID, err := strconv.ParseInt(id, 10, 64)
