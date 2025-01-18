@@ -35,6 +35,9 @@ var allowedMimeTypes = map[string]bool{
 	// OpenDocument Formats
 	"application/vnd.oasis.opendocument.text":        true, // .odt
 	"application/vnd.oasis.opendocument.spreadsheet": true, // .ods
+
+	// Allow ZIP files (for .docx, etc.)
+	"application/zip": true,
 }
 
 // UploadHandler handles file uploads
