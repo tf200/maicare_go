@@ -941,6 +941,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UploadHandlerResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UploadHandlerResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_GetPermissionsByRoleIDApiResponse:
     properties:
       data:
@@ -1330,29 +1339,6 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
-  /attachments/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Upload a file to the server
-      parameters:
-      - description: File to upload
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.UploadHandlerResponse'
-      security:
-      - Bearer: []
-      summary: Upload a file
-      tags:
-      - attachments
   /auth/refresh:
     post:
       consumes:
@@ -2474,6 +2460,27 @@ paths:
       summary: Update a sender
       tags:
       - senders
+  /upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to the server
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UploadHandlerResponse'
+      summary: Upload a file
+      tags:
+      - attachments
 security:
 - Bearer: []
 securityDefinitions:

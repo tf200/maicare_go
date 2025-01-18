@@ -23,43 +23,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/attachments/upload": {
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Upload a file to the server",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "attachments"
-                ],
-                "summary": "Upload a file",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "File to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.UploadHandlerResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/refresh": {
             "post": {
                 "security": [
@@ -1758,6 +1721,38 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/upload": {
+            "post": {
+                "description": "Upload a file to the server",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "attachments"
+                ],
+                "summary": "Upload a file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UploadHandlerResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -3167,6 +3162,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UpdateSenderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_UploadHandlerResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UploadHandlerResponse"
                 },
                 "message": {
                     "type": "string"

@@ -52,9 +52,8 @@ type UploadHandlerResponse struct {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "File to upload"
-// @Success 200 {object} UploadHandlerResponse
+// @Success 200 {object} Response[UploadHandlerResponse]
 // @Router /upload [post]
-// @Security Bearer
 func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
 	file, header, err := ctx.Request.FormFile("file")
