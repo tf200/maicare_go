@@ -1,9 +1,9 @@
 
 migrateup:
-	migrate -path db/migrations -database "postgresql://user:jCjVBejKHMCUC5VjtLbTz69hVgJBfUHC@dpg-ct8ncs68ii6s73cd8oug-a.oregon-postgres.render.com/mdev_z2v5" -verbose up
+	migrate -path db/migrations -database "postgresql://maicaredb_user:HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4@dpg-cu56483tq21c73e1bqmg-a.frankfurt-postgres.render.com/maicaredb" -verbose up
 
 migratedown:
-	migrate -path db/migrations -database "postgresql://user:jCjVBejKHMCUC5VjtLbTz69hVgJBfUHC@dpg-ct8ncs68ii6s73cd8oug-a.oregon-postgres.render.com/mdev_z2v5" -verbose down
+	migrate -path db/migrations -database "postgresql://maicaredb_user:HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4@dpg-cu56483tq21c73e1bqmg-a.frankfurt-postgres.render.com/maicaredb" -verbose down
 
 sqlc:
 	sqlc generate
