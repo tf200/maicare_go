@@ -26,6 +26,6 @@ admin:
 	python3 admin.py
 
 push:
-	git push && sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back
+	sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back && git push 
 
 .PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push

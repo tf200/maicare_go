@@ -53,6 +53,22 @@ permissions:
   - name: CLIENT.CREATE
     resource: /clients
     method: [POST]
+  - name: CLIENT.VIEW
+    resource: /clients
+    method: [GET]
+  - name: FINANCE.VIEW
+    resource: /finance
+    method: [GET]
+  - name: PROFILE.VIEW
+    resource: /finance
+    method: [POST]
+  - name: SETTINGS.VIEW
+    resource: /settings
+    method: [GET]
+  - name: CARE_COORDINATION.VIEW
+    resource: "none"
+    method: [none]
+  
   
 
 roles:
@@ -75,6 +91,12 @@ roles:
       - LOCATION.UPDATE
       - LOCATION.DELETE
       - CLIENT.CREATE
+      - CLIENT.VIEW
+      - FINANCE.VIEW
+      - PROFILE.VIEW
+      - SETTINGS.VIEW
+      - CARE_COORDINATION.VIEW
+
   - name: test
     id: 2
     description: "Test role"

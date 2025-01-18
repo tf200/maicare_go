@@ -12,6 +12,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 const maxFileSize int64 = 10 << 20 // 10 MB
@@ -39,7 +40,7 @@ var allowedMimeTypes = map[string]bool{
 // UploadHandler handles file uploads
 type UploadHandlerResponse struct {
 	FileURL   string    `json:"file_url"`
-	FileID    string    `json:"file_id"`
+	FileID    uuid.UUID `json:"file_id"`
 	CreatedAt time.Time `json:"created_at"`
 	Size      int64     `json:"size"`
 }
@@ -119,7 +120,7 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 
 	res := SuccessResponse(UploadHandlerResponse{
 		FileURL:   fileURL,
-		FileID:    attachment.Uuid.String(),
+		FileID:    attachment.Uuid,
 		CreatedAt: attachment.Created.Time,
 		Size:      int64(attachment.Size),
 	}, "File uploaded successfully")

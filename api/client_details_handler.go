@@ -61,7 +61,7 @@ type CreateClientDetailsResponse struct {
 	ProfilePicture        *string            `json:"profile_picture"`
 	Infix                 *string            `json:"infix"`
 	Created               pgtype.Timestamptz `json:"created"`
-	SenderID              *int64             `json:"sender_id"`
+	SenderID              int64              `json:"sender_id"`
 	LocationID            *int64             `json:"location_id"`
 	IdentityAttachmentIds []uuid.UUID        `json:"identity_attachment_ids"`
 	DepartureReason       *string            `json:"departure_reason"`
