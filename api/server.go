@@ -92,6 +92,7 @@ func (server *Server) setupRoutes() {
 	server.setupLocationRoutes(baseRouter)
 	server.setupAttachementRoutes(baseRouter)
 	server.setupSenderRoutes(baseRouter)
+	server.setupClientRoutes(baseRouter)
 
 	// Add more route setups as needed
 

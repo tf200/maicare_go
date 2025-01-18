@@ -198,6 +198,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Create a new client",
+                "parameters": [
+                    {
+                        "description": "Client details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateClientDetailsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateClientDetailsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "get": {
                 "description": "Get a paginated list of employee profiles with optional filters",
@@ -1855,6 +1906,26 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Address": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "belongs_to": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            }
+        },
         "api.AssignRoleToUserApiResponse": {
             "type": "object",
             "properties": {
@@ -1887,6 +1958,171 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateClientDetailsRequest": {
+            "type": "object",
+            "required": [
+                "birthplace",
+                "date_of_birth",
+                "departement",
+                "email",
+                "filenumber",
+                "first_name",
+                "gender",
+                "last_name",
+                "location",
+                "organisation",
+                "phone_number",
+                "source"
+            ],
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Address"
+                    }
+                },
+                "birthplace": {
+                    "type": "string"
+                },
+                "bsn": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "departement": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "filenumber": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "identity_attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "infix": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "legal_measure": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "integer"
+                },
+                "organisation": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateClientDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Address"
+                    }
+                },
+                "birthplace": {
+                    "type": "string"
+                },
+                "bsn": {
+                    "type": "string"
+                },
+                "created": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "date_of_birth": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "departement": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "filenumber": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_untaken_medications": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identity": {
+                    "type": "boolean"
+                },
+                "identity_attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "infix": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "legal_measure": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "organisation": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -2693,6 +2929,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.AssignRoleToUserApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateClientDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateClientDetailsResponse"
                 },
                 "message": {
                     "type": "string"

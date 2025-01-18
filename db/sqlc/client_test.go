@@ -38,11 +38,8 @@ func TestCreateClientDetails(t *testing.T) {
 		IdentityAttachmentIds: []byte("[]"),
 		DepartureReason:       util.StringPtr("test Reason"),
 		DepartureReport:       util.StringPtr("test report"),
-		GpsPosition:           []byte("[]"),
-		MaturityDomains:       []byte("[]"),
 		Addresses:             []byte("[]"),
 		LegalMeasure:          util.StringPtr("test measure"),
-		HasUntakenMedications: false,
 	}
 
 	client, err := testQueries.CreateClientDetails(context.Background(), arg)
@@ -61,11 +58,8 @@ func TestCreateClientDetails(t *testing.T) {
 	require.Equal(t, arg.IdentityAttachmentIds, client.IdentityAttachmentIds)
 	require.Equal(t, arg.DepartureReason, client.DepartureReason)
 	require.Equal(t, arg.DepartureReport, client.DepartureReport)
-	require.Equal(t, arg.GpsPosition, client.GpsPosition)
-	require.Equal(t, arg.MaturityDomains, client.MaturityDomains)
 	require.Equal(t, arg.Addresses, client.Addresses)
 	require.Equal(t, arg.LegalMeasure, client.LegalMeasure)
-	require.Equal(t, arg.HasUntakenMedications, client.HasUntakenMedications)
 }
 
 func TestCreateClientDetailsTx(t *testing.T) {
@@ -98,11 +92,8 @@ func TestCreateClientDetailsTx(t *testing.T) {
 		IdentityAttachmentIds: identityAttachmentIds,
 		DepartureReason:       util.StringPtr("test Reason"),
 		DepartureReport:       util.StringPtr("test report"),
-		GpsPosition:           []byte("[]"),
-		MaturityDomains:       []byte("[]"),
 		Addresses:             []byte("[]"),
 		LegalMeasure:          util.StringPtr("test measure"),
-		HasUntakenMedications: false,
 	}
 
 	arg := CreateClientDetailsTxParams{

@@ -97,6 +97,19 @@ definitions:
       start_date:
         type: string
     type: object
+  api.Address:
+    properties:
+      address:
+        type: string
+      belongs_to:
+        type: string
+      city:
+        type: string
+      phone_number:
+        type: string
+      zip_code:
+        type: string
+    type: object
   api.AssignRoleToUserApiResponse:
     properties:
       id:
@@ -118,6 +131,119 @@ definitions:
       name:
         type: string
       phone_number:
+        type: string
+    type: object
+  api.CreateClientDetailsRequest:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/api.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_attachment_ids:
+        items:
+          type: string
+        type: array
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      source:
+        type: string
+    required:
+    - birthplace
+    - date_of_birth
+    - departement
+    - email
+    - filenumber
+    - first_name
+    - gender
+    - last_name
+    - location
+    - organisation
+    - phone_number
+    - source
+    type: object
+  api.CreateClientDetailsResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/api.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      created:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_birth:
+        $ref: '#/definitions/pgtype.Date'
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_untaken_medications:
+        type: boolean
+      id:
+        type: integer
+      identity:
+        type: boolean
+      identity_attachment_ids:
+        items:
+          type: string
+        type: array
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
         type: string
     type: object
   api.CreateEmployeeProfileRequest:
@@ -657,6 +783,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.AssignRoleToUserApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateClientDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientDetailsResponse'
       message:
         type: string
       success:
@@ -1306,6 +1441,39 @@ paths:
       summary: Generate authentication tokens
       tags:
       - authentication
+  /clients:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientDetailsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientDetailsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new client
+      tags:
+      - clients
   /employees:
     get:
       consumes:

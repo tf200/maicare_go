@@ -34,14 +34,11 @@ INSERT INTO client_details (
     identity_attachment_ids,
     departure_reason,
     departure_report,
-    gps_position,
-    maturity_domains,
     addresses,
-    legal_measure,
-    has_untaken_medications
+    legal_measure
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+    $17, $18, $19, $20, $21, $22, $23
 ) RETURNING id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
@@ -67,11 +64,8 @@ type CreateClientDetailsParams struct {
 	IdentityAttachmentIds []byte      `json:"identity_attachment_ids"`
 	DepartureReason       *string     `json:"departure_reason"`
 	DepartureReport       *string     `json:"departure_report"`
-	GpsPosition           []byte      `json:"gps_position"`
-	MaturityDomains       []byte      `json:"maturity_domains"`
 	Addresses             []byte      `json:"addresses"`
 	LegalMeasure          *string     `json:"legal_measure"`
-	HasUntakenMedications bool        `json:"has_untaken_medications"`
 }
 
 func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error) {
@@ -97,11 +91,8 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		arg.IdentityAttachmentIds,
 		arg.DepartureReason,
 		arg.DepartureReport,
-		arg.GpsPosition,
-		arg.MaturityDomains,
 		arg.Addresses,
 		arg.LegalMeasure,
-		arg.HasUntakenMedications,
 	)
 	var i ClientDetail
 	err := row.Scan(

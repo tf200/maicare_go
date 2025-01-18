@@ -50,6 +50,9 @@ permissions:
   - name: DASHBOARD.VIEW
     resource: /dashboard
     method: [GET]
+  - name: CLIENT.CREATE
+    resource: /clients
+    method: [POST]
   
 
 roles:
@@ -71,6 +74,7 @@ roles:
       - LOCATION.VIEW
       - LOCATION.UPDATE
       - LOCATION.DELETE
+      - CLIENT.CREATE
   - name: test
     id: 2
     description: "Test role"

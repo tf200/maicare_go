@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"sync"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -20,31 +20,19 @@ func (store *Store) CreateClientDetailsTx(ctx context.Context, arg CreateClientD
 	var result CreateClientDetailsTxResult
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
-		var wg sync.WaitGroup
-		errChan := make(chan error, len(arg.IdentityAttachments))
-
+		// First check and update all attachments sequentially
 		for _, attachmentID := range arg.IdentityAttachments {
-			wg.Add(1)
-			go func(id uuid.UUID) {
-				defer wg.Done()
-				_, err := q.SetAttachmentAsUsed(ctx, id)
-				if err != nil {
-					errChan <- err
-				}
-			}(attachmentID)
+			_, err := q.SetAttachmentAsUsed(ctx, attachmentID)
+			if err != nil {
+				return fmt.Errorf("failed to set attachment %s as used: %w", attachmentID, err)
+			}
 		}
 
-		wg.Wait()
-		close(errChan)
-
-		for err := range errChan {
-			return err
-		}
-
+		// Then create the client
 		var err error
 		result.Client, err = q.CreateClientDetails(ctx, arg.CreateClientParams)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create client details: %w", err)
 		}
 
 		return nil

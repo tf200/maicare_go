@@ -10,6 +10,7 @@ import (
 )
 
 func createRandomAttachmentFile(t *testing.T) AttachmentFile {
+
 	tagvalue := "test"
 	arg := CreateAttachmentParams{
 		Name: util.RandomString(5),
