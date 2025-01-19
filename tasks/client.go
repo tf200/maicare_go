@@ -11,12 +11,13 @@ type AsynqClient struct {
 	client *asynq.Client
 }
 
-func NewAsynqClient(redisHost, redisUser, redisPassword string) *AsynqClient {
+func NewAsynqClient(redisHost, redisUser, redisPassword string, tls *tls.Config) *AsynqClient {
+
 	client := asynq.NewClient(asynq.RedisClientOpt{
 		Addr:         redisHost,
 		Username:     redisUser,
 		Password:     redisPassword,
-		TLSConfig:    &tls.Config{},
+		TLSConfig:    tls,
 		DialTimeout:  5 * time.Second, // Connection timeout
 		ReadTimeout:  3 * time.Second, // Read timeout
 		WriteTimeout: 3 * time.Second,

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"maicare_go/api"
@@ -40,11 +41,20 @@ func main() {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}
 
-	// Initialize Asynq client
-	asynqClient := tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword)
+	var asynqClient *tasks.AsynqClient
+	if !config.Remote {
+		asynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+	} else {
+		asynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, nil)
+	}
 
 	// Initialize Asynq server
-	asynqServer := tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store)
+	var asynqServer *tasks.AsynqServer
+	if !config.Remote {
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{})
+	} else {
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, nil)
+	}
 
 	// Create error channel to catch server errors
 	errChan := make(chan error, 1)

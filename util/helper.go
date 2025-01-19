@@ -18,4 +18,5 @@ func BoolPtr(b bool) *bool {
 
 func Float64Ptr(f float64) *float64 {
 	return &f
+
 }

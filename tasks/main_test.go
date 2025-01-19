@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	db "maicare_go/db/sqlc"
 
@@ -16,7 +17,6 @@ var testStore *db.Store
 var testasynqClient *AsynqClient
 var testWorker *AsynqServer
 
-
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
 	if err != nil {
@@ -30,9 +30,9 @@ func TestMain(m *testing.M) {
 	defer conn.Close()
 
 	testStore = db.NewStore(conn)
-	testasynqClient = NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword)
+	testasynqClient = NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 
-	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore)
+	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{})
 
 	os.Exit(m.Run())
 }
