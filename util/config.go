@@ -17,6 +17,9 @@ type Config struct {
 	B2KeyID               string        `mapstructure:"B2_KEY_ID"`
 	B2Bucket              string        `mapstructure:"B2_BUCKET"`
 	Host                  string        `mapstructure:"HOST"`
+	RedisHost             string        `mapstructure:"REDIS_HOST"`
+	RedisUser             string        `mapstructure:"REDIS_USER"`
+	RedisPassword         string        `mapstructure:"REDIS_PASSWORD"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

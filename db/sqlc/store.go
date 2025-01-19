@@ -71,4 +71,3 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 
 	return result, err
 }
-

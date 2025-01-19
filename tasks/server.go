@@ -1,7 +1,9 @@
 package tasks
 
 import (
+	"crypto/tls"
 	db "maicare_go/db/sqlc"
+	"time"
 
 	"github.com/hibiken/asynq"
 )
@@ -11,19 +13,27 @@ type AsynqServer struct {
 	store  *db.Store
 }
 
-func NewAsynqServer(redisAddr string, store *db.Store) *AsynqServer {
+func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store) *AsynqServer {
 	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisAddr},
+		asynq.RedisClientOpt{
+			Addr:         redisHost,
+			Username:     redisUser,
+			Password:     redisPassword,
+			TLSConfig:    &tls.Config{},
+			DialTimeout:  5 * time.Second,
+			ReadTimeout:  3 * time.Second,
+			WriteTimeout: 3 * time.Second,
+		},
 		asynq.Config{
-			// Specify how many concurrent workers to use
 			Concurrency: 10,
-			// Optionally specify multiple queues with different priority.
 			Queues: map[string]int{
 				"critical": 6,
 				"default":  3,
 				"low":      1,
 			},
-			// See the godoc for other configuration options
+			RetryDelayFunc: func(n int, err error, t *asynq.Task) time.Duration {
+				return time.Duration(n*n) * time.Second // Exponential backoff
+			},
 		},
 	)
 	return &AsynqServer{server: srv, store: store}

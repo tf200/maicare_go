@@ -17,11 +17,14 @@ package api
 
 // @Security Bearer
 import (
+	"context"
 	"fmt"
+	"net/http"
 
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
+	"maicare_go/tasks"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -32,14 +35,16 @@ import (
 )
 
 type Server struct {
-	store      *db.Store
-	router     *gin.Engine
-	config     util.Config
-	tokenMaker token.Maker
-	b2Client   *bucket.B2Client
+	store       *db.Store
+	router      *gin.Engine
+	config      util.Config
+	tokenMaker  token.Maker
+	b2Client    *bucket.B2Client
+	asynqClient *tasks.AsynqClient
+	httpServer  *http.Server
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.AsynqClient) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)
@@ -51,10 +56,11 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client) (*Server, error) {
 	}
 
 	server := &Server{
-		store:      store,
-		config:     config,
-		tokenMaker: tokenMaker,
-		b2Client:   b2Client,
+		store:       store,
+		config:      config,
+		tokenMaker:  tokenMaker,
+		b2Client:    b2Client,
+		asynqClient: asyqClient,
 	}
 
 	// Initialize swagger docs
@@ -100,5 +106,27 @@ func (server *Server) setupRoutes() {
 }
 
 func (server *Server) Start() error {
-	return server.router.Run(server.config.ServerAddress)
+	// Create http.Server with your gin router
+	server.httpServer = &http.Server{
+		Addr:    server.config.ServerAddress,
+		Handler: server.router,
+		// You can add other http.Server configurations here if needed
+		// ReadTimeout:  5 * time.Second,
+		// WriteTimeout: 10 * time.Second,
+		// IdleTimeout:  15 * time.Second,
+	}
+
+	// Start the server
+	if err := server.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("failed to start server: %v", err)
+	}
+
+	return nil
+}
+
+func (server *Server) Shutdown(ctx context.Context) error {
+	if err := server.httpServer.Shutdown(ctx); err != nil {
+		return fmt.Errorf("server shutdown failed: %v", err)
+	}
+	return nil
 }

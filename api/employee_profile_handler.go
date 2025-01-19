@@ -9,6 +9,7 @@ import (
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/tasks"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -185,6 +186,10 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
+		UserID:     employee.User.ID,
+		TemplateID: "welcome",
+	}, ctx)
 	res := SuccessResponse(CreateEmployeeProfileResponse{
 		ID:                        employee.Employee.ID,
 		EmployeeNumber:            employee.Employee.EmployeeNumber,

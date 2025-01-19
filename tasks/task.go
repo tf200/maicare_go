@@ -15,7 +15,7 @@ const (
 )
 
 type EmailDeliveryPayload struct {
-	UserID     int
+	UserID     int64
 	TemplateID string
 }
 
