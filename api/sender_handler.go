@@ -218,6 +218,77 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// GetSenderByIdResponse represents a response to a request to get a sender by ID.
+type GetSenderByIdResponse struct {
+	ID           int64     `json:"id"`
+	Types        string    `json:"types"`
+	Name         string    `json:"name"`
+	Address      *string   `json:"address"`
+	PostalCode   *string   `json:"postal_code"`
+	Place        *string   `json:"place"`
+	Land         *string   `json:"land"`
+	Kvknumber    *string   `json:"kvknumber"`
+	Btwnumber    *string   `json:"btwnumber"`
+	PhoneNumber  *string   `json:"phone_number"`
+	ClientNumber *string   `json:"client_number"`
+	EmailAddress *string   `json:"email_address"`
+	Contacts     []Contact `json:"contacts"`
+	IsArchived   bool      `json:"is_archived"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// GetSenderAPI returns a sender by ID.
+// @Summary Get a sender
+// @Description Get a sender
+// @Tags senders
+// @Produce json
+// @Param id path int true "Sender ID"
+// @Success 200 {object} Response[GetSenderByIdResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /senders/{id} [get]
+func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
+	id := ctx.Param("id")
+	senderID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	sender, err := server.store.GetSenderById(ctx, senderID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var contactsResp []Contact
+	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetSenderByIdResponse{
+		ID:           sender.ID,
+		Types:        sender.Types,
+		Name:         sender.Name,
+		Address:      sender.Address,
+		PostalCode:   sender.PostalCode,
+		Place:        sender.Place,
+		Land:         sender.Land,
+		Kvknumber:    sender.Kvknumber,
+		Btwnumber:    sender.Btwnumber,
+		PhoneNumber:  sender.PhoneNumber,
+		ClientNumber: sender.ClientNumber,
+		EmailAddress: sender.EmailAddress,
+		Contacts:     contactsResp,
+		IsArchived:   sender.IsArchived,
+		CreatedAt:    sender.CreatedAt.Time,
+		UpdatedAt:    sender.UpdatedAt.Time,
+	}, "Sender retrieved successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
 // UpdateSenderRequest represents a request to update a sender.
 type UpdateSenderRequest struct {
 	Name         *string   `json:"name"`

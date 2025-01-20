@@ -549,6 +549,43 @@ definitions:
       name:
         type: string
     type: object
+  api.GetSenderByIdResponse:
+    properties:
+      address:
+        type: string
+      btwnumber:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      created_at:
+        type: string
+      email_address:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      kvknumber:
+        type: string
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.ListEmployeeCertificationResponse:
     properties:
       date_issued:
@@ -864,6 +901,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetRoleByIDApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetSenderByIdResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetSenderByIdResponse'
       message:
         type: string
       success:
@@ -2422,6 +2468,36 @@ paths:
       tags:
       - senders
   /senders/{id}:
+    get:
+      description: Get a sender
+      parameters:
+      - description: Sender ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetSenderByIdResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a sender
+      tags:
+      - senders
     put:
       consumes:
       - application/json

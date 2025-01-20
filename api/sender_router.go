@@ -8,6 +8,7 @@ func (server *Server) setupSenderRoutes(baseRouter *gin.RouterGroup) {
 	{
 		senders.POST("", RBACMiddleware(server.store, "SENDER.CREATE"), server.CreateSenderApi) // POST /senders
 		senders.GET("", RBACMiddleware(server.store, "SENDER.VIEW"), server.ListSendersAPI)
+		senders.GET("/:id", RBACMiddleware(server.store, "SENDER.VIEW"), server.GetSenderByIdAPI)
 		senders.PUT("/:id", RBACMiddleware(server.store, "SENDER.UPDATE"), server.UpdateSenderApi) // PUT /senders/:id
 		// GET /senders
 		// Future endpoints:

@@ -1664,6 +1664,51 @@ const docTemplate = `{
             }
         },
         "/senders/{id}": {
+            "get": {
+                "description": "Get a sender",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "senders"
+                ],
+                "summary": "Get a sender",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Sender ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetSenderByIdResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Update a sender",
                 "consumes": [
@@ -2570,6 +2615,62 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetSenderByIdResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btwnumber": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Contact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "kvknumber": {
+                    "type": "string"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListEmployeeCertificationResponse": {
             "type": "object",
             "properties": {
@@ -3050,6 +3151,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetRoleByIDApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetSenderByIdResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetSenderByIdResponse"
                 },
                 "message": {
                     "type": "string"

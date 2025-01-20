@@ -442,3 +442,48 @@ func TestUpdateSenderApi(t *testing.T) {
 	}
 
 }
+
+func TestGetSenderByIdAPI(t *testing.T) {
+	sender := createRandomSender(t)
+	contacts := make([]Contact, 0)
+	err := json.Unmarshal(sender.Contacts, &contacts)
+	require.NoError(t, err)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, sender.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/senders/%d", sender.ID)
+				return http.NewRequest(http.MethodGet, url, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[GetSenderByIdResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.Equal(t, sender.ID, response.Data.ID)
+				require.Equal(t, sender.Name, response.Data.Name)
+				require.Equal(t, sender.Types, response.Data.Types)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+
+}

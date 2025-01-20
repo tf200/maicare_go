@@ -174,3 +174,14 @@ func TestUpdateSender(t *testing.T) {
 	require.NotEqual(t, sender.Name, updatedSender.Name)
 	require.NotEqual(t, sender.Contacts, updatedSender.Contacts)
 }
+
+func TestGetSenderById(t *testing.T) {
+	sender := createRandomSenders(t)
+	sender2, err := testQueries.GetSenderById(context.Background(), sender.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, sender2)
+	require.Equal(t, sender.ID, sender2.ID)
+	require.Equal(t, sender.Name, sender2.Name)
+	require.Equal(t, sender.Address, sender2.Address)
+}
