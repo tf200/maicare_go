@@ -36,3 +36,28 @@ func createRandomAttachmentFile(t *testing.T) AttachmentFile {
 func TestCreateAttachment(t *testing.T) {
 	createRandomAttachmentFile(t)
 }
+
+func TestGetAttachmentById(t *testing.T) {
+	attachment1 := createRandomAttachmentFile(t)
+	attachment2, err := testQueries.GetAttachmentById(context.Background(), attachment1.Uuid)
+	require.NoError(t, err)
+	require.NotEmpty(t, attachment2)
+
+	require.Equal(t, attachment1.Name, attachment2.Name)
+	require.Equal(t, attachment1.File, attachment2.File)
+	require.Equal(t, attachment1.Size, attachment2.Size)
+	require.Equal(t, attachment1.Tag, attachment2.Tag)
+	require.Equal(t, attachment1.Uuid, attachment2.Uuid)
+	require.Equal(t, attachment1.Created, attachment2.Created)
+
+}
+
+func TestDeleteAttachement(t *testing.T) {
+	attachment1 := createRandomAttachmentFile(t)
+	_, err := testQueries.DeleteAttachment(context.Background(), attachment1.Uuid)
+	require.NoError(t, err)
+
+	attachment2, err := testQueries.GetAttachmentById(context.Background(), attachment1.Uuid)
+	require.Error(t, err)
+	require.Empty(t, attachment2)
+}

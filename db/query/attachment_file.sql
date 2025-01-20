@@ -11,6 +11,14 @@ INSERT INTO attachment_file (
     $4
 ) RETURNING *;
 
+-- name: GetAttachmentById :one
+SELECT * FROM attachment_file
+WHERE uuid = $1 LIMIT 1;
+
+-- name: DeleteAttachment :one
+DELETE FROM attachment_file
+WHERE uuid = $1
+RETURNING *;
 
 
 -- name: SetAttachmentAsUsed :one

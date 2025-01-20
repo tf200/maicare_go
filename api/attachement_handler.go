@@ -56,7 +56,7 @@ type UploadHandlerResponse struct {
 // @Produce json
 // @Param file formData file true "File to upload"
 // @Success 200 {object} Response[UploadHandlerResponse]
-// @Router /upload [post]
+// @Router /attachment/upload [post]
 func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
 	file, header, err := ctx.Request.FormFile("file")
@@ -128,4 +128,110 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	}, "File uploaded successfully")
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// GetAttachmentByIdResponse represents the response for GetAttachmentByIdApi
+type GetAttachmentByIdResponse struct {
+	FileURL   string    `json:"file_url"`
+	FileID    uuid.UUID `json:"file_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Size      int64     `json:"size"`
+}
+
+// GetAttachmentByIdApi retrieves an attachment by its ID
+// @Summary Get an attachment by ID
+// @Description Get an attachment by its ID
+// @Tags attachments
+// @Produce json
+// @Param id path string true "Attachment ID"
+// @Success 200 {object} Response[GetAttachmentByIdResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /attachment/{id} [get]
+func (server *Server) GetAttachmentByIdApi(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	attachment, err := server.store.GetAttachmentById(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetAttachmentByIdResponse{
+		FileURL:   attachment.File,
+		FileID:    attachment.Uuid,
+		CreatedAt: attachment.Created.Time,
+		Size:      int64(attachment.Size),
+	}, "Attachment retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteAttachmentResponse represents the response for DeleteAttachment
+type DeleteAttachmentResponse struct {
+	FileURL   string    `json:"file_url"`
+	FileID    uuid.UUID `json:"file_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Size      int64     `json:"size"`
+}
+
+// DeleteAttachment deletes an attachment by its ID
+// @Summary Delete an attachment by ID
+// @Description Delete an attachment by its ID
+// @Tags attachments
+// @Produce json
+// @Param id path string true "Attachment ID"
+// @Success 200 {object} Response[DeleteAttachmentResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /attachment/{id} [delete]
+func (server *Server) DeleteAttachment(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	attachment, err := server.store.GetAttachmentById(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
+	qtx := server.store.WithTx(tx)
+
+	attachment, err = qtx.DeleteAttachment(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.b2Client.DeleteFromB2(ctx, attachment.Name)
+	if err != nil {
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(DeleteAttachmentResponse{
+		FileURL:   attachment.File,
+		FileID:    attachment.Uuid,
+		CreatedAt: attachment.Created.Time,
+		Size:      int64(attachment.Size),
+	}, "Attachment deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+
 }

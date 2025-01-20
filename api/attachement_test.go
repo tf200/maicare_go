@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"maicare_go/token"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -139,6 +140,70 @@ func TestUploadHandler(t *testing.T) {
 
 			recorder := httptest.NewRecorder()
 			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestGetAttachmentById(t *testing.T) {
+	file := createRandomAttachmentFile(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/attachment/%s", file.Uuid), nil)
+				t.Log(req)
+				if err != nil {
+					return nil, err
+				}
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response Response[GetAttachmentByIdResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.Equal(t, file.Uuid, response.Data.FileID)
+			},
+		},
+		{
+			name: "NotFound",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				req, err := http.NewRequest(http.MethodGet, "/attachment/00000000-0000-0000-0000-000000000000", nil)
+				if err != nil {
+					return nil, err
+				}
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
 	}

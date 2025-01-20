@@ -48,9 +48,9 @@ definitions:
   api.AddEmployeeCertificationResponse:
     properties:
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       date_issued:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       employee_id:
         type: integer
       id:
@@ -445,9 +445,31 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.DeleteAttachmentResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
+    type: object
   api.DeleteLocationResponse:
     properties:
       id:
+        type: integer
+    type: object
+  api.GetAttachmentByIdResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
         type: integer
     type: object
   api.GetEmployeeProfileByIDApiResponse:
@@ -589,7 +611,7 @@ definitions:
   api.ListEmployeeCertificationResponse:
     properties:
       date_issued:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       employee_id:
         type: integer
       id:
@@ -861,10 +883,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_DeleteAttachmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteAttachmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_DeleteLocationResponse:
     properties:
       data:
         $ref: '#/definitions/api.DeleteLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetAttachmentByIdResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetAttachmentByIdResponse'
       message:
         type: string
       success:
@@ -1092,9 +1132,9 @@ definitions:
   api.UpdateEmployeeCertificationResponse:
     properties:
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       date_issued:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       employee_id:
         type: integer
       id:
@@ -1169,9 +1209,9 @@ definitions:
       authentication_phone_number:
         type: string
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       date_of_birth:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       department:
         type: string
       email:
@@ -1385,6 +1425,88 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
+  /attachment/{id}:
+    delete:
+      description: Delete an attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteAttachmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete an attachment by ID
+      tags:
+      - attachments
+    get:
+      description: Get an attachment by its ID
+      parameters:
+      - description: Attachment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetAttachmentByIdResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get an attachment by ID
+      tags:
+      - attachments
+  /attachment/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to the server
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UploadHandlerResponse'
+      summary: Upload a file
+      tags:
+      - attachments
   /auth/refresh:
     post:
       consumes:
@@ -2536,27 +2658,6 @@ paths:
       summary: Update a sender
       tags:
       - senders
-  /upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Upload a file to the server
-      parameters:
-      - description: File to upload
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_UploadHandlerResponse'
-      summary: Upload a file
-      tags:
-      - attachments
 security:
 - Bearer: []
 securityDefinitions:

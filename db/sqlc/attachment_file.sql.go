@@ -53,6 +53,49 @@ func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentPara
 	return i, err
 }
 
+const deleteAttachment = `-- name: DeleteAttachment :one
+DELETE FROM attachment_file
+WHERE uuid = $1
+RETURNING uuid, name, file, size, is_used, tag, updated, created
+`
+
+func (q *Queries) DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, deleteAttachment, argUuid)
+	var i AttachmentFile
+	err := row.Scan(
+		&i.Uuid,
+		&i.Name,
+		&i.File,
+		&i.Size,
+		&i.IsUsed,
+		&i.Tag,
+		&i.Updated,
+		&i.Created,
+	)
+	return i, err
+}
+
+const getAttachmentById = `-- name: GetAttachmentById :one
+SELECT uuid, name, file, size, is_used, tag, updated, created FROM attachment_file
+WHERE uuid = $1 LIMIT 1
+`
+
+func (q *Queries) GetAttachmentById(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, getAttachmentById, argUuid)
+	var i AttachmentFile
+	err := row.Scan(
+		&i.Uuid,
+		&i.Name,
+		&i.File,
+		&i.Size,
+		&i.IsUsed,
+		&i.Tag,
+		&i.Updated,
+		&i.Created,
+	)
+	return i, err
+}
+
 const setAttachmentAsUsed = `-- name: SetAttachmentAsUsed :one
 UPDATE attachment_file
 SET

@@ -447,28 +447,28 @@ type UpdateEmployeeProfileRequest struct {
 // UpdateEmployeeProfileResponse represents the response for UpdateEmployeeProfileApi
 
 type UpdateEmployeeProfileResponse struct {
-	ID                        int64              `json:"id"`
-	UserID                    int64              `json:"user_id"`
-	FirstName                 string             `json:"first_name"`
-	LastName                  string             `json:"last_name"`
-	Position                  *string            `json:"position"`
-	Department                *string            `json:"department"`
-	EmployeeNumber            *string            `json:"employee_number"`
-	EmploymentNumber          *string            `json:"employment_number"`
-	PrivateEmailAddress       *string            `json:"private_email_address"`
-	Email                     string             `json:"email"`
-	AuthenticationPhoneNumber *string            `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string            `json:"private_phone_number"`
-	WorkPhoneNumber           *string            `json:"work_phone_number"`
-	DateOfBirth               pgtype.Date        `json:"date_of_birth"`
-	HomeTelephoneNumber       *string            `json:"home_telephone_number"`
-	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
-	IsSubcontractor           *bool              `json:"is_subcontractor"`
-	Gender                    *string            `json:"gender"`
-	LocationID                *int64             `json:"location_id"`
-	HasBorrowed               bool               `json:"has_borrowed"`
-	OutOfService              *bool              `json:"out_of_service"`
-	IsArchived                bool               `json:"is_archived"`
+	ID                        int64     `json:"id"`
+	UserID                    int64     `json:"user_id"`
+	FirstName                 string    `json:"first_name"`
+	LastName                  string    `json:"last_name"`
+	Position                  *string   `json:"position"`
+	Department                *string   `json:"department"`
+	EmployeeNumber            *string   `json:"employee_number"`
+	EmploymentNumber          *string   `json:"employment_number"`
+	PrivateEmailAddress       *string   `json:"private_email_address"`
+	Email                     string    `json:"email"`
+	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
+	PrivatePhoneNumber        *string   `json:"private_phone_number"`
+	WorkPhoneNumber           *string   `json:"work_phone_number"`
+	DateOfBirth               time.Time `json:"date_of_birth"`
+	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
+	CreatedAt                 time.Time `json:"created_at"`
+	IsSubcontractor           *bool     `json:"is_subcontractor"`
+	Gender                    *string   `json:"gender"`
+	LocationID                *int64    `json:"location_id"`
+	HasBorrowed               bool      `json:"has_borrowed"`
+	OutOfService              *bool     `json:"out_of_service"`
+	IsArchived                bool      `json:"is_archived"`
 }
 
 // @Summary Update employee profile by ID
@@ -538,9 +538,9 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
 		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
 		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		DateOfBirth:               employee.DateOfBirth,
+		DateOfBirth:               employee.DateOfBirth.Time,
 		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		CreatedAt:                 employee.CreatedAt,
+		CreatedAt:                 employee.CreatedAt.Time,
 		IsSubcontractor:           employee.IsSubcontractor,
 		Gender:                    employee.Gender,
 		LocationID:                employee.LocationID,
@@ -982,12 +982,12 @@ type AddEmployeeCertificationRequest struct {
 
 // AddEmployeeCertificationResponse represents the response for AddEmployeeCertificationApi
 type AddEmployeeCertificationResponse struct {
-	ID         int64              `json:"id"`
-	EmployeeID int64              `json:"employee_id"`
-	Name       string             `json:"name"`
-	IssuedBy   string             `json:"issued_by"`
-	DateIssued pgtype.Date        `json:"date_issued"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID         int64     `json:"id"`
+	EmployeeID int64     `json:"employee_id"`
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	DateIssued time.Time `json:"date_issued"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // @Summary Add certification to employee profile
@@ -1032,19 +1032,19 @@ func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
 		EmployeeID: certification.EmployeeID,
 		Name:       certification.Name,
 		IssuedBy:   certification.IssuedBy,
-		DateIssued: certification.DateIssued,
-		CreatedAt:  certification.CreatedAt,
+		DateIssued: certification.DateIssued.Time,
+		CreatedAt:  certification.CreatedAt.Time,
 	}, "Certification added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
 }
 
 // ListEmployeeCertificationResponse represents the response for ListEmployeeCertificationApi
 type ListEmployeeCertificationResponse struct {
-	ID         int64       `json:"id"`
-	EmployeeID int64       `json:"employee_id"`
-	Name       string      `json:"name"`
-	IssuedBy   string      `json:"issued_by"`
-	DateIssued pgtype.Date `json:"date_issued"`
+	ID         int64     `json:"id"`
+	EmployeeID int64     `json:"employee_id"`
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	DateIssued time.Time `json:"date_issued"`
 }
 
 // @Summary List certifications for employee profile
@@ -1074,7 +1074,7 @@ func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
 			EmployeeID: certification.EmployeeID,
 			Name:       certification.Name,
 			IssuedBy:   certification.IssuedBy,
-			DateIssued: certification.DateIssued,
+			DateIssued: certification.DateIssued.Time,
 		}
 	}
 	res := SuccessResponse(responseCertifications, "Employee certifications retrieved successfully")
@@ -1090,12 +1090,12 @@ type UpdateEmployeeCertificationRequest struct {
 
 // UpdateEmployeeCertificationResponse represents the response for UpdateEmployeeCertificationApi
 type UpdateEmployeeCertificationResponse struct {
-	ID         int64              `json:"id"`
-	EmployeeID int64              `json:"employee_id"`
-	Name       string             `json:"name"`
-	IssuedBy   string             `json:"issued_by"`
-	DateIssued pgtype.Date        `json:"date_issued"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID         int64     `json:"id"`
+	EmployeeID int64     `json:"employee_id"`
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	DateIssued time.Time `json:"date_issued"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // @Summary Update certification for employee profile
@@ -1144,8 +1144,8 @@ func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
 		EmployeeID: certification.EmployeeID,
 		Name:       certification.Name,
 		IssuedBy:   certification.IssuedBy,
-		DateIssued: certification.DateIssued,
-		CreatedAt:  certification.CreatedAt,
+		DateIssued: certification.DateIssued.Time,
+		CreatedAt:  certification.CreatedAt.Time,
 	}, "Certification updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }

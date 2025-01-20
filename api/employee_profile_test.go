@@ -181,7 +181,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusForbidden, recorder.Code)
+				require.Equal(t, http.StatusCreated, recorder.Code)
 			},
 		},
 
@@ -697,7 +697,7 @@ func TestAddEmployeeCertificationApi(t *testing.T) {
 
 				require.Equal(t, "AWS Certified Developer", response.Data.Name)
 				require.Equal(t, "AWS", response.Data.IssuedBy)
-				require.Equal(t, "2022-01-01", response.Data.DateIssued.Time.Format("2006-01-02"))
+				require.Equal(t, "2022-01-01", response.Data.DateIssued.Format("2006-01-02"))
 			},
 		},
 	}

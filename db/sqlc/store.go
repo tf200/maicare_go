@@ -8,12 +8,12 @@ import (
 
 type Store struct {
 	*Queries
-	connPool *pgxpool.Pool
+	ConnPool *pgxpool.Pool
 }
 
 func NewStore(connPool *pgxpool.Pool) *Store {
 	return &Store{
-		connPool: connPool,
+		ConnPool: connPool,
 		Queries:  New(connPool),
 	}
 }
@@ -22,7 +22,7 @@ type TxFn func(queries *Queries) error
 
 // ExecTx executes a function within a database transaction
 func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
-	tx, err := store.connPool.Begin(ctx)
+	tx, err := store.ConnPool.Begin(ctx)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,8 @@ import (
 	"io"
 	"maicare_go/util"
 	"mime/multipart"
+	"net/url"
+	"strings"
 
 	"github.com/Backblaze/blazer/b2"
 )
@@ -57,4 +59,31 @@ func (b *B2Client) UploadToB2(ctx context.Context, file multipart.File, filename
 	}
 
 	return nil
+}
+
+func (b *B2Client) DeleteFromB2(ctx context.Context, filename string) error {
+	obj := b.Bucket.Object(filename)
+	if err := obj.Delete(ctx); err != nil {
+		return fmt.Errorf("failed to delete file from B2: %v", err)
+	}
+	return nil
+}
+
+func (b *B2Client) DeleteFromB2URL(ctx context.Context, fileURL string) error {
+	// Parse the URL
+	parsedURL, err := url.Parse(fileURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse URL: %v", err)
+	}
+
+	// Extract filename from path
+	// Path format: /file/bucket-name/filename
+	pathParts := strings.Split(parsedURL.Path, "/")
+	if len(pathParts) < 4 {
+		return fmt.Errorf("invalid B2 file URL format")
+	}
+	filename := pathParts[len(pathParts)-1]
+
+	// Delete the file
+	return b.DeleteFromB2(ctx, filename)
 }
