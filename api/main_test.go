@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
@@ -38,7 +39,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
-	testasynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword)
+	testasynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 
 	testServer, err = NewServer(testStore, testb2Client, testasynqClient)
 	if err != nil {
