@@ -1425,7 +1425,7 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
-  /attachment/{id}:
+  /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
       parameters:
@@ -1486,7 +1486,7 @@ paths:
       summary: Get an attachment by ID
       tags:
       - attachments
-  /attachment/upload:
+  /attachments/upload:
     post:
       consumes:
       - multipart/form-data

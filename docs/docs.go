@@ -23,7 +23,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/attachment/upload": {
+        "/attachments/upload": {
             "post": {
                 "description": "Upload a file to the server",
                 "consumes": [
@@ -55,7 +55,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/attachment/{id}": {
+        "/attachments/{id}": {
             "get": {
                 "description": "Get an attachment by its ID",
                 "produces": [

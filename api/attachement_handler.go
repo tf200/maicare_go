@@ -56,7 +56,7 @@ type UploadHandlerResponse struct {
 // @Produce json
 // @Param file formData file true "File to upload"
 // @Success 200 {object} Response[UploadHandlerResponse]
-// @Router /attachment/upload [post]
+// @Router /attachments/upload [post]
 func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
 	file, header, err := ctx.Request.FormFile("file")
@@ -146,7 +146,7 @@ type GetAttachmentByIdResponse struct {
 // @Param id path string true "Attachment ID"
 // @Success 200 {object} Response[GetAttachmentByIdResponse]
 // @Failure 400,404,500 {object} Response[any]
-// @Router /attachment/{id} [get]
+// @Router /attachments/{id} [get]
 func (server *Server) GetAttachmentByIdApi(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -185,7 +185,7 @@ type DeleteAttachmentResponse struct {
 // @Param id path string true "Attachment ID"
 // @Success 200 {object} Response[DeleteAttachmentResponse]
 // @Failure 400,404,500 {object} Response[any]
-// @Router /attachment/{id} [delete]
+// @Router /attachments/{id} [delete]
 func (server *Server) DeleteAttachment(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
