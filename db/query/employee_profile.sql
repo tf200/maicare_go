@@ -161,6 +161,10 @@ WHERE id = $1
 RETURNING *;
 
 
+-- name: DeleteEmployeeEducation :one
+DELETE FROM employee_education WHERE id = $1 RETURNING *;
+
+
 
 
 -- name: AddEmployeeExperience :one
@@ -191,6 +195,9 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: DeleteEmployeeExperience :one
+DELETE FROM employee_experience WHERE id = $1 RETURNING *;
+
 
 -- name: AddEmployeeCertification :one
 INSERT INTO certification (
@@ -216,3 +223,6 @@ SET
 WHERE id = $1
 RETURNING *;
 
+
+-- name: DeleteEmployeeCertification :one
+DELETE FROM certification WHERE id = $1 RETURNING *;

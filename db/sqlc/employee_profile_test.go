@@ -453,6 +453,14 @@ func TestUpdateEducation(t *testing.T) {
 	require.NotEqual(t, education.FieldOfStudy, updatedEducation.FieldOfStudy)
 }
 
+func TestDeleteEmployeeEducation(t *testing.T) {
+	education := addRandomEducation(t, 1)
+	deletedEducation, err := testQueries.DeleteEmployeeEducation(context.Background(), education.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, deletedEducation)
+	require.Equal(t, education.ID, deletedEducation.ID)
+}
+
 func addRandomExperience(t *testing.T, employeeID int64) EmployeeExperience {
 
 	experienceArg := AddEmployeeExperienceParams{
@@ -514,6 +522,14 @@ func TestUpdateEmployeeExperience(t *testing.T) {
 
 }
 
+func TestDeleteEmployeeExperience(t *testing.T) {
+	experience := addRandomExperience(t, 1)
+	deletedExp, err := testQueries.DeleteEmployeeExperience(context.Background(), experience.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, deletedExp)
+	require.Equal(t, experience.ID, deletedExp.ID)
+}
+
 func addRandomCertification(t *testing.T, employeeID int64) Certification {
 	certificationArg := AddEmployeeCertificationParams{
 		EmployeeID: employeeID,
@@ -568,4 +584,13 @@ func TestUpdateEmployeeCertification(t *testing.T) {
 	require.NotEmpty(t, updatedCertification)
 	require.NotEqual(t, certification.Name, updatedCertification.Name)
 	require.Equal(t, certification.IssuedBy, updatedCertification.IssuedBy)
+}
+
+func TestDeleteEmployeeCertification(t *testing.T) {
+	certifcation := addRandomCertification(t, 1)
+	deletedCert, err := testQueries.DeleteEmployeeCertification(context.Background(), certifcation.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, deletedCert)
+	require.Equal(t, certifcation.ID, deletedCert.ID)
+
 }

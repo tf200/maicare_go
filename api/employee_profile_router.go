@@ -16,14 +16,17 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 		employeeGroup.POST("/:id/education", RBACMiddleware(server.store, "EMPLOYEE.CREATE"), server.AddEducationToEmployeeProfileApi)
 		employeeGroup.GET("/:id/education", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeEducationApi)
 		employeeGroup.PUT("/:id/education/:education_id", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.UpdateEmployeeEducationApi)
+		employeeGroup.DELETE("/:id/education/:education_id", RBACMiddleware(server.store, "EMPLOYEE.DELETE"), server.DeleteEmployeeEducationApi)
 
 		employeeGroup.POST("/:id/experience", RBACMiddleware(server.store, "EMPLOYEE.CREATE"), server.AddEmployeeExperienceApi)
 		employeeGroup.GET("/:id/experience", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeExperienceApi)
 		employeeGroup.PUT("/:id/experience/:experience_id", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.UpdateEmployeeExperienceApi)
+		employeeGroup.DELETE("/:id/experience/:experience_id", RBACMiddleware(server.store, "EMPLOYEE.DELETE"), server.DeleteEmployeeExperienceApi)
 
 		employeeGroup.POST("/:id/certification", RBACMiddleware(server.store, "EMPLOYEE.CREATE"), server.AddEmployeeCertificationApi)
 		employeeGroup.GET("/:id/certification", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeCertificationApi)
 		employeeGroup.PUT("/:id/certification/:certification_id", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.UpdateEmployeeCertificationApi)
+		employeeGroup.DELETE("/:id/certification/:certification_id", RBACMiddleware(server.store, "EMPLOYEE.DELETE"), server.DeleteEmployeeCertificationApi)
 
 	}
 	// Add other auth routes

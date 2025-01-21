@@ -563,13 +563,13 @@ type AddEducationToEmployeeProfileRequest struct {
 
 // AddEducationToEmployeeProfileResponse represents the response for AddEducationToEmployeeProfileApi
 type AddEducationToEmployeeProfileResponse struct {
-	ID              int64  `json:"id"`
-	EmployeeID      int64  `json:"employee_id"`
-	InstitutionName string `json:"institution_name"`
-	Degree          string `json:"degree"`
-	FieldOfStudy    string `json:"field_of_study"`
-	StartDate       string `json:"start_date"`
-	EndDate         string `json:"end_date"`
+	ID              int64     `json:"id"`
+	EmployeeID      int64     `json:"employee_id"`
+	InstitutionName string    `json:"institution_name"`
+	Degree          string    `json:"degree"`
+	FieldOfStudy    string    `json:"field_of_study"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary Add education to employee profile
@@ -625,8 +625,8 @@ func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 		InstitutionName: education.InstitutionName,
 		Degree:          education.Degree,
 		FieldOfStudy:    education.FieldOfStudy,
-		StartDate:       education.StartDate.Time.Format("2006-01-02"),
-		EndDate:         education.EndDate.Time.Format("2006-01-02"),
+		StartDate:       education.StartDate.Time,
+		EndDate:         education.EndDate.Time,
 	}, "Education added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
 
@@ -634,13 +634,13 @@ func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 
 // ListEmployeeEducationResponse represents the response for ListEmployeeEducationApi
 type ListEmployeeEducationResponse struct {
-	ID              int64  `json:"id"`
-	EmployeeID      int64  `json:"employee_id"`
-	InstitutionName string `json:"institution_name"`
-	Degree          string `json:"degree"`
-	FieldOfStudy    string `json:"field_of_study"`
-	StartDate       string `json:"start_date"`
-	EndDate         string `json:"end_date"`
+	ID              int64     `json:"id"`
+	EmployeeID      int64     `json:"employee_id"`
+	InstitutionName string    `json:"institution_name"`
+	Degree          string    `json:"degree"`
+	FieldOfStudy    string    `json:"field_of_study"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary List education for employee profile
@@ -671,8 +671,8 @@ func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
 			InstitutionName: education.InstitutionName,
 			Degree:          education.Degree,
 			FieldOfStudy:    education.FieldOfStudy,
-			StartDate:       education.StartDate.Time.Format("2006-01-02"),
-			EndDate:         education.EndDate.Time.Format("2006-01-02"),
+			StartDate:       education.StartDate.Time,
+			EndDate:         education.EndDate.Time,
 		}
 	}
 	res := SuccessResponse(responseEducations, "Employee education retrieved successfully")
@@ -690,12 +690,12 @@ type UpdateEmployeeEducationRequest struct {
 
 // UpdateEmployeeEducationResponse represents the response for UpdateEmployeeEducationApi
 type UpdateEmployeeEducationResponse struct {
-	ID              int64  `json:"id"`
-	InstitutionName string `json:"institution_name"`
-	Degree          string `json:"degree"`
-	FieldOfStudy    string `json:"field_of_study"`
-	StartDate       string `json:"start_date"`
-	EndDate         string `json:"end_date"`
+	ID              int64     `json:"id"`
+	InstitutionName string    `json:"institution_name"`
+	Degree          string    `json:"degree"`
+	FieldOfStudy    string    `json:"field_of_study"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary Update education for employee profile
@@ -709,7 +709,7 @@ type UpdateEmployeeEducationResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/education/{education_id} [put]
 func (server *Server) UpdateEmployeeEducationApi(ctx *gin.Context) {
-	id := ctx.Param(":education_id")
+	id := ctx.Param("education_id")
 	educationID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -753,11 +753,53 @@ func (server *Server) UpdateEmployeeEducationApi(ctx *gin.Context) {
 		InstitutionName: education.InstitutionName,
 		Degree:          education.Degree,
 		FieldOfStudy:    education.FieldOfStudy,
-		StartDate:       education.StartDate.Time.Format("2006-01-02"),
-		EndDate:         education.EndDate.Time.Format("2006-01-02"),
+		StartDate:       education.StartDate.Time,
+		EndDate:         education.EndDate.Time,
 	}, "Education updated successfully")
 	ctx.JSON(http.StatusOK, res)
 
+}
+
+// DeleteEmployeeEducationResponse represents the response for DeleteEmployeeEducationApi
+type DeleteEmployeeEducationResponse struct {
+	ID              int64     `json:"id"`
+	InstitutionName string    `json:"institution_name"`
+	Degree          string    `json:"degree"`
+	FieldOfStudy    string    `json:"field_of_study"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
+}
+
+// @Summary Delete education for employee profile
+// @Description Delete education for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param education_id path int true "Education ID"
+// @Success 200 {object} Response[DeleteEmployeeEducationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/education/{education_id} [delete]
+func (server *Server) DeleteEmployeeEducationApi(ctx *gin.Context) {
+	id := ctx.Param("education_id")
+	educationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	education, err := server.store.DeleteEmployeeEducation(ctx, educationID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(DeleteEmployeeEducationResponse{
+		ID:              education.ID,
+		InstitutionName: education.InstitutionName,
+		Degree:          education.Degree,
+		FieldOfStudy:    education.FieldOfStudy,
+		StartDate:       education.StartDate.Time,
+		EndDate:         education.EndDate.Time,
+	}, "Education deleted successfully")
+	ctx.JSON(http.StatusOK, res)
 }
 
 // AddEmployeeExperienceRequest represents the request for AddEmployeeExperienceApi
@@ -921,7 +963,7 @@ type UpdateEmployeeExperienceResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/experience/{experience_id} [put]
 func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
-	id := ctx.Param(":experience_id")
+	id := ctx.Param("experience_id")
 	experienceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -970,6 +1012,52 @@ func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
 		Description: experience.Description,
 		CreatedAt:   experience.CreatedAt.Time,
 	}, "Experience updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteEmployeeExperienceResponse represents the response for DeleteEmployeeExperienceApi
+type DeleteEmployeeExperienceResponse struct {
+	ID          int64     `json:"id"`
+	EmployeeID  int64     `json:"employee_id"`
+	JobTitle    string    `json:"job_title"`
+	CompanyName string    `json:"company_name"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Description *string   `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// @Summary Delete experience for employee profile
+// @Description Delete experience for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param experience_id path int true "Experience ID"
+// @Success 200 {object} Response[DeleteEmployeeExperienceResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/experience/{experience_id} [delete]
+func (server *Server) DeleteEmployeeExperienceApi(ctx *gin.Context) {
+	id := ctx.Param("experience_id")
+	experienceID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	experience, err := server.store.DeleteEmployeeExperience(ctx, experienceID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(DeleteEmployeeExperienceResponse{
+		ID:          experience.ID,
+		EmployeeID:  experience.EmployeeID,
+		JobTitle:    experience.JobTitle,
+		CompanyName: experience.CompanyName,
+		StartDate:   experience.StartDate.Time,
+		EndDate:     experience.EndDate.Time,
+		Description: experience.Description,
+		CreatedAt:   experience.CreatedAt.Time,
+	}, "Experience deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -1109,7 +1197,7 @@ type UpdateEmployeeCertificationResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/certification/{certification_id} [put]
 func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
-	id := ctx.Param(":certification_id")
+	id := ctx.Param("certification_id")
 	certificationID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -1147,5 +1235,47 @@ func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
 		DateIssued: certification.DateIssued.Time,
 		CreatedAt:  certification.CreatedAt.Time,
 	}, "Certification updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteEmployeeEducationResponse represents the response for DeleteEmployeeEducationApi
+type DeleteEmployeeCertificationResponse struct {
+	ID         int64     `json:"id"`
+	EmployeeID int64     `json:"employee_id"`
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	DateIssued time.Time `json:"date_issued"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// @Summary Delete certification for employee profile
+// @Description Delete certification for employee profile
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param certification_id path int true "Certification ID"
+// @Success 200 {object} Response[DeleteEmployeeCertificationResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/certification/{certification_id} [delete]
+func (server *Server) DeleteEmployeeCertificationApi(ctx *gin.Context) {
+	id := ctx.Param("certification_id")
+	certificationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	certification, err := server.store.DeleteEmployeeCertification(ctx, certificationID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(DeleteEmployeeCertificationResponse{
+		ID:         certification.ID,
+		EmployeeID: certification.EmployeeID,
+		Name:       certification.Name,
+		IssuedBy:   certification.IssuedBy,
+		DateIssued: certification.DateIssued.Time,
+		CreatedAt:  certification.CreatedAt.Time,
+	}, "Certification deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }

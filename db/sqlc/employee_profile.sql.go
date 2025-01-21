@@ -281,6 +281,64 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 	return i, err
 }
 
+const deleteEmployeeCertification = `-- name: DeleteEmployeeCertification :one
+DELETE FROM certification WHERE id = $1 RETURNING id, employee_id, name, issued_by, date_issued, created_at
+`
+
+func (q *Queries) DeleteEmployeeCertification(ctx context.Context, id int64) (Certification, error) {
+	row := q.db.QueryRow(ctx, deleteEmployeeCertification, id)
+	var i Certification
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.Name,
+		&i.IssuedBy,
+		&i.DateIssued,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const deleteEmployeeEducation = `-- name: DeleteEmployeeEducation :one
+DELETE FROM employee_education WHERE id = $1 RETURNING id, employee_id, institution_name, degree, field_of_study, start_date, end_date, created_at
+`
+
+func (q *Queries) DeleteEmployeeEducation(ctx context.Context, id int64) (EmployeeEducation, error) {
+	row := q.db.QueryRow(ctx, deleteEmployeeEducation, id)
+	var i EmployeeEducation
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.InstitutionName,
+		&i.Degree,
+		&i.FieldOfStudy,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const deleteEmployeeExperience = `-- name: DeleteEmployeeExperience :one
+DELETE FROM employee_experience WHERE id = $1 RETURNING id, employee_id, job_title, company_name, start_date, end_date, description, created_at
+`
+
+func (q *Queries) DeleteEmployeeExperience(ctx context.Context, id int64) (EmployeeExperience, error) {
+	row := q.db.QueryRow(ctx, deleteEmployeeExperience, id)
+	var i EmployeeExperience
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.JobTitle,
+		&i.CompanyName,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Description,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
 SELECT 
     ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,

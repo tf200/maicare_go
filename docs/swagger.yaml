@@ -165,7 +165,7 @@ definitions:
         type: string
       legal_measure:
         type: string
-      location:
+      location_id:
         type: integer
       organisation:
         type: string
@@ -182,7 +182,7 @@ definitions:
     - first_name
     - gender
     - last_name
-    - location
+    - location_id
     - organisation
     - phone_number
     - source
@@ -455,6 +455,55 @@ definitions:
         type: string
       size:
         type: integer
+    type: object
+  api.DeleteEmployeeCertificationResponse:
+    properties:
+      created_at:
+        type: string
+      date_issued:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      issued_by:
+        type: string
+      name:
+        type: string
+    type: object
+  api.DeleteEmployeeEducationResponse:
+    properties:
+      degree:
+        type: string
+      end_date:
+        type: string
+      field_of_study:
+        type: string
+      id:
+        type: integer
+      institution_name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.DeleteEmployeeExperienceResponse:
+    properties:
+      company_name:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      employee_id:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      job_title:
+        type: string
+      start_date:
+        type: string
     type: object
   api.DeleteLocationResponse:
     properties:
@@ -887,6 +936,33 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteAttachmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeleteEmployeeCertificationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteEmployeeCertificationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeleteEmployeeEducationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteEmployeeEducationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeleteEmployeeExperienceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteEmployeeExperienceResponse'
       message:
         type: string
       success:
@@ -1886,6 +1962,49 @@ paths:
       tags:
       - employees
   /employees/{id}/certification/{certification_id}:
+    delete:
+      description: Delete certification for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Certification ID
+        in: path
+        name: certification_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteEmployeeCertificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete certification for employee profile
+      tags:
+      - employees
     put:
       description: Update certification for employee profile
       parameters:
@@ -2021,6 +2140,49 @@ paths:
       tags:
       - employees
   /employees/{id}/education/{education_id}:
+    delete:
+      description: Delete education for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Education ID
+        in: path
+        name: education_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteEmployeeEducationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete education for employee profile
+      tags:
+      - employees
     put:
       description: Update education for employee profile
       parameters:
@@ -2154,6 +2316,49 @@ paths:
       tags:
       - employees
   /employees/{id}/experience/{experience_id}:
+    delete:
+      description: Delete experience for employee profile
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Experience ID
+        in: path
+        name: experience_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteEmployeeExperienceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete experience for employee profile
+      tags:
+      - employees
     put:
       description: Update experience for employee profile
       parameters:

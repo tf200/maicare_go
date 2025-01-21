@@ -17,7 +17,7 @@ type CreateClientDetailsRequest struct {
 	LastName              string      `json:"last_name" binding:"required"`
 	Email                 string      `json:"email" binding:"required,email"`
 	Organisation          *string     `json:"organisation" binding:"required"`
-	LocationID            *int64      `json:"location" binding:"required"`
+	LocationID            *int64      `json:"location_id" binding:"required"`
 	LegalMeasure          *string     `json:"legal_measure"`
 	Birthplace            *string     `json:"birthplace" binding:"required"`
 	Departement           *string     `json:"departement" binding:"required"`
