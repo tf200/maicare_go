@@ -286,6 +286,73 @@ const docTemplate = `{
             }
         },
         "/clients": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "List clients",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Location ID",
+                        "name": "location_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientsApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -3064,6 +3131,89 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListClientsApiResponse": {
+            "type": "object",
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Address"
+                    }
+                },
+                "birthplace": {
+                    "type": "string"
+                },
+                "bsn": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "date_of_birth": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "departement": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "filenumber": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_untaken_medications": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identity": {
+                    "type": "boolean"
+                },
+                "infix": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "legal_measure": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "organisation": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListEmployeeCertificationResponse": {
             "type": "object",
             "properties": {
@@ -3865,6 +4015,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-api_ListClientsApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListClientsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-api_ListEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -4247,6 +4411,29 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "pagination.Response-api_ListClientsApiResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListClientsApiResponse"
+                    }
                 }
             }
         },

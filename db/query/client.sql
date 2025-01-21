@@ -29,3 +29,19 @@ INSERT INTO client_details (
 ) RETURNING *;
 
 
+-- name: ListClientDetails :many
+SELECT 
+    *, 
+    COUNT(*) OVER() AS total_count
+FROM client_details
+WHERE
+    (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL) AND
+    (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
+    (sqlc.narg('search')::TEXT IS NULL OR 
+        first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        last_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        filenumber ILIKE '%' || sqlc.narg('search') || '%' OR
+        email ILIKE '%' || sqlc.narg('search') || '%' OR
+        phone_number ILIKE '%' || sqlc.narg('search') || '%')
+ORDER BY created_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');

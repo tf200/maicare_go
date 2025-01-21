@@ -140,7 +140,7 @@ type ClientDetail struct {
 	Filenumber            string             `json:"filenumber"`
 	ProfilePicture        *string            `json:"profile_picture"`
 	Infix                 *string            `json:"infix"`
-	Created               pgtype.Timestamptz `json:"created"`
+	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 	SenderID              int64              `json:"sender_id"`
 	LocationID            *int64             `json:"location_id"`
 	IdentityAttachmentIds []byte             `json:"identity_attachment_ids"`

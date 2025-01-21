@@ -657,6 +657,61 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ListClientsApiResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/api.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_birth:
+        $ref: '#/definitions/pgtype.Date'
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_untaken_medications:
+        type: boolean
+      id:
+        type: integer
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
+        type: string
+    type: object
   api.ListEmployeeCertificationResponse:
     properties:
       date_issued:
@@ -1178,6 +1233,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-api_ListClientsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_ListEmployeeResponse:
     properties:
       data:
@@ -1431,6 +1495,21 @@ definitions:
       size:
         type: integer
     type: object
+  pagination.Response-api_ListClientsApiResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientsApiResponse'
+        type: array
+    type: object
   pagination.Response-api_ListEmployeeResponse:
     properties:
       count:
@@ -1672,6 +1751,50 @@ paths:
       tags:
       - authentication
   /clients:
+    get:
+      parameters:
+      - description: Client status
+        in: query
+        name: status
+        type: string
+      - description: Location ID
+        in: query
+        name: location_id
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientsApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List clients
+      tags:
+      - clients
     post:
       consumes:
       - application/json

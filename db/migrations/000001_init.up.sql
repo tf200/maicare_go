@@ -218,7 +218,7 @@ CREATE TABLE client_details (
     filenumber VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(100) NULL,
     infix VARCHAR(100) NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NOT NULL REFERENCES sender(id) ON DELETE CASCADE,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
     identity_attachment_ids JSONB NOT NULL DEFAULT '[]',

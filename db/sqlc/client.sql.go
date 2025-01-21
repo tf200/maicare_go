@@ -39,7 +39,7 @@ INSERT INTO client_details (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
     $17, $18, $19, $20, $21, $22, $23
-) RETURNING id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+) RETURNING id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type CreateClientDetailsParams struct {
@@ -113,7 +113,7 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
-		&i.Created,
+		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,
 		&i.IdentityAttachmentIds,
@@ -126,4 +126,118 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.HasUntakenMedications,
 	)
 	return i, err
+}
+
+const listClientDetails = `-- name: ListClientDetails :many
+SELECT 
+    id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, 
+    COUNT(*) OVER() AS total_count
+FROM client_details
+WHERE
+    (status = $1 OR $1 IS NULL) AND
+    (location_id = $2 OR $2 IS NULL) AND
+    ($3::TEXT IS NULL OR 
+        first_name ILIKE '%' || $3 || '%' OR
+        last_name ILIKE '%' || $3 || '%' OR
+        filenumber ILIKE '%' || $3 || '%' OR
+        email ILIKE '%' || $3 || '%' OR
+        phone_number ILIKE '%' || $3 || '%')
+ORDER BY created_at DESC
+LIMIT $5 OFFSET $4
+`
+
+type ListClientDetailsParams struct {
+	Status     *string `json:"status"`
+	LocationID *int64  `json:"location_id"`
+	Search     *string `json:"search"`
+	Offset     int32   `json:"offset"`
+	Limit      int32   `json:"limit"`
+}
+
+type ListClientDetailsRow struct {
+	ID                    int64              `json:"id"`
+	FirstName             string             `json:"first_name"`
+	LastName              string             `json:"last_name"`
+	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
+	Identity              bool               `json:"identity"`
+	Status                *string            `json:"status"`
+	Bsn                   *string            `json:"bsn"`
+	Source                *string            `json:"source"`
+	Birthplace            *string            `json:"birthplace"`
+	Email                 string             `json:"email"`
+	PhoneNumber           *string            `json:"phone_number"`
+	Organisation          *string            `json:"organisation"`
+	Departement           *string            `json:"departement"`
+	Gender                string             `json:"gender"`
+	Filenumber            string             `json:"filenumber"`
+	ProfilePicture        *string            `json:"profile_picture"`
+	Infix                 *string            `json:"infix"`
+	CreatedAt             pgtype.Timestamptz `json:"created_at"`
+	SenderID              int64              `json:"sender_id"`
+	LocationID            *int64             `json:"location_id"`
+	IdentityAttachmentIds []byte             `json:"identity_attachment_ids"`
+	DepartureReason       *string            `json:"departure_reason"`
+	DepartureReport       *string            `json:"departure_report"`
+	GpsPosition           []byte             `json:"gps_position"`
+	MaturityDomains       []byte             `json:"maturity_domains"`
+	Addresses             []byte             `json:"addresses"`
+	LegalMeasure          *string            `json:"legal_measure"`
+	HasUntakenMedications bool               `json:"has_untaken_medications"`
+	TotalCount            int64              `json:"total_count"`
+}
+
+func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsParams) ([]ListClientDetailsRow, error) {
+	rows, err := q.db.Query(ctx, listClientDetails,
+		arg.Status,
+		arg.LocationID,
+		arg.Search,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClientDetailsRow
+	for rows.Next() {
+		var i ListClientDetailsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.DateOfBirth,
+			&i.Identity,
+			&i.Status,
+			&i.Bsn,
+			&i.Source,
+			&i.Birthplace,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.Organisation,
+			&i.Departement,
+			&i.Gender,
+			&i.Filenumber,
+			&i.ProfilePicture,
+			&i.Infix,
+			&i.CreatedAt,
+			&i.SenderID,
+			&i.LocationID,
+			&i.IdentityAttachmentIds,
+			&i.DepartureReason,
+			&i.DepartureReport,
+			&i.GpsPosition,
+			&i.MaturityDomains,
+			&i.Addresses,
+			&i.LegalMeasure,
+			&i.HasUntakenMedications,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

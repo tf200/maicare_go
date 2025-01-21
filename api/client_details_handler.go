@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
 	"net/http"
 	"time"
 
@@ -170,7 +171,7 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		Filenumber:            client.Client.Filenumber,
 		ProfilePicture:        client.Client.ProfilePicture,
 		Infix:                 client.Client.Infix,
-		Created:               client.Client.Created,
+		Created:               client.Client.CreatedAt,
 		SenderID:              client.Client.SenderID,
 		LocationID:            client.Client.LocationID,
 		IdentityAttachmentIds: identityAttachmentIds,
@@ -180,6 +181,120 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		LegalMeasure:          client.Client.LegalMeasure,
 		HasUntakenMedications: client.Client.HasUntakenMedications,
 	}, "Client created successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// ListClientsApiParams represents a request to list clients
+type ListClientsApiParams struct {
+	pagination.Request
+	Status     *string `form:"status"`
+	LocationID *int64  `form:"location_id"`
+	Search     *string `form:"search"`
+}
+
+// ListClientsApiResponse represents a response to a list clients request
+type ListClientsApiResponse struct {
+	ID                    int64              `json:"id"`
+	FirstName             string             `json:"first_name"`
+	LastName              string             `json:"last_name"`
+	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
+	Identity              bool               `json:"identity"`
+	Status                *string            `json:"status"`
+	Bsn                   *string            `json:"bsn"`
+	Source                *string            `json:"source"`
+	Birthplace            *string            `json:"birthplace"`
+	Email                 string             `json:"email"`
+	PhoneNumber           *string            `json:"phone_number"`
+	Organisation          *string            `json:"organisation"`
+	Departement           *string            `json:"departement"`
+	Gender                string             `json:"gender"`
+	Filenumber            string             `json:"filenumber"`
+	ProfilePicture        *string            `json:"profile_picture"`
+	Infix                 *string            `json:"infix"`
+	CreatedAt             pgtype.Timestamptz `json:"created_at"`
+	SenderID              int64              `json:"sender_id"`
+	LocationID            *int64             `json:"location_id"`
+	DepartureReason       *string            `json:"departure_reason"`
+	DepartureReport       *string            `json:"departure_report"`
+	Addresses             []Address          `json:"addresses"`
+	LegalMeasure          *string            `json:"legal_measure"`
+	HasUntakenMedications bool               `json:"has_untaken_medications"`
+}
+
+// ListClientDetailsApi lists clients
+// @Summary List clients
+// @Tags clients
+// @Produce json
+// @Param status query string false "Client status"
+// @Param location_id query int false "Location ID"
+// @Param search query string false "Search query"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} Response[pagination.Response[ListClientsApiResponse]]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients [get]
+func (server *Server) ListClientsApi(ctx *gin.Context) {
+	var req ListClientsApiParams
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	params := req.GetParams()
+
+	clients, err := server.store.ListClientDetails(ctx, db.ListClientDetailsParams{
+		Status: req.Status,
+		Search: req.Search,
+		Offset: params.Offset,
+		Limit:  params.Limit,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	totalCount := clients[0].TotalCount
+
+	clientList := make([]ListClientsApiResponse, len(clients))
+	for i, client := range clients {
+		var addresses []Address
+		err = json.Unmarshal(client.Addresses, &addresses)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		clientList[i] = ListClientsApiResponse{
+			ID:                    client.ID,
+			FirstName:             client.FirstName,
+			LastName:              client.LastName,
+			DateOfBirth:           client.DateOfBirth,
+			Identity:              client.Identity,
+			Status:                client.Status,
+			Bsn:                   client.Bsn,
+			Source:                client.Source,
+			Birthplace:            client.Birthplace,
+			Email:                 client.Email,
+			PhoneNumber:           client.PhoneNumber,
+			Organisation:          client.Organisation,
+			Departement:           client.Departement,
+			Gender:                client.Gender,
+			Filenumber:            client.Filenumber,
+			ProfilePicture:        client.ProfilePicture,
+			Infix:                 client.Infix,
+			CreatedAt:             client.CreatedAt,
+			SenderID:              client.SenderID,
+			LocationID:            client.LocationID,
+			DepartureReason:       client.DepartureReason,
+			DepartureReport:       client.DepartureReport,
+			Addresses:             addresses,
+			LegalMeasure:          client.LegalMeasure,
+			HasUntakenMedications: client.HasUntakenMedications,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, clientList, totalCount)
+
+	res := SuccessResponse(pag, "Clients fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 
 }

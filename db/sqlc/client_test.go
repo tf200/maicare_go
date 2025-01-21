@@ -13,8 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateClientDetails(t *testing.T) {
+func createRandomClientDetails(t *testing.T) ClientDetail {
 	location := CreateRandomLocation(t)
+	sender := createRandomSenders(t)
 
 	arg := CreateClientDetailsParams{
 		FirstName:             util.RandomString(5),
@@ -33,7 +34,7 @@ func TestCreateClientDetails(t *testing.T) {
 		Filenumber:            "testfile",
 		ProfilePicture:        util.StringPtr("test-profile.jpg"),
 		Infix:                 util.StringPtr("van"),
-		SenderID:              1,
+		SenderID:              sender.ID,
 		LocationID:            util.IntPtr(location.ID),
 		IdentityAttachmentIds: []byte("[]"),
 		DepartureReason:       util.StringPtr("test Reason"),
@@ -60,6 +61,11 @@ func TestCreateClientDetails(t *testing.T) {
 	require.Equal(t, arg.DepartureReport, client.DepartureReport)
 	require.Equal(t, arg.Addresses, client.Addresses)
 	require.Equal(t, arg.LegalMeasure, client.LegalMeasure)
+	return client
+}
+
+func TestCreateClientDetails(t *testing.T) {
+	createRandomClientDetails(t)
 }
 
 func TestCreateClientDetailsTx(t *testing.T) {
@@ -107,5 +113,73 @@ func TestCreateClientDetailsTx(t *testing.T) {
 	require.NotEmpty(t, client)
 	require.Equal(t, CreateClientParams.FirstName, client.Client.FirstName)
 	require.Equal(t, CreateClientParams.LastName, client.Client.LastName)
+
+}
+
+func TestListClientDetails(t *testing.T) {
+	var clients []ClientDetail
+	for i := 0; i < 20; i++ {
+		_ = append(clients, createRandomClientDetails(t))
+	}
+	testCases := []struct {
+		name  string
+		arg   ListClientDetailsParams
+		check func(t *testing.T, clients []ListClientDetailsRow)
+	}{
+		{
+			name: "base case",
+			arg: ListClientDetailsParams{
+				Limit:  5,
+				Offset: 0,
+			},
+			check: func(t *testing.T, clients []ListClientDetailsRow) {
+				require.NotEmpty(t, clients)
+				require.Len(t, clients, 5)
+			},
+		},
+		{
+			name: "with offset",
+			arg: ListClientDetailsParams{
+				Limit:  5,
+				Offset: 5,
+			},
+			check: func(t *testing.T, clients []ListClientDetailsRow) {
+				require.NotEmpty(t, clients)
+				require.Len(t, clients, 5)
+			},
+		},
+		{
+			name: "with search",
+			arg: ListClientDetailsParams{
+				Limit:  5,
+				Offset: 0,
+				Search: util.StringPtr("a"),
+			},
+			check: func(t *testing.T, clients []ListClientDetailsRow) {
+				require.NotEmpty(t, clients)
+
+			},
+		},
+		{
+			name: "with status",
+			arg: ListClientDetailsParams{
+				Limit:  5,
+				Offset: 0,
+				Status: util.StringPtr("On Waiting List"),
+			},
+			check: func(t *testing.T, clients []ListClientDetailsRow) {
+				require.NotEmpty(t, clients)
+				require.Len(t, clients, 5)
+				require.Equal(t, util.StringPtr("On Waiting List"), clients[0].Status)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			clients, err := testQueries.ListClientDetails(context.Background(), tc.arg)
+			require.NoError(t, err)
+			tc.check(t, clients)
+		})
+	}
 
 }
