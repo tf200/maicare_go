@@ -45,3 +45,12 @@ WHERE
         phone_number ILIKE '%' || sqlc.narg('search') || '%')
 ORDER BY created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+
+-- name: GetClientDetails :one
+SELECT * FROM client_details
+WHERE id = $1 LIMIT 1;
+
+
+
+

@@ -164,7 +164,7 @@ type ClientDiagnosis struct {
 	Status              string             `json:"status"`
 	DiagnosingClinician string             `json:"diagnosing_clinician"`
 	Notes               *string            `json:"notes"`
-	Created             pgtype.Timestamptz `json:"created"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 }
 
 type ClientDocument struct {

@@ -128,6 +128,47 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 	return i, err
 }
 
+const getClientDetails = `-- name: GetClientDetails :one
+SELECT id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications FROM client_details
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetClientDetails(ctx context.Context, id int64) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, getClientDetails, id)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.Source,
+		&i.Birthplace,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Organisation,
+		&i.Departement,
+		&i.Gender,
+		&i.Filenumber,
+		&i.ProfilePicture,
+		&i.Infix,
+		&i.CreatedAt,
+		&i.SenderID,
+		&i.LocationID,
+		&i.IdentityAttachmentIds,
+		&i.DepartureReason,
+		&i.DepartureReport,
+		&i.GpsPosition,
+		&i.MaturityDomains,
+		&i.Addresses,
+		&i.LegalMeasure,
+		&i.HasUntakenMedications,
+	)
+	return i, err
+}
+
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT 
     id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, 

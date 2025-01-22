@@ -183,3 +183,23 @@ func TestListClientDetails(t *testing.T) {
 	}
 
 }
+
+func TestGetClientDetails(t *testing.T) {
+	client := createRandomClientDetails(t)
+	client1, err := testQueries.GetClientDetails(context.Background(), client.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, client1)
+	require.Equal(t, client.ID, client1.ID)
+	require.Equal(t, client.FirstName, client1.FirstName)
+	require.Equal(t, client.LastName, client1.LastName)
+	require.Equal(t, client.Email, client1.Email)
+	require.Equal(t, client.PhoneNumber, client1.PhoneNumber)
+	require.Equal(t, client.DateOfBirth, client1.DateOfBirth)
+	require.Equal(t, client.Identity, client1.Identity)
+	require.Equal(t, client.Status, client1.Status)
+	require.Equal(t, client.Bsn, client1.Bsn)
+	require.Equal(t, client.Source, client1.Source)
+	require.Equal(t, client.Birthplace, client1.Birthplace)
+	require.Equal(t, client.Organisation, client1.Organisation)
+	require.Equal(t, client.Departement, client1.Departement)
+}

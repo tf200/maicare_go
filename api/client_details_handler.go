@@ -5,6 +5,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,7 @@ type CreateClientDetailsRequest struct {
 	Filenumber            string      `json:"filenumber" binding:"required"`
 	DateOfBirth           string      `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
 	PhoneNumber           *string     `json:"phone_number" binding:"required"`
+	SenderID              int64       `json:"sender_id" binding:"required"`
 	Infix                 *string     `json:"infix"`
 	Source                *string     `json:"source" binding:"required"`
 	Bsn                   *string     `json:"bsn"`
@@ -44,32 +46,32 @@ type Address struct {
 
 // CreateClientDetailsResponse represents a response to a create client request
 type CreateClientDetailsResponse struct {
-	ID                    int64              `json:"id"`
-	FirstName             string             `json:"first_name"`
-	LastName              string             `json:"last_name"`
-	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
-	Identity              bool               `json:"identity"`
-	Status                *string            `json:"status"`
-	Bsn                   *string            `json:"bsn"`
-	Source                *string            `json:"source"`
-	Birthplace            *string            `json:"birthplace"`
-	Email                 string             `json:"email"`
-	PhoneNumber           *string            `json:"phone_number"`
-	Organisation          *string            `json:"organisation"`
-	Departement           *string            `json:"departement"`
-	Gender                string             `json:"gender"`
-	Filenumber            string             `json:"filenumber"`
-	ProfilePicture        *string            `json:"profile_picture"`
-	Infix                 *string            `json:"infix"`
-	Created               pgtype.Timestamptz `json:"created"`
-	SenderID              int64              `json:"sender_id"`
-	LocationID            *int64             `json:"location_id"`
-	IdentityAttachmentIds []uuid.UUID        `json:"identity_attachment_ids"`
-	DepartureReason       *string            `json:"departure_reason"`
-	DepartureReport       *string            `json:"departure_report"`
-	Addresses             []Address          `json:"addresses"`
-	LegalMeasure          *string            `json:"legal_measure"`
-	HasUntakenMedications bool               `json:"has_untaken_medications"`
+	ID                    int64       `json:"id"`
+	FirstName             string      `json:"first_name"`
+	LastName              string      `json:"last_name"`
+	DateOfBirth           time.Time   `json:"date_of_birth"`
+	Identity              bool        `json:"identity"`
+	Status                *string     `json:"status"`
+	Bsn                   *string     `json:"bsn"`
+	Source                *string     `json:"source"`
+	Birthplace            *string     `json:"birthplace"`
+	Email                 string      `json:"email"`
+	PhoneNumber           *string     `json:"phone_number"`
+	Organisation          *string     `json:"organisation"`
+	Departement           *string     `json:"departement"`
+	Gender                string      `json:"gender"`
+	Filenumber            string      `json:"filenumber"`
+	ProfilePicture        *string     `json:"profile_picture"`
+	Infix                 *string     `json:"infix"`
+	Created               time.Time   `json:"created"`
+	SenderID              int64       `json:"sender_id"`
+	LocationID            *int64      `json:"location_id"`
+	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
+	DepartureReason       *string     `json:"departure_reason"`
+	DepartureReport       *string     `json:"departure_report"`
+	Addresses             []Address   `json:"addresses"`
+	LegalMeasure          *string     `json:"legal_measure"`
+	HasUntakenMedications bool        `json:"has_untaken_medications"`
 }
 
 // CreateClientApi creates a new client
@@ -123,7 +125,7 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 			Gender:       req.Gender,
 			Filenumber:   req.Filenumber,
 			//ProfilePicture:        nil, // needs to be checked
-			//SenderID:              nil, // needs to be checked
+			SenderID:              req.SenderID, // needs to be checked
 			LocationID:            req.LocationID,
 			IdentityAttachmentIds: identityAttachmentIdsJSON,
 			//DepartureReason:       nil, // needs to be checked
@@ -157,7 +159,7 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		ID:                    client.Client.ID,
 		FirstName:             client.Client.FirstName,
 		LastName:              client.Client.LastName,
-		DateOfBirth:           client.Client.DateOfBirth,
+		DateOfBirth:           client.Client.DateOfBirth.Time,
 		Identity:              client.Client.Identity,
 		Status:                client.Client.Status,
 		Bsn:                   client.Client.Bsn,
@@ -171,7 +173,7 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		Filenumber:            client.Client.Filenumber,
 		ProfilePicture:        client.Client.ProfilePicture,
 		Infix:                 client.Client.Infix,
-		Created:               client.Client.CreatedAt,
+		Created:               client.Client.CreatedAt.Time,
 		SenderID:              client.Client.SenderID,
 		LocationID:            client.Client.LocationID,
 		IdentityAttachmentIds: identityAttachmentIds,
@@ -195,34 +197,34 @@ type ListClientsApiParams struct {
 
 // ListClientsApiResponse represents a response to a list clients request
 type ListClientsApiResponse struct {
-	ID                    int64              `json:"id"`
-	FirstName             string             `json:"first_name"`
-	LastName              string             `json:"last_name"`
-	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
-	Identity              bool               `json:"identity"`
-	Status                *string            `json:"status"`
-	Bsn                   *string            `json:"bsn"`
-	Source                *string            `json:"source"`
-	Birthplace            *string            `json:"birthplace"`
-	Email                 string             `json:"email"`
-	PhoneNumber           *string            `json:"phone_number"`
-	Organisation          *string            `json:"organisation"`
-	Departement           *string            `json:"departement"`
-	Gender                string             `json:"gender"`
-	Filenumber            string             `json:"filenumber"`
-	ProfilePicture        *string            `json:"profile_picture"`
-	Infix                 *string            `json:"infix"`
-	CreatedAt             pgtype.Timestamptz `json:"created_at"`
-	SenderID              int64              `json:"sender_id"`
-	LocationID            *int64             `json:"location_id"`
-	DepartureReason       *string            `json:"departure_reason"`
-	DepartureReport       *string            `json:"departure_report"`
-	Addresses             []Address          `json:"addresses"`
-	LegalMeasure          *string            `json:"legal_measure"`
-	HasUntakenMedications bool               `json:"has_untaken_medications"`
+	ID                    int64     `json:"id"`
+	FirstName             string    `json:"first_name"`
+	LastName              string    `json:"last_name"`
+	DateOfBirth           time.Time `json:"date_of_birth"`
+	Identity              bool      `json:"identity"`
+	Status                *string   `json:"status"`
+	Bsn                   *string   `json:"bsn"`
+	Source                *string   `json:"source"`
+	Birthplace            *string   `json:"birthplace"`
+	Email                 string    `json:"email"`
+	PhoneNumber           *string   `json:"phone_number"`
+	Organisation          *string   `json:"organisation"`
+	Departement           *string   `json:"departement"`
+	Gender                string    `json:"gender"`
+	Filenumber            string    `json:"filenumber"`
+	ProfilePicture        *string   `json:"profile_picture"`
+	Infix                 *string   `json:"infix"`
+	CreatedAt             time.Time `json:"created_at"`
+	SenderID              int64     `json:"sender_id"`
+	LocationID            *int64    `json:"location_id"`
+	DepartureReason       *string   `json:"departure_reason"`
+	DepartureReport       *string   `json:"departure_report"`
+	Addresses             []Address `json:"addresses"`
+	LegalMeasure          *string   `json:"legal_measure"`
+	HasUntakenMedications bool      `json:"has_untaken_medications"`
 }
 
-// ListClientDetailsApi lists clients
+// ListClientsApi lists clients
 // @Summary List clients
 // @Tags clients
 // @Produce json
@@ -267,7 +269,7 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 			ID:                    client.ID,
 			FirstName:             client.FirstName,
 			LastName:              client.LastName,
-			DateOfBirth:           client.DateOfBirth,
+			DateOfBirth:           client.DateOfBirth.Time,
 			Identity:              client.Identity,
 			Status:                client.Status,
 			Bsn:                   client.Bsn,
@@ -281,7 +283,7 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 			Filenumber:            client.Filenumber,
 			ProfilePicture:        client.ProfilePicture,
 			Infix:                 client.Infix,
-			CreatedAt:             client.CreatedAt,
+			CreatedAt:             client.CreatedAt.Time,
 			SenderID:              client.SenderID,
 			LocationID:            client.LocationID,
 			DepartureReason:       client.DepartureReason,
@@ -297,4 +299,101 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 	res := SuccessResponse(pag, "Clients fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 
+}
+
+// GetClientApiResponse represents a response to a get client request
+type GetClientApiResponse struct {
+	ID                    int64       `json:"id"`
+	FirstName             string      `json:"first_name"`
+	LastName              string      `json:"last_name"`
+	DateOfBirth           time.Time   `json:"date_of_birth"`
+	Identity              bool        `json:"identity"`
+	Status                *string     `json:"status"`
+	Bsn                   *string     `json:"bsn"`
+	Source                *string     `json:"source"`
+	Birthplace            *string     `json:"birthplace"`
+	Email                 string      `json:"email"`
+	PhoneNumber           *string     `json:"phone_number"`
+	Organisation          *string     `json:"organisation"`
+	Departement           *string     `json:"departement"`
+	Gender                string      `json:"gender"`
+	Filenumber            string      `json:"filenumber"`
+	ProfilePicture        *string     `json:"profile_picture"`
+	Infix                 *string     `json:"infix"`
+	CreatedAt             time.Time   `json:"created_at"`
+	SenderID              int64       `json:"sender_id"`
+	LocationID            *int64      `json:"location_id"`
+	DepartureReason       *string     `json:"departure_reason"`
+	DepartureReport       *string     `json:"departure_report"`
+	Addresses             []Address   `json:"addresses"`
+	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
+	LegalMeasure          *string     `json:"legal_measure"`
+	HasUntakenMedications bool        `json:"has_untaken_medications"`
+}
+
+// GetClientApi gets a client
+// @Summary Get a client
+// @Tags clients
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[GetClientApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id} [get]
+func (server *Server) GetClientApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	client, err := server.store.GetClientDetails(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var addresses []Address
+	err = json.Unmarshal(client.Addresses, &addresses)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var identityAttachmentIds []uuid.UUID
+	err = json.Unmarshal(client.IdentityAttachmentIds, &identityAttachmentIds)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetClientApiResponse{
+		ID:                    client.ID,
+		FirstName:             client.FirstName,
+		LastName:              client.LastName,
+		DateOfBirth:           client.DateOfBirth.Time,
+		Identity:              client.Identity,
+		Status:                client.Status,
+		Bsn:                   client.Bsn,
+		Source:                client.Source,
+		Birthplace:            client.Birthplace,
+		Email:                 client.Email,
+		PhoneNumber:           client.PhoneNumber,
+		Organisation:          client.Organisation,
+		Departement:           client.Departement,
+		Gender:                client.Gender,
+		Filenumber:            client.Filenumber,
+		ProfilePicture:        client.ProfilePicture,
+		Infix:                 client.Infix,
+		CreatedAt:             client.CreatedAt.Time,
+		SenderID:              client.SenderID,
+		LocationID:            client.LocationID,
+		DepartureReason:       client.DepartureReason,
+		DepartureReport:       client.DepartureReport,
+		Addresses:             addresses,
+		IdentityAttachmentIds: identityAttachmentIds,
+		LegalMeasure:          client.LegalMeasure,
+		HasUntakenMedications: client.HasUntakenMedications,
+	}, "Client fetched successfully")
+	ctx.JSON(http.StatusOK, res)
 }

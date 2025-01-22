@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/token"
@@ -138,6 +139,7 @@ func TestCreateClientApi(t *testing.T) {
 						},
 					},
 					IdentityAttachmentIds: filesUuids[:],
+					SenderID:              1,
 				}
 				reqBody, err := json.Marshal(clientReq)
 				require.NoError(t, err)
@@ -237,6 +239,50 @@ func TestListClient(t *testing.T) {
 	}
 	for i := range testCaes {
 		tc := testCaes[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+
+}
+
+func TestGetClientDetails(t *testing.T) {
+	client := createRandomClientDetails(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d", client.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var clientRes Response[GetClientApiResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+				require.Equal(t, client.ID, clientRes.Data.ID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
 		t.Run(tc.name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			request, err := tc.buildRequest()

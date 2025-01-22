@@ -285,7 +285,7 @@ CREATE TABLE client_diagnosis (
     status VARCHAR(100) NOT NULL,
     diagnosing_clinician VARCHAR(100) NOT NULL,
     notes TEXT NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX client_diagnosis_client_id_idx ON client_diagnosis(client_id);
