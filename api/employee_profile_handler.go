@@ -310,7 +310,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseEmployees := make([]ListEmployeeResponse, len(employees))
+	responseEmployees := make([]ListEmployeeResponse, 0)
 	for i, employee := range employees {
 		responseEmployees[i] = ListEmployeeResponse{
 			ID:                        employee.ID,
@@ -663,7 +663,7 @@ func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseEducations := make([]ListEmployeeEducationResponse, len(educations))
+	responseEducations := make([]ListEmployeeEducationResponse, 0)
 	for i, education := range educations {
 		responseEducations[i] = ListEmployeeEducationResponse{
 			ID:              education.ID,
@@ -914,7 +914,7 @@ func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseExperiences := make([]ListEmployeeExperienceResponse, len(experiences))
+	responseExperiences := make([]ListEmployeeExperienceResponse, 0)
 	for i, experience := range experiences {
 		responseExperiences[i] = ListEmployeeExperienceResponse{
 			ID:          experience.ID,
@@ -1155,7 +1155,7 @@ func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseCertifications := make([]ListEmployeeCertificationResponse, len(certifications))
+	responseCertifications := make([]ListEmployeeCertificationResponse, 0)
 	for i, certification := range certifications {
 		responseCertifications[i] = ListEmployeeCertificationResponse{
 			ID:         certification.ID,

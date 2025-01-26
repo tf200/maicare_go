@@ -133,6 +133,38 @@ definitions:
       phone_number:
         type: string
     type: object
+  api.CreateClientAllergyRequest:
+    properties:
+      allergy_id:
+        type: integer
+      notes:
+        type: string
+      reaction:
+        type: string
+      severity:
+        type: string
+    required:
+    - allergy_id
+    - reaction
+    - severity
+    type: object
+  api.CreateClientAllergyResponse:
+    properties:
+      allergy_type_id:
+        type: integer
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      reaction:
+        type: string
+      severity:
+        type: string
+    type: object
   api.CreateClientDetailsRequest:
     properties:
       addresses:
@@ -719,6 +751,25 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ListClientAllergiesResponse:
+    properties:
+      allergy_name:
+        type: string
+      allergy_type_id:
+        type: integer
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      reaction:
+        type: string
+      severity:
+        type: string
+    type: object
   api.ListClientsApiResponse:
     properties:
       addresses:
@@ -1008,6 +1059,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.AssignRoleToUserApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateClientAllergyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientAllergyResponse'
       message:
         type: string
       success:
@@ -1304,6 +1364,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-api_ListClientAllergiesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientAllergiesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_ListClientsApiResponse:
     properties:
       data:
@@ -1565,6 +1634,21 @@ definitions:
         type: string
       size:
         type: integer
+    type: object
+  pagination.Response-api_ListClientAllergiesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientAllergiesResponse'
+        type: array
     type: object
   pagination.Response-api_ListClientsApiResponse:
     properties:
@@ -1900,6 +1984,75 @@ paths:
       summary: Get a client
       tags:
       - clients
+  /clients/{id}/client_allergies:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: query
+        name: client_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientAllergiesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all client allergies
+      tags:
+      - client_Medical
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client allergy data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientAllergyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientAllergyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a client allergy
+      tags:
+      - client_Medical
   /employees:
     get:
       consumes:

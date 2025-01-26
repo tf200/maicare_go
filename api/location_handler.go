@@ -32,7 +32,7 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseLocations := make([]ListLocationsResponse, len(locations))
+	responseLocations := make([]ListLocationsResponse, 0)
 	for i, location := range locations {
 		responseLocations[i] = ListLocationsResponse{
 			ID:       location.ID,

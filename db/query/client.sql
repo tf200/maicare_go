@@ -54,3 +54,39 @@ WHERE id = $1 LIMIT 1;
 
 
 
+-- name: CreateClientAllergy :one
+INSERT INTO client_allergy (
+    client_id,
+    allergy_type_id,
+    severity,
+    reaction,
+    notes,
+    created_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+) RETURNING *;
+
+
+-- name: GetClientAllergy :one
+SELECT * FROM client_allergy
+WHERE id = $1 LIMIT 1;
+
+-- name: UpdateClientAllergy :one
+UPDATE client_allergy
+SET
+    allergy_type_id = COALESCE(sqlc.narg('allergy_type_id'), allergy_type_id),
+    severity = COALESCE(sqlc.narg('severity'), severity),
+    reaction = COALESCE(sqlc.narg('reaction'), reaction),
+    notes = COALESCE(sqlc.narg('notes'), notes)
+WHERE id = $1
+RETURNING *;
+
+-- name: ListClientAllergies :many
+SELECT 
+    al.*,
+    ty.name AS allergy_name,
+    (SELECT COUNT(*) FROM client_allergy WHERE al.client_id = $1) AS total_allergies
+FROM client_allergy al
+JOIN allergy_type ty ON al.allergy_type_id = ty.id
+WHERE al.client_id = $1
+LIMIT $2 OFFSET $3;

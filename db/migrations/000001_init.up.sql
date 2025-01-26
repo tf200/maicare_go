@@ -334,14 +334,29 @@ CREATE TABLE treatments (
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE allergy_type (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO allergy_type (name)
+VALUES 
+    ('Food'),
+    ('Medicine'),
+    ('Insect'),
+    ('Latex'),
+    ('Mold'),
+    ('Pet'),
+    ('Pollen');
+
 CREATE TABLE client_allergy (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    allergy_type VARCHAR(100) NOT NULL,
+    allergy_type_id BIGINT NOT NULL REFERENCES allergy_type(id) ON DELETE CASCADE,
     severity VARCHAR(100) NOT NULL,
     reaction TEXT NOT NULL,
     notes TEXT NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE client_documents (

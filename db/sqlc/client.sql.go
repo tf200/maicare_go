@@ -11,6 +11,50 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createClientAllergy = `-- name: CreateClientAllergy :one
+INSERT INTO client_allergy (
+    client_id,
+    allergy_type_id,
+    severity,
+    reaction,
+    notes,
+    created_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+) RETURNING id, client_id, allergy_type_id, severity, reaction, notes, created_at
+`
+
+type CreateClientAllergyParams struct {
+	ClientID      int64              `json:"client_id"`
+	AllergyTypeID int64              `json:"allergy_type_id"`
+	Severity      string             `json:"severity"`
+	Reaction      string             `json:"reaction"`
+	Notes         *string            `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateClientAllergy(ctx context.Context, arg CreateClientAllergyParams) (ClientAllergy, error) {
+	row := q.db.QueryRow(ctx, createClientAllergy,
+		arg.ClientID,
+		arg.AllergyTypeID,
+		arg.Severity,
+		arg.Reaction,
+		arg.Notes,
+		arg.CreatedAt,
+	)
+	var i ClientAllergy
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.AllergyTypeID,
+		&i.Severity,
+		&i.Reaction,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createClientDetails = `-- name: CreateClientDetails :one
 INSERT INTO client_details (
     first_name,
@@ -128,6 +172,26 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 	return i, err
 }
 
+const getClientAllergy = `-- name: GetClientAllergy :one
+SELECT id, client_id, allergy_type_id, severity, reaction, notes, created_at FROM client_allergy
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetClientAllergy(ctx context.Context, id int64) (ClientAllergy, error) {
+	row := q.db.QueryRow(ctx, getClientAllergy, id)
+	var i ClientAllergy
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.AllergyTypeID,
+		&i.Severity,
+		&i.Reaction,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getClientDetails = `-- name: GetClientDetails :one
 SELECT id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications FROM client_details
 WHERE id = $1 LIMIT 1
@@ -167,6 +231,65 @@ func (q *Queries) GetClientDetails(ctx context.Context, id int64) (ClientDetail,
 		&i.HasUntakenMedications,
 	)
 	return i, err
+}
+
+const listClientAllergies = `-- name: ListClientAllergies :many
+SELECT 
+    al.id, al.client_id, al.allergy_type_id, al.severity, al.reaction, al.notes, al.created_at,
+    ty.name AS allergy_name,
+    (SELECT COUNT(*) FROM client_allergy WHERE al.client_id = $1) AS total_allergies
+FROM client_allergy al
+JOIN allergy_type ty ON al.allergy_type_id = ty.id
+WHERE al.client_id = $1
+LIMIT $2 OFFSET $3
+`
+
+type ListClientAllergiesParams struct {
+	ClientID int64 `json:"client_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
+}
+
+type ListClientAllergiesRow struct {
+	ID             int64              `json:"id"`
+	ClientID       int64              `json:"client_id"`
+	AllergyTypeID  int64              `json:"allergy_type_id"`
+	Severity       string             `json:"severity"`
+	Reaction       string             `json:"reaction"`
+	Notes          *string            `json:"notes"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	AllergyName    string             `json:"allergy_name"`
+	TotalAllergies int64              `json:"total_allergies"`
+}
+
+func (q *Queries) ListClientAllergies(ctx context.Context, arg ListClientAllergiesParams) ([]ListClientAllergiesRow, error) {
+	rows, err := q.db.Query(ctx, listClientAllergies, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClientAllergiesRow
+	for rows.Next() {
+		var i ListClientAllergiesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.AllergyTypeID,
+			&i.Severity,
+			&i.Reaction,
+			&i.Notes,
+			&i.CreatedAt,
+			&i.AllergyName,
+			&i.TotalAllergies,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listClientDetails = `-- name: ListClientDetails :many
@@ -281,4 +404,44 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateClientAllergy = `-- name: UpdateClientAllergy :one
+UPDATE client_allergy
+SET
+    allergy_type_id = COALESCE($2, allergy_type_id),
+    severity = COALESCE($3, severity),
+    reaction = COALESCE($4, reaction),
+    notes = COALESCE($5, notes)
+WHERE id = $1
+RETURNING id, client_id, allergy_type_id, severity, reaction, notes, created_at
+`
+
+type UpdateClientAllergyParams struct {
+	ID            int64   `json:"id"`
+	AllergyTypeID *int64  `json:"allergy_type_id"`
+	Severity      *string `json:"severity"`
+	Reaction      *string `json:"reaction"`
+	Notes         *string `json:"notes"`
+}
+
+func (q *Queries) UpdateClientAllergy(ctx context.Context, arg UpdateClientAllergyParams) (ClientAllergy, error) {
+	row := q.db.QueryRow(ctx, updateClientAllergy,
+		arg.ID,
+		arg.AllergyTypeID,
+		arg.Severity,
+		arg.Reaction,
+		arg.Notes,
+	)
+	var i ClientAllergy
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.AllergyTypeID,
+		&i.Severity,
+		&i.Reaction,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
 }

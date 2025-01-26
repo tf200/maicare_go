@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS "public"."care_plan_domains" CASCADE;
 DROP TABLE IF EXISTS "public"."careplan_atachements" CASCADE;
 DROP TABLE IF EXISTS "public"."certification" CASCADE;
 DROP TABLE IF EXISTS "public"."client_agreement" CASCADE;
+DROP TABLE IF EXISTS "public"."allergy_type" CASCADE;
 DROP TABLE IF EXISTS "public"."client_allergy" CASCADE;
 DROP TABLE IF EXISTS "public"."client_current_level" CASCADE;
 DROP TABLE IF EXISTS "public"."client_details" CASCADE;

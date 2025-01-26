@@ -99,6 +99,7 @@ func (server *Server) setupRoutes() {
 	server.setupAttachementRoutes(baseRouter)
 	server.setupSenderRoutes(baseRouter)
 	server.setupClientRoutes(baseRouter)
+	server.setupClientMedicalRoutes(baseRouter)
 
 	// Add more route setups as needed
 

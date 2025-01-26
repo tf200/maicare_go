@@ -203,3 +203,70 @@ func TestGetClientDetails(t *testing.T) {
 	require.Equal(t, client.Organisation, client1.Organisation)
 	require.Equal(t, client.Departement, client1.Departement)
 }
+
+func createRandomClientAllergy(t *testing.T, clientID int64) ClientAllergy {
+
+	arg := CreateClientAllergyParams{
+		ClientID:      clientID,
+		AllergyTypeID: 1,
+		Severity:      "Mild",
+		Reaction:      "test reaction",
+		Notes:         util.StringPtr("test note"),
+	}
+
+	allergy, err := testQueries.CreateClientAllergy(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, allergy)
+	require.Equal(t, arg.ClientID, allergy.ClientID)
+	return allergy
+}
+
+func TestCreateClientAllergy(t *testing.T) {
+	client := createRandomClientDetails(t)
+	createRandomClientAllergy(t, client.ID)
+}
+
+func TestListClientAllergies(t *testing.T) {
+	client := createRandomClientDetails(t)
+	for i := 0; i < 20; i++ {
+		_ = createRandomClientAllergy(t, client.ID)
+	}
+	testCases := []struct {
+		name  string
+		arg   ListClientAllergiesParams
+		check func(t *testing.T, allergies []ListClientAllergiesRow)
+	}{
+		{
+			name: "base case",
+			arg: ListClientAllergiesParams{
+				ClientID: client.ID,
+				Limit:    5,
+				Offset:   0,
+			},
+			check: func(t *testing.T, allergies []ListClientAllergiesRow) {
+				require.NotEmpty(t, allergies)
+				require.Len(t, allergies, 5)
+			},
+		},
+		{
+			name: "with offset",
+			arg: ListClientAllergiesParams{
+				ClientID: client.ID,
+				Limit:    5,
+				Offset:   5,
+			},
+			check: func(t *testing.T, allergies []ListClientAllergiesRow) {
+				require.NotEmpty(t, allergies)
+				require.Len(t, allergies, 5)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			allergies, err := testQueries.ListClientAllergies(context.Background(), tc.arg)
+			require.NoError(t, err)
+			tc.check(t, allergies)
+		})
+	}
+}
