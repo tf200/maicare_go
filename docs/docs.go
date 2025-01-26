@@ -494,7 +494,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/client_allergies": {
+        "/clients/{id}/allergies": {
             "get": {
                 "consumes": [
                     "application/json"

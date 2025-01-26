@@ -87,7 +87,7 @@ type CreateClientAllergyResponse struct {
 // @Param request body CreateClientAllergyRequest true "Client allergy data"
 // @Success 200 {object} Response[CreateClientAllergyResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/client_allergies [post]
+// @Router /clients/{id}/allergies [post]
 func (server *Server) CreateClientAllergyApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
@@ -153,7 +153,7 @@ type ListClientAllergiesResponse struct {
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[ListClientAllergiesResponse]]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/client_allergies [get]
+// @Router /clients/{id}/allergies [get]
 func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)

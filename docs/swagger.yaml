@@ -2029,7 +2029,7 @@ paths:
       summary: Get a client
       tags:
       - clients
-  /clients/{id}/client_allergies:
+  /clients/{id}/allergies:
     get:
       consumes:
       - application/json
