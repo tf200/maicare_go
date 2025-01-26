@@ -236,7 +236,7 @@ func (q *Queries) GetClientDetails(ctx context.Context, id int64) (ClientDetail,
 const listClientAllergies = `-- name: ListClientAllergies :many
 SELECT 
     al.id, al.client_id, al.allergy_type_id, al.severity, al.reaction, al.notes, al.created_at,
-    ty.name AS allergy_name,
+    ty.name AS allergy_type,
     (SELECT COUNT(*) FROM client_allergy WHERE al.client_id = $1) AS total_allergies
 FROM client_allergy al
 JOIN allergy_type ty ON al.allergy_type_id = ty.id
@@ -258,7 +258,7 @@ type ListClientAllergiesRow struct {
 	Reaction       string             `json:"reaction"`
 	Notes          *string            `json:"notes"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	AllergyName    string             `json:"allergy_name"`
+	AllergyType    string             `json:"allergy_type"`
 	TotalAllergies int64              `json:"total_allergies"`
 }
 
@@ -279,7 +279,7 @@ func (q *Queries) ListClientAllergies(ctx context.Context, arg ListClientAllergi
 			&i.Reaction,
 			&i.Notes,
 			&i.CreatedAt,
-			&i.AllergyName,
+			&i.AllergyType,
 			&i.TotalAllergies,
 		); err != nil {
 			return nil, err

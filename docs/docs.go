@@ -3426,7 +3426,7 @@ const docTemplate = `{
         "api.ListClientAllergiesResponse": {
             "type": "object",
             "properties": {
-                "allergy_name": {
+                "allergy_type": {
                     "type": "string"
                 },
                 "allergy_type_id": {

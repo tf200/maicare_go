@@ -84,7 +84,7 @@ RETURNING *;
 -- name: ListClientAllergies :many
 SELECT 
     al.*,
-    ty.name AS allergy_name,
+    ty.name AS allergy_type,
     (SELECT COUNT(*) FROM client_allergy WHERE al.client_id = $1) AS total_allergies
 FROM client_allergy al
 JOIN allergy_type ty ON al.allergy_type_id = ty.id

@@ -91,7 +91,7 @@ type ListClientAllergiesResponse struct {
 	Reaction      string    `json:"reaction"`
 	Notes         *string   `json:"notes"`
 	CreatedAt     time.Time `json:"created_at"`
-	AllergyName   string    `json:"allergy_name"`
+	AllergyType   string    `json:"allergy_type"`
 }
 
 // ListClientAllergiesApi lists all client allergies
@@ -140,7 +140,7 @@ func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
 			Reaction:      allergy.Reaction,
 			Notes:         allergy.Notes,
 			CreatedAt:     allergy.CreatedAt.Time,
-			AllergyName:   allergy.AllergyName,
+			AllergyType:   allergy.AllergyType,
 		})
 	}
 
