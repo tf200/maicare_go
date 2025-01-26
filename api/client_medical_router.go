@@ -12,5 +12,5 @@ func (server *Server) setupClientMedicalRoutes(baseRouter *gin.RouterGroup) {
 	}
 
 	// Route without /clients prefix
-	// baseRouter.POST("/allergy_types", AuthMiddleware(server.tokenMaker), server.ListAllergyTypesApi)
+	baseRouter.GET("/allergy_types", AuthMiddleware(server.tokenMaker), server.ListAllergyTypesApi)
 }
