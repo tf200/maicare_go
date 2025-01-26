@@ -751,6 +751,13 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ListAllergyTypesResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   api.ListClientAllergiesResponse:
     properties:
       allergy_type:
@@ -1212,6 +1219,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetSenderByIdResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListAllergyTypesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListAllergyTypesResponse'
       message:
         type: string
       success:
@@ -1707,6 +1723,35 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
+  /allergy_types:
+    get:
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListAllergyTypesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all allergy types
+      tags:
+      - client_Medical
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
@@ -1990,8 +2035,8 @@ paths:
       - application/json
       parameters:
       - description: Client ID
-        in: query
-        name: client_id
+        in: path
+        name: id
         required: true
         type: integer
       - description: Page number
@@ -2055,8 +2100,6 @@ paths:
       - client_Medical
   /employees:
     get:
-      consumes:
-      - application/json
       description: Get a paginated list of employee profiles with optional filters
       parameters:
       - description: Page number

@@ -10,6 +10,55 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ListAllergyTypesRequest defines the request for listing allergy types
+type ListAllergyTypesRequest struct {
+	pagination.Request
+	Search *string `form:"search"`
+}
+
+// ListAllergyTypesResponse defines the response for listing allergy types
+type ListAllergyTypesResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// ListAllergyTypesApi lists all allergy types
+// @Summary List all allergy types
+// @Tags client_Medical
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Produce json
+// @Success 200 {object} Response[ListAllergyTypesResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /allergy_types [get]
+func (server *Server) ListAllergyTypesApi(ctx *gin.Context) {
+	var req ListAllergyTypesRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	params := req.GetParams()
+	arg := db.ListAllergiesParams{
+		Limit:  params.Limit,
+		Offset: params.Offset,
+		Search: req.Search,
+	}
+	allergyTypes, err := server.store.ListAllergies(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	allergyTypesResponse := make([]ListAllergyTypesResponse, 0)
+	for _, allergyType := range allergyTypes {
+		allergyTypesResponse = append(allergyTypesResponse, ListAllergyTypesResponse{
+			ID:   allergyType.ID,
+			Name: allergyType.Name,
+		})
+	}
+	res := SuccessResponse(allergyTypesResponse, "Allergy types fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // CreateClientAllergyRequest defines the request for creating a client allergy
 type CreateClientAllergyRequest struct {
 	AllergyTypeID int64   `json:"allergy_id" binding:"required"`
@@ -99,7 +148,7 @@ type ListClientAllergiesResponse struct {
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param client_id query int true "Client ID"
+// @Param id path int true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[ListClientAllergiesResponse]]

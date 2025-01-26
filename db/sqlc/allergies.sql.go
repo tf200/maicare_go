@@ -23,3 +23,40 @@ func (q *Queries) Createallergy(ctx context.Context, name string) (AllergyType, 
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
+
+const listAllergies = `-- name: ListAllergies :many
+SELECT id, name FROM allergy_type 
+WHERE 
+    CASE 
+        WHEN $1::text IS NULL THEN true
+        ELSE name ILIKE concat('%', $1::text, '%')
+    END
+LIMIT $3::int
+OFFSET $2::int
+`
+
+type ListAllergiesParams struct {
+	Search *string `json:"search"`
+	Offset int32   `json:"offset"`
+	Limit  int32   `json:"limit"`
+}
+
+func (q *Queries) ListAllergies(ctx context.Context, arg ListAllergiesParams) ([]AllergyType, error) {
+	rows, err := q.db.Query(ctx, listAllergies, arg.Search, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AllergyType
+	for rows.Next() {
+		var i AllergyType
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

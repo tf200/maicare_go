@@ -17,6 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// func TestListAllergyTypesApi (t *testing.T){
+// 	test
+// }
+
 func createRandomClientAllergy(t *testing.T, clientID int64) db.ClientAllergy {
 
 	arg := db.CreateClientAllergyParams{

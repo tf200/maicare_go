@@ -85,7 +85,7 @@ RETURNING *;
 SELECT 
     al.*,
     ty.name AS allergy_type,
-    (SELECT COUNT(*) FROM client_allergy WHERE al.client_id = $1) AS total_allergies
+    (SELECT COUNT(*) FROM client_allergy WHERE client_allergy.client_id = al.client_id) AS total_allergies
 FROM client_allergy al
 JOIN allergy_type ty ON al.allergy_type_id = ty.id
 WHERE al.client_id = $1

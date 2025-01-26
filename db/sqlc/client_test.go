@@ -247,6 +247,7 @@ func TestListClientAllergies(t *testing.T) {
 			check: func(t *testing.T, allergies []ListClientAllergiesRow) {
 				require.NotEmpty(t, allergies)
 				require.Len(t, allergies, 5)
+				require.Equal(t, int64(20), allergies[0].TotalAllergies)
 			},
 		},
 		{

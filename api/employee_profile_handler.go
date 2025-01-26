@@ -257,7 +257,6 @@ type ListEmployeeResponse struct {
 // @Summary List employee profiles
 // @Description Get a paginated list of employee profiles with optional filters
 // @Tags employees
-// @Accept json
 // @Produce json
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
