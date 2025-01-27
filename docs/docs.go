@@ -1733,6 +1733,15 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Profile picture details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.SetEmployeeProfilePictureRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -4569,6 +4578,17 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "api.SetEmployeeProfilePictureRequest": {
+            "type": "object",
+            "required": [
+                "attachement_id"
+            ],
+            "properties": {
+                "attachement_id": {
+                    "type": "string"
                 }
             }
         },

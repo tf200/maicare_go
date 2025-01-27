@@ -572,6 +572,7 @@ type SetEmployeeProfilePictureResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Employee ID"
+// @Param request body SetEmployeeProfilePictureRequest true "Profile picture details"
 // @Success 200 {object} Response[SetEmployeeProfilePictureResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/profile_picture [put]

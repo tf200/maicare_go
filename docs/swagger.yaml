@@ -1425,6 +1425,13 @@ definitions:
       success:
         type: boolean
     type: object
+  api.SetEmployeeProfilePictureRequest:
+    properties:
+      attachement_id:
+        type: string
+    required:
+    - attachement_id
+    type: object
   api.SetEmployeeProfilePictureResponse:
     properties:
       email:
@@ -2837,6 +2844,12 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Profile picture details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.SetEmployeeProfilePictureRequest'
       produces:
       - application/json
       responses:
