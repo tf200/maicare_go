@@ -179,7 +179,7 @@ func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
 	}
 	totalCount := clientAllergies[0].TotalAllergies
 
-	allergies := make([]ListClientAllergiesResponse, 0)
+	allergies := make([]ListClientAllergiesResponse, len(clientAllergies))
 	for _, allergy := range clientAllergies {
 		allergies = append(allergies, ListClientAllergiesResponse{
 			ID:            allergy.ID,

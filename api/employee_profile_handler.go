@@ -13,6 +13,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -309,7 +310,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseEmployees := make([]ListEmployeeResponse, 0)
+	responseEmployees := make([]ListEmployeeResponse, len(employees))
 	for i, employee := range employees {
 		responseEmployees[i] = ListEmployeeResponse{
 			ID:                        employee.ID,
@@ -474,6 +475,7 @@ type UpdateEmployeeProfileResponse struct {
 // @Description Update employee profile by ID
 // @Tags employees
 // @Produce json
+// @Param id path int true "Employee ID"
 // @Success 200 {object} Response[UpdateEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id} [put]
@@ -547,6 +549,60 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 		OutOfService:              employee.OutOfService,
 		IsArchived:                employee.IsArchived,
 	}, "Employee profile updated successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// SetEmployeeProfilePictureRequest represents the request for SetEmployeeProfilePictureApi
+type SetEmployeeProfilePictureRequest struct {
+	AttachementID uuid.UUID `json:"attachement_id" binding:"required"`
+}
+
+// SetEmployeeProfilePictureResponse represents the response for SetEmployeeProfilePictureApi
+type SetEmployeeProfilePictureResponse struct {
+	ID             int64   `json:"id"`
+	Email          string  `json:"email"`
+	RoleID         int32   `json:"role_id"`
+	ProfilePicture *string `json:"profile_picture"`
+}
+
+// @Summary Set employee profile picture by ID
+// @Description Set employee profile picture by ID
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Success 200 {object} Response[SetEmployeeProfilePictureResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/profile_picture [put]
+func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req SetEmployeeProfilePictureRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.SetEmployeeProfilePictureTxParams{
+		EmployeeID:    employeeID,
+		AttachementID: req.AttachementID,
+	}
+	user, err := server.store.SetEmployeeProfilePictureTx(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(SetEmployeeProfilePictureResponse{
+		ID:             user.User.ID,
+		Email:          user.User.Email,
+		RoleID:         user.User.RoleID,
+		ProfilePicture: user.User.ProfilePicture,
+	}, "Employee profile picture updated successfully")
+
 	ctx.JSON(http.StatusOK, res)
 
 }
@@ -662,7 +718,7 @@ func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseEducations := make([]ListEmployeeEducationResponse, 0)
+	responseEducations := make([]ListEmployeeEducationResponse, len(educations))
 	for i, education := range educations {
 		responseEducations[i] = ListEmployeeEducationResponse{
 			ID:              education.ID,
@@ -913,7 +969,7 @@ func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseExperiences := make([]ListEmployeeExperienceResponse, 0)
+	responseExperiences := make([]ListEmployeeExperienceResponse, len(experiences))
 	for i, experience := range experiences {
 		responseExperiences[i] = ListEmployeeExperienceResponse{
 			ID:          experience.ID,
@@ -1154,7 +1210,7 @@ func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseCertifications := make([]ListEmployeeCertificationResponse, 0)
+	responseCertifications := make([]ListEmployeeCertificationResponse, len(certifications))
 	for i, certification := range certifications {
 		responseCertifications[i] = ListEmployeeCertificationResponse{
 			ID:         certification.ID,

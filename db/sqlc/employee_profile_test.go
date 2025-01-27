@@ -247,6 +247,31 @@ func TestListEmployeeProfile(t *testing.T) {
 	}
 }
 
+func TestSetEmployeeProfilePicture(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	updatedEmployee, err := testQueries.SetEmployeeProfilePicture(context.Background(), SetEmployeeProfilePictureParams{
+		ID:             employee.ID,
+		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, updatedEmployee)
+	require.Equal(t, employee.ID, updatedEmployee.ID)
+}
+
+func TestSetEmployeeProfilePictureTx(t *testing.T) {
+	store := NewStore(testDB)
+	attachement := createRandomAttachmentImage(t)
+	employee, _ := createRandomEmployee(t)
+	arg := SetEmployeeProfilePictureTxParams{
+		EmployeeID:    employee.ID,
+		AttachementID: attachement.Uuid,
+	}
+	result, err := store.SetEmployeeProfilePictureTx(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, result)
+
+}
+
 func TestCountEmployeeProfile(t *testing.T) {
 	// Get initial count before adding test data
 	initialCount, err := testQueries.CountEmployeeProfile(context.Background(), CountEmployeeProfileParams{

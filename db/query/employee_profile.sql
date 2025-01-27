@@ -132,6 +132,16 @@ SET
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
+-- name: SetEmployeeProfilePicture :one
+UPDATE custom_user
+SET profile_picture = $2
+WHERE id = (
+    SELECT user_id 
+    FROM employee_profile
+    WHERE employee_profile.id = $1
+)
+RETURNING *;
+
 
 -- name: AddEducationToEmployeeProfile :one
 INSERT INTO employee_education (
@@ -226,3 +236,5 @@ RETURNING *;
 
 -- name: DeleteEmployeeCertification :one
 DELETE FROM certification WHERE id = $1 RETURNING *;
+
+

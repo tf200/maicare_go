@@ -18,3 +18,5 @@ WHERE id = $1 LIMIT 1;
 -- name: GetUserByEmail :one
 SELECT * FROM custom_user
 WHERE email= $1 LIMIT 1;
+
+

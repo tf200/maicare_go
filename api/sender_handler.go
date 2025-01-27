@@ -181,7 +181,7 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 		return
 	}
 
-	responseSenders := make([]ListSendersResponse, 0)
+	responseSenders := make([]ListSendersResponse, len(senders))
 	for i, sender := range senders {
 		contacts := make([]Contact, 0)
 		if err := json.Unmarshal(sender.Contacts, &contacts); err != nil {

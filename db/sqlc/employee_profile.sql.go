@@ -669,6 +669,38 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 	return items, nil
 }
 
+const setEmployeeProfilePicture = `-- name: SetEmployeeProfilePicture :one
+UPDATE custom_user
+SET profile_picture = $2
+WHERE id = (
+    SELECT user_id 
+    FROM employee_profile
+    WHERE employee_profile.id = $1
+)
+RETURNING id, password, last_login, email, role_id, is_active, date_joined, profile_picture
+`
+
+type SetEmployeeProfilePictureParams struct {
+	ID             int64   `json:"id"`
+	ProfilePicture *string `json:"profile_picture"`
+}
+
+func (q *Queries) SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error) {
+	row := q.db.QueryRow(ctx, setEmployeeProfilePicture, arg.ID, arg.ProfilePicture)
+	var i CustomUser
+	err := row.Scan(
+		&i.ID,
+		&i.Password,
+		&i.LastLogin,
+		&i.Email,
+		&i.RoleID,
+		&i.IsActive,
+		&i.DateJoined,
+		&i.ProfilePicture,
+	)
+	return i, err
+}
+
 const updateEmployeeCertification = `-- name: UpdateEmployeeCertification :one
 UPDATE certification
 SET

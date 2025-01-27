@@ -33,6 +33,30 @@ func createRandomAttachmentFile(t *testing.T) AttachmentFile {
 	return attachment
 }
 
+func createRandomAttachmentImage(t *testing.T) AttachmentFile {
+
+	tagvalue := "test"
+	arg := CreateAttachmentParams{
+		Name: util.RandomString(5),
+		File: util.GetRandomImageURL(),
+		Size: 23,
+		Tag:  &tagvalue,
+	}
+	attachment, err := testQueries.CreateAttachment(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, attachment)
+
+	require.Equal(t, arg.Name, attachment.Name)
+	require.Equal(t, arg.File, attachment.File)
+	require.Equal(t, arg.Size, attachment.Size)
+	require.Equal(t, arg.Tag, attachment.Tag)
+
+	require.NotZero(t, attachment.Uuid)
+	require.NotZero(t, attachment.Created)
+	return attachment
+}
+
 func TestCreateAttachment(t *testing.T) {
 	createRandomAttachmentFile(t)
 }
