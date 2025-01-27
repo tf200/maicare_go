@@ -1251,6 +1251,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_SetEmployeeProfilePictureResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.SetEmployeeProfilePictureResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateEmployeeCertificationResponse:
     properties:
       data:
@@ -1415,6 +1424,17 @@ definitions:
         type: string
       success:
         type: boolean
+    type: object
+  api.SetEmployeeProfilePictureResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      profile_picture:
+        type: string
+      role_id:
+        type: integer
     type: object
   api.UpdateEmployeeCertificationRequest:
     properties:
@@ -2240,6 +2260,12 @@ paths:
       - employees
     put:
       description: Update employee profile by ID
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -2798,6 +2824,47 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update experience for employee profile
+      tags:
+      - employees
+  /employees/{id}/profile_picture:
+    put:
+      consumes:
+      - application/json
+      description: Set employee profile picture by ID
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_SetEmployeeProfilePictureResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Set employee profile picture by ID
       tags:
       - employees
   /employees/profile:
