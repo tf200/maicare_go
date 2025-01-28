@@ -204,6 +204,21 @@ func TestGetClientDetails(t *testing.T) {
 	require.Equal(t, client.Departement, client1.Departement)
 }
 
+func TestSetClientProfilePictureTx(t *testing.T) {
+	store := NewStore(testDB)
+	client := createRandomClientDetails(t)
+	attachment := createRandomAttachmentFile(t)
+
+	arg := SetClientProfilePictureTxParams{
+		ClientID:     client.ID,
+		AttachmentID: attachment.Uuid,
+	}
+
+	clientUp, err := store.SetClientProfilePictureTx(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientUp)
+}
+
 func createRandomClientAllergy(t *testing.T, clientID int64) ClientAllergy {
 
 	arg := CreateClientAllergyParams{

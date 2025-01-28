@@ -555,7 +555,7 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 
 // SetEmployeeProfilePictureRequest represents the request for SetEmployeeProfilePictureApi
 type SetEmployeeProfilePictureRequest struct {
-	AttachementID uuid.UUID `json:"attachement_id" binding:"required"`
+	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
 }
 
 // SetEmployeeProfilePictureResponse represents the response for SetEmployeeProfilePictureApi
@@ -590,7 +590,7 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 	}
 	arg := db.SetEmployeeProfilePictureTxParams{
 		EmployeeID:    employeeID,
-		AttachementID: req.AttachementID,
+		AttachementID: req.AttachmentID,
 	}
 	user, err := server.store.SetEmployeeProfilePictureTx(ctx, arg)
 	if err != nil {

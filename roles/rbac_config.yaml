@@ -56,6 +56,12 @@ permissions:
   - name: CLIENT.VIEW
     resource: /clients
     method: [GET]
+  - name: CLIENT.UPDATE
+    resource: /clients
+    method: [PUT]
+  - name: CLIENT.DELETE
+    resource: /clients
+    method: [DELETE]
   - name: FINANCE.VIEW
     resource: /finance
     method: [GET]
@@ -92,6 +98,8 @@ roles:
       - LOCATION.DELETE
       - CLIENT.CREATE
       - CLIENT.VIEW
+      - CLIENT.UPDATE
+      - CLIENT.DELETE
       - FINANCE.VIEW
       - PROFILE.VIEW
       - SETTINGS.VIEW

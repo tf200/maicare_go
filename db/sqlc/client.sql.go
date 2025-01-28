@@ -406,6 +406,54 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 	return items, nil
 }
 
+const setClientProfilePicture = `-- name: SetClientProfilePicture :one
+UPDATE client_details
+SET profile_picture = $2
+WHERE id = $1
+RETURNING id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+`
+
+type SetClientProfilePictureParams struct {
+	ID             int64   `json:"id"`
+	ProfilePicture *string `json:"profile_picture"`
+}
+
+func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProfilePictureParams) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, setClientProfilePicture, arg.ID, arg.ProfilePicture)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.Source,
+		&i.Birthplace,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Organisation,
+		&i.Departement,
+		&i.Gender,
+		&i.Filenumber,
+		&i.ProfilePicture,
+		&i.Infix,
+		&i.CreatedAt,
+		&i.SenderID,
+		&i.LocationID,
+		&i.IdentityAttachmentIds,
+		&i.DepartureReason,
+		&i.DepartureReport,
+		&i.GpsPosition,
+		&i.MaturityDomains,
+		&i.Addresses,
+		&i.LegalMeasure,
+		&i.HasUntakenMedications,
+	)
+	return i, err
+}
+
 const updateClientAllergy = `-- name: UpdateClientAllergy :one
 UPDATE client_allergy
 SET

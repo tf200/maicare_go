@@ -40,3 +40,36 @@ func (store *Store) CreateClientDetailsTx(ctx context.Context, arg CreateClientD
 
 	return result, err
 }
+
+type SetClientProfilePictureTxParams struct {
+	ClientID     int64
+	AttachmentID uuid.UUID
+}
+
+type SetClientProfilePictureTxResult struct {
+	User ClientDetail
+}
+
+func (store *Store) SetClientProfilePictureTx(ctx context.Context, arg SetClientProfilePictureTxParams) (SetClientProfilePictureTxResult, error) {
+	var result SetClientProfilePictureTxResult
+
+	err := store.ExecTx(ctx, func(q *Queries) error {
+
+		attachement, err := q.SetAttachmentAsUsed(ctx, arg.AttachmentID)
+		if err != nil {
+			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
+		}
+
+		result.User, err = q.SetClientProfilePicture(ctx, SetClientProfilePictureParams{
+			ID:             arg.ClientID,
+			ProfilePicture: &attachement.File,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create client details: %w", err)
+		}
+
+		return nil
+	})
+
+	return result, err
+}

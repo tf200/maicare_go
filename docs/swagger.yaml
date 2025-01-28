@@ -281,6 +281,60 @@ definitions:
       status:
         type: string
     type: object
+  api.CreateClientEmergencyContactParams:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      incidents_reports:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
+  api.CreateClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
   api.CreateEmployeeProfileRequest:
     properties:
       authentication_phone_number:
@@ -491,6 +545,11 @@ definitions:
       size:
         type: integer
     type: object
+  api.DeleteClientEmergencyContactResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   api.DeleteEmployeeCertificationResponse:
     properties:
       created_at:
@@ -613,6 +672,37 @@ definitions:
       source:
         type: string
       status:
+        type: string
+    type: object
+  api.GetClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
         type: string
     type: object
   api.GetEmployeeProfileByIDApiResponse:
@@ -775,6 +865,37 @@ definitions:
       reaction:
         type: string
       severity:
+        type: string
+    type: object
+  api.ListClientEmergencyContactsResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
         type: string
     type: object
   api.ListClientsApiResponse:
@@ -1089,6 +1210,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateEmployeeProfileResponse:
     properties:
       data:
@@ -1120,6 +1250,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteAttachmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeleteClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -1179,6 +1318,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetEmployeeProfileByIDApiResponse:
     properties:
       data:
@@ -1233,6 +1381,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_ListClientEmergencyContactsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListClientEmergencyContactsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_LoginUserResponse:
     properties:
       data:
@@ -1251,10 +1408,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_SetClientProfilePictureResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.SetClientProfilePictureResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_SetEmployeeProfilePictureResponse:
     properties:
       data:
         $ref: '#/definitions/api.SetEmployeeProfilePictureResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -1425,6 +1600,20 @@ definitions:
       success:
         type: boolean
     type: object
+  api.SetClientProfilePictureRequest:
+    properties:
+      attachement_id:
+        type: string
+    required:
+    - attachement_id
+    type: object
+  api.SetClientProfilePictureResponse:
+    properties:
+      id:
+        type: integer
+      profile_picture:
+        type: string
+    type: object
   api.SetEmployeeProfilePictureRequest:
     properties:
       attachement_id:
@@ -1442,6 +1631,60 @@ definitions:
         type: string
       role_id:
         type: integer
+    type: object
+  api.UpdateClientEmergencyContactParams:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      incidents_reports:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
+  api.UpdateClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
     type: object
   api.UpdateEmployeeCertificationRequest:
     properties:
@@ -2125,6 +2368,214 @@ paths:
       summary: Create a client allergy
       tags:
       - client_Medical
+  /clients/{id}/emergency_contacts:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListClientEmergencyContactsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all client emergency contacts
+      tags:
+      - client_network
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client emergency contact data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientEmergencyContactParams'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientEmergencyContactResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a client emergency contact
+      tags:
+      - client_network
+  /clients/{id}/emergency_contacts/{contact_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Contact ID
+        in: path
+        name: contact_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteClientEmergencyContactResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a client emergency contact
+      tags:
+      - client_network
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Contact ID
+        in: path
+        name: contact_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientEmergencyContactResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client emergency contact
+      tags:
+      - client_network
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Contact ID
+        in: path
+        name: contact_id
+        required: true
+        type: integer
+      - description: Client emergency contact data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientEmergencyContactParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientEmergencyContactResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client emergency contact
+      tags:
+      - client_network
+  /clients/{id}/profile_picture:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client profile picture
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.SetClientProfilePictureRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_SetClientProfilePictureResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Set a client profile picture
+      tags:
+      - clients
   /employees:
     get:
       description: Get a paginated list of employee profiles with optional filters

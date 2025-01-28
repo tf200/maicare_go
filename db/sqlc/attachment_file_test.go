@@ -14,7 +14,7 @@ func createRandomAttachmentFile(t *testing.T) AttachmentFile {
 	tagvalue := "test"
 	arg := CreateAttachmentParams{
 		Name: util.RandomString(5),
-		File: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+		File: util.GetRandomImageURL(),
 		Size: 23,
 		Tag:  &tagvalue,
 	}

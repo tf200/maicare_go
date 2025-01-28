@@ -193,9 +193,8 @@ type ClientEmergencyContact struct {
 	Address          *string            `json:"address"`
 	Relationship     *string            `json:"relationship"`
 	RelationStatus   *string            `json:"relation_status"`
-	Created          pgtype.Timestamptz `json:"created"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	IsVerified       bool               `json:"is_verified"`
-	Uuid             pgtype.UUID        `json:"uuid"`
 	MedicalReports   bool               `json:"medical_reports"`
 	IncidentsReports bool               `json:"incidents_reports"`
 	GoalsReports     bool               `json:"goals_reports"`

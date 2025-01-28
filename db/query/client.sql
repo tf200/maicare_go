@@ -52,6 +52,13 @@ SELECT * FROM client_details
 WHERE id = $1 LIMIT 1;
 
 
+-- name: SetClientProfilePicture :one
+UPDATE client_details
+SET profile_picture = $2
+WHERE id = $1
+RETURNING *;
+
+
 
 
 -- name: CreateClientAllergy :one
@@ -90,3 +97,5 @@ FROM client_allergy al
 JOIN allergy_type ty ON al.allergy_type_id = ty.id
 WHERE al.client_id = $1
 LIMIT $2 OFFSET $3;
+
+

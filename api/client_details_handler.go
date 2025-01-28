@@ -397,3 +397,53 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 	}, "Client fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// SetClientProfilePictureRequest represents a request to update a client
+type SetClientProfilePictureRequest struct {
+	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
+}
+
+// SetClientProfilePictureResponse represents a response to a set client profile picture request
+type SetClientProfilePictureResponse struct {
+	ID             int64   `json:"id"`
+	ProfilePicture *string `json:"profile_picture"`
+}
+
+// SetClientProfilePictureApi sets a client profile picture
+// @Summary Set a client profile picture
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body SetClientProfilePictureRequest true "Client profile picture"
+// @Success 200 {object} Response[SetClientProfilePictureResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/profile_picture [put]
+func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req SetClientProfilePictureRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.SetClientProfilePictureTxParams{
+		ClientID:     clientID,
+		AttachmentID: req.AttachmentID,
+	}
+	client, err := server.store.SetClientProfilePictureTx(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(SetClientProfilePictureResponse{
+		ID:             client.User.ID,
+		ProfilePicture: client.User.ProfilePicture,
+	}, "Profile picture set successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}

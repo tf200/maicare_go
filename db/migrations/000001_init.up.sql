@@ -311,16 +311,15 @@ CREATE TABLE client_emergency_contact (
     address VARCHAR(100) NULL,
     relationship VARCHAR(100) NULL,
     relation_status VARCHAR(50) NULL CHECK (relation_status IN ('Primary Relationship', 'Secondary Relationship')),
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    uuid UUID NULL,
     medical_reports BOOLEAN NOT NULL DEFAULT FALSE,
     incidents_reports BOOLEAN NOT NULL DEFAULT FALSE,
     goals_reports BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX client_emergency_contact_client_id_idx ON client_emergency_contact(client_id);
-CREATE INDEX client_emergency_contact_uuid_idx ON client_emergency_contact(uuid);
+
 
 
 
