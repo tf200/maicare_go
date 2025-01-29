@@ -856,6 +856,102 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/incidents": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "List all incidents",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListIncidentsResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Create an incident",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Incident data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateIncidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateIncidentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/profile_picture": {
             "put": {
                 "consumes": [
@@ -3393,6 +3489,352 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateIncidentRequest": {
+            "type": "object",
+            "required": [
+                "incident_type",
+                "needed_consultation",
+                "physical_injury",
+                "recurrence_risk",
+                "reporter_involvement",
+                "runtime_incident",
+                "severity_of_incident"
+            ],
+            "properties": {
+                "accident": {
+                    "type": "boolean"
+                },
+                "additional_appointments": {
+                    "type": "string"
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_absence": {
+                    "type": "boolean"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "employee_absenteeism": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "fire_water_damage": {
+                    "type": "boolean"
+                },
+                "incident_date": {
+                    "type": "string"
+                },
+                "incident_explanation": {
+                    "type": "string"
+                },
+                "incident_prevent_steps": {
+                    "type": "string"
+                },
+                "incident_taken_measures": {
+                    "type": "string"
+                },
+                "incident_type": {
+                    "type": "string"
+                },
+                "inform_who": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "medicines": {
+                    "type": "boolean"
+                },
+                "mese_worker": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "needed_consultation": {
+                    "type": "string",
+                    "enum": [
+                        "no",
+                        "not_clear",
+                        "hospitalization",
+                        "consult_gp"
+                    ]
+                },
+                "organization": {
+                    "type": "boolean"
+                },
+                "organizational": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "other": {
+                    "type": "boolean"
+                },
+                "other_cause": {
+                    "type": "string"
+                },
+                "other_desc": {
+                    "type": "string"
+                },
+                "other_notifications": {
+                    "type": "boolean"
+                },
+                "passing_away": {
+                    "type": "boolean"
+                },
+                "physical_injury": {
+                    "type": "string",
+                    "enum": [
+                        "no_injuries",
+                        "not_noticeable_yet",
+                        "bruising_swelling",
+                        "broken_bones",
+                        "shortness_of_breath",
+                        "death",
+                        "other"
+                    ]
+                },
+                "physical_injury_desc": {
+                    "type": "string"
+                },
+                "psychological_damage": {
+                    "type": "string"
+                },
+                "psychological_damage_desc": {
+                    "type": "string"
+                },
+                "recurrence_risk": {
+                    "type": "string",
+                    "enum": [
+                        "high",
+                        "very_high",
+                        "means",
+                        "very_low"
+                    ]
+                },
+                "reporter_involvement": {
+                    "type": "string",
+                    "enum": [
+                        "directly_involved",
+                        "witness",
+                        "found_afterwards",
+                        "alarmed"
+                    ]
+                },
+                "runtime_incident": {
+                    "type": "string"
+                },
+                "self_harm": {
+                    "type": "boolean"
+                },
+                "severity_of_incident": {
+                    "type": "string",
+                    "enum": [
+                        "fatal",
+                        "serious",
+                        "less_serious",
+                        "near_incident"
+                    ]
+                },
+                "succession": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "succession_desc": {
+                    "type": "string"
+                },
+                "technical": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "use_prohibited_substances": {
+                    "type": "boolean"
+                },
+                "violence": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.CreateIncidentResponse": {
+            "type": "object",
+            "properties": {
+                "accident": {
+                    "type": "boolean"
+                },
+                "additional_appointments": {
+                    "type": "string"
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_absence": {
+                    "type": "boolean"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created": {
+                    "type": "string"
+                },
+                "employee_absenteeism": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "fire_water_damage": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incident_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "incident_explanation": {
+                    "type": "string"
+                },
+                "incident_prevent_steps": {
+                    "type": "string"
+                },
+                "incident_taken_measures": {
+                    "type": "string"
+                },
+                "incident_type": {
+                    "type": "string"
+                },
+                "inform_who": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "medicines": {
+                    "type": "boolean"
+                },
+                "mese_worker": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "needed_consultation": {
+                    "type": "string"
+                },
+                "organization": {
+                    "type": "boolean"
+                },
+                "organizational": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "other": {
+                    "type": "boolean"
+                },
+                "other_cause": {
+                    "type": "string"
+                },
+                "other_desc": {
+                    "type": "string"
+                },
+                "other_notifications": {
+                    "type": "boolean"
+                },
+                "passing_away": {
+                    "type": "boolean"
+                },
+                "physical_injury": {
+                    "type": "string"
+                },
+                "physical_injury_desc": {
+                    "type": "string"
+                },
+                "psychological_damage": {
+                    "type": "string"
+                },
+                "psychological_damage_desc": {
+                    "type": "string"
+                },
+                "recurrence_risk": {
+                    "type": "string"
+                },
+                "reporter_involvement": {
+                    "type": "string"
+                },
+                "runtime_incident": {
+                    "type": "string"
+                },
+                "self_harm": {
+                    "type": "boolean"
+                },
+                "severity_of_incident": {
+                    "type": "string"
+                },
+                "soft_delete": {
+                    "type": "boolean"
+                },
+                "succession": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "succession_desc": {
+                    "type": "string"
+                },
+                "technical": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated": {
+                    "type": "string"
+                },
+                "use_prohibited_substances": {
+                    "type": "boolean"
+                },
+                "violence": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.CreateLocationRequest": {
             "type": "object",
             "required": [
@@ -4316,6 +4758,170 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListIncidentsResponse": {
+            "type": "object",
+            "properties": {
+                "accident": {
+                    "type": "boolean"
+                },
+                "additional_appointments": {
+                    "type": "string"
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_absence": {
+                    "type": "boolean"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "employee_absenteeism": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "fire_water_damage": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incident_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "incident_explanation": {
+                    "type": "string"
+                },
+                "incident_prevent_steps": {
+                    "type": "string"
+                },
+                "incident_taken_measures": {
+                    "type": "string"
+                },
+                "incident_type": {
+                    "type": "string"
+                },
+                "inform_who": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "medicines": {
+                    "type": "boolean"
+                },
+                "mese_worker": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "needed_consultation": {
+                    "type": "string"
+                },
+                "organization": {
+                    "type": "boolean"
+                },
+                "organizational": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "other": {
+                    "type": "boolean"
+                },
+                "other_cause": {
+                    "type": "string"
+                },
+                "other_desc": {
+                    "type": "string"
+                },
+                "other_notifications": {
+                    "type": "boolean"
+                },
+                "passing_away": {
+                    "type": "boolean"
+                },
+                "physical_injury": {
+                    "type": "string"
+                },
+                "physical_injury_desc": {
+                    "type": "string"
+                },
+                "psychological_damage": {
+                    "type": "string"
+                },
+                "psychological_damage_desc": {
+                    "type": "string"
+                },
+                "recurrence_risk": {
+                    "type": "string"
+                },
+                "reporter_involvement": {
+                    "type": "string"
+                },
+                "runtime_incident": {
+                    "type": "string"
+                },
+                "self_harm": {
+                    "type": "boolean"
+                },
+                "severity_of_incident": {
+                    "type": "string"
+                },
+                "soft_delete": {
+                    "type": "boolean"
+                },
+                "succession": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "succession_desc": {
+                    "type": "string"
+                },
+                "technical": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "use_prohibited_substances": {
+                    "type": "boolean"
+                },
+                "violence": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.ListLocationsResponse": {
             "type": "object",
             "properties": {
@@ -4577,6 +5183,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateIncidentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateIncidentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -5141,6 +5761,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-api_ListIncidentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListIncidentsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -5722,6 +6356,29 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-api_ListIncidentsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListIncidentsResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-api_ListSendersResponse": {
             "type": "object",
             "properties": {
@@ -5742,6 +6399,47 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.ListSendersResponse"
                     }
+                }
+            }
+        },
+        "pgtype.Date": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pgtype.InfinityModifier": {
+            "type": "integer",
+            "enum": [
+                1,
+                0,
+                -1
+            ],
+            "x-enum-varnames": [
+                "Infinity",
+                "Finite",
+                "NegativeInfinity"
+            ]
+        },
+        "pgtype.Timestamptz": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
                 }
             }
         }

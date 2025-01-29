@@ -551,8 +551,7 @@ type GroupAccess struct {
 
 type Incident struct {
 	ID                      int64              `json:"id"`
-	EmployeeFullname        string             `json:"employee_fullname"`
-	EmployeePosition        string             `json:"employee_position"`
+	EmployeeID              int64              `json:"employee_id"`
 	LocationID              *int64             `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []byte             `json:"inform_who"`
@@ -593,8 +592,8 @@ type Incident struct {
 	EmployeeAbsenteeism     []byte             `json:"employee_absenteeism"`
 	ClientID                int64              `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
-	Updated                 pgtype.Timestamptz `json:"updated"`
-	Created                 pgtype.Timestamptz `json:"created"`
+	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt               pgtype.Timestamptz `json:"created_at"`
 }
 
 type IncidentDetail struct {

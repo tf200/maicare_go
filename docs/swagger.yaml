@@ -443,6 +443,244 @@ definitions:
       work_phone_number:
         type: string
     type: object
+  api.CreateIncidentRequest:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        items:
+          type: string
+        type: array
+      employee_id:
+        type: integer
+      fire_water_damage:
+        type: boolean
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        enum:
+        - "no"
+        - not_clear
+        - hospitalization
+        - consult_gp
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        enum:
+        - no_injuries
+        - not_noticeable_yet
+        - bruising_swelling
+        - broken_bones
+        - shortness_of_breath
+        - death
+        - other
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        enum:
+        - high
+        - very_high
+        - means
+        - very_low
+        type: string
+      reporter_involvement:
+        enum:
+        - directly_involved
+        - witness
+        - found_afterwards
+        - alarmed
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        enum:
+        - fatal
+        - serious
+        - less_serious
+        - near_incident
+        type: string
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    required:
+    - incident_type
+    - needed_consultation
+    - physical_injury
+    - recurrence_risk
+    - reporter_involvement
+    - runtime_incident
+    - severity_of_incident
+    type: object
+  api.CreateIncidentResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      created:
+        type: string
+      employee_absenteeism:
+        items:
+          type: string
+        type: array
+      employee_id:
+        type: integer
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        $ref: '#/definitions/pgtype.Date'
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      updated:
+        type: string
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
   api.CreateLocationRequest:
     properties:
       address:
@@ -1051,6 +1289,115 @@ definitions:
       work_phone_number:
         type: string
     type: object
+  api.ListIncidentsResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      employee_absenteeism:
+        items:
+          type: string
+        type: array
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        $ref: '#/definitions/pgtype.Date'
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
   api.ListLocationsResponse:
     properties:
       address:
@@ -1223,6 +1570,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateIncidentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateIncidentResponse'
       message:
         type: string
       success:
@@ -1586,6 +1942,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListIncidentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListIncidentsResponse'
       message:
         type: string
       success:
@@ -1966,6 +2331,21 @@ definitions:
           $ref: '#/definitions/api.ListEmployeeResponse'
         type: array
     type: object
+  pagination.Response-api_ListIncidentsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListIncidentsResponse'
+        type: array
+    type: object
   pagination.Response-api_ListSendersResponse:
     properties:
       count:
@@ -1980,6 +2360,34 @@ definitions:
         items:
           $ref: '#/definitions/api.ListSendersResponse'
         type: array
+    type: object
+  pgtype.Date:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Timestamptz:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
     type: object
 info:
   contact:
@@ -2538,6 +2946,69 @@ paths:
       summary: Update a client emergency contact
       tags:
       - client_network
+  /clients/{id}/incidents:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListIncidentsResponse'
+      summary: List all incidents
+      tags:
+      - incidents
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Incident data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateIncidentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateIncidentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create an incident
+      tags:
+      - incidents
   /clients/{id}/profile_picture:
     put:
       consumes:

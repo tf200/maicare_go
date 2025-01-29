@@ -577,71 +577,6 @@ CREATE INDEX careplan_atachements_careplan_id_idx ON careplan_atachements(carepl
 
 
 
-CREATE TABLE incident (
-    id BIGSERIAL PRIMARY KEY,
-    employee_fullname VARCHAR(100) NOT NULL,
-    employee_position VARCHAR(100) NOT NULL,
-    location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
-    reporter_involvement VARCHAR(100) NOT NULL CHECK (reporter_involvement IN (
-        'directly_involved', 'witness', 'found_afterwards', 'alarmed'
-    )),
-    inform_who JSONB NOT NULL DEFAULT '[]',
-    incident_date DATE NOT NULL,
-    runtime_incident VARCHAR(100) NOT NULL,
-    incident_type VARCHAR(100) NOT NULL,
-    passing_away BOOLEAN NOT NULL DEFAULT FALSE,
-    self_harm BOOLEAN NOT NULL DEFAULT FALSE,
-    violence BOOLEAN NOT NULL DEFAULT FALSE,
-    fire_water_damage BOOLEAN NOT NULL DEFAULT FALSE,
-    accident BOOLEAN NOT NULL DEFAULT FALSE,
-    client_absence BOOLEAN NOT NULL DEFAULT FALSE,
-    medicines BOOLEAN NOT NULL DEFAULT FALSE,
-    organization BOOLEAN NOT NULL DEFAULT FALSE,
-    use_prohibited_substances BOOLEAN NOT NULL DEFAULT FALSE,
-    other_notifications BOOLEAN NOT NULL DEFAULT FALSE,
-    severity_of_incident VARCHAR(100) NOT NULL CHECK (severity_of_incident IN (
-        'near_incident', 'less_serious', 'serious', 'fatal'
-    )),
-    incident_explanation TEXT NULL,
-    recurrence_risk VARCHAR(100) NOT NULL CHECK (recurrence_risk IN (
-        'very_low', 'means', 'high', 'very_high'
-    )),
-    incident_prevent_steps TEXT NULL,
-    incident_taken_measures TEXT NULL,
-    technical JSONB NOT NULL DEFAULT '[]',
-    organizational JSONB NOT NULL DEFAULT '[]',
-    mese_worker JSONB NOT NULL DEFAULT '[]',
-    client_options JSONB NOT NULL DEFAULT '[]',
-    other_cause VARCHAR(100) NULL,
-    cause_explanation TEXT NULL DEFAULT '',
-    physical_injury VARCHAR(100) NOT NULL CHECK (physical_injury IN (
-        'no_injuries', 'not_noticeable_yet', 'bruising_swelling', 'skin_injury',
-        'broken_bones', 'shortness_of_breath', 'death', 'other'
-    )),
-    physical_injury_desc TEXT NULL DEFAULT '',
-    psychological_damage VARCHAR(100) NOT NULL CHECK (psychological_damage IN (
-        'no', 'not_noticeable_yet', 'drowsiness', 'unrest', 'other'
-    )),
-    psychological_damage_desc TEXT NULL DEFAULT '',
-    needed_consultation VARCHAR(100) NOT NULL CHECK (needed_consultation IN (
-        'no', 'not_clear', 'hospitalization', 'consult_gp'
-    )),
-    succession JSONB NOT NULL DEFAULT '[]',
-    succession_desc TEXT NULL DEFAULT '',
-    other BOOLEAN NOT NULL DEFAULT FALSE,
-    other_desc VARCHAR(100) NULL,
-    additional_appointments TEXT NULL DEFAULT '',
-    employee_absenteeism JSONB NOT NULL DEFAULT '[]',
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    soft_delete BOOLEAN NOT NULL DEFAULT FALSE,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX incident_client_id_idx ON incident(client_id);
-CREATE INDEX incident_location_id_idx ON incident(location_id);
-CREATE INDEX incident_soft_delete_idx ON incident(soft_delete);
-
 
 
 
@@ -943,6 +878,72 @@ CREATE TABLE employee_experience (
 );
 
 CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
+
+
+
+CREATE TABLE incident (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    reporter_involvement VARCHAR(100) NOT NULL CHECK (reporter_involvement IN (
+        'directly_involved', 'witness', 'found_afterwards', 'alarmed'
+    )),
+    inform_who JSONB NOT NULL DEFAULT '[]',
+    incident_date DATE NOT NULL,
+    runtime_incident VARCHAR(100) NOT NULL,
+    incident_type VARCHAR(100) NOT NULL,
+    passing_away BOOLEAN NOT NULL DEFAULT FALSE,
+    self_harm BOOLEAN NOT NULL DEFAULT FALSE,
+    violence BOOLEAN NOT NULL DEFAULT FALSE,
+    fire_water_damage BOOLEAN NOT NULL DEFAULT FALSE,
+    accident BOOLEAN NOT NULL DEFAULT FALSE,
+    client_absence BOOLEAN NOT NULL DEFAULT FALSE,
+    medicines BOOLEAN NOT NULL DEFAULT FALSE,
+    organization BOOLEAN NOT NULL DEFAULT FALSE,
+    use_prohibited_substances BOOLEAN NOT NULL DEFAULT FALSE,
+    other_notifications BOOLEAN NOT NULL DEFAULT FALSE,
+    severity_of_incident VARCHAR(100) NOT NULL CHECK (severity_of_incident IN (
+        'near_incident', 'less_serious', 'serious', 'fatal'
+    )),
+    incident_explanation TEXT NULL,
+    recurrence_risk VARCHAR(100) NOT NULL CHECK (recurrence_risk IN (
+        'very_low', 'means', 'high', 'very_high'
+    )),
+    incident_prevent_steps TEXT NULL,
+    incident_taken_measures TEXT NULL,
+    technical JSONB NOT NULL DEFAULT '[]',
+    organizational JSONB NOT NULL DEFAULT '[]',
+    mese_worker JSONB NOT NULL DEFAULT '[]',
+    client_options JSONB NOT NULL DEFAULT '[]',
+    other_cause VARCHAR(100) NULL,
+    cause_explanation TEXT NULL DEFAULT '',
+    physical_injury VARCHAR(100) NOT NULL CHECK (physical_injury IN (
+        'no_injuries', 'not_noticeable_yet', 'bruising_swelling', 'skin_injury',
+        'broken_bones', 'shortness_of_breath', 'death', 'other'
+    )),
+    physical_injury_desc TEXT NULL DEFAULT '',
+    psychological_damage VARCHAR(100) NOT NULL CHECK (psychological_damage IN (
+        'no', 'not_noticeable_yet', 'drowsiness', 'unrest', 'other'
+    )),
+    psychological_damage_desc TEXT NULL DEFAULT '',
+    needed_consultation VARCHAR(100) NOT NULL CHECK (needed_consultation IN (
+        'no', 'not_clear', 'hospitalization', 'consult_gp'
+    )),
+    succession JSONB NOT NULL DEFAULT '[]',
+    succession_desc TEXT NULL DEFAULT '',
+    other BOOLEAN NOT NULL DEFAULT FALSE,
+    other_desc VARCHAR(100) NULL,
+    additional_appointments TEXT NULL DEFAULT '',
+    employee_absenteeism JSONB NOT NULL DEFAULT '[]',
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    soft_delete BOOLEAN NOT NULL DEFAULT FALSE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX incident_client_id_idx ON incident(client_id);
+CREATE INDEX incident_location_id_idx ON incident(location_id);
+CREATE INDEX incident_soft_delete_idx ON incident(soft_delete);
 
 
 
