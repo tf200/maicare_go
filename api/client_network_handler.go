@@ -146,20 +146,18 @@ func (server *Server) ListClientEmergencyContactsApi(ctx *gin.Context) {
 
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		log.Printf("Failed to parse client ID: %v", err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	var req ListClientEmergencyContactsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		log.Printf("Failed to bind query params: %v", err)
+
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	params := req.GetParams()
-	log.Printf("Query params: limit=%d, offset=%d", params.Limit, params.Offset)
 
 	contacts, err := server.store.ListEmergencyContacts(ctx, db.ListEmergencyContactsParams{
 		ClientID: clientID,
@@ -168,12 +166,10 @@ func (server *Server) ListClientEmergencyContactsApi(ctx *gin.Context) {
 		Search:   req.Search,
 	})
 	if err != nil {
-		log.Printf("Failed to fetch contacts: %v", err)
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	// Handle case where no contacts are found
 	if len(contacts) == 0 {
 		pag := pagination.NewResponse(ctx, req.Request, []ListClientEmergencyContactsResponse{}, 0)
 		res := SuccessResponse(pag, "No emergency contacts found")

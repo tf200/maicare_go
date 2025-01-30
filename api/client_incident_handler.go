@@ -54,7 +54,7 @@ type CreateIncidentRequest struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"` 
+	ClientID                int64     `json:"client_id"`
 }
 
 // CreateIncidentResponse represents a response for CreateIncidentApi
@@ -409,6 +409,13 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(incidents) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListIncidentsResponse{}, 0)
+		res := SuccessResponse(pag, "No incidents found")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
