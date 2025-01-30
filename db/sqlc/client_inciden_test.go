@@ -89,3 +89,36 @@ func TestListIncidents(t *testing.T) {
 	t.Log(incidents)
 	require.Len(t, incidents, 4)
 }
+
+func TestGetIncident(t *testing.T) {
+	client := createRandomClientDetails(t)
+	incident1 := createRandomClientIncident(t, client.ID)
+	incident2, err := testQueries.GetIncident(context.Background(), incident1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, incident2)
+	require.Equal(t, incident1.ID, incident2.ID)
+}
+
+func TestUpdateIncident(t *testing.T) {
+	client := createRandomClientDetails(t)
+	incident1 := createRandomClientIncident(t, client.ID)
+	arg := UpdateIncidentParams{
+		ID:           incident1.ID,
+		IncidentType: util.StringPtr("test incident"),
+	}
+	incident2, err := testQueries.UpdateIncident(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, incident2)
+	require.Equal(t, incident1.ID, incident2.ID)
+	require.NotEqual(t, incident1.IncidentType, incident2.IncidentType)
+}
+
+func TestDeleteIncident(t *testing.T) {
+	client := createRandomClientDetails(t)
+	incident1 := createRandomClientIncident(t, client.ID)
+	_, err := testQueries.DeleteIncident(context.Background(), incident1.ID)
+	require.NoError(t, err)
+	incident2, err := testQueries.GetIncident(context.Background(), incident1.ID)
+	require.Error(t, err)
+	require.Empty(t, incident2)
+}

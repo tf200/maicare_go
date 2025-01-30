@@ -255,3 +255,180 @@ func TestListIncidentsApi(t *testing.T) {
 	}
 
 }
+
+func TestGetIncidentApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	incident := createRandomClientIncident(t, client.ID)
+	var InformWho []string
+	err := json.Unmarshal(incident.InformWho, &InformWho)
+	require.NoError(t, err)
+	var Technical []string
+	err = json.Unmarshal(incident.Technical, &Technical)
+	require.NoError(t, err)
+	var Organizational []string
+	err = json.Unmarshal(incident.Organizational, &Organizational)
+	require.NoError(t, err)
+	var MeseWorker []string
+	err = json.Unmarshal(incident.MeseWorker, &MeseWorker)
+	require.NoError(t, err)
+	var ClientOptions []string
+	err = json.Unmarshal(incident.ClientOptions, &ClientOptions)
+	require.NoError(t, err)
+	var Succession []string
+	err = json.Unmarshal(incident.Succession, &Succession)
+	require.NoError(t, err)
+	var EmployeeAbsenteeism []string
+	err = json.Unmarshal(incident.EmployeeAbsenteeism, &EmployeeAbsenteeism)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
+				request, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var res Response[GetIncidentResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				require.NotEmpty(t, res)
+				require.NotEmpty(t, res.Data.ID)
+				require.Equal(t, res.Data.ID, incident.ID)
+				require.Equal(t, res.Data.EmployeeID, incident.EmployeeID)
+				require.NotNil(t, res.Data.LocationID)
+				require.Equal(t, *res.Data.LocationID, *incident.LocationID)
+				require.Equal(t, res.Data.ReporterInvolvement, incident.ReporterInvolvement)
+				require.Equal(t, res.Data.InformWho, InformWho)
+				require.Equal(t, res.Data.RuntimeIncident, incident.RuntimeIncident)
+				require.Equal(t, res.Data.IncidentType, incident.IncidentType)
+				require.Equal(t, res.Data.PassingAway, incident.PassingAway)
+				require.Equal(t, res.Data.SelfHarm, incident.SelfHarm)
+				require.Equal(t, res.Data.Violence, incident.Violence)
+				require.Equal(t, res.Data.FireWaterDamage, incident.FireWaterDamage)
+				require.Equal(t, res.Data.Accident, incident.Accident)
+				require.Equal(t, res.Data.ClientAbsence, incident.ClientAbsence)
+				require.Equal(t, res.Data.Medicines, incident.Medicines)
+				require.Equal(t, res.Data.Organization, incident.Organization)
+				require.Equal(t, res.Data.UseProhibitedSubstances, incident.UseProhibitedSubstances)
+				require.Equal(t, res.Data.OtherNotifications, incident.OtherNotifications)
+				require.Equal(t, res.Data.SeverityOfIncident, incident.SeverityOfIncident)
+				require.NotNil(t, res.Data.IncidentExplanation)
+				require.Equal(t, *res.Data.IncidentExplanation, *incident.IncidentExplanation)
+				require.Equal(t, res.Data.RecurrenceRisk, incident.RecurrenceRisk)
+				require.NotNil(t, res.Data.IncidentPreventSteps)
+				require.Equal(t, *res.Data.IncidentPreventSteps, *incident.IncidentPreventSteps)
+				require.NotNil(t, res.Data.IncidentTakenMeasures)
+				require.Equal(t, *res.Data.IncidentTakenMeasures, *incident.IncidentTakenMeasures)
+				require.Equal(t, res.Data.Technical, Technical)
+				require.Equal(t, res.Data.Organizational, Organizational)
+				require.Equal(t, res.Data.MeseWorker, MeseWorker)
+				require.Equal(t, res.Data.ClientOptions, ClientOptions)
+				require.NotNil(t, res.Data.OtherCause)
+				require.Equal(t, *res.Data.OtherCause, *incident.OtherCause)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+
+	}
+
+}
+
+func TestUpdateIncidentApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	incident := createRandomClientIncident(t, client.ID)
+	var InformWho []string
+	err := json.Unmarshal(incident.InformWho, &InformWho)
+	require.NoError(t, err)
+	var Technical []string
+	err = json.Unmarshal(incident.Technical, &Technical)
+	require.NoError(t, err)
+	var Organizational []string
+	err = json.Unmarshal(incident.Organizational, &Organizational)
+	require.NoError(t, err)
+	var MeseWorker []string
+	err = json.Unmarshal(incident.MeseWorker, &MeseWorker)
+	require.NoError(t, err)
+	var ClientOptions []string
+	err = json.Unmarshal(incident.ClientOptions, &ClientOptions)
+	require.NoError(t, err)
+	var Succession []string
+	err = json.Unmarshal(incident.Succession, &Succession)
+	require.NoError(t, err)
+	var EmployeeAbsenteeism []string
+	err = json.Unmarshal(incident.EmployeeAbsenteeism, &EmployeeAbsenteeism)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				incidentReq := UpdateIncidentRequest{
+					ReporterInvolvement: util.StringPtr("directly_involved"),
+					InformWho:           []string{"updated"},
+				}
+				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
+				reqBody, err := json.Marshal(incidentReq)
+				require.NoError(t, err)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(reqBody))
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var res Response[UpdateIncidentResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				require.NotEmpty(t, res)
+				require.NotEmpty(t, res.Data.ID)
+				require.Equal(t, res.Data.ID, incident.ID)
+				require.Equal(t, res.Data.ReporterInvolvement, "directly_involved")
+				require.Equal(t, res.Data.InformWho, []string{"updated"})
+				require.Equal(t, res.Data.Technical, Technical)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+
+	}
+}

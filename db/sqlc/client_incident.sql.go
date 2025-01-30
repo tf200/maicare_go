@@ -197,6 +197,177 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 	return i, err
 }
 
+const deleteIncident = `-- name: DeleteIncident :one
+DELETE FROM incident
+WHERE id = $1
+RETURNING id, employee_id, location_id, reporter_involvement, inform_who, incident_date, runtime_incident, incident_type, passing_away, self_harm, violence, fire_water_damage, accident, client_absence, medicines, organization, use_prohibited_substances, other_notifications, severity_of_incident, incident_explanation, recurrence_risk, incident_prevent_steps, incident_taken_measures, technical, organizational, mese_worker, client_options, other_cause, cause_explanation, physical_injury, physical_injury_desc, psychological_damage, psychological_damage_desc, needed_consultation, succession, succession_desc, other, other_desc, additional_appointments, employee_absenteeism, client_id, soft_delete, updated_at, created_at
+`
+
+func (q *Queries) DeleteIncident(ctx context.Context, id int64) (Incident, error) {
+	row := q.db.QueryRow(ctx, deleteIncident, id)
+	var i Incident
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.LocationID,
+		&i.ReporterInvolvement,
+		&i.InformWho,
+		&i.IncidentDate,
+		&i.RuntimeIncident,
+		&i.IncidentType,
+		&i.PassingAway,
+		&i.SelfHarm,
+		&i.Violence,
+		&i.FireWaterDamage,
+		&i.Accident,
+		&i.ClientAbsence,
+		&i.Medicines,
+		&i.Organization,
+		&i.UseProhibitedSubstances,
+		&i.OtherNotifications,
+		&i.SeverityOfIncident,
+		&i.IncidentExplanation,
+		&i.RecurrenceRisk,
+		&i.IncidentPreventSteps,
+		&i.IncidentTakenMeasures,
+		&i.Technical,
+		&i.Organizational,
+		&i.MeseWorker,
+		&i.ClientOptions,
+		&i.OtherCause,
+		&i.CauseExplanation,
+		&i.PhysicalInjury,
+		&i.PhysicalInjuryDesc,
+		&i.PsychologicalDamage,
+		&i.PsychologicalDamageDesc,
+		&i.NeededConsultation,
+		&i.Succession,
+		&i.SuccessionDesc,
+		&i.Other,
+		&i.OtherDesc,
+		&i.AdditionalAppointments,
+		&i.EmployeeAbsenteeism,
+		&i.ClientID,
+		&i.SoftDelete,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getIncident = `-- name: GetIncident :one
+SELECT 
+    i.id, i.employee_id, i.location_id, i.reporter_involvement, i.inform_who, i.incident_date, i.runtime_incident, i.incident_type, i.passing_away, i.self_harm, i.violence, i.fire_water_damage, i.accident, i.client_absence, i.medicines, i.organization, i.use_prohibited_substances, i.other_notifications, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.technical, i.organizational, i.mese_worker, i.client_options, i.other_cause, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.succession, i.succession_desc, i.other, i.other_desc, i.additional_appointments, i.employee_absenteeism, i.client_id, i.soft_delete, i.updated_at, i.created_at,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
+FROM incident i
+JOIN employee_profile e ON i.employee_id = e.id
+WHERE i.id = $1 LIMIT 1
+`
+
+type GetIncidentRow struct {
+	ID                      int64              `json:"id"`
+	EmployeeID              int64              `json:"employee_id"`
+	LocationID              *int64             `json:"location_id"`
+	ReporterInvolvement     string             `json:"reporter_involvement"`
+	InformWho               []byte             `json:"inform_who"`
+	IncidentDate            pgtype.Date        `json:"incident_date"`
+	RuntimeIncident         string             `json:"runtime_incident"`
+	IncidentType            string             `json:"incident_type"`
+	PassingAway             bool               `json:"passing_away"`
+	SelfHarm                bool               `json:"self_harm"`
+	Violence                bool               `json:"violence"`
+	FireWaterDamage         bool               `json:"fire_water_damage"`
+	Accident                bool               `json:"accident"`
+	ClientAbsence           bool               `json:"client_absence"`
+	Medicines               bool               `json:"medicines"`
+	Organization            bool               `json:"organization"`
+	UseProhibitedSubstances bool               `json:"use_prohibited_substances"`
+	OtherNotifications      bool               `json:"other_notifications"`
+	SeverityOfIncident      string             `json:"severity_of_incident"`
+	IncidentExplanation     *string            `json:"incident_explanation"`
+	RecurrenceRisk          string             `json:"recurrence_risk"`
+	IncidentPreventSteps    *string            `json:"incident_prevent_steps"`
+	IncidentTakenMeasures   *string            `json:"incident_taken_measures"`
+	Technical               []byte             `json:"technical"`
+	Organizational          []byte             `json:"organizational"`
+	MeseWorker              []byte             `json:"mese_worker"`
+	ClientOptions           []byte             `json:"client_options"`
+	OtherCause              *string            `json:"other_cause"`
+	CauseExplanation        *string            `json:"cause_explanation"`
+	PhysicalInjury          string             `json:"physical_injury"`
+	PhysicalInjuryDesc      *string            `json:"physical_injury_desc"`
+	PsychologicalDamage     string             `json:"psychological_damage"`
+	PsychologicalDamageDesc *string            `json:"psychological_damage_desc"`
+	NeededConsultation      string             `json:"needed_consultation"`
+	Succession              []byte             `json:"succession"`
+	SuccessionDesc          *string            `json:"succession_desc"`
+	Other                   bool               `json:"other"`
+	OtherDesc               *string            `json:"other_desc"`
+	AdditionalAppointments  *string            `json:"additional_appointments"`
+	EmployeeAbsenteeism     []byte             `json:"employee_absenteeism"`
+	ClientID                int64              `json:"client_id"`
+	SoftDelete              bool               `json:"soft_delete"`
+	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt               pgtype.Timestamptz `json:"created_at"`
+	EmployeeFirstName       string             `json:"employee_first_name"`
+	EmployeeLastName        string             `json:"employee_last_name"`
+}
+
+func (q *Queries) GetIncident(ctx context.Context, id int64) (GetIncidentRow, error) {
+	row := q.db.QueryRow(ctx, getIncident, id)
+	var i GetIncidentRow
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.LocationID,
+		&i.ReporterInvolvement,
+		&i.InformWho,
+		&i.IncidentDate,
+		&i.RuntimeIncident,
+		&i.IncidentType,
+		&i.PassingAway,
+		&i.SelfHarm,
+		&i.Violence,
+		&i.FireWaterDamage,
+		&i.Accident,
+		&i.ClientAbsence,
+		&i.Medicines,
+		&i.Organization,
+		&i.UseProhibitedSubstances,
+		&i.OtherNotifications,
+		&i.SeverityOfIncident,
+		&i.IncidentExplanation,
+		&i.RecurrenceRisk,
+		&i.IncidentPreventSteps,
+		&i.IncidentTakenMeasures,
+		&i.Technical,
+		&i.Organizational,
+		&i.MeseWorker,
+		&i.ClientOptions,
+		&i.OtherCause,
+		&i.CauseExplanation,
+		&i.PhysicalInjury,
+		&i.PhysicalInjuryDesc,
+		&i.PsychologicalDamage,
+		&i.PsychologicalDamageDesc,
+		&i.NeededConsultation,
+		&i.Succession,
+		&i.SuccessionDesc,
+		&i.Other,
+		&i.OtherDesc,
+		&i.AdditionalAppointments,
+		&i.EmployeeAbsenteeism,
+		&i.ClientID,
+		&i.SoftDelete,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
+	)
+	return i, err
+}
+
 const listIncidents = `-- name: ListIncidents :many
 SELECT 
     i.id, i.employee_id, i.location_id, i.reporter_involvement, i.inform_who, i.incident_date, i.runtime_incident, i.incident_type, i.passing_away, i.self_harm, i.violence, i.fire_water_damage, i.accident, i.client_absence, i.medicines, i.organization, i.use_prohibited_substances, i.other_notifications, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.technical, i.organizational, i.mese_worker, i.client_options, i.other_cause, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.succession, i.succession_desc, i.other, i.other_desc, i.additional_appointments, i.employee_absenteeism, i.client_id, i.soft_delete, i.updated_at, i.created_at,
@@ -332,4 +503,186 @@ func (q *Queries) ListIncidents(ctx context.Context, arg ListIncidentsParams) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateIncident = `-- name: UpdateIncident :one
+UPDATE incident
+SET
+    employee_id = COALESCE($2, employee_id),
+    location_id = COALESCE($3, location_id),
+    reporter_involvement = COALESCE($4, reporter_involvement),
+    inform_who = COALESCE($5, inform_who),
+    incident_date = COALESCE($6, incident_date),
+    runtime_incident = COALESCE($7, runtime_incident),
+    incident_type = COALESCE($8, incident_type),
+    passing_away = COALESCE($9, passing_away),
+    self_harm = COALESCE($10, self_harm),
+    violence = COALESCE($11, violence),
+    fire_water_damage = COALESCE($12, fire_water_damage),
+    accident = COALESCE($13, accident),
+    client_absence = COALESCE($14, client_absence),
+    medicines = COALESCE($15, medicines),
+    organization = COALESCE($16, organization),
+    use_prohibited_substances = COALESCE($17, use_prohibited_substances),
+    other_notifications = COALESCE($18, other_notifications),
+    severity_of_incident = COALESCE($19, severity_of_incident),
+    incident_explanation = COALESCE($20, incident_explanation),
+    recurrence_risk = COALESCE($21, recurrence_risk),
+    incident_prevent_steps = COALESCE($22, incident_prevent_steps),
+    incident_taken_measures = COALESCE($23, incident_taken_measures),
+    technical = COALESCE($24, technical),
+    organizational = COALESCE($25, organizational),
+    mese_worker = COALESCE($26, mese_worker),
+    client_options = COALESCE($27, client_options),
+    other_cause = COALESCE($28, other_cause),
+    cause_explanation = COALESCE($29, cause_explanation),
+    physical_injury = COALESCE($30, physical_injury),
+    physical_injury_desc = COALESCE($31, physical_injury_desc),
+    psychological_damage = COALESCE($32, psychological_damage),
+    psychological_damage_desc = COALESCE($33, psychological_damage_desc),
+    needed_consultation = COALESCE($34, needed_consultation),
+    succession = COALESCE($35, succession),
+    succession_desc = COALESCE($36, succession_desc),
+    other = COALESCE($37, other),
+    other_desc = COALESCE($38, other_desc),
+    additional_appointments = COALESCE($39, additional_appointments),
+    employee_absenteeism = COALESCE($40, employee_absenteeism)
+WHERE id = $1
+RETURNING id, employee_id, location_id, reporter_involvement, inform_who, incident_date, runtime_incident, incident_type, passing_away, self_harm, violence, fire_water_damage, accident, client_absence, medicines, organization, use_prohibited_substances, other_notifications, severity_of_incident, incident_explanation, recurrence_risk, incident_prevent_steps, incident_taken_measures, technical, organizational, mese_worker, client_options, other_cause, cause_explanation, physical_injury, physical_injury_desc, psychological_damage, psychological_damage_desc, needed_consultation, succession, succession_desc, other, other_desc, additional_appointments, employee_absenteeism, client_id, soft_delete, updated_at, created_at
+`
+
+type UpdateIncidentParams struct {
+	ID                      int64       `json:"id"`
+	EmployeeID              *int64      `json:"employee_id"`
+	LocationID              *int64      `json:"location_id"`
+	ReporterInvolvement     *string     `json:"reporter_involvement"`
+	InformWho               []byte      `json:"inform_who"`
+	IncidentDate            pgtype.Date `json:"incident_date"`
+	RuntimeIncident         *string     `json:"runtime_incident"`
+	IncidentType            *string     `json:"incident_type"`
+	PassingAway             *bool       `json:"passing_away"`
+	SelfHarm                *bool       `json:"self_harm"`
+	Violence                *bool       `json:"violence"`
+	FireWaterDamage         *bool       `json:"fire_water_damage"`
+	Accident                *bool       `json:"accident"`
+	ClientAbsence           *bool       `json:"client_absence"`
+	Medicines               *bool       `json:"medicines"`
+	Organization            *bool       `json:"organization"`
+	UseProhibitedSubstances *bool       `json:"use_prohibited_substances"`
+	OtherNotifications      *bool       `json:"other_notifications"`
+	SeverityOfIncident      *string     `json:"severity_of_incident"`
+	IncidentExplanation     *string     `json:"incident_explanation"`
+	RecurrenceRisk          *string     `json:"recurrence_risk"`
+	IncidentPreventSteps    *string     `json:"incident_prevent_steps"`
+	IncidentTakenMeasures   *string     `json:"incident_taken_measures"`
+	Technical               []byte      `json:"technical"`
+	Organizational          []byte      `json:"organizational"`
+	MeseWorker              []byte      `json:"mese_worker"`
+	ClientOptions           []byte      `json:"client_options"`
+	OtherCause              *string     `json:"other_cause"`
+	CauseExplanation        *string     `json:"cause_explanation"`
+	PhysicalInjury          *string     `json:"physical_injury"`
+	PhysicalInjuryDesc      *string     `json:"physical_injury_desc"`
+	PsychologicalDamage     *string     `json:"psychological_damage"`
+	PsychologicalDamageDesc *string     `json:"psychological_damage_desc"`
+	NeededConsultation      *string     `json:"needed_consultation"`
+	Succession              []byte      `json:"succession"`
+	SuccessionDesc          *string     `json:"succession_desc"`
+	Other                   *bool       `json:"other"`
+	OtherDesc               *string     `json:"other_desc"`
+	AdditionalAppointments  *string     `json:"additional_appointments"`
+	EmployeeAbsenteeism     []byte      `json:"employee_absenteeism"`
+}
+
+func (q *Queries) UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error) {
+	row := q.db.QueryRow(ctx, updateIncident,
+		arg.ID,
+		arg.EmployeeID,
+		arg.LocationID,
+		arg.ReporterInvolvement,
+		arg.InformWho,
+		arg.IncidentDate,
+		arg.RuntimeIncident,
+		arg.IncidentType,
+		arg.PassingAway,
+		arg.SelfHarm,
+		arg.Violence,
+		arg.FireWaterDamage,
+		arg.Accident,
+		arg.ClientAbsence,
+		arg.Medicines,
+		arg.Organization,
+		arg.UseProhibitedSubstances,
+		arg.OtherNotifications,
+		arg.SeverityOfIncident,
+		arg.IncidentExplanation,
+		arg.RecurrenceRisk,
+		arg.IncidentPreventSteps,
+		arg.IncidentTakenMeasures,
+		arg.Technical,
+		arg.Organizational,
+		arg.MeseWorker,
+		arg.ClientOptions,
+		arg.OtherCause,
+		arg.CauseExplanation,
+		arg.PhysicalInjury,
+		arg.PhysicalInjuryDesc,
+		arg.PsychologicalDamage,
+		arg.PsychologicalDamageDesc,
+		arg.NeededConsultation,
+		arg.Succession,
+		arg.SuccessionDesc,
+		arg.Other,
+		arg.OtherDesc,
+		arg.AdditionalAppointments,
+		arg.EmployeeAbsenteeism,
+	)
+	var i Incident
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.LocationID,
+		&i.ReporterInvolvement,
+		&i.InformWho,
+		&i.IncidentDate,
+		&i.RuntimeIncident,
+		&i.IncidentType,
+		&i.PassingAway,
+		&i.SelfHarm,
+		&i.Violence,
+		&i.FireWaterDamage,
+		&i.Accident,
+		&i.ClientAbsence,
+		&i.Medicines,
+		&i.Organization,
+		&i.UseProhibitedSubstances,
+		&i.OtherNotifications,
+		&i.SeverityOfIncident,
+		&i.IncidentExplanation,
+		&i.RecurrenceRisk,
+		&i.IncidentPreventSteps,
+		&i.IncidentTakenMeasures,
+		&i.Technical,
+		&i.Organizational,
+		&i.MeseWorker,
+		&i.ClientOptions,
+		&i.OtherCause,
+		&i.CauseExplanation,
+		&i.PhysicalInjury,
+		&i.PhysicalInjuryDesc,
+		&i.PsychologicalDamage,
+		&i.PsychologicalDamageDesc,
+		&i.NeededConsultation,
+		&i.Succession,
+		&i.SuccessionDesc,
+		&i.Other,
+		&i.OtherDesc,
+		&i.AdditionalAppointments,
+		&i.EmployeeAbsenteeism,
+		&i.ClientID,
+		&i.SoftDelete,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
