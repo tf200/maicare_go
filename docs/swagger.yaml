@@ -110,6 +110,30 @@ definitions:
       zip_code:
         type: string
     type: object
+  api.AssignEmployeeRequest:
+    properties:
+      employee_id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.AssignEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   api.AssignRoleToUserApiResponse:
     properties:
       id:
@@ -842,6 +866,21 @@ definitions:
       id:
         type: integer
     type: object
+  api.GetAssignedEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   api.GetAttachmentByIdResponse:
     properties:
       created_at:
@@ -1193,6 +1232,21 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.ListAssignedEmployeesResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
         type: string
     type: object
   api.ListClientAllergiesResponse:
@@ -1639,6 +1693,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_AssignEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AssignEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_AssignRoleToUserApiResponse:
     properties:
       data:
@@ -1760,6 +1823,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -1895,6 +1967,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.SetEmployeeProfilePictureResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -2047,6 +2128,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-api_ListAssignedEmployeesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListAssignedEmployeesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_ListClientAllergiesResponse:
     properties:
       data:
@@ -2123,6 +2213,30 @@ definitions:
         type: string
       role_id:
         type: integer
+    type: object
+  api.UpdateAssignedEmployeeRequest:
+    properties:
+      employee_id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.UpdateAssignedEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
     type: object
   api.UpdateClientEmergencyContactParams:
     properties:
@@ -2615,6 +2729,21 @@ definitions:
       size:
         type: integer
     type: object
+  pagination.Response-api_ListAssignedEmployeesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListAssignedEmployeesResponse'
+        type: array
+    type: object
   pagination.Response-api_ListClientAllergiesResponse:
     properties:
       count:
@@ -3077,6 +3206,142 @@ paths:
       summary: Create a client allergy
       tags:
       - client_Medical
+  /clients/{id}/assigned_employees:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListAssignedEmployeesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all assigned employees
+      tags:
+      - client_network
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Employee assignment data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AssignEmployeeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_AssignEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Assign an employee to a client
+      tags:
+      - client_network
+  /clients/{id}/assigned_employees/{assign_id}:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Assignment ID
+        in: path
+        name: assign_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetAssignedEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get an assigned employee
+      tags:
+      - client_network
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Assignment ID
+        in: path
+        name: assign_id
+        required: true
+        type: integer
+      - description: Assigned employee data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateAssignedEmployeeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateAssignedEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update an assigned employee
+      tags:
+      - client_network
   /clients/{id}/emergency_contacts:
     get:
       parameters:

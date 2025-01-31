@@ -4,7 +4,9 @@ import (
 	"context"
 	"maicare_go/util"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -92,4 +94,69 @@ func TestDeleteEmergencyContact(t *testing.T) {
 	contact2, err := testQueries.GetEmergencyContact(context.Background(), contact1.ID)
 	require.Error(t, err)
 	require.Empty(t, contact2)
+}
+
+func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) AssignedEmployee {
+	arg := AssignEmployeeParams{
+		ClientID:   clientID,
+		EmployeeID: employeeID,
+		StartDate:  pgtype.Date{Time: time.Now(), Valid: true},
+		Role:       "Primary Caregiver",
+	}
+	assign, err := testQueries.AssignEmployee(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, assign)
+	require.Equal(t, arg.ClientID, assign.ClientID)
+	require.Equal(t, arg.EmployeeID, assign.EmployeeID)
+
+	return assign
+}
+
+func TestAssignEmployee(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	assignRandomEmployee(t, client.ID, employee.ID)
+
+}
+
+func TestListAssignedEmployees(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	for i := 0; i < 10; i++ {
+		assignRandomEmployee(t, client.ID, employee.ID)
+	}
+	arg := ListAssignedEmployeesParams{
+		ClientID: client.ID,
+		Limit:    5,
+		Offset:   5,
+	}
+	assigns, err := testQueries.ListAssignedEmployees(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, assigns, 5)
+}
+
+func TestGetAssignEmployee(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	assign1 := assignRandomEmployee(t, client.ID, employee.ID)
+	assign2, err := testQueries.GetAssignedEmployee(context.Background(), assign1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, assign2)
+	require.Equal(t, assign1.ID, assign2.ID)
+	require.Equal(t, assign1.ClientID, assign2.ClientID)
+}
+
+func TestUpdateAssignEmployee(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	assign1 := assignRandomEmployee(t, client.ID, employee.ID)
+	arg := UpdateAssignedEmployeeParams{
+		ID:   assign1.ID,
+		Role: util.StringPtr("Secondary Caregiver"),
+	}
+	assign2, err := testQueries.UpdateAssignedEmployee(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, assign2)
+	require.Equal(t, assign1.ID, assign2.ID)
+	require.NotEqual(t, assign1.Role, assign2.Role)
 }

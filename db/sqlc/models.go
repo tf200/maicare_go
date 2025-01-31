@@ -48,6 +48,15 @@ type AssessmentDomain struct {
 	Name string `json:"name"`
 }
 
+type AssignedEmployee struct {
+	ID         int64              `json:"id"`
+	ClientID   int64              `json:"client_id"`
+	EmployeeID int64              `json:"employee_id"`
+	StartDate  pgtype.Date        `json:"start_date"`
+	Role       string             `json:"role"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
 type Assignment struct {
 	ID            int64              `json:"id"`
 	EmployeeID    int64              `json:"employee_id"`
@@ -198,15 +207,6 @@ type ClientEmergencyContact struct {
 	MedicalReports   bool               `json:"medical_reports"`
 	IncidentsReports bool               `json:"incidents_reports"`
 	GoalsReports     bool               `json:"goals_reports"`
-}
-
-type ClientEmployeeAssignment struct {
-	ID         int64              `json:"id"`
-	ClientID   int64              `json:"client_id"`
-	EmployeeID int64              `json:"employee_id"`
-	StartDate  pgtype.Date        `json:"start_date"`
-	Role       string             `json:"role"`
-	Created    pgtype.Timestamptz `json:"created"`
 }
 
 type ClientGoal struct {

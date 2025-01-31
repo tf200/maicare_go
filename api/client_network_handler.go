@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // CreateClientEmergencyContactParams defines the request for creating a client emergency contact
@@ -385,5 +386,259 @@ func (server *Server) DeleteClientEmergencyContactApi(ctx *gin.Context) {
 	res := SuccessResponse(DeleteClientEmergencyContactResponse{
 		ID: contactID,
 	}, "Client emergency contact deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// AssignEmployeeRequest defines the request for assigning an employee to a client
+type AssignEmployeeRequest struct {
+	EmployeeID int64     `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
+	Role       string    `json:"role"`
+}
+
+// AssignEmployeeResponse defines the response for assigning an employee to a client
+type AssignEmployeeResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	EmployeeID int64     `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
+	Role       string    `json:"role"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// AssignEmployeeApi assigns an employee to a client
+// @Summary Assign an employee to a client
+// @Tags client_network
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body AssignEmployeeRequest true "Employee assignment data"
+// @Success 201 {object} Response[AssignEmployeeResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/assigned_employees [post]
+func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req AssignEmployeeRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.AssignEmployeeParams{
+		ClientID:   clientID,
+		EmployeeID: req.EmployeeID,
+		StartDate:  pgtype.Date{Time: req.StartDate, Valid: true},
+		Role:       req.Role,
+	}
+
+	assign, err := server.store.AssignEmployee(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(AssignEmployeeResponse{
+		ID:         assign.ID,
+		ClientID:   assign.ClientID,
+		EmployeeID: assign.EmployeeID,
+		StartDate:  assign.StartDate.Time,
+		Role:       assign.Role,
+		CreatedAt:  assign.CreatedAt.Time,
+	}, "Employee assigned successfully")
+
+	ctx.JSON(http.StatusCreated, res)
+
+}
+
+// ListAssignedEmployeesRequest defines the request for listing assigned employees
+type ListAssignedEmployeesRequest struct {
+	pagination.Request
+}
+
+// ListAssignedEmployeesResponse defines the response for listing assigned employees
+type ListAssignedEmployeesResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	EmployeeID int64     `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
+	Role       string    `json:"role"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// ListAssignedEmployeesApi lists all assigned employees
+// @Summary List all assigned employees
+// @Tags client_network
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} Response[pagination.Response[ListAssignedEmployeesResponse]]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/assigned_employees [get]
+func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ListAssignedEmployeesRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	params := req.GetParams()
+
+	assigns, err := server.store.ListAssignedEmployees(ctx, db.ListAssignedEmployeesParams{
+		ClientID: clientID,
+		Limit:    params.Limit,
+		Offset:   params.Offset,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(assigns) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListAssignedEmployeesResponse{}, 0)
+		res := SuccessResponse(pag, "No assigned employees found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
+	assignsRes := make([]ListAssignedEmployeesResponse, len(assigns))
+	for i, assign := range assigns {
+		assignsRes[i] = ListAssignedEmployeesResponse{
+			ID:         assign.ID,
+			ClientID:   assign.ClientID,
+			EmployeeID: assign.EmployeeID,
+			StartDate:  assign.StartDate.Time,
+			Role:       assign.Role,
+			CreatedAt:  assign.CreatedAt.Time,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, assignsRes, assigns[0].TotalCount)
+	res := SuccessResponse(pag, "Assigned employees fetched successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetAssignedEmployeeResponse defines the response for getting an assigned employee
+type GetAssignedEmployeeResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	EmployeeID int64     `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
+	Role       string    `json:"role"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// GetAssignedEmployeeApi gets an assigned employee
+// @Summary Get an assigned employee
+// @Tags client_network
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param assign_id path int true "Assignment ID"
+// @Success 200 {object} Response[GetAssignedEmployeeResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/assigned_employees/{assign_id} [get]
+func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
+	id := ctx.Param("assign_id")
+	assignID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	assign, err := server.store.GetAssignedEmployee(ctx, assignID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetAssignedEmployeeResponse{
+		ID:         assign.ID,
+		ClientID:   assign.ClientID,
+		EmployeeID: assign.EmployeeID,
+		StartDate:  assign.StartDate.Time,
+		Role:       assign.Role,
+		CreatedAt:  assign.CreatedAt.Time,
+	}, "Assigned employee fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateAssignedEmployeeRequest defines the request for updating an assigned employee
+type UpdateAssignedEmployeeRequest struct {
+	EmployeeID *int64    `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
+	Role       *string   `json:"role"`
+}
+
+// UpdateAssignedEmployeeResponse defines the response for updating an assigned employee
+type UpdateAssignedEmployeeResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	EmployeeID int64     `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
+	Role       string    `json:"role"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// UpdateAssignedEmployeeApi updates an assigned employee
+// @Summary Update an assigned employee
+// @Tags client_network
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param assign_id path int true "Assignment ID"
+// @Param request body UpdateAssignedEmployeeRequest true "Assigned employee data"
+// @Success 200 {object} Response[UpdateAssignedEmployeeResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/assigned_employees/{assign_id} [put]
+func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
+	id := ctx.Param("assign_id")
+	assignID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateAssignedEmployeeRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateAssignedEmployeeParams{
+		ID:         assignID,
+		EmployeeID: req.EmployeeID,
+		StartDate:  pgtype.Date{Time: req.StartDate, Valid: true},
+		Role:       req.Role,
+	}
+
+	assign, err := server.store.UpdateAssignedEmployee(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(UpdateAssignedEmployeeResponse{
+		ID:         assign.ID,
+		ClientID:   assign.ClientID,
+		EmployeeID: assign.EmployeeID,
+		StartDate:  assign.StartDate.Time,
+		Role:       assign.Role,
+		CreatedAt:  assign.CreatedAt.Time,
+	}, "Assigned employee updated successfully")
+
 	ctx.JSON(http.StatusOK, res)
 }

@@ -11,6 +11,43 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const assignEmployee = `-- name: AssignEmployee :one
+INSERT INTO assigned_employee (
+    client_id,
+    employee_id,
+    start_date,
+    role
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING id, client_id, employee_id, start_date, role, created_at
+`
+
+type AssignEmployeeParams struct {
+	ClientID   int64       `json:"client_id"`
+	EmployeeID int64       `json:"employee_id"`
+	StartDate  pgtype.Date `json:"start_date"`
+	Role       string      `json:"role"`
+}
+
+func (q *Queries) AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignedEmployee, error) {
+	row := q.db.QueryRow(ctx, assignEmployee,
+		arg.ClientID,
+		arg.EmployeeID,
+		arg.StartDate,
+		arg.Role,
+	)
+	var i AssignedEmployee
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createEmemrgencyContact = `-- name: CreateEmemrgencyContact :one
 INSERT INTO client_emergency_contact (
     client_id,
@@ -105,6 +142,43 @@ func (q *Queries) DeleteEmergencyContact(ctx context.Context, id int64) (ClientE
 	return i, err
 }
 
+const getAssignedEmployee = `-- name: GetAssignedEmployee :one
+SELECT 
+    ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
+FROM assigned_employee ae
+JOIN employee_profile e ON ae.employee_id = e.id
+WHERE ae.id = $1 LIMIT 1
+`
+
+type GetAssignedEmployeeRow struct {
+	ID                int64              `json:"id"`
+	ClientID          int64              `json:"client_id"`
+	EmployeeID        int64              `json:"employee_id"`
+	StartDate         pgtype.Date        `json:"start_date"`
+	Role              string             `json:"role"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	EmployeeFirstName string             `json:"employee_first_name"`
+	EmployeeLastName  string             `json:"employee_last_name"`
+}
+
+func (q *Queries) GetAssignedEmployee(ctx context.Context, id int64) (GetAssignedEmployeeRow, error) {
+	row := q.db.QueryRow(ctx, getAssignedEmployee, id)
+	var i GetAssignedEmployeeRow
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
+	)
+	return i, err
+}
+
 const getEmergencyContact = `-- name: GetEmergencyContact :one
 SELECT id, client_id, first_name, last_name, email, phone_number, address, relationship, relation_status, created_at, is_verified, medical_reports, incidents_reports, goals_reports FROM client_emergency_contact
 WHERE id = $1 LIMIT 1
@@ -130,6 +204,67 @@ func (q *Queries) GetEmergencyContact(ctx context.Context, id int64) (ClientEmer
 		&i.GoalsReports,
 	)
 	return i, err
+}
+
+const listAssignedEmployees = `-- name: ListAssignedEmployees :many
+SELECT 
+    ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    COUNT(*) OVER() as total_count
+FROM assigned_employee ae
+JOIN employee_profile e ON ae.employee_id = e.id
+WHERE ae.client_id = $1
+ORDER BY ae.start_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListAssignedEmployeesParams struct {
+	ClientID int64 `json:"client_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
+}
+
+type ListAssignedEmployeesRow struct {
+	ID                int64              `json:"id"`
+	ClientID          int64              `json:"client_id"`
+	EmployeeID        int64              `json:"employee_id"`
+	StartDate         pgtype.Date        `json:"start_date"`
+	Role              string             `json:"role"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	EmployeeFirstName string             `json:"employee_first_name"`
+	EmployeeLastName  string             `json:"employee_last_name"`
+	TotalCount        int64              `json:"total_count"`
+}
+
+func (q *Queries) ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error) {
+	rows, err := q.db.Query(ctx, listAssignedEmployees, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAssignedEmployeesRow
+	for rows.Next() {
+		var i ListAssignedEmployeesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.EmployeeID,
+			&i.StartDate,
+			&i.Role,
+			&i.CreatedAt,
+			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listEmergencyContacts = `-- name: ListEmergencyContacts :many
@@ -210,6 +345,42 @@ func (q *Queries) ListEmergencyContacts(ctx context.Context, arg ListEmergencyCo
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAssignedEmployee = `-- name: UpdateAssignedEmployee :one
+UPDATE assigned_employee
+SET
+    employee_id = COALESCE($2, employee_id),
+    start_date = COALESCE($3, start_date),
+    role = COALESCE($4, role)
+WHERE id = $1
+RETURNING id, client_id, employee_id, start_date, role, created_at
+`
+
+type UpdateAssignedEmployeeParams struct {
+	ID         int64       `json:"id"`
+	EmployeeID *int64      `json:"employee_id"`
+	StartDate  pgtype.Date `json:"start_date"`
+	Role       *string     `json:"role"`
+}
+
+func (q *Queries) UpdateAssignedEmployee(ctx context.Context, arg UpdateAssignedEmployeeParams) (AssignedEmployee, error) {
+	row := q.db.QueryRow(ctx, updateAssignedEmployee,
+		arg.ID,
+		arg.EmployeeID,
+		arg.StartDate,
+		arg.Role,
+	)
+	var i AssignedEmployee
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateEmergencyContact = `-- name: UpdateEmergencyContact :one

@@ -16,7 +16,7 @@ DROP TABLE IF EXISTS "public"."client_details" CASCADE;
 DROP TABLE IF EXISTS "public"."client_diagnosis" CASCADE;
 DROP TABLE IF EXISTS "public"."client_documents" CASCADE;
 DROP TABLE IF EXISTS "public"."client_emergency_contact" CASCADE;
-DROP TABLE IF EXISTS "public"."client_employee_assignment" CASCADE;
+DROP TABLE IF EXISTS "public"."assigned_employee" CASCADE;
 DROP TABLE IF EXISTS "public"."client_goals" CASCADE;
 DROP TABLE IF EXISTS "public"."client_medication" CASCADE;
 DROP TABLE IF EXISTS "public"."client_medication_record" CASCADE;

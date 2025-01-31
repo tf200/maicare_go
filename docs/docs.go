@@ -599,6 +599,212 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/assigned_employees": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "List all assigned employees",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListAssignedEmployeesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Assign an employee to a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Employee assignment data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.AssignEmployeeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_AssignEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/assigned_employees/{assign_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Get an assigned employee",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "assign_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetAssignedEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Update an assigned employee",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "assign_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Assigned employee data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateAssignedEmployeeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateAssignedEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/emergency_contacts": {
             "get": {
                 "produces": [
@@ -3114,6 +3320,43 @@ const docTemplate = `{
                 }
             }
         },
+        "api.AssignEmployeeRequest": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.AssignEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "api.AssignRoleToUserApiResponse": {
             "type": "object",
             "properties": {
@@ -4192,6 +4435,29 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetAttachmentByIdResponse": {
             "type": "object",
             "properties": {
@@ -4723,6 +4989,29 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ListAssignedEmployeesResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 }
             }
@@ -5399,6 +5688,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_AssignEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.AssignEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_AssignRoleToUserApiResponse": {
             "type": "object",
             "properties": {
@@ -5586,6 +5889,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.DeleteLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetAssignedEmployeeResponse"
                 },
                 "message": {
                     "type": "string"
@@ -5796,6 +6113,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.SetEmployeeProfilePictureResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_UpdateAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UpdateAssignedEmployeeResponse"
                 },
                 "message": {
                     "type": "string"
@@ -6033,6 +6364,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-api_ListAssignedEmployeesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListAssignedEmployeesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-api_ListClientAllergiesResponse": {
             "type": "object",
             "properties": {
@@ -6150,6 +6495,43 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.UpdateAssignedEmployeeRequest": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UpdateAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -6893,6 +7275,29 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "pagination.Response-api_ListAssignedEmployeesResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListAssignedEmployeesResponse"
+                    }
                 }
             }
         },

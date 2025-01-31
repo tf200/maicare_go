@@ -54,3 +54,49 @@ RETURNING *;
 DELETE FROM client_emergency_contact
 WHERE id = $1
 RETURNING *;
+
+
+
+-- name: AssignEmployee :one
+INSERT INTO assigned_employee (
+    client_id,
+    employee_id,
+    start_date,
+    role
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING *;
+
+
+-- name: ListAssignedEmployees :many
+SELECT 
+    ae.*,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    COUNT(*) OVER() as total_count
+FROM assigned_employee ae
+JOIN employee_profile e ON ae.employee_id = e.id
+WHERE ae.client_id = $1
+ORDER BY ae.start_date DESC
+LIMIT $2 OFFSET $3;
+
+
+-- name: GetAssignedEmployee :one
+SELECT 
+    ae.*,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
+FROM assigned_employee ae
+JOIN employee_profile e ON ae.employee_id = e.id
+WHERE ae.id = $1 LIMIT 1;
+
+
+-- name: UpdateAssignedEmployee :one
+UPDATE assigned_employee
+SET
+    employee_id = COALESCE(sqlc.narg('employee_id'), employee_id),
+    start_date = COALESCE(sqlc.narg('start_date'), start_date),
+    role = COALESCE(sqlc.narg('role'), role)
+WHERE id = $1
+RETURNING *;
+

@@ -963,13 +963,13 @@ CREATE INDEX assignment_client_id_idx ON assignment(client_id);
 
 
 
-CREATE TABLE client_employee_assignment (
+CREATE TABLE assigned_employee (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     role VARCHAR(100) NOT NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE progress_report (
@@ -989,8 +989,8 @@ CREATE TABLE progress_report (
     created TIMESTAMPTZ NULL
 );
 
-CREATE INDEX client_employee_assignment_client_id_idx ON client_employee_assignment(client_id);
-CREATE INDEX client_employee_assignment_employee_id_idx ON client_employee_assignment(employee_id);
+CREATE INDEX assigned_employee_client_id_idx ON assigned_employee(client_id);
+CREATE INDEX assigned_employee_employee_id_idx ON assigned_employee(employee_id);
 CREATE INDEX progress_report_client_id_idx ON progress_report(client_id);
 CREATE INDEX progress_report_author_id_idx ON progress_report(author_id);
 CREATE INDEX progress_report_created_idx ON progress_report(created DESC);
