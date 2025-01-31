@@ -21,6 +21,7 @@ type Config struct {
 	RedisUser             string        `mapstructure:"REDIS_USER"`
 	RedisPassword         string        `mapstructure:"REDIS_PASSWORD"`
 	Remote                bool          `mapstructure:"REMOTE"`
+	OpenRouterAPIKey      string        `mapstructure:"OPEN_ROUTER_API_KEY"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

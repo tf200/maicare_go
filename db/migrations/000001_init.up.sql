@@ -934,7 +934,7 @@ CREATE TABLE incident (
     other BOOLEAN NOT NULL DEFAULT FALSE,
     other_desc VARCHAR(100) NULL,
     additional_appointments TEXT NULL DEFAULT '',
-    employee_absenteeism JSONB NOT NULL DEFAULT '[]',
+    employee_absenteeism VARCHAR(100) NOT NULL DEFAULT '',
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     soft_delete BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

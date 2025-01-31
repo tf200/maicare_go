@@ -589,7 +589,7 @@ type Incident struct {
 	Other                   bool               `json:"other"`
 	OtherDesc               *string            `json:"other_desc"`
 	AdditionalAppointments  *string            `json:"additional_appointments"`
-	EmployeeAbsenteeism     []byte             `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     string             `json:"employee_absenteeism"`
 	ClientID                int64              `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`

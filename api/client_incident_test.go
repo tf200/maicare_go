@@ -62,7 +62,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 		Other:                   false,
 		OtherDesc:               util.StringPtr("test other"),
 		AdditionalAppointments:  util.StringPtr("test appointments"),
-		EmployeeAbsenteeism:     []byte("[\"client\"]"),
+		EmployeeAbsenteeism:     "client",
 		ClientID:                clientID,
 	}
 
@@ -129,7 +129,7 @@ func TestCreateIncident(t *testing.T) {
 					Other:                   false,
 					OtherDesc:               util.StringPtr("test other"),
 					AdditionalAppointments:  util.StringPtr("test appointments"),
-					EmployeeAbsenteeism:     []string{"client"},
+					EmployeeAbsenteeism:     "client",
 					ClientID:                client.ID,
 				}
 				url := fmt.Sprintf("/clients/%d/incidents", client.ID)
@@ -141,6 +141,7 @@ func TestCreateIncident(t *testing.T) {
 
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
 				var res Response[CreateIncidentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -277,9 +278,6 @@ func TestGetIncidentApi(t *testing.T) {
 	var Succession []string
 	err = json.Unmarshal(incident.Succession, &Succession)
 	require.NoError(t, err)
-	var EmployeeAbsenteeism []string
-	err = json.Unmarshal(incident.EmployeeAbsenteeism, &EmployeeAbsenteeism)
-	require.NoError(t, err)
 
 	testCases := []struct {
 		name          string
@@ -376,9 +374,6 @@ func TestUpdateIncidentApi(t *testing.T) {
 	require.NoError(t, err)
 	var Succession []string
 	err = json.Unmarshal(incident.Succession, &Succession)
-	require.NoError(t, err)
-	var EmployeeAbsenteeism []string
-	err = json.Unmarshal(incident.EmployeeAbsenteeism, &EmployeeAbsenteeism)
 	require.NoError(t, err)
 
 	testCases := []struct {

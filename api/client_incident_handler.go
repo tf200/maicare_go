@@ -53,7 +53,7 @@ type CreateIncidentRequest struct {
 	Other                   bool      `json:"other"`
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
 }
 
@@ -98,7 +98,7 @@ type CreateIncidentResponse struct {
 	Other                   bool      `json:"other"`
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated"`
@@ -166,12 +166,6 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	employeeAbsenteeismBytes, err := json.Marshal(req.EmployeeAbsenteeism)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	arg := db.CreateIncidentParams{
 		EmployeeID:              req.EmployeeID,
 		LocationID:              req.LocationID,
@@ -211,7 +205,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		Other:                   req.Other,
 		OtherDesc:               req.OtherDesc,
 		AdditionalAppointments:  req.AdditionalAppointments,
-		EmployeeAbsenteeism:     employeeAbsenteeismBytes,
+		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
 		ClientID:                clientID,
 	}
 
@@ -264,13 +258,6 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	var employeeAbsenteeism []string
-	err = json.Unmarshal(incident.EmployeeAbsenteeism, &employeeAbsenteeism)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	res := SuccessResponse(CreateIncidentResponse{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
@@ -311,7 +298,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		Other:                   incident.Other,
 		OtherDesc:               incident.OtherDesc,
 		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     employeeAbsenteeism,
+		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 		ClientID:                incident.ClientID,
 		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
@@ -370,7 +357,7 @@ type ListIncidentsResponse struct {
 	Other                   bool      `json:"other"`
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
@@ -465,13 +452,6 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 			return
 		}
 
-		var employeeAbsenteeism []string
-		err = json.Unmarshal(incident.EmployeeAbsenteeism, &employeeAbsenteeism)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
 		incidentList[i] = ListIncidentsResponse{
 			ID:                      incident.ID,
 			EmployeeID:              incident.EmployeeID,
@@ -514,7 +494,7 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 			Other:                   incident.Other,
 			OtherDesc:               incident.OtherDesc,
 			AdditionalAppointments:  incident.AdditionalAppointments,
-			EmployeeAbsenteeism:     employeeAbsenteeism,
+			EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 			ClientID:                incident.ClientID,
 			SoftDelete:              incident.SoftDelete,
 			UpdatedAt:               incident.UpdatedAt.Time,
@@ -572,7 +552,7 @@ type GetIncidentResponse struct {
 	Other                   bool      `json:"other"`
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
@@ -644,13 +624,6 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	var employeeAbsenteeism []string
-	err = json.Unmarshal(incident.EmployeeAbsenteeism, &employeeAbsenteeism)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	res := SuccessResponse(GetIncidentResponse{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
@@ -693,7 +666,7 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 		Other:                   incident.Other,
 		OtherDesc:               incident.OtherDesc,
 		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     employeeAbsenteeism,
+		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 		ClientID:                incident.ClientID,
 		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
@@ -744,7 +717,7 @@ type UpdateIncidentRequest struct {
 	Other                   *bool     `json:"other"`
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     *string   `json:"employee_absenteeism"`
 }
 
 // UpdateIncidentResponse represents a response for UpdateIncidentApi
@@ -788,7 +761,7 @@ type UpdateIncidentResponse struct {
 	Other                   bool      `json:"other"`
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     []string  `json:"employee_absenteeism"`
+	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated"`
@@ -853,6 +826,7 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		Other:                   req.Other,
 		OtherDesc:               req.OtherDesc,
 		AdditionalAppointments:  req.AdditionalAppointments,
+		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
 	}
 
 	if req.InformWho != nil {
@@ -909,15 +883,6 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		arg.Succession = successionBytes
 	}
 
-	if req.EmployeeAbsenteeism != nil {
-		employeeAbsenteeismBytes, err := json.Marshal(req.EmployeeAbsenteeism)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-		arg.EmployeeAbsenteeism = employeeAbsenteeismBytes
-	}
-
 	incident, err := server.store.UpdateIncident(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -966,13 +931,6 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	var employeeAbsenteeism []string
-	err = json.Unmarshal(incident.EmployeeAbsenteeism, &employeeAbsenteeism)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	res := SuccessResponse(UpdateIncidentResponse{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
@@ -1013,7 +971,7 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		Other:                   incident.Other,
 		OtherDesc:               incident.OtherDesc,
 		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     employeeAbsenteeism,
+		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 		ClientID:                incident.ClientID,
 		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
