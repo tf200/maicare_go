@@ -415,7 +415,7 @@ type AssignEmployeeResponse struct {
 // @Param request body AssignEmployeeRequest true "Employee assignment data"
 // @Success 201 {object} Response[AssignEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/assigned_employees [post]
+// @Router /clients/{id}/involved_employees [post]
 func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
@@ -480,7 +480,7 @@ type ListAssignedEmployeesResponse struct {
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[ListAssignedEmployeesResponse]]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/assigned_employees [get]
+// @Router /clients/{id}/involved_employees [get]
 func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
@@ -550,7 +550,7 @@ type GetAssignedEmployeeResponse struct {
 // @Param assign_id path int true "Assignment ID"
 // @Success 200 {object} Response[GetAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/assigned_employees/{assign_id} [get]
+// @Router /clients/{id}/involved_employees/{assign_id} [get]
 func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("assign_id")
 	assignID, err := strconv.ParseInt(id, 10, 64)
@@ -603,7 +603,7 @@ type UpdateAssignedEmployeeResponse struct {
 // @Param request body UpdateAssignedEmployeeRequest true "Assigned employee data"
 // @Success 200 {object} Response[UpdateAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/assigned_employees/{assign_id} [put]
+// @Router /clients/{id}/involved_employees/{assign_id} [put]
 func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("assign_id")
 	assignID, err := strconv.ParseInt(id, 10, 64)

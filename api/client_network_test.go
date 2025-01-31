@@ -327,7 +327,7 @@ func TestAssignEmployeeApi(t *testing.T) {
 				}
 				reqBody, err := json.Marshal(assignReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/clients/%d/assigned_employees", client.ID)
+				url := fmt.Sprintf("/clients/%d/involved_employees", client.ID)
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
@@ -377,7 +377,7 @@ func TestListAssignedEmployeesApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/clients/%d/assigned_employees?page=1&page_size=5", client.ID)
+				url := fmt.Sprintf("/clients/%d/involved_employees?page=1&page_size=5", client.ID)
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return req, nil
@@ -425,7 +425,7 @@ func TestGetAssignedEmployeeApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 
-				url := fmt.Sprintf("/clients/%d/assigned_employees/%d", client.ID, assign.ID)
+				url := fmt.Sprintf("/clients/%d/involved_employees/%d", client.ID, assign.ID)
 				t.Log(url)
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
@@ -475,7 +475,7 @@ func TestUpdateAssignedEmployeeApi(t *testing.T) {
 				}
 				reqBody, err := json.Marshal(updateReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/clients/%d/assigned_employees/%d", client.ID, assign.ID)
+				url := fmt.Sprintf("/clients/%d/involved_employees/%d", client.ID, assign.ID)
 				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
