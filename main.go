@@ -67,7 +67,7 @@ func main() {
 	}()
 
 	// Start your main server
-	server, err := api.NewServer(store, b2Client, asynqClient)
+	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}
