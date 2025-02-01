@@ -85,7 +85,7 @@ type CreateClientAllergyResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param request body CreateClientAllergyRequest true "Client allergy data"
-// @Success 200 {object} Response[CreateClientAllergyResponse]
+// @Success 201 {object} Response[CreateClientAllergyResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/allergies [post]
 func (server *Server) CreateClientAllergyApi(ctx *gin.Context) {

@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
 	"maicare_go/token"
 	"mime/multipart"
@@ -11,6 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/stretchr/testify/require"
 )

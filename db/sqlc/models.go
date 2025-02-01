@@ -736,10 +736,10 @@ type ProgressReport struct {
 	Date           pgtype.Timestamptz `json:"date"`
 	Title          *string            `json:"title"`
 	ReportText     string             `json:"report_text"`
-	AuthorID       *int64             `json:"author_id"`
+	EmployeeID     *int64             `json:"employee_id"`
 	Type           string             `json:"type"`
 	EmotionalState string             `json:"emotional_state"`
-	Created        pgtype.Timestamptz `json:"created"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type ProtectedEmail struct {

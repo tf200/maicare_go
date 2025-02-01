@@ -1,11 +1,12 @@
 package api
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"

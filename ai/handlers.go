@@ -77,11 +77,11 @@ type TokenUsage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 type CorrectedContent struct {
-	CorrectedText  string `json:"corrected_text"`
+	CorrectedText  string   `json:"corrected_text"`
 	CorrectedWords []string `json:"corrected_words"`
 }
 
-func SpellingCheck(text string, model string, apiKey string) (*CorrectedContent, error) {
+func (ai *AiHandler) SpellingCheck(text string, model string) (*CorrectedContent, error) {
 	request := OpenRouterRequest{
 		Model: model,
 		Messages: []Messages{
@@ -123,7 +123,7 @@ func SpellingCheck(text string, model string, apiKey string) (*CorrectedContent,
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+ai.OpenRouterAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

@@ -112,7 +112,7 @@ type CreateIncidentResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param request body CreateIncidentRequest true "Incident data"
-// @Success 200 {object} Response[CreateIncidentResponse]
+// @Success 201 {object} Response[CreateIncidentResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/incidents [post]
 func (server *Server) CreateIncidentApi(ctx *gin.Context) {

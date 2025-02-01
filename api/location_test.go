@@ -3,12 +3,13 @@ package api
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/token"

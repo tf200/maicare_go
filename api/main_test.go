@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	}
 	testasynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 
-	testServer, err = NewServer(testStore, testb2Client, testasynqClient)
+	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

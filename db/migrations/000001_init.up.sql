@@ -975,10 +975,10 @@ CREATE TABLE assigned_employee (
 CREATE TABLE progress_report (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date TIMESTAMPTZ NOT NULL ,
     title VARCHAR(50) NULL,
     report_text TEXT NOT NULL,
-    author_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     type VARCHAR(50) NOT NULL CHECK (type IN (
         'morning_report', 'evening_report', 'night_report', 'shift_report',
         'one_to_one_report', 'process_report', 'contact_journal', 'other'
@@ -986,14 +986,14 @@ CREATE TABLE progress_report (
     emotional_state VARCHAR(20) NOT NULL CHECK (emotional_state IN (
         'normal', 'excited', 'happy', 'sad', 'angry', 'anxious', 'depressed'
     )) DEFAULT 'normal',
-    created TIMESTAMPTZ NULL
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX assigned_employee_client_id_idx ON assigned_employee(client_id);
 CREATE INDEX assigned_employee_employee_id_idx ON assigned_employee(employee_id);
 CREATE INDEX progress_report_client_id_idx ON progress_report(client_id);
-CREATE INDEX progress_report_author_id_idx ON progress_report(author_id);
-CREATE INDEX progress_report_created_idx ON progress_report(created DESC);
+CREATE INDEX progress_report_author_id_idx ON progress_report(employee_id);
+CREATE INDEX progress_report_created_idx ON progress_report(created_at DESC);
 
 
 CREATE TABLE measurement (

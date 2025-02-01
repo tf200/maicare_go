@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
@@ -13,6 +12,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"

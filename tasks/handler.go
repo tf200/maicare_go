@@ -2,9 +2,10 @@ package tasks
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/goccy/go-json"
 
 	"github.com/hibiken/asynq"
 )

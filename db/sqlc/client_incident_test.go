@@ -54,7 +54,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) Incident {
 		Other:                   false,
 		OtherDesc:               util.StringPtr("test other"),
 		AdditionalAppointments:  util.StringPtr("test appointments"),
-		EmployeeAbsenteeism:     []byte("[\"client\"]"),
+		EmployeeAbsenteeism:     "client",
 		ClientID:                clientID,
 	}
 

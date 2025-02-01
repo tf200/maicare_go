@@ -55,7 +55,7 @@ type UploadHandlerResponse struct {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "File to upload"
-// @Success 200 {object} Response[UploadHandlerResponse]
+// @Success 201 {object} Response[UploadHandlerResponse]
 // @Router /attachments/upload [post]
 func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
@@ -127,7 +127,7 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 		Size:      int64(attachment.Size),
 	}, "File uploaded successfully")
 
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusCreated, res)
 }
 
 // GetAttachmentByIdResponse represents the response for GetAttachmentByIdApi

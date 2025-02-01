@@ -484,9 +484,7 @@ definitions:
           type: string
         type: array
       employee_absenteeism:
-        items:
-          type: string
-        type: array
+        type: string
       employee_id:
         type: integer
       fire_water_damage:
@@ -619,9 +617,7 @@ definitions:
       created:
         type: string
       employee_absenteeism:
-        items:
-          type: string
-        type: array
+        type: string
       employee_id:
         type: integer
       fire_water_damage:
@@ -726,6 +722,63 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.CreateProgressReportRequest:
+    properties:
+      date:
+        type: string
+      emotional_state:
+        enum:
+        - normal
+        - excited
+        - happy
+        - sad
+        - angry
+        - anxious
+        - depressed
+        type: string
+      employee_id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        enum:
+        - morning_report
+        - evening_report
+        - night_report
+        - shift_report
+        - one_to_one_report
+        - process_report
+        - contact_journal
+        - other
+        type: string
+    required:
+    - emotional_state
+    - report_text
+    - type
+    type: object
+  api.CreateProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
         type: string
     type: object
   api.CreateSenderRequest:
@@ -1071,9 +1124,7 @@ definitions:
       created_at:
         type: string
       employee_absenteeism:
-        items:
-          type: string
-        type: array
+        type: string
       employee_first_name:
         type: string
       employee_id:
@@ -1181,6 +1232,31 @@ definitions:
       name:
         type: string
       resource:
+        type: string
+    type: object
+  api.GetProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
         type: string
     type: object
   api.GetRoleByIDApiResponse:
@@ -1471,9 +1547,7 @@ definitions:
       created_at:
         type: string
       employee_absenteeism:
-        items:
-          type: string
-        type: array
+        type: string
       employee_first_name:
         type: string
       employee_id:
@@ -1570,6 +1644,31 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.ListProgressReportsResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
         type: string
     type: object
   api.ListRolesApiResponse:
@@ -1765,6 +1864,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateProgressReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateSenderResponse:
     properties:
       data:
@@ -1895,6 +2003,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetProgressReportResponse'
       message:
         type: string
       success:
@@ -2044,6 +2161,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateProgressReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateSenderResponse:
     properties:
       data:
@@ -2177,6 +2303,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListSendersResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-array_api_ListProgressReportsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-array_api_ListProgressReportsResponse'
       message:
         type: string
       success:
@@ -2438,9 +2573,7 @@ definitions:
           type: string
         type: array
       employee_absenteeism:
-        items:
-          type: string
-        type: array
+        type: string
       employee_id:
         type: integer
       fire_water_damage:
@@ -2539,9 +2672,7 @@ definitions:
       created:
         type: string
       employee_absenteeism:
-        items:
-          type: string
-        type: array
+        type: string
       employee_id:
         type: integer
       fire_water_damage:
@@ -2643,6 +2774,44 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.UpdateProgressReportRequest:
+    properties:
+      client_id:
+        type: integer
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  api.UpdateProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
         type: string
     type: object
   api.UpdateSenderRequest:
@@ -2819,6 +2988,23 @@ definitions:
           $ref: '#/definitions/api.ListSendersResponse'
         type: array
     type: object
+  pagination.Response-array_api_ListProgressReportsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          items:
+            $ref: '#/definitions/api.ListProgressReportsResponse'
+          type: array
+        type: array
+    type: object
 info:
   contact:
     email: your-email@domain.com
@@ -2935,8 +3121,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/api.Response-api_UploadHandlerResponse'
       summary: Upload a file
@@ -3088,8 +3274,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/api.Response-api_CreateClientDetailsResponse'
         "400":
@@ -3191,8 +3377,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/api.Response-api_CreateClientAllergyResponse'
         "400":
@@ -3420,8 +3606,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/api.Response-api_CreateIncidentResponse'
         "400":
@@ -3688,6 +3874,142 @@ paths:
       summary: Set a client profile picture
       tags:
       - clients
+  /clients/{id}/progress_reports:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-array_api_ListProgressReportsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all progress reports for a client
+      tags:
+      - progress_reports
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress Report Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateProgressReportRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateProgressReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new progress report for a client
+      tags:
+      - progress_reports
+  /clients/{id}/progress_reports/{report_id}:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress Report ID
+        in: path
+        name: report_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetProgressReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Retrieve a progress report for a client
+      tags:
+      - progress_reports
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress Report ID
+        in: path
+        name: report_id
+        required: true
+        type: integer
+      - description: Progress Report Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateProgressReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateProgressReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a progress report for a client
+      tags:
+      - progress_reports
   /employees:
     get:
       description: Get a paginated list of employee profiles with optional filters

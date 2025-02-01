@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"maicare_go/util"
 

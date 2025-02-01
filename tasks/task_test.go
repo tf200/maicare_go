@@ -3,10 +3,11 @@ package tasks
 import (
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"log"
 	"maicare_go/util"
 	"testing"
+
+	"github.com/goccy/go-json"
 
 	"github.com/hibiken/asynq"
 	"github.com/stretchr/testify/require"

@@ -1,12 +1,13 @@
 package api
 
 import (
-	"encoding/json"
 	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/stretchr/testify/require"
 )

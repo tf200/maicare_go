@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -60,4 +61,8 @@ func RandomPgInt8() pgtype.Int8 {
 func GenerateUsername(firstName, lastName string) string {
 	id := uuid.New().String()[:6] // Just 6 characters
 	return fmt.Sprintf("%s%s", strings.ToLower(firstName+lastName), id)
+}
+
+func RandomTIme() time.Time {
+	return time.Now().Add(time.Duration(rand.Int63()))
 }

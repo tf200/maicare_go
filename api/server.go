@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"maicare_go/ai"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
@@ -42,9 +43,10 @@ type Server struct {
 	b2Client    *bucket.B2Client
 	asynqClient *tasks.AsynqClient
 	httpServer  *http.Server
+	aiHandler   *ai.AiHandler
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.AsynqClient) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.AsynqClient, apiKey string) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)
@@ -55,12 +57,14 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.Asy
 		return nil, fmt.Errorf("cannot create tokenmaker %v", err)
 	}
 
+	aiHandler := ai.NewAiHandler(apiKey)
 	server := &Server{
 		store:       store,
 		config:      config,
 		tokenMaker:  tokenMaker,
 		b2Client:    b2Client,
 		asynqClient: asyqClient,
+		aiHandler:   aiHandler,
 	}
 
 	// Initialize swagger docs
@@ -102,6 +106,8 @@ func (server *Server) setupRoutes() {
 	server.setupClientMedicalRoutes(baseRouter)
 	server.setupClientNetworkRoutes(baseRouter)
 	server.setupClientIncidentRoutes(baseRouter)
+	server.setupAiRoutes(baseRouter)
+	server.setupProgressReportsRoutes(baseRouter)
 
 	// Add more route setups as needed
 

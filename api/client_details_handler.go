@@ -1,12 +1,13 @@
 package api
 
 import (
-	"encoding/json"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -80,7 +81,7 @@ type CreateClientDetailsResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateClientDetailsRequest true "Client details"
-// @Success 200 {object} Response[CreateClientDetailsResponse]
+// @Success 201 {object} Response[CreateClientDetailsResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients [post]
 func (server *Server) CreateClientApi(ctx *gin.Context) {
@@ -183,7 +184,7 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		LegalMeasure:          client.Client.LegalMeasure,
 		HasUntakenMedications: client.Client.HasUntakenMedications,
 	}, "Client created successfully")
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusCreated, res)
 
 }
 
