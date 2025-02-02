@@ -338,6 +338,21 @@ func TestGetIncidentApi(t *testing.T) {
 				require.Equal(t, *res.Data.OtherCause, *incident.OtherCause)
 			},
 		},
+		{
+			name: "Not Found",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, 0)
+				request, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
 	}
 
 	for i := range testCases {

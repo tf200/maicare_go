@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/goccy/go-json"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -578,6 +580,10 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 
 	incident, err := server.store.GetIncident(ctx, incidentID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
