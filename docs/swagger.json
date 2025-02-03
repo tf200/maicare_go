@@ -16,6 +16,40 @@
     },
     "basePath": "/",
     "paths": {
+        "/ai/spelling_check": {
+            "post": {
+                "description": "Check spelling of a text",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "Check spelling of a text",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CorrectSpellingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CorrectSpellingResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/allergy_types": {
             "get": {
                 "produces": [
@@ -3592,6 +3626,25 @@
                 }
             }
         },
+        "api.CorrectSpellingRequest": {
+            "type": "object",
+            "properties": {
+                "initial_text": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CorrectSpellingResponse": {
+            "type": "object",
+            "properties": {
+                "corrected_text": {
+                    "type": "string"
+                },
+                "initial_text": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateClientAllergyRequest": {
             "type": "object",
             "required": [
@@ -6049,6 +6102,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.AssignRoleToUserApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CorrectSpellingResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CorrectSpellingResponse"
                 },
                 "message": {
                     "type": "string"

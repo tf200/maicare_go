@@ -157,6 +157,18 @@ definitions:
       phone_number:
         type: string
     type: object
+  api.CorrectSpellingRequest:
+    properties:
+      initial_text:
+        type: string
+    type: object
+  api.CorrectSpellingResponse:
+    properties:
+      corrected_text:
+        type: string
+      initial_text:
+        type: string
+    type: object
   api.CreateClientAllergyRequest:
     properties:
       allergy_id:
@@ -1810,6 +1822,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CorrectSpellingResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CorrectSpellingResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateClientAllergyResponse:
     properties:
       data:
@@ -3017,6 +3038,28 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
+  /ai/spelling_check:
+    post:
+      consumes:
+      - application/json
+      description: Check spelling of a text
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CorrectSpellingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CorrectSpellingResponse'
+      summary: Check spelling of a text
+      tags:
+      - ai
   /allergy_types:
     get:
       parameters:
