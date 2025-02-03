@@ -463,12 +463,13 @@ type ListAssignedEmployeesRequest struct {
 
 // ListAssignedEmployeesResponse defines the response for listing assigned employees
 type ListAssignedEmployeesResponse struct {
-	ID         int64     `json:"id"`
-	ClientID   int64     `json:"client_id"`
-	EmployeeID int64     `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       string    `json:"role"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID           int64     `json:"id"`
+	ClientID     int64     `json:"client_id"`
+	EmployeeID   int64     `json:"employee_id"`
+	StartDate    time.Time `json:"start_date"`
+	Role         string    `json:"role"`
+	EmployeeName string    `json:"employee_name"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 // ListAssignedEmployeesApi lists all assigned employees
@@ -517,12 +518,13 @@ func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
 	assignsRes := make([]ListAssignedEmployeesResponse, len(assigns))
 	for i, assign := range assigns {
 		assignsRes[i] = ListAssignedEmployeesResponse{
-			ID:         assign.ID,
-			ClientID:   assign.ClientID,
-			EmployeeID: assign.EmployeeID,
-			StartDate:  assign.StartDate.Time,
-			Role:       assign.Role,
-			CreatedAt:  assign.CreatedAt.Time,
+			ID:           assign.ID,
+			ClientID:     assign.ClientID,
+			EmployeeID:   assign.EmployeeID,
+			StartDate:    assign.StartDate.Time,
+			Role:         assign.Role,
+			EmployeeName: assign.EmployeeFirstName + " " + assign.EmployeeLastName,
+			CreatedAt:    assign.CreatedAt.Time,
 		}
 	}
 
@@ -534,12 +536,13 @@ func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
 
 // GetAssignedEmployeeResponse defines the response for getting an assigned employee
 type GetAssignedEmployeeResponse struct {
-	ID         int64     `json:"id"`
-	ClientID   int64     `json:"client_id"`
-	EmployeeID int64     `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       string    `json:"role"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID           int64     `json:"id"`
+	ClientID     int64     `json:"client_id"`
+	EmployeeID   int64     `json:"employee_id"`
+	StartDate    time.Time `json:"start_date"`
+	Role         string    `json:"role"`
+	EmployeeName string    `json:"employee_name"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 // GetAssignedEmployeeApi gets an assigned employee
@@ -566,12 +569,13 @@ func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(GetAssignedEmployeeResponse{
-		ID:         assign.ID,
-		ClientID:   assign.ClientID,
-		EmployeeID: assign.EmployeeID,
-		StartDate:  assign.StartDate.Time,
-		Role:       assign.Role,
-		CreatedAt:  assign.CreatedAt.Time,
+		ID:           assign.ID,
+		ClientID:     assign.ClientID,
+		EmployeeID:   assign.EmployeeID,
+		StartDate:    assign.StartDate.Time,
+		Role:         assign.Role,
+		EmployeeName: assign.EmployeeFirstName + " " + assign.EmployeeLastName,
+		CreatedAt:    assign.CreatedAt.Time,
 	}, "Assigned employee fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -639,6 +643,41 @@ func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
 		Role:       assign.Role,
 		CreatedAt:  assign.CreatedAt.Time,
 	}, "Assigned employee updated successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteAssignedEmployeeResponse defines the response for deleting an assigned employee
+type DeleteAssignedEmployeeResponse struct {
+	ID int64 `json:"id"`
+}
+
+// DeleteAssignedEmployeeApi deletes an assigned employee
+// @Summary Delete an assigned employee
+// @Tags client_network
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param assign_id path int true "Assignment ID"
+// @Success 200 {object} Response[DeleteAssignedEmployeeResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/involved_employees/{assign_id} [delete]
+func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
+	id := ctx.Param("assign_id")
+	assignID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	_, err = server.store.DeleteAssignedEmployee(ctx, assignID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(DeleteAssignedEmployeeResponse{
+		ID: assignID,
+	}, "Assigned employee deleted successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

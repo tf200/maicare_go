@@ -100,3 +100,9 @@ SET
 WHERE id = $1
 RETURNING *;
 
+
+-- name: DeleteAssignedEmployee :one
+DELETE FROM assigned_employee
+WHERE id = $1
+RETURNING *;
+

@@ -114,6 +114,26 @@ func (q *Queries) CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrge
 	return i, err
 }
 
+const deleteAssignedEmployee = `-- name: DeleteAssignedEmployee :one
+DELETE FROM assigned_employee
+WHERE id = $1
+RETURNING id, client_id, employee_id, start_date, role, created_at
+`
+
+func (q *Queries) DeleteAssignedEmployee(ctx context.Context, id int64) (AssignedEmployee, error) {
+	row := q.db.QueryRow(ctx, deleteAssignedEmployee, id)
+	var i AssignedEmployee
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const deleteEmergencyContact = `-- name: DeleteEmergencyContact :one
 DELETE FROM client_emergency_contact
 WHERE id = $1

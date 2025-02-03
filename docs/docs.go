@@ -1303,6 +1303,51 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Delete an assigned employee",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Assignment ID",
+                        "name": "assign_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_DeleteAssignedEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
             }
         },
         "/clients/{id}/profile_picture": {
@@ -4659,6 +4704,14 @@ const docTemplate = `{
                 }
             }
         },
+        "api.DeleteAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.DeleteAttachmentResponse": {
             "type": "object",
             "properties": {
@@ -4778,6 +4831,9 @@ const docTemplate = `{
                 },
                 "employee_id": {
                     "type": "integer"
+                },
+                "employee_name": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -5371,6 +5427,9 @@ const docTemplate = `{
                 },
                 "employee_id": {
                     "type": "integer"
+                },
+                "employee_name": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -6235,6 +6294,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateSenderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_DeleteAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.DeleteAssignedEmployeeResponse"
                 },
                 "message": {
                     "type": "string"

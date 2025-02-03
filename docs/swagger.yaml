@@ -861,6 +861,11 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.DeleteAssignedEmployeeResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   api.DeleteAttachmentResponse:
     properties:
       created_at:
@@ -939,6 +944,8 @@ definitions:
         type: string
       employee_id:
         type: integer
+      employee_name:
+        type: string
       id:
         type: integer
       role:
@@ -1330,6 +1337,8 @@ definitions:
         type: string
       employee_id:
         type: integer
+      employee_name:
+        type: string
       id:
         type: integer
       role:
@@ -1898,6 +1907,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateSenderResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeleteAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -3811,6 +3829,36 @@ paths:
       tags:
       - client_network
   /clients/{id}/involved_employees/{assign_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Assignment ID
+        in: path
+        name: assign_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteAssignedEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete an assigned employee
+      tags:
+      - client_network
     get:
       parameters:
       - description: Client ID
