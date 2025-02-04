@@ -33,7 +33,7 @@ func createRandomClientDetails(t *testing.T) ClientDetail {
 		Departement:           util.StringPtr("test dep"),
 		Gender:                "Male", // or "Female" or other values as per your requirements
 		Filenumber:            "testfile",
-		ProfilePicture:        util.StringPtr("test-profile.jpg"),
+		ProfilePicture:        util.StringPtr(util.GetRandomImageURL()),
 		Infix:                 util.StringPtr("van"),
 		SenderID:              sender.ID,
 		LocationID:            util.IntPtr(location.ID),

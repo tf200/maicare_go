@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
-	"github.com/goccy/go-json"
+	"encoding/json"
 )
 
 type Messages struct {
@@ -77,8 +78,8 @@ type TokenUsage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 type CorrectedContent struct {
-	CorrectedText  string   `json:"corrected_text"`
-	CorrectedWords []string `json:"corrected_words"`
+	CorrectedText  string `json:"corrected_text"`
+	CorrectedWords string `json:"corrected_words"`
 }
 
 func (ai *AiHandler) SpellingCheck(text string, model string) (*CorrectedContent, error) {
@@ -87,7 +88,7 @@ func (ai *AiHandler) SpellingCheck(text string, model string) (*CorrectedContent
 		Messages: []Messages{
 			{
 				Role:    "user",
-				Content: fmt.Sprintf("correct the spelling : %s", text),
+				Content: fmt.Sprintf("correct the spelling : %s"+"the response need to in json format in this exact structure {\"corrected_text\" : \"text here\", \"corrected_words\" : \"changed words here\" }", text),
 			},
 		},
 		ResponseFormat: SpellCheckFormat{
@@ -154,6 +155,7 @@ func (ai *AiHandler) SpellingCheck(text string, model string) (*CorrectedContent
 	var correctedContent CorrectedContent
 	err = json.Unmarshal([]byte(openRouterResponse.Choices[0].Message.Content), &correctedContent)
 	if err != nil {
+		log.Printf("Error unmarshalling corrected content: %v", err)
 		return nil, err
 	}
 

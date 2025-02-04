@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,21 +30,28 @@ type CorrectSpellingResponse struct {
 func (server *Server) SpellingCheckApi(ctx *gin.Context) {
 	var request CorrectSpellingRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
+		log.Printf("Error binding JSON: %v", err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	correctedText, err := server.aiHandler.SpellingCheck(request.InitialText, "mistralai/mistral-small-24b-instruct-2501")
+	log.Printf("Received request: %+v", request)
+
+	correctedText, err := server.aiHandler.SpellingCheck(request.InitialText, "anthropic/claude-3.5-haiku-20241022:beta")
 	if err != nil {
+		log.Printf("Error in SpellingCheck: %v", err)
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	log.Printf("Corrected text: %+v", correctedText)
 
 	res := SuccessResponse(CorrectSpellingResponse{
 		CorrectedText: correctedText.CorrectedText,
 		InitialText:   request.InitialText,
 	}, "Spelling check successful")
 
-	ctx.JSON(http.StatusOK, res)
+	log.Printf("Response: %+v", res)
 
+	ctx.JSON(http.StatusOK, res)
 }

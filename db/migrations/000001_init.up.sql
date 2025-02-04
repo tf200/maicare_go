@@ -216,7 +216,7 @@ CREATE TABLE client_details (
     departement VARCHAR(100) NULL,
     gender VARCHAR(100) NOT NULL,
     filenumber VARCHAR(100) NOT NULL,
-    profile_picture VARCHAR(100) NULL,
+    profile_picture VARCHAR(600) NULL,
     infix VARCHAR(100) NULL,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NOT NULL REFERENCES sender(id) ON DELETE CASCADE,
