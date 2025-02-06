@@ -220,3 +220,118 @@ func TestDeleteClientDiagnosis(t *testing.T) {
 	require.NoError(t, err)
 
 }
+
+func createRandomClientMedication(t *testing.T, clientID int64, employeeID int64) ClientMedication {
+
+	arg := CreateClientMedicationParams{
+		ClientID:         clientID,
+		Name:             "test name",
+		Dosage:           "test dosage",
+		StartDate:        pgtype.Date{Time: util.RandomTIme(), Valid: true},
+		EndDate:          pgtype.Date{Time: util.RandomTIme(), Valid: true},
+		Notes:            util.StringPtr("test note"),
+		SelfAdministered: true,
+		AdministeredByID: util.IntPtr(employeeID),
+		IsCritical:       true,
+	}
+
+	medication, err := testQueries.CreateClientMedication(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, medication)
+	require.Equal(t, arg.ClientID, medication.ClientID)
+	return medication
+}
+
+func TestCreateClientMedication(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	createRandomClientMedication(t, client.ID, employee.ID)
+}
+
+func TestListClientMedications(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	for i := 0; i < 20; i++ {
+		_ = createRandomClientMedication(t, client.ID, employee.ID)
+	}
+
+	testCases := []struct {
+		name  string
+		arg   ListClientMedicationsParams
+		check func(t *testing.T, medications []ListClientMedicationsRow)
+	}{
+		{
+			name: "base case",
+			arg: ListClientMedicationsParams{
+				ClientID: client.ID,
+				Limit:    5,
+				Offset:   0,
+			},
+			check: func(t *testing.T, medications []ListClientMedicationsRow) {
+				require.NotEmpty(t, medications)
+				require.Len(t, medications, 5)
+				require.Equal(t, int64(20), medications[0].TotalMedications)
+			},
+		},
+		{
+			name: "with offset",
+			arg: ListClientMedicationsParams{
+				ClientID: client.ID,
+				Limit:    5,
+				Offset:   5,
+			},
+			check: func(t *testing.T, medications []ListClientMedicationsRow) {
+				require.NotEmpty(t, medications)
+				require.Len(t, medications, 5)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			medications, err := testQueries.ListClientMedications(context.Background(), tc.arg)
+			require.NoError(t, err)
+			tc.check(t, medications)
+		})
+	}
+}
+
+func TestGetClientMedication(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	medication1 := createRandomClientMedication(t, client.ID, employee.ID)
+
+	medication2, err := testQueries.GetClientMedication(context.Background(), medication1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, medication2)
+	require.Equal(t, medication1.ID, medication2.ID)
+}
+
+func TestUpdateClientMedication(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	medication1 := createRandomClientMedication(t, client.ID, employee.ID)
+
+	arg := UpdateClientMedicationParams{
+		ID:         medication1.ID,
+		IsCritical: util.BoolPtr(false),
+	}
+
+	medication2, err := testQueries.UpdateClientMedication(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, medication2)
+	require.Equal(t, medication1.ID, medication2.ID)
+	require.NotEqual(t, medication1.IsCritical, medication2.IsCritical)
+
+}
+
+func TestDeleteClientMedication(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	medication1 := createRandomClientMedication(t, client.ID, employee.ID)
+
+	_, err := testQueries.DeleteClientMedication(context.Background(), medication1.ID)
+	require.NoError(t, err)
+
+}

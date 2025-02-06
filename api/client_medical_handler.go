@@ -699,3 +699,365 @@ func (server *Server) DeleteClientDiagnosisApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, res)
 }
+
+// CreateclientMedicationRequest defines the request for creating a client medication
+type CreateclientMedicationRequest struct {
+	Name             string      `json:"name"`
+	Dosage           string      `json:"dosage"`
+	StartDate        pgtype.Date `json:"start_date"`
+	EndDate          pgtype.Date `json:"end_date"`
+	Notes            *string     `json:"notes"`
+	SelfAdministered bool        `json:"self_administered"`
+	AdministeredByID *int64      `json:"administered_by_id"`
+	IsCritical       bool        `json:"is_critical"`
+}
+
+// CreateClientMedicationResponse defines the response for creating a client medication
+type CreateClientMedicationResponse struct {
+	ID               int64     `json:"id"`
+	ClientID         int64     `json:"client_id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+// CreateClientMedicationApi creates a client medication
+// @Summary Create a client medication
+// @Tags client_Medical
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body CreateclientMedicationRequest true "Client medication data"
+// @Success 201 {object} Response[CreateClientMedicationResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/medications [post]
+func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req CreateclientMedicationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.CreateClientMedicationParams{
+		ClientID:         clientID,
+		Name:             req.Name,
+		Dosage:           req.Dosage,
+		StartDate:        req.StartDate,
+		EndDate:          req.EndDate,
+		Notes:            req.Notes,
+		SelfAdministered: req.SelfAdministered,
+		AdministeredByID: req.AdministeredByID,
+		IsCritical:       req.IsCritical,
+	}
+
+	clientMedication, err := server.store.CreateClientMedication(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(CreateClientMedicationResponse{
+		ID:               clientMedication.ID,
+		ClientID:         clientMedication.ClientID,
+		Name:             clientMedication.Name,
+		Dosage:           clientMedication.Dosage,
+		StartDate:        clientMedication.StartDate.Time,
+		EndDate:          clientMedication.EndDate.Time,
+		Notes:            clientMedication.Notes,
+		SelfAdministered: clientMedication.SelfAdministered,
+		AdministeredByID: clientMedication.AdministeredByID,
+		IsCritical:       clientMedication.IsCritical,
+		UpdatedAt:        clientMedication.UpdatedAt.Time,
+		CreatedAt:        clientMedication.CreatedAt.Time,
+	}, "Client medication created successfully")
+
+	ctx.JSON(http.StatusCreated, res)
+
+}
+
+// ListClientMedicationsRequest defines the request for listing client medications
+type ListClientMedicationsRequest struct {
+	pagination.Request
+}
+
+// ListClientMedicationsResponse defines the response for listing client medications
+type ListClientMedicationsResponse struct {
+	ID                      int64     `json:"id"`
+	Name                    string    `json:"name"`
+	Dosage                  string    `json:"dosage"`
+	StartDate               time.Time `json:"start_date"`
+	EndDate                 time.Time `json:"end_date"`
+	Notes                   *string   `json:"notes"`
+	SelfAdministered        bool      `json:"self_administered"`
+	ClientID                int64     `json:"client_id"`
+	AdministeredByID        *int64    `json:"administered_by_id"`
+	IsCritical              bool      `json:"is_critical"`
+	UpdatedAt               time.Time `json:"updated_at"`
+	CreatedAt               time.Time `json:"created_at"`
+	AdministeredByFirstName string    `json:"administered_by_first_name"`
+	AdministeredByLastName  string    `json:"administered_by_last_name"`
+}
+
+// ListClientMedicationsApi lists all client medications
+// @Summary List all client medications
+// @Tags client_Medical
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} Response[pagination.Response[ListClientMedicationsResponse]]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/medications [get]
+func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ListClientMedicationsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	params := req.GetParams()
+	arg := db.ListClientMedicationsParams{
+		ClientID: clientID,
+		Limit:    params.Limit,
+		Offset:   params.Offset,
+	}
+
+	clientMedications, err := server.store.ListClientMedications(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	totalCount := clientMedications[0].TotalMedications
+
+	medications := make([]ListClientMedicationsResponse, len(clientMedications))
+	for i, medication := range clientMedications {
+		medications[i] = ListClientMedicationsResponse{
+			ID:                      medication.ID,
+			Name:                    medication.Name,
+			Dosage:                  medication.Dosage,
+			StartDate:               medication.StartDate.Time,
+			EndDate:                 medication.EndDate.Time,
+			Notes:                   medication.Notes,
+			SelfAdministered:        medication.SelfAdministered,
+			ClientID:                medication.ClientID,
+			AdministeredByID:        medication.AdministeredByID,
+			IsCritical:              medication.IsCritical,
+			UpdatedAt:               medication.UpdatedAt.Time,
+			CreatedAt:               medication.CreatedAt.Time,
+			AdministeredByFirstName: medication.AdministeredByFirstName,
+			AdministeredByLastName:  medication.AdministeredByLastName,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, medications, totalCount)
+	res := SuccessResponse(pag, "Client medications fetched successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetClientMedicationResponse defines the response for getting a client medication
+type GetClientMedicationResponse struct {
+	ID                      int64     `json:"id"`
+	Name                    string    `json:"name"`
+	Dosage                  string    `json:"dosage"`
+	StartDate               time.Time `json:"start_date"`
+	EndDate                 time.Time `json:"end_date"`
+	Notes                   *string   `json:"notes"`
+	SelfAdministered        bool      `json:"self_administered"`
+	ClientID                int64     `json:"client_id"`
+	AdministeredByID        *int64    `json:"administered_by_id"`
+	IsCritical              bool      `json:"is_critical"`
+	UpdatedAt               time.Time `json:"updated_at"`
+	CreatedAt               time.Time `json:"created_at"`
+	AdministeredByFirstName string    `json:"administered_by_first_name"`
+	AdministeredByLastName  string    `json:"administered_by_last_name"`
+}
+
+// GetClientMedicationApi gets a client medication
+// @Summary Get a client medication
+// @Tags client_Medical
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param medication_id path int true "Medication ID"
+// @Success 200 {object} Response[GetClientMedicationResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/medications/{medication_id} [get]
+func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
+	id := ctx.Param("medication_id")
+	medicationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	medication, err := server.store.GetClientMedication(ctx, medicationID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetClientMedicationResponse{
+		ID:                      medication.ID,
+		Name:                    medication.Name,
+		Dosage:                  medication.Dosage,
+		StartDate:               medication.StartDate.Time,
+		EndDate:                 medication.EndDate.Time,
+		Notes:                   medication.Notes,
+		SelfAdministered:        medication.SelfAdministered,
+		ClientID:                medication.ClientID,
+		AdministeredByID:        medication.AdministeredByID,
+		IsCritical:              medication.IsCritical,
+		UpdatedAt:               medication.UpdatedAt.Time,
+		CreatedAt:               medication.CreatedAt.Time,
+		AdministeredByFirstName: medication.AdministeredByFirstName,
+		AdministeredByLastName:  medication.AdministeredByLastName,
+	}, "Client medication fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// UpdateClientMedicationRequest defines the request for updating a client medication
+type UpdateClientMedicationRequest struct {
+	Name             *string   `json:"name"`
+	Dosage           *string   `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered *bool     `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       *bool     `json:"is_critical"`
+}
+
+// UpdateClientMedicationResponse defines the response for updating a client medication
+type UpdateClientMedicationResponse struct {
+	ID               int64     `json:"id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	ClientID         int64     `json:"client_id"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+// UpdateClientMedicationApi updates a client medication
+// @Summary Update a client medication
+// @Tags client_Medical
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param medication_id path int true "Medication ID"
+// @Param request body UpdateClientMedicationRequest true "Client medication data"
+// @Success 200 {object} Response[UpdateClientMedicationResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/medications/{medication_id} [put]
+func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
+	id := ctx.Param("medication_id")
+	medicationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateClientMedicationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateClientMedicationParams{
+		ID:               medicationID,
+		Name:             req.Name,
+		Dosage:           req.Dosage,
+		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
+		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+		Notes:            req.Notes,
+		SelfAdministered: req.SelfAdministered,
+		AdministeredByID: req.AdministeredByID,
+		IsCritical:       req.IsCritical,
+	}
+
+	medication, err := server.store.UpdateClientMedication(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(UpdateClientMedicationResponse{
+		ID:               medication.ID,
+		Name:             medication.Name,
+		Dosage:           medication.Dosage,
+		StartDate:        medication.StartDate.Time,
+		EndDate:          medication.EndDate.Time,
+		Notes:            medication.Notes,
+		SelfAdministered: medication.SelfAdministered,
+		ClientID:         medication.ClientID,
+		AdministeredByID: medication.AdministeredByID,
+		IsCritical:       medication.IsCritical,
+		UpdatedAt:        medication.UpdatedAt.Time,
+		CreatedAt:        medication.CreatedAt.Time,
+	}, "Client medication updated successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteClientMedicationResponse defines the response for deleting a client medication
+type DeleteClientMedicationResponse struct {
+	ID int64 `json:"id"`
+}
+
+// DeleteClientMedicationApi deletes a client medication
+// @Summary Delete a client medication
+// @Tags client_Medical
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param medication_id path int true "Medication ID"
+// @Success 200 {object} Response[any]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/medications/{medication_id} [delete]
+func (server *Server) DeleteClientMedicationApi(ctx *gin.Context) {
+	id := ctx.Param("medication_id")
+	medicationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	medication, err := server.store.DeleteClientMedication(ctx, medicationID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(DeleteClientMedicationResponse{
+		ID: medication.ID,
+	}, "Client medication deleted successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}

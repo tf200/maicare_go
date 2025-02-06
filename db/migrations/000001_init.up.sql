@@ -1053,8 +1053,8 @@ CREATE TABLE client_medication (
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     administered_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX measurement_client_id_idx ON measurement(client_id);
@@ -1065,8 +1065,8 @@ CREATE INDEX emotional_state_client_id_idx ON emotional_state(client_id);
 CREATE INDEX physical_state_client_id_idx ON physical_state(client_id);
 CREATE INDEX client_medication_client_id_idx ON client_medication(client_id);
 CREATE INDEX client_medication_administered_by_id_idx ON client_medication(administered_by_id);
-CREATE INDEX client_medication_updated_idx ON client_medication(updated);
-CREATE INDEX client_medication_created_idx ON client_medication(created);
+CREATE INDEX client_medication_updated_idx ON client_medication(updated_at);
+CREATE INDEX client_medication_created_idx ON client_medication(created_at);
 
 
 

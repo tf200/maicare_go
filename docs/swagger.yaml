@@ -417,6 +417,33 @@ definitions:
       relationship:
         type: string
     type: object
+  api.CreateClientMedicationResponse:
+    properties:
+      administered_by_id:
+        type: integer
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.CreateEmployeeProfileRequest:
     properties:
       authentication_phone_number:
@@ -907,6 +934,25 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.CreateclientMedicationRequest:
+    properties:
+      administered_by_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        $ref: '#/definitions/pgtype.Date'
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        $ref: '#/definitions/pgtype.Date'
+    type: object
   api.DeleteAssignedEmployeeResponse:
     properties:
       id:
@@ -1140,6 +1186,37 @@ definitions:
       relation_status:
         type: string
       relationship:
+        type: string
+    type: object
+  api.GetClientMedicationResponse:
+    properties:
+      administered_by_first_name:
+        type: string
+      administered_by_id:
+        type: integer
+      administered_by_last_name:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   api.GetEmployeeProfileByIDApiResponse:
@@ -1507,6 +1584,37 @@ definitions:
       relation_status:
         type: string
       relationship:
+        type: string
+    type: object
+  api.ListClientMedicationsResponse:
+    properties:
+      administered_by_first_name:
+        type: string
+      administered_by_id:
+        type: integer
+      administered_by_last_name:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   api.ListClientsApiResponse:
@@ -1989,6 +2097,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateClientMedicationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientMedicationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateEmployeeProfileResponse:
     properties:
       data:
@@ -2151,6 +2268,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetClientMedicationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientMedicationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetEmployeeProfileByIDApiResponse:
     properties:
       data:
@@ -2299,6 +2425,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdateClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateClientMedicationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateClientMedicationResponse'
       message:
         type: string
       success:
@@ -2473,6 +2608,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientDiagnosesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListClientMedicationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientMedicationsResponse'
       message:
         type: string
       success:
@@ -2703,6 +2847,52 @@ definitions:
       relation_status:
         type: string
       relationship:
+        type: string
+    type: object
+  api.UpdateClientMedicationRequest:
+    properties:
+      administered_by_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+    type: object
+  api.UpdateClientMedicationResponse:
+    properties:
+      administered_by_id:
+        type: integer
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   api.UpdateEmployeeCertificationRequest:
@@ -3221,6 +3411,21 @@ definitions:
           $ref: '#/definitions/api.ListClientDiagnosesResponse'
         type: array
     type: object
+  pagination.Response-api_ListClientMedicationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientMedicationsResponse'
+        type: array
+    type: object
   pagination.Response-api_ListClientsApiResponse:
     properties:
       count:
@@ -3297,6 +3502,15 @@ definitions:
             $ref: '#/definitions/api.ListProgressReportsResponse'
           type: array
         type: array
+    type: object
+  pgtype.Date:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
     type: object
   pgtype.InfinityModifier:
     enum:
@@ -4467,6 +4681,172 @@ paths:
       summary: Update an assigned employee
       tags:
       - client_network
+  /clients/{id}/medications:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all client medications
+      tags:
+      - client_Medical
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client medication data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateclientMedicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientMedicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a client medication
+      tags:
+      - client_Medical
+  /clients/{id}/medications/{medication_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Medication ID
+        in: path
+        name: medication_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a client medication
+      tags:
+      - client_Medical
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Medication ID
+        in: path
+        name: medication_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientMedicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client medication
+      tags:
+      - client_Medical
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Medication ID
+        in: path
+        name: medication_id
+        required: true
+        type: integer
+      - description: Client medication data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientMedicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientMedicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client medication
+      tags:
+      - client_Medical
   /clients/{id}/profile_picture:
     put:
       consumes:

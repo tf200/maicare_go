@@ -230,8 +230,8 @@ type ClientMedication struct {
 	ClientID         int64              `json:"client_id"`
 	AdministeredByID *int64             `json:"administered_by_id"`
 	IsCritical       bool               `json:"is_critical"`
-	Updated          pgtype.Timestamptz `json:"updated"`
-	Created          pgtype.Timestamptz `json:"created"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 }
 
 type ClientMedicationRecord struct {
