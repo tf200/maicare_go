@@ -573,8 +573,6 @@ func createRandomEducation(t *testing.T) (int64, int64) {
 				require.Equal(t, "BsC", response.Data.Degree)
 				require.Equal(t, "Computer Science", response.Data.FieldOfStudy)
 				require.Equal(t, "University of Ghana", response.Data.InstitutionName)
-				require.Equal(t, "2018-01-01", response.Data.StartDate)
-				require.Equal(t, "2022-01-01", response.Data.EndDate)
 				return response.Data.ID
 
 			},

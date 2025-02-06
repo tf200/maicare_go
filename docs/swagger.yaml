@@ -317,6 +317,52 @@ definitions:
       status:
         type: string
     type: object
+  api.CreateClientDiagnosisRequest:
+    properties:
+      client_id:
+        type: integer
+      date_of_diagnosis:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  api.CreateClientDiagnosisResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date_of_diagnosis:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
   api.CreateClientEmergencyContactParams:
     properties:
       address:
@@ -964,6 +1010,23 @@ definitions:
       size:
         type: integer
     type: object
+  api.GetClientAllergyResponse:
+    properties:
+      allergy_type_id:
+        type: integer
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      reaction:
+        type: string
+      severity:
+        type: string
+    type: object
   api.GetClientApiResponse:
     properties:
       addresses:
@@ -1021,6 +1084,31 @@ definitions:
       source:
         type: string
       status:
+        type: string
+    type: object
+  api.GetClientDiagnosisResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date_of_diagnosis:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
         type: string
     type: object
   api.GetClientEmergencyContactResponse:
@@ -1363,6 +1451,31 @@ definitions:
       reaction:
         type: string
       severity:
+        type: string
+    type: object
+  api.ListClientDiagnosesResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date_of_diagnosis:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
         type: string
     type: object
   api.ListClientEmergencyContactsResponse:
@@ -1858,6 +1971,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateClientDiagnosisResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientDiagnosisResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateClientEmergencyContactResponse:
     properties:
       data:
@@ -1993,10 +2115,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetClientAllergyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientAllergyResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetClientApiResponse:
     properties:
       data:
         $ref: '#/definitions/api.GetClientApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetClientDiagnosisResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientDiagnosisResponse'
       message:
         type: string
       success:
@@ -2132,6 +2272,24 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdateAssignedEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateClientAllergyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateClientAllergyResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateClientDiagnosisResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateClientDiagnosisResponse'
       message:
         type: string
       success:
@@ -2311,6 +2469,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-api_ListClientDiagnosesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientDiagnosesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_ListClientsApiResponse:
     properties:
       data:
@@ -2410,6 +2577,78 @@ definitions:
       role:
         type: string
       start_date:
+        type: string
+    type: object
+  api.UpdateClientAllergyRequest:
+    properties:
+      allergy_type_id:
+        type: integer
+      notes:
+        type: string
+      reaction:
+        type: string
+      severity:
+        type: string
+    type: object
+  api.UpdateClientAllergyResponse:
+    properties:
+      allergy_type_id:
+        type: integer
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      reaction:
+        type: string
+      severity:
+        type: string
+    type: object
+  api.UpdateClientDiagnosisRequest:
+    properties:
+      date_of_diagnosis:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  api.UpdateClientDiagnosisResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_diagnosis:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
         type: string
     type: object
   api.UpdateClientEmergencyContactParams:
@@ -2967,6 +3206,21 @@ definitions:
           $ref: '#/definitions/api.ListClientAllergiesResponse'
         type: array
     type: object
+  pagination.Response-api_ListClientDiagnosesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientDiagnosesResponse'
+        type: array
+    type: object
   pagination.Response-api_ListClientsApiResponse:
     properties:
       count:
@@ -3043,6 +3297,25 @@ definitions:
             $ref: '#/definitions/api.ListProgressReportsResponse'
           type: array
         type: array
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Timestamptz:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
     type: object
 info:
   contact:
@@ -3451,6 +3724,273 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create a client allergy
+      tags:
+      - client_Medical
+  /clients/{id}/allergies/{allergy_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Allergy ID
+        in: path
+        name: allergy_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a client allergy
+      tags:
+      - client_Medical
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Allergy ID
+        in: path
+        name: allergy_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientAllergyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client allergy
+      tags:
+      - client_Medical
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Allergy ID
+        in: path
+        name: allergy_id
+        required: true
+        type: integer
+      - description: Client allergy data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientAllergyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientAllergyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client allergy
+      tags:
+      - client_Medical
+  /clients/{id}/diagnosis:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientDiagnosesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all client diagnoses
+      tags:
+      - client_Medical
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client diagnosis data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientDiagnosisRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientDiagnosisResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a client diagnosis
+      tags:
+      - client_Medical
+  /clients/{id}/diagnosis/{diagnosis_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a client diagnosis
+      tags:
+      - client_Medical
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientDiagnosisResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client diagnosis
+      tags:
+      - client_Medical
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      - description: Client diagnosis data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientDiagnosisRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientDiagnosisResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client diagnosis
       tags:
       - client_Medical
   /clients/{id}/emergency_contacts:

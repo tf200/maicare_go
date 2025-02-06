@@ -36,7 +36,6 @@ func TestSpellCheckApi(t *testing.T) {
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var res Response[CorrectSpellingResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)

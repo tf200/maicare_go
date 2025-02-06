@@ -38,11 +38,15 @@ func TestUploadHandler(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildRequest  func() (*http.Request, error)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
 				writer := multipart.NewWriter(body)
@@ -62,7 +66,7 @@ func TestUploadHandler(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/upload", body)
+				req, err := http.NewRequest(http.MethodPost, "/attachments/upload", body)
 				if err != nil {
 					return nil, err
 				}
@@ -70,7 +74,7 @@ func TestUploadHandler(t *testing.T) {
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+				require.Equal(t, http.StatusCreated, recorder.Code)
 
 				var response Response[UploadHandlerResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
@@ -84,6 +88,9 @@ func TestUploadHandler(t *testing.T) {
 		},
 		{
 			name: "NoFile",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
 				writer := multipart.NewWriter(body)
@@ -92,7 +99,7 @@ func TestUploadHandler(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/upload", body)
+				req, err := http.NewRequest(http.MethodPost, "/attachments/upload", body)
 				if err != nil {
 					return nil, err
 				}
@@ -105,6 +112,9 @@ func TestUploadHandler(t *testing.T) {
 		},
 		{
 			name: "EmptyFile",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
 				writer := multipart.NewWriter(body)
@@ -119,7 +129,7 @@ func TestUploadHandler(t *testing.T) {
 					return nil, err
 				}
 
-				req, err := http.NewRequest(http.MethodPost, "/upload", body)
+				req, err := http.NewRequest(http.MethodPost, "/attachments/upload", body)
 				if err != nil {
 					return nil, err
 				}
@@ -134,13 +144,13 @@ func TestUploadHandler(t *testing.T) {
 
 	for i := range testCases {
 		tc := testCases[i]
-
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := tc.buildRequest()
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
 			require.NoError(t, err)
 
-			recorder := httptest.NewRecorder()
-			testServer.router.ServeHTTP(recorder, req)
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
 	}
@@ -161,7 +171,7 @@ func TestGetAttachmentById(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/attachment/%s", file.Uuid), nil)
+				req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/attachments/%s", file.Uuid), nil)
 				t.Log(req)
 				if err != nil {
 					return nil, err
@@ -191,7 +201,7 @@ func TestGetAttachmentById(t *testing.T) {
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
 	}

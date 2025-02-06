@@ -78,8 +78,7 @@ type TokenUsage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 type CorrectedContent struct {
-	CorrectedText  string `json:"corrected_text"`
-	CorrectedWords string `json:"corrected_words"`
+	CorrectedText string `json:"corrected_text"`
 }
 
 func (ai *AiHandler) SpellingCheck(text string, model string) (*CorrectedContent, error) {

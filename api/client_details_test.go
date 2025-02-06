@@ -63,7 +63,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		Departement:           util.StringPtr("test dep"),
 		Gender:                "Male", // or "Female" or other values as per your requirements
 		Filenumber:            "testfile",
-		ProfilePicture:        util.StringPtr("test-profile.jpg"),
+		ProfilePicture:        util.StringPtr(util.GetRandomImageURL()),
 		Infix:                 util.StringPtr("van"),
 		SenderID:              sender.ID,
 		LocationID:            util.IntPtr(location.ID),
@@ -152,7 +152,7 @@ func TestCreateClientApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Logf("Response Status Code: %d", recorder.Code)
 				t.Logf("Raw Response Body: %s", recorder.Body.String())
-				require.Equal(t, http.StatusOK, recorder.Code)
+				require.Equal(t, http.StatusCreated, recorder.Code)
 				var clientRes Response[CreateClientDetailsResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
