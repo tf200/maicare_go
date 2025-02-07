@@ -220,3 +220,87 @@ func TestSetClientProfilePictureTx(t *testing.T) {
 	require.NotEmpty(t, clientUp)
 }
 
+func TestCreateClientDocument(t *testing.T) {
+	client := createRandomClientDetails(t)
+	attachment := createRandomAttachmentFile(t)
+
+	arg := CreateClientDocumentParams{
+		ClientID:       client.ID,
+		AttachmentUuid: pgtype.UUID{Bytes: attachment.Uuid, Valid: true},
+		Label:          "registration_form",
+	}
+
+	clientDoc, err := testQueries.CreateClientDocument(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientDoc)
+	require.Equal(t, arg.ClientID, clientDoc.ClientID)
+	require.Equal(t, arg.AttachmentUuid.Bytes, clientDoc.AttachmentUuid.Bytes)
+}
+
+func addRandomClientDocument(t *testing.T, ClientID int64) ClientDocument {
+	store := NewStore(testDB)
+	attachment := createRandomAttachmentFile(t)
+
+	arg := AddClientDocumentTxParams{
+		ClientID:     ClientID,
+		AttachmentID: attachment.Uuid,
+		Label:        "registration_form",
+	}
+
+	clientDoc, err := store.AddClientDocumentTx(context.Background(), arg)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, clientDoc)
+	require.Equal(t, arg.ClientID, clientDoc.Attachment.ClientID)
+	return clientDoc.Attachment
+}
+
+func TestAddClientDocumentTx(t *testing.T) {
+	client := createRandomClientDetails(t)
+	addRandomClientDocument(t, client.ID)
+}
+
+func TestListClientDocuments(t *testing.T) {
+	client := createRandomClientDetails(t)
+	for i := 0; i < 10; i++ {
+		addRandomClientDocument(t, client.ID)
+	}
+
+	testCases := []struct {
+		name  string
+		arg   ListClientDocumentsParams
+		check func(t *testing.T, clientDocs []ListClientDocumentsRow)
+	}{
+		{
+			name: "base case",
+			arg: ListClientDocumentsParams{
+				ClientID: client.ID,
+				Limit:    5,
+				Offset:   0,
+			},
+			check: func(t *testing.T, clientDocs []ListClientDocumentsRow) {
+				require.NotEmpty(t, clientDocs)
+				require.Len(t, clientDocs, 5)
+			},
+		},
+		{
+			name: "with offset",
+			arg: ListClientDocumentsParams{
+				ClientID: client.ID,
+				Limit:    5,
+				Offset:   5,
+			},
+			check: func(t *testing.T, clientDocs []ListClientDocumentsRow) {
+				require.NotEmpty(t, clientDocs)
+				require.Len(t, clientDocs, 5)
+			},
+		},
+	}
+	for i := range testCases {
+		t.Run(testCases[i].name, func(t *testing.T) {
+			clientDocs, err := testQueries.ListClientDocuments(context.Background(), testCases[i].arg)
+			require.NoError(t, err)
+			testCases[i].check(t, clientDocs)
+		})
+	}
+}

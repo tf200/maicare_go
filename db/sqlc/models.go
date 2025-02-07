@@ -182,14 +182,10 @@ type ClientDiagnosis struct {
 }
 
 type ClientDocument struct {
-	ID               int64              `json:"id"`
-	UserID           int64              `json:"user_id"`
-	Documents        string             `json:"documents"`
-	UploadedAt       pgtype.Timestamptz `json:"uploaded_at"`
-	OriginalFilename *string            `json:"original_filename"`
-	FileSize         *int64             `json:"file_size"`
-	Created          pgtype.Timestamptz `json:"created"`
-	Label            string             `json:"label"`
+	ID             int64       `json:"id"`
+	AttachmentUuid pgtype.UUID `json:"attachment_uuid"`
+	ClientID       int64       `json:"client_id"`
+	Label          string      `json:"label"`
 }
 
 type ClientEmergencyContact struct {

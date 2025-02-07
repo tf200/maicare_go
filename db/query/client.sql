@@ -59,7 +59,24 @@ WHERE id = $1
 RETURNING *;
 
 
+-- name: CreateClientDocument :one
+INSERT INTO client_documents (
+    client_id,
+    attachment_uuid,
+    label
+) VALUES (
+    $1, $2, $3
+) RETURNING *;
 
 
+-- name: ListClientDocuments :many
+SELECT 
+    cd.*,
+    a.*,
+    COUNT(*) OVER() AS total_count
+FROM client_documents cd
+JOIN attachment_file a ON cd.attachment_uuid = a.uuid
+WHERE client_id = $1
+LIMIT $2 OFFSET $3;
 
 

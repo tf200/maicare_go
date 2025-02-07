@@ -448,3 +448,150 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 
 }
+
+// AddClientDocumentApiRequest represents a request to add a document to a client
+type AddClientDocumentApiRequest struct {
+	AttachmentID uuid.UUID
+	Label        string
+}
+
+// AddClientDocumentApiResponse represents a response to an add client document request
+type AddClientDocumentApiResponse struct {
+	ID           int64     `json:"id"`
+	AttachmentID uuid.UUID `json:"attachment_id"`
+	ClientID     int64     `json:"client_id"`
+	Label        string    `json:"label"`
+}
+
+// AddClientDocumentApi adds a document to a client
+// @Summary Add a document to a client
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body AddClientDocumentApiRequest true "Client document"
+// @Success 201 {object} Response[AddClientDocumentApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/documents [post]
+func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req AddClientDocumentApiRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.AddClientDocumentTxParams{
+		ClientID:     clientID,
+		AttachmentID: req.AttachmentID,
+		Label:        req.Label,
+	}
+
+	clientDoc, err := server.store.AddClientDocumentTx(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(AddClientDocumentApiResponse{
+		ID:           clientDoc.Attachment.ID,
+		AttachmentID: clientDoc.Attachment.AttachmentUuid.Bytes,
+		ClientID:     clientDoc.Attachment.ClientID,
+		Label:        clientDoc.Attachment.Label,
+	}, "Client document added successfully")
+	ctx.JSON(http.StatusCreated, res)
+}
+
+// ListClientDocumentsApiRequest represents a request to list client documents
+type ListClientDocumentsApiRequest struct {
+	pagination.Request
+}
+
+// ListClientDocumentsApiResponse represents a response to a list client documents request
+type ListClientDocumentsApiResponse struct {
+	ID             int64     `json:"id"`
+	AttachmentUuid uuid.UUID `json:"attachment_uuid"`
+	ClientID       int64     `json:"client_id"`
+	Label          string    `json:"label"`
+	Uuid           uuid.UUID `json:"uuid"`
+	Name           string    `json:"name"`
+	File           string    `json:"file"`
+	Size           int32     `json:"size"`
+	IsUsed         bool      `json:"is_used"`
+	Tag            *string   `json:"tag"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+// ListClientDocumentsApi lists documents of a client
+// @Summary List documents of a client
+// @Tags clients
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} Response[pagination.Response[ListClientDocumentsApiResponse]]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/documents [get]
+func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ListClientDocumentsApiRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	params := req.GetParams()
+
+	clientDocs, err := server.store.ListClientDocuments(ctx, db.ListClientDocumentsParams{
+		ClientID: clientID,
+		Offset:   params.Offset,
+		Limit:    params.Limit,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if len(clientDocs) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientDocumentsApiResponse{}, 0)
+		res := SuccessResponse(pag, "No client documents found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
+	totalCount := clientDocs[0].TotalCount
+
+	clientDocList := make([]ListClientDocumentsApiResponse, len(clientDocs))
+	for i, clientDoc := range clientDocs {
+		clientDocList[i] = ListClientDocumentsApiResponse{
+			ID:             clientDoc.ID,
+			AttachmentUuid: clientDoc.AttachmentUuid.Bytes,
+			ClientID:       clientDoc.ClientID,
+			Label:          clientDoc.Label,
+			Uuid:           clientDoc.Uuid,
+			Name:           clientDoc.Name,
+			File:           clientDoc.File,
+			Size:           clientDoc.Size,
+			IsUsed:         clientDoc.IsUsed,
+			Tag:            clientDoc.Tag,
+			UpdatedAt:      clientDoc.Updated.Time,
+			CreatedAt:      clientDoc.Created.Time,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, clientDocList, totalCount)
+
+	res := SuccessResponse(pag, "Client documents fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}

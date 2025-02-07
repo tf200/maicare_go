@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CreateClientDetailsTxParams struct {
@@ -63,6 +64,41 @@ func (store *Store) SetClientProfilePictureTx(ctx context.Context, arg SetClient
 		result.User, err = q.SetClientProfilePicture(ctx, SetClientProfilePictureParams{
 			ID:             arg.ClientID,
 			ProfilePicture: &attachement.File,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create client details: %w", err)
+		}
+
+		return nil
+	})
+
+	return result, err
+}
+
+type AddClientDocumentTxParams struct {
+	ClientID     int64
+	AttachmentID uuid.UUID
+	Label        string
+}
+
+type AddClientDocumentTxResults struct {
+	Attachment ClientDocument
+}
+
+func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocumentTxParams) (AddClientDocumentTxResults, error) {
+	var result AddClientDocumentTxResults
+
+	err := store.ExecTx(ctx, func(q *Queries) error {
+
+		attachement, err := q.SetAttachmentAsUsed(ctx, arg.AttachmentID)
+		if err != nil {
+			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
+		}
+
+		result.Attachment, err = q.CreateClientDocument(ctx, CreateClientDocumentParams{
+			ClientID:     arg.ClientID,
+			AttachmentUuid: pgtype.UUID{Bytes: attachement.Uuid, Valid: true},
+			Label:        arg.Label,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create client details: %w", err)

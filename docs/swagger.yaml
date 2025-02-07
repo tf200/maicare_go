@@ -1,5 +1,23 @@
 basePath: /
 definitions:
+  api.AddClientDocumentApiRequest:
+    properties:
+      attachmentID:
+        type: string
+      label:
+        type: string
+    type: object
+  api.AddClientDocumentApiResponse:
+    properties:
+      attachment_id:
+        type: string
+      client_id:
+        type: integer
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   api.AddEducationToEmployeeProfileRequest:
     properties:
       degree:
@@ -1555,6 +1573,33 @@ definitions:
       title:
         type: string
     type: object
+  api.ListClientDocumentsApiResponse:
+    properties:
+      attachment_uuid:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      file:
+        type: string
+      id:
+        type: integer
+      is_used:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+      tag:
+        type: string
+      updated_at:
+        type: string
+      uuid:
+        type: string
+    type: object
   api.ListClientEmergencyContactsResponse:
     properties:
       address:
@@ -2002,6 +2047,15 @@ definitions:
   api.Response-any:
     properties:
       data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_AddClientDocumentApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AddClientDocumentApiResponse'
       message:
         type: string
       success:
@@ -2608,6 +2662,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientDiagnosesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListClientDocumentsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientDocumentsApiResponse'
       message:
         type: string
       success:
@@ -3411,6 +3474,21 @@ definitions:
           $ref: '#/definitions/api.ListClientDiagnosesResponse'
         type: array
     type: object
+  pagination.Response-api_ListClientDocumentsApiResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientDocumentsApiResponse'
+        type: array
+    type: object
   pagination.Response-api_ListClientMedicationsResponse:
     properties:
       count:
@@ -4207,6 +4285,81 @@ paths:
       summary: Update a client diagnosis
       tags:
       - client_Medical
+  /clients/{id}/documents:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientDocumentsApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List documents of a client
+      tags:
+      - clients
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client document
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddClientDocumentApiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_AddClientDocumentApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add a document to a client
+      tags:
+      - clients
   /clients/{id}/emergency_contacts:
     get:
       parameters:

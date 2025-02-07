@@ -345,3 +345,118 @@ func TestSetClientProfilePictureApi(t *testing.T) {
 		})
 	}
 }
+
+func TestAddClientDocumentApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	file := createRandomAttachmentFile(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				reqBody := AddClientDocumentApiRequest{
+					AttachmentID: file.Uuid,
+					Label:        "other",
+				}
+				data, err := json.Marshal(reqBody)
+				require.NoError(t, err)
+
+				url := fmt.Sprintf("/clients/%d/documents", client.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusCreated, recorder.Code)
+				var clientRes Response[AddClientDocumentApiResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func addRandomClientDocument(t *testing.T, ClientID int64) db.ClientDocument {
+
+	attachment := createRandomAttachmentFile(t)
+
+	arg := db.AddClientDocumentTxParams{
+		ClientID:     ClientID,
+		AttachmentID: attachment.Uuid,
+		Label:        "registration_form",
+	}
+
+	clientDoc, err := testStore.AddClientDocumentTx(context.Background(), arg)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, clientDoc)
+	require.Equal(t, arg.ClientID, clientDoc.Attachment.ClientID)
+	return clientDoc.Attachment
+}
+
+func TestListClientDocumentsApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	for i := 0; i < 10; i++ {
+		addRandomClientDocument(t, client.ID)
+	}
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/documents?page=1&page_size=5", client.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var clientRes Response[pagination.Response[ListClientDocumentsApiResponse]]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+				require.Len(t, clientRes.Data.Results, 5)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}

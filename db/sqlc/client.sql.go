@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -124,6 +125,34 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.Addresses,
 		&i.LegalMeasure,
 		&i.HasUntakenMedications,
+	)
+	return i, err
+}
+
+const createClientDocument = `-- name: CreateClientDocument :one
+INSERT INTO client_documents (
+    client_id,
+    attachment_uuid,
+    label
+) VALUES (
+    $1, $2, $3
+) RETURNING id, attachment_uuid, client_id, label
+`
+
+type CreateClientDocumentParams struct {
+	ClientID       int64       `json:"client_id"`
+	AttachmentUuid pgtype.UUID `json:"attachment_uuid"`
+	Label          string      `json:"label"`
+}
+
+func (q *Queries) CreateClientDocument(ctx context.Context, arg CreateClientDocumentParams) (ClientDocument, error) {
+	row := q.db.QueryRow(ctx, createClientDocument, arg.ClientID, arg.AttachmentUuid, arg.Label)
+	var i ClientDocument
+	err := row.Scan(
+		&i.ID,
+		&i.AttachmentUuid,
+		&i.ClientID,
+		&i.Label,
 	)
 	return i, err
 }
@@ -271,6 +300,73 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.Addresses,
 			&i.LegalMeasure,
 			&i.HasUntakenMedications,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClientDocuments = `-- name: ListClientDocuments :many
+SELECT 
+    cd.id, cd.attachment_uuid, cd.client_id, cd.label,
+    a.uuid, a.name, a.file, a.size, a.is_used, a.tag, a.updated, a.created,
+    COUNT(*) OVER() AS total_count
+FROM client_documents cd
+JOIN attachment_file a ON cd.attachment_uuid = a.uuid
+WHERE client_id = $1
+LIMIT $2 OFFSET $3
+`
+
+type ListClientDocumentsParams struct {
+	ClientID int64 `json:"client_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
+}
+
+type ListClientDocumentsRow struct {
+	ID             int64              `json:"id"`
+	AttachmentUuid pgtype.UUID        `json:"attachment_uuid"`
+	ClientID       int64              `json:"client_id"`
+	Label          string             `json:"label"`
+	Uuid           uuid.UUID          `json:"uuid"`
+	Name           string             `json:"name"`
+	File           string             `json:"file"`
+	Size           int32              `json:"size"`
+	IsUsed         bool               `json:"is_used"`
+	Tag            *string            `json:"tag"`
+	Updated        pgtype.Timestamptz `json:"updated"`
+	Created        pgtype.Timestamptz `json:"created"`
+	TotalCount     int64              `json:"total_count"`
+}
+
+func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumentsParams) ([]ListClientDocumentsRow, error) {
+	rows, err := q.db.Query(ctx, listClientDocuments, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClientDocumentsRow
+	for rows.Next() {
+		var i ListClientDocumentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.AttachmentUuid,
+			&i.ClientID,
+			&i.Label,
+			&i.Uuid,
+			&i.Name,
+			&i.File,
+			&i.Size,
+			&i.IsUsed,
+			&i.Tag,
+			&i.Updated,
+			&i.Created,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

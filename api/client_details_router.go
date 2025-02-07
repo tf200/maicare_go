@@ -11,5 +11,8 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		clientsGroup.GET("/:id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientApi)
 
 		clientsGroup.PUT("/:id/profile_picture", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.SetClientProfilePictureApi)
+
+		clientsGroup.POST("/:id/documents", RBACMiddleware(server.store, "CLIENT.CREATE"), server.AddClientDocumentApi)
+		clientsGroup.GET("/:id/documents", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientDocumentsApi)
 	}
 }

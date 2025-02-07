@@ -360,12 +360,8 @@ CREATE TABLE client_allergy (
 
 CREATE TABLE client_documents (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    documents VARCHAR(255) NOT NULL,
-    uploaded_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
-    original_filename VARCHAR(255) NULL,
-    file_size BIGINT NULL,
-    created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
+    attachment_uuid UUID NULL REFERENCES attachment_file("uuid") ON DELETE SET NULL,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     label VARCHAR(100) NOT NULL CHECK (label IN (
         'registration_form', 'intake_form', 'consent_form',
         'risk_assessment', 'self_reliance_matrix', 'force_inventory',
@@ -375,7 +371,7 @@ CREATE TABLE client_documents (
 
 CREATE INDEX treatments_user_id_idx ON treatments(user_id);
 CREATE INDEX client_allergy_client_id_idx ON client_allergy(client_id);
-CREATE INDEX client_documents_user_id_idx ON client_documents(user_id);
+CREATE INDEX client_documents_user_id_idx ON client_documents(client_id);
 CREATE INDEX client_documents_label_idx ON client_documents(label);
 
 
