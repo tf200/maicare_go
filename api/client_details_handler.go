@@ -461,6 +461,13 @@ type AddClientDocumentApiResponse struct {
 	AttachmentID uuid.UUID `json:"attachment_id"`
 	ClientID     int64     `json:"client_id"`
 	Label        string    `json:"label"`
+	Name         string    `json:"name"`
+	File         string    `json:"file"`
+	Size         int32     `json:"size"`
+	IsUsed       bool      `json:"is_used"`
+	Tag          *string   `json:"tag"`
+	UpdatedAt    time.Time `json:"updated"`
+	CreatedAt    time.Time `json:"created"`
 }
 
 // AddClientDocumentApi adds a document to a client
@@ -500,10 +507,17 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(AddClientDocumentApiResponse{
-		ID:           clientDoc.Attachment.ID,
-		AttachmentID: clientDoc.Attachment.AttachmentUuid.Bytes,
-		ClientID:     clientDoc.Attachment.ClientID,
-		Label:        clientDoc.Attachment.Label,
+		ID:           clientDoc.ClientDocument.ID,
+		AttachmentID: clientDoc.ClientDocument.AttachmentUuid.Bytes,
+		ClientID:     clientDoc.ClientDocument.ClientID,
+		Label:        clientDoc.ClientDocument.Label,
+		Name:         clientDoc.Attachment.Name,
+		File:         clientDoc.Attachment.File,
+		Size:         clientDoc.Attachment.Size,
+		IsUsed:       clientDoc.Attachment.IsUsed,
+		Tag:          clientDoc.Attachment.Tag,
+		UpdatedAt:    clientDoc.Attachment.Updated.Time,
+		CreatedAt:    clientDoc.Attachment.Created.Time,
 	}, "Client document added successfully")
 	ctx.JSON(http.StatusCreated, res)
 }

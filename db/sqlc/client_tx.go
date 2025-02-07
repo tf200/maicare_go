@@ -82,23 +82,24 @@ type AddClientDocumentTxParams struct {
 }
 
 type AddClientDocumentTxResults struct {
-	Attachment ClientDocument
+	ClientDocument ClientDocument
+	Attachment     AttachmentFile
 }
 
 func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocumentTxParams) (AddClientDocumentTxResults, error) {
 	var result AddClientDocumentTxResults
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
-
-		attachement, err := q.SetAttachmentAsUsed(ctx, arg.AttachmentID)
+		var err error
+		result.Attachment, err = q.SetAttachmentAsUsed(ctx, arg.AttachmentID)
 		if err != nil {
 			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
 		}
 
-		result.Attachment, err = q.CreateClientDocument(ctx, CreateClientDocumentParams{
-			ClientID:     arg.ClientID,
-			AttachmentUuid: pgtype.UUID{Bytes: attachement.Uuid, Valid: true},
-			Label:        arg.Label,
+		result.ClientDocument, err = q.CreateClientDocument(ctx, CreateClientDocumentParams{
+			ClientID:       arg.ClientID,
+			AttachmentUuid: pgtype.UUID{Bytes: result.Attachment.Uuid, Valid: true},
+			Label:          arg.Label,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create client details: %w", err)

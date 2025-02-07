@@ -251,8 +251,8 @@ func addRandomClientDocument(t *testing.T, ClientID int64) ClientDocument {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, clientDoc)
-	require.Equal(t, arg.ClientID, clientDoc.Attachment.ClientID)
-	return clientDoc.Attachment
+	require.Equal(t, arg.ClientID, clientDoc.ClientDocument.ClientID)
+	return clientDoc.ClientDocument
 }
 
 func TestAddClientDocumentTx(t *testing.T) {

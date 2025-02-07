@@ -4228,10 +4228,31 @@ const docTemplate = `{
                 "client_id": {
                     "type": "integer"
                 },
+                "created": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
+                "is_used": {
+                    "type": "boolean"
+                },
                 "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "updated": {
                     "type": "string"
                 }
             }
