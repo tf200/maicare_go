@@ -364,6 +364,7 @@ type ListIncidentsResponse struct {
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
 	CreatedAt               time.Time `json:"created_at"`
+	IsConfirmed             bool      `json:"is_confirmed"`
 }
 
 // ListIncidentsApi lists all incidents
@@ -501,6 +502,7 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 			SoftDelete:              incident.SoftDelete,
 			UpdatedAt:               incident.UpdatedAt.Time,
 			CreatedAt:               incident.CreatedAt.Time,
+			IsConfirmed:             incident.IsConfirmed,
 		}
 	}
 
@@ -559,6 +561,7 @@ type GetIncidentResponse struct {
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
 	CreatedAt               time.Time `json:"created_at"`
+	IsConfirmed             bool      `json:"is_confirmed"`
 }
 
 // GetIncidentApi retrieves an incident
@@ -772,6 +775,7 @@ type UpdateIncidentResponse struct {
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated"`
 	CreatedAt               time.Time `json:"created"`
+	IsConfirmed             bool      `json:"is_confirmed"`
 }
 
 // UpdateIncidentApi updates an incident

@@ -1379,6 +1379,8 @@ definitions:
         items:
           type: string
         type: array
+      is_confirmed:
+        type: boolean
       location_id:
         type: integer
       medicines:
@@ -1894,6 +1896,8 @@ definitions:
         items:
           type: string
         type: array
+      is_confirmed:
+        type: boolean
       location_id:
         type: integer
       medicines:
@@ -3277,6 +3281,8 @@ definitions:
         items:
           type: string
         type: array
+      is_confirmed:
+        type: boolean
       location_id:
         type: integer
       medicines:

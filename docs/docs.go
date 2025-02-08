@@ -6372,6 +6372,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "is_confirmed": {
+                    "type": "boolean"
+                },
                 "location_id": {
                     "type": "integer"
                 },
@@ -7153,6 +7156,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_confirmed": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "integer"
@@ -9278,6 +9284,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_confirmed": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "integer"

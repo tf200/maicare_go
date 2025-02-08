@@ -6365,6 +6365,9 @@
                         "type": "string"
                     }
                 },
+                "is_confirmed": {
+                    "type": "boolean"
+                },
                 "location_id": {
                     "type": "integer"
                 },
@@ -7146,6 +7149,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_confirmed": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "integer"
@@ -9271,6 +9277,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_confirmed": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "integer"

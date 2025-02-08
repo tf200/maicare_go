@@ -62,16 +62,16 @@ func (e *SmtpConf) Send(subject, body string, to []string) error {
 	return nil
 }
 
-func (c *SmtpConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
+func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
 
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")
 	}
-	if c.SmtpHost == "" || c.SmtpPort == 0 {
+	if s.SmtpHost == "" || s.SmtpPort == 0 {
 		return errors.New("invalid SMTP configuration")
 	}
 
-	tmpl, err := template.ParseFiles("credentials.html")
+	tmpl, err := template.ParseFiles("templates/credentials.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse HTML template: %w", err)
 	}
@@ -82,7 +82,7 @@ func (c *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 	}
 
 	message := mail.NewMsg()
-	if err := message.From(fmt.Sprintf("%s <%s>", c.Name, c.Address)); err != nil {
+	if err := message.From(fmt.Sprintf("%s <%s>", s.Name, s.Address)); err != nil {
 		return fmt.Errorf("failed to set From address: %w", err)
 	}
 	if err := message.To(to...); err != nil {
@@ -92,11 +92,11 @@ func (c *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 	message.SetBodyString(mail.TypeTextHTML, body.String())
 
 	client, err := mail.NewClient(
-		c.SmtpHost,
+		s.SmtpHost,
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),
-		mail.WithUsername(c.Address),
-		mail.WithPassword(c.Athentication),
-		mail.WithPort(c.SmtpPort),
+		mail.WithUsername(s.Address),
+		mail.WithPassword(s.Athentication),
+		mail.WithPort(s.SmtpPort),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create mail client: %w", err)
@@ -108,3 +108,6 @@ func (c *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 
 	return nil
 }
+
+
+
