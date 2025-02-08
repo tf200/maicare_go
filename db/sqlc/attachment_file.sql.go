@@ -96,17 +96,22 @@ func (q *Queries) GetAttachmentById(ctx context.Context, argUuid uuid.UUID) (Att
 	return i, err
 }
 
-const setAttachmentAsUsed = `-- name: SetAttachmentAsUsed :one
+const setAttachmentAsUsedorUnused = `-- name: SetAttachmentAsUsedorUnused :one
 UPDATE attachment_file
 SET
-    is_used = true
+    is_used = $2
 WHERE
     uuid = $1
 RETURNING uuid, name, file, size, is_used, tag, updated, created
 `
 
-func (q *Queries) SetAttachmentAsUsed(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
-	row := q.db.QueryRow(ctx, setAttachmentAsUsed, argUuid)
+type SetAttachmentAsUsedorUnusedParams struct {
+	Uuid   uuid.UUID `json:"uuid"`
+	IsUsed bool      `json:"is_used"`
+}
+
+func (q *Queries) SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, setAttachmentAsUsedorUnused, arg.Uuid, arg.IsUsed)
 	var i AttachmentFile
 	err := row.Scan(
 		&i.Uuid,

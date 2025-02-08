@@ -410,8 +410,8 @@ func addRandomClientDocument(t *testing.T, ClientID int64) db.ClientDocument {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, clientDoc)
-	require.Equal(t, arg.ClientID, clientDoc.Attachment.ClientID)
-	return clientDoc.Attachment
+	require.Equal(t, arg.ClientID, clientDoc.ClientDocument.ClientID)
+	return clientDoc.ClientDocument
 }
 
 func TestListClientDocumentsApi(t *testing.T) {
@@ -444,6 +444,98 @@ func TestListClientDocumentsApi(t *testing.T) {
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
 				require.Len(t, clientRes.Data.Results, 5)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestDeleteClientDocumentApi(t *testing.T) {
+	cleint := createRandomClientDetails(t)
+	clientDoc := addRandomClientDocument(t, cleint.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/documents/%d", cleint.ID, clientDoc.ID)
+				data := DeleteClientDocumentApiRequest{
+					AttachmentID: clientDoc.AttachmentUuid.Bytes,
+				}
+				reqBody, err := json.Marshal(data)
+				require.NoError(t, err)
+				req, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(reqBody))
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestGetMissingClientDocumentsApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	clientDoc := addRandomClientDocument(t, client.ID)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/missing_documents", client.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var clientRes Response[GetMissingClientDocumentsApiResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+				require.NotEmpty(t, clientRes.Data.MissingDocs)
+				require.NotContains(t, clientRes.Data.MissingDocs, clientDoc.Label)
+
 			},
 		},
 	}

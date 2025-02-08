@@ -304,3 +304,44 @@ func TestListClientDocuments(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteClientDocument(t *testing.T) {
+	client := createRandomClientDetails(t)
+	clientDoc := addRandomClientDocument(t, client.ID)
+
+	_, err := testQueries.DeleteClientDocument(context.Background(), clientDoc.AttachmentUuid)
+	require.NoError(t, err)
+
+	clientDocs, err := testQueries.ListClientDocuments(context.Background(), ListClientDocumentsParams{
+		ClientID: client.ID,
+	})
+	require.NoError(t, err)
+	require.Empty(t, clientDocs)
+}
+
+func TestDeleteClientDocumentTx(t *testing.T) {
+	client := createRandomClientDetails(t)
+	clientDoc := addRandomClientDocument(t, client.ID)
+
+	store := NewStore(testDB)
+	_, err := store.DeleteClientDocumentTx(context.Background(), DeleteClientDocumentParams{
+		AttachmentID: clientDoc.AttachmentUuid.Bytes,
+	})
+	require.NoError(t, err)
+
+	clientDocs, err := testQueries.ListClientDocuments(context.Background(), ListClientDocumentsParams{
+		ClientID: client.ID,
+	})
+	require.NoError(t, err)
+	require.Empty(t, clientDocs)
+}
+
+func TestGetMissingClientDocuments(t *testing.T) {
+	client := createRandomClientDetails(t)
+	clientDoc := addRandomClientDocument(t, client.ID)
+
+	missingDocs, err := testQueries.GetMissingClientDocuments(context.Background(), client.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, missingDocs)
+	require.NotContains(t, missingDocs, clientDoc.Label)
+}

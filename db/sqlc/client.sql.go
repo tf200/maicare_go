@@ -157,6 +157,24 @@ func (q *Queries) CreateClientDocument(ctx context.Context, arg CreateClientDocu
 	return i, err
 }
 
+const deleteClientDocument = `-- name: DeleteClientDocument :one
+DELETE FROM client_documents
+WHERE attachment_uuid = $1
+RETURNING id, attachment_uuid, client_id, label
+`
+
+func (q *Queries) DeleteClientDocument(ctx context.Context, attachmentUuid pgtype.UUID) (ClientDocument, error) {
+	row := q.db.QueryRow(ctx, deleteClientDocument, attachmentUuid)
+	var i ClientDocument
+	err := row.Scan(
+		&i.ID,
+		&i.AttachmentUuid,
+		&i.ClientID,
+		&i.Label,
+	)
+	return i, err
+}
+
 const getClientDetails = `-- name: GetClientDetails :one
 SELECT id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications FROM client_details
 WHERE id = $1 LIMIT 1
@@ -196,6 +214,45 @@ func (q *Queries) GetClientDetails(ctx context.Context, id int64) (ClientDetail,
 		&i.HasUntakenMedications,
 	)
 	return i, err
+}
+
+const getMissingClientDocuments = `-- name: GetMissingClientDocuments :many
+WITH all_labels AS (
+    SELECT unnest(ARRAY[
+        'registration_form', 'intake_form', 'consent_form',
+        'risk_assessment', 'self_reliance_matrix', 'force_inventory',
+        'care_plan', 'signaling_plan', 'cooperation_agreement', 'other'
+    ]) AS label
+),
+client_labels AS (
+    SELECT label
+    FROM client_documents
+    WHERE client_id = $1
+)
+SELECT al.label::text AS missing_label
+FROM all_labels al
+LEFT JOIN client_labels cl ON al.label = cl.label
+WHERE cl.label IS NULL
+`
+
+func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID int64) ([]string, error) {
+	rows, err := q.db.Query(ctx, getMissingClientDocuments, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var missing_label string
+		if err := rows.Scan(&missing_label); err != nil {
+			return nil, err
+		}
+		items = append(items, missing_label)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listClientDetails = `-- name: ListClientDetails :many

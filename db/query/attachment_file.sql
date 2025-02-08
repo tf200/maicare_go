@@ -21,10 +21,10 @@ WHERE uuid = $1
 RETURNING *;
 
 
--- name: SetAttachmentAsUsed :one
+-- name: SetAttachmentAsUsedorUnused :one
 UPDATE attachment_file
 SET
-    is_used = true
+    is_used = $2
 WHERE
     uuid = $1
 RETURNING *;

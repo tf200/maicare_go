@@ -590,6 +590,7 @@ type Incident struct {
 	SoftDelete              bool               `json:"soft_delete"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
+	IsConfirmed             bool               `json:"is_confirmed"`
 }
 
 type IncidentDetail struct {

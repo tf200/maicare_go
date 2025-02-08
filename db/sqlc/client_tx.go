@@ -23,7 +23,10 @@ func (store *Store) CreateClientDetailsTx(ctx context.Context, arg CreateClientD
 	err := store.ExecTx(ctx, func(q *Queries) error {
 		// First check and update all attachments sequentially
 		for _, attachmentID := range arg.IdentityAttachments {
-			_, err := q.SetAttachmentAsUsed(ctx, attachmentID)
+			_, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
+				Uuid:   attachmentID,
+				IsUsed: true,
+			})
 			if err != nil {
 				return fmt.Errorf("failed to set attachment %s as used: %w", attachmentID, err)
 			}
@@ -56,7 +59,11 @@ func (store *Store) SetClientProfilePictureTx(ctx context.Context, arg SetClient
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
 
-		attachement, err := q.SetAttachmentAsUsed(ctx, arg.AttachmentID)
+		attachement, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
+			Uuid:   arg.AttachmentID,
+			IsUsed: true,
+		})
+
 		if err != nil {
 			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
 		}
@@ -91,7 +98,10 @@ func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocume
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
 		var err error
-		result.Attachment, err = q.SetAttachmentAsUsed(ctx, arg.AttachmentID)
+		result.Attachment, err = q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
+			Uuid:   arg.AttachmentID,
+			IsUsed: true,
+		})
 		if err != nil {
 			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
 		}
@@ -101,6 +111,39 @@ func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocume
 			AttachmentUuid: pgtype.UUID{Bytes: result.Attachment.Uuid, Valid: true},
 			Label:          arg.Label,
 		})
+		if err != nil {
+			return fmt.Errorf("failed to create client details: %w", err)
+		}
+
+		return nil
+	})
+
+	return result, err
+}
+
+type DeleteClientDocumentParams struct {
+	AttachmentID uuid.UUID
+}
+
+type DeleteClientDocumentResults struct {
+	ClientDocument ClientDocument
+	Attachment     AttachmentFile
+}
+
+func (store *Store) DeleteClientDocumentTx(ctx context.Context, arg DeleteClientDocumentParams) (DeleteClientDocumentResults, error) {
+	var result DeleteClientDocumentResults
+
+	err := store.ExecTx(ctx, func(q *Queries) error {
+		var err error
+		result.Attachment, err = q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
+			Uuid:   arg.AttachmentID,
+			IsUsed: false,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
+		}
+
+		result.ClientDocument, err = q.DeleteClientDocument(ctx, pgtype.UUID{Bytes: arg.AttachmentID, Valid: true})
 		if err != nil {
 			return fmt.Errorf("failed to create client details: %w", err)
 		}

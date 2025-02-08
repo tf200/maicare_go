@@ -14,5 +14,9 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 
 		clientsGroup.POST("/:id/documents", RBACMiddleware(server.store, "CLIENT.CREATE"), server.AddClientDocumentApi)
 		clientsGroup.GET("/:id/documents", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientDocumentsApi)
+		clientsGroup.DELETE("/:id/documents/:doc_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.DeleteClientDocumentApi)
+
+		clientsGroup.GET("/:id/missing_documents", RBACMiddleware(server.store, "CLIENT.CREATE"), server.GetMissingClientDocumentsApi)
+
 	}
 }

@@ -1001,6 +1001,20 @@ definitions:
       size:
         type: integer
     type: object
+  api.DeleteClientDocumentApiRequest:
+    properties:
+      attachement_id:
+        type: string
+    required:
+    - attachement_id
+    type: object
+  api.DeleteClientDocumentApiResponse:
+    properties:
+      attachment_id:
+        type: string
+      id:
+        type: integer
+    type: object
   api.DeleteClientEmergencyContactResponse:
     properties:
       id:
@@ -1438,6 +1452,13 @@ definitions:
         type: integer
       name:
         type: string
+    type: object
+  api.GetMissingClientDocumentsApiResponse:
+    properties:
+      missing_docs:
+        items:
+          type: string
+        type: array
     type: object
   api.GetPermissionsByRoleIDApiResponse:
     properties:
@@ -2237,6 +2258,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_DeleteClientDocumentApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteClientDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_DeleteClientEmergencyContactResponse:
     properties:
       data:
@@ -2376,6 +2406,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetMissingClientDocumentsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetMissingClientDocumentsApiResponse'
       message:
         type: string
       success:
@@ -4374,6 +4413,49 @@ paths:
       summary: Add a document to a client
       tags:
       - clients
+  /clients/{id}/documents/{document_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: integer
+      - description: Client document
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DeleteClientDocumentApiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteClientDocumentApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a client document
+      tags:
+      - clients
   /clients/{id}/emergency_contacts:
     get:
       parameters:
@@ -5014,6 +5096,36 @@ paths:
       summary: Update a client medication
       tags:
       - client_Medical
+  /clients/{id}/missing_documents:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetMissingClientDocumentsApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get missing documents of a client
+      tags:
+      - clients
   /clients/{id}/profile_picture:
     put:
       consumes:

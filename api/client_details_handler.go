@@ -609,3 +609,83 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 	res := SuccessResponse(pag, "Client documents fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// DeleteClientDocumentApiRequest represents a request to delete a client document
+type DeleteClientDocumentApiRequest struct {
+	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
+}
+
+// DeleteClientDocumentApiResponse represents a response to a delete client document request
+type DeleteClientDocumentApiResponse struct {
+	ID           int64     `json:"id"`
+	AttachmentID uuid.UUID `json:"attachment_id"`
+}
+
+// DeleteClientDocumentApi deletes a client document
+// @Summary Delete a client document
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param document_id path int true "Document ID"
+// @Param request body DeleteClientDocumentApiRequest true "Client document"
+// @Success 200 {object} Response[DeleteClientDocumentApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/documents/{document_id} [delete]
+func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
+	var req DeleteClientDocumentApiRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.DeleteClientDocumentParams{
+		AttachmentID: req.AttachmentID,
+	}
+
+	clientDoc, err := server.store.DeleteClientDocumentTx(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(DeleteClientDocumentApiResponse{
+		ID:           clientDoc.ClientDocument.ID,
+		AttachmentID: clientDoc.ClientDocument.AttachmentUuid.Bytes,
+	}, "Client document deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// GetMissingClientDocumentsApiResponse represents a response to a get missing client documents request
+type GetMissingClientDocumentsApiResponse struct {
+	MissingDocs []string `json:"missing_docs"`
+}
+
+// GetMissingClientDocumentsApi gets missing documents of a client
+// @Summary Get missing documents of a client
+// @Tags clients
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[GetMissingClientDocumentsApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/missing_documents [get]
+func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	missingDocs, err := server.store.GetMissingClientDocuments(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetMissingClientDocumentsApiResponse{
+		MissingDocs: missingDocs,
+	}, "Missing client documents fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}

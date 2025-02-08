@@ -22,7 +22,10 @@ func (store *Store) SetEmployeeProfilePictureTx(ctx context.Context, arg SetEmpl
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
 
-		attachement, err := q.SetAttachmentAsUsed(ctx, arg.AttachementID)
+		attachement, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
+			Uuid:   arg.AttachementID,
+			IsUsed: true,
+		})
 		if err != nil {
 			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachementID, err)
 		}

@@ -80,3 +80,26 @@ WHERE client_id = $1
 LIMIT $2 OFFSET $3;
 
 
+-- name: DeleteClientDocument :one
+DELETE FROM client_documents
+WHERE attachment_uuid = $1
+RETURNING *;
+
+
+-- name: GetMissingClientDocuments :many
+WITH all_labels AS (
+    SELECT unnest(ARRAY[
+        'registration_form', 'intake_form', 'consent_form',
+        'risk_assessment', 'self_reliance_matrix', 'force_inventory',
+        'care_plan', 'signaling_plan', 'cooperation_agreement', 'other'
+    ]) AS label
+),
+client_labels AS (
+    SELECT label
+    FROM client_documents
+    WHERE client_id = $1
+)
+SELECT al.label::text AS missing_label
+FROM all_labels al
+LEFT JOIN client_labels cl ON al.label = cl.label
+WHERE cl.label IS NULL;
