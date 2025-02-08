@@ -684,6 +684,14 @@ func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
 		return
 	}
 
+	if len(missingDocs) == 0 {
+		res := SuccessResponse(GetMissingClientDocumentsApiResponse{
+			MissingDocs: missingDocs,
+		}, "No missing client documents found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
 	res := SuccessResponse(GetMissingClientDocumentsApiResponse{
 		MissingDocs: missingDocs,
 	}, "Missing client documents fetched successfully")

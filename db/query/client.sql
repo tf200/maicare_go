@@ -91,7 +91,7 @@ WITH all_labels AS (
     SELECT unnest(ARRAY[
         'registration_form', 'intake_form', 'consent_form',
         'risk_assessment', 'self_reliance_matrix', 'force_inventory',
-        'care_plan', 'signaling_plan', 'cooperation_agreement', 'other'
+        'care_plan', 'signaling_plan', 'cooperation_agreement'
     ]) AS label
 ),
 client_labels AS (
