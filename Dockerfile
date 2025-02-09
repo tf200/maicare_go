@@ -19,7 +19,7 @@ ENV GOPROXY=https://proxy.golang.org,direct
 RUN go build -o main main.go
 
 # Stage 2: Final Image
-FROM debian:slim-bookworm
+FROM debian:slim
 
 # Install wkhtmltopdf and its minimal dependencies
 RUN apt-get update && apt-get install -y \
