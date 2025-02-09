@@ -19,23 +19,22 @@ ENV GOPROXY=https://proxy.golang.org,direct
 RUN go build -o main main.go
 
 # Stage 2: Final Image
-FROM alpine:latest
+FROM debian:slim-bookworm
 
-# Install dependencies for wkhtmltopdf
-RUN apk add --no-cache \
-    libstdc++ \
-    libx11 \
-    libxrender \
-    libxext \
-    libssl1.1 \
-    ca-certificates \
+# Install wkhtmltopdf and its minimal dependencies
+RUN apt-get update && apt-get install -y \
+    wkhtmltopdf \
     fontconfig \
-    freetype \
-    ttf-dejavu \
-    ttf-liberation \
-    && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.alpine3.14-amd64.apk \
-    && apk add --no-cache --allow-untrusted wkhtmltox-0.12.6.1-2.alpine3.14-amd64.apk \
-    && rm wkhtmltox-0.12.6.1-2.alpine3.14-amd64.apk
+    libfreetype6 \
+    libjpeg62-turbo \
+    libpng16-16 \
+    libx11-6 \
+    libxcb1 \
+    libxext6 \
+    libxrender1 \
+    xfonts-75dpi \
+    xfonts-base \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
