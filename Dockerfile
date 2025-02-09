@@ -21,17 +21,21 @@ RUN go build -o main main.go
 # Stage 2: Final Image
 FROM alpine:latest
 
-# Install wkhtmltopdf and its dependencies
+# Install dependencies for wkhtmltopdf
 RUN apk add --no-cache \
-    wkhtmltopdf \
-    # Required dependencies for wkhtmltopdf
-    qt5-qtbase-dev \
-    qt5-qtwebkit-dev \
-    qt5-qtsvg-dev \
+    libstdc++ \
+    libx11 \
+    libxrender \
+    libxext \
+    libssl1.1 \
+    ca-certificates \
+    fontconfig \
+    freetype \
     ttf-dejavu \
     ttf-liberation \
-    fontconfig \
-    dbus
+    && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.alpine3.14-amd64.apk \
+    && apk add --no-cache --allow-untrusted wkhtmltox-0.12.6.1-2.alpine3.14-amd64.apk \
+    && rm wkhtmltox-0.12.6.1-2.alpine3.14-amd64.apk
 
 # Set the working directory
 WORKDIR /app
