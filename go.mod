@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	github.com/Backblaze/blazer v0.7.1
+	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.3
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/goccy/go-json v0.10.5
@@ -22,7 +23,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.3 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
