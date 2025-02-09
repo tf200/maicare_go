@@ -23,6 +23,7 @@ FROM debian:bookworm-slim
 
 # Install wkhtmltopdf and its minimal dependencies
 RUN apt-get update && apt-get install -y \
+    ca-certificates \
     wkhtmltopdf \
     fontconfig \
     libfreetype6 \
