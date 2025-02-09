@@ -4,6 +4,7 @@ import (
 	"errors"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/pdf"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,7 +19,7 @@ import (
 // CreateIncidentRequest represents a request to create an incident
 type CreateIncidentRequest struct {
 	EmployeeID              int64     `json:"employee_id"`
-	LocationID              *int64    `json:"location_id"`
+	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement" binding:"required" enums:"directly_involved,witness,found_afterwards,alarmed"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -63,7 +64,7 @@ type CreateIncidentRequest struct {
 type CreateIncidentResponse struct {
 	ID                      int64     `json:"id"`
 	EmployeeID              int64     `json:"employee_id"`
-	LocationID              *int64    `json:"location_id"`
+	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -322,7 +323,7 @@ type ListIncidentsResponse struct {
 	EmployeeID              int64     `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
-	LocationID              *int64    `json:"location_id"`
+	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -519,7 +520,7 @@ type GetIncidentResponse struct {
 	EmployeeID              int64     `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
-	LocationID              *int64    `json:"location_id"`
+	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -562,6 +563,7 @@ type GetIncidentResponse struct {
 	UpdatedAt               time.Time `json:"updated_at"`
 	CreatedAt               time.Time `json:"created_at"`
 	IsConfirmed             bool      `json:"is_confirmed"`
+	LocationName            string    `json:"location_name"`
 }
 
 // GetIncidentApi retrieves an incident
@@ -680,6 +682,8 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
 		CreatedAt:               incident.CreatedAt.Time,
+		IsConfirmed:             incident.IsConfirmed,
+		LocationName:            incident.LocationName,
 	}, "Incident retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
@@ -733,7 +737,7 @@ type UpdateIncidentRequest struct {
 type UpdateIncidentResponse struct {
 	ID                      int64     `json:"id"`
 	EmployeeID              int64     `json:"employee_id"`
-	LocationID              *int64    `json:"location_id"`
+	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -1007,6 +1011,187 @@ func (server *Server) DeleteIncidentApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse([]string{}, "Incident deleted successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GenerateIncidentFileResponse represents a response for GenerateIncidentFileApi
+type GenerateIncidentFileResponse struct {
+	FileUrl *string `json:"file_url"`
+	ID      int64   `json:"incident_id"`
+}
+
+// GenerateIncidentFileApi generates an incident file
+// @Summary Generate an incident file
+// @Tags incidents
+// @Produce json
+// @Param incident_id path int true "Incident ID"
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[GenerateIncidentFileResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/incidents/{incident_id}/file [get]
+func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
+	id := ctx.Param("incident_id")
+	incidentID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	incident, err := server.store.GetIncident(ctx, incidentID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var informWho []string
+	err = json.Unmarshal(incident.InformWho, &informWho)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var technical []string
+	err = json.Unmarshal(incident.Technical, &technical)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var organizational []string
+	err = json.Unmarshal(incident.Organizational, &organizational)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var meseWorker []string
+	err = json.Unmarshal(incident.MeseWorker, &meseWorker)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var clientOptions []string
+	err = json.Unmarshal(incident.ClientOptions, &clientOptions)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var succession []string
+	err = json.Unmarshal(incident.Succession, &succession)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	incidentData := pdf.IncidentReportData{
+		ID:                      incident.ID,
+		EmployeeID:              incident.EmployeeID,
+		EmployeeFirstName:       incident.EmployeeFirstName,
+		EmployeeLastName:        incident.EmployeeLastName,
+		LocationID:              incident.LocationID,
+		ReporterInvolvement:     incident.ReporterInvolvement,
+		InformWho:               informWho,
+		IncidentDate:            incident.IncidentDate.Time,
+		RuntimeIncident:         incident.RuntimeIncident,
+		IncidentType:            incident.IncidentType,
+		PassingAway:             incident.PassingAway,
+		SelfHarm:                incident.SelfHarm,
+		Violence:                incident.Violence,
+		FireWaterDamage:         incident.FireWaterDamage,
+		Accident:                incident.Accident,
+		ClientAbsence:           incident.ClientAbsence,
+		Medicines:               incident.Medicines,
+		Organization:            incident.Organization,
+		UseProhibitedSubstances: incident.UseProhibitedSubstances,
+		OtherNotifications:      incident.OtherNotifications,
+		SeverityOfIncident:      incident.SeverityOfIncident,
+		IncidentExplanation:     incident.IncidentExplanation,
+		RecurrenceRisk:          incident.RecurrenceRisk,
+		IncidentPreventSteps:    incident.IncidentPreventSteps,
+		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
+		Technical:               technical,
+		Organizational:          organizational,
+		MeseWorker:              meseWorker,
+		ClientOptions:           clientOptions,
+		OtherCause:              incident.OtherCause,
+		CauseExplanation:        incident.CauseExplanation,
+		PhysicalInjury:          incident.PhysicalInjury,
+		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
+		PsychologicalDamage:     incident.PsychologicalDamage,
+		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
+		NeededConsultation:      incident.NeededConsultation,
+		Succession:              succession,
+		SuccessionDesc:          incident.SuccessionDesc,
+		Other:                   incident.Other,
+		OtherDesc:               incident.OtherDesc,
+		AdditionalAppointments:  incident.AdditionalAppointments,
+		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		ClientID:                incident.ClientID,
+		LocationName:            incident.LocationName,
+	}
+
+	fileUrl, err := pdf.GenerateAndUploadIncidentPDF(ctx, incidentData, server.b2Client)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	incidentWithUpdatedFileUrl, err := server.store.UpdateIncidentFileUrl(ctx, db.UpdateIncidentFileUrlParams{
+		ID:      incident.ID,
+		FileUrl: &fileUrl,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GenerateIncidentFileResponse{
+		FileUrl: incidentWithUpdatedFileUrl,
+		ID:      incident.ID,
+	}, "Incident file generated successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ConfirmIncidentResponse represents a response for ConfirmIncidentApi
+type ConfirmIncidentResponse struct {
+	ID      int64   `json:"id"`
+	FileUrl *string `json:"file_url"`
+}
+
+// ConfirmIncidentApi confirms an incident
+// @Summary Confirm an incident
+// @Tags incidents
+// @Produce json
+// @Param incident_id path int true "Incident ID"
+// @Success 200 {object} Response[ConfirmIncidentResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /incidents/{incident_id}/confirm [put]
+func (server *Server) ConfirmIncidentApi(ctx *gin.Context) {
+	id := ctx.Param("incident_id")
+	incidentID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	incident, err := server.store.ConfirmIncident(ctx, incidentID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(ConfirmIncidentResponse{
+		ID:      incident.ID,
+		FileUrl: incident.FileUrl,
+	}, "Incident confirmed successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

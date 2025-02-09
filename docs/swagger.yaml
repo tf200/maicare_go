@@ -180,6 +180,13 @@ definitions:
       role_id:
         type: integer
     type: object
+  api.ConfirmIncidentResponse:
+    properties:
+      file_url:
+        type: string
+      id:
+        type: integer
+    type: object
   api.Contact:
     properties:
       email:
@@ -1074,6 +1081,13 @@ definitions:
       id:
         type: integer
     type: object
+  api.GenerateIncidentFileResponse:
+    properties:
+      file_url:
+        type: string
+      incident_id:
+        type: integer
+    type: object
   api.GetAssignedEmployeeResponse:
     properties:
       client_id:
@@ -1383,6 +1397,8 @@ definitions:
         type: boolean
       location_id:
         type: integer
+      location_name:
+        type: string
       medicines:
         type: boolean
       mese_worker:
@@ -2145,6 +2161,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_ConfirmIncidentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ConfirmIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CorrectSpellingResponse:
     properties:
       data:
@@ -2311,6 +2336,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GenerateIncidentFileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GenerateIncidentFileResponse'
       message:
         type: string
       success:
@@ -4770,6 +4804,41 @@ paths:
       summary: Update an incident
       tags:
       - incidents
+  /clients/{id}/incidents/{incident_id}/file:
+    get:
+      parameters:
+      - description: Incident ID
+        in: path
+        name: incident_id
+        required: true
+        type: integer
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateIncidentFileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Generate an incident file
+      tags:
+      - incidents
   /clients/{id}/involved_employees:
     get:
       parameters:
@@ -6094,6 +6163,36 @@ paths:
       summary: Get employee profile by user ID
       tags:
       - employees
+  /incidents/{incident_id}/confirm:
+    put:
+      parameters:
+      - description: Incident ID
+        in: path
+        name: incident_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ConfirmIncidentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Confirm an incident
+      tags:
+      - incidents
   /locations:
     get:
       description: Get a list of all locations

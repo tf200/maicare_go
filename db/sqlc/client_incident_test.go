@@ -17,7 +17,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) Incident {
 
 	arg := CreateIncidentParams{
 		EmployeeID:              employee.ID,
-		LocationID:              &location.ID,
+		LocationID:              location.ID,
 		ReporterInvolvement:     "directly_involved",
 		InformWho:               []byte("[\"client\"]"),
 		IncidentDate:            pgtype.Date{Time: time.Now(), Valid: true},

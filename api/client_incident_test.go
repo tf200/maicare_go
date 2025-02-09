@@ -26,7 +26,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 
 	arg := db.CreateIncidentParams{
 		EmployeeID:              employee.ID,
-		LocationID:              &location.ID,
+		LocationID:              location.ID,
 		ReporterInvolvement:     "directly_involved",
 		InformWho:               []byte("[\"client\"]"),
 		IncidentDate:            pgtype.Date{Time: time.Now(), Valid: true},
@@ -93,7 +93,7 @@ func TestCreateIncident(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				incidentReq := CreateIncidentRequest{
 					EmployeeID:              1,
-					LocationID:              &location.ID,
+					LocationID:              location.ID,
 					ReporterInvolvement:     "directly_involved",
 					InformWho:               []string{"client"},
 					IncidentDate:            time.Now(),
@@ -150,7 +150,7 @@ func TestCreateIncident(t *testing.T) {
 				require.NotEmpty(t, res)
 				require.NotEmpty(t, res.Data.ID)
 				require.Equal(t, res.Data.EmployeeID, int64(1))
-				require.Equal(t, *res.Data.LocationID, location.ID)
+				require.Equal(t, res.Data.LocationID, location.ID)
 				require.Equal(t, res.Data.ReporterInvolvement, "directly_involved")
 				require.Equal(t, res.Data.InformWho, []string{"client"})
 				require.Equal(t, res.Data.RuntimeIncident, "no")
@@ -306,8 +306,7 @@ func TestGetIncidentApi(t *testing.T) {
 				require.NotEmpty(t, res.Data.ID)
 				require.Equal(t, res.Data.ID, incident.ID)
 				require.Equal(t, res.Data.EmployeeID, incident.EmployeeID)
-				require.NotNil(t, res.Data.LocationID)
-				require.Equal(t, *res.Data.LocationID, *incident.LocationID)
+				require.Equal(t, res.Data.LocationID, incident.LocationID)
 				require.Equal(t, res.Data.ReporterInvolvement, incident.ReporterInvolvement)
 				require.Equal(t, res.Data.InformWho, InformWho)
 				require.Equal(t, res.Data.RuntimeIncident, incident.RuntimeIncident)

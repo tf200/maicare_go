@@ -1681,6 +1681,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/incidents/{incident_id}/file": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Generate an incident file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Incident ID",
+                        "name": "incident_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GenerateIncidentFileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/involved_employees": {
             "get": {
                 "produces": [
@@ -3678,6 +3731,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/incidents/{incident_id}/confirm": {
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Confirm an incident",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Incident ID",
+                        "name": "incident_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ConfirmIncidentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/locations": {
             "get": {
                 "description": "Get a list of all locations",
@@ -4588,6 +4687,17 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.ConfirmIncidentResponse": {
+            "type": "object",
+            "properties": {
+                "file_url": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "integer"
                 }
             }
@@ -5910,6 +6020,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GenerateIncidentFileResponse": {
+            "type": "object",
+            "properties": {
+                "file_url": {
+                    "type": "string"
+                },
+                "incident_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.GetAssignedEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -6377,6 +6498,9 @@ const docTemplate = `{
                 },
                 "location_id": {
                     "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -7535,6 +7659,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_ConfirmIncidentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ConfirmIncidentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_CorrectSpellingResponse": {
             "type": "object",
             "properties": {
@@ -7792,6 +7930,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.DeleteLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GenerateIncidentFileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GenerateIncidentFileResponse"
                 },
                 "message": {
                     "type": "string"

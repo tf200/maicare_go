@@ -65,9 +65,11 @@ LIMIT $2 OFFSET $3;
 SELECT 
     i.*,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    l.name AS location_name
 FROM incident i
 JOIN employee_profile e ON i.employee_id = e.id
+JOIN location l ON i.location_id = l.id
 WHERE i.id = $1 LIMIT 1;
 
 
@@ -121,3 +123,17 @@ RETURNING *;
 DELETE FROM incident
 WHERE id = $1
 RETURNING *;
+
+
+-- name: ConfirmIncident :one
+UPDATE incident
+SET is_confirmed = true
+WHERE id = $1
+RETURNING id, is_confirmed, file_url;
+
+
+-- name: UpdateIncidentFileUrl :one
+UPDATE incident
+SET file_url = $2
+WHERE id = $1
+RETURNING file_url;

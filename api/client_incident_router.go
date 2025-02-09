@@ -13,6 +13,8 @@ func (server *Server) setupClientIncidentRoutes(baseRouter *gin.RouterGroup) {
 		ClientIncident.PUT("/:id/incidents/:incident_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateIncidentApi)
 		ClientIncident.DELETE("/:id/incidents/:incident_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteIncidentApi)
 
+		ClientIncident.GET("/:id/incidents/:incident_id/file", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GenerateIncidentFileApi)
+		ClientIncident.PUT("/:id/incidents/:incident_id/confirm", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ConfirmIncidentApi)
 	}
 
 }

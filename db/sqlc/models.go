@@ -548,7 +548,7 @@ type GroupAccess struct {
 type Incident struct {
 	ID                      int64              `json:"id"`
 	EmployeeID              int64              `json:"employee_id"`
-	LocationID              *int64             `json:"location_id"`
+	LocationID              int64              `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []byte             `json:"inform_who"`
 	IncidentDate            pgtype.Date        `json:"incident_date"`
@@ -591,6 +591,7 @@ type Incident struct {
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
 	IsConfirmed             bool               `json:"is_confirmed"`
+	FileUrl                 *string            `json:"file_url"`
 }
 
 type IncidentDetail struct {

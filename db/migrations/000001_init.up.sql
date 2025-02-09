@@ -880,7 +880,7 @@ CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
 CREATE TABLE incident (
     id BIGSERIAL PRIMARY KEY,
     employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
-    location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    location_id BIGINT NOT NULL REFERENCES location(id) ON DELETE CASCADE,
     reporter_involvement VARCHAR(100) NOT NULL CHECK (reporter_involvement IN (
         'directly_involved', 'witness', 'found_afterwards', 'alarmed'
     )),
@@ -935,7 +935,8 @@ CREATE TABLE incident (
     soft_delete BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_confirmed BOOLEAN NOT NULL DEFAULT FALSE
+    is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+    file_url VARCHAR(255) NULL
 );
 
 CREATE INDEX incident_client_id_idx ON incident(client_id);
