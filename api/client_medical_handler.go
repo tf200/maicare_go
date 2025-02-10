@@ -49,13 +49,22 @@ func (server *Server) ListAllergyTypesApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	allergyTypesResponse := make([]ListAllergyTypesResponse, 0)
-	for _, allergyType := range allergyTypes {
-		allergyTypesResponse = append(allergyTypesResponse, ListAllergyTypesResponse{
-			ID:   allergyType.ID,
-			Name: allergyType.Name,
-		})
+
+	if len(allergyTypes) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListAllergyTypesResponse{}, 0)
+		res := SuccessResponse(pag, "No allergy types found")
+		ctx.JSON(http.StatusOK, res)
+		return
 	}
+
+	allergyTypesResponse := make([]ListAllergyTypesResponse, len(allergyTypes))
+	for i, allergy := range allergyTypesResponse {
+		allergyTypesResponse[i] = ListAllergyTypesResponse{
+			ID:   allergy.ID,
+			Name: allergy.Name,
+		}
+	}
+
 	res := SuccessResponse(allergyTypesResponse, "Allergy types fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -178,6 +187,14 @@ func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	if len(clientAllergies) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientAllergiesResponse{}, 0)
+		res := SuccessResponse(pag, "No client allergies found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
 	totalCount := clientAllergies[0].TotalAllergies
 
 	allergies := make([]ListClientAllergiesResponse, len(clientAllergies))
@@ -494,6 +511,13 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 	clientDiagnoses, err := server.store.ListClientDiagnoses(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(clientDiagnoses) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientDiagnosesResponse{}, 0)
+		res := SuccessResponse(pag, "No client diagnoses found")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
@@ -846,6 +870,13 @@ func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
 	clientMedications, err := server.store.ListClientMedications(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(clientMedications) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientMedicationsResponse{}, 0)
+		res := SuccessResponse(pag, "No client medications found")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
