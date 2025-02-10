@@ -4955,12 +4955,6 @@ const docTemplate = `{
         "api.CreateClientDiagnosisRequest": {
             "type": "object",
             "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "date_of_diagnosis": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -4991,9 +4985,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "date_of_diagnosis": {
                     "type": "string"
                 },
                 "description": {
@@ -6817,9 +6808,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "date_of_diagnosis": {
                     "type": "string"
                 },
                 "description": {
@@ -8818,9 +8806,6 @@ const docTemplate = `{
         "api.UpdateClientDiagnosisRequest": {
             "type": "object",
             "properties": {
-                "date_of_diagnosis": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -8851,9 +8836,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "date_of_diagnosis": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "description": {

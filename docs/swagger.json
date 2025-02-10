@@ -4948,12 +4948,6 @@
         "api.CreateClientDiagnosisRequest": {
             "type": "object",
             "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "date_of_diagnosis": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -4984,9 +4978,6 @@
                     "type": "integer"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "date_of_diagnosis": {
                     "type": "string"
                 },
                 "description": {
@@ -6810,9 +6801,6 @@
                     "type": "integer"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "date_of_diagnosis": {
                     "type": "string"
                 },
                 "description": {
@@ -8811,9 +8799,6 @@
         "api.UpdateClientDiagnosisRequest": {
             "type": "object",
             "properties": {
-                "date_of_diagnosis": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -8844,9 +8829,6 @@
                     "type": "integer"
                 },
                 "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "date_of_diagnosis": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "description": {

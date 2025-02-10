@@ -120,10 +120,9 @@ func createRandomClientDiagnosis(t *testing.T, clientID int64) ClientDiagnosis {
 		Title:               util.StringPtr("test title"),
 		DiagnosisCode:       "test code",
 		Description:         "test description",
-		DateOfDiagnosis:     pgtype.Timestamptz{Time: util.RandomTIme(), Valid: true},
 		Severity:            util.StringPtr("Mild"),
 		Status:              "Active",
-		DiagnosingClinician: "test clinician",
+		DiagnosingClinician: util.StringPtr("Dr. Test"),
 		Notes:               util.StringPtr("test note"),
 	}
 

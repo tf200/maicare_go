@@ -280,10 +280,9 @@ CREATE TABLE client_diagnosis (
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     diagnosis_code VARCHAR(10) NOT NULL,
     description TEXT NOT NULL,
-    date_of_diagnosis TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     severity VARCHAR(50) NULL,
     status VARCHAR(100) NOT NULL,
-    diagnosing_clinician VARCHAR(100) NOT NULL,
+    diagnosing_clinician VARCHAR(100) NULL,
     notes TEXT NULL,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );

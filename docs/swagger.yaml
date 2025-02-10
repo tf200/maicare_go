@@ -358,10 +358,6 @@ definitions:
     type: object
   api.CreateClientDiagnosisRequest:
     properties:
-      client_id:
-        type: integer
-      date_of_diagnosis:
-        type: string
       description:
         type: string
       diagnosing_clinician:
@@ -382,8 +378,6 @@ definitions:
       client_id:
         type: integer
       created_at:
-        type: string
-      date_of_diagnosis:
         type: string
       description:
         type: string
@@ -1606,8 +1600,6 @@ definitions:
       client_id:
         type: integer
       created_at:
-        type: string
-      date_of_diagnosis:
         type: string
       description:
         type: string
@@ -2907,8 +2899,6 @@ definitions:
     type: object
   api.UpdateClientDiagnosisRequest:
     properties:
-      date_of_diagnosis:
-        $ref: '#/definitions/pgtype.Timestamptz'
       description:
         type: string
       diagnosing_clinician:
@@ -2929,8 +2919,6 @@ definitions:
       client_id:
         type: integer
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      date_of_diagnosis:
         $ref: '#/definitions/pgtype.Timestamptz'
       description:
         type: string

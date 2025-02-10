@@ -61,26 +61,24 @@ INSERT INTO client_diagnosis (
     title,
     diagnosis_code,
     description,
-    date_of_diagnosis,
     severity,
     status,
     diagnosing_clinician,
     notes
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING id, title, client_id, diagnosis_code, description, date_of_diagnosis, severity, status, diagnosing_clinician, notes, created_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, title, client_id, diagnosis_code, description, severity, status, diagnosing_clinician, notes, created_at
 `
 
 type CreateClientDiagnosisParams struct {
-	ClientID            int64              `json:"client_id"`
-	Title               *string            `json:"title"`
-	DiagnosisCode       string             `json:"diagnosis_code"`
-	Description         string             `json:"description"`
-	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
-	Severity            *string            `json:"severity"`
-	Status              string             `json:"status"`
-	DiagnosingClinician string             `json:"diagnosing_clinician"`
-	Notes               *string            `json:"notes"`
+	ClientID            int64   `json:"client_id"`
+	Title               *string `json:"title"`
+	DiagnosisCode       string  `json:"diagnosis_code"`
+	Description         string  `json:"description"`
+	Severity            *string `json:"severity"`
+	Status              string  `json:"status"`
+	DiagnosingClinician *string `json:"diagnosing_clinician"`
+	Notes               *string `json:"notes"`
 }
 
 func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDiagnosisParams) (ClientDiagnosis, error) {
@@ -89,7 +87,6 @@ func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDia
 		arg.Title,
 		arg.DiagnosisCode,
 		arg.Description,
-		arg.DateOfDiagnosis,
 		arg.Severity,
 		arg.Status,
 		arg.DiagnosingClinician,
@@ -102,7 +99,6 @@ func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDia
 		&i.ClientID,
 		&i.DiagnosisCode,
 		&i.Description,
-		&i.DateOfDiagnosis,
 		&i.Severity,
 		&i.Status,
 		&i.DiagnosingClinician,
@@ -195,7 +191,7 @@ func (q *Queries) DeleteClientAllergy(ctx context.Context, id int64) (ClientAlle
 const deleteClientDiagnosis = `-- name: DeleteClientDiagnosis :one
 DELETE FROM client_diagnosis
 WHERE id = $1  
-RETURNING id, title, client_id, diagnosis_code, description, date_of_diagnosis, severity, status, diagnosing_clinician, notes, created_at
+RETURNING id, title, client_id, diagnosis_code, description, severity, status, diagnosing_clinician, notes, created_at
 `
 
 func (q *Queries) DeleteClientDiagnosis(ctx context.Context, id int64) (ClientDiagnosis, error) {
@@ -207,7 +203,6 @@ func (q *Queries) DeleteClientDiagnosis(ctx context.Context, id int64) (ClientDi
 		&i.ClientID,
 		&i.DiagnosisCode,
 		&i.Description,
-		&i.DateOfDiagnosis,
 		&i.Severity,
 		&i.Status,
 		&i.DiagnosingClinician,
@@ -265,7 +260,7 @@ func (q *Queries) GetClientAllergy(ctx context.Context, id int64) (ClientAllergy
 }
 
 const getClientDiagnosis = `-- name: GetClientDiagnosis :one
-SELECT id, title, client_id, diagnosis_code, description, date_of_diagnosis, severity, status, diagnosing_clinician, notes, created_at FROM client_diagnosis
+SELECT id, title, client_id, diagnosis_code, description, severity, status, diagnosing_clinician, notes, created_at FROM client_diagnosis
 WHERE id = $1 LIMIT 1
 `
 
@@ -278,7 +273,6 @@ func (q *Queries) GetClientDiagnosis(ctx context.Context, id int64) (ClientDiagn
 		&i.ClientID,
 		&i.DiagnosisCode,
 		&i.Description,
-		&i.DateOfDiagnosis,
 		&i.Severity,
 		&i.Status,
 		&i.DiagnosingClinician,
@@ -397,7 +391,7 @@ func (q *Queries) ListClientAllergies(ctx context.Context, arg ListClientAllergi
 
 const listClientDiagnoses = `-- name: ListClientDiagnoses :many
 SELECT 
-    d.id, d.title, d.client_id, d.diagnosis_code, d.description, d.date_of_diagnosis, d.severity, d.status, d.diagnosing_clinician, d.notes, d.created_at,
+    d.id, d.title, d.client_id, d.diagnosis_code, d.description, d.severity, d.status, d.diagnosing_clinician, d.notes, d.created_at,
     (SELECT COUNT(*) FROM client_diagnosis WHERE client_diagnosis.client_id = d.client_id) AS total_diagnoses
 FROM client_diagnosis d
 WHERE d.client_id = $1
@@ -416,10 +410,9 @@ type ListClientDiagnosesRow struct {
 	ClientID            int64              `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
 	Description         string             `json:"description"`
-	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
 	Severity            *string            `json:"severity"`
 	Status              string             `json:"status"`
-	DiagnosingClinician string             `json:"diagnosing_clinician"`
+	DiagnosingClinician *string            `json:"diagnosing_clinician"`
 	Notes               *string            `json:"notes"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	TotalDiagnoses      int64              `json:"total_diagnoses"`
@@ -440,7 +433,6 @@ func (q *Queries) ListClientDiagnoses(ctx context.Context, arg ListClientDiagnos
 			&i.ClientID,
 			&i.DiagnosisCode,
 			&i.Description,
-			&i.DateOfDiagnosis,
 			&i.Severity,
 			&i.Status,
 			&i.DiagnosingClinician,
@@ -578,25 +570,23 @@ SET
     title = COALESCE($2, title),
     diagnosis_code = COALESCE($3, diagnosis_code),
     description = COALESCE($4, description),
-    date_of_diagnosis = COALESCE($5, date_of_diagnosis),
-    severity = COALESCE($6, severity),
-    status = COALESCE($7, status),
-    diagnosing_clinician = COALESCE($8, diagnosing_clinician),
-    notes = COALESCE($9, notes)
+    severity = COALESCE($5, severity),
+    status = COALESCE($6, status),
+    diagnosing_clinician = COALESCE($7, diagnosing_clinician),
+    notes = COALESCE($8, notes)
 WHERE id = $1
-RETURNING id, title, client_id, diagnosis_code, description, date_of_diagnosis, severity, status, diagnosing_clinician, notes, created_at
+RETURNING id, title, client_id, diagnosis_code, description, severity, status, diagnosing_clinician, notes, created_at
 `
 
 type UpdateClientDiagnosisParams struct {
-	ID                  int64              `json:"id"`
-	Title               *string            `json:"title"`
-	DiagnosisCode       *string            `json:"diagnosis_code"`
-	Description         *string            `json:"description"`
-	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
-	Severity            *string            `json:"severity"`
-	Status              *string            `json:"status"`
-	DiagnosingClinician *string            `json:"diagnosing_clinician"`
-	Notes               *string            `json:"notes"`
+	ID                  int64   `json:"id"`
+	Title               *string `json:"title"`
+	DiagnosisCode       *string `json:"diagnosis_code"`
+	Description         *string `json:"description"`
+	Severity            *string `json:"severity"`
+	Status              *string `json:"status"`
+	DiagnosingClinician *string `json:"diagnosing_clinician"`
+	Notes               *string `json:"notes"`
 }
 
 func (q *Queries) UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error) {
@@ -605,7 +595,6 @@ func (q *Queries) UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDia
 		arg.Title,
 		arg.DiagnosisCode,
 		arg.Description,
-		arg.DateOfDiagnosis,
 		arg.Severity,
 		arg.Status,
 		arg.DiagnosingClinician,
@@ -618,7 +607,6 @@ func (q *Queries) UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDia
 		&i.ClientID,
 		&i.DiagnosisCode,
 		&i.Description,
-		&i.DateOfDiagnosis,
 		&i.Severity,
 		&i.Status,
 		&i.DiagnosingClinician,

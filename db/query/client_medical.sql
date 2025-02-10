@@ -50,13 +50,12 @@ INSERT INTO client_diagnosis (
     title,
     diagnosis_code,
     description,
-    date_of_diagnosis,
     severity,
     status,
     diagnosing_clinician,
     notes
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 
@@ -82,7 +81,6 @@ SET
     title = COALESCE(sqlc.narg('title'), title),
     diagnosis_code = COALESCE(sqlc.narg('diagnosis_code'), diagnosis_code),
     description = COALESCE(sqlc.narg('description'), description),
-    date_of_diagnosis = COALESCE(sqlc.narg('date_of_diagnosis'), date_of_diagnosis),
     severity = COALESCE(sqlc.narg('severity'), severity),
     status = COALESCE(sqlc.narg('status'), status),
     diagnosing_clinician = COALESCE(sqlc.narg('diagnosing_clinician'), diagnosing_clinician),

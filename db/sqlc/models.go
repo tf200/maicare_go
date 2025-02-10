@@ -173,10 +173,9 @@ type ClientDiagnosis struct {
 	ClientID            int64              `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
 	Description         string             `json:"description"`
-	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
 	Severity            *string            `json:"severity"`
 	Status              string             `json:"status"`
-	DiagnosingClinician string             `json:"diagnosing_clinician"`
+	DiagnosingClinician *string            `json:"diagnosing_clinician"`
 	Notes               *string            `json:"notes"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 }

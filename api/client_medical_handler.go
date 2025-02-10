@@ -371,15 +371,13 @@ func (server *Server) DeleteClientAllergyApi(ctx *gin.Context) {
 
 // CreateClientDiagnosisRequest defines the request for creating a client diagnosis
 type CreateClientDiagnosisRequest struct {
-	ClientID            int64     `json:"client_id"`
-	Title               *string   `json:"title"`
-	DiagnosisCode       string    `json:"diagnosis_code"`
-	Description         string    `json:"description"`
-	DateOfDiagnosis     time.Time `json:"date_of_diagnosis"`
-	Severity            *string   `json:"severity"`
-	Status              string    `json:"status"`
-	DiagnosingClinician string    `json:"diagnosing_clinician"`
-	Notes               *string   `json:"notes"`
+	Title               *string `json:"title"`
+	DiagnosisCode       string  `json:"diagnosis_code"`
+	Description         string  `json:"description"`
+	Severity            *string `json:"severity"`
+	Status              string  `json:"status"`
+	DiagnosingClinician *string `json:"diagnosing_clinician"`
+	Notes               *string `json:"notes"`
 }
 
 // CreateClientDiagnosisResponse defines the response for creating a client diagnosis
@@ -389,10 +387,9 @@ type CreateClientDiagnosisResponse struct {
 	ClientID            int64     `json:"client_id"`
 	DiagnosisCode       string    `json:"diagnosis_code"`
 	Description         string    `json:"description"`
-	DateOfDiagnosis     time.Time `json:"date_of_diagnosis"`
 	Severity            *string   `json:"severity"`
 	Status              string    `json:"status"`
-	DiagnosingClinician string    `json:"diagnosing_clinician"`
+	DiagnosingClinician *string   `json:"diagnosing_clinician"`
 	Notes               *string   `json:"notes"`
 	CreatedAt           time.Time `json:"created_at"`
 }
@@ -426,7 +423,6 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 		Title:               req.Title,
 		DiagnosisCode:       req.DiagnosisCode,
 		Description:         req.Description,
-		DateOfDiagnosis:     pgtype.Timestamptz{Time: req.DateOfDiagnosis, Valid: true},
 		Severity:            req.Severity,
 		Status:              req.Status,
 		DiagnosingClinician: req.DiagnosingClinician,
@@ -445,7 +441,6 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 		ClientID:            clientDiagnosis.ClientID,
 		DiagnosisCode:       clientDiagnosis.DiagnosisCode,
 		Description:         clientDiagnosis.Description,
-		DateOfDiagnosis:     clientDiagnosis.DateOfDiagnosis.Time,
 		Severity:            clientDiagnosis.Severity,
 		Status:              clientDiagnosis.Status,
 		DiagnosingClinician: clientDiagnosis.DiagnosingClinician,
@@ -468,10 +463,9 @@ type ListClientDiagnosesResponse struct {
 	ClientID            int64     `json:"client_id"`
 	DiagnosisCode       string    `json:"diagnosis_code"`
 	Description         string    `json:"description"`
-	DateOfDiagnosis     time.Time `json:"date_of_diagnosis"`
 	Severity            *string   `json:"severity"`
 	Status              string    `json:"status"`
-	DiagnosingClinician string    `json:"diagnosing_clinician"`
+	DiagnosingClinician *string   `json:"diagnosing_clinician"`
 	Notes               *string   `json:"notes"`
 	CreatedAt           time.Time `json:"created_at"`
 }
@@ -531,7 +525,6 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 			ClientID:            diagnosis.ClientID,
 			DiagnosisCode:       diagnosis.DiagnosisCode,
 			Description:         diagnosis.Description,
-			DateOfDiagnosis:     diagnosis.DateOfDiagnosis.Time,
 			Severity:            diagnosis.Severity,
 			Status:              diagnosis.Status,
 			DiagnosingClinician: diagnosis.DiagnosingClinician,
@@ -556,7 +549,7 @@ type GetClientDiagnosisResponse struct {
 	DateOfDiagnosis     time.Time `json:"date_of_diagnosis"`
 	Severity            *string   `json:"severity"`
 	Status              string    `json:"status"`
-	DiagnosingClinician string    `json:"diagnosing_clinician"`
+	DiagnosingClinician *string   `json:"diagnosing_clinician"`
 	Notes               *string   `json:"notes"`
 	CreatedAt           time.Time `json:"created_at"`
 }
@@ -591,7 +584,6 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 		ClientID:            diagnosis.ClientID,
 		DiagnosisCode:       diagnosis.DiagnosisCode,
 		Description:         diagnosis.Description,
-		DateOfDiagnosis:     diagnosis.DateOfDiagnosis.Time,
 		Severity:            diagnosis.Severity,
 		Status:              diagnosis.Status,
 		DiagnosingClinician: diagnosis.DiagnosingClinician,
@@ -604,14 +596,13 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 
 // UpdateClientDiagnosisApi updates a client diagnosis
 type UpdateClientDiagnosisRequest struct {
-	Title               *string            `json:"title"`
-	DiagnosisCode       *string            `json:"diagnosis_code"`
-	Description         *string            `json:"description"`
-	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
-	Severity            *string            `json:"severity"`
-	Status              *string            `json:"status"`
-	DiagnosingClinician *string            `json:"diagnosing_clinician"`
-	Notes               *string            `json:"notes"`
+	Title               *string `json:"title"`
+	DiagnosisCode       *string `json:"diagnosis_code"`
+	Description         *string `json:"description"`
+	Severity            *string `json:"severity"`
+	Status              *string `json:"status"`
+	DiagnosingClinician *string `json:"diagnosing_clinician"`
+	Notes               *string `json:"notes"`
 }
 
 // UpdateClientDiagnosisApi updates a client diagnosis
@@ -621,10 +612,9 @@ type UpdateClientDiagnosisResponse struct {
 	ClientID            int64              `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
 	Description         string             `json:"description"`
-	DateOfDiagnosis     pgtype.Timestamptz `json:"date_of_diagnosis"`
 	Severity            *string            `json:"severity"`
 	Status              string             `json:"status"`
-	DiagnosingClinician string             `json:"diagnosing_clinician"`
+	DiagnosingClinician *string            `json:"diagnosing_clinician"`
 	Notes               *string            `json:"notes"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 }
@@ -659,7 +649,6 @@ func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
 		Title:               req.Title,
 		DiagnosisCode:       req.DiagnosisCode,
 		Description:         req.Description,
-		DateOfDiagnosis:     req.DateOfDiagnosis,
 		Severity:            req.Severity,
 		Status:              req.Status,
 		DiagnosingClinician: req.DiagnosingClinician,
@@ -678,7 +667,6 @@ func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
 		ClientID:            diagnosis.ClientID,
 		DiagnosisCode:       diagnosis.DiagnosisCode,
 		Description:         diagnosis.Description,
-		DateOfDiagnosis:     diagnosis.DateOfDiagnosis,
 		Severity:            diagnosis.Severity,
 		Status:              diagnosis.Status,
 		DiagnosingClinician: diagnosis.DiagnosingClinician,

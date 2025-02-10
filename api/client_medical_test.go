@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/stretchr/testify/require"
 )
@@ -296,10 +295,9 @@ func createRandomClientDiagnosis(t *testing.T, clientID int64) db.ClientDiagnosi
 		Title:               util.StringPtr("test title"),
 		DiagnosisCode:       "test code",
 		Description:         "test description",
-		DateOfDiagnosis:     pgtype.Timestamptz{Time: util.RandomTIme(), Valid: true},
 		Severity:            util.StringPtr("Mild"),
 		Status:              "Active",
-		DiagnosingClinician: "test clinician",
+		DiagnosingClinician: util.StringPtr("test clinician"),
 		Notes:               util.StringPtr("test note"),
 	}
 
@@ -330,10 +328,9 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 					Title:               util.StringPtr("test title"),
 					DiagnosisCode:       "test code",
 					Description:         "test description",
-					DateOfDiagnosis:     util.RandomTIme(),
 					Severity:            util.StringPtr("Mild"),
 					Status:              "Active",
-					DiagnosingClinician: "test clinician",
+					DiagnosingClinician: util.StringPtr("test clinician"),
 					Notes:               util.StringPtr("test note"),
 				}
 				reqBody, err := json.Marshal(diagnosisReq)
@@ -359,7 +356,8 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 				require.NotNil(t, diagnosisResp.Data.Severity)
 				require.Equal(t, *diagnosisResp.Data.Severity, "Mild")
 				require.Equal(t, diagnosisResp.Data.Status, "Active")
-				require.Equal(t, diagnosisResp.Data.DiagnosingClinician, "test clinician")
+				require.NotNil(t, diagnosisResp.Data.DiagnosingClinician)
+				require.Equal(t, *diagnosisResp.Data.DiagnosingClinician, "test clinician")
 				require.NotNil(t, diagnosisResp.Data.Notes)
 				require.Equal(t, *diagnosisResp.Data.Notes, "test note")
 			},
@@ -461,7 +459,8 @@ func TestGetClientDiagnosisApi(t *testing.T) {
 				require.NotNil(t, diagnosisResp.Data.Severity)
 				require.Equal(t, *diagnosisResp.Data.Severity, "Mild")
 				require.Equal(t, diagnosisResp.Data.Status, "Active")
-				require.Equal(t, diagnosisResp.Data.DiagnosingClinician, "test clinician")
+				require.NotNil(t, diagnosisResp.Data.DiagnosingClinician)
+				require.Equal(t, *diagnosisResp.Data.DiagnosingClinician, "test clinician")
 				require.NotNil(t, diagnosisResp.Data.Notes)
 				require.Equal(t, *diagnosisResp.Data.Notes, "test note")
 			},
@@ -500,7 +499,6 @@ func TestUpdateClientDiagnosisApi(t *testing.T) {
 					Title:               util.StringPtr("test title updated"),
 					DiagnosisCode:       util.StringPtr("15235"),
 					Description:         util.StringPtr("test description updated"),
-					DateOfDiagnosis:     pgtype.Timestamptz{Time: util.RandomTIme(), Valid: true},
 					Severity:            util.StringPtr("Severe"),
 					Status:              util.StringPtr("Inactive"),
 					DiagnosingClinician: util.StringPtr("test clinician updated"),
@@ -529,7 +527,6 @@ func TestUpdateClientDiagnosisApi(t *testing.T) {
 				require.NotNil(t, diagnosisResp.Data.Severity)
 				require.Equal(t, *diagnosisResp.Data.Severity, "Severe")
 				require.Equal(t, diagnosisResp.Data.Status, "Inactive")
-				require.Equal(t, diagnosisResp.Data.DiagnosingClinician, "test clinician updated")
 				require.NotNil(t, diagnosisResp.Data.Notes)
 				require.Equal(t, *diagnosisResp.Data.Notes, "test note updated")
 			},
