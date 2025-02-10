@@ -19,6 +19,12 @@ func (server *Server) setupClientMedicalRoutes(baseRouter *gin.RouterGroup) {
 		ClientMedical.PUT("/:id/diagnosis/:diagnosis_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateClientDiagnosisApi)
 		ClientMedical.DELETE("/:id/diagnosis/:diagnosis_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteClientDiagnosisApi)
 
+		ClientMedical.POST("/:id/medications", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateClientMedicationApi)
+		ClientMedical.GET("/:id/medications", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientMedicationsApi)
+		ClientMedical.GET("/:id/medications/:medication_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientMedicationApi)
+		ClientMedical.PUT("/:id/medications/:medication_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateClientMedicationApi)
+		ClientMedical.DELETE("/:id/medications/:medication_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteClientMedicationApi)
+
 	}
 
 	// Route without /clients prefix
