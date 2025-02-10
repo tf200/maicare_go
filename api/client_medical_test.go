@@ -25,11 +25,11 @@ import (
 func createRandomClientAllergy(t *testing.T, clientID int64) db.ClientAllergy {
 
 	arg := db.CreateClientAllergyParams{
-		ClientID:      clientID,
-		AllergyTypeID: 1,
-		Severity:      "Mild",
-		Reaction:      "test reaction",
-		Notes:         util.StringPtr("test note"),
+		ClientID:    clientID,
+		AllergyType: "Insect",
+		Severity:    "Mild",
+		Reaction:    "test reaction",
+		Notes:       util.StringPtr("test note"),
 	}
 
 	allergy, err := testStore.CreateClientAllergy(context.Background(), arg)
@@ -55,10 +55,10 @@ func TestCreateClientAllergyApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				allergyReq := CreateClientAllergyRequest{
-					AllergyTypeID: 1,
-					Severity:      "Mild",
-					Reaction:      "test reaction",
-					Notes:         util.StringPtr("test note"),
+					AllergyType: "Insect",
+					Severity:    "Mild",
+					Reaction:    "test reaction",
+					Notes:       util.StringPtr("test note"),
 				}
 				reqBody, err := json.Marshal(allergyReq)
 				require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestCreateClientAllergyApi(t *testing.T) {
 				require.NoError(t, err)
 				require.NotEmpty(t, allergyResp.Data.ID)
 				require.Equal(t, allergyResp.Data.ClientID, client.ID)
-				require.Equal(t, allergyResp.Data.AllergyTypeID, int64(1))
+				require.Equal(t, allergyResp.Data.AllergyType, "Insect")
 				require.Equal(t, allergyResp.Data.Severity, "Mild")
 				require.Equal(t, allergyResp.Data.Reaction, "test reaction")
 				require.Equal(t, *allergyResp.Data.Notes, "test note")
@@ -170,7 +170,7 @@ func TestGetClientAllergyApi(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, allergyResp.Data.ID, allergy.ID)
 				require.Equal(t, allergyResp.Data.ClientID, client.ID)
-				require.Equal(t, allergyResp.Data.AllergyTypeID, int64(1))
+				require.Equal(t, allergyResp.Data.AllergyType, "Insect")
 				require.Equal(t, allergyResp.Data.Severity, "Mild")
 				require.Equal(t, allergyResp.Data.Reaction, "test reaction")
 				require.NotNil(t, allergyResp.Data.Notes)
@@ -208,10 +208,10 @@ func TestUpdateClientAllergyyApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				allergyReq := UpdateClientAllergyRequest{
-					AllergyTypeID: util.IntPtr(2),
-					Severity:      util.StringPtr("Severe"),
-					Reaction:      util.StringPtr("test reaction updated"),
-					Notes:         util.StringPtr("test note updated"),
+					AllergyType: util.StringPtr("Latex"),
+					Severity:    util.StringPtr("Severe"),
+					Reaction:    util.StringPtr("test reaction updated"),
+					Notes:       util.StringPtr("test note updated"),
 				}
 				reqBody, err := json.Marshal(allergyReq)
 				require.NoError(t, err)
@@ -228,7 +228,7 @@ func TestUpdateClientAllergyyApi(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, allergyResp.Data.ID, allergy.ID)
 				require.Equal(t, allergyResp.Data.ClientID, client.ID)
-				require.Equal(t, allergyResp.Data.AllergyTypeID, int64(2))
+				require.Equal(t, allergyResp.Data.AllergyType, "Latex")
 				require.Equal(t, allergyResp.Data.Severity, "Severe")
 				require.Equal(t, allergyResp.Data.Reaction, "test reaction updated")
 				require.NotNil(t, allergyResp.Data.Notes)

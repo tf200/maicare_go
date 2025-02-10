@@ -57,51 +57,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/allergy_types": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "List all allergy types",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListAllergyTypesResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/attachments/upload": {
             "post": {
                 "description": "Upload a file to the server",
@@ -4744,7 +4699,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "allergy_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "notes": {
                     "type": "string"
@@ -4761,7 +4716,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "allergy_type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_id": {
                     "type": "integer"
@@ -6069,7 +6024,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "allergy_type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_id": {
                     "type": "integer"
@@ -6735,17 +6690,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ListAllergyTypesResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "api.ListAssignedEmployeesResponse": {
             "type": "object",
             "properties": {
@@ -6777,9 +6721,6 @@ const docTemplate = `{
             "properties": {
                 "allergy_type": {
                     "type": "string"
-                },
-                "allergy_type_id": {
-                    "type": "integer"
                 },
                 "client_id": {
                     "type": "integer"
@@ -8151,20 +8092,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_ListAllergyTypesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListAllergyTypesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_ListClientEmergencyContactsResponse": {
             "type": "object",
             "properties": {
@@ -8764,7 +8691,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "allergy_type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "notes": {
                     "type": "string"
@@ -8781,7 +8708,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "allergy_type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_id": {
                     "type": "integer"

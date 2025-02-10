@@ -11,81 +11,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// ListAllergyTypesRequest defines the request for listing allergy types
-type ListAllergyTypesRequest struct {
-	pagination.Request
-	Search *string `form:"search"`
-}
-
-// ListAllergyTypesResponse defines the response for listing allergy types
-type ListAllergyTypesResponse struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-// ListAllergyTypesApi lists all allergy types
-// @Summary List all allergy types
-// @Tags client_Medical
-// @Param page query int false "Page number"
-// @Param page_size query int false "Page size"
-// @Produce json
-// @Success 200 {object} Response[ListAllergyTypesResponse]
-// @Failure 400,404 {object} Response[any]
-// @Router /allergy_types [get]
-func (server *Server) ListAllergyTypesApi(ctx *gin.Context) {
-	var req ListAllergyTypesRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	params := req.GetParams()
-	arg := db.ListAllergiesParams{
-		Limit:  params.Limit,
-		Offset: params.Offset,
-		Search: req.Search,
-	}
-	allergyTypes, err := server.store.ListAllergies(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if len(allergyTypes) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListAllergyTypesResponse{}, 0)
-		res := SuccessResponse(pag, "No allergy types found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	allergyTypesResponse := make([]ListAllergyTypesResponse, len(allergyTypes))
-	for i, allergy := range allergyTypesResponse {
-		allergyTypesResponse[i] = ListAllergyTypesResponse{
-			ID:   allergy.ID,
-			Name: allergy.Name,
-		}
-	}
-
-	res := SuccessResponse(allergyTypesResponse, "Allergy types fetched successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
 // CreateClientAllergyRequest defines the request for creating a client allergy
 type CreateClientAllergyRequest struct {
-	AllergyTypeID int64   `json:"allergy_id" binding:"required"`
-	Severity      string  `json:"severity" binding:"required"`
-	Reaction      string  `json:"reaction" binding:"required"`
-	Notes         *string `json:"notes"`
+	AllergyType string  `json:"allergy_id" binding:"required"`
+	Severity    string  `json:"severity" binding:"required"`
+	Reaction    string  `json:"reaction" binding:"required"`
+	Notes       *string `json:"notes"`
 }
 
 // CreateClientAllergyResponse defines the response for creating a client allergy
 type CreateClientAllergyResponse struct {
-	ID            int64     `json:"id"`
-	ClientID      int64     `json:"client_id"`
-	AllergyTypeID int64     `json:"allergy_type_id"`
-	Severity      string    `json:"severity"`
-	Reaction      string    `json:"reaction"`
-	Notes         *string   `json:"notes"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	ClientID    int64     `json:"client_id"`
+	AllergyType string    `json:"allergy_type_id"`
+	Severity    string    `json:"severity"`
+	Reaction    string    `json:"reaction"`
+	Notes       *string   `json:"notes"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // CreateClientAllergyApi creates a client allergy
@@ -112,11 +54,11 @@ func (server *Server) CreateClientAllergyApi(ctx *gin.Context) {
 		return
 	}
 	arg := db.CreateClientAllergyParams{
-		ClientID:      clientID,
-		AllergyTypeID: req.AllergyTypeID,
-		Severity:      req.Severity,
-		Reaction:      req.Reaction,
-		Notes:         req.Notes,
+		ClientID:    clientID,
+		AllergyType: req.AllergyType,
+		Severity:    req.Severity,
+		Reaction:    req.Reaction,
+		Notes:       req.Notes,
 	}
 	clientAllergy, err := server.store.CreateClientAllergy(ctx, arg)
 	if err != nil {
@@ -125,13 +67,13 @@ func (server *Server) CreateClientAllergyApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(CreateClientAllergyResponse{
-		ID:            clientAllergy.ID,
-		ClientID:      clientAllergy.ClientID,
-		AllergyTypeID: clientAllergy.AllergyTypeID,
-		Severity:      clientAllergy.Severity,
-		Reaction:      clientAllergy.Reaction,
-		Notes:         clientAllergy.Notes,
-		CreatedAt:     clientAllergy.CreatedAt.Time,
+		ID:          clientAllergy.ID,
+		ClientID:    clientAllergy.ClientID,
+		AllergyType: clientAllergy.AllergyType,
+		Severity:    clientAllergy.Severity,
+		Reaction:    clientAllergy.Reaction,
+		Notes:       clientAllergy.Notes,
+		CreatedAt:   clientAllergy.CreatedAt.Time,
 	}, "Client allergy created successfully")
 	ctx.JSON(http.StatusCreated, res)
 }
@@ -143,14 +85,13 @@ type ListClientAllergiesRequest struct {
 
 // ListClientAllergiesResponse defines the response for listing client allergies
 type ListClientAllergiesResponse struct {
-	ID            int64     `json:"id"`
-	ClientID      int64     `json:"client_id"`
-	AllergyTypeID int64     `json:"allergy_type_id"`
-	Severity      string    `json:"severity"`
-	Reaction      string    `json:"reaction"`
-	Notes         *string   `json:"notes"`
-	CreatedAt     time.Time `json:"created_at"`
-	AllergyType   string    `json:"allergy_type"`
+	ID          int64     `json:"id"`
+	ClientID    int64     `json:"client_id"`
+	Severity    string    `json:"severity"`
+	Reaction    string    `json:"reaction"`
+	Notes       *string   `json:"notes"`
+	CreatedAt   time.Time `json:"created_at"`
+	AllergyType string    `json:"allergy_type"`
 }
 
 // ListClientAllergiesApi lists all client allergies
@@ -200,14 +141,13 @@ func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
 	allergies := make([]ListClientAllergiesResponse, len(clientAllergies))
 	for i, allergy := range clientAllergies {
 		allergies[i] = ListClientAllergiesResponse{
-			ID:            allergy.ID,
-			ClientID:      allergy.ClientID,
-			AllergyTypeID: allergy.AllergyTypeID,
-			Severity:      allergy.Severity,
-			Reaction:      allergy.Reaction,
-			Notes:         allergy.Notes,
-			CreatedAt:     allergy.CreatedAt.Time,
-			AllergyType:   allergy.AllergyType,
+			ID:          allergy.ID,
+			ClientID:    allergy.ClientID,
+			AllergyType: allergy.AllergyType,
+			Severity:    allergy.Severity,
+			Reaction:    allergy.Reaction,
+			Notes:       allergy.Notes,
+			CreatedAt:   allergy.CreatedAt.Time,
 		}
 	}
 
@@ -219,13 +159,13 @@ func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
 
 // GetClientAllergyResponse defines the request for geting a client allergy
 type GetClientAllergyResponse struct {
-	ID            int64     `json:"id"`
-	ClientID      int64     `json:"client_id"`
-	AllergyTypeID int64     `json:"allergy_type_id"`
-	Severity      string    `json:"severity"`
-	Reaction      string    `json:"reaction"`
-	Notes         *string   `json:"notes"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	ClientID    int64     `json:"client_id"`
+	AllergyType string    `json:"allergy_type_id"`
+	Severity    string    `json:"severity"`
+	Reaction    string    `json:"reaction"`
+	Notes       *string   `json:"notes"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // GetClientAllergyApi gets a client allergy
@@ -252,13 +192,13 @@ func (server *Server) GetClientAllergyApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(GetClientAllergyResponse{
-		ID:            allergy.ID,
-		ClientID:      allergy.ClientID,
-		AllergyTypeID: allergy.AllergyTypeID,
-		Severity:      allergy.Severity,
-		Reaction:      allergy.Reaction,
-		Notes:         allergy.Notes,
-		CreatedAt:     allergy.CreatedAt.Time,
+		ID:          allergy.ID,
+		ClientID:    allergy.ClientID,
+		AllergyType: allergy.AllergyType,
+		Severity:    allergy.Severity,
+		Reaction:    allergy.Reaction,
+		Notes:       allergy.Notes,
+		CreatedAt:   allergy.CreatedAt.Time,
 	}, "Client allergy fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 
@@ -266,21 +206,21 @@ func (server *Server) GetClientAllergyApi(ctx *gin.Context) {
 
 // UpdateClientAllergyRequest defines the request for updating a client allergy
 type UpdateClientAllergyRequest struct {
-	AllergyTypeID *int64  `json:"allergy_type_id"`
-	Severity      *string `json:"severity"`
-	Reaction      *string `json:"reaction"`
-	Notes         *string `json:"notes"`
+	AllergyType *string `json:"allergy_type_id"`
+	Severity    *string `json:"severity"`
+	Reaction    *string `json:"reaction"`
+	Notes       *string `json:"notes"`
 }
 
 // UpdateClientAllergyResponse defines the response for updating a client allergy
 type UpdateClientAllergyResponse struct {
-	ID            int64     `json:"id"`
-	ClientID      int64     `json:"client_id"`
-	AllergyTypeID int64     `json:"allergy_type_id"`
-	Severity      string    `json:"severity"`
-	Reaction      string    `json:"reaction"`
-	Notes         *string   `json:"notes"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	ClientID    int64     `json:"client_id"`
+	AllergyType string    `json:"allergy_type_id"`
+	Severity    string    `json:"severity"`
+	Reaction    string    `json:"reaction"`
+	Notes       *string   `json:"notes"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // UpdateClientAllergyApi updates a client allergy
@@ -309,11 +249,11 @@ func (server *Server) UpdateClientAllergyApi(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateClientAllergyParams{
-		ID:            allergyID,
-		AllergyTypeID: req.AllergyTypeID,
-		Severity:      req.Severity,
-		Reaction:      req.Reaction,
-		Notes:         req.Notes,
+		ID:          allergyID,
+		AllergyType: req.AllergyType,
+		Severity:    req.Severity,
+		Reaction:    req.Reaction,
+		Notes:       req.Notes,
 	}
 
 	allergy, err := server.store.UpdateClientAllergy(ctx, arg)
@@ -323,13 +263,13 @@ func (server *Server) UpdateClientAllergyApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(UpdateClientAllergyResponse{
-		ID:            allergy.ID,
-		ClientID:      allergy.ClientID,
-		AllergyTypeID: allergy.AllergyTypeID,
-		Severity:      allergy.Severity,
-		Reaction:      allergy.Reaction,
-		Notes:         allergy.Notes,
-		CreatedAt:     allergy.CreatedAt.Time,
+		ID:          allergy.ID,
+		ClientID:    allergy.ClientID,
+		AllergyType: allergy.AllergyType,
+		Severity:    allergy.Severity,
+		Reaction:    allergy.Reaction,
+		Notes:       allergy.Notes,
+		CreatedAt:   allergy.CreatedAt.Time,
 	}, "Client allergy updated successfully")
 
 	ctx.JSON(http.StatusOK, res)

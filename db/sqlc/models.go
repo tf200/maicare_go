@@ -29,11 +29,6 @@ type AiGeneratedWeeklyReport struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
-type AllergyType struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
 type Assessment struct {
 	ID       int64              `json:"id"`
 	Content  *string            `json:"content"`
@@ -118,13 +113,13 @@ type ClientAgreement struct {
 }
 
 type ClientAllergy struct {
-	ID            int64              `json:"id"`
-	ClientID      int64              `json:"client_id"`
-	AllergyTypeID int64              `json:"allergy_type_id"`
-	Severity      string             `json:"severity"`
-	Reaction      string             `json:"reaction"`
-	Notes         *string            `json:"notes"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ID          int64              `json:"id"`
+	ClientID    int64              `json:"client_id"`
+	AllergyType string             `json:"allergy_type"`
+	Severity    string             `json:"severity"`
+	Reaction    string             `json:"reaction"`
+	Notes       *string            `json:"notes"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type ClientCurrentLevel struct {

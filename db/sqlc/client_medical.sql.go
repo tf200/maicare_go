@@ -14,29 +14,29 @@ import (
 const createClientAllergy = `-- name: CreateClientAllergy :one
 INSERT INTO client_allergy (
     client_id,
-    allergy_type_id,
+    allergy_type,
     severity,
     reaction,
     notes,
     created_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6
-) RETURNING id, client_id, allergy_type_id, severity, reaction, notes, created_at
+) RETURNING id, client_id, allergy_type, severity, reaction, notes, created_at
 `
 
 type CreateClientAllergyParams struct {
-	ClientID      int64              `json:"client_id"`
-	AllergyTypeID int64              `json:"allergy_type_id"`
-	Severity      string             `json:"severity"`
-	Reaction      string             `json:"reaction"`
-	Notes         *string            `json:"notes"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ClientID    int64              `json:"client_id"`
+	AllergyType string             `json:"allergy_type"`
+	Severity    string             `json:"severity"`
+	Reaction    string             `json:"reaction"`
+	Notes       *string            `json:"notes"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) CreateClientAllergy(ctx context.Context, arg CreateClientAllergyParams) (ClientAllergy, error) {
 	row := q.db.QueryRow(ctx, createClientAllergy,
 		arg.ClientID,
-		arg.AllergyTypeID,
+		arg.AllergyType,
 		arg.Severity,
 		arg.Reaction,
 		arg.Notes,
@@ -46,7 +46,7 @@ func (q *Queries) CreateClientAllergy(ctx context.Context, arg CreateClientAller
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
-		&i.AllergyTypeID,
+		&i.AllergyType,
 		&i.Severity,
 		&i.Reaction,
 		&i.Notes,
@@ -170,7 +170,7 @@ func (q *Queries) CreateClientMedication(ctx context.Context, arg CreateClientMe
 const deleteClientAllergy = `-- name: DeleteClientAllergy :one
 DELETE FROM client_allergy
 WHERE id = $1
-RETURNING id, client_id, allergy_type_id, severity, reaction, notes, created_at
+RETURNING id, client_id, allergy_type, severity, reaction, notes, created_at
 `
 
 func (q *Queries) DeleteClientAllergy(ctx context.Context, id int64) (ClientAllergy, error) {
@@ -179,7 +179,7 @@ func (q *Queries) DeleteClientAllergy(ctx context.Context, id int64) (ClientAlle
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
-		&i.AllergyTypeID,
+		&i.AllergyType,
 		&i.Severity,
 		&i.Reaction,
 		&i.Notes,
@@ -240,7 +240,7 @@ func (q *Queries) DeleteClientMedication(ctx context.Context, id int64) (ClientM
 }
 
 const getClientAllergy = `-- name: GetClientAllergy :one
-SELECT id, client_id, allergy_type_id, severity, reaction, notes, created_at FROM client_allergy
+SELECT id, client_id, allergy_type, severity, reaction, notes, created_at FROM client_allergy
 WHERE id = $1 LIMIT 1
 `
 
@@ -250,7 +250,7 @@ func (q *Queries) GetClientAllergy(ctx context.Context, id int64) (ClientAllergy
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
-		&i.AllergyTypeID,
+		&i.AllergyType,
 		&i.Severity,
 		&i.Reaction,
 		&i.Notes,
@@ -332,11 +332,9 @@ func (q *Queries) GetClientMedication(ctx context.Context, id int64) (GetClientM
 
 const listClientAllergies = `-- name: ListClientAllergies :many
 SELECT 
-    al.id, al.client_id, al.allergy_type_id, al.severity, al.reaction, al.notes, al.created_at,
-    ty.name AS allergy_type,
+    al.id, al.client_id, al.allergy_type, al.severity, al.reaction, al.notes, al.created_at,
     (SELECT COUNT(*) FROM client_allergy WHERE client_allergy.client_id = al.client_id) AS total_allergies
 FROM client_allergy al
-JOIN allergy_type ty ON al.allergy_type_id = ty.id
 WHERE al.client_id = $1
 LIMIT $2 OFFSET $3
 `
@@ -350,12 +348,11 @@ type ListClientAllergiesParams struct {
 type ListClientAllergiesRow struct {
 	ID             int64              `json:"id"`
 	ClientID       int64              `json:"client_id"`
-	AllergyTypeID  int64              `json:"allergy_type_id"`
+	AllergyType    string             `json:"allergy_type"`
 	Severity       string             `json:"severity"`
 	Reaction       string             `json:"reaction"`
 	Notes          *string            `json:"notes"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	AllergyType    string             `json:"allergy_type"`
 	TotalAllergies int64              `json:"total_allergies"`
 }
 
@@ -371,12 +368,11 @@ func (q *Queries) ListClientAllergies(ctx context.Context, arg ListClientAllergi
 		if err := rows.Scan(
 			&i.ID,
 			&i.ClientID,
-			&i.AllergyTypeID,
+			&i.AllergyType,
 			&i.Severity,
 			&i.Reaction,
 			&i.Notes,
 			&i.CreatedAt,
-			&i.AllergyType,
 			&i.TotalAllergies,
 		); err != nil {
 			return nil, err
@@ -527,26 +523,26 @@ func (q *Queries) ListClientMedications(ctx context.Context, arg ListClientMedic
 const updateClientAllergy = `-- name: UpdateClientAllergy :one
 UPDATE client_allergy
 SET
-    allergy_type_id = COALESCE($2, allergy_type_id),
+    allergy_type = COALESCE($2, allergy_type),
     severity = COALESCE($3, severity),
     reaction = COALESCE($4, reaction),
     notes = COALESCE($5, notes)
 WHERE id = $1
-RETURNING id, client_id, allergy_type_id, severity, reaction, notes, created_at
+RETURNING id, client_id, allergy_type, severity, reaction, notes, created_at
 `
 
 type UpdateClientAllergyParams struct {
-	ID            int64   `json:"id"`
-	AllergyTypeID *int64  `json:"allergy_type_id"`
-	Severity      *string `json:"severity"`
-	Reaction      *string `json:"reaction"`
-	Notes         *string `json:"notes"`
+	ID          int64   `json:"id"`
+	AllergyType *string `json:"allergy_type"`
+	Severity    *string `json:"severity"`
+	Reaction    *string `json:"reaction"`
+	Notes       *string `json:"notes"`
 }
 
 func (q *Queries) UpdateClientAllergy(ctx context.Context, arg UpdateClientAllergyParams) (ClientAllergy, error) {
 	row := q.db.QueryRow(ctx, updateClientAllergy,
 		arg.ID,
-		arg.AllergyTypeID,
+		arg.AllergyType,
 		arg.Severity,
 		arg.Reaction,
 		arg.Notes,
@@ -555,7 +551,7 @@ func (q *Queries) UpdateClientAllergy(ctx context.Context, arg UpdateClientAller
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
-		&i.AllergyTypeID,
+		&i.AllergyType,
 		&i.Severity,
 		&i.Reaction,
 		&i.Notes,

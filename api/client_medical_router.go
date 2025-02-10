@@ -26,7 +26,4 @@ func (server *Server) setupClientMedicalRoutes(baseRouter *gin.RouterGroup) {
 		ClientMedical.DELETE("/:id/medications/:medication_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteClientMedicationApi)
 
 	}
-
-	// Route without /clients prefix
-	baseRouter.GET("/allergy_types", AuthMiddleware(server.tokenMaker), server.ListAllergyTypesApi)
 }

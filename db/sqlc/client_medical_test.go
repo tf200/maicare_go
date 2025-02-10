@@ -12,11 +12,11 @@ import (
 func createRandomClientAllergy(t *testing.T, clientID int64) ClientAllergy {
 
 	arg := CreateClientAllergyParams{
-		ClientID:      clientID,
-		AllergyTypeID: 1,
-		Severity:      "Mild",
-		Reaction:      "test reaction",
-		Notes:         util.StringPtr("test note"),
+		ClientID:    clientID,
+		AllergyType: "Insect",
+		Severity:    "Mild",
+		Reaction:    "test reaction",
+		Notes:       util.StringPtr("test note"),
 	}
 
 	allergy, err := testQueries.CreateClientAllergy(context.Background(), arg)

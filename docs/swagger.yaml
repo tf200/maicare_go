@@ -211,7 +211,7 @@ definitions:
   api.CreateClientAllergyRequest:
     properties:
       allergy_id:
-        type: integer
+        type: string
       notes:
         type: string
       reaction:
@@ -226,7 +226,7 @@ definitions:
   api.CreateClientAllergyResponse:
     properties:
       allergy_type_id:
-        type: integer
+        type: string
       client_id:
         type: integer
       created_at:
@@ -1113,7 +1113,7 @@ definitions:
   api.GetClientAllergyResponse:
     properties:
       allergy_type_id:
-        type: integer
+        type: string
       client_id:
         type: integer
       created_at:
@@ -1552,13 +1552,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.ListAllergyTypesResponse:
-    properties:
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
   api.ListAssignedEmployeesResponse:
     properties:
       client_id:
@@ -1580,8 +1573,6 @@ definitions:
     properties:
       allergy_type:
         type: string
-      allergy_type_id:
-        type: integer
       client_id:
         type: integer
       created_at:
@@ -2477,15 +2468,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ListAllergyTypesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListAllergyTypesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_ListClientEmergencyContactsResponse:
     properties:
       data:
@@ -2872,7 +2854,7 @@ definitions:
   api.UpdateClientAllergyRequest:
     properties:
       allergy_type_id:
-        type: integer
+        type: string
       notes:
         type: string
       reaction:
@@ -2883,7 +2865,7 @@ definitions:
   api.UpdateClientAllergyResponse:
     properties:
       allergy_type_id:
-        type: integer
+        type: string
       client_id:
         type: integer
       created_at:
@@ -3724,35 +3706,6 @@ paths:
       summary: Check spelling of a text
       tags:
       - ai
-  /allergy_types:
-    get:
-      parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_ListAllergyTypesResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List all allergy types
-      tags:
-      - client_Medical
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
