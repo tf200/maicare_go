@@ -160,3 +160,17 @@ func TestUpdateAssignEmployee(t *testing.T) {
 	require.Equal(t, assign1.ID, assign2.ID)
 	require.NotEqual(t, assign1.Role, assign2.Role)
 }
+
+func TestGetClientRelatedEmails(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	_ = assignRandomEmployee(t, client.ID, employee.ID)
+	emergencyContact := createRandomEmergencyContact(t, client.ID)
+
+	emails, err := testQueries.GetClientRelatedEmails(context.Background(), client.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, emails)
+	require.Contains(t, emails, employee.Email)
+	require.NotNil(t, emergencyContact.Email)
+	require.Contains(t, emails, *emergencyContact.Email)
+}

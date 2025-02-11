@@ -18,6 +18,8 @@ func (server *Server) setupClientNetworkRoutes(baseRouter *gin.RouterGroup) {
 		ClientNetwork.GET("/:id/involved_employees/:assign_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetAssignedEmployeeApi)
 		ClientNetwork.PUT("/:id/involved_employees/:assign_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateAssignedEmployeeApi)
 		ClientNetwork.DELETE("/:id/involved_employees/:assign_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteAssignedEmployeeApi)
+
+		ClientNetwork.GET("/:id/related_emails", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientRelatedEmailsApi)
 	}
 
 }

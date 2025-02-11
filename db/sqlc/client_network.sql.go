@@ -199,6 +199,43 @@ func (q *Queries) GetAssignedEmployee(ctx context.Context, id int64) (GetAssigne
 	return i, err
 }
 
+const getClientRelatedEmails = `-- name: GetClientRelatedEmails :many
+WITH employee_emails AS (
+    SELECT ed.email AS employee_email
+    FROM assigned_employee ae
+    JOIN employee_profile ed ON ae.employee_id = ed.id
+    WHERE ae.client_id = $1
+),
+emergency_contact_emails AS (
+    SELECT cec.email AS contact_email
+    FROM client_emergency_contact cec
+    WHERE cec.client_id = $1
+)
+SELECT employee_email FROM employee_emails
+UNION
+SELECT contact_email FROM emergency_contact_emails
+`
+
+func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID int64) ([]string, error) {
+	rows, err := q.db.Query(ctx, getClientRelatedEmails, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var employee_email string
+		if err := rows.Scan(&employee_email); err != nil {
+			return nil, err
+		}
+		items = append(items, employee_email)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEmergencyContact = `-- name: GetEmergencyContact :one
 SELECT id, client_id, first_name, last_name, email, phone_number, address, relationship, relation_status, created_at, is_verified, medical_reports, incidents_reports, goals_reports FROM client_emergency_contact
 WHERE id = $1 LIMIT 1

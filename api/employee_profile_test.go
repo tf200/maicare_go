@@ -763,3 +763,52 @@ func TestAddEmployeeCertificationApi(t *testing.T) {
 		})
 	}
 }
+
+func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomEmployee(t)
+	}
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := "/employees/emails?search=John"
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body)
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var response Response[[]SearchEmployeesByNameOrEmailResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+
+}

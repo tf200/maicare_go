@@ -619,3 +619,15 @@ func TestDeleteEmployeeCertification(t *testing.T) {
 	require.Equal(t, certifcation.ID, deletedCert.ID)
 
 }
+
+func TestSearchEmployeesByNameOrEmail(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomEmployee(t)
+	}
+	search := "a"
+	searchedEmployees, err := testQueries.SearchEmployeesByNameOrEmail(context.Background(), &search)
+	require.NoError(t, err)
+	require.NotEmpty(t, searchedEmployees)
+	require.Len(t, searchedEmployees, 10)
+
+}

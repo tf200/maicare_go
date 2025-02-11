@@ -58,6 +58,7 @@ type CreateIncidentRequest struct {
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
+	Emails                  []string  `json:"emails"`
 }
 
 // CreateIncidentResponse represents a response for CreateIncidentApi
@@ -780,6 +781,7 @@ type UpdateIncidentResponse struct {
 	UpdatedAt               time.Time `json:"updated"`
 	CreatedAt               time.Time `json:"created"`
 	IsConfirmed             bool      `json:"is_confirmed"`
+	Emails                  []string  `json:"emails"`
 }
 
 // UpdateIncidentApi updates an incident

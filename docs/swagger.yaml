@@ -601,6 +601,10 @@ definitions:
         items:
           type: string
         type: array
+      emails:
+        items:
+          type: string
+        type: array
       employee_absenteeism:
         type: string
       employee_id:
@@ -1272,6 +1276,13 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  api.GetClientRelatedEmailsResponse:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
     type: object
   api.GetEmployeeProfileByIDApiResponse:
     properties:
@@ -2396,6 +2407,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetClientRelatedEmailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientRelatedEmailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetEmployeeProfileByIDApiResponse:
     properties:
       data:
@@ -2705,6 +2725,17 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_SearchEmployeesByNameOrEmailResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.SearchEmployeesByNameOrEmailResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_ListAssignedEmployeesResponse:
     properties:
       data:
@@ -2794,6 +2825,17 @@ definitions:
         type: string
       success:
         type: boolean
+    type: object
+  api.SearchEmployeesByNameOrEmailResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
     type: object
   api.SetClientProfilePictureRequest:
     properties:
@@ -3263,6 +3305,10 @@ definitions:
         type: array
       created:
         type: string
+      emails:
+        items:
+          type: string
+        type: array
       employee_absenteeism:
         type: string
       employee_id:
@@ -5316,6 +5362,32 @@ paths:
       summary: Update a progress report for a client
       tags:
       - progress_reports
+  /clients/{id}/related_emails:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientRelatedEmailsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get client related emails
+      tags:
+      - client_network
   /employees:
     get:
       description: Get a paginated list of employee profiles with optional filters
@@ -6069,6 +6141,45 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Set employee profile picture by ID
+      tags:
+      - employees
+  /employees/emails:
+    get:
+      description: Search employees by name or email
+      parameters:
+      - description: Search query
+        in: query
+        name: search
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_SearchEmployeesByNameOrEmailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Search employees by name or email
       tags:
       - employees
   /employees/profile:

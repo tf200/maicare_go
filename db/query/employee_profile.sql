@@ -238,3 +238,15 @@ RETURNING *;
 DELETE FROM certification WHERE id = $1 RETURNING *;
 
 
+-- name: SearchEmployeesByNameOrEmail :many
+SELECT
+    id,
+    first_name,
+    last_name,
+    email
+FROM employee_profile
+WHERE 
+    first_name ILIKE '%' || @search || '%' OR
+    last_name ILIKE '%' || @search || '%' OR
+    email ILIKE '%' || @search || '%'
+LIMIT 10;

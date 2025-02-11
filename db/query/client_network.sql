@@ -106,3 +106,20 @@ DELETE FROM assigned_employee
 WHERE id = $1
 RETURNING *;
 
+
+
+-- name: GetClientRelatedEmails :many
+WITH employee_emails AS (
+    SELECT ed.email AS employee_email
+    FROM assigned_employee ae
+    JOIN employee_profile ed ON ae.employee_id = ed.id
+    WHERE ae.client_id = $1
+),
+emergency_contact_emails AS (
+    SELECT cec.email AS contact_email
+    FROM client_emergency_contact cec
+    WHERE cec.client_id = $1
+)
+SELECT employee_email FROM employee_emails
+UNION
+SELECT contact_email FROM emergency_contact_emails;

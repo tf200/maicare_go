@@ -681,3 +681,37 @@ func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, res)
 }
+
+// GetClientRelatedEmailsResponse defines the response for getting client related emails
+type GetClientRelatedEmailsResponse struct {
+	Emails []string `json:"emails"`
+}
+
+// GetClientRelatedEmailsApi gets client related emails
+// @Summary Get client related emails
+// @Tags client_network
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[GetClientRelatedEmailsResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/related_emails [get]
+func (serve *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	emails, err := serve.store.GetClientRelatedEmails(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetClientRelatedEmailsResponse{
+		Emails: emails,
+	}, "Client related emails fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}

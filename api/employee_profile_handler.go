@@ -1336,3 +1336,46 @@ func (server *Server) DeleteEmployeeCertificationApi(ctx *gin.Context) {
 	}, "Certification deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+type SearchEmployeesByNameOrEmailRequest struct {
+	Search *string `form:"search" binding:"required"`
+}
+
+type SearchEmployeesByNameOrEmailResponse struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+}
+
+// @Summary Search employees by name or email
+// @Description Search employees by name or email
+// @Tags employees
+// @Produce json
+// @Param search query string true "Search query"
+// @Success 200 {object} Response[[]SearchEmployeesByNameOrEmailResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/emails [get]
+func (server *Server) SearchEmployeesByNameOrEmailApi(ctx *gin.Context) {
+	var req SearchEmployeesByNameOrEmailRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	employees, err := server.store.SearchEmployeesByNameOrEmail(ctx, req.Search)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	responseEmployees := make([]SearchEmployeesByNameOrEmailResponse, len(employees))
+	for i, employee := range employees {
+		responseEmployees[i] = SearchEmployeesByNameOrEmailResponse{
+			ID:        employee.ID,
+			FirstName: employee.FirstName,
+			LastName:  employee.LastName,
+			Email:     employee.Email,
+		}
+	}
+	res := SuccessResponse(responseEmployees, "Employees retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
