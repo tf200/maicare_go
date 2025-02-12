@@ -29,6 +29,24 @@ type AiGeneratedWeeklyReport struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type AppointmentCard struct {
+	ID                     int64              `json:"id"`
+	ClientID               int64              `json:"client_id"`
+	GeneralInformation     []string           `json:"general_information"`
+	ImportantContacts      []string           `json:"important_contacts"`
+	HouseholdInfo          []string           `json:"household_info"`
+	OrganizationAgreements []string           `json:"organization_agreements"`
+	YouthOfficerAgreements []string           `json:"youth_officer_agreements"`
+	TreatmentAgreements    []string           `json:"treatment_agreements"`
+	SmokingRules           []string           `json:"smoking_rules"`
+	Work                   []string           `json:"work"`
+	SchoolInternship       []string           `json:"school_internship"`
+	Travel                 []string           `json:"travel"`
+	Leave                  []string           `json:"leave"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Assessment struct {
 	ID       int64              `json:"id"`
 	Content  *string            `json:"content"`

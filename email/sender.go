@@ -15,6 +15,7 @@ import (
 type Sender interface {
 	Send(subject, body string, to []string) error
 	SendCredentials(ctx context.Context, to []string, data Credentials) error
+	SendIncident(ctx context.Context, to []string, data Incident) error
 }
 
 type SmtpConf struct {
@@ -28,6 +29,15 @@ type SmtpConf struct {
 type Credentials struct {
 	Email    string
 	Password string
+}
+
+type Incident struct {
+	IncidentID   int
+	ReportedBy   string
+	ClientName   string
+	IncidentType string
+	Severity     string
+	Location     string
 }
 
 func NewSmtpConf(name, address, authentication, smtpHost string, smtpPort int) Sender {
@@ -109,5 +119,49 @@ func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 	return nil
 }
 
+func (s *SmtpConf) SendIncident(ctx context.Context, to []string, data Incident) error {
 
+	if len(to) == 0 {
+		return errors.New("no recipient addresses provided")
+	}
+	if s.SmtpHost == "" || s.SmtpPort == 0 {
+		return errors.New("invalid SMTP configuration")
+	}
 
+	tmpl, err := template.ParseFiles("templates/incident.html")
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML template: %w", err)
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	message := mail.NewMsg()
+	if err := message.From(fmt.Sprintf("%s <%s>", s.Name, s.Address)); err != nil {
+		return fmt.Errorf("failed to set From address: %w", err)
+	}
+	if err := message.To(to...); err != nil {
+		return fmt.Errorf("failed to set To address: %w", err)
+	}
+	message.Subject("Welcome to Maicare!")
+	message.SetBodyString(mail.TypeTextHTML, body.String())
+
+	client, err := mail.NewClient(
+		s.SmtpHost,
+		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithUsername(s.Address),
+		mail.WithPassword(s.Athentication),
+		mail.WithPort(s.SmtpPort),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create mail client: %w", err)
+	}
+
+	if err := client.DialAndSendWithContext(ctx, message); err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
+}

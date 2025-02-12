@@ -1223,3 +1223,25 @@ CREATE INDEX goal_history_date_idx ON goal_history(date);
 CREATE INDEX group_access_employee_id_idx ON group_access(employee_id);
 CREATE INDEX group_access_group_id_idx ON group_access(group_id);
 CREATE INDEX group_access_created_idx ON group_access(created DESC);
+
+
+
+-- databases I am creating 
+
+CREATE TABLE appointment_card (
+    id BIGSERIAL PRIMARY KEY,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    general_information TEXT[] NOT NULL DEFAULT '{}',
+    important_contacts TEXT[] NOT NULL DEFAULT '{}',
+    household_info TEXT[] NOT NULL DEFAULT '{}',
+    organization_agreements TEXT[] NOT NULL DEFAULT '{}',
+    youth_officer_agreements TEXT[] NOT NULL DEFAULT '{}',
+    treatment_agreements TEXT[] NOT NULL DEFAULT '{}',
+    smoking_rules TEXT[] NOT NULL DEFAULT '{}',
+    work TEXT[] NOT NULL DEFAULT '{}',
+    school_internship TEXT[] NOT NULL DEFAULT '{}',
+    travel TEXT[] NOT NULL DEFAULT '{}',
+    leave TEXT[] NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

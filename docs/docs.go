@@ -737,6 +737,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/appointment_cards": {
+            "post": {
+                "description": "Create a new appointment card",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointment_cards"
+                ],
+                "summary": "Create a new appointment card",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateAppointmentCardRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateAppointmentCardResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/diagnosis": {
             "get": {
                 "consumes": [
@@ -4789,6 +4830,160 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateAppointmentCardRequest": {
+            "type": "object",
+            "properties": {
+                "general_information": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "household_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "important_contacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leave": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organization_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "school_internship": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "smoking_rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "travel": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "treatment_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "work": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "youth_officer_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api.CreateAppointmentCardResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "general_information": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "household_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "important_contacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leave": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organization_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "school_internship": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "smoking_rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "travel": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "treatment_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "youth_officer_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "api.CreateClientAllergyRequest": {
             "type": "object",
             "required": [
@@ -7723,6 +7918,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CorrectSpellingResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateAppointmentCardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateAppointmentCardResponse"
                 },
                 "message": {
                     "type": "string"

@@ -78,3 +78,4 @@ DROP TABLE IF EXISTS "public"."sender_audit" CASCADE;
 DROP TABLE IF EXISTS "public"."roles" CASCADE;
 DROP TABLE IF EXISTS "public"."role_permissions" CASCADE;
 DROP TABLE IF EXISTS "public"."permissions" CASCADE;
+DROP TABLE IF EXISTS "public"."appointment_card" CASCADE;

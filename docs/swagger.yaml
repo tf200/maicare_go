@@ -208,6 +208,108 @@ definitions:
       initial_text:
         type: string
     type: object
+  api.CreateAppointmentCardRequest:
+    properties:
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  api.CreateAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
   api.CreateClientAllergyRequest:
     properties:
       allergy_id:
@@ -2168,6 +2270,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CorrectSpellingResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateAppointmentCardResponse'
       message:
         type: string
       success:
@@ -4197,6 +4308,33 @@ paths:
       summary: Update a client allergy
       tags:
       - client_Medical
+  /clients/{id}/appointment_cards:
+    post:
+      consumes:
+      - application/json
+      description: Create a new appointment card
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateAppointmentCardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateAppointmentCardResponse'
+      summary: Create a new appointment card
+      tags:
+      - appointment_cards
   /clients/{id}/diagnosis:
     get:
       consumes:
