@@ -1188,6 +1188,61 @@ definitions:
       incident_id:
         type: integer
     type: object
+  api.GetAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
   api.GetAssignedEmployeeResponse:
     properties:
       client_id:
@@ -2455,6 +2510,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetAppointmentCardResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetAssignedEmployeeResponse:
     properties:
       data:
@@ -2639,6 +2703,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.SetEmployeeProfilePictureResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateAppointmentCardResponse'
       message:
         type: string
       success:
@@ -2979,6 +3052,108 @@ definitions:
         type: string
       role_id:
         type: integer
+    type: object
+  api.UpdateAppointmentCardRequest:
+    properties:
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  api.UpdateAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
     type: object
   api.UpdateAssignedEmployeeRequest:
     properties:
@@ -4309,6 +4484,24 @@ paths:
       tags:
       - client_Medical
   /clients/{id}/appointment_cards:
+    get:
+      description: Get an appointment card by client ID
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetAppointmentCardResponse'
+      summary: Get an appointment card by client ID
+      tags:
+      - appointment_cards
     post:
       consumes:
       - application/json
@@ -4333,6 +4526,32 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-api_CreateAppointmentCardResponse'
       summary: Create a new appointment card
+      tags:
+      - appointment_cards
+    put:
+      consumes:
+      - application/json
+      description: Update an appointment card by client ID
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateAppointmentCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
+      summary: Update an appointment card by client ID
       tags:
       - appointment_cards
   /clients/{id}/diagnosis:
