@@ -81,11 +81,11 @@ func (q *Queries) CreateAppointmentCard(ctx context.Context, arg CreateAppointme
 
 const getAppointmentCard = `-- name: GetAppointmentCard :one
 SELECT id, client_id, general_information, important_contacts, household_info, organization_agreements, youth_officer_agreements, treatment_agreements, smoking_rules, work, school_internship, travel, leave, created_at, updated_at FROM appointment_card
-WHERE id = $1 LIMIT 1
+WHERE client_id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAppointmentCard(ctx context.Context, id int64) (AppointmentCard, error) {
-	row := q.db.QueryRow(ctx, getAppointmentCard, id)
+func (q *Queries) GetAppointmentCard(ctx context.Context, clientID int64) (AppointmentCard, error) {
+	row := q.db.QueryRow(ctx, getAppointmentCard, clientID)
 	var i AppointmentCard
 	err := row.Scan(
 		&i.ID,
@@ -121,12 +121,12 @@ SET
     school_internship = COALESCE($10, school_internship),
     travel = COALESCE($11, travel),
     leave = COALESCE($12, leave)
-WHERE id = $1
+WHERE client_id = $1
 RETURNING id, client_id, general_information, important_contacts, household_info, organization_agreements, youth_officer_agreements, treatment_agreements, smoking_rules, work, school_internship, travel, leave, created_at, updated_at
 `
 
 type UpdateAppointmentCardParams struct {
-	ID                     int64    `json:"id"`
+	ClientID               int64    `json:"client_id"`
 	GeneralInformation     []string `json:"general_information"`
 	ImportantContacts      []string `json:"important_contacts"`
 	HouseholdInfo          []string `json:"household_info"`
@@ -142,7 +142,7 @@ type UpdateAppointmentCardParams struct {
 
 func (q *Queries) UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error) {
 	row := q.db.QueryRow(ctx, updateAppointmentCard,
-		arg.ID,
+		arg.ClientID,
 		arg.GeneralInformation,
 		arg.ImportantContacts,
 		arg.HouseholdInfo,

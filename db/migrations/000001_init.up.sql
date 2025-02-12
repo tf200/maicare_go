@@ -1230,7 +1230,7 @@ CREATE INDEX group_access_created_idx ON group_access(created DESC);
 
 CREATE TABLE appointment_card (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE UNIQUE,
     general_information TEXT[] NOT NULL DEFAULT '{}',
     important_contacts TEXT[] NOT NULL DEFAULT '{}',
     household_info TEXT[] NOT NULL DEFAULT '{}',

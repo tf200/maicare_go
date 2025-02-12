@@ -41,7 +41,7 @@ func TestCreateAppointmentCard(t *testing.T) {
 func TestGetAppointmentCard(t *testing.T) {
 	client := createRandomClientDetails(t)
 	appointmentCard1 := createRandomAppointmentCard(t, client.ID)
-	appointmentCard2, err := testQueries.GetAppointmentCard(context.Background(), appointmentCard1.ID)
+	appointmentCard2, err := testQueries.GetAppointmentCard(context.Background(), client.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, appointmentCard2)
 	require.Equal(t, appointmentCard1.ID, appointmentCard2.ID)
@@ -51,7 +51,7 @@ func TestUpdateAppointmentCard(t *testing.T) {
 	client := createRandomClientDetails(t)
 	appointmentCard1 := createRandomAppointmentCard(t, client.ID)
 	arg := UpdateAppointmentCardParams{
-		ID:                 appointmentCard1.ID,
+		ClientID:           client.ID,
 		GeneralInformation: []string{"Updated: Client is doing well", "Updated: No concerns raised"},
 		ImportantContacts:  []string{"Updated: Mother - 555-123-4567", "Updated: Case Worker - 555-987-6543"},
 		HouseholdInfo:      []string{"Updated: Lives with mother and younger sibling", "Updated: Stable home environment"},

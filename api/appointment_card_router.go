@@ -6,6 +6,8 @@ func (server *Server) setupAppointmentCardRoutes(baseRouter *gin.RouterGroup) {
 	appointmentCardRouter := baseRouter.Group("/clients").Use(AuthMiddleware(server.tokenMaker))
 	{
 		appointmentCardRouter.POST("/:id/appointment_cards", server.CreateAppointmentCardApi)
+		appointmentCardRouter.GET("/:id/appointment_cards", server.GetAppointmentCardApi)
+		appointmentCardRouter.PUT("/:id/appointment_cards", server.UpdateAppointmentCardApi)
 
 	}
 }

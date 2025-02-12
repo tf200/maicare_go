@@ -18,7 +18,7 @@ INSERT INTO appointment_card (
 
 -- name: GetAppointmentCard :one
 SELECT * FROM appointment_card
-WHERE id = $1 LIMIT 1;
+WHERE client_id = $1 LIMIT 1;
 
 -- name: UpdateAppointmentCard :one
 UPDATE appointment_card
@@ -34,5 +34,5 @@ SET
     school_internship = COALESCE(sqlc.narg('school_internship'), school_internship),
     travel = COALESCE(sqlc.narg('travel'), travel),
     leave = COALESCE(sqlc.narg('leave'), leave)
-WHERE id = $1
+WHERE client_id = $1
 RETURNING *;
