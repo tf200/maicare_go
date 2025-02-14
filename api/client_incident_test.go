@@ -65,6 +65,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 		AdditionalAppointments:  util.StringPtr("test appointments"),
 		EmployeeAbsenteeism:     "client",
 		ClientID:                clientID,
+		Emails:                  []string{"testemail@gg.com", "gaga@gog.com"},
 	}
 
 	incident, err := testStore.CreateIncident(context.Background(), arg)
@@ -72,6 +73,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 	require.NotEmpty(t, incident)
 	require.Equal(t, arg.EmployeeID, incident.EmployeeID)
 	require.Equal(t, arg.ClientID, incident.ClientID)
+	require.Equal(t, arg.Emails, incident.Emails)
 	return incident
 }
 
@@ -132,6 +134,7 @@ func TestCreateIncident(t *testing.T) {
 					AdditionalAppointments:  util.StringPtr("test appointments"),
 					EmployeeAbsenteeism:     "client",
 					ClientID:                client.ID,
+					Emails:                  []string{"testemail@gg.com", "gaga@gog.com"},
 				}
 				url := fmt.Sprintf("/clients/%d/incidents", client.ID)
 				reqBody, err := json.Marshal(incidentReq)
@@ -188,6 +191,7 @@ func TestCreateIncident(t *testing.T) {
 				require.NotNil(t, res.Data.PsychologicalDamageDesc)
 				require.Equal(t, *res.Data.PsychologicalDamageDesc, "test damage")
 				require.Equal(t, res.Data.NeededConsultation, "no")
+				require.Equal(t, res.Data.Emails, []string{"testemail@gg.com", "gaga@gog.com"})
 			},
 		},
 	}
@@ -238,6 +242,7 @@ func TestListIncidentsApi(t *testing.T) {
 				require.NotEmpty(t, incidents)
 				require.NotEmpty(t, incidents.Data.Results)
 				require.Len(t, incidents.Data.Results, 10)
+				require.NotEmpty(t, incidents.Data.Results[0].Emails)
 
 			},
 		},
@@ -335,6 +340,7 @@ func TestGetIncidentApi(t *testing.T) {
 				require.Equal(t, res.Data.ClientOptions, ClientOptions)
 				require.NotNil(t, res.Data.OtherCause)
 				require.Equal(t, *res.Data.OtherCause, *incident.OtherCause)
+				require.Equal(t, res.Data.Emails, incident.Emails)
 			},
 		},
 		{
@@ -406,6 +412,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 				incidentReq := UpdateIncidentRequest{
 					ReporterInvolvement: util.StringPtr("directly_involved"),
 					InformWho:           []string{"updated"},
+					Emails:              []string{"taha@gmail.com"},
 				}
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
 				reqBody, err := json.Marshal(incidentReq)
@@ -425,6 +432,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 				require.Equal(t, res.Data.ReporterInvolvement, "directly_involved")
 				require.Equal(t, res.Data.InformWho, []string{"updated"})
 				require.Equal(t, res.Data.Technical, Technical)
+				require.Equal(t, res.Data.Emails, []string{"taha@gmail.com"})
 			},
 		},
 	}

@@ -104,6 +104,7 @@ type CreateIncidentResponse struct {
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
+	Emails                  []string  `json:"emails"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated"`
 	CreatedAt               time.Time `json:"created"`
@@ -211,6 +212,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		AdditionalAppointments:  req.AdditionalAppointments,
 		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
 		ClientID:                clientID,
+		Emails:                  req.Emails,
 	}
 
 	incident, err := server.store.CreateIncident(ctx, arg)
@@ -304,6 +306,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		AdditionalAppointments:  incident.AdditionalAppointments,
 		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 		ClientID:                incident.ClientID,
+		Emails:                  incident.Emails,
 		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
 		CreatedAt:               incident.CreatedAt.Time,
@@ -363,6 +366,7 @@ type ListIncidentsResponse struct {
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
+	Emails                  []string  `json:"emails"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
 	CreatedAt               time.Time `json:"created_at"`
@@ -501,6 +505,7 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 			AdditionalAppointments:  incident.AdditionalAppointments,
 			EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 			ClientID:                incident.ClientID,
+			Emails:                  incident.Emails,
 			SoftDelete:              incident.SoftDelete,
 			UpdatedAt:               incident.UpdatedAt.Time,
 			CreatedAt:               incident.CreatedAt.Time,
@@ -565,6 +570,7 @@ type GetIncidentResponse struct {
 	CreatedAt               time.Time `json:"created_at"`
 	IsConfirmed             bool      `json:"is_confirmed"`
 	LocationName            string    `json:"location_name"`
+	Emails                  []string  `json:"emails"`
 }
 
 // GetIncidentApi retrieves an incident
@@ -685,6 +691,7 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 		CreatedAt:               incident.CreatedAt.Time,
 		IsConfirmed:             incident.IsConfirmed,
 		LocationName:            incident.LocationName,
+		Emails:                  incident.Emails,
 	}, "Incident retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
@@ -732,6 +739,7 @@ type UpdateIncidentRequest struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     *string   `json:"employee_absenteeism"`
+	Emails                  []string  `json:"emails"`
 }
 
 // UpdateIncidentResponse represents a response for UpdateIncidentApi
@@ -843,6 +851,7 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		OtherDesc:               req.OtherDesc,
 		AdditionalAppointments:  req.AdditionalAppointments,
 		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
+		Emails:                  req.Emails,
 	}
 
 	if req.InformWho != nil {
@@ -992,6 +1001,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
 		CreatedAt:               incident.CreatedAt.Time,
+		IsConfirmed:             incident.IsConfirmed,
+		Emails:                  incident.Emails,
 	}, "Incident updated successfully")
 
 	ctx.JSON(http.StatusOK, res)

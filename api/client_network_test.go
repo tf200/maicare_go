@@ -510,6 +510,7 @@ func TestUpdateAssignedEmployeeApi(t *testing.T) {
 func TestGetClientRelatedEmailsApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	employee, _ := createRandomEmployee(t)
+	t.Log(client.ID, employee.ID)
 	_ = assignRandomEmployee(t, client.ID, employee.ID)
 	emergencyContact := createRandomEmergencyContact(t, client.ID)
 

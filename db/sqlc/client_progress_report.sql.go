@@ -103,6 +103,51 @@ func (q *Queries) GetProgressReport(ctx context.Context, id int64) (GetProgressR
 	return i, err
 }
 
+const getProgressReportsByDateRange = `-- name: GetProgressReportsByDateRange :many
+SELECT id, client_id, date, title, report_text, employee_id, type, emotional_state, created_at
+FROM progress_report
+WHERE client_id = $1
+  AND date >= $2
+  AND date <= $3
+ORDER BY date ASC
+`
+
+type GetProgressReportsByDateRangeParams struct {
+	ClientID  int64              `json:"client_id"`
+	StartDate pgtype.Timestamptz `json:"start_date"`
+	EndDate   pgtype.Timestamptz `json:"end_date"`
+}
+
+func (q *Queries) GetProgressReportsByDateRange(ctx context.Context, arg GetProgressReportsByDateRangeParams) ([]ProgressReport, error) {
+	rows, err := q.db.Query(ctx, getProgressReportsByDateRange, arg.ClientID, arg.StartDate, arg.EndDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProgressReport
+	for rows.Next() {
+		var i ProgressReport
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.Date,
+			&i.Title,
+			&i.ReportText,
+			&i.EmployeeID,
+			&i.Type,
+			&i.EmotionalState,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProgressReports = `-- name: ListProgressReports :many
 SELECT 
     pr.id, pr.client_id, pr.date, pr.title, pr.report_text, pr.employee_id, pr.type, pr.emotional_state, pr.created_at,

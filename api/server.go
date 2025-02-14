@@ -109,6 +109,7 @@ func (server *Server) setupRoutes() {
 	server.setupAiRoutes(baseRouter)
 	server.setupProgressReportsRoutes(baseRouter)
 	server.setupAppointmentCardRoutes(baseRouter)
+	server.setupMaturityMatrixRoutes(baseRouter)
 
 	// Add more route setups as needed
 

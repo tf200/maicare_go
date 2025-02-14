@@ -741,25 +741,25 @@ CREATE TABLE data_sharing_statement (
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE maturity_matrix (
-    id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    is_approved BOOLEAN NOT NULL DEFAULT FALSE,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE maturity_matrix (
+--     id BIGSERIAL PRIMARY KEY,
+--     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+--     start_date DATE NOT NULL,
+--     end_date DATE NOT NULL,
+--     is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+--     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
-CREATE TABLE selected_maturity_matrix_assessment (
-    id BIGSERIAL PRIMARY KEY,  -- Adding the id column
-    maturity_matrix_id BIGINT NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
-    assessment_id BIGINT NOT NULL REFERENCES assessment(id) ON DELETE CASCADE
+-- CREATE TABLE selected_maturity_matrix_assessment (
+--     id BIGSERIAL PRIMARY KEY,  -- Adding the id column
+--     maturity_matrix_id BIGINT NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
+--     assessment_id BIGINT NOT NULL REFERENCES assessment(id) ON DELETE CASCADE
     
-);
+-- );
 
-CREATE INDEX data_sharing_statement_client_id_idx ON data_sharing_statement(client_id);
-CREATE INDEX maturity_matrix_client_id_idx ON maturity_matrix(client_id);
+-- CREATE INDEX data_sharing_statement_client_id_idx ON data_sharing_statement(client_id);
+-- CREATE INDEX maturity_matrix_client_id_idx ON maturity_matrix(client_id);
 
 
 
@@ -920,7 +920,8 @@ CREATE TABLE incident (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
-    file_url VARCHAR(255) NULL
+    file_url VARCHAR(255) NULL,
+    emails TEXT[] NULL DEFAULT '{}'
 );
 
 CREATE INDEX incident_client_id_idx ON incident(client_id);
@@ -1069,31 +1070,14 @@ CREATE INDEX client_medication_record_updated_idx ON client_medication_record(up
 CREATE INDEX client_medication_record_created_idx ON client_medication_record(created DESC);
 
 
-CREATE TABLE client_goals (
-    id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    goal_name VARCHAR(100) NOT NULL,
-    goal_details VARCHAR(500) NOT NULL,
-    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
-    administered_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL
-);
 
-CREATE TABLE goals_report (
-    id BIGSERIAL PRIMARY KEY,
-    goal_id BIGINT NULL REFERENCES client_goals(id) ON DELETE SET NULL,
-    title VARCHAR(100) NOT NULL,
-    report_text TEXT NOT NULL,
-    rating INTEGER NULL,
-    created_at_sys TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NULL
-);
 
-CREATE TABLE ai_generated_weekly_reports (
-    id BIGSERIAL PRIMARY KEY,
-    report_text TEXT NOT NULL,
-    goal_id BIGINT NULL REFERENCES client_goals(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE ai_generated_weekly_reports (
+--     id BIGSERIAL PRIMARY KEY,
+--     report_text TEXT NOT NULL,
+--     goal_id BIGINT NULL REFERENCES client_goals(id) ON DELETE SET NULL,
+--     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
 CREATE TABLE weekly_report_summary (
     id BIGSERIAL PRIMARY KEY,
@@ -1102,10 +1086,10 @@ CREATE TABLE weekly_report_summary (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX client_goals_client_id_idx ON client_goals(client_id);
-CREATE INDEX client_goals_administered_by_id_idx ON client_goals(administered_by_id);
-CREATE INDEX goals_report_goal_id_idx ON goals_report(goal_id);
-CREATE INDEX ai_generated_weekly_reports_goal_id_idx ON ai_generated_weekly_reports(goal_id);
+-- CREATE INDEX client_goals_client_id_idx ON client_goals(client_id);
+-- CREATE INDEX client_goals_administered_by_id_idx ON client_goals(administered_by_id);
+-- CREATE INDEX goals_report_goal_id_idx ON goals_report(goal_id);
+-- CREATE INDEX ai_generated_weekly_reports_goal_id_idx ON ai_generated_weekly_reports(goal_id);
 CREATE INDEX weekly_report_summary_client_id_idx ON weekly_report_summary(client_id);
 CREATE INDEX weekly_report_summary_created_at_idx ON weekly_report_summary(created_at DESC);
 
@@ -1137,74 +1121,74 @@ CREATE INDEX incident_details_date_of_incident_idx ON incident_details(date_of_i
 CREATE INDEX incident_details_status_idx ON incident_details(status);
 
 
-CREATE TABLE domain_goal (
-    id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    "desc" TEXT NULL DEFAULT '',
-    domain_id BIGINT NULL REFERENCES assessment_domain(id) ON DELETE SET NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    created_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    reviewed_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    selected_maturity_matrix_assessment_id BIGINT NULL REFERENCES selected_maturity_matrix_assessment(id) ON DELETE CASCADE,
-    is_approved BOOLEAN NOT NULL DEFAULT FALSE,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE domain_goal (
+--     id BIGSERIAL PRIMARY KEY,
+--     title VARCHAR(255) NOT NULL,
+--     "desc" TEXT NULL DEFAULT '',
+--     domain_id BIGINT NULL REFERENCES assessment_domain(id) ON DELETE SET NULL,
+--     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+--     created_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+--     reviewed_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+--     selected_maturity_matrix_assessment_id BIGINT NULL REFERENCES selected_maturity_matrix_assessment(id) ON DELETE CASCADE,
+--     is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+--     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
-CREATE INDEX domain_goal_domain_id_idx ON domain_goal(domain_id);
-CREATE INDEX domain_goal_client_id_idx ON domain_goal(client_id);
-CREATE INDEX domain_goal_created_by_id_idx ON domain_goal(created_by_id);
-CREATE INDEX domain_goal_created_idx ON domain_goal(created DESC);
-
-
-
-CREATE TABLE domain_objective (
-    id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    "desc" TEXT NULL DEFAULT '',
-    rating FLOAT NOT NULL DEFAULT 0,
-    goal_id BIGINT NULL REFERENCES domain_goal(id) ON DELETE SET NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX domain_objective_goal_id_idx ON domain_objective(goal_id);
-CREATE INDEX domain_objective_client_id_idx ON domain_objective(client_id);
+-- CREATE INDEX domain_goal_domain_id_idx ON domain_goal(domain_id);
+-- CREATE INDEX domain_goal_client_id_idx ON domain_goal(client_id);
+-- CREATE INDEX domain_goal_created_by_id_idx ON domain_goal(created_by_id);
+-- CREATE INDEX domain_goal_created_idx ON domain_goal(created DESC);
 
 
 
-CREATE TABLE objective_history (
-    id BIGSERIAL PRIMARY KEY,
-    rating FLOAT NOT NULL DEFAULT 0,
-    week INTEGER NOT NULL,
-    date DATE NOT NULL DEFAULT CURRENT_DATE,
-    objective_id BIGINT NOT NULL REFERENCES domain_objective(id) ON DELETE CASCADE,
-    content TEXT NULL DEFAULT '',
-    UNIQUE(week, objective_id)
-);
+-- CREATE TABLE domain_objective (
+--     id BIGSERIAL PRIMARY KEY,
+--     title VARCHAR(255) NOT NULL,
+--     "desc" TEXT NULL DEFAULT '',
+--     rating FLOAT NOT NULL DEFAULT 0,
+--     goal_id BIGINT NULL REFERENCES domain_goal(id) ON DELETE SET NULL,
+--     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+--     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
-CREATE INDEX objective_history_objective_id_idx ON objective_history(objective_id);
-CREATE INDEX objective_history_week_idx ON objective_history(week);
-CREATE INDEX objective_history_date_idx ON objective_history(date);
+-- CREATE INDEX domain_objective_goal_id_idx ON domain_objective(goal_id);
+-- CREATE INDEX domain_objective_client_id_idx ON domain_objective(client_id);
 
 
 
-CREATE TABLE objective_progress_report (
-    id BIGSERIAL PRIMARY KEY,
-    objective_id BIGINT NOT NULL REFERENCES domain_objective(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    report_text TEXT NULL,
-    rating FLOAT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE objective_history (
+--     id BIGSERIAL PRIMARY KEY,
+--     rating FLOAT NOT NULL DEFAULT 0,
+--     week INTEGER NOT NULL,
+--     date DATE NOT NULL DEFAULT CURRENT_DATE,
+--     objective_id BIGINT NOT NULL REFERENCES domain_objective(id) ON DELETE CASCADE,
+--     content TEXT NULL DEFAULT '',
+--     UNIQUE(week, objective_id)
+-- );
 
-CREATE TABLE goal_history (
-    id BIGSERIAL PRIMARY KEY,
-    rating FLOAT NOT NULL DEFAULT 0,
-    date DATE NOT NULL DEFAULT CURRENT_DATE,
-    goal_id BIGINT NOT NULL REFERENCES domain_goal(id) ON DELETE CASCADE
-);
+-- CREATE INDEX objective_history_objective_id_idx ON objective_history(objective_id);
+-- CREATE INDEX objective_history_week_idx ON objective_history(week);
+-- CREATE INDEX objective_history_date_idx ON objective_history(date);
+
+
+
+-- CREATE TABLE objective_progress_report (
+--     id BIGSERIAL PRIMARY KEY,
+--     objective_id BIGINT NOT NULL REFERENCES domain_objective(id) ON DELETE CASCADE,
+--     title VARCHAR(255) NOT NULL,
+--     report_text TEXT NULL,
+--     rating FLOAT NOT NULL DEFAULT 0,
+--     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- CREATE TABLE goal_history (
+--     id BIGSERIAL PRIMARY KEY,
+--     rating FLOAT NOT NULL DEFAULT 0,
+--     date DATE NOT NULL DEFAULT CURRENT_DATE,
+--     goal_id BIGINT NOT NULL REFERENCES domain_goal(id) ON DELETE CASCADE
+-- );
 
 CREATE TABLE group_access (
     id BIGSERIAL PRIMARY KEY,
@@ -1216,10 +1200,10 @@ CREATE TABLE group_access (
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX objective_progress_report_objective_id_idx ON objective_progress_report(objective_id);
-CREATE INDEX objective_progress_report_created_at_idx ON objective_progress_report(created_at DESC);
-CREATE INDEX goal_history_goal_id_idx ON goal_history(goal_id);
-CREATE INDEX goal_history_date_idx ON goal_history(date);
+-- CREATE INDEX objective_progress_report_objective_id_idx ON objective_progress_report(objective_id);
+-- CREATE INDEX objective_progress_report_created_at_idx ON objective_progress_report(created_at DESC);
+-- CREATE INDEX goal_history_goal_id_idx ON goal_history(goal_id);
+-- CREATE INDEX goal_history_date_idx ON goal_history(date);
 CREATE INDEX group_access_employee_id_idx ON group_access(employee_id);
 CREATE INDEX group_access_group_id_idx ON group_access(group_id);
 CREATE INDEX group_access_created_idx ON group_access(created DESC);
@@ -1245,3 +1229,87 @@ CREATE TABLE appointment_card (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE TABLE maturity_matrix (
+    id BIGINT PRIMARY KEY,
+    topic_name VARCHAR(255) NOT NULL,
+    level_description JSONB NOT NULL DEFAULT '[]'
+);
+INSERT INTO maturity_matrix (id, topic_name, level_description)
+VALUES
+    (1, 'Finances', '[]'),
+    (2, 'Work & Education', '[]'),
+    (3, 'Use of Time', '[]'),
+    (4, 'Housing', '[]'),
+    (5, 'Domestic Relationships', '[]'),
+    (6, 'Mental Health', '[]'),
+    (7, 'Physical Health', '[]'),
+    (8, 'Substance Use', '[]'),
+    (9, 'Basic ADL', '[]'),
+    (10, 'Instrumental ADL', '[]'),
+    (11, 'Social Network', '[]'),
+    (12, 'Social Participation', '[]'),
+    (13, 'Justice', '[]');
+
+CREATE TABLE client_maturity_matrix_assessment (
+    id BIGSERIAL PRIMARY KEY,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    maturity_matrix_id BIGINT NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    initial_level INT NOT NULL CHECK (initial_level BETWEEN 1 AND 5),
+    current_level INT NOT NULL CHECK (current_level BETWEEN 1 AND 5),
+    is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE(client_id, maturity_matrix_id)
+);
+
+CREATE TABLE level_history (
+    id BIGSERIAL PRIMARY KEY,
+    client_maturity_matrix_assessment_id BIGINT NOT NULL REFERENCES client_maturity_matrix_assessment(id) ON DELETE CASCADE,
+    change_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_level INT NOT NULL CHECK (old_level BETWEEN 1 AND 5),
+    new_level INT NOT NULL CHECK (new_level BETWEEN 1 AND 5),
+    comment TEXT NOT NULL
+);
+
+-- 1. Create the trigger function
+CREATE OR REPLACE FUNCTION trg_after_update_client_maturity_matrix_assessment_func()
+RETURNS trigger AS $$
+BEGIN
+    IF NEW.current_level <> OLD.current_level THEN
+        INSERT INTO LevelHistory (client_maturity_matrix_assessment_id, old_level, new_level, comment)
+        VALUES (OLD.client_maturity_matrix_assessment_id, OLD.current_level, NEW.current_level, 'Automatic logging of level change.');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 2. Create the trigger that calls the function after updates on ClientTopics
+CREATE TRIGGER trg_after_update_client_maturity_matrix_assessment
+AFTER UPDATE ON client_maturity_matrix_assessment
+FOR EACH ROW
+EXECUTE FUNCTION trg_after_update_client_maturity_matrix_assessment_func();
+
+
+
+
+
+CREATE TABLE client_goals (
+    id BIGSERIAL PRIMARY KEY,
+    client_maturity_matrix_assessment_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    description VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE goals_report (
+    id BIGSERIAL PRIMARY KEY,
+    client_maturity_matrix_assessment_id BIGINT NULL REFERENCES client_goals(id) ON DELETE SET NULL,
+    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    title VARCHAR(100) NOT NULL,
+    report_text TEXT NOT NULL,
+    level INT NULL,
+    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+);
+

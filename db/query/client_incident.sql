@@ -39,12 +39,13 @@ INSERT INTO incident (
     other_desc,
     additional_appointments,
     employee_absenteeism,
-    client_id
+    client_id,
+    emails
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
     $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
+    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
 ) RETURNING *;
 
 
@@ -114,7 +115,8 @@ SET
     other = COALESCE(sqlc.narg('other'), other),
     other_desc = COALESCE(sqlc.narg('other_desc'), other_desc),
     additional_appointments = COALESCE(sqlc.narg('additional_appointments'), additional_appointments),
-    employee_absenteeism = COALESCE(sqlc.narg('employee_absenteeism'), employee_absenteeism)
+    employee_absenteeism = COALESCE(sqlc.narg('employee_absenteeism'), employee_absenteeism),
+    emails = COALESCE(sqlc.narg('emails'), emails)
 WHERE id = $1
 RETURNING *;
 

@@ -22,13 +22,6 @@ type AiGeneratedReport struct {
 	Created    pgtype.Timestamptz `json:"created"`
 }
 
-type AiGeneratedWeeklyReport struct {
-	ID         int64              `json:"id"`
-	ReportText string             `json:"report_text"`
-	GoalID     *int64             `json:"goal_id"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-}
-
 type AppointmentCard struct {
 	ID                     int64              `json:"id"`
 	ClientID               int64              `json:"client_id"`
@@ -218,12 +211,22 @@ type ClientEmergencyContact struct {
 }
 
 type ClientGoal struct {
-	ID               int64              `json:"id"`
-	ClientID         int64              `json:"client_id"`
-	GoalName         string             `json:"goal_name"`
-	GoalDetails      string             `json:"goal_details"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	AdministeredByID *int64             `json:"administered_by_id"`
+	ID                               int64              `json:"id"`
+	ClientMaturityMatrixAssessmentID int64              `json:"client_maturity_matrix_assessment_id"`
+	Description                      string             `json:"description"`
+	Status                           string             `json:"status"`
+	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
+}
+
+type ClientMaturityMatrixAssessment struct {
+	ID               int64       `json:"id"`
+	ClientID         int64       `json:"client_id"`
+	MaturityMatrixID int64       `json:"maturity_matrix_id"`
+	StartDate        pgtype.Date `json:"start_date"`
+	EndDate          pgtype.Date `json:"end_date"`
+	InitialLevel     int32       `json:"initial_level"`
+	CurrentLevel     int32       `json:"current_level"`
+	IsActive         bool        `json:"is_active"`
 }
 
 type ClientMedication struct {
@@ -417,31 +420,6 @@ type DbSetting struct {
 	OptionType  string `json:"option_type"`
 }
 
-type DomainGoal struct {
-	ID                                 int64              `json:"id"`
-	Title                              string             `json:"title"`
-	Desc                               *string            `json:"desc"`
-	DomainID                           *int64             `json:"domain_id"`
-	ClientID                           int64              `json:"client_id"`
-	CreatedByID                        *int64             `json:"created_by_id"`
-	ReviewedByID                       *int64             `json:"reviewed_by_id"`
-	SelectedMaturityMatrixAssessmentID *int64             `json:"selected_maturity_matrix_assessment_id"`
-	IsApproved                         bool               `json:"is_approved"`
-	Updated                            pgtype.Timestamptz `json:"updated"`
-	Created                            pgtype.Timestamptz `json:"created"`
-}
-
-type DomainObjective struct {
-	ID       int64              `json:"id"`
-	Title    string             `json:"title"`
-	Desc     *string            `json:"desc"`
-	Rating   float64            `json:"rating"`
-	GoalID   *int64             `json:"goal_id"`
-	ClientID int64              `json:"client_id"`
-	Updated  pgtype.Timestamptz `json:"updated"`
-	Created  pgtype.Timestamptz `json:"created"`
-}
-
 type EmotionalState struct {
 	ID               int64              `json:"id"`
 	ClientID         int64              `json:"client_id"`
@@ -525,21 +503,14 @@ type FrameworkAgreement struct {
 	Created          pgtype.Timestamptz `json:"created"`
 }
 
-type GoalHistory struct {
-	ID     int64       `json:"id"`
-	Rating float64     `json:"rating"`
-	Date   pgtype.Date `json:"date"`
-	GoalID int64       `json:"goal_id"`
-}
-
 type GoalsReport struct {
-	ID           int64              `json:"id"`
-	GoalID       *int64             `json:"goal_id"`
-	Title        string             `json:"title"`
-	ReportText   string             `json:"report_text"`
-	Rating       *int32             `json:"rating"`
-	CreatedAtSys pgtype.Timestamptz `json:"created_at_sys"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	ID                               int64              `json:"id"`
+	ClientMaturityMatrixAssessmentID *int64             `json:"client_maturity_matrix_assessment_id"`
+	EmployeeID                       int64              `json:"employee_id"`
+	Title                            string             `json:"title"`
+	ReportText                       string             `json:"report_text"`
+	Level                            *int32             `json:"level"`
+	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
 }
 
 type Group struct {
@@ -604,6 +575,7 @@ type Incident struct {
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
 	IsConfirmed             bool               `json:"is_confirmed"`
 	FileUrl                 *string            `json:"file_url"`
+	Emails                  []string           `json:"emails"`
 }
 
 type IncidentDetail struct {
@@ -661,6 +633,15 @@ type InvoiceHistory struct {
 	InvoiceID     int64              `json:"invoice_id"`
 }
 
+type LevelHistory struct {
+	ID                               int64              `json:"id"`
+	ClientMaturityMatrixAssessmentID int64              `json:"client_maturity_matrix_assessment_id"`
+	ChangeDate                       pgtype.Timestamptz `json:"change_date"`
+	OldLevel                         int32              `json:"old_level"`
+	NewLevel                         int32              `json:"new_level"`
+	Comment                          string             `json:"comment"`
+}
+
 type Location struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
@@ -669,13 +650,9 @@ type Location struct {
 }
 
 type MaturityMatrix struct {
-	ID         int64              `json:"id"`
-	ClientID   int64              `json:"client_id"`
-	StartDate  pgtype.Date        `json:"start_date"`
-	EndDate    pgtype.Date        `json:"end_date"`
-	IsApproved bool               `json:"is_approved"`
-	Updated    pgtype.Timestamptz `json:"updated"`
-	Created    pgtype.Timestamptz `json:"created"`
+	ID               int64  `json:"id"`
+	TopicName        string `json:"topic_name"`
+	LevelDescription []byte `json:"level_description"`
 }
 
 type Measurement struct {
@@ -695,24 +672,6 @@ type Notification struct {
 	IsRead   bool               `json:"is_read"`
 	Metadata []byte             `json:"metadata"`
 	Created  pgtype.Timestamptz `json:"created"`
-}
-
-type ObjectiveHistory struct {
-	ID          int64       `json:"id"`
-	Rating      float64     `json:"rating"`
-	Week        int32       `json:"week"`
-	Date        pgtype.Date `json:"date"`
-	ObjectiveID int64       `json:"objective_id"`
-	Content     *string     `json:"content"`
-}
-
-type ObjectiveProgressReport struct {
-	ID          int64              `json:"id"`
-	ObjectiveID int64              `json:"objective_id"`
-	Title       string             `json:"title"`
-	ReportText  *string            `json:"report_text"`
-	Rating      float64            `json:"rating"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type Observation struct {
@@ -826,12 +785,6 @@ type Role struct {
 type RolePermission struct {
 	RoleID       int32 `json:"role_id"`
 	PermissionID int32 `json:"permission_id"`
-}
-
-type SelectedMaturityMatrixAssessment struct {
-	ID               int64 `json:"id"`
-	MaturityMatrixID int64 `json:"maturity_matrix_id"`
-	AssessmentID     int64 `json:"assessment_id"`
 }
 
 type Sender struct {

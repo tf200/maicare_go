@@ -45,3 +45,12 @@ SET
     emotional_state = COALESCE(sqlc.narg('emotional_state'), emotional_state)
 WHERE id = $1
 RETURNING *;
+
+
+-- name: GetProgressReportsByDateRange :many
+SELECT *
+FROM progress_report
+WHERE client_id = @client_id
+  AND date >= @start_date
+  AND date <= @end_date
+ORDER BY date ASC;

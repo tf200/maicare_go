@@ -74,3 +74,28 @@ func TestUpdateProgressReport(t *testing.T) {
 	require.NotEqual(t, progressReport1.ReportText, progressReport2.ReportText)
 	require.NotEqual(t, progressReport1.EmotionalState, progressReport2.EmotionalState)
 }
+
+func TestGetProgressReportsByDateRange(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	for i := 0; i < 10; i++ {
+		createRandomProgressReport(t, client.ID, employee.ID)
+	}
+	startDate := util.RandomTIme()
+	endDate := startDate.AddDate(1, 1, 5)
+	arg := GetProgressReportsByDateRangeParams{
+		ClientID:  client.ID,
+		StartDate: pgtype.Timestamptz{Time: startDate, Valid: true},
+		EndDate:   pgtype.Timestamptz{Time: endDate, Valid: true},
+	}
+
+	progressReports, err := testQueries.GetProgressReportsByDateRange(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, progressReports, 5)
+	for _, report := range progressReports {
+		require.NotEmpty(t, report)
+		require.Equal(t, client.ID, report.ClientID)
+		require.GreaterOrEqual(t, report.Date.Time.Unix(), startDate.Unix())
+		require.LessOrEqual(t, report.Date.Time.Unix(), endDate.Unix())
+	}
+}
