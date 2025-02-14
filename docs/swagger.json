@@ -2040,6 +2040,65 @@
                 }
             }
         },
+        "/clients/{id}/maturity_matrix_assessment": {
+            "post": {
+                "description": "Create a client maturity matrix assessment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client"
+                ],
+                "summary": "Create client maturity matrix assessment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateClientMaturityMatrixAssessmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateClientMaturityMatrixAssessmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/medications": {
             "get": {
                 "produces": [
@@ -5403,6 +5462,43 @@
                 }
             }
         },
+        "api.CreateClientMaturityMatrixAssessmentRequest": {
+            "type": "object",
+            "properties": {
+                "assessment": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.MatrixAssessment"
+                    }
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateClientMaturityMatrixAssessmentResponse": {
+            "type": "object",
+            "properties": {
+                "assessment": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.MatrixAssessment"
+                    }
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateClientMedicationResponse": {
             "type": "object",
             "properties": {
@@ -5814,6 +5910,12 @@
                 },
                 "created": {
                     "type": "string"
+                },
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "employee_absenteeism": {
                     "type": "string"
@@ -6853,6 +6955,12 @@
                 "created_at": {
                     "type": "string"
                 },
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "employee_absenteeism": {
                     "type": "string"
                 },
@@ -7624,6 +7732,12 @@
                 "created_at": {
                     "type": "string"
                 },
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "employee_absenteeism": {
                     "type": "string"
                 },
@@ -7907,6 +8021,17 @@
                 }
             }
         },
+        "api.MatrixAssessment": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "initial_level": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.Permission": {
             "type": "object",
             "properties": {
@@ -8130,6 +8255,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateClientEmergencyContactResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateClientMaturityMatrixAssessmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateClientMaturityMatrixAssessmentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -9856,6 +9995,12 @@
                     "type": "boolean"
                 },
                 "client_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "emails": {
                     "type": "array",
                     "items": {
                         "type": "string"

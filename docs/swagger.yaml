@@ -552,6 +552,30 @@ definitions:
       relationship:
         type: string
     type: object
+  api.CreateClientMaturityMatrixAssessmentRequest:
+    properties:
+      assessment:
+        items:
+          $ref: '#/definitions/api.MatrixAssessment'
+        type: array
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.CreateClientMaturityMatrixAssessmentResponse:
+    properties:
+      assessment:
+        items:
+          $ref: '#/definitions/api.MatrixAssessment'
+        type: array
+      client_id:
+        type: integer
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
   api.CreateClientMedicationResponse:
     properties:
       administered_by_id:
@@ -840,6 +864,10 @@ definitions:
         type: array
       created:
         type: string
+      emails:
+        items:
+          type: string
+        type: array
       employee_absenteeism:
         type: string
       employee_id:
@@ -1529,6 +1557,10 @@ definitions:
         type: array
       created_at:
         type: string
+      emails:
+        items:
+          type: string
+        type: array
       employee_absenteeism:
         type: string
       employee_first_name:
@@ -2037,6 +2069,10 @@ definitions:
         type: array
       created_at:
         type: string
+      emails:
+        items:
+          type: string
+        type: array
       employee_absenteeism:
         type: string
       employee_first_name:
@@ -2225,6 +2261,13 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
+  api.MatrixAssessment:
+    properties:
+      id:
+        type: integer
+      initial_level:
+        type: integer
+    type: object
   api.Permission:
     properties:
       id:
@@ -2370,6 +2413,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateClientMaturityMatrixAssessmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientMaturityMatrixAssessmentResponse'
       message:
         type: string
       success:
@@ -3489,6 +3541,10 @@ definitions:
       client_absence:
         type: boolean
       client_options:
+        items:
+          type: string
+        type: array
+      emails:
         items:
           type: string
         type: array
@@ -5349,6 +5405,45 @@ paths:
       summary: Update an assigned employee
       tags:
       - client_network
+  /clients/{id}/maturity_matrix_assessment:
+    post:
+      consumes:
+      - application/json
+      description: Create a client maturity matrix assessment
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientMaturityMatrixAssessmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientMaturityMatrixAssessmentResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create client maturity matrix assessment
+      tags:
+      - client
   /clients/{id}/medications:
     get:
       parameters:
