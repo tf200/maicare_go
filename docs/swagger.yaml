@@ -187,6 +187,32 @@ definitions:
       id:
         type: integer
     type: object
+  api.ConfirmProgressReportRequest:
+    properties:
+      enddate:
+        type: string
+      report_text:
+        type: string
+      startdate:
+        type: string
+    required:
+    - report_text
+    type: object
+  api.ConfirmProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      report_text:
+        type: string
+      start_date:
+        type: string
+    type: object
   api.Contact:
     properties:
       email:
@@ -1758,6 +1784,21 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ListAiGeneratedReportsResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      report_text:
+        type: string
+      start_date:
+        type: string
+    type: object
   api.ListAssignedEmployeesResponse:
     properties:
       client_id:
@@ -2399,6 +2440,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ConfirmIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ConfirmProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ConfirmProgressReportResponse'
       message:
         type: string
       success:
@@ -3117,6 +3167,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListSendersResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-array_api_ListAiGeneratedReportsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-array_api_ListAiGeneratedReportsResponse'
       message:
         type: string
       success:
@@ -4099,6 +4158,23 @@ definitions:
           $ref: '#/definitions/api.ListSendersResponse'
         type: array
     type: object
+  pagination.Response-array_api_ListAiGeneratedReportsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          items:
+            $ref: '#/definitions/api.ListAiGeneratedReportsResponse'
+          type: array
+        type: array
+    type: object
   pagination.Response-array_api_ListProgressReportsResponse:
     properties:
       count:
@@ -4455,6 +4531,95 @@ paths:
       summary: Get a client
       tags:
       - clients
+  /clients/{id}/ai_progress_reports:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-array_api_ListAiGeneratedReportsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all AI generated reports for a client
+      tags:
+      - progress_reports
+    post:
+      consumes:
+      - application/json
+      description: Generate auto reports
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GenerateAutoReportsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateAutoReportsResponse'
+      summary: Generate auto reports
+      tags:
+      - progress_reports
+  /clients/{id}/ai_progress_reports/confirm:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress Report Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ConfirmProgressReportRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_ConfirmProgressReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Confirm a progress report for a client
+      tags:
+      - progress_reports
   /clients/{id}/allergies:
     get:
       consumes:
@@ -5934,28 +6099,6 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update a progress report for a client
-      tags:
-      - progress_reports
-  /clients/{id}/progress_reports/auto:
-    post:
-      consumes:
-      - application/json
-      description: Generate auto reports
-      parameters:
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.GenerateAutoReportsRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_GenerateAutoReportsResponse'
-      summary: Generate auto reports
       tags:
       - progress_reports
   /clients/{id}/related_emails:

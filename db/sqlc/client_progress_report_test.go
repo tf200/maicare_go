@@ -99,3 +99,54 @@ func TestGetProgressReportsByDateRange(t *testing.T) {
 		require.LessOrEqual(t, report.Date.Time.Unix(), endDate.Unix())
 	}
 }
+
+func createRandomAiGeneratedReport(t *testing.T, clientID int64) AiGeneratedReport {
+	startdate := util.RandomTIme()
+	enddate := startdate.AddDate(0, 0, 7)
+
+	arg := CreateAiGeneratedReportParams{
+		ClientID:   clientID,
+		ReportText: "Test AI Generated Report",
+		StartDate:  pgtype.Date{Time: startdate, Valid: true},
+		EndDate:    pgtype.Date{Time: enddate, Valid: true},
+	}
+
+	aiGeneratedReport, err := testQueries.CreateAiGeneratedReport(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, aiGeneratedReport)
+	require.Equal(t, arg.ClientID, aiGeneratedReport.ClientID)
+	require.Equal(t, arg.ReportText, aiGeneratedReport.ReportText)
+	return aiGeneratedReport
+}
+
+func TestCreateAiGeneratedReport(t *testing.T) {
+	client := createRandomClientDetails(t)
+	createRandomAiGeneratedReport(t, client.ID)
+}
+
+func TestListAiGeneratedReports(t *testing.T) {
+	client := createRandomClientDetails(t)
+	for i := 0; i < 10; i++ {
+		createRandomAiGeneratedReport(t, client.ID)
+	}
+	arg := ListAiGeneratedReportsParams{
+		ClientID: client.ID,
+		Limit:    5,
+		Offset:   5,
+	}
+	aiGeneratedReports, err := testQueries.ListAiGeneratedReports(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, aiGeneratedReports, 5)
+}
+
+func TestGetAiGeneratedReport(t *testing.T) {
+	client := createRandomClientDetails(t)
+	aiGeneratedReport1 := createRandomAiGeneratedReport(t, client.ID)
+	aiGeneratedReport2, err := testQueries.GetAiGeneratedReport(context.Background(), aiGeneratedReport1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, aiGeneratedReport2)
+	require.Equal(t, aiGeneratedReport1.ID, aiGeneratedReport2.ID)
+	require.Equal(t, aiGeneratedReport1.ClientID, aiGeneratedReport2.ClientID)
+}
+
+

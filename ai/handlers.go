@@ -98,7 +98,7 @@ func (ai *AiHandler) SpellingCheck(text string, model string) (*CorrectedContent
 	}
 
 	if len(openRouterResponse.Choices) == 0 {
-		return nil, fmt.Errorf("no choices returned")
+		return nil, fmt.Errorf("no choices returned: %v", string(body))
 	}
 
 	var correctedContent CorrectedContent
@@ -133,7 +133,7 @@ func (ai *AiHandler) GenerateAutoReports(text string, model string) (*AutoReport
 		ResponseFormat: ResponseFormat[JSONSchema[Schema[LLMAutoReportsResponseFormat]]]{
 			Type: "json_schema",
 			JSONSchema: JSONSchema[Schema[LLMAutoReportsResponseFormat]]{
-				Name:   "correct_spelling",
+				Name:   "report_text",
 				Strict: true,
 				Schema: Schema[LLMAutoReportsResponseFormat]{
 					Type: "object",
@@ -143,7 +143,7 @@ func (ai *AiHandler) GenerateAutoReports(text string, model string) (*AutoReport
 							Description: "The generated report",
 						},
 					},
-					Required:             []string{"corrected_text", "corrected_words"},
+					Required:             []string{"generated_report"},
 					AdditionalProperties: false,
 				},
 			},
@@ -151,12 +151,12 @@ func (ai *AiHandler) GenerateAutoReports(text string, model string) (*AutoReport
 	}
 	jsonRequest, err := json.Marshal(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error marshalling request: %v", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, "https://openrouter.ai/api/v1/chat/completions", bytes.NewBuffer(jsonRequest))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+ai.OpenRouterAPIKey)
@@ -165,12 +165,12 @@ func (ai *AiHandler) GenerateAutoReports(text string, model string) (*AutoReport
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error sending request: %v", err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading response: %v", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -180,18 +180,18 @@ func (ai *AiHandler) GenerateAutoReports(text string, model string) (*AutoReport
 	var openRouterResponse OpenRouterResponse
 	err = json.Unmarshal(body, &openRouterResponse)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling response: %v", err)
 	}
 
 	if len(openRouterResponse.Choices) == 0 {
-		return nil, fmt.Errorf("no choices returned")
+		return nil, fmt.Errorf("no choices returned : %v req : %v", string(body), string(jsonRequest))
 	}
 
 	var report AutoReportsContent
 	err = json.Unmarshal([]byte(openRouterResponse.Choices[0].Message.Content), &report)
 	if err != nil {
-		log.Printf("Error unmarshalling corrected content: %v", err)
-		return nil, err
+		log.Printf("Error unmarshalling llm json content: %v", err)
+		return nil, fmt.Errorf("error unmarshalling llm json content: %v, %v", err, string(body))
 	}
 
 	return &report, nil

@@ -483,6 +483,142 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/ai_progress_reports": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress_reports"
+                ],
+                "summary": "List all AI generated reports for a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-array_api_ListAiGeneratedReportsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Generate auto reports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress_reports"
+                ],
+                "summary": "Generate auto reports",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.GenerateAutoReportsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GenerateAutoReportsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/ai_progress_reports/confirm": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress_reports"
+                ],
+                "summary": "Confirm a progress report for a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Progress Report Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ConfirmProgressReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ConfirmProgressReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/allergies": {
             "get": {
                 "consumes": [
@@ -2615,40 +2751,6 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/progress_reports/auto": {
-            "post": {
-                "description": "Generate auto reports",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "progress_reports"
-                ],
-                "summary": "Generate auto reports",
-                "parameters": [
-                    {
-                        "description": "Request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.GenerateAutoReportsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GenerateAutoReportsResponse"
                         }
                     }
                 }
@@ -5051,6 +5153,46 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ConfirmProgressReportRequest": {
+            "type": "object",
+            "required": [
+                "report_text"
+            ],
+            "properties": {
+                "enddate": {
+                    "type": "string"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "startdate": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ConfirmProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "api.Contact": {
             "type": "object",
             "properties": {
@@ -7397,6 +7539,29 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListAiGeneratedReportsResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListAssignedEmployeesResponse": {
             "type": "object",
             "properties": {
@@ -8369,6 +8534,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.ConfirmIncidentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_ConfirmProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ConfirmProgressReportResponse"
                 },
                 "message": {
                     "type": "string"
@@ -9485,6 +9664,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListSendersResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-array_api_ListAiGeneratedReportsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-array_api_ListAiGeneratedReportsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10976,6 +11169,32 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListSendersResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-array_api_ListAiGeneratedReportsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/api.ListAiGeneratedReportsResponse"
+                        }
                     }
                 }
             }

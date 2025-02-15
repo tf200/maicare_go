@@ -330,7 +330,7 @@ type GenerateAutoReportsResponse struct {
 // @Produce json
 // @Param request body GenerateAutoReportsRequest true "Request body"
 // @Success 200 {object} Response[GenerateAutoReportsResponse]
-// @Router /clients/{id}/progress_reports/auto [post]
+// @Router /clients/{id}/ai_progress_reports [post]
 func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
@@ -367,7 +367,7 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 	}
 	text := builder.String()
 
-	autoRep, err := server.aiHandler.GenerateAutoReports(text, "anthropic/claude-3.5-haiku-20241022:beta")
+	autoRep, err := server.aiHandler.GenerateAutoReports(text, "google/gemini-2.0-flash-001")
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -377,6 +377,150 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 		Report: autoRep.GeneratedReport,
 	}, "Auto reports generated successfully")
 
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// ConfirmProgressReportRequest defines the request payload for ConfirmProgressReport API
+type ConfirmProgressReportRequest struct {
+	ReportText string `json:"report_text" binding:"required"`
+	Startdate  time.Time
+	Enddate    time.Time
+}
+
+// ConfirmProgressReportResponse defines the response payload for ConfirmProgressReport API
+type ConfirmProgressReportResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+	ReportText string    `json:"report_text"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// ConfirmProgressReportApi creates a new progress report for a client
+// @Summary Confirm a progress report for a client
+// @Tags progress_reports
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body ConfirmProgressReportRequest true "Progress Report Request"
+// @Success 201 {object} Response[ConfirmProgressReportResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/ai_progress_reports/confirm [post]
+func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ConfirmProgressReportRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	progressReport := db.CreateAiGeneratedReportParams{
+		ClientID:   clientID,
+		ReportText: req.ReportText,
+		StartDate:  pgtype.Date{Time: req.Startdate, Valid: true},
+		EndDate:    pgtype.Date{Time: req.Enddate, Valid: true},
+	}
+
+	createdProgressReport, err := server.store.CreateAiGeneratedReport(ctx, progressReport)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(ConfirmProgressReportResponse{
+		ID:         createdProgressReport.ID,
+		ClientID:   createdProgressReport.ClientID,
+		StartDate:  createdProgressReport.StartDate.Time,
+		EndDate:    createdProgressReport.EndDate.Time,
+		ReportText: createdProgressReport.ReportText,
+		CreatedAt:  createdProgressReport.CreatedAt.Time,
+	}, "Progress Report created successfully")
+
+	ctx.JSON(http.StatusCreated, res)
+}
+
+// ListAiGeneratedReportsRequest defines the request payload for ListAiGeneratedReports API
+type ListAiGeneratedReportsRequest struct {
+	pagination.Request
+}
+
+// ListAiGeneratedReportsResponse defines the response payload for ListAiGeneratedReports API
+type ListAiGeneratedReportsResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+	ReportText string    `json:"report_text"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// ListAiGeneratedReportsApi lists all AI generated reports for a client
+// @Summary List all AI generated reports for a client
+// @Tags progress_reports
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} Response[pagination.Response[[]ListAiGeneratedReportsResponse]]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/ai_progress_reports [get]
+func (server *Server) ListAiGeneratedReportsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ListAiGeneratedReportsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	params := req.GetParams()
+
+	arg := db.ListAiGeneratedReportsParams{
+		ClientID: clientID,
+		Limit:    params.Limit,
+		Offset:   params.Offset,
+	}
+
+	progressReports, err := server.store.ListAiGeneratedReports(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(progressReports) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListAiGeneratedReportsResponse{}, 0)
+		res := SuccessResponse(pag, "No progress reports found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
+	repList := make([]ListAiGeneratedReportsResponse, len(progressReports))
+	for i, progressReport := range progressReports {
+		repList[i] = ListAiGeneratedReportsResponse{
+			ID:         progressReport.ID,
+			ClientID:   progressReport.ClientID,
+			StartDate:  progressReport.StartDate.Time,
+			EndDate:    progressReport.EndDate.Time,
+			ReportText: progressReport.ReportText,
+			CreatedAt:  progressReport.CreatedAt.Time,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, repList, progressReports[0].TotalCount)
+	res := SuccessResponse(pag, "Progress reports retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 
 }
