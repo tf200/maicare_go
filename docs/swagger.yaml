@@ -558,10 +558,8 @@ definitions:
         items:
           $ref: '#/definitions/api.MatrixAssessment'
         type: array
-      end_date:
-        type: string
-      start_date:
-        type: string
+    required:
+    - assessment
     type: object
   api.CreateClientMaturityMatrixAssessmentResponse:
     properties:
@@ -571,10 +569,6 @@ definitions:
         type: array
       client_id:
         type: integer
-      end_date:
-        type: string
-      start_date:
-        type: string
     type: object
   api.CreateClientMedicationResponse:
     properties:
@@ -1208,6 +1202,18 @@ definitions:
     properties:
       id:
         type: integer
+    type: object
+  api.GenerateAutoReportsRequest:
+    properties:
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
+  api.GenerateAutoReportsResponse:
+    properties:
+      report:
+        type: string
     type: object
   api.GenerateIncidentFileResponse:
     properties:
@@ -1867,6 +1873,27 @@ definitions:
       relationship:
         type: string
     type: object
+  api.ListClientMaturityMatrixAssessmentsResponse:
+    properties:
+      client_id:
+        type: integer
+      current_level:
+        type: integer
+      end_date:
+        $ref: '#/definitions/pgtype.Date'
+      id:
+        type: integer
+      initial_level:
+        type: integer
+      is_active:
+        type: boolean
+      matrix_assessment_id:
+        type: integer
+      start_date:
+        $ref: '#/definitions/pgtype.Date'
+      topic_name:
+        type: string
+    type: object
   api.ListClientMedicationsResponse:
     properties:
       administered_by_first_name:
@@ -2175,6 +2202,13 @@ definitions:
       name:
         type: string
     type: object
+  api.ListMaturityMatrixResponse:
+    properties:
+      id:
+        type: integer
+      topic_name:
+        type: string
+    type: object
   api.ListProgressReportsResponse:
     properties:
       client_id:
@@ -2263,10 +2297,16 @@ definitions:
     type: object
   api.MatrixAssessment:
     properties:
+      end_date:
+        type: string
       id:
         type: integer
       initial_level:
         type: integer
+      maturity_matrix_id:
+        type: integer
+      start_date:
+        type: string
     type: object
   api.Permission:
     properties:
@@ -2548,6 +2588,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GenerateAutoReportsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GenerateAutoReportsResponse'
       message:
         type: string
       success:
@@ -2950,6 +2999,17 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_ListMaturityMatrixResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListMaturityMatrixResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_ListRolesApiResponse:
     properties:
       data:
@@ -3003,6 +3063,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientDocumentsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse'
       message:
         type: string
       success:
@@ -3938,6 +4007,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListClientDocumentsApiResponse'
+        type: array
+    type: object
+  pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientMaturityMatrixAssessmentsResponse'
         type: array
     type: object
   pagination.Response-api_ListClientMedicationsResponse:
@@ -5406,6 +5490,44 @@ paths:
       tags:
       - client_network
   /clients/{id}/maturity_matrix_assessment:
+    get:
+      description: Get a list of client maturity matrix assessments
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List client maturity matrix assessments
+      tags:
+      - client
     post:
       consumes:
       - application/json
@@ -5812,6 +5934,28 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update a progress report for a client
+      tags:
+      - progress_reports
+  /clients/{id}/progress_reports/auto:
+    post:
+      consumes:
+      - application/json
+      description: Generate auto reports
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GenerateAutoReportsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateAutoReportsResponse'
+      summary: Generate auto reports
       tags:
       - progress_reports
   /clients/{id}/related_emails:
@@ -6858,6 +7002,31 @@ paths:
       summary: Update a location
       tags:
       - locations
+  /maturity_matrix:
+    get:
+      description: Get a list of all maturity matrix
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListMaturityMatrixResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all maturity matrix
+      tags:
+      - maturity_matrix
   /roles:
     get:
       description: List all roles

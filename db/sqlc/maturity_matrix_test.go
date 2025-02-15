@@ -11,6 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestListMaturityMatrix(t *testing.T) {
+
+	matrix, err := testQueries.ListMaturityMatrix(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, matrix)
+	require.Len(t, matrix, 13)
+}
+
 func createRamdomClientMaturityMatrixAssessment(t *testing.T, clientID int64, maturityMatrixID int64) {
 	startDate := util.RandomTIme()
 	endDate := startDate.AddDate(0, 0, 7)
@@ -28,6 +36,7 @@ func createRamdomClientMaturityMatrixAssessment(t *testing.T, clientID int64, ma
 	require.NotEmpty(t, clientMaturityMatrixAssessment)
 	require.Equal(t, arg.ClientID, clientMaturityMatrixAssessment.ClientID)
 	require.Equal(t, arg.MaturityMatrixID, clientMaturityMatrixAssessment.MaturityMatrixID)
+	require.NotEmpty(t, clientMaturityMatrixAssessment.TopicName)
 }
 
 func TestCreateClientMaturityMatrixAssessment(t *testing.T) {
@@ -37,21 +46,21 @@ func TestCreateClientMaturityMatrixAssessment(t *testing.T) {
 
 func TestListClientMaturityMatrixAssessments(t *testing.T) {
 	client := createRandomClientDetails(t)
-	/* 	
-	we are using i instead of random value because of the unique constraint 
-	each client can have only one assessment for each maturity matrix
-	this way we get a sure unique value between 1 and 10
+	/*
+		we are using i instead of random value because of the unique constraint
+		each client can have only one assessment for each maturity matrix
+		this way we get a sure unique value between 1 and 10
 	*/
 	var i int64
 	for i = 0; i < 10; i++ {
-		createRamdomClientMaturityMatrixAssessment(t, client.ID, i+1) 
-	arg := ListClientMaturityMatrixAssessmentsParams{
-		ClientID: client.ID,
-		Limit:    5,
-		Offset:   5,
+		createRamdomClientMaturityMatrixAssessment(t, client.ID, i+1)
+		arg := ListClientMaturityMatrixAssessmentsParams{
+			ClientID: client.ID,
+			Limit:    5,
+			Offset:   5,
+		}
+		clientMaturityMatrixAssessments, err := testQueries.ListClientMaturityMatrixAssessments(context.Background(), arg)
+		require.NoError(t, err)
+		require.Len(t, clientMaturityMatrixAssessments, 5)
 	}
-	clientMaturityMatrixAssessments, err := testQueries.ListClientMaturityMatrixAssessments(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, clientMaturityMatrixAssessments, 5)
-}
 }

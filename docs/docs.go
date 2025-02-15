@@ -2048,6 +2048,63 @@ const docTemplate = `{
             }
         },
         "/clients/{id}/maturity_matrix_assessment": {
+            "get": {
+                "description": "Get a list of client maturity matrix assessments",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client"
+                ],
+                "summary": "List client maturity matrix assessments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a client maturity matrix assessment",
                 "consumes": [
@@ -2558,6 +2615,40 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/progress_reports/auto": {
+            "post": {
+                "description": "Generate auto reports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress_reports"
+                ],
+                "summary": "Generate auto reports",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.GenerateAutoReportsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GenerateAutoReportsResponse"
                         }
                     }
                 }
@@ -4240,6 +4331,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/maturity_matrix": {
+            "get": {
+                "description": "Get a list of all maturity matrix",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maturity_matrix"
+                ],
+                "summary": "List all maturity matrix",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_ListMaturityMatrixResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/roles": {
             "get": {
                 "description": "List all roles",
@@ -5471,18 +5600,15 @@ const docTemplate = `{
         },
         "api.CreateClientMaturityMatrixAssessmentRequest": {
             "type": "object",
+            "required": [
+                "assessment"
+            ],
             "properties": {
                 "assessment": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.MatrixAssessment"
                     }
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
                 }
             }
         },
@@ -5497,12 +5623,6 @@ const docTemplate = `{
                 },
                 "client_id": {
                     "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
                 }
             }
         },
@@ -6431,6 +6551,25 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.GenerateAutoReportsRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.GenerateAutoReportsResponse": {
+            "type": "object",
+            "properties": {
+                "report": {
+                    "type": "string"
                 }
             }
         },
@@ -7433,6 +7572,38 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListClientMaturityMatrixAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "initial_level": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "matrix_assessment_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "topic_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListClientMedicationsResponse": {
             "type": "object",
             "properties": {
@@ -7899,6 +8070,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListMaturityMatrixResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "topic_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListProgressReportsResponse": {
             "type": "object",
             "properties": {
@@ -8031,11 +8213,20 @@ const docTemplate = `{
         "api.MatrixAssessment": {
             "type": "object",
             "properties": {
+                "end_date": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "initial_level": {
                     "type": "integer"
+                },
+                "maturity_matrix_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -8472,6 +8663,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.DeleteLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GenerateAutoReportsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GenerateAutoReportsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -9098,6 +9303,23 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_api_ListMaturityMatrixResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListMaturityMatrixResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-array_api_ListRolesApiResponse": {
             "type": "object",
             "properties": {
@@ -9179,6 +9401,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListClientDocumentsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10602,6 +10838,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListClientDocumentsApiResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListClientMaturityMatrixAssessmentsResponse"
                     }
                 }
             }

@@ -12,8 +12,8 @@ import (
 )
 
 const createClientMaturityMatrixAssessment = `-- name: CreateClientMaturityMatrixAssessment :one
-INSERT INTO
-    client_maturity_matrix_assessment (
+WITH inserted AS (
+    INSERT INTO client_maturity_matrix_assessment (
         client_id,
         maturity_matrix_id,
         start_date,
@@ -22,7 +22,14 @@ INSERT INTO
         current_level
     ) VALUES (
         $1, $2, $3, $4, $5, $6
-    ) RETURNING id, client_id, maturity_matrix_id, start_date, end_date, initial_level, current_level, is_active
+    )
+    RETURNING id, client_id, maturity_matrix_id, start_date, end_date, initial_level, current_level, is_active
+)
+SELECT 
+    inserted.id, inserted.client_id, inserted.maturity_matrix_id, inserted.start_date, inserted.end_date, inserted.initial_level, inserted.current_level, inserted.is_active,
+    mm.topic_name AS topic_name
+FROM inserted
+JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id
 `
 
 type CreateClientMaturityMatrixAssessmentParams struct {
@@ -34,7 +41,19 @@ type CreateClientMaturityMatrixAssessmentParams struct {
 	CurrentLevel     int32       `json:"current_level"`
 }
 
-func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg CreateClientMaturityMatrixAssessmentParams) (ClientMaturityMatrixAssessment, error) {
+type CreateClientMaturityMatrixAssessmentRow struct {
+	ID               int64       `json:"id"`
+	ClientID         int64       `json:"client_id"`
+	MaturityMatrixID int64       `json:"maturity_matrix_id"`
+	StartDate        pgtype.Date `json:"start_date"`
+	EndDate          pgtype.Date `json:"end_date"`
+	InitialLevel     int32       `json:"initial_level"`
+	CurrentLevel     int32       `json:"current_level"`
+	IsActive         bool        `json:"is_active"`
+	TopicName        string      `json:"topic_name"`
+}
+
+func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg CreateClientMaturityMatrixAssessmentParams) (CreateClientMaturityMatrixAssessmentRow, error) {
 	row := q.db.QueryRow(ctx, createClientMaturityMatrixAssessment,
 		arg.ClientID,
 		arg.MaturityMatrixID,
@@ -43,7 +62,7 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 		arg.InitialLevel,
 		arg.CurrentLevel,
 	)
-	var i ClientMaturityMatrixAssessment
+	var i CreateClientMaturityMatrixAssessmentRow
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
@@ -53,6 +72,7 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 		&i.InitialLevel,
 		&i.CurrentLevel,
 		&i.IsActive,
+		&i.TopicName,
 	)
 	return i, err
 }
@@ -60,7 +80,8 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 const listClientMaturityMatrixAssessments = `-- name: ListClientMaturityMatrixAssessments :many
 SELECT
     cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.current_level, cma.is_active,
-    mm.topic_name AS topic_name
+    mm.topic_name AS topic_name,
+    COUNT(*) OVER() AS total_count
 FROM client_maturity_matrix_assessment cma
 JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
 WHERE cma.client_id = $1
@@ -84,6 +105,7 @@ type ListClientMaturityMatrixAssessmentsRow struct {
 	CurrentLevel     int32       `json:"current_level"`
 	IsActive         bool        `json:"is_active"`
 	TopicName        string      `json:"topic_name"`
+	TotalCount       int64       `json:"total_count"`
 }
 
 func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg ListClientMaturityMatrixAssessmentsParams) ([]ListClientMaturityMatrixAssessmentsRow, error) {
@@ -105,7 +127,32 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 			&i.CurrentLevel,
 			&i.IsActive,
 			&i.TopicName,
+			&i.TotalCount,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMaturityMatrix = `-- name: ListMaturityMatrix :many
+SELECT id, topic_name, level_description FROM maturity_matrix
+`
+
+func (q *Queries) ListMaturityMatrix(ctx context.Context) ([]MaturityMatrix, error) {
+	rows, err := q.db.Query(ctx, listMaturityMatrix)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MaturityMatrix
+	for rows.Next() {
+		var i MaturityMatrix
+		if err := rows.Scan(&i.ID, &i.TopicName, &i.LevelDescription); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

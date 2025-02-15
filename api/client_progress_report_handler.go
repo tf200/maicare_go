@@ -1,10 +1,12 @@
 package api
 
 import (
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -307,4 +309,74 @@ func (server *Server) UpdateProgressReportApi(ctx *gin.Context) {
 	}, "Progress Report updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// GenerateAutoReportsRequest is the request format for the auto reports generation API
+type GenerateAutoReportsRequest struct {
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+}
+
+// GenerateAutoReportsResponse is the response format for the auto reports generation API
+type GenerateAutoReportsResponse struct {
+	Report string `json:"report"`
+}
+
+// GenerateAutoReportsApi is the handler for the auto reports generation API
+// @Summary Generate auto reports
+// @Description Generate auto reports
+// @Tags progress_reports
+// @Accept json
+// @Produce json
+// @Param request body GenerateAutoReportsRequest true "Request body"
+// @Success 200 {object} Response[GenerateAutoReportsResponse]
+// @Router /clients/{id}/progress_reports/auto [post]
+func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req GenerateAutoReportsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.GetProgressReportsByDateRangeParams{
+		ClientID:  clientID,
+		StartDate: pgtype.Timestamptz{Time: req.StartDate, Valid: true},
+		EndDate:   pgtype.Timestamptz{Time: req.EndDate, Valid: true},
+	}
+	progressReports, err := server.store.GetProgressReportsByDateRange(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var builder strings.Builder
+	for _, report := range progressReports {
+		fmt.Fprintf(&builder,
+			"Date: %s\nType: %s\nEmotional State: %s\nReport Text: %s\n\n",
+			report.Date.Time.GoString(),
+			report.Type,
+			report.EmotionalState,
+			report.ReportText)
+	}
+	text := builder.String()
+
+	autoRep, err := server.aiHandler.GenerateAutoReports(text, "anthropic/claude-3.5-haiku-20241022:beta")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GenerateAutoReportsResponse{
+		Report: autoRep.GeneratedReport,
+	}, "Auto reports generated successfully")
+
+	ctx.JSON(http.StatusOK, res)
+
 }

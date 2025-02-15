@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS "public"."ai_generated_report" CASCADE;
+DROP TABLE IF EXISTS "public"."ai_generated_reports" CASCADE;
 DROP TABLE IF EXISTS "public"."ai_generated_weekly_reports" CASCADE;
 DROP TABLE IF EXISTS "public"."assessment" CASCADE;
 DROP TABLE IF EXISTS "public"."assessment_domain" CASCADE;

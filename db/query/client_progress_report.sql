@@ -54,3 +54,39 @@ WHERE client_id = @client_id
   AND date >= @start_date
   AND date <= @end_date
 ORDER BY date ASC;
+
+
+
+-- name: CreateAiGeneratedReport :one
+INSERT INTO ai_generated_reports (
+        client_id,
+        report_text,
+        start_date,
+        end_date
+
+    ) VALUES (
+        $1, $2, $3, $4
+    ) RETURNING *;
+
+
+-- name: ListAiGeneratedReports :many
+SELECT 
+    agr.*,
+    COUNT(*) OVER() AS total_count
+FROM ai_generated_reports agr
+WHERE agr.client_id = $1
+ORDER BY agr.created_at DESC
+LIMIT $2 OFFSET $3;
+
+
+-- name: GetAiGeneratedReport :one
+SELECT 
+    agr.*
+FROM ai_generated_reports agr
+WHERE agr.id = $1 LIMIT 1;
+
+
+
+
+
+

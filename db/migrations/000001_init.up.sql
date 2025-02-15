@@ -764,27 +764,27 @@ CREATE TABLE data_sharing_statement (
 
 
 
-CREATE TABLE ai_generated_report (
-    id BIGSERIAL PRIMARY KEY,
-    report_type VARCHAR(100) NOT NULL CHECK (report_type IN (
-        'client_reports_summary',
-        'client_profile_summary',
-        'client_goals_and_objectives_summary',
-        'employee_performance'
-    )),
-    title VARCHAR(255) NOT NULL,
-    content TEXT NULL,
-    user_id BIGINT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
-    user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('client', 'employee')),
-    start_date TIMESTAMPTZ NULL,
-    end_date TIMESTAMPTZ NULL,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE ai_generated_report (
+--     id BIGSERIAL PRIMARY KEY,
+--     report_type VARCHAR(100) NOT NULL CHECK (report_type IN (
+--         'client_reports_summary',
+--         'client_profile_summary',
+--         'client_goals_and_objectives_summary',
+--         'employee_performance'
+--     )),
+--     title VARCHAR(255) NOT NULL,
+--     content TEXT NULL,
+--     user_id BIGINT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
+--     user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('client', 'employee')),
+--     start_date TIMESTAMPTZ NULL,
+--     end_date TIMESTAMPTZ NULL,
+--     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
-CREATE INDEX ai_generated_report_user_id_idx ON ai_generated_report(user_id);
-CREATE INDEX ai_generated_report_created_idx ON ai_generated_report(created DESC);
-CREATE INDEX ai_generated_report_updated_idx ON ai_generated_report(updated);
+-- CREATE INDEX ai_generated_report_user_id_idx ON ai_generated_report(user_id);
+-- CREATE INDEX ai_generated_report_created_idx ON ai_generated_report(created DESC);
+-- CREATE INDEX ai_generated_report_updated_idx ON ai_generated_report(updated);
 
 
 
@@ -1072,12 +1072,14 @@ CREATE INDEX client_medication_record_created_idx ON client_medication_record(cr
 
 
 
--- CREATE TABLE ai_generated_weekly_reports (
---     id BIGSERIAL PRIMARY KEY,
---     report_text TEXT NOT NULL,
---     goal_id BIGINT NULL REFERENCES client_goals(id) ON DELETE SET NULL,
---     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
--- );
+CREATE TABLE ai_generated_reports (
+    id BIGSERIAL PRIMARY KEY,
+    report_text TEXT NOT NULL,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE weekly_report_summary (
     id BIGSERIAL PRIMARY KEY,

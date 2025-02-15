@@ -11,15 +11,11 @@ import (
 
 type AiGeneratedReport struct {
 	ID         int64              `json:"id"`
-	ReportType string             `json:"report_type"`
-	Title      string             `json:"title"`
-	Content    *string            `json:"content"`
-	UserID     *int64             `json:"user_id"`
-	UserType   string             `json:"user_type"`
-	StartDate  pgtype.Timestamptz `json:"start_date"`
-	EndDate    pgtype.Timestamptz `json:"end_date"`
-	Updated    pgtype.Timestamptz `json:"updated"`
-	Created    pgtype.Timestamptz `json:"created"`
+	ReportText string             `json:"report_text"`
+	ClientID   int64              `json:"client_id"`
+	StartDate  pgtype.Date        `json:"start_date"`
+	EndDate    pgtype.Date        `json:"end_date"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type AppointmentCard struct {

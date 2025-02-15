@@ -11,6 +11,44 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createAiGeneratedReport = `-- name: CreateAiGeneratedReport :one
+INSERT INTO ai_generated_reports (
+        client_id,
+        report_text,
+        start_date,
+        end_date
+
+    ) VALUES (
+        $1, $2, $3, $4
+    ) RETURNING id, report_text, client_id, start_date, end_date, created_at
+`
+
+type CreateAiGeneratedReportParams struct {
+	ClientID   int64       `json:"client_id"`
+	ReportText string      `json:"report_text"`
+	StartDate  pgtype.Date `json:"start_date"`
+	EndDate    pgtype.Date `json:"end_date"`
+}
+
+func (q *Queries) CreateAiGeneratedReport(ctx context.Context, arg CreateAiGeneratedReportParams) (AiGeneratedReport, error) {
+	row := q.db.QueryRow(ctx, createAiGeneratedReport,
+		arg.ClientID,
+		arg.ReportText,
+		arg.StartDate,
+		arg.EndDate,
+	)
+	var i AiGeneratedReport
+	err := row.Scan(
+		&i.ID,
+		&i.ReportText,
+		&i.ClientID,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createProgressReport = `-- name: CreateProgressReport :one
 INSERT INTO progress_report (
         client_id,
@@ -55,6 +93,27 @@ func (q *Queries) CreateProgressReport(ctx context.Context, arg CreateProgressRe
 		&i.EmployeeID,
 		&i.Type,
 		&i.EmotionalState,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getAiGeneratedReport = `-- name: GetAiGeneratedReport :one
+SELECT 
+    agr.id, agr.report_text, agr.client_id, agr.start_date, agr.end_date, agr.created_at
+FROM ai_generated_reports agr
+WHERE agr.id = $1 LIMIT 1
+`
+
+func (q *Queries) GetAiGeneratedReport(ctx context.Context, id int64) (AiGeneratedReport, error) {
+	row := q.db.QueryRow(ctx, getAiGeneratedReport, id)
+	var i AiGeneratedReport
+	err := row.Scan(
+		&i.ID,
+		&i.ReportText,
+		&i.ClientID,
+		&i.StartDate,
+		&i.EndDate,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -137,6 +196,60 @@ func (q *Queries) GetProgressReportsByDateRange(ctx context.Context, arg GetProg
 			&i.Type,
 			&i.EmotionalState,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAiGeneratedReports = `-- name: ListAiGeneratedReports :many
+SELECT 
+    agr.id, agr.report_text, agr.client_id, agr.start_date, agr.end_date, agr.created_at,
+    COUNT(*) OVER() AS total_count
+FROM ai_generated_reports agr
+WHERE agr.client_id = $1
+ORDER BY agr.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListAiGeneratedReportsParams struct {
+	ClientID int64 `json:"client_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
+}
+
+type ListAiGeneratedReportsRow struct {
+	ID         int64              `json:"id"`
+	ReportText string             `json:"report_text"`
+	ClientID   int64              `json:"client_id"`
+	StartDate  pgtype.Date        `json:"start_date"`
+	EndDate    pgtype.Date        `json:"end_date"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	TotalCount int64              `json:"total_count"`
+}
+
+func (q *Queries) ListAiGeneratedReports(ctx context.Context, arg ListAiGeneratedReportsParams) ([]ListAiGeneratedReportsRow, error) {
+	rows, err := q.db.Query(ctx, listAiGeneratedReports, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAiGeneratedReportsRow
+	for rows.Next() {
+		var i ListAiGeneratedReportsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ReportText,
+			&i.ClientID,
+			&i.StartDate,
+			&i.EndDate,
+			&i.CreatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
