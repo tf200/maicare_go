@@ -31,16 +31,16 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 				assessmentReq := CreateClientMaturityMatrixAssessmentRequest{
 					Assessments: []MatrixAssessment{
 						{
-							ID:           1,
-							InitialLevel: 2,
-							StartDate:    time.Now(),
-							EndDate:      time.Now().Add(time.Hour * 24 * 7),
+							MaturityMatrixID: 1,
+							InitialLevel:     2,
+							StartDate:        time.Now(),
+							EndDate:          time.Now().Add(time.Hour * 24 * 7),
 						},
 						{
-							ID:           2,
-							InitialLevel: 3,
-							StartDate:    time.Now(),
-							EndDate:      time.Now().Add(time.Hour * 24 * 7),
+							MaturityMatrixID: 2,
+							InitialLevel:     3,
+							StartDate:        time.Now(),
+							EndDate:          time.Now().Add(time.Hour * 24 * 7),
 						},
 					},
 				}
@@ -55,6 +55,7 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
 				var assessmentCard Response[CreateClientMaturityMatrixAssessmentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &assessmentCard)

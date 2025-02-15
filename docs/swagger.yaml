@@ -5527,7 +5527,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: List client maturity matrix assessments
       tags:
-      - client
+      - maturity_matrix
     post:
       consumes:
       - application/json
@@ -5565,7 +5565,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Create client maturity matrix assessment
       tags:
-      - client
+      - maturity_matrix
   /clients/{id}/medications:
     get:
       parameters:

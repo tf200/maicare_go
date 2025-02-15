@@ -68,7 +68,7 @@ type CreateClientMaturityMatrixAssessmentResponse struct {
 
 // @Summary Create client maturity matrix assessment
 // @Description Create a client maturity matrix assessment
-// @Tags client
+// @Tags maturity_matrix
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
@@ -161,7 +161,7 @@ type ListClientMaturityMatrixAssessmentsResponse struct {
 
 // @Summary List client maturity matrix assessments
 // @Description Get a list of client maturity matrix assessments
-// @Tags client
+// @Tags maturity_matrix
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param page query int false "Page number"
@@ -194,6 +194,13 @@ func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(clientAssessments) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientMaturityMatrixAssessmentsResponse{}, 0)
+		res := SuccessResponse(pag, "No client maturity matrix assessments found")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 

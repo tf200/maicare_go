@@ -2054,7 +2054,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "client"
+                    "maturity_matrix"
                 ],
                 "summary": "List client maturity matrix assessments",
                 "parameters": [
@@ -2114,7 +2114,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "client"
+                    "maturity_matrix"
                 ],
                 "summary": "Create client maturity matrix assessment",
                 "parameters": [
