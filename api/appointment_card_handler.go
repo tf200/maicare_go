@@ -271,4 +271,3 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, res)
 }
-

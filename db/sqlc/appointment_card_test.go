@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAppointmentCard(t *testing.T, clientID int64) AppointmentCard {
+func createRandomAppointmentCard(t *testing.T, clientID int64) (AppointmentCard, error) {
 
 	arg := CreateAppointmentCardParams{
 		ClientID:               clientID,
@@ -24,23 +24,28 @@ func createRandomAppointmentCard(t *testing.T, clientID int64) AppointmentCard {
 		Leave:                  []string{"Took a week off for vacation", "Returned to work on August 1st"},
 	}
 	appointmentCard, err := testQueries.CreateAppointmentCard(context.Background(), arg)
+	if err != nil {
+		return AppointmentCard{}, err
+	}
 	require.NoError(t, err)
 	require.NotEmpty(t, appointmentCard)
 	require.Equal(t, arg.ClientID, appointmentCard.ClientID)
 	require.Equal(t, arg.GeneralInformation, appointmentCard.GeneralInformation)
 	require.Equal(t, arg.ImportantContacts, appointmentCard.ImportantContacts)
 	require.Equal(t, arg.HouseholdInfo, appointmentCard.HouseholdInfo)
-	return appointmentCard
+	return appointmentCard, err
 }
 
 func TestCreateAppointmentCard(t *testing.T) {
 	client := createRandomClientDetails(t)
 	createRandomAppointmentCard(t, client.ID)
+	_, err := createRandomAppointmentCard(t, client.ID)
+	require.Error(t, err)
 }
 
 func TestGetAppointmentCard(t *testing.T) {
 	client := createRandomClientDetails(t)
-	appointmentCard1 := createRandomAppointmentCard(t, client.ID)
+	appointmentCard1, _ := createRandomAppointmentCard(t, client.ID)
 	appointmentCard2, err := testQueries.GetAppointmentCard(context.Background(), client.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, appointmentCard2)
@@ -49,7 +54,7 @@ func TestGetAppointmentCard(t *testing.T) {
 
 func TestUpdateAppointmentCard(t *testing.T) {
 	client := createRandomClientDetails(t)
-	appointmentCard1 := createRandomAppointmentCard(t, client.ID)
+	appointmentCard1, _ := createRandomAppointmentCard(t, client.ID)
 	arg := UpdateAppointmentCardParams{
 		ClientID:           client.ID,
 		GeneralInformation: []string{"Updated: Client is doing well", "Updated: No concerns raised"},
