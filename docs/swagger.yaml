@@ -4570,6 +4570,11 @@ paths:
       - application/json
       description: Generate auto reports
       parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: Request body
         in: body
         name: request

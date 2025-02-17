@@ -328,6 +328,7 @@ type GenerateAutoReportsResponse struct {
 // @Tags progress_reports
 // @Accept json
 // @Produce json
+// @Param id path int true "Client ID"
 // @Param request body GenerateAutoReportsRequest true "Request body"
 // @Success 200 {object} Response[GenerateAutoReportsResponse]
 // @Router /clients/{id}/ai_progress_reports [post]

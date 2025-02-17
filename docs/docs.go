@@ -548,6 +548,13 @@ const docTemplate = `{
                 "summary": "Generate auto reports",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Request body",
                         "name": "request",
                         "in": "body",
