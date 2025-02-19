@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        .content-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .meta-item {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Appointment Card {{.ClientName}}</h1>
+    </div>
+
+    <div class="meta-info">
+        <div class="meta-item">Date: {{.Date}}</div>
+        <div class="meta-item">Mentor: {{.Mentor}}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">General Information</div>
+        <ul class="content-list">
+            {{range .GeneralInformation}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Important Contacts</div>
+        <ul class="content-list">
+            {{range .ImportantContacts}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Household</div>
+        <ul class="content-list">
+            {{range .HouseholdInfo}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Organization Agreements</div>
+        <ul class="content-list">
+            {{range .OrganizationAgreements}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Youth Officer Agreements</div>
+        <ul class="content-list">
+            {{range .YouthOfficerAgreements}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Treatment Agreements</div>
+        <ul class="content-list">
+            {{range .TreatmentAgreements}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Smoking Rules</div>
+        <ul class="content-list">
+            {{range .SmokingRules}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Work</div>
+        <ul class="content-list">
+            {{range .Work}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">School/Internship</div>
+        <ul class="content-list">
+            {{range .SchoolInternship}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Travel</div>
+        <ul class="content-list">
+            {{range .Travel}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Leave</div>
+        <ul class="content-list">
+            {{range .Leave}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+</body>
+</html>

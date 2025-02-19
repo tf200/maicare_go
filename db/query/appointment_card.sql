@@ -17,8 +17,16 @@ INSERT INTO appointment_card (
 ) RETURNING *;
 
 -- name: GetAppointmentCard :one
-SELECT * FROM appointment_card
-WHERE client_id = $1 LIMIT 1;
+SELECT 
+    ac.*,
+    c.first_name,
+    c.last_name
+FROM appointment_card ac
+JOIN client_details c ON ac.client_id = c.id
+WHERE ac.client_id = $1
+LIMIT 1;
+
+
 
 -- name: UpdateAppointmentCard :one
 UPDATE appointment_card
@@ -36,3 +44,11 @@ SET
     leave = COALESCE(sqlc.narg('leave'), leave)
 WHERE client_id = $1
 RETURNING *;
+
+-- name: UpdateAppointmentCardUrl :one
+UPDATE appointment_card
+SET
+    file_url = COALESCE(sqlc.narg('file_url'), file_url)
+WHERE client_id = $1
+RETURNING file_url;
+

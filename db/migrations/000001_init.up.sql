@@ -1229,6 +1229,7 @@ CREATE TABLE appointment_card (
     school_internship TEXT[] NOT NULL DEFAULT '{}',
     travel TEXT[] NOT NULL DEFAULT '{}',
     leave TEXT[] NOT NULL DEFAULT '{}',
+    file_url VARCHAR(255) NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

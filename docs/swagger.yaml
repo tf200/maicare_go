@@ -287,6 +287,8 @@ definitions:
         type: integer
       created_at:
         type: string
+      file_url:
+        type: string
       general_information:
         items:
           type: string
@@ -1253,6 +1255,8 @@ definitions:
       client_id:
         type: integer
       created_at:
+        type: string
+      file_url:
         type: string
       general_information:
         items:
@@ -4862,6 +4866,25 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
       summary: Update an appointment card by client ID
+      tags:
+      - appointment_cards
+  /clients/{id}/appointment_cards/generate_document:
+    post:
+      description: Generate an appointment card document by client ID
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
+      summary: Generate an appointment card document by client ID
       tags:
       - appointment_cards
   /clients/{id}/diagnosis:

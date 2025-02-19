@@ -987,6 +987,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/appointment_cards/generate_document": {
+            "post": {
+                "description": "Generate an appointment card document by client ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointment_cards"
+                ],
+                "summary": "Generate an appointment card document by client ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateAppointmentCardResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/diagnosis": {
             "get": {
                 "consumes": [
@@ -5313,6 +5342,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "file_url": {
+                    "type": "string"
+                },
                 "general_information": {
                     "type": "array",
                     "items": {
@@ -6740,6 +6772,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "created_at": {
+                    "type": "string"
+                },
+                "file_url": {
                     "type": "string"
                 },
                 "general_information": {

@@ -2,6 +2,7 @@ package api
 
 import (
 	db "maicare_go/db/sqlc"
+	"maicare_go/pdf"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,6 +42,7 @@ type CreateAppointmentCardResponse struct {
 	Leave                  []string  `json:"leave"`
 	CreatedAt              time.Time `json:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at"`
+	FileUrl                *string   `json:"file_url"`
 }
 
 // CreateAppointmentCardApi creates a new appointment card
@@ -104,6 +106,7 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 		Leave:                  appointmentCard.Leave,
 		CreatedAt:              appointmentCard.CreatedAt.Time,
 		UpdatedAt:              appointmentCard.UpdatedAt.Time,
+		FileUrl:                appointmentCard.FileUrl,
 	}, "Appointment card created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
@@ -127,6 +130,7 @@ type GetAppointmentCardResponse struct {
 	Leave                  []string  `json:"leave"`
 	CreatedAt              time.Time `json:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at"`
+	FileUrl                *string   `json:"file_url"`
 }
 
 // GetAppointmentCardApi retrieves an appointment card by client ID
@@ -167,6 +171,7 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 		Leave:                  appointmentCard.Leave,
 		CreatedAt:              appointmentCard.CreatedAt.Time,
 		UpdatedAt:              appointmentCard.UpdatedAt.Time,
+		FileUrl:                appointmentCard.FileUrl,
 	}, "Appointment card retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
@@ -270,4 +275,67 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 	}, "Appointment card updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// GenerateAppointmentCardDocument generates an appointment card document by client ID
+// @Summary Generate an appointment card document by client ID
+// @Description Generate an appointment card document by client ID
+// @Tags appointment_cards
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[UpdateAppointmentCardResponse]
+// @Router /clients/{id}/appointment_cards/generate_document [post]
+func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	appointmentCard, err := server.store.GetAppointmentCard(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if appointmentCard.FileUrl != nil && *appointmentCard.FileUrl != "" {
+		server.b2Client.DeleteFromB2URL(ctx, *appointmentCard.FileUrl)
+	}
+
+	pdfArg := pdf.AppointmentCard{
+		ID:                     appointmentCard.ID,
+		ClientName:             appointmentCard.FirstName + " " + appointmentCard.LastName,
+		Date:                   appointmentCard.CreatedAt.Time.Format("02-01-2006"),
+		GeneralInformation:     appointmentCard.GeneralInformation,
+		ImportantContacts:      appointmentCard.ImportantContacts,
+		HouseholdInfo:          appointmentCard.HouseholdInfo,
+		OrganizationAgreements: appointmentCard.OrganizationAgreements,
+		YouthOfficerAgreements: appointmentCard.YouthOfficerAgreements,
+		TreatmentAgreements:    appointmentCard.TreatmentAgreements,
+		SmokingRules:           appointmentCard.SmokingRules,
+		Work:                   appointmentCard.Work,
+		SchoolInternship:       appointmentCard.SchoolInternship,
+		Travel:                 appointmentCard.Travel,
+		Leave:                  appointmentCard.Leave,
+	}
+
+	pdfUrl, err := pdf.GenerateAndUploadAppointmentCardPDF(ctx, pdfArg, server.b2Client)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	updatedAppointmentCard, err := server.store.UpdateAppointmentCardUrl(ctx, db.UpdateAppointmentCardUrlParams{
+		ClientID: clientID,
+		FileUrl:  &pdfUrl,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(updatedAppointmentCard, "Appointment card document generated successfully")
+	ctx.JSON(http.StatusOK, res)
+
 }
