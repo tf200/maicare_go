@@ -21,9 +21,10 @@ swagger:
 	swag init --parseDependency --output ./docs --generalInfo server.go --dir ./api
 
 roles:
-	cd roles && python3 seed.py && cd ..
+	cd roles && g++ -std=c++17 -o rbac_sync rbac_sync.cpp -lpqxx -lpq -lyaml-cpp && ./rbac_sync && cd ..
 admin:
-	python3 admin.py
+	cd admin && g++ -o admin admin.cpp -lpqxx -lssl -lcrypto -l:bcrypt.a && ./admin && cd ..
+
 
 push:
 	sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back && git push 

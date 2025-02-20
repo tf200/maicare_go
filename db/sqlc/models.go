@@ -212,6 +212,10 @@ type ClientGoal struct {
 	ClientMaturityMatrixAssessmentID int64              `json:"client_maturity_matrix_assessment_id"`
 	Description                      string             `json:"description"`
 	Status                           string             `json:"status"`
+	TargetLevel                      int32              `json:"target_level"`
+	StartDate                        pgtype.Date        `json:"start_date"`
+	TargetDate                       pgtype.Date        `json:"target_date"`
+	CompletionDate                   pgtype.Date        `json:"completion_date"`
 	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
 }
 
@@ -500,14 +504,15 @@ type FrameworkAgreement struct {
 	Created          pgtype.Timestamptz `json:"created"`
 }
 
-type GoalsReport struct {
-	ID                               int64              `json:"id"`
-	ClientMaturityMatrixAssessmentID *int64             `json:"client_maturity_matrix_assessment_id"`
-	EmployeeID                       int64              `json:"employee_id"`
-	Title                            string             `json:"title"`
-	ReportText                       string             `json:"report_text"`
-	Level                            *int32             `json:"level"`
-	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
+type GoalObjective struct {
+	ID                   int64              `json:"id"`
+	GoalID               int64              `json:"goal_id"`
+	ObjectiveDescription string             `json:"objective_description"`
+	DueDate              pgtype.Date        `json:"due_date"`
+	Status               string             `json:"status"`
+	CompletionDate       pgtype.Date        `json:"completion_date"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Group struct {
@@ -594,6 +599,31 @@ type IncidentInvolvedChild struct {
 	ClientID   int64 `json:"client_id"`
 }
 
+type IntakeForm struct {
+	ID                         int64       `json:"id"`
+	IntakeFormToken            string      `json:"intake_form_token"`
+	FirstName                  string      `json:"first_name"`
+	LastName                   string      `json:"last_name"`
+	DateOfBirth                pgtype.Date `json:"date_of_birth"`
+	PhoneNumber                string      `json:"phone_number"`
+	Gender                     string      `json:"gender"`
+	PlaceOfBirth               string      `json:"place_of_birth"`
+	RepresentativeFirstName    string      `json:"representative_first_name"`
+	RepresentativeLastName     string      `json:"representative_last_name"`
+	RepresentativePhoneNumber  string      `json:"representative_phone_number"`
+	RepresentativeEmail        string      `json:"representative_email"`
+	RepresentativeRelationship string      `json:"representative_relationship"`
+	RepresentativeAddress      string      `json:"representative_address"`
+	AttachementIds             []uuid.UUID `json:"attachement_ids"`
+}
+
+type IntakeFormToken struct {
+	Token     string           `json:"token"`
+	ExpiresAt pgtype.Timestamp `json:"expires_at"`
+	IsRevoked bool             `json:"is_revoked"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+}
+
 type Invoice struct {
 	ID              int64              `json:"id"`
 	InvoiceNumber   string             `json:"invoice_number"`
@@ -669,6 +699,16 @@ type Notification struct {
 	IsRead   bool               `json:"is_read"`
 	Metadata []byte             `json:"metadata"`
 	Created  pgtype.Timestamptz `json:"created"`
+}
+
+type ObjectivesReport struct {
+	ID                               int64              `json:"id"`
+	ClientMaturityMatrixAssessmentID *int64             `json:"client_maturity_matrix_assessment_id"`
+	EmployeeID                       int64              `json:"employee_id"`
+	Title                            string             `json:"title"`
+	ReportText                       string             `json:"report_text"`
+	Level                            *int32             `json:"level"`
+	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
 }
 
 type Observation struct {

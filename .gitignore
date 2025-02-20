@@ -3,3 +3,4 @@ venv/
 admin.py
 dev.env
 entrypoint.sh
+/admin

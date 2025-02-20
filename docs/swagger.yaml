@@ -189,14 +189,16 @@ definitions:
     type: object
   api.ConfirmProgressReportRequest:
     properties:
-      enddate:
+      end_date:
         type: string
       report_text:
         type: string
-      startdate:
+      start_date:
         type: string
     required:
+    - end_date
     - report_text
+    - start_date
     type: object
   api.ConfirmProgressReportResponse:
     properties:
@@ -975,6 +977,88 @@ definitions:
       violence:
         type: boolean
     type: object
+  api.CreateIntakeFormRequest:
+    properties:
+      attachement_ids:
+        items:
+          type: string
+        type: array
+      date_of_birth:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      intake_form_token:
+        type: string
+      last_name:
+        type: string
+      phonenumber:
+        type: string
+      place_of_birth:
+        type: string
+      representative_address:
+        type: string
+      representative_email:
+        type: string
+      representative_first_name:
+        type: string
+      representative_last_name:
+        type: string
+      representative_phone_number:
+        type: string
+      representative_relationship:
+        type: string
+    required:
+    - date_of_birth
+    - first_name
+    - gender
+    - intake_form_token
+    - last_name
+    - phonenumber
+    - place_of_birth
+    - representative_address
+    - representative_email
+    - representative_first_name
+    - representative_last_name
+    - representative_phone_number
+    - representative_relationship
+    type: object
+  api.CreateIntakeFormResponse:
+    properties:
+      attachement_ids:
+        items:
+          type: string
+        type: array
+      date_of_birth:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      intake_form_token:
+        type: string
+      last_name:
+        type: string
+      phonenumber:
+        type: string
+      place_of_birth:
+        type: string
+      representative_address:
+        type: string
+      representative_email:
+        type: string
+      representative_first_name:
+        type: string
+      representative_last_name:
+        type: string
+      representative_phone_number:
+        type: string
+      representative_relationship:
+        type: string
+    type: object
   api.CreateLocationRequest:
     properties:
       address:
@@ -1249,6 +1333,13 @@ definitions:
         type: string
       incident_id:
         type: integer
+    type: object
+  api.GenerateIntakeFormTokenResponse:
+    properties:
+      expires_at:
+        type: string
+      token:
+        type: string
     type: object
   api.GetAppointmentCardResponse:
     properties:
@@ -1787,6 +1878,17 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  api.IntakeFormUploadHandlerResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
     type: object
   api.ListAiGeneratedReportsResponse:
     properties:
@@ -2548,6 +2650,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateIntakeFormResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateIntakeFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateLocationResponse:
     properties:
       data:
@@ -2660,6 +2771,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GenerateIncidentFileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GenerateIntakeFormTokenResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GenerateIntakeFormTokenResponse'
       message:
         type: string
       success:
@@ -2813,6 +2933,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetSenderByIdResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_IntakeFormUploadHandlerResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.IntakeFormUploadHandlerResponse'
       message:
         type: string
       success:
@@ -7012,6 +7141,135 @@ paths:
       summary: Confirm an incident
       tags:
       - incidents
+  /intake_form:
+    post:
+      consumes:
+      - application/json
+      description: Create an intake form
+      parameters:
+      - description: Intake form token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Intake form request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateIntakeFormRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateIntakeFormResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
+      summary: Create an intake form
+      tags:
+      - intake_form
+  /intake_form/token:
+    post:
+      description: Generate an intake form token
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateIntakeFormTokenResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
+      summary: Generate an intake form token
+      tags:
+      - intake_form
+  /intake_form/token/{token}:
+    get:
+      description: Verify an intake form token
+      parameters:
+      - description: Intake form token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
+      summary: Verify an intake form token
+      tags:
+      - intake_form
+  /intake_form/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file for intake form
+      parameters:
+      - description: Intake form token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_IntakeFormUploadHandlerResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "413":
+          description: Request entity too large
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
+      summary: Upload a file for intake form
+      tags:
+      - intake_form
   /locations:
     get:
       description: Get a list of all locations

@@ -83,5 +83,9 @@ DROP TABLE IF EXISTS "public"."level_history" CASCADE;
 DROP FUNCTION IF EXISTS trg_after_update_client_maturity_matrix_assessment_func();
 DROP TRIGGER IF EXISTS trg_after_update_client_maturity_matrix_assessment ON client_maturity_matrix_assessment;
 DROP TABLE IF EXISTS "public"."client_goals" CASCADE;
-DROP TABLE IF EXISTS "public"."goals_report" CASCADE;
+DROP TABLE IF EXISTS "public"."goal_objectives" CASCADE;
+DROP TABLE IF EXISTS "public"."objective_progress" CASCADE;
+DROP TABLE IF EXISTS "public"."objectives_report" CASCADE;
+DROP TABLE IF EXISTS "public"."intake_form_tokens" CASCADE;
+DROP TABLE IF EXISTS "public"."intake_forms" CASCADE;
 

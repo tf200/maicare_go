@@ -384,9 +384,9 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 
 // ConfirmProgressReportRequest defines the request payload for ConfirmProgressReport API
 type ConfirmProgressReportRequest struct {
-	ReportText string `json:"report_text" binding:"required"`
-	Startdate  time.Time
-	Enddate    time.Time
+	ReportText string    `json:"report_text" binding:"required"`
+	Startdate  time.Time `json:"start_date" binding:"required"`
+	Enddate    time.Time `json:"end_date" binding:"required"`
 }
 
 // ConfirmProgressReportResponse defines the response payload for ConfirmProgressReport API

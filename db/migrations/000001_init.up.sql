@@ -1304,10 +1304,26 @@ CREATE TABLE client_goals (
     client_maturity_matrix_assessment_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     description VARCHAR(100) NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
+    target_level INT NOT NULL CHECK (target_level BETWEEN 1 AND 5),
+    start_date DATE NOT NULL,
+    target_date DATE NOT NULL,
+    completion_date DATE,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE goals_report (
+-- Table for objectives (sub-tasks of goals)
+CREATE TABLE goal_objectives (
+    id BIGSERIAL PRIMARY KEY,
+    goal_id BIGINT NOT NULL REFERENCES client_goals(id) ON DELETE CASCADE,
+    objective_description TEXT NOT NULL,
+    due_date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    completion_date DATE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE objectives_report (
     id BIGSERIAL PRIMARY KEY,
     client_maturity_matrix_assessment_id BIGINT NULL REFERENCES client_goals(id) ON DELETE SET NULL,
     employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
@@ -1316,4 +1332,35 @@ CREATE TABLE goals_report (
     level INT NULL,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
+
+-- IntakeForm
+
+CREATE TABLE intake_form_tokens (
+    token VARCHAR(64) PRIMARY KEY,
+    expires_at TIMESTAMP NOT NULL,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE intake_forms (
+    id BIGSERIAL PRIMARY KEY,
+    intake_form_token VARCHAR(64) NOT NULL REFERENCES intake_form_tokens(token) ON DELETE CASCADE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    gender VARCHAR(20) NOT NULL,
+    place_of_birth VARCHAR(100) NOT NULL,
+    representative_first_name VARCHAR(100) NOT NULL,
+    representative_last_name VARCHAR(100) NOT NULL,
+    representative_phone_number VARCHAR(20) NOT NULL,
+    representative_email VARCHAR(254) NOT NULL,
+    representative_relationship VARCHAR(100) NOT NULL,
+    representative_address TEXT NOT NULL,
+    attachement_ids UUID[] NOT NULL
+);
+
 

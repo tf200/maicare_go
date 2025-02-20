@@ -4219,6 +4219,209 @@
                 }
             }
         },
+        "/intake_form": {
+            "post": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "description": "Create an intake form",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Create an intake form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Intake form request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateIntakeFormRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateIntakeFormResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_form/token": {
+            "post": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "description": "Generate an intake form token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Generate an intake form token",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GenerateIntakeFormTokenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_form/token/{token}": {
+            "get": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "description": "Verify an intake form token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Verify an intake form token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_form/upload": {
+            "post": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "description": "Upload a file for intake form",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Upload a file for intake form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_IntakeFormUploadHandlerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "413": {
+                        "description": "Request entity too large",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/locations": {
             "get": {
                 "description": "Get a list of all locations",
@@ -5185,16 +5388,18 @@
         "api.ConfirmProgressReportRequest": {
             "type": "object",
             "required": [
-                "report_text"
+                "end_date",
+                "report_text",
+                "start_date"
             ],
             "properties": {
-                "enddate": {
+                "end_date": {
                     "type": "string"
                 },
                 "report_text": {
                     "type": "string"
                 },
-                "startdate": {
+                "start_date": {
                     "type": "string"
                 }
             }
@@ -6346,6 +6551,124 @@
                 }
             }
         },
+        "api.CreateIntakeFormRequest": {
+            "type": "object",
+            "required": [
+                "date_of_birth",
+                "first_name",
+                "gender",
+                "intake_form_token",
+                "last_name",
+                "phonenumber",
+                "place_of_birth",
+                "representative_address",
+                "representative_email",
+                "representative_first_name",
+                "representative_last_name",
+                "representative_phone_number",
+                "representative_relationship"
+            ],
+            "properties": {
+                "attachement_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "intake_form_token": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phonenumber": {
+                    "type": "string"
+                },
+                "place_of_birth": {
+                    "type": "string"
+                },
+                "representative_address": {
+                    "type": "string"
+                },
+                "representative_email": {
+                    "type": "string"
+                },
+                "representative_first_name": {
+                    "type": "string"
+                },
+                "representative_last_name": {
+                    "type": "string"
+                },
+                "representative_phone_number": {
+                    "type": "string"
+                },
+                "representative_relationship": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "attachement_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "intake_form_token": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phonenumber": {
+                    "type": "string"
+                },
+                "place_of_birth": {
+                    "type": "string"
+                },
+                "representative_address": {
+                    "type": "string"
+                },
+                "representative_email": {
+                    "type": "string"
+                },
+                "representative_first_name": {
+                    "type": "string"
+                },
+                "representative_last_name": {
+                    "type": "string"
+                },
+                "representative_phone_number": {
+                    "type": "string"
+                },
+                "representative_relationship": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateLocationRequest": {
             "type": "object",
             "required": [
@@ -6755,6 +7078,17 @@
                 },
                 "incident_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.GenerateIntakeFormTokenResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -7571,6 +7905,23 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "api.IntakeFormUploadHandlerResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
                 }
             }
         },
@@ -8732,6 +9083,20 @@
                 }
             }
         },
+        "api.Response-api_CreateIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateIntakeFormResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_CreateLocationResponse": {
             "type": "object",
             "properties": {
@@ -8905,6 +9270,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GenerateIncidentFileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GenerateIntakeFormTokenResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GenerateIntakeFormTokenResponse"
                 },
                 "message": {
                     "type": "string"
@@ -9143,6 +9522,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetSenderByIdResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_IntakeFormUploadHandlerResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.IntakeFormUploadHandlerResponse"
                 },
                 "message": {
                     "type": "string"
