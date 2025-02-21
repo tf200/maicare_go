@@ -96,6 +96,7 @@ INSERT INTO intake_form_tokens(
     $1,
     $2
 )
+
 RETURNING token, expires_at, is_revoked, created_at
 `
 

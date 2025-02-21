@@ -81,3 +81,5 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 	}
 
 }
+
+// TODO WRITE THE TESTS DONT FORGET TO ADD THE TESTS TO THE TEST SUITE

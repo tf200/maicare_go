@@ -11,6 +11,56 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createClientGoal = `-- name: CreateClientGoal :one
+INSERT INTO client_goals (
+    client_maturity_matrix_assessment_id,
+    description,
+    status,
+    target_level,
+    start_date,
+    target_date,
+    completion_date
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+)
+RETURNING id, client_maturity_matrix_assessment_id, description, status, target_level, start_date, target_date, completion_date, created_at
+`
+
+type CreateClientGoalParams struct {
+	ClientMaturityMatrixAssessmentID int64       `json:"client_maturity_matrix_assessment_id"`
+	Description                      string      `json:"description"`
+	Status                           string      `json:"status"`
+	TargetLevel                      int32       `json:"target_level"`
+	StartDate                        pgtype.Date `json:"start_date"`
+	TargetDate                       pgtype.Date `json:"target_date"`
+	CompletionDate                   pgtype.Date `json:"completion_date"`
+}
+
+func (q *Queries) CreateClientGoal(ctx context.Context, arg CreateClientGoalParams) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, createClientGoal,
+		arg.ClientMaturityMatrixAssessmentID,
+		arg.Description,
+		arg.Status,
+		arg.TargetLevel,
+		arg.StartDate,
+		arg.TargetDate,
+		arg.CompletionDate,
+	)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientMaturityMatrixAssessmentID,
+		&i.Description,
+		&i.Status,
+		&i.TargetLevel,
+		&i.StartDate,
+		&i.TargetDate,
+		&i.CompletionDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createClientMaturityMatrixAssessment = `-- name: CreateClientMaturityMatrixAssessment :one
 WITH inserted AS (
     INSERT INTO client_maturity_matrix_assessment (
@@ -75,6 +125,104 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 		&i.TopicName,
 	)
 	return i, err
+}
+
+const getClientMaturityMatrixAssessment = `-- name: GetClientMaturityMatrixAssessment :one
+SELECT
+    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.current_level, cma.is_active,
+    mm.topic_name AS topic_name
+FROM client_maturity_matrix_assessment cma
+JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+WHERE cma.id = $1
+`
+
+type GetClientMaturityMatrixAssessmentRow struct {
+	ID               int64       `json:"id"`
+	ClientID         int64       `json:"client_id"`
+	MaturityMatrixID int64       `json:"maturity_matrix_id"`
+	StartDate        pgtype.Date `json:"start_date"`
+	EndDate          pgtype.Date `json:"end_date"`
+	InitialLevel     int32       `json:"initial_level"`
+	CurrentLevel     int32       `json:"current_level"`
+	IsActive         bool        `json:"is_active"`
+	TopicName        string      `json:"topic_name"`
+}
+
+func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id int64) (GetClientMaturityMatrixAssessmentRow, error) {
+	row := q.db.QueryRow(ctx, getClientMaturityMatrixAssessment, id)
+	var i GetClientMaturityMatrixAssessmentRow
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.MaturityMatrixID,
+		&i.StartDate,
+		&i.EndDate,
+		&i.InitialLevel,
+		&i.CurrentLevel,
+		&i.IsActive,
+		&i.TopicName,
+	)
+	return i, err
+}
+
+const listClientGoals = `-- name: ListClientGoals :many
+SELECT
+    cg.id, cg.client_maturity_matrix_assessment_id, cg.description, cg.status, cg.target_level, cg.start_date, cg.target_date, cg.completion_date, cg.created_at,
+    COUNT(*) OVER() AS total_count
+    FROM client_goals cg
+WHERE cg.client_maturity_matrix_assessment_id = $1
+ORDER BY cg.start_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListClientGoalsParams struct {
+	ClientMaturityMatrixAssessmentID int64 `json:"client_maturity_matrix_assessment_id"`
+	Limit                            int32 `json:"limit"`
+	Offset                           int32 `json:"offset"`
+}
+
+type ListClientGoalsRow struct {
+	ID                               int64              `json:"id"`
+	ClientMaturityMatrixAssessmentID int64              `json:"client_maturity_matrix_assessment_id"`
+	Description                      string             `json:"description"`
+	Status                           string             `json:"status"`
+	TargetLevel                      int32              `json:"target_level"`
+	StartDate                        pgtype.Date        `json:"start_date"`
+	TargetDate                       pgtype.Date        `json:"target_date"`
+	CompletionDate                   pgtype.Date        `json:"completion_date"`
+	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
+	TotalCount                       int64              `json:"total_count"`
+}
+
+func (q *Queries) ListClientGoals(ctx context.Context, arg ListClientGoalsParams) ([]ListClientGoalsRow, error) {
+	rows, err := q.db.Query(ctx, listClientGoals, arg.ClientMaturityMatrixAssessmentID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClientGoalsRow
+	for rows.Next() {
+		var i ListClientGoalsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientMaturityMatrixAssessmentID,
+			&i.Description,
+			&i.Status,
+			&i.TargetLevel,
+			&i.StartDate,
+			&i.TargetDate,
+			&i.CompletionDate,
+			&i.CreatedAt,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listClientMaturityMatrixAssessments = `-- name: ListClientMaturityMatrixAssessments :many

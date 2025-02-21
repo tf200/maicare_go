@@ -2335,6 +2335,190 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/maturity_matrix_assessment/{assessment_id}/goals": {
+            "get": {
+                "description": "Get a list of client goals",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maturity_matrix"
+                ],
+                "summary": "List client goals",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Client maturity matrix assessment ID",
+                        "name": "assessment_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientGoalsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a client goal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maturity_matrix"
+                ],
+                "summary": "Create client goal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Client maturity matrix assessment ID",
+                        "name": "assessment_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateClientGoalRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateClientGoalResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/maturity_matrix_assessment/{mma_id}": {
+            "get": {
+                "description": "Get a client maturity matrix assessment",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maturity_matrix"
+                ],
+                "summary": "Get client maturity matrix assessment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Client maturity matrix assessment ID",
+                        "name": "assessment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetClientMaturityMatrixAssessmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/medications": {
             "get": {
                 "produces": [
@@ -5984,6 +6168,65 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateClientGoalRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "start_date",
+                "status",
+                "target_date",
+                "target_level"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_date": {
+                    "type": "string"
+                },
+                "target_level": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.CreateClientGoalResponse": {
+            "type": "object",
+            "properties": {
+                "client_maturity_matrix_assessment_id": {
+                    "type": "integer"
+                },
+                "completion_date": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_date": {
+                    "type": "string"
+                },
+                "target_level": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.CreateClientMaturityMatrixAssessmentRequest": {
             "type": "object",
             "required": [
@@ -7428,6 +7671,38 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetClientMaturityMatrixAssessmentResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "initial_level": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "maturity_matrix_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "topic_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetClientMedicationResponse": {
             "type": "object",
             "properties": {
@@ -8127,6 +8402,38 @@ const docTemplate = `{
                 },
                 "relationship": {
                     "type": "string"
+                }
+            }
+        },
+        "api.ListClientGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "client_maturity_matrix_assessment_id": {
+                    "type": "integer"
+                },
+                "completion_date": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_date": {
+                    "type": "string"
+                },
+                "target_level": {
+                    "type": "integer"
                 }
             }
         },
@@ -9034,6 +9341,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_CreateClientGoalResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateClientGoalResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_CreateClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
@@ -9389,6 +9710,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetClientEmergencyContactResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetClientMaturityMatrixAssessmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetClientMaturityMatrixAssessmentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10015,6 +10350,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListClientDocumentsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-api_ListClientGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListClientGoalsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -11466,6 +11815,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListClientDocumentsApiResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-api_ListClientGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListClientGoalsResponse"
                     }
                 }
             }

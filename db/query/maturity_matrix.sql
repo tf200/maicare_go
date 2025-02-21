@@ -33,3 +33,40 @@ JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
 WHERE cma.client_id = $1
 ORDER BY cma.start_date DESC
 LIMIT $2 OFFSET $3;
+
+-- name: GetClientMaturityMatrixAssessment :one
+SELECT
+    cma.*,
+    mm.topic_name AS topic_name
+FROM client_maturity_matrix_assessment cma
+JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+WHERE cma.id = $1;
+
+
+
+-- name: CreateClientGoal :one
+INSERT INTO client_goals (
+    client_maturity_matrix_assessment_id,
+    description,
+    status,
+    target_level,
+    start_date,
+    target_date,
+    completion_date
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+)
+RETURNING *;
+
+
+-- name: ListClientGoals :many
+SELECT
+    cg.*,
+    COUNT(*) OVER() AS total_count
+    FROM client_goals cg
+WHERE cg.client_maturity_matrix_assessment_id = $1
+ORDER BY cg.start_date DESC
+LIMIT $2 OFFSET $3;
+
+
+

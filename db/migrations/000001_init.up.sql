@@ -1302,7 +1302,7 @@ EXECUTE FUNCTION trg_after_update_client_maturity_matrix_assessment_func();
 CREATE TABLE client_goals (
     id BIGSERIAL PRIMARY KEY,
     client_maturity_matrix_assessment_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    description VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed')) DEFAULT 'pending',
     target_level INT NOT NULL CHECK (target_level BETWEEN 1 AND 5),
     start_date DATE NOT NULL,

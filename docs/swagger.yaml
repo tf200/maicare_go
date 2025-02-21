@@ -582,6 +582,46 @@ definitions:
       relationship:
         type: string
     type: object
+  api.CreateClientGoalRequest:
+    properties:
+      description:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      target_date:
+        type: string
+      target_level:
+        type: integer
+    required:
+    - description
+    - start_date
+    - status
+    - target_date
+    - target_level
+    type: object
+  api.CreateClientGoalResponse:
+    properties:
+      client_maturity_matrix_assessment_id:
+        type: integer
+      completion_date:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      target_date:
+        type: string
+      target_level:
+        type: integer
+    type: object
   api.CreateClientMaturityMatrixAssessmentRequest:
     properties:
       assessment:
@@ -1558,6 +1598,27 @@ definitions:
       relationship:
         type: string
     type: object
+  api.GetClientMaturityMatrixAssessmentResponse:
+    properties:
+      client_id:
+        type: integer
+      current_level:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      initial_level:
+        type: integer
+      is_active:
+        type: boolean
+      maturity_matrix_id:
+        type: integer
+      start_date:
+        type: string
+      topic_name:
+        type: string
+    type: object
   api.GetClientMedicationResponse:
     properties:
       administered_by_first_name:
@@ -2019,6 +2080,27 @@ definitions:
         type: string
       relationship:
         type: string
+    type: object
+  api.ListClientGoalsResponse:
+    properties:
+      client_maturity_matrix_assessment_id:
+        type: integer
+      completion_date:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      target_date:
+        type: string
+      target_level:
+        type: integer
     type: object
   api.ListClientMaturityMatrixAssessmentsResponse:
     properties:
@@ -2614,6 +2696,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateClientGoalResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateClientGoalResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateClientMaturityMatrixAssessmentResponse:
     properties:
       data:
@@ -2843,6 +2934,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetClientMaturityMatrixAssessmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientMaturityMatrixAssessmentResponse'
       message:
         type: string
       success:
@@ -3246,6 +3346,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientDocumentsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListClientGoalsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListClientGoalsResponse'
       message:
         type: string
       success:
@@ -4199,6 +4308,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListClientDocumentsApiResponse'
+        type: array
+    type: object
+  pagination.Response-api_ListClientGoalsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListClientGoalsResponse'
         type: array
     type: object
   pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse:
@@ -5886,6 +6010,129 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create client maturity matrix assessment
+      tags:
+      - maturity_matrix
+  /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals:
+    get:
+      description: Get a list of client goals
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client maturity matrix assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientGoalsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List client goals
+      tags:
+      - maturity_matrix
+    post:
+      consumes:
+      - application/json
+      description: Create a client goal
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client maturity matrix assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientGoalRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientGoalResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create client goal
+      tags:
+      - maturity_matrix
+  /clients/{id}/maturity_matrix_assessment/{mma_id}:
+    get:
+      description: Get a client maturity matrix assessment
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client maturity matrix assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientMaturityMatrixAssessmentResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get client maturity matrix assessment
       tags:
       - maturity_matrix
   /clients/{id}/medications:
