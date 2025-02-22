@@ -442,3 +442,157 @@ func (server *Server) ListClientGoalsApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, res)
 }
+
+// GoalObjectives represents a goal objective
+type GoalObjectives struct {
+	ID                   int64              `json:"id"`
+	ObjectiveDescription string             `json:"objective_description"`
+	DueDate              time.Time          `json:"due_date"`
+	Status               string             `json:"status"`
+	CompletionDate       time.Time          `json:"completion_date"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+// GetClientGoalResponse represents a response for GetClientGoalApi
+type GetClientGoalResponse struct {
+	ID                               int64            `json:"id"`
+	ClientMaturityMatrixAssessmentID int64            `json:"client_maturity_matrix_assessment_id"`
+	Description                      string           `json:"description"`
+	Status                           string           `json:"status"`
+	TargetLevel                      int32            `json:"target_level"`
+	StartDate                        time.Time        `json:"start_date"`
+	TargetDate                       time.Time        `json:"target_date"`
+	CompletionDate                   time.Time        `json:"completion_date"`
+	CreatedAt                        time.Time        `json:"created_at"`
+	Objectives                       []GoalObjectives `json:"objectives"`
+}
+
+// @Summary Get client goal
+// @Description Get a client goal
+// @Tags maturity_matrix
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param assessment_id path int true "Client maturity matrix assessment ID"
+// @Param goal_id path int true "Client goal ID"
+// @Success 200 {object} Response[GetClientGoalResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id} [get]
+func (server *Server) GetClientGoalApi(ctx *gin.Context) {
+	goalID := ctx.Param("goal_id")
+	clientGoalID, err := strconv.ParseInt(goalID, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	clientGoal, err := server.store.GetClientGoal(ctx, clientGoalID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	objectives, err := server.store.ListGoalObjectives(ctx, clientGoalID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	responseObjectives := make([]GoalObjectives, len(objectives))
+	for i, objective := range objectives {
+		responseObjectives[i] = GoalObjectives{
+			ID:                   objective.ID,
+			ObjectiveDescription: objective.ObjectiveDescription,
+			DueDate:              objective.DueDate.Time,
+			Status:               objective.Status,
+			CompletionDate:       objective.CompletionDate.Time,
+			CreatedAt:            objective.CreatedAt,
+			UpdatedAt:            objective.UpdatedAt,
+		}
+	}
+
+	res := SuccessResponse(GetClientGoalResponse{
+		ID:                               clientGoal.ID,
+		ClientMaturityMatrixAssessmentID: clientGoal.ClientMaturityMatrixAssessmentID,
+		Description:                      clientGoal.Description,
+		Status:                           clientGoal.Status,
+		TargetLevel:                      clientGoal.TargetLevel,
+		StartDate:                        clientGoal.StartDate.Time,
+		TargetDate:                       clientGoal.TargetDate.Time,
+		CompletionDate:                   clientGoal.CompletionDate.Time,
+		CreatedAt:                        clientGoal.CreatedAt.Time,
+		Objectives:                       responseObjectives,
+	}, "Client goal retrieved successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// CreateGoalObjectiveRequest represents a request to create a goal objective
+type CreateGoalObjectiveRequest struct {
+	ObjectiveDescription string    `json:"objective_description" binding:"required"`
+	Status               string    `json:"status" binding:"required"`
+	DueDate              time.Time `json:"due_date" binding:"required"`
+}
+
+// CreateGoalObjectiveResponse represents a response for CreateGoalObjectiveApi
+type CreateGoalObjectiveResponse struct {
+	ID                   int64     `json:"id"`
+	GoalID               int64     `json:"goal_id"`
+	ObjectiveDescription string    `json:"objective_description"`
+	Status               string    `json:"status"`
+	DueDate              time.Time `json:"due_date"`
+}
+
+// @Summary Create goal objective
+// @Description Create a goal objective
+// @Tags maturity_matrix
+// @Accept json
+// @Produce json
+// @Param goal_id path int true "Client goal ID"
+// @Param client_id path int true "Client ID"
+// @Param assessment_id path int true "Client maturity matrix assessment ID"
+// @Param request body CreateGoalObjectiveRequest true "Request body"
+// @Success 201 {object} Response[CreateGoalObjectiveResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives [post]
+func (server *Server) CreateGoalObjectiveApi(ctx *gin.Context) {
+	goalID := ctx.Param("goal_id")
+	clientGoalID, err := strconv.ParseInt(goalID, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req CreateGoalObjectiveRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.CreateGoalObjectiveParams{
+		GoalID:               clientGoalID,
+		ObjectiveDescription: req.ObjectiveDescription,
+		Status:               req.Status,
+		DueDate:              pgtype.Date{Time: req.DueDate, Valid: true},
+	}
+
+	goalObjective, err := server.store.CreateGoalObjective(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(CreateGoalObjectiveResponse{
+		ID:                   goalObjective.ID,
+		GoalID:               goalObjective.GoalID,
+		ObjectiveDescription: goalObjective.ObjectiveDescription,
+		Status:               goalObjective.Status,
+		DueDate:              goalObjective.DueDate.Time,
+	}, "Goal objective created successfully")
+
+	ctx.JSON(http.StatusCreated, res)
+}

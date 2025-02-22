@@ -775,6 +775,32 @@ definitions:
       work_phone_number:
         type: string
     type: object
+  api.CreateGoalObjectiveRequest:
+    properties:
+      due_date:
+        type: string
+      objective_description:
+        type: string
+      status:
+        type: string
+    required:
+    - due_date
+    - objective_description
+    - status
+    type: object
+  api.CreateGoalObjectiveResponse:
+    properties:
+      due_date:
+        type: string
+      goal_id:
+        type: integer
+      id:
+        type: integer
+      objective_description:
+        type: string
+      status:
+        type: string
+    type: object
   api.CreateIncidentRequest:
     properties:
       accident:
@@ -1598,6 +1624,31 @@ definitions:
       relationship:
         type: string
     type: object
+  api.GetClientGoalResponse:
+    properties:
+      client_maturity_matrix_assessment_id:
+        type: integer
+      completion_date:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      objectives:
+        items:
+          $ref: '#/definitions/api.GoalObjectives'
+        type: array
+      start_date:
+        type: string
+      status:
+        type: string
+      target_date:
+        type: string
+      target_level:
+        type: integer
+    type: object
   api.GetClientMaturityMatrixAssessmentResponse:
     properties:
       client_id:
@@ -1939,6 +1990,23 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  api.GoalObjectives:
+    properties:
+      completion_date:
+        type: string
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      due_date:
+        type: string
+      id:
+        type: integer
+      objective_description:
+        type: string
+      status:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
     type: object
   api.IntakeFormUploadHandlerResponse:
     properties:
@@ -2732,6 +2800,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateGoalObjectiveResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateGoalObjectiveResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateIncidentResponse:
     properties:
       data:
@@ -2934,6 +3011,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetClientGoalResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientGoalResponse'
       message:
         type: string
       success:
@@ -6097,6 +6183,96 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create client goal
+      tags:
+      - maturity_matrix
+  /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}:
+    get:
+      description: Get a client goal
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client maturity matrix assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      - description: Client goal ID
+        in: path
+        name: goal_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientGoalResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get client goal
+      tags:
+      - maturity_matrix
+  /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives:
+    post:
+      consumes:
+      - application/json
+      description: Create a goal objective
+      parameters:
+      - description: Client goal ID
+        in: path
+        name: goal_id
+        required: true
+        type: integer
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: integer
+      - description: Client maturity matrix assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateGoalObjectiveRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateGoalObjectiveResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create goal objective
       tags:
       - maturity_matrix
   /clients/{id}/maturity_matrix_assessment/{mma_id}:

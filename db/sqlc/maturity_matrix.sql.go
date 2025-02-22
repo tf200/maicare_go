@@ -127,6 +127,70 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 	return i, err
 }
 
+const createGoalObjective = `-- name: CreateGoalObjective :one
+INSERT INTO goal_objectives (
+    goal_id,
+    objective_description,
+    due_date,
+    status,
+    completion_date
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING id, goal_id, objective_description, due_date, status, completion_date, created_at, updated_at
+`
+
+type CreateGoalObjectiveParams struct {
+	GoalID               int64       `json:"goal_id"`
+	ObjectiveDescription string      `json:"objective_description"`
+	DueDate              pgtype.Date `json:"due_date"`
+	Status               string      `json:"status"`
+	CompletionDate       pgtype.Date `json:"completion_date"`
+}
+
+func (q *Queries) CreateGoalObjective(ctx context.Context, arg CreateGoalObjectiveParams) (GoalObjective, error) {
+	row := q.db.QueryRow(ctx, createGoalObjective,
+		arg.GoalID,
+		arg.ObjectiveDescription,
+		arg.DueDate,
+		arg.Status,
+		arg.CompletionDate,
+	)
+	var i GoalObjective
+	err := row.Scan(
+		&i.ID,
+		&i.GoalID,
+		&i.ObjectiveDescription,
+		&i.DueDate,
+		&i.Status,
+		&i.CompletionDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getClientGoal = `-- name: GetClientGoal :one
+SELECT id, client_maturity_matrix_assessment_id, description, status, target_level, start_date, target_date, completion_date, created_at FROM client_goals WHERE id = $1
+`
+
+func (q *Queries) GetClientGoal(ctx context.Context, id int64) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, getClientGoal, id)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientMaturityMatrixAssessmentID,
+		&i.Description,
+		&i.Status,
+		&i.TargetLevel,
+		&i.StartDate,
+		&i.TargetDate,
+		&i.CompletionDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getClientMaturityMatrixAssessment = `-- name: GetClientMaturityMatrixAssessment :one
 SELECT
     cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.current_level, cma.is_active,
@@ -275,6 +339,57 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 			&i.CurrentLevel,
 			&i.IsActive,
 			&i.TopicName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listGoalObjectives = `-- name: ListGoalObjectives :many
+SELECT
+    go.id, go.goal_id, go.objective_description, go.due_date, go.status, go.completion_date, go.created_at, go.updated_at,
+    COUNT(*) OVER() AS total_count
+FROM goal_objectives go
+WHERE go.goal_id = $1
+ORDER BY go.due_date DESC
+`
+
+type ListGoalObjectivesRow struct {
+	ID                   int64              `json:"id"`
+	GoalID               int64              `json:"goal_id"`
+	ObjectiveDescription string             `json:"objective_description"`
+	DueDate              pgtype.Date        `json:"due_date"`
+	Status               string             `json:"status"`
+	CompletionDate       pgtype.Date        `json:"completion_date"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+	TotalCount           int64              `json:"total_count"`
+}
+
+func (q *Queries) ListGoalObjectives(ctx context.Context, goalID int64) ([]ListGoalObjectivesRow, error) {
+	rows, err := q.db.Query(ctx, listGoalObjectives, goalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListGoalObjectivesRow
+	for rows.Next() {
+		var i ListGoalObjectivesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GoalID,
+			&i.ObjectiveDescription,
+			&i.DueDate,
+			&i.Status,
+			&i.CompletionDate,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

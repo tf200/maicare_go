@@ -1317,8 +1317,8 @@ CREATE TABLE goal_objectives (
     goal_id BIGINT NOT NULL REFERENCES client_goals(id) ON DELETE CASCADE,
     objective_description TEXT NOT NULL,
     due_date DATE NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
-    completion_date DATE,
+        status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
+  completion_date DATE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

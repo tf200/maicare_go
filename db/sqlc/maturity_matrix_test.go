@@ -124,3 +124,60 @@ func TestListClientGoals(t *testing.T) {
 	require.Len(t, clientGoals, 5)
 
 }
+
+func TestGetClientGoal(t *testing.T) {
+	client := createRandomClientDetails(t)
+	mma := createRamdomClientMaturityMatrixAssessment(t, client.ID, 1)
+	goal := createRandomClientGoal(t, mma.ID)
+
+	clientGoal, err := testQueries.GetClientGoal(context.Background(), goal.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientGoal)
+	require.Equal(t, goal.ID, clientGoal.ID)
+	require.Equal(t, goal.ClientMaturityMatrixAssessmentID, clientGoal.ClientMaturityMatrixAssessmentID)
+	require.Equal(t, goal.Description, clientGoal.Description)
+	require.Equal(t, goal.Status, clientGoal.Status)
+	require.Equal(t, goal.TargetLevel, clientGoal.TargetLevel)
+}
+
+func createRandomGoalObjective(t *testing.T, goalID int64) GoalObjective {
+	arg := CreateGoalObjectiveParams{
+		GoalID:               goalID,
+		ObjectiveDescription: faker.Paragraph(),
+		Status:               "pending",
+		DueDate:              pgtype.Date{Time: util.RandomTIme(), Valid: true},
+	}
+	goalObjective, err := testQueries.CreateGoalObjective(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, goalObjective)
+	require.Equal(t, arg.GoalID, goalObjective.GoalID)
+	require.Equal(t, arg.ObjectiveDescription, goalObjective.ObjectiveDescription)
+	require.Equal(t, arg.Status, goalObjective.Status)
+	return goalObjective
+}
+
+func TestCreateGoalObjective(t *testing.T) {
+	client := createRandomClientDetails(t)
+	mma := createRamdomClientMaturityMatrixAssessment(t, client.ID, 1)
+	goal := createRandomClientGoal(t, mma.ID)
+	createRandomGoalObjective(t, goal.ID)
+}
+
+func TestListGoalObjectives(t *testing.T) {
+	client := createRandomClientDetails(t)
+	mma := createRamdomClientMaturityMatrixAssessment(t, client.ID, 1)
+	goal := createRandomClientGoal(t, mma.ID)
+	for i := 0; i < 10; i++ {
+		createRandomGoalObjective(t, goal.ID)
+	}
+
+	arg := ListGoalObjectivesParams{
+		GoalID: goal.ID,
+		Limit:  5,
+		Offset: 5,
+	}
+
+	goalObjectives, err := testQueries.ListGoalObjectives(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, goalObjectives, 5)
+}

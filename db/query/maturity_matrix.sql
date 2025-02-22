@@ -69,4 +69,30 @@ ORDER BY cg.start_date DESC
 LIMIT $2 OFFSET $3;
 
 
+-- name: GetClientGoal :one
+SELECT * FROM client_goals WHERE id = $1;
+
+
+-- name: CreateGoalObjective :one
+INSERT INTO goal_objectives (
+    goal_id,
+    objective_description,
+    due_date,
+    status,
+    completion_date
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING *;
+
+
+
+
+-- name: ListGoalObjectives :many
+SELECT
+    go.*,
+    COUNT(*) OVER() AS total_count
+FROM goal_objectives go
+WHERE go.goal_id = $1
+ORDER BY go.due_date DESC;
 
