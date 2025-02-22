@@ -508,8 +508,8 @@ func (server *Server) GetClientGoalApi(ctx *gin.Context) {
 			DueDate:              objective.DueDate.Time,
 			Status:               objective.Status,
 			CompletionDate:       objective.CompletionDate.Time,
-			CreatedAt:            objective.CreatedAt,
-			UpdatedAt:            objective.UpdatedAt,
+			CreatedAt:            objective.CreatedAt.Time,
+			UpdatedAt:            objective.UpdatedAt.Time,
 		}
 	}
 
