@@ -171,13 +171,7 @@ func TestListGoalObjectives(t *testing.T) {
 		createRandomGoalObjective(t, goal.ID)
 	}
 
-	arg := ListGoalObjectivesParams{
-		GoalID: goal.ID,
-		Limit:  5,
-		Offset: 5,
-	}
-
-	goalObjectives, err := testQueries.ListGoalObjectives(context.Background(), arg)
+	goalObjectives, err := testQueries.ListGoalObjectives(context.Background(), goal.ID)
 	require.NoError(t, err)
-	require.Len(t, goalObjectives, 5)
+	require.Len(t, goalObjectives, 10)
 }

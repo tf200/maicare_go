@@ -445,13 +445,13 @@ func (server *Server) ListClientGoalsApi(ctx *gin.Context) {
 
 // GoalObjectives represents a goal objective
 type GoalObjectives struct {
-	ID                   int64              `json:"id"`
-	ObjectiveDescription string             `json:"objective_description"`
-	DueDate              time.Time          `json:"due_date"`
-	Status               string             `json:"status"`
-	CompletionDate       time.Time          `json:"completion_date"`
-	CreatedAt            pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+	ID                   int64     `json:"id"`
+	ObjectiveDescription string    `json:"objective_description"`
+	DueDate              time.Time `json:"due_date"`
+	Status               string    `json:"status"`
+	CompletionDate       time.Time `json:"completion_date"`
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
 }
 
 // GetClientGoalResponse represents a response for GetClientGoalApi
