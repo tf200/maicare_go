@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
 
 	"maicare_go/util"
@@ -19,10 +20,10 @@ func createRandomClientDetails(t *testing.T) ClientDetail {
 	sender := createRandomSenders(t)
 
 	arg := CreateClientDetailsParams{
-		FirstName:             util.RandomString(5),
-		LastName:              util.RandomString(5),
-		Email:                 util.RandomEmail(),
-		PhoneNumber:           util.StringPtr("0653316517"),
+		FirstName:             faker.FirstName(),
+		LastName:              faker.LastName(),
+		Email:                 faker.Email(),
+		PhoneNumber:           util.StringPtr(faker.Phonenumber()),
 		DateOfBirth:           pgtype.Date{Time: time.Now().AddDate(-20, 0, 0), Valid: true},
 		Identity:              false,
 		Status:                util.StringPtr("On Waiting List"),

@@ -4567,7 +4567,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Intake form token",
                         "name": "token",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
@@ -4604,11 +4604,6 @@ const docTemplate = `{
         },
         "/intake_form/token": {
             "post": {
-                "security": [
-                    {
-                        "-": []
-                    }
-                ],
                 "description": "Generate an intake form token",
                 "produces": [
                     "application/json"
@@ -4622,52 +4617,6 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_GenerateIntakeFormTokenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/intake_form/token/{token}": {
-            "get": {
-                "security": [
-                    {
-                        "-": []
-                    }
-                ],
-                "description": "Verify an intake form token",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "Verify an intake form token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Intake form token",
-                        "name": "token",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "500": {
@@ -4702,7 +4651,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Intake form token",
                         "name": "token",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
@@ -4734,6 +4683,52 @@ const docTemplate = `{
                     },
                     "413": {
                         "description": "Request entity too large",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_form/verify": {
+            "get": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "description": "Verify an intake form token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Verify an intake form token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -6980,7 +6975,6 @@ const docTemplate = `{
                 "date_of_birth",
                 "first_name",
                 "gender",
-                "intake_form_token",
                 "last_name",
                 "phonenumber",
                 "place_of_birth",
@@ -7005,9 +6999,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "type": "string"
-                },
-                "intake_form_token": {
                     "type": "string"
                 },
                 "last_name": {
@@ -8408,7 +8399,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "due_date": {
                     "type": "string"
@@ -8423,7 +8414,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 }
             }
         },

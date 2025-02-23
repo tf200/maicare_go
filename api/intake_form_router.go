@@ -9,8 +9,8 @@ func (server *Server) setupIntakeFormRoutes(baseRouter *gin.RouterGroup) {
 	{
 
 		intakeFormGroup.POST("/upload", server.IntakeFormUploadHandlerApi)
-		intakeFormGroup.POST("/token", server.GenerateIntakeFormToken)
-		intakeFormGroup.GET("/token/:token", server.VerifyIntakeFormToken)
+		intakeFormGroup.POST("/token", AuthMiddleware(server.tokenMaker), server.GenerateIntakeFormToken)
+		intakeFormGroup.GET("/verify", server.VerifyIntakeFormToken)
 		intakeFormGroup.POST("", server.CreateIntakeFormApi)
 	}
 

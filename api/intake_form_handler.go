@@ -28,7 +28,7 @@ type IntakeFormUploadHandlerResponse struct {
 // @Tags intake_form
 // @Accept mpfd
 // @Produce json
-// @Param token path string true "Intake form token"
+// @Param token query string true "Intake form token"
 // @Param file formData file true "File to upload"
 // @Success 201 {object} Response[IntakeFormUploadHandlerResponse]
 // @Failure 400 {object} Response[any] "Bad request"
@@ -38,7 +38,7 @@ type IntakeFormUploadHandlerResponse struct {
 // @Router /intake_form/upload [post]
 // @Security -
 func (server *Server) IntakeFormUploadHandlerApi(ctx *gin.Context) {
-	token := ctx.Param("token")
+	token := ctx.Query("token")
 
 	dbToken, err := server.store.GetIntakeFormToken(ctx, token)
 	if err != nil {
@@ -141,7 +141,6 @@ type GenerateIntakeFormTokenResponse struct {
 // @Success 201 {object} Response[GenerateIntakeFormTokenResponse]
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /intake_form/token [post]
-// @Security -
 func (server *Server) GenerateIntakeFormToken(ctx *gin.Context) {
 	arg := db.CreateIntakeFormTokenParams{
 		Token:     uuid.New().String(),
@@ -166,14 +165,14 @@ func (server *Server) GenerateIntakeFormToken(ctx *gin.Context) {
 // @Description Verify an intake form token
 // @Tags intake_form
 // @Produce json
-// @Param token path string true "Intake form token"
+// @Param token query string true "Intake form token"
 // @Success 200 {object} Response[any]
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /intake_form/token/{token} [get]
+// @Router /intake_form/verify [get]
 // @Security -
 func (server *Server) VerifyIntakeFormToken(ctx *gin.Context) {
-	token := ctx.Param("token")
+	token := ctx.Query("token")
 
 	dbToken, err := server.store.GetIntakeFormToken(ctx, token)
 	if err != nil {
@@ -197,11 +196,10 @@ func (server *Server) VerifyIntakeFormToken(ctx *gin.Context) {
 
 // CreateIntakeFormRequest represents a request to create an intake form
 type CreateIntakeFormRequest struct {
-	IntakeFormToken            string      `json:"intake_form_token" binding:"required"`
 	FirstName                  string      `json:"first_name" binding:"required"`
 	LastName                   string      `json:"last_name" binding:"required"`
 	DateOfBirth                time.Time   `json:"date_of_birth" binding:"required"`
-	Phonenumber                string      `json:"phonenumber" binding:"required"`
+	PhoneNumber                string      `json:"phonenumber" binding:"required"`
 	Gender                     string      `json:"gender" binding:"required"`
 	PlaceOfBirth               string      `json:"place_of_birth" binding:"required"`
 	RepresentativeFirstName    string      `json:"representative_first_name" binding:"required"`
@@ -237,7 +235,7 @@ type CreateIntakeFormResponse struct {
 // @Tags intake_form
 // @Accept json
 // @Produce json
-// @Param token path string true "Intake form token"
+// @Param token query string true "Intake form token"
 // @Param request body CreateIntakeFormRequest true "Intake form request"
 // @Success 201 {object} Response[CreateIntakeFormResponse]
 // @Failure 400 {object} Response[any] "Bad request"
@@ -245,7 +243,7 @@ type CreateIntakeFormResponse struct {
 // @Router /intake_form [post]
 // @Security -
 func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
-	token := ctx.Param("token")
+	token := ctx.Query("token")
 
 	dbToken, err := server.store.GetIntakeFormToken(ctx, token)
 	if err != nil {
@@ -278,11 +276,11 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 	qtx := server.store.WithTx(tx)
 
 	arg := db.CreateIntakeFormParams{
-		IntakeFormToken:            req.IntakeFormToken,
+		IntakeFormToken:            token,
 		FirstName:                  req.FirstName,
 		LastName:                   req.LastName,
 		DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
-		PhoneNumber:                req.Phonenumber,
+		PhoneNumber:                req.PhoneNumber,
 		Gender:                     req.Gender,
 		PlaceOfBirth:               req.PlaceOfBirth,
 		RepresentativeFirstName:    req.RepresentativeFirstName,
@@ -300,7 +298,7 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = qtx.RevokedIntakeFormToken(ctx, req.IntakeFormToken)
+	_, err = qtx.RevokedIntakeFormToken(ctx, token)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

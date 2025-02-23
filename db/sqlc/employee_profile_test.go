@@ -8,6 +8,7 @@ import (
 
 	"maicare_go/util"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -19,8 +20,8 @@ func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 
 	arg := CreateEmployeeProfileParams{
 		UserID:                    user.ID,
-		FirstName:                 util.RandomString(5),
-		LastName:                  util.RandomString(5),
+		FirstName:                 faker.FirstName(),
+		LastName:                  faker.LastName(),
 		Position:                  util.StringPtr(util.RandomString(5)),
 		Department:                util.StringPtr(util.RandomString(5)),
 		EmployeeNumber:            util.StringPtr(util.RandomString(5)),
