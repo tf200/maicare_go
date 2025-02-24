@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
 
 	"github.com/google/uuid"
@@ -49,10 +50,10 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 	sender := createRandomSender(t)
 
 	arg := db.CreateClientDetailsParams{
-		FirstName:             util.RandomString(5),
-		LastName:              util.RandomString(5),
-		Email:                 util.RandomEmail(),
-		PhoneNumber:           util.StringPtr("0653316517"),
+		FirstName:             faker.FirstName(),
+		LastName:              faker.LastName(),
+		Email:                 faker.Email(),
+		PhoneNumber:           util.StringPtr(faker.Phonenumber()),
 		DateOfBirth:           pgtype.Date{Time: time.Now().AddDate(-20, 0, 0), Valid: true},
 		Identity:              false,
 		Status:                util.StringPtr("On Waiting List"),
@@ -102,6 +103,8 @@ func TestCreateClientApi(t *testing.T) {
 
 	}
 
+	sender := createRandomSender(t)
+	location := createRandomLocation(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -115,11 +118,11 @@ func TestCreateClientApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				clientReq := CreateClientDetailsRequest{
-					FirstName:    util.RandomString(5),
-					LastName:     util.RandomString(8),
-					Email:        util.RandomEmail(),
+					FirstName:    faker.FirstName(),
+					LastName:     faker.LastName(),
+					Email:        faker.Email(),
 					Organisation: util.StringPtr("Test Organisation"),
-					LocationID:   util.IntPtr(1),
+					LocationID:   &location.ID,
 					LegalMeasure: util.StringPtr("Test Legal Measure"),
 					Birthplace:   util.StringPtr("Test Birthplace"),
 					Departement:  util.StringPtr("Test Departement"),
@@ -140,7 +143,7 @@ func TestCreateClientApi(t *testing.T) {
 						},
 					},
 					IdentityAttachmentIds: filesUuids[:],
-					SenderID:              1,
+					SenderID:              sender.ID,
 				}
 				reqBody, err := json.Marshal(clientReq)
 				require.NoError(t, err)

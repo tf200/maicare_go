@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
@@ -25,9 +26,9 @@ func createRandomSender(t *testing.T) db.Sender {
 	// Define a slice of Contact structs
 	contacts := []Contact{
 		{
-			Name:        util.StringPtr("Test Contact"),
-			Email:       util.StringPtr("test@example.com"),
-			PhoneNumber: util.StringPtr("1234567890"),
+			Name:        util.StringPtr(faker.Name()),
+			Email:       util.StringPtr(faker.Email()),
+			PhoneNumber: util.StringPtr(faker.Phonenumber()),
 		},
 	}
 
@@ -38,9 +39,9 @@ func createRandomSender(t *testing.T) db.Sender {
 	// Create the CreateSenderParams
 	arg := db.CreateSenderParams{
 		Types:        "main_provider",
-		Name:         "MAICARE",
-		Address:      util.StringPtr("test"),
-		PostalCode:   util.StringPtr("test"),
+		Name:         faker.FirstName(),
+		Address:      util.StringPtr(faker.GetRealAddress().City),
+		PostalCode:   util.StringPtr(faker.GetRealAddress().PostalCode),
 		Place:        util.StringPtr("test"),
 		Land:         util.StringPtr("test"),
 		Kvknumber:    util.StringPtr("test"),

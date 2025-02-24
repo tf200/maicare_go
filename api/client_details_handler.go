@@ -256,6 +256,13 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 		return
 	}
 
+	if len(clients) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientsApiResponse{}, 0)
+		res := SuccessResponse(pag, "No clients found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
 	totalCount := clients[0].TotalCount
 
 	clientList := make([]ListClientsApiResponse, len(clients))

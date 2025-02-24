@@ -167,7 +167,7 @@ CREATE TABLE sender (
         'main_provider', 'local_authority', 
         'particular_party', 'healthcare_institution'
     )),
-    name VARCHAR(20) NOT NULL,
+    name VARCHAR(60) NOT NULL,
     address VARCHAR(200) NULL,
     postal_code VARCHAR(20) NULL,
     place VARCHAR(20) NULL,
