@@ -1360,7 +1360,7 @@ CREATE TABLE intake_forms (
     representative_email VARCHAR(254) NOT NULL,
     representative_relationship VARCHAR(100) NOT NULL,
     representative_address TEXT NOT NULL,
-    attachement_ids UUID[] NOT NULL
+    attachement_ids UUID[] NULL DEFAULT '{}'
 );
 
 

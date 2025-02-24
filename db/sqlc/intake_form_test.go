@@ -78,7 +78,6 @@ func TestCreateIntakeForm(t *testing.T) {
 		RepresentativePhoneNumber:  faker.Phonenumber(),
 		RepresentativeRelationship: faker.WORD,
 		RepresentativeAddress:      faker.GetRealAddress().Address,
-		AttachementIds:             []uuid.UUID{},
 	}
 
 	form, err := testQueries.CreateIntakeForm(context.Background(), arg)
