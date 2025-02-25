@@ -160,6 +160,7 @@ func TestCreateGoalObjective(t *testing.T) {
 	client := createRandomClientDetails(t)
 	mma := createRamdomClientMaturityMatrixAssessment(t, client.ID, 1)
 	goal := createRandomClientGoal(t, mma.ID)
+	t.Log(goal.ID)
 	createRandomGoalObjective(t, goal.ID)
 }
 

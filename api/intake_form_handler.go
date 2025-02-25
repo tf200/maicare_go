@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -28,7 +29,6 @@ type IntakeFormUploadHandlerResponse struct {
 // @Tags intake_form
 // @Accept mpfd
 // @Produce json
-// @Param token query string true "Intake form token"
 // @Param file formData file true "File to upload"
 // @Success 201 {object} Response[IntakeFormUploadHandlerResponse]
 // @Failure 400 {object} Response[any] "Bad request"
@@ -38,23 +38,6 @@ type IntakeFormUploadHandlerResponse struct {
 // @Router /intake_form/upload [post]
 // @Security -
 func (server *Server) IntakeFormUploadHandlerApi(ctx *gin.Context) {
-	token := ctx.Query("token")
-
-	dbToken, err := server.store.GetIntakeFormToken(ctx, token)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if dbToken.IsRevoked {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	if dbToken.ExpiresAt.Time.Before(time.Now()) {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
 
 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
 	file, header, err := ctx.Request.FormFile("file")
@@ -128,106 +111,135 @@ func (server *Server) IntakeFormUploadHandlerApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, res)
 }
 
-// GenerateIntakeFormTokenResponse represents a response from the generate intake form token handler
-type GenerateIntakeFormTokenResponse struct {
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
-}
-
-// @Summary Generate an intake form token
-// @Description Generate an intake form token
-// @Tags intake_form
-// @Produce json
-// @Success 201 {object} Response[GenerateIntakeFormTokenResponse]
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /intake_form/token [post]
-func (server *Server) GenerateIntakeFormToken(ctx *gin.Context) {
-	arg := db.CreateIntakeFormTokenParams{
-		Token:     uuid.New().String(),
-		ExpiresAt: pgtype.Timestamp{Time: time.Now().Add(time.Hour * 24), Valid: true},
-	}
-
-	token, err := server.store.CreateIntakeFormToken(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(GenerateIntakeFormTokenResponse{
-		Token:     token.Token,
-		ExpiresAt: token.ExpiresAt.Time,
-	}, "Intake form token created successfully")
-	ctx.JSON(http.StatusCreated, res)
-
-}
-
-// @Summary Verify an intake form token
-// @Description Verify an intake form token
-// @Tags intake_form
-// @Produce json
-// @Param token query string true "Intake form token"
-// @Success 200 {object} Response[any]
-// @Failure 401 {object} Response[any] "Unauthorized"
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /intake_form/verify [get]
-// @Security -
-func (server *Server) VerifyIntakeFormToken(ctx *gin.Context) {
-	token := ctx.Query("token")
-
-	dbToken, err := server.store.GetIntakeFormToken(ctx, token)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if dbToken.IsRevoked {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	if dbToken.ExpiresAt.Time.Before(time.Now()) {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "Intake form token verified"})
-
+type GuardionInfo struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+	Address     string `json:"address"`
 }
 
 // CreateIntakeFormRequest represents a request to create an intake form
 type CreateIntakeFormRequest struct {
-	FirstName                  string      `json:"first_name" binding:"required"`
-	LastName                   string      `json:"last_name" binding:"required"`
-	DateOfBirth                time.Time   `json:"date_of_birth" binding:"required"`
-	PhoneNumber                string      `json:"phonenumber" binding:"required"`
-	Gender                     string      `json:"gender" binding:"required"`
-	PlaceOfBirth               string      `json:"place_of_birth" binding:"required"`
-	RepresentativeFirstName    string      `json:"representative_first_name" binding:"required"`
-	RepresentativeLastName     string      `json:"representative_last_name" binding:"required"`
-	RepresentativePhoneNumber  string      `json:"representative_phone_number" binding:"required"`
-	RepresentativeEmail        string      `json:"representative_email" binding:"required"`
-	RepresentativeRelationship string      `json:"representative_relationship" binding:"required"`
-	RepresentativeAddress      string      `json:"representative_address" binding:"required"`
-	AttachementIds             []uuid.UUID `json:"attachement_ids"`
+	FirstName             string         `json:"first_name"`
+	LastName              string         `json:"last_name"`
+	DateOfBirth           time.Time      `json:"date_of_birth"`
+	Nationality           string         `json:"nationality"`
+	Bsn                   string         `json:"bsn"`
+	Address               string         `json:"address"`
+	City                  string         `json:"city"`
+	PostalCode            string         `json:"postal_code"`
+	PhoneNumber           string         `json:"phone_number"`
+	Gender                string         `json:"gender"`
+	Email                 string         `json:"email"`
+	IDType                string         `json:"id_type"`
+	IDNumber              string         `json:"id_number"`
+	ReferrerName          *string        `json:"referrer_name"`
+	ReferrerOrganization  *string        `json:"referrer_organization"`
+	ReferrerFunction      *string        `json:"referrer_function"`
+	ReferrerPhone         *string        `json:"referrer_phone"`
+	ReferrerEmail         *string        `json:"referrer_email"`
+	SignedBy              *string        `json:"signed_by"`
+	HasValidIndication    bool           `json:"has_valid_indication"`
+	LawType               *string        `json:"law_type"`
+	OtherLawSpecification *string        `json:"other_law_specification"`
+	MainProviderName      *string        `json:"main_provider_name"`
+	MainProviderContact   *string        `json:"main_provider_contact"`
+	IndicationStartDate   time.Time      `json:"indication_start_date"`
+	IndicationEndDate     time.Time      `json:"indication_end_date"`
+	RegistrationReason    *string        `json:"registration_reason"`
+	GuidanceGoals         *string        `json:"guidance_goals"`
+	RegistrationType      *string        `json:"registration_type"`
+	LivingSituation       *string        `json:"living_situation"`
+	OtherLivingSituation  *string        `json:"other_living_situation"`
+	ParentalAuthority     bool           `json:"parental_authority"`
+	CurrentSchool         *string        `json:"current_school"`
+	MentorName            *string        `json:"mentor_name"`
+	MentorPhone           *string        `json:"mentor_phone"`
+	MentorEmail           *string        `json:"mentor_email"`
+	PreviousCare          *string        `json:"previous_care"`
+	GuardianDetails       []GuardionInfo `json:"guardian_details"`
+	Diagnoses             *string        `json:"diagnoses"`
+	UsesMedication        bool           `json:"uses_medication"`
+	MedicationDetails     *string        `json:"medication_details"`
+	AddictionIssues       bool           `json:"addiction_issues"`
+	JudicialInvolvement   bool           `json:"judicial_involvement"`
+	RiskAggression        bool           `json:"risk_aggression"`
+	RiskSuicidality       bool           `json:"risk_suicidality"`
+	RiskRunningAway       bool           `json:"risk_running_away"`
+	RiskSelfHarm          bool           `json:"risk_self_harm"`
+	RiskWeaponPossession  bool           `json:"risk_weapon_possession"`
+	RiskDrugDealing       bool           `json:"risk_drug_dealing"`
+	OtherRisks            *string        `json:"other_risks"`
+	SharingPermission     bool           `json:"sharing_permission"`
+	TruthDeclaration      bool           `json:"truth_declaration"`
+	ClientSignature       bool           `json:"client_signature"`
+	GuardianSignature     *bool          `json:"guardian_signature"`
+	ReferrerSignature     *bool          `json:"referrer_signature"`
+	SignatureDate         time.Time      `json:"signature_date"`
+	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
 }
 
 // CreateIntakeFormResponse represents a response from the create intake form handler
 type CreateIntakeFormResponse struct {
-	ID                         int64       `json:"id"`
-	IntakeFormToken            string      `json:"intake_form_token"`
-	FirstName                  string      `json:"first_name"`
-	LastName                   string      `json:"last_name"`
-	DateOfBirth                time.Time   `json:"date_of_birth"`
-	Phonenumber                string      `json:"phonenumber"`
-	Gender                     string      `json:"gender"`
-	PlaceOfBirth               string      `json:"place_of_birth"`
-	RepresentativeFirstName    string      `json:"representative_first_name"`
-	RepresentativeLastName     string      `json:"representative_last_name"`
-	RepresentativePhoneNumber  string      `json:"representative_phone_number"`
-	RepresentativeEmail        string      `json:"representative_email"`
-	RepresentativeRelationship string      `json:"representative_relationship"`
-	RepresentativeAddress      string      `json:"representative_address"`
-	AttachementIds             []uuid.UUID `json:"attachement_ids"`
+	ID                    int64          `json:"id"`
+	FirstName             string         `json:"first_name"`
+	LastName              string         `json:"last_name"`
+	DateOfBirth           time.Time      `json:"date_of_birth"`
+	Nationality           string         `json:"nationality"`
+	Bsn                   string         `json:"bsn"`
+	Address               string         `json:"address"`
+	City                  string         `json:"city"`
+	PostalCode            string         `json:"postal_code"`
+	PhoneNumber           string         `json:"phone_number"`
+	Gender                string         `json:"gender"`
+	Email                 string         `json:"email"`
+	IDType                string         `json:"id_type"`
+	IDNumber              string         `json:"id_number"`
+	ReferrerName          *string        `json:"referrer_name"`
+	ReferrerOrganization  *string        `json:"referrer_organization"`
+	ReferrerFunction      *string        `json:"referrer_function"`
+	ReferrerPhone         *string        `json:"referrer_phone"`
+	ReferrerEmail         *string        `json:"referrer_email"`
+	SignedBy              *string        `json:"signed_by"`
+	HasValidIndication    bool           `json:"has_valid_indication"`
+	LawType               *string        `json:"law_type"`
+	OtherLawSpecification *string        `json:"other_law_specification"`
+	MainProviderName      *string        `json:"main_provider_name"`
+	MainProviderContact   *string        `json:"main_provider_contact"`
+	IndicationStartDate   time.Time      `json:"indication_start_date"`
+	IndicationEndDate     time.Time      `json:"indication_end_date"`
+	RegistrationReason    *string        `json:"registration_reason"`
+	GuidanceGoals         *string        `json:"guidance_goals"`
+	RegistrationType      *string        `json:"registration_type"`
+	LivingSituation       *string        `json:"living_situation"`
+	OtherLivingSituation  *string        `json:"other_living_situation"`
+	ParentalAuthority     bool           `json:"parental_authority"`
+	CurrentSchool         *string        `json:"current_school"`
+	MentorName            *string        `json:"mentor_name"`
+	MentorPhone           *string        `json:"mentor_phone"`
+	MentorEmail           *string        `json:"mentor_email"`
+	PreviousCare          *string        `json:"previous_care"`
+	GuardianDetails       []GuardionInfo `json:"guardian_details"`
+	Diagnoses             *string        `json:"diagnoses"`
+	UsesMedication        bool           `json:"uses_medication"`
+	MedicationDetails     *string        `json:"medication_details"`
+	AddictionIssues       bool           `json:"addiction_issues"`
+	JudicialInvolvement   bool           `json:"judicial_involvement"`
+	RiskAggression        bool           `json:"risk_aggression"`
+	RiskSuicidality       bool           `json:"risk_suicidality"`
+	RiskRunningAway       bool           `json:"risk_running_away"`
+	RiskSelfHarm          bool           `json:"risk_self_harm"`
+	RiskWeaponPossession  bool           `json:"risk_weapon_possession"`
+	RiskDrugDealing       bool           `json:"risk_drug_dealing"`
+	OtherRisks            *string        `json:"other_risks"`
+	SharingPermission     bool           `json:"sharing_permission"`
+	TruthDeclaration      bool           `json:"truth_declaration"`
+	ClientSignature       bool           `json:"client_signature"`
+	GuardianSignature     *bool          `json:"guardian_signature"`
+	ReferrerSignature     *bool          `json:"referrer_signature"`
+	SignatureDate         time.Time      `json:"signature_date"`
+	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
 }
 
 // @Summary Create an intake form
@@ -235,7 +247,6 @@ type CreateIntakeFormResponse struct {
 // @Tags intake_form
 // @Accept json
 // @Produce json
-// @Param token query string true "Intake form token"
 // @Param request body CreateIntakeFormRequest true "Intake form request"
 // @Success 201 {object} Response[CreateIntakeFormResponse]
 // @Failure 400 {object} Response[any] "Bad request"
@@ -243,26 +254,15 @@ type CreateIntakeFormResponse struct {
 // @Router /intake_form [post]
 // @Security -
 func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
-	token := ctx.Query("token")
-
-	dbToken, err := server.store.GetIntakeFormToken(ctx, token)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if dbToken.IsRevoked {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	if dbToken.ExpiresAt.Time.Before(time.Now()) {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
 	var req CreateIntakeFormRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	guardianDetailsBytes, err := json.Marshal(req.GuardianDetails)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -276,29 +276,65 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 	qtx := server.store.WithTx(tx)
 
 	arg := db.CreateIntakeFormParams{
-		IntakeFormToken:            token,
-		FirstName:                  req.FirstName,
-		LastName:                   req.LastName,
-		DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
-		PhoneNumber:                req.PhoneNumber,
-		Gender:                     req.Gender,
-		PlaceOfBirth:               req.PlaceOfBirth,
-		RepresentativeFirstName:    req.RepresentativeFirstName,
-		RepresentativeLastName:     req.RepresentativeLastName,
-		RepresentativePhoneNumber:  req.RepresentativePhoneNumber,
-		RepresentativeEmail:        req.RepresentativeEmail,
-		RepresentativeRelationship: req.RepresentativeRelationship,
-		RepresentativeAddress:      req.RepresentativeAddress,
-		AttachementIds:             req.AttachementIds,
+		FirstName:             req.FirstName,
+		LastName:              req.LastName,
+		DateOfBirth:           pgtype.Date{Time: req.DateOfBirth, Valid: true},
+		Nationality:           req.Nationality,
+		Bsn:                   req.Bsn,
+		Address:               req.Address,
+		City:                  req.City,
+		PostalCode:            req.PostalCode,
+		PhoneNumber:           req.PhoneNumber,
+		Gender:                req.Gender,
+		Email:                 req.Email,
+		IDType:                req.IDType,
+		IDNumber:              req.IDNumber,
+		ReferrerName:          req.ReferrerName,
+		ReferrerOrganization:  req.ReferrerOrganization,
+		ReferrerFunction:      req.ReferrerFunction,
+		ReferrerPhone:         req.ReferrerPhone,
+		ReferrerEmail:         req.ReferrerEmail,
+		SignedBy:              req.SignedBy,
+		HasValidIndication:    req.HasValidIndication,
+		LawType:               req.LawType,
+		OtherLawSpecification: req.OtherLawSpecification,
+		MainProviderName:      req.MainProviderName,
+		MainProviderContact:   req.MainProviderContact,
+		IndicationStartDate:   pgtype.Date{Time: req.IndicationStartDate, Valid: true},
+		IndicationEndDate:     pgtype.Date{Time: req.IndicationEndDate, Valid: true},
+		RegistrationReason:    req.RegistrationReason,
+		GuidanceGoals:         req.GuidanceGoals,
+		RegistrationType:      req.RegistrationType,
+		LivingSituation:       req.LivingSituation,
+		OtherLivingSituation:  req.OtherLivingSituation,
+		ParentalAuthority:     req.ParentalAuthority,
+		CurrentSchool:         req.CurrentSchool,
+		MentorName:            req.MentorName,
+		MentorPhone:           req.MentorPhone,
+		MentorEmail:           req.MentorEmail,
+		PreviousCare:          req.PreviousCare,
+		GuardianDetails:       guardianDetailsBytes,
+		Diagnoses:             req.Diagnoses,
+		UsesMedication:        req.UsesMedication,
+		MedicationDetails:     req.MedicationDetails,
+		AddictionIssues:       req.AddictionIssues,
+		JudicialInvolvement:   req.JudicialInvolvement,
+		RiskAggression:        req.RiskAggression,
+		RiskSuicidality:       req.RiskSuicidality,
+		RiskRunningAway:       req.RiskRunningAway,
+		RiskSelfHarm:          req.RiskSelfHarm,
+		RiskWeaponPossession:  req.RiskWeaponPossession,
+		RiskDrugDealing:       req.RiskDrugDealing,
+		OtherRisks:            req.OtherRisks,
+		SharingPermission:     req.SharingPermission,
+		TruthDeclaration:      req.TruthDeclaration,
+		ClientSignature:       req.ClientSignature,
+		GuardianSignature:     req.GuardianSignature,
+		ReferrerSignature:     req.ReferrerSignature,
+		SignatureDate:         pgtype.Date{Time: req.SignatureDate, Valid: true},
 	}
 
 	form, err := qtx.CreateIntakeForm(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = qtx.RevokedIntakeFormToken(ctx, token)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -321,22 +357,71 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 		return
 	}
 
+	var GuardianDetails []GuardionInfo
+	err = json.Unmarshal(form.GuardianDetails, &GuardianDetails)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	res := SuccessResponse(CreateIntakeFormResponse{
-		ID:                         form.ID,
-		IntakeFormToken:            form.IntakeFormToken,
-		FirstName:                  form.FirstName,
-		LastName:                   form.LastName,
-		DateOfBirth:                form.DateOfBirth.Time,
-		Phonenumber:                form.PhoneNumber,
-		Gender:                     form.Gender,
-		PlaceOfBirth:               form.PlaceOfBirth,
-		RepresentativeFirstName:    form.RepresentativeFirstName,
-		RepresentativeLastName:     form.RepresentativeLastName,
-		RepresentativePhoneNumber:  form.RepresentativePhoneNumber,
-		RepresentativeEmail:        form.RepresentativeEmail,
-		RepresentativeRelationship: form.RepresentativeRelationship,
-		RepresentativeAddress:      form.RepresentativeAddress,
-		AttachementIds:             form.AttachementIds,
+		ID:                    form.ID,
+		FirstName:             form.FirstName,
+		LastName:              form.LastName,
+		DateOfBirth:           form.DateOfBirth.Time,
+		Nationality:           form.Nationality,
+		Bsn:                   form.Bsn,
+		Address:               form.Address,
+		City:                  form.City,
+		PostalCode:            form.PostalCode,
+		Gender:                form.Gender,
+		Email:                 form.Email,
+		IDType:                form.IDType,
+		IDNumber:              form.IDNumber,
+		ReferrerName:          form.ReferrerName,
+		ReferrerOrganization:  form.ReferrerOrganization,
+		ReferrerFunction:      form.ReferrerFunction,
+		ReferrerPhone:         form.ReferrerPhone,
+		ReferrerEmail:         form.ReferrerEmail,
+		SignedBy:              form.SignedBy,
+		HasValidIndication:    form.HasValidIndication,
+		LawType:               form.LawType,
+		OtherLawSpecification: form.OtherLawSpecification,
+		MainProviderName:      form.MainProviderName,
+		MainProviderContact:   form.MainProviderContact,
+		IndicationStartDate:   form.IndicationStartDate.Time,
+		IndicationEndDate:     form.IndicationEndDate.Time,
+		RegistrationReason:    form.RegistrationReason,
+		GuidanceGoals:         form.GuidanceGoals,
+		RegistrationType:      form.RegistrationType,
+		LivingSituation:       form.LivingSituation,
+		OtherLivingSituation:  form.OtherLivingSituation,
+		ParentalAuthority:     form.ParentalAuthority,
+		CurrentSchool:         form.CurrentSchool,
+		MentorName:            form.MentorName,
+		MentorPhone:           form.MentorPhone,
+		MentorEmail:           form.MentorEmail,
+		PreviousCare:          form.PreviousCare,
+		GuardianDetails:       GuardianDetails,
+		Diagnoses:             form.Diagnoses,
+		UsesMedication:        form.UsesMedication,
+		MedicationDetails:     form.MedicationDetails,
+		AddictionIssues:       form.AddictionIssues,
+		JudicialInvolvement:   form.JudicialInvolvement,
+		RiskAggression:        form.RiskAggression,
+		RiskSuicidality:       form.RiskSuicidality,
+		RiskRunningAway:       form.RiskRunningAway,
+		RiskSelfHarm:          form.RiskSelfHarm,
+		RiskWeaponPossession:  form.RiskWeaponPossession,
+		RiskDrugDealing:       form.RiskDrugDealing,
+		OtherRisks:            form.OtherRisks,
+		SharingPermission:     form.SharingPermission,
+		TruthDeclaration:      form.TruthDeclaration,
+		ClientSignature:       form.ClientSignature,
+		GuardianSignature:     form.GuardianSignature,
+		ReferrerSignature:     form.ReferrerSignature,
+		SignatureDate:         form.SignatureDate.Time,
+		AttachementIds:        form.AttachementIds,
 	}, "Intake form created successfully")
 
 	ctx.JSON(http.StatusCreated, res)

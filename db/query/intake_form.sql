@@ -1,46 +1,68 @@
 
-
-
--- name: CreateIntakeFormToken :one
-INSERT INTO intake_form_tokens(
-    token,
-    expires_at
-) VALUES (
-    $1,
-    $2
-)
-
-RETURNING *;
-
-
-
--- name: GetIntakeFormToken :one
-SELECT * FROM intake_form_tokens WHERE token = $1;
-
--- name: RevokedIntakeFormToken :one
-UPDATE intake_form_tokens
-SET
-    is_revoked = true
-WHERE token = $1
-RETURNING *;
-
-
 -- name: CreateIntakeForm :one
 INSERT INTO intake_forms (
-    intake_form_token,
     first_name,
     last_name,
     date_of_birth,
+    nationality,
+    bsn,
+    address,
+    city,
+    postal_code,
     phone_number,
     gender,
-    place_of_birth,
-    representative_first_name,
-    representative_last_name,
-    representative_phone_number,
-    representative_email,
-    representative_relationship,
-    representative_address,
+    email,
+    id_type,
+    id_number,
+    referrer_name,
+    referrer_organization,
+    referrer_function,
+    referrer_phone,
+    referrer_email,
+    signed_by,
+    has_valid_indication,
+    law_type,
+    other_law_specification,
+    main_provider_name,
+    main_provider_contact,
+    indication_start_date,
+    indication_end_date,
+    registration_reason,
+    guidance_goals,
+    registration_type,
+    living_situation,
+    other_living_situation,
+    parental_authority,
+    current_school,
+    mentor_name,
+    mentor_phone,
+    mentor_email,
+    previous_care,
+    guardian_details,
+    diagnoses,
+    uses_medication,
+    medication_details,
+    addiction_issues,
+    judicial_involvement,
+    risk_aggression,
+    risk_suicidality,
+    risk_running_away,
+    risk_self_harm,
+    risk_weapon_possession,
+    risk_drug_dealing,
+    other_risks,
+    sharing_permission,
+    truth_declaration,
+    client_signature,
+    guardian_signature,
+    referrer_signature,
+    signature_date,
     attachement_ids
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
+    $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
+    $51, $52, $53, $54, $55, $56, $57
 ) RETURNING *;

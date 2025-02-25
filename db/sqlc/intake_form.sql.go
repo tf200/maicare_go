@@ -14,141 +14,253 @@ import (
 
 const createIntakeForm = `-- name: CreateIntakeForm :one
 INSERT INTO intake_forms (
-    intake_form_token,
     first_name,
     last_name,
     date_of_birth,
+    nationality,
+    bsn,
+    address,
+    city,
+    postal_code,
     phone_number,
     gender,
-    place_of_birth,
-    representative_first_name,
-    representative_last_name,
-    representative_phone_number,
-    representative_email,
-    representative_relationship,
-    representative_address,
+    email,
+    id_type,
+    id_number,
+    referrer_name,
+    referrer_organization,
+    referrer_function,
+    referrer_phone,
+    referrer_email,
+    signed_by,
+    has_valid_indication,
+    law_type,
+    other_law_specification,
+    main_provider_name,
+    main_provider_contact,
+    indication_start_date,
+    indication_end_date,
+    registration_reason,
+    guidance_goals,
+    registration_type,
+    living_situation,
+    other_living_situation,
+    parental_authority,
+    current_school,
+    mentor_name,
+    mentor_phone,
+    mentor_email,
+    previous_care,
+    guardian_details,
+    diagnoses,
+    uses_medication,
+    medication_details,
+    addiction_issues,
+    judicial_involvement,
+    risk_aggression,
+    risk_suicidality,
+    risk_running_away,
+    risk_self_harm,
+    risk_weapon_possession,
+    risk_drug_dealing,
+    other_risks,
+    sharing_permission,
+    truth_declaration,
+    client_signature,
+    guardian_signature,
+    referrer_signature,
+    signature_date,
     attachement_ids
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-) RETURNING id, intake_form_token, first_name, last_name, date_of_birth, phone_number, gender, place_of_birth, representative_first_name, representative_last_name, representative_phone_number, representative_email, representative_relationship, representative_address, attachement_ids
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
+    $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
+    $51, $52, $53, $54, $55, $56, $57
+) RETURNING id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, attachement_ids
 `
 
 type CreateIntakeFormParams struct {
-	IntakeFormToken            string      `json:"intake_form_token"`
-	FirstName                  string      `json:"first_name"`
-	LastName                   string      `json:"last_name"`
-	DateOfBirth                pgtype.Date `json:"date_of_birth"`
-	PhoneNumber                string      `json:"phone_number"`
-	Gender                     string      `json:"gender"`
-	PlaceOfBirth               string      `json:"place_of_birth"`
-	RepresentativeFirstName    string      `json:"representative_first_name"`
-	RepresentativeLastName     string      `json:"representative_last_name"`
-	RepresentativePhoneNumber  string      `json:"representative_phone_number"`
-	RepresentativeEmail        string      `json:"representative_email"`
-	RepresentativeRelationship string      `json:"representative_relationship"`
-	RepresentativeAddress      string      `json:"representative_address"`
-	AttachementIds             []uuid.UUID `json:"attachement_ids"`
+	FirstName             string      `json:"first_name"`
+	LastName              string      `json:"last_name"`
+	DateOfBirth           pgtype.Date `json:"date_of_birth"`
+	Nationality           string      `json:"nationality"`
+	Bsn                   string      `json:"bsn"`
+	Address               string      `json:"address"`
+	City                  string      `json:"city"`
+	PostalCode            string      `json:"postal_code"`
+	PhoneNumber           string      `json:"phone_number"`
+	Gender                string      `json:"gender"`
+	Email                 string      `json:"email"`
+	IDType                string      `json:"id_type"`
+	IDNumber              string      `json:"id_number"`
+	ReferrerName          *string     `json:"referrer_name"`
+	ReferrerOrganization  *string     `json:"referrer_organization"`
+	ReferrerFunction      *string     `json:"referrer_function"`
+	ReferrerPhone         *string     `json:"referrer_phone"`
+	ReferrerEmail         *string     `json:"referrer_email"`
+	SignedBy              *string     `json:"signed_by"`
+	HasValidIndication    bool        `json:"has_valid_indication"`
+	LawType               *string     `json:"law_type"`
+	OtherLawSpecification *string     `json:"other_law_specification"`
+	MainProviderName      *string     `json:"main_provider_name"`
+	MainProviderContact   *string     `json:"main_provider_contact"`
+	IndicationStartDate   pgtype.Date `json:"indication_start_date"`
+	IndicationEndDate     pgtype.Date `json:"indication_end_date"`
+	RegistrationReason    *string     `json:"registration_reason"`
+	GuidanceGoals         *string     `json:"guidance_goals"`
+	RegistrationType      *string     `json:"registration_type"`
+	LivingSituation       *string     `json:"living_situation"`
+	OtherLivingSituation  *string     `json:"other_living_situation"`
+	ParentalAuthority     bool        `json:"parental_authority"`
+	CurrentSchool         *string     `json:"current_school"`
+	MentorName            *string     `json:"mentor_name"`
+	MentorPhone           *string     `json:"mentor_phone"`
+	MentorEmail           *string     `json:"mentor_email"`
+	PreviousCare          *string     `json:"previous_care"`
+	GuardianDetails       []byte      `json:"guardian_details"`
+	Diagnoses             *string     `json:"diagnoses"`
+	UsesMedication        bool        `json:"uses_medication"`
+	MedicationDetails     *string     `json:"medication_details"`
+	AddictionIssues       bool        `json:"addiction_issues"`
+	JudicialInvolvement   bool        `json:"judicial_involvement"`
+	RiskAggression        bool        `json:"risk_aggression"`
+	RiskSuicidality       bool        `json:"risk_suicidality"`
+	RiskRunningAway       bool        `json:"risk_running_away"`
+	RiskSelfHarm          bool        `json:"risk_self_harm"`
+	RiskWeaponPossession  bool        `json:"risk_weapon_possession"`
+	RiskDrugDealing       bool        `json:"risk_drug_dealing"`
+	OtherRisks            *string     `json:"other_risks"`
+	SharingPermission     bool        `json:"sharing_permission"`
+	TruthDeclaration      bool        `json:"truth_declaration"`
+	ClientSignature       bool        `json:"client_signature"`
+	GuardianSignature     *bool       `json:"guardian_signature"`
+	ReferrerSignature     *bool       `json:"referrer_signature"`
+	SignatureDate         pgtype.Date `json:"signature_date"`
+	AttachementIds        []uuid.UUID `json:"attachement_ids"`
 }
 
 func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error) {
 	row := q.db.QueryRow(ctx, createIntakeForm,
-		arg.IntakeFormToken,
 		arg.FirstName,
 		arg.LastName,
 		arg.DateOfBirth,
+		arg.Nationality,
+		arg.Bsn,
+		arg.Address,
+		arg.City,
+		arg.PostalCode,
 		arg.PhoneNumber,
 		arg.Gender,
-		arg.PlaceOfBirth,
-		arg.RepresentativeFirstName,
-		arg.RepresentativeLastName,
-		arg.RepresentativePhoneNumber,
-		arg.RepresentativeEmail,
-		arg.RepresentativeRelationship,
-		arg.RepresentativeAddress,
+		arg.Email,
+		arg.IDType,
+		arg.IDNumber,
+		arg.ReferrerName,
+		arg.ReferrerOrganization,
+		arg.ReferrerFunction,
+		arg.ReferrerPhone,
+		arg.ReferrerEmail,
+		arg.SignedBy,
+		arg.HasValidIndication,
+		arg.LawType,
+		arg.OtherLawSpecification,
+		arg.MainProviderName,
+		arg.MainProviderContact,
+		arg.IndicationStartDate,
+		arg.IndicationEndDate,
+		arg.RegistrationReason,
+		arg.GuidanceGoals,
+		arg.RegistrationType,
+		arg.LivingSituation,
+		arg.OtherLivingSituation,
+		arg.ParentalAuthority,
+		arg.CurrentSchool,
+		arg.MentorName,
+		arg.MentorPhone,
+		arg.MentorEmail,
+		arg.PreviousCare,
+		arg.GuardianDetails,
+		arg.Diagnoses,
+		arg.UsesMedication,
+		arg.MedicationDetails,
+		arg.AddictionIssues,
+		arg.JudicialInvolvement,
+		arg.RiskAggression,
+		arg.RiskSuicidality,
+		arg.RiskRunningAway,
+		arg.RiskSelfHarm,
+		arg.RiskWeaponPossession,
+		arg.RiskDrugDealing,
+		arg.OtherRisks,
+		arg.SharingPermission,
+		arg.TruthDeclaration,
+		arg.ClientSignature,
+		arg.GuardianSignature,
+		arg.ReferrerSignature,
+		arg.SignatureDate,
 		arg.AttachementIds,
 	)
 	var i IntakeForm
 	err := row.Scan(
 		&i.ID,
-		&i.IntakeFormToken,
 		&i.FirstName,
 		&i.LastName,
 		&i.DateOfBirth,
+		&i.Nationality,
+		&i.Bsn,
+		&i.Address,
+		&i.City,
+		&i.PostalCode,
 		&i.PhoneNumber,
 		&i.Gender,
-		&i.PlaceOfBirth,
-		&i.RepresentativeFirstName,
-		&i.RepresentativeLastName,
-		&i.RepresentativePhoneNumber,
-		&i.RepresentativeEmail,
-		&i.RepresentativeRelationship,
-		&i.RepresentativeAddress,
+		&i.Email,
+		&i.IDType,
+		&i.IDNumber,
+		&i.ReferrerName,
+		&i.ReferrerOrganization,
+		&i.ReferrerFunction,
+		&i.ReferrerPhone,
+		&i.ReferrerEmail,
+		&i.SignedBy,
+		&i.HasValidIndication,
+		&i.LawType,
+		&i.OtherLawSpecification,
+		&i.MainProviderName,
+		&i.MainProviderContact,
+		&i.IndicationStartDate,
+		&i.IndicationEndDate,
+		&i.RegistrationReason,
+		&i.GuidanceGoals,
+		&i.RegistrationType,
+		&i.LivingSituation,
+		&i.OtherLivingSituation,
+		&i.ParentalAuthority,
+		&i.CurrentSchool,
+		&i.MentorName,
+		&i.MentorPhone,
+		&i.MentorEmail,
+		&i.PreviousCare,
+		&i.GuardianDetails,
+		&i.Diagnoses,
+		&i.UsesMedication,
+		&i.MedicationDetails,
+		&i.AddictionIssues,
+		&i.JudicialInvolvement,
+		&i.RiskAggression,
+		&i.RiskSuicidality,
+		&i.RiskRunningAway,
+		&i.RiskSelfHarm,
+		&i.RiskWeaponPossession,
+		&i.RiskDrugDealing,
+		&i.OtherRisks,
+		&i.SharingPermission,
+		&i.TruthDeclaration,
+		&i.ClientSignature,
+		&i.GuardianSignature,
+		&i.ReferrerSignature,
+		&i.SignatureDate,
 		&i.AttachementIds,
-	)
-	return i, err
-}
-
-const createIntakeFormToken = `-- name: CreateIntakeFormToken :one
-INSERT INTO intake_form_tokens(
-    token,
-    expires_at
-) VALUES (
-    $1,
-    $2
-)
-
-RETURNING token, expires_at, is_revoked, created_at
-`
-
-type CreateIntakeFormTokenParams struct {
-	Token     string           `json:"token"`
-	ExpiresAt pgtype.Timestamp `json:"expires_at"`
-}
-
-func (q *Queries) CreateIntakeFormToken(ctx context.Context, arg CreateIntakeFormTokenParams) (IntakeFormToken, error) {
-	row := q.db.QueryRow(ctx, createIntakeFormToken, arg.Token, arg.ExpiresAt)
-	var i IntakeFormToken
-	err := row.Scan(
-		&i.Token,
-		&i.ExpiresAt,
-		&i.IsRevoked,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const getIntakeFormToken = `-- name: GetIntakeFormToken :one
-SELECT token, expires_at, is_revoked, created_at FROM intake_form_tokens WHERE token = $1
-`
-
-func (q *Queries) GetIntakeFormToken(ctx context.Context, token string) (IntakeFormToken, error) {
-	row := q.db.QueryRow(ctx, getIntakeFormToken, token)
-	var i IntakeFormToken
-	err := row.Scan(
-		&i.Token,
-		&i.ExpiresAt,
-		&i.IsRevoked,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const revokedIntakeFormToken = `-- name: RevokedIntakeFormToken :one
-UPDATE intake_form_tokens
-SET
-    is_revoked = true
-WHERE token = $1
-RETURNING token, expires_at, is_revoked, created_at
-`
-
-func (q *Queries) RevokedIntakeFormToken(ctx context.Context, token string) (IntakeFormToken, error) {
-	row := q.db.QueryRow(ctx, revokedIntakeFormToken, token)
-	var i IntakeFormToken
-	err := row.Scan(
-		&i.Token,
-		&i.ExpiresAt,
-		&i.IsRevoked,
-		&i.CreatedAt,
 	)
 	return i, err
 }
