@@ -138,7 +138,9 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := util.HashPassword(util.RandomString(6))
+	password := util.RandomString(6)
+
+	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -189,8 +191,9 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		return
 	}
 	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
-		UserID:     employee.User.ID,
-		TemplateID: "welcome",
+		To:           req.Email,
+		UserEmail:    req.Email,
+		UserPassword: password,
 	}, ctx)
 	res := SuccessResponse(CreateEmployeeProfileResponse{
 		ID:                        employee.Employee.ID,

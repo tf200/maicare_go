@@ -16,8 +16,9 @@ const (
 )
 
 type EmailDeliveryPayload struct {
-	UserID     int64
-	TemplateID string
+	To           string `json:"to"`
+	UserEmail    string `json:"user_email"`
+	UserPassword string `json:"user_password"`
 }
 
 func (c *AsynqClient) EnqueueEmailDelivery(

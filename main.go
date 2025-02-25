@@ -8,6 +8,7 @@ import (
 	"maicare_go/api"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
+	"maicare_go/email"
 	"maicare_go/tasks"
 	"maicare_go/util"
 	"os"
@@ -48,12 +49,15 @@ func main() {
 		asynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, nil)
 	}
 
+	// Inirialize the SMTP Client for email deleviry
+	smtpConf := email.NewSmtpConf(config.SmtpName, config.SmtpAddress, config.SmtpAuth, config.SmtpHost, config.SmtpPort)
+
 	// Initialize Asynq server
 	var asynqServer *tasks.AsynqServer
 	if !config.Remote {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{})
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf)
 	} else {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, nil)
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, nil, smtpConf)
 	}
 
 	// Create error channel to catch server errors
@@ -61,10 +65,15 @@ func main() {
 
 	// Start the Asynq server in a goroutine
 	go func() {
+		log.Println("Starting Asynq server...")
+
 		if err := asynqServer.Start(); err != nil {
+			log.Printf("FATAL: Asynq server error: %v", err)
 			errChan <- fmt.Errorf("asynq server error: %v", err)
 		}
 	}()
+
+	log.Println("Asynq server started successfully in background")
 
 	// Start your main server
 	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey)

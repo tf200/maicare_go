@@ -19,8 +19,9 @@ func TestEnqueueEmailDelivery(t *testing.T) {
 		log.Fatalf("Could not load conf %v", err)
 	}
 	payload := EmailDeliveryPayload{
-		UserID:     1,
-		TemplateID: "template_id",
+		To:           "farjiataha@gmail.com",
+		UserEmail:    "farjiataha@gmail.com",
+		UserPassword: "password",
 	}
 	ctx := context.Background()
 	err = testasynqClient.EnqueueEmailDelivery(payload, ctx)
@@ -45,6 +46,6 @@ func TestEnqueueEmailDelivery(t *testing.T) {
 	var gotPayload EmailDeliveryPayload
 	err = json.Unmarshal(task.Payload, &gotPayload)
 	require.NoError(t, err)
-	require.Equal(t, payload.UserID, gotPayload.UserID)
+	require.Equal(t, payload.To, gotPayload.To)
 
 }

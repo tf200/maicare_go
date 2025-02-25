@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maicare_go/email"
 
 	"github.com/goccy/go-json"
 
@@ -13,9 +14,19 @@ import (
 func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Task) error {
 	var p EmailDeliveryPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		log.Printf("Failed to unmarshal email task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	log.Printf("Sending Email to User: user_id=%d, template_id=%s", p.UserID, p.TemplateID)
-	// Email delivery code ...
+
+	if p.To == "" || p.UserEmail == "" || p.UserPassword == "" {
+		return fmt.Errorf("invalid email payload: missing required fields: %w", asynq.SkipRetry)
+	}
+
+	err := processor.smtp.SendCredentials(ctx, []string{p.To}, email.Credentials{Email: p.UserEmail, Password: p.UserPassword})
+	if err != nil {
+		log.Printf("Failed to send email to %s: %v", p.To, err)
+		return fmt.Errorf("failed to send email to %s: %v: %w", p.To, err, asynq.SkipRetry)
+	}
+
 	return nil
 }

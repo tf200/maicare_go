@@ -3,6 +3,7 @@ package tasks
 import (
 	"crypto/tls"
 	db "maicare_go/db/sqlc"
+	"maicare_go/email"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -11,9 +12,10 @@ import (
 type AsynqServer struct {
 	server *asynq.Server
 	store  *db.Store
+	smtp   *email.SmtpConf
 }
 
-func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config) *AsynqServer {
+func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, smtp *email.SmtpConf) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
 			Addr:         redisHost,
@@ -36,7 +38,7 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store,
 			},
 		},
 	)
-	return &AsynqServer{server: srv, store: store}
+	return &AsynqServer{server: srv, store: store, smtp: smtp}
 }
 
 func (a *AsynqServer) Start() error {

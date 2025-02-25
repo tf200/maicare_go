@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"log"
 	db "maicare_go/db/sqlc"
+	"maicare_go/email"
 
 	"maicare_go/util"
 	"os"
@@ -30,9 +31,10 @@ func TestMain(m *testing.M) {
 	defer conn.Close()
 
 	testStore = db.NewStore(conn)
+	testSmtp := email.NewSmtpConf(config.SmtpName, config.SmtpAddress, config.SmtpAuth, config.SmtpHost, config.SmtpPort)
 	testasynqClient = NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 
-	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{})
+	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{}, testSmtp)
 
 	os.Exit(m.Run())
 }

@@ -109,7 +109,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					LastName:                  util.RandomString(8),
 					DateOfBirth:               util.StringPtr("2000-01-05"),
 					Gender:                    util.StringPtr("male"),
-					Email:                     util.RandomEmail(),
+					Email:                     "farjiataha@gmail.com",
 					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
 					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),

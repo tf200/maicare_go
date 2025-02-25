@@ -3,6 +3,7 @@ package email
 import (
 	"bytes"
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"html/template"
@@ -11,12 +12,6 @@ import (
 
 	"github.com/wneessen/go-mail"
 )
-
-type Sender interface {
-	Send(subject, body string, to []string) error
-	SendCredentials(ctx context.Context, to []string, data Credentials) error
-	SendIncident(ctx context.Context, to []string, data Incident) error
-}
 
 type SmtpConf struct {
 	Name          string
@@ -40,7 +35,7 @@ type Incident struct {
 	Location     string
 }
 
-func NewSmtpConf(name, address, authentication, smtpHost string, smtpPort int) Sender {
+func NewSmtpConf(name, address, authentication, smtpHost string, smtpPort int) *SmtpConf {
 	return &SmtpConf{
 		Name:          name,
 		Address:       address,
@@ -72,6 +67,9 @@ func (e *SmtpConf) Send(subject, body string, to []string) error {
 	return nil
 }
 
+//go:embed templates/credentials.html
+var credentialsTemplateFS embed.FS
+
 func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
 
 	if len(to) == 0 {
@@ -81,7 +79,7 @@ func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 		return errors.New("invalid SMTP configuration")
 	}
 
-	tmpl, err := template.ParseFiles("templates/credentials.html")
+	tmpl, err := template.ParseFS(credentialsTemplateFS, "templates/credentials.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse HTML template: %w", err)
 	}

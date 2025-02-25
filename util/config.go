@@ -22,6 +22,11 @@ type Config struct {
 	RedisPassword         string        `mapstructure:"REDIS_PASSWORD"`
 	Remote                bool          `mapstructure:"REMOTE"`
 	OpenRouterAPIKey      string        `mapstructure:"OPEN_ROUTER_API_KEY"`
+	SmtpName              string        `mapstructure:"SMTP_NAME"`
+	SmtpAddress           string        `mapstructure:"SMTP_ADDRESS"`
+	SmtpAuth              string        `mapstructure:"SMTP_AUTH"`
+	SmtpHost              string        `mapstructure:"SMTP_HOST"`
+	SmtpPort              int           `mapstructure:"SMTP_PORT"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
