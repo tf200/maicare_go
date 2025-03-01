@@ -2,6 +2,12 @@
 SELECT * FROM maturity_matrix;
 
 
+-- name: GetLevelDescription :one
+SELECT jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', sqlc.arg('level')::text)::jsonpath) as level_description 
+FROM maturity_matrix 
+WHERE id = $1;
+
+
 
 -- name: CreateClientMaturityMatrixAssessment :one
 WITH inserted AS (
@@ -86,8 +92,6 @@ INSERT INTO goal_objectives (
 RETURNING *;
 
 
-
-
 -- name: ListGoalObjectives :many
 SELECT
     go.*,
@@ -95,4 +99,10 @@ SELECT
 FROM goal_objectives go
 WHERE go.goal_id = $1
 ORDER BY go.due_date DESC;
+
+
+
+
+
+
 

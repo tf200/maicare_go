@@ -235,6 +235,22 @@ CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);
 CREATE INDEX client_details_location_id_idx ON client_details(location_id);
 
 
+-- New table for status history
+CREATE TABLE client_status_history (
+    id BIGSERIAL PRIMARY KEY,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
+    changed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    changed_by BIGINT,  -- user ID who made the change
+    reason VARCHAR(255),
+    FOREIGN KEY (changed_by) REFERENCES custom_user(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_client_status_history_client_id ON client_status_history(client_id);
+CREATE INDEX idx_client_status_history_changed_at ON client_status_history(changed_at DESC);
+
+
 CREATE TABLE client_current_level (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
@@ -247,17 +263,6 @@ CREATE TABLE client_current_level (
 CREATE INDEX client_current_level_client_id_idx ON client_current_level(client_id);
 CREATE INDEX client_current_level_domain_id_idx ON client_current_level(domain_id);
 
-
-
-CREATE TABLE client_status_history (
-    id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('In Care', 'On Waiting List', 'Out Of Care')),
-    start_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX client_status_history_client_id_idx ON client_status_history(client_id);
-CREATE INDEX client_status_history_start_date_idx ON client_status_history(start_date);
 
 
 CREATE TABLE client_state (
@@ -1242,19 +1247,357 @@ CREATE TABLE maturity_matrix (
 );
 INSERT INTO maturity_matrix (id, topic_name, level_description)
 VALUES
-    (1, 'Finances', '[]'),
-    (2, 'Work & Education', '[]'),
-    (3, 'Use of Time', '[]'),
-    (4, 'Housing', '[]'),
-    (5, 'Domestic Relationships', '[]'),
-    (6, 'Mental Health', '[]'),
-    (7, 'Physical Health', '[]'),
-    (8, 'Substance Use', '[]'),
-    (9, 'Basic ADL', '[]'),
-    (10, 'Instrumental ADL', '[]'),
-    (11, 'Social Network', '[]'),
-    (12, 'Social Participation', '[]'),
-    (13, 'Justice', '[]');
+    (1, 'Finances', '[
+  {
+    "level": 1,
+    "name": "Acute problematiek",
+    "description": "Groeiende complexe schulden"
+  },
+  {
+    "level": 2,
+    "name": "Niet zelfredzaam",
+    "description": "Beschikt niet over vrij besteedbaar inkomen of groeiende schulden door spontaan of ongepast uitgeven"
+  },
+  {
+    "level": 3,
+    "name": "Beperkt zelfredzaam",
+    "description": "Beschikt over vrij besteedbaar inkomen van ouders zonder verantwoordelijkheid voor noodzakelijke behoeften (zakgeld). Eventuele schulden zijn stabiel en onder beheer"
+  },
+  {
+    "level": 4,
+    "name": "Voldoende zelfredzaam",
+    "description": "Beschikt over vrij besteedbaar inkomen van ouders met enige verantwoordelijkheid voor noodzakelijke behoeften (zakgeld, en kleed-/lunchgeld). Gepast uitgeven. Eventuele schulden verminderen"
+  },
+  {
+    "level": 5,
+    "name": "Volledig zelfredzaam",
+    "description": "Beschikt over vrij besteedbaar inkomen (uit klusjes of (bij)baan) met enige verantwoordelijkheid voor noodzakelijke behoeften. Aan het eind van de maand is geld over. Geen schulden"
+  }
+]'),
+    (2, 'Work & Education', '[
+  {
+    "level": 1,
+    "name": "Geen opleiding of werk",
+    "description": "Geen (traject naar) opleiding/werk of werk zonder adequate toerusting/verzekering. Geen zoekactiviteiten naar opleiding/werk."
+  },
+  {
+    "level": 2,
+    "name": "Zoekende maar instabiel",
+    "description": "Geen (traject naar) opleiding/werk, maar wel zoekactiviteiten gericht op opleiding/werk of ‘papieren’ opleiding (ingeschreven maar niet volgend) of veel schoolverzuim/dreigend ontslag of dreigende drop-out."
+  },
+  {
+    "level": 3,
+    "name": "Instabiele opleiding of werk",
+    "description": "Volgt opleiding maar loopt achter of heeft geregeld verzuim van opleiding/werk of volgt traject naar opleiding (trajectbegeleiding, coaching voor schoolverlaters)."
+  },
+  {
+    "level": 4,
+    "name": "Op schema",
+    "description": "Op schema met opleiding of heeft startkwalificatie met tijdelijke baan/traject naar opleiding/traject naar werk. Zelden ongeoorloofd verzuim."
+  },
+  {
+    "level": 5,
+    "name": "Succesvol in opleiding of werk",
+    "description": "Presteert zeer goed op opleiding of heeft startkwalificatie met vaste baan. Geen ongeoorloofd verzuim."
+  }
+]'),
+    (3, 'Use of Time', '[
+  {
+    "level": 1,
+    "name": "Geen structuur of activiteiten",
+    "description": "Afwezigheid van activiteiten die plezierig/nuttig zijn. Geen structuur in de dag. Onregelmatig dag-nacht ritme."
+  },
+  {
+    "level": 2,
+    "name": "Zeer beperkte activiteiten en structuur",
+    "description": "Nauwelijks activiteiten die plezierig/nuttig zijn. Nauwelijks structuur in de dag. Afwijkend dag-nacht ritme."
+  },
+  {
+    "level": 3,
+    "name": "Onvoldoende maar acceptabel",
+    "description": "Onvoldoende activiteiten die plezierig/nuttig zijn, maar voldoende structuur in de dag. Enige afwijkingen in het dag-nacht ritme."
+  },
+  {
+    "level": 4,
+    "name": "Voldoende activiteiten en structuur",
+    "description": "Voldoende activiteiten die plezierig/nuttig zijn. Dag-nacht ritme heeft geen negatieve invloed op het dagelijks functioneren."
+  },
+  {
+    "level": 5,
+    "name": "Gezonde balans en structuur",
+    "description": "Tijd is overwegend gevuld met plezierige/nuttige activiteiten. Gezond dag-nacht ritme."
+  }
+]'),
+    (4, 'Housing', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "dakloos of in crisisopvang"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "voor wonen ongeschikte huisvesting of dreigende huisuitzetting"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "veilige, stabiele huisvesting maar slechts marginaal toereikend of verblijft in niet-autonome huisvesting (instelling)"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "veilige, stabiele en toereikende huisvesting, gedeeltelijk autonome huisvesting (begeleid wonen)"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "veilige, stabiele en toereikende huisvesting, autonome huisvesting (zelfstandig wonen), woont bij ouders/verzorgers"
+    }
+]'),
+    (5, 'Domestic Relationships', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "geweld in huiselijke kring/ kindermishandeling/ misbruik/ verwaarlozing"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "relationele problemen met leden van het huishouden of dreigend geweld in huiselijke kring/ kindermishandeling/ misbruik/ verwaarlozing"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "spanningen in relatie(s) met leden van het huishouden, probeert eigen negatief relationeel gedrag te veranderen"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "relationele problemen met leden van het huishouden of spanningen tussen leden van het huishouden zijn niet (meer) aanwezig"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "wordt gesteund en steunt binnen het huishouden, communicatie met leden van het huishouden is consistent open"
+    }
+]'),
+    (6, 'Mental Health', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "geestelijke noodsituatie, een gevaar voor zichzelf/anderen"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "(chronische) geestelijke aandoening maar geen gevaar voor zichzelf/anderen, functioneren is ernstig beperkt door geestelijk gezondheidsprobleem (incl. gedrags-ontwikkelingsproblematiek), geen behandeling"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "geestelijke aandoening, functioneren is beperkt door geestelijk gezondheidsprobleem (incl. gedrags- en ontwikkelingsproblematiek), behandeltrouw is minimaal of beperking bestaat ondanks goede behandeltrouw"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "minimale tekenen van geestelijke onrust die voorspelbare reactie zijn op stressoren in het leven (ook puberteit), functioneren is marginaal beperkt door geestelijke onrust, goede behandeltrouw of geen behandeling nodig"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "geestelijk gezond, niet meer dan de dagelijkse beslommeringen/zorgen"
+    }
+]'),
+    (7, 'Physical Health', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "een noodgeval/ kritieke situatie, direct medische aandacht nodig"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "(chronische) lichamelijke aandoening die medische behandeling vereist, functioneren is ernstig beperkt door lichamelijk gezondheidsprobleem, geen behandeling"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "lichamelijke aandoening, functioneren is beperkt door lichamelijk gezondheidsprobleem, behandeltrouw is minimaal of beperking bestaat ondanks goede behandeltrouw"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "minimaal lichamelijk ongemak dat samenhangt met dagelijkse activiteiten, functioneren is marginaal beperkt door lichamelijk ongemak, goede behandeltrouw of geen behandeling nodig"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "lichamelijk gezond, gezonde leefstijl (gezonde voeding en voldoende bewegen)"
+    }
+]'),
+    (8, 'Substance Use', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "(gedrags-) stoornis/afhankelijkheid van het gebruik van middelen of van games/gokken/seks/internet, gebruik veroorzaakt/verergert lichamelijke/geestelijke problemen die behandeling vereisen"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "gebruik van middelen of problematisch ‘gebruik’ van games/gokken/seks/internet, aan gebruik gerelateerde lichamelijke/geestelijke problemen of problemen thuis/op school/op het werk, geen behandeling"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "gebruik van middelen, geen aan middelengebruik gerelateerde problemen, behandeltrouw is minimaal of beperking bestaat ondanks goede behandeltrouw"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "geen middelengebruik ondanks sterke drang of behandeling met potentieel verslavende middelen zonder bijgebruik, goede behandeltrouw of geen behandeling nodig"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "geen middelengebruik, geen sterke drang naar gebruik van middelen"
+    }
+]'),
+    (9, 'Basic ADL', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "een gebied van de basale ADL wordt niet uitgevoerd, verhongering of uitdroging of bevulling/vervulling"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "meerdere gebieden van de basale ADL worden beperkt uitgevoerd"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "alle gebieden van de basale ADL worden uitgevoerd maar een enkel gebied van de basale ADL wordt beperkt uitgevoerd"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "geen beperkingen in de uitvoering van de basale ADL, krijgt hulp of gebruikt hulpmiddel"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "geen beperkingen in de uitvoering van de basale ADL, zoals eten, wassen en aankleden, geen gebruik van hulpmiddelen"
+    }
+]'),
+    (10, 'Instrumental ADL', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "meerdere gebieden van de instrumentele ADL worden niet uitgevoerd, woningvervulling of onder-/over-medicatie of geen administratie of voedselvergiftiging"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "een enkel gebied van de instrumentele ADL wordt niet uitgevoerd of uitvoering op meerdere gebieden is beperkt, weet gezien de leeftijd te weinig van welke instanties er zijn, wat je er mee moet doen en hoe ze te benaderen"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "alle gebieden van de instrumentele ADL worden uitgevoerd, uitvoering van een enkel gebied van de instrumentele ADL is beperkt, weet beperkt van instanties af en krijgt gezien de leeftijd veel hulp bij het contact met instanties"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "geen beperkingen in de uitvoering van de instrumentele ADL, krijgt hulp van buiten het huishouden of gebruikt hulpmiddel, weet van instanties af, maar krijgt gezien de leeftijd enige hulp bij het contact leggen met en het gebruik maken van instanties"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "geen beperkingen in de uitvoering van de instrumentele ADL, krijgt geen hulp van buiten huishouden en maakt geen gebruik van hulpmiddelen, maakt leeftijdsadequaat gebruik van instanties"
+    }
+]'),
+    (11, 'Social Network', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "ernstig sociaal isolement, geen steunend contact met familie of met volwassen steunfiguur buiten gezin, geen steunend contact met leeftijdgenoten"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "geen steunend contact met familie of met volwassen steunfiguur buiten gezin, weinig steunend contact met leeftijdgenoten, veel belemmerend contact"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "enig steunend contact met familie of met één volwassen steunfiguur buiten het huishouden, enig steunend contact met leeftijdgenoten, weinig belemmerend contact"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "voldoende steunend contact met familie of met volwassen steunfiguren buiten het huishouden, voldoende steunend contact met leeftijdgenoten, nauwelijks belemmerend contact"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "gezond sociaal netwerk, veel steunend contact met familie of met volwassen steunfiguur buiten het huishouden, veel steunend contact met leeftijdgenoten, geen belemmerend contact"
+    }
+]'),
+    (12, 'Social Participation', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "niet van toepassing door crisissituatie of in overlevingsmodus of veroorzaakt ernstige overlast"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "geen maatschappelijke participatie of veroorzaakt overlast"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "nauwelijks participerend in maatschappij, logistieke, financiële of sociaal-maatschappelijke hindernissen om meer te participeren"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "enige maatschappelijke participatie (meedoen), persoonlijke hindernis (motivatie) om meer te participeren"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "actief participerend in de maatschappij (bijdragen)"
+    }
+]'),
+    (13, 'Justice', '[
+    {
+        "level": 1,
+        "name": "Acute problematiek",
+        "description": "zeer regelmatig (maandelijks) contact met politie of openstaande zaken bij justitie"
+    },
+    {
+        "level": 2,
+        "name": "Niet zelfredzaam",
+        "description": "regelmatig (meerdere keren per jaar) contact met politie of lopende zaken bij justitie"
+    },
+    {
+        "level": 3,
+        "name": "Beperkt zelfredzaam",
+        "description": "incidenteel (eens per jaar) contact met politie of voorwaardelijke straf/voorwaardelijke invrijheidsstelling"
+    },
+    {
+        "level": 4,
+        "name": "Voldoende zelfredzaam",
+        "description": "zelden (minder dan eens per jaar) contact met politie of strafblad"
+    },
+    {
+        "level": 5,
+        "name": "Volledig zelfredzaam",
+        "description": "geen contact met politie, geen strafblad"
+    }
+]');
 
 CREATE TABLE client_maturity_matrix_assessment (
     id BIGSERIAL PRIMARY KEY,

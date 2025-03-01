@@ -2567,7 +2567,10 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateGoalObjectiveRequest"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.CreateGoalObjectiveRequest"
+                            }
                         }
                     }
                 ],
@@ -2575,7 +2578,68 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateGoalObjectiveResponse"
+                            "$ref": "#/definitions/api.Response-array_api_CreateGoalObjectiveResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives/generate": {
+            "post": {
+                "description": "Generate objectives for a client goal",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maturity_matrix"
+                ],
+                "summary": "Generate objectives",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client goal ID",
+                        "name": "goal_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Client maturity matrix assessment ID",
+                        "name": "assessment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GenerateObjectivesResponse"
                         }
                     },
                     "400": {
@@ -5335,6 +5399,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "ai.Objectives": {
+            "type": "object",
+            "properties": {
+                "due_date": {
+                    "type": "string"
+                },
+                "objective_description": {
+                    "type": "string"
+                }
+            }
+        },
         "api.AddClientDocumentApiRequest": {
             "type": "object",
             "properties": {
@@ -6496,17 +6571,13 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "due_date",
-                "objective_description",
-                "status"
+                "objective_description"
             ],
             "properties": {
                 "due_date": {
                     "type": "string"
                 },
                 "objective_description": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 }
             }
@@ -7659,6 +7730,20 @@ const docTemplate = `{
                 },
                 "incident_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.GenerateObjectivesResponse": {
+            "type": "object",
+            "properties": {
+                "goal_id": {
+                    "type": "integer"
+                },
+                "objectives": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ai.Objectives"
+                    }
                 }
             }
         },
@@ -9801,20 +9886,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateGoalObjectiveResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateGoalObjectiveResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CreateIncidentResponse": {
             "type": "object",
             "properties": {
@@ -10016,6 +10087,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GenerateIncidentFileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GenerateObjectivesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GenerateObjectivesResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10576,6 +10661,23 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UploadHandlerResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_CreateGoalObjectiveResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.CreateGoalObjectiveResponse"
+                    }
                 },
                 "message": {
                     "type": "string"

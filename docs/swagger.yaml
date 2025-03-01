@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  ai.Objectives:
+    properties:
+      due_date:
+        type: string
+      objective_description:
+        type: string
+    type: object
   api.AddClientDocumentApiRequest:
     properties:
       attachmentID:
@@ -781,12 +788,9 @@ definitions:
         type: string
       objective_description:
         type: string
-      status:
-        type: string
     required:
     - due_date
     - objective_description
-    - status
     type: object
   api.CreateGoalObjectiveResponse:
     properties:
@@ -1561,6 +1565,15 @@ definitions:
         type: string
       incident_id:
         type: integer
+    type: object
+  api.GenerateObjectivesResponse:
+    properties:
+      goal_id:
+        type: integer
+      objectives:
+        items:
+          $ref: '#/definitions/ai.Objectives'
+        type: array
     type: object
   api.GetAppointmentCardResponse:
     properties:
@@ -2968,15 +2981,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateGoalObjectiveResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateGoalObjectiveResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateIncidentResponse:
     properties:
       data:
@@ -3107,6 +3111,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GenerateIncidentFileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GenerateObjectivesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GenerateObjectivesResponse'
       message:
         type: string
       success:
@@ -3467,6 +3480,17 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UploadHandlerResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_CreateGoalObjectiveResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.CreateGoalObjectiveResponse'
+        type: array
       message:
         type: string
       success:
@@ -6411,14 +6435,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateGoalObjectiveRequest'
+          items:
+            $ref: '#/definitions/api.CreateGoalObjectiveRequest'
+          type: array
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateGoalObjectiveResponse'
+            $ref: '#/definitions/api.Response-array_api_CreateGoalObjectiveResponse'
         "400":
           description: Bad request
           schema:
@@ -6432,6 +6458,47 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create goal objective
+      tags:
+      - maturity_matrix
+  /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives/generate:
+    post:
+      description: Generate objectives for a client goal
+      parameters:
+      - description: Client goal ID
+        in: path
+        name: goal_id
+        required: true
+        type: integer
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client maturity matrix assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateObjectivesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Generate objectives
       tags:
       - maturity_matrix
   /clients/{id}/maturity_matrix_assessment/{mma_id}:

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"maicare_go/ai"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -532,7 +533,6 @@ func (server *Server) GetClientGoalApi(ctx *gin.Context) {
 // CreateGoalObjectiveRequest represents a request to create a goal objective
 type CreateGoalObjectiveRequest struct {
 	ObjectiveDescription string    `json:"objective_description" binding:"required"`
-	Status               string    `json:"status" binding:"required"`
 	DueDate              time.Time `json:"due_date" binding:"required"`
 }
 
@@ -553,8 +553,8 @@ type CreateGoalObjectiveResponse struct {
 // @Param goal_id path int true "Client goal ID"
 // @Param client_id path int true "Client ID"
 // @Param assessment_id path int true "Client maturity matrix assessment ID"
-// @Param request body CreateGoalObjectiveRequest true "Request body"
-// @Success 201 {object} Response[CreateGoalObjectiveResponse]
+// @Param request body []CreateGoalObjectiveRequest true "Request body"
+// @Success 201 {object} Response[[]CreateGoalObjectiveResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -567,32 +567,114 @@ func (server *Server) CreateGoalObjectiveApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateGoalObjectiveRequest
+	var req []CreateGoalObjectiveRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.CreateGoalObjectiveParams{
-		GoalID:               clientGoalID,
-		ObjectiveDescription: req.ObjectiveDescription,
-		Status:               req.Status,
-		DueDate:              pgtype.Date{Time: req.DueDate, Valid: true},
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := server.store.WithTx(tx)
+
+	responses := make([]CreateGoalObjectiveResponse, 0, len(req))
+
+	for _, objective := range req {
+		arg := db.CreateGoalObjectiveParams{
+			GoalID:               clientGoalID,
+			ObjectiveDescription: objective.ObjectiveDescription,
+			Status:               "pending",
+			DueDate:              pgtype.Date{Time: objective.DueDate, Valid: true},
+		}
+
+		createdObjective, err := qtx.CreateGoalObjective(ctx, arg)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		response := CreateGoalObjectiveResponse{
+			ID:                   createdObjective.ID,
+			GoalID:               createdObjective.GoalID,
+			ObjectiveDescription: createdObjective.ObjectiveDescription,
+			Status:               createdObjective.Status,
+			DueDate:              createdObjective.DueDate.Time,
+		}
+
+		responses = append(responses, response)
 	}
 
-	goalObjective, err := server.store.CreateGoalObjective(ctx, arg)
+	err = tx.Commit(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(CreateGoalObjectiveResponse{
-		ID:                   goalObjective.ID,
-		GoalID:               goalObjective.GoalID,
-		ObjectiveDescription: goalObjective.ObjectiveDescription,
-		Status:               goalObjective.Status,
-		DueDate:              goalObjective.DueDate.Time,
-	}, "Goal objective created successfully")
+	ctx.JSON(http.StatusCreated, SuccessResponse(responses, "Goal objectives created successfully"))
+}
 
-	ctx.JSON(http.StatusCreated, res)
+type GenerateObjectivesResponse struct {
+	GoalID     int64           `json:"goal_id"`
+	Objectives []ai.Objectives `json:"objectives"`
+}
+
+// @Summary Generate objectives
+// @Description Generate objectives for a client goal
+// @Tags maturity_matrix
+// @Produce json
+// @Param goal_id path int true "Client goal ID"
+// @Param id path int true "Client ID"
+// @Param assessment_id path int true "Client maturity matrix assessment ID"
+// @Success 200 {object} Response[GenerateObjectivesResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives/generate [post]
+func (server *Server) GenerateObjectivesApi(ctx *gin.Context) {
+	goalID := ctx.Param("goal_id")
+	clientGoalID, err := strconv.ParseInt(goalID, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	clientGoal, err := server.store.GetClientGoal(ctx, clientGoalID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	mma, err := server.store.GetClientMaturityMatrixAssessment(ctx, clientGoal.ClientMaturityMatrixAssessmentID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	levelDescrption, err := server.store.GetLevelDescription(ctx, db.GetLevelDescriptionParams{
+		ID:    mma.MaturityMatrixID,
+		Level: strconv.Itoa(int(clientGoal.TargetLevel)),
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	generatedObjectives, err := server.aiHandler.GenerateObjectives(string(levelDescrption), "", clientGoal.Description, mma.StartDate.Time.Format("2006-01-02"), mma.EndDate.Time.Format("2006-01-02"), "google/gemini-2.0-flash-001")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GenerateObjectivesResponse{
+		GoalID:     clientGoalID,
+		Objectives: generatedObjectives.GeneratedObjectives,
+	}, "Objectives generated successfully")
+
+	ctx.JSON(http.StatusOK, res)
+
 }

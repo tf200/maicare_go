@@ -61,3 +61,23 @@ func TestGenerateAutoReports(t *testing.T) {
 	// Print response to console
 	t.Logf("Spell check response: %s", response)
 }
+
+func TestGenerateObjectives(t *testing.T) {
+	config, err := util.LoadConfig("../")
+	require.NoError(t, err)
+	a := NewAiHandler(config.OpenRouterAPIKey)
+
+	model := "google/gemini-2.0-flash-001"
+	level_description := "growing complex debts"
+	goal := "start paying off debt"
+	description := "Fatima is in a lot of debt and does not have a job or any source of income."
+	start_date := "2022-01-01"
+	end_date := "2023-01-01"
+
+	response, err := a.GenerateObjectives(level_description, goal, description, start_date, end_date, model)
+	require.NoError(t, err)
+	require.NotNil(t, response)
+
+	// Print response to console
+	t.Logf("Spell check response: %s", response)
+}

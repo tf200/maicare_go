@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"maicare_go/util"
+	"strconv"
 	"testing"
 
 	"math/rand"
@@ -18,6 +19,16 @@ func TestListMaturityMatrix(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, matrix)
 	require.Len(t, matrix, 13)
+}
+
+func TestGetLevelDescription(t *testing.T) {
+	arg := GetLevelDescriptionParams{
+		ID:    1,
+		Level: strconv.Itoa(1),
+	}
+	levelDescription, err := testQueries.GetLevelDescription(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, levelDescription)
 }
 
 func createRamdomClientMaturityMatrixAssessment(t *testing.T, clientID int64, maturityMatrixID int64) CreateClientMaturityMatrixAssessmentRow {

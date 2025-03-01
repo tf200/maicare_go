@@ -88,4 +88,4 @@ DROP TABLE IF EXISTS "public"."objective_progress" CASCADE;
 DROP TABLE IF EXISTS "public"."objectives_report" CASCADE;
 DROP TABLE IF EXISTS "public"."intake_form_tokens" CASCADE;
 DROP TABLE IF EXISTS "public"."intake_forms" CASCADE;
-
+DROP TABLE IF EXISTS "public"."client_status_history" CASCADE;

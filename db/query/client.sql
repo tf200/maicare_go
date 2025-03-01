@@ -52,6 +52,8 @@ SELECT * FROM client_details
 WHERE id = $1 LIMIT 1;
 
 
+
+
 -- name: SetClientProfilePicture :one
 UPDATE client_details
 SET profile_picture = $2

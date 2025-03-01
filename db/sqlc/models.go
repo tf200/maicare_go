@@ -269,8 +269,11 @@ type ClientState struct {
 type ClientStatusHistory struct {
 	ID        int64              `json:"id"`
 	ClientID  int64              `json:"client_id"`
-	Status    string             `json:"status"`
-	StartDate pgtype.Timestamptz `json:"start_date"`
+	OldStatus *string            `json:"old_status"`
+	NewStatus string             `json:"new_status"`
+	ChangedAt pgtype.Timestamptz `json:"changed_at"`
+	ChangedBy *int64             `json:"changed_by"`
+	Reason    *string            `json:"reason"`
 }
 
 type CollaborationAgreement struct {

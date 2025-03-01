@@ -229,6 +229,24 @@ func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id int6
 	return i, err
 }
 
+const getLevelDescription = `-- name: GetLevelDescription :one
+SELECT jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', $2::text)::jsonpath) as level_description 
+FROM maturity_matrix 
+WHERE id = $1
+`
+
+type GetLevelDescriptionParams struct {
+	ID    int64  `json:"id"`
+	Level string `json:"level"`
+}
+
+func (q *Queries) GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getLevelDescription, arg.ID, arg.Level)
+	var level_description []byte
+	err := row.Scan(&level_description)
+	return level_description, err
+}
+
 const listClientGoals = `-- name: ListClientGoals :many
 SELECT
     cg.id, cg.client_maturity_matrix_assessment_id, cg.description, cg.status, cg.target_level, cg.start_date, cg.target_date, cg.completion_date, cg.created_at,
