@@ -863,6 +863,15 @@ type RolePermission struct {
 	PermissionID int32 `json:"permission_id"`
 }
 
+type ScheduledStatusChange struct {
+	ID            int32              `json:"id"`
+	ClientID      int64              `json:"client_id"`
+	NewStatus     string             `json:"new_status"`
+	Reason        *string            `json:"reason"`
+	ScheduledDate pgtype.Date        `json:"scheduled_date"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type Sender struct {
 	ID           int64              `json:"id"`
 	Types        string             `json:"types"`

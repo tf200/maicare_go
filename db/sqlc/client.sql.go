@@ -157,6 +157,81 @@ func (q *Queries) CreateClientDocument(ctx context.Context, arg CreateClientDocu
 	return i, err
 }
 
+const createClientStatusHistory = `-- name: CreateClientStatusHistory :one
+INSERT INTO client_status_history (
+    client_id,
+    old_status,
+    new_status,
+    reason
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING id, client_id, old_status, new_status, changed_at, changed_by, reason
+`
+
+type CreateClientStatusHistoryParams struct {
+	ClientID  int64   `json:"client_id"`
+	OldStatus *string `json:"old_status"`
+	NewStatus string  `json:"new_status"`
+	Reason    *string `json:"reason"`
+}
+
+func (q *Queries) CreateClientStatusHistory(ctx context.Context, arg CreateClientStatusHistoryParams) (ClientStatusHistory, error) {
+	row := q.db.QueryRow(ctx, createClientStatusHistory,
+		arg.ClientID,
+		arg.OldStatus,
+		arg.NewStatus,
+		arg.Reason,
+	)
+	var i ClientStatusHistory
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.OldStatus,
+		&i.NewStatus,
+		&i.ChangedAt,
+		&i.ChangedBy,
+		&i.Reason,
+	)
+	return i, err
+}
+
+const createSchedueledClientStatusChange = `-- name: CreateSchedueledClientStatusChange :one
+INSERT INTO scheduled_status_changes (
+    client_id,
+    new_status,
+    reason,
+    scheduled_date
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING id, client_id, new_status, reason, scheduled_date, created_at
+`
+
+type CreateSchedueledClientStatusChangeParams struct {
+	ClientID      int64       `json:"client_id"`
+	NewStatus     string      `json:"new_status"`
+	Reason        *string     `json:"reason"`
+	ScheduledDate pgtype.Date `json:"scheduled_date"`
+}
+
+func (q *Queries) CreateSchedueledClientStatusChange(ctx context.Context, arg CreateSchedueledClientStatusChangeParams) (ScheduledStatusChange, error) {
+	row := q.db.QueryRow(ctx, createSchedueledClientStatusChange,
+		arg.ClientID,
+		arg.NewStatus,
+		arg.Reason,
+		arg.ScheduledDate,
+	)
+	var i ScheduledStatusChange
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.NewStatus,
+		&i.Reason,
+		&i.ScheduledDate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const deleteClientDocument = `-- name: DeleteClientDocument :one
 DELETE FROM client_documents
 WHERE attachment_uuid = $1
@@ -436,6 +511,47 @@ func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumen
 	return items, nil
 }
 
+const listClientStatusHistory = `-- name: ListClientStatusHistory :many
+SELECT id, client_id, old_status, new_status, changed_at, changed_by, reason FROM client_status_history
+WHERE client_id = $1
+ORDER BY changed_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListClientStatusHistoryParams struct {
+	ClientID int64 `json:"client_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
+}
+
+func (q *Queries) ListClientStatusHistory(ctx context.Context, arg ListClientStatusHistoryParams) ([]ClientStatusHistory, error) {
+	rows, err := q.db.Query(ctx, listClientStatusHistory, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ClientStatusHistory
+	for rows.Next() {
+		var i ClientStatusHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.OldStatus,
+			&i.NewStatus,
+			&i.ChangedAt,
+			&i.ChangedBy,
+			&i.Reason,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const setClientProfilePicture = `-- name: SetClientProfilePicture :one
 UPDATE client_details
 SET profile_picture = $2
@@ -450,6 +566,54 @@ type SetClientProfilePictureParams struct {
 
 func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProfilePictureParams) (ClientDetail, error) {
 	row := q.db.QueryRow(ctx, setClientProfilePicture, arg.ID, arg.ProfilePicture)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.Source,
+		&i.Birthplace,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Organisation,
+		&i.Departement,
+		&i.Gender,
+		&i.Filenumber,
+		&i.ProfilePicture,
+		&i.Infix,
+		&i.CreatedAt,
+		&i.SenderID,
+		&i.LocationID,
+		&i.IdentityAttachmentIds,
+		&i.DepartureReason,
+		&i.DepartureReport,
+		&i.GpsPosition,
+		&i.MaturityDomains,
+		&i.Addresses,
+		&i.LegalMeasure,
+		&i.HasUntakenMedications,
+	)
+	return i, err
+}
+
+const updateClientStatus = `-- name: UpdateClientStatus :one
+UPDATE client_details
+SET status = $2
+WHERE id = $1
+RETURNING id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+`
+
+type UpdateClientStatusParams struct {
+	ID     int64   `json:"id"`
+	Status *string `json:"status"`
+}
+
+func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, updateClientStatus, arg.ID, arg.Status)
 	var i ClientDetail
 	err := row.Scan(
 		&i.ID,

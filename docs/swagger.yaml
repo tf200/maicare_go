@@ -3404,6 +3404,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateClientStatusResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateClientStatusResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateEmployeeCertificationResponse:
     properties:
       data:
@@ -4036,6 +4045,26 @@ definitions:
       start_date:
         type: string
       updated_at:
+        type: string
+    type: object
+  api.UpdateClientStatusRequest:
+    properties:
+      reason:
+        type: string
+      schedueled:
+        type: boolean
+      schedueled_for:
+        type: string
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  api.UpdateClientStatusResponse:
+    properties:
+      id:
+        type: integer
+      status:
         type: string
     type: object
   api.UpdateEmployeeCertificationRequest:
@@ -6933,6 +6962,44 @@ paths:
       summary: Get client related emails
       tags:
       - client_network
+  /clients/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client
+      tags:
+      - clients
   /employees:
     get:
       description: Get a paginated list of employee profiles with optional filters

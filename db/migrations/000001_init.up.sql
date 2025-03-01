@@ -242,13 +242,21 @@ CREATE TABLE client_status_history (
     old_status VARCHAR(50),
     new_status VARCHAR(50) NOT NULL,
     changed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    changed_by BIGINT,  -- user ID who made the change
-    reason VARCHAR(255),
-    FOREIGN KEY (changed_by) REFERENCES custom_user(id) ON DELETE SET NULL
+    changed_by BIGINT NULL,
+    reason VARCHAR(255)
 );
 
 CREATE INDEX idx_client_status_history_client_id ON client_status_history(client_id);
 CREATE INDEX idx_client_status_history_changed_at ON client_status_history(changed_at DESC);
+
+CREATE TABLE scheduled_status_changes (
+    id SERIAL PRIMARY KEY,
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    new_status VARCHAR(50) NOT NULL,
+    reason TEXT,
+    scheduled_date DATE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 
 
 CREATE TABLE client_current_level (

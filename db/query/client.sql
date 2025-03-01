@@ -51,7 +51,37 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 SELECT * FROM client_details
 WHERE id = $1 LIMIT 1;
 
+-- name: UpdateClientStatus :one
+UPDATE client_details
+SET status = $2
+WHERE id = $1
+RETURNING *;
 
+-- name: CreateClientStatusHistory :one
+INSERT INTO client_status_history (
+    client_id,
+    old_status,
+    new_status,
+    reason
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING *;
+
+-- name: ListClientStatusHistory :many
+SELECT * FROM client_status_history
+WHERE client_id = $1
+ORDER BY changed_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CreateSchedueledClientStatusChange :one
+INSERT INTO scheduled_status_changes (
+    client_id,
+    new_status,
+    reason,
+    scheduled_date
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING *;
 
 
 -- name: SetClientProfilePicture :one
@@ -105,3 +135,6 @@ SELECT al.label::text AS missing_label
 FROM all_labels al
 LEFT JOIN client_labels cl ON al.label = cl.label
 WHERE cl.label IS NULL;
+
+
+

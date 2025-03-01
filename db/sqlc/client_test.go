@@ -206,6 +206,83 @@ func TestGetClientDetails(t *testing.T) {
 	require.Equal(t, client.Departement, client1.Departement)
 }
 
+func TestUpdateClientStatus(t *testing.T) {
+	client := createRandomClientDetails(t)
+	arg := UpdateClientStatusParams{
+		ID:     client.ID,
+		Status: util.StringPtr("In Care"),
+	}
+
+	clientUp, err := testQueries.UpdateClientStatus(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientUp)
+	require.Equal(t, arg.ID, clientUp.ID)
+	require.Equal(t, arg.Status, clientUp.Status)
+}
+
+func TestCreateClientStatusHistory(t *testing.T) {
+	client := createRandomClientDetails(t)
+	arg := CreateClientStatusHistoryParams{
+		ClientID:  client.ID,
+		OldStatus: util.StringPtr("On Waiting List"),
+		NewStatus: "In Care",
+		Reason:    util.StringPtr("Test Reason"),
+	}
+
+	clientStatus, err := testQueries.CreateClientStatusHistory(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientStatus)
+	require.Equal(t, arg.ClientID, clientStatus.ClientID)
+	require.Equal(t, arg.OldStatus, clientStatus.OldStatus)
+}
+
+func TestListClientStatusHistory(t *testing.T) {
+	client := createRandomClientDetails(t)
+	arg := CreateClientStatusHistoryParams{
+		ClientID:  client.ID,
+		OldStatus: util.StringPtr("On Waiting List"),
+		NewStatus: "In Care",
+		Reason:    util.StringPtr("Test Reason"),
+	}
+
+	_, err := testQueries.CreateClientStatusHistory(context.Background(), arg)
+	require.NoError(t, err)
+
+	arg2 := CreateClientStatusHistoryParams{
+		ClientID:  client.ID,
+		OldStatus: util.StringPtr("In Care"),
+		NewStatus: "Out Of Care",
+		Reason:    util.StringPtr("Test Reason"),
+	}
+
+	_, err = testQueries.CreateClientStatusHistory(context.Background(), arg2)
+	require.NoError(t, err)
+
+	historyList, err := testQueries.ListClientStatusHistory(context.Background(), ListClientStatusHistoryParams{
+		ClientID: client.ID,
+		Limit:    5,
+		Offset:   0,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, historyList)
+	require.Len(t, historyList, 2)
+}
+
+func TestCreateSchedueledClientStatusChange(t *testing.T) {
+	client := createRandomClientDetails(t)
+	arg := CreateSchedueledClientStatusChangeParams{
+		ClientID:      client.ID,
+		NewStatus:     "In Care",
+		Reason:        util.StringPtr("Test Reason"),
+		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
+	}
+
+	clientStatus, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientStatus)
+	require.Equal(t, arg.ClientID, clientStatus.ClientID)
+}
+
 func TestSetClientProfilePictureTx(t *testing.T) {
 	store := NewStore(testDB)
 	client := createRandomClientDetails(t)

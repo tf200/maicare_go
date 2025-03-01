@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -404,6 +405,119 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 		HasUntakenMedications: client.HasUntakenMedications,
 	}, "Client fetched successfully")
 	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateClientDetailsRequest represents a request to update a client
+type UpdateClientStatusRequest struct {
+	Status        string    `json:"status" binding:"required"`
+	Reason        string    `json:"reason"`
+	IsSchedueled  bool      `json:"schedueled"`
+	SchedueledFor time.Time `json:"schedueled_for"`
+}
+
+// UpdateClientStatusResponse represents a response to an update client request
+type UpdateClientStatusResponse struct {
+	ID     int64   `json:"id"`
+	Status *string `json:"status"`
+}
+
+// UpdateClientStatusApi updates a client
+// @Summary Update a client
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body UpdateClientStatusRequest true "Client status"
+// @Success 200 {object} Response[UpdateClientStatusResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/status [put]
+func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateClientStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	if req.IsSchedueled {
+		if req.SchedueledFor.Before(time.Now()) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("schedueled for date must be in the future")))
+			return
+		}
+
+		schedueledChange, err := server.store.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
+			ClientID:      clientID,
+			NewStatus:     req.Status,
+			Reason:        &req.Reason,
+			ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		res := SuccessResponse(UpdateClientStatusResponse{
+			ID:     schedueledChange.ClientID,
+			Status: &schedueledChange.NewStatus,
+		}, "Client status update schedueled successfully")
+		ctx.JSON(http.StatusOK, res)
+		return
+	} else {
+
+		tx, err := server.store.ConnPool.Begin(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		defer tx.Rollback(ctx)
+
+		qtx := server.store.WithTx(tx)
+
+		oldClient, err := qtx.GetClientDetails(ctx, clientID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		client, err := qtx.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
+			ID:     clientID,
+			Status: &req.Status,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		_, err = qtx.CreateClientStatusHistory(ctx, db.CreateClientStatusHistoryParams{
+			ClientID:  clientID,
+			OldStatus: oldClient.Status,
+			NewStatus: req.Status,
+			Reason:    &req.Reason,
+		})
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		err = tx.Commit(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		res := SuccessResponse(UpdateClientStatusResponse{
+			ID:     client.ID,
+			Status: client.Status,
+		}, "Client status updated successfully")
+		ctx.JSON(http.StatusOK, res)
+	}
+
 }
 
 // SetClientProfilePictureRequest represents a request to update a client
