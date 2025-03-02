@@ -18,7 +18,7 @@ func (server *Server) setupMaturityMatrixRoutes(baseRouter *gin.RouterGroup) {
 		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/goals/:goal_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientGoalApi)
 
 		mmGroup.POST("/:id/maturity_matrix_assessment/:assessment_id/goals/:goal_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.CreateGoalObjectiveApi)
-		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/goals/:goal_id/objectives/generate", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GenerateObjectivesApi)
+		mmGroup.POST("/:id/maturity_matrix_assessment/:assessment_id/goals/:goal_id/objectives/generate", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GenerateObjectivesApi)
 	}
 
 	baseRouter.GET("/maturity_matrix", server.ListMaturityMatrixApi)

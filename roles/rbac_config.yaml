@@ -100,9 +100,7 @@ roles:
       - CLIENT.VIEW
       - CLIENT.UPDATE
       - CLIENT.DELETE
-      - FINANCE.VIEW
       - PROFILE.VIEW
-      - SETTINGS.VIEW
       - CARE_COORDINATION.VIEW
 
   - name: test

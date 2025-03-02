@@ -37,16 +37,16 @@
 </head>
 <body>
     <div class="header">
-        <h1>Appointment Card {{.ClientName}}</h1>
+        <h1>Afsprakenkaart {{.ClientName}}</h1>
     </div>
 
     <div class="meta-info">
-        <div class="meta-item">Date: {{.Date}}</div>
+        <div class="meta-item">Datum: {{.Date}}</div>
         <div class="meta-item">Mentor: {{.Mentor}}</div>
     </div>
 
     <div class="section">
-        <div class="section-title">General Information</div>
+        <div class="section-title">Algemene Informatie</div>
         <ul class="content-list">
             {{range .GeneralInformation}}
             <li>{{.}}</li>
@@ -55,7 +55,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Important Contacts</div>
+        <div class="section-title">Belangrijke Contacten</div>
         <ul class="content-list">
             {{range .ImportantContacts}}
             <li>{{.}}</li>
@@ -64,7 +64,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Household</div>
+        <div class="section-title">Huishouden</div>
         <ul class="content-list">
             {{range .HouseholdInfo}}
             <li>{{.}}</li>
@@ -73,7 +73,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Organization Agreements</div>
+        <div class="section-title">Organisatie Afspraken</div>
         <ul class="content-list">
             {{range .OrganizationAgreements}}
             <li>{{.}}</li>
@@ -82,7 +82,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Youth Officer Agreements</div>
+        <div class="section-title">Jeugdreclassering Afspraken</div>
         <ul class="content-list">
             {{range .YouthOfficerAgreements}}
             <li>{{.}}</li>
@@ -91,7 +91,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Treatment Agreements</div>
+        <div class="section-title">Behandel Afspraken</div>
         <ul class="content-list">
             {{range .TreatmentAgreements}}
             <li>{{.}}</li>
@@ -100,7 +100,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Smoking Rules</div>
+        <div class="section-title">Rookregels</div>
         <ul class="content-list">
             {{range .SmokingRules}}
             <li>{{.}}</li>
@@ -109,7 +109,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Work</div>
+        <div class="section-title">Werk</div>
         <ul class="content-list">
             {{range .Work}}
             <li>{{.}}</li>
@@ -118,7 +118,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">School/Internship</div>
+        <div class="section-title">School/Stage</div>
         <ul class="content-list">
             {{range .SchoolInternship}}
             <li>{{.}}</li>
@@ -127,7 +127,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Travel</div>
+        <div class="section-title">Reizen</div>
         <ul class="content-list">
             {{range .Travel}}
             <li>{{.}}</li>
@@ -136,7 +136,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Leave</div>
+        <div class="section-title">Verlof</div>
         <ul class="content-list">
             {{range .Leave}}
             <li>{{.}}</li>

@@ -55,9 +55,9 @@ func main() {
 	// Initialize Asynq server
 	var asynqServer *tasks.AsynqServer
 	if !config.Remote {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf)
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf, b2Client)
 	} else {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, nil, smtpConf)
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, nil, smtpConf, b2Client)
 	}
 
 	// Create error channel to catch server errors

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"crypto/tls"
+	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"time"
@@ -10,12 +11,13 @@ import (
 )
 
 type AsynqServer struct {
-	server *asynq.Server
-	store  *db.Store
-	smtp   *email.SmtpConf
+	server   *asynq.Server
+	store    *db.Store
+	smtp     *email.SmtpConf
+	b2Bucket *bucket.B2Client
 }
 
-func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, smtp *email.SmtpConf) *AsynqServer {
+func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, smtp *email.SmtpConf, b2Bucket *bucket.B2Client) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
 			Addr:         redisHost,
@@ -38,12 +40,13 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store,
 			},
 		},
 	)
-	return &AsynqServer{server: srv, store: store, smtp: smtp}
+	return &AsynqServer{server: srv, store: store, smtp: smtp, b2Bucket: b2Bucket}
 }
 
 func (a *AsynqServer) Start() error {
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(TypeEmailDelivery, a.ProcessEmailTask)
+	mux.HandleFunc(TypeIncident, a.ProcessIncidentTask)
 	return a.server.Start(mux)
 }
 

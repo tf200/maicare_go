@@ -555,3 +555,83 @@ func TestGetMissingClientDocumentsApi(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateClientStatusApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK No Scheduling",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				reqBody := UpdateClientStatusRequest{
+					Status:       "In Care",
+					Reason:       "Test Reason",
+					IsSchedueled: false,
+				}
+				data, err := json.Marshal(reqBody)
+				require.NoError(t, err)
+
+				url := fmt.Sprintf("/clients/%d/status", client.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var clientRes Response[UpdateClientStatusResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+			},
+		},
+		{
+			name: "OK With Scheduling",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				scheduledTime := time.Date(2028, 1, 2, 0, 0, 0, 0, time.UTC)
+				reqBody := UpdateClientStatusRequest{
+					Status:        "In Care",
+					Reason:        "Test Reason",
+					IsSchedueled:  true,
+					SchedueledFor: scheduledTime,
+				}
+				data, err := json.Marshal(reqBody)
+				require.NoError(t, err)
+
+				url := fmt.Sprintf("/clients/%d/status", client.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var clientRes Response[UpdateClientStatusResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}

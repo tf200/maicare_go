@@ -20,7 +20,7 @@ func TestSendCredentials(t *testing.T) {
 		Password: "password",
 	})
 	require.NoError(t, err)
-}
+} 
 
 func TestSendIncident(t *testing.T) {
 	email := NewSmtpConf("config", "dev@maicare.online", "u,Q4(;9^$tzWZjm", "mail.privateemail.com", 587)
@@ -31,6 +31,7 @@ func TestSendIncident(t *testing.T) {
 		IncidentType: "workplace_accident",
 		Severity:     "serious",
 		Location:     "Main Building - Floor 3",
+		DocumentLink: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
 	}
 	err := email.SendIncident(context.Background(), []string{"farjiataha@gmail.com"}, arg)
 	require.NoError(t, err)

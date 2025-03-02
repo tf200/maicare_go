@@ -27,12 +27,13 @@ type Credentials struct {
 }
 
 type Incident struct {
-	IncidentID   int
+	IncidentID   int64
 	ReportedBy   string
 	ClientName   string
 	IncidentType string
 	Severity     string
 	Location     string
+	DocumentLink string
 }
 
 func NewSmtpConf(name, address, authentication, smtpHost string, smtpPort int) *SmtpConf {
@@ -143,7 +144,7 @@ func (s *SmtpConf) SendIncident(ctx context.Context, to []string, data Incident)
 	if err := message.To(to...); err != nil {
 		return fmt.Errorf("failed to set To address: %w", err)
 	}
-	message.Subject("Welcome to Maicare!")
+	message.Subject("Incident!")
 	message.SetBodyString(mail.TypeTextHTML, body.String())
 
 	client, err := mail.NewClient(

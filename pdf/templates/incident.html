@@ -61,24 +61,24 @@
 
 <body>
 
-    <h1>Incident Report</h1>
-    <p><strong>Report ID:</strong> {{.ID}}</p>
-    <p><strong>Date of Incident:</strong> {{.IncidentDate}}</p>
+    <h1>Incidentrapport</h1>
+    <p><strong>Rapport ID:</strong> {{.ID}}</p>
+    <p><strong>Datum van Incident:</strong> {{.IncidentDate}}</p>
 
     <!-- Employee Information -->
     <div class="section">
-        <h2>Employee Information</h2>
+        <h2>Medewerker Informatie</h2>
         <table>
             <tr>
-                <td class="label">Employee ID</td>
+                <td class="label">Medewerker ID</td>
                 <td class="value">{{.EmployeeID}}</td>
             </tr>
             <tr>
-                <td class="label">Employee Name</td>
+                <td class="label">Naam Medewerker</td>
                 <td class="value">{{.EmployeeFirstName}} {{.EmployeeLastName}}</td>
             </tr>
             <tr>
-                <td class="label">Location</td>
+                <td class="label">Locatie</td>
                 <td class="value">{{.LocationID}} - {{.LocationName}}</td>
             </tr>
         </table>
@@ -89,11 +89,11 @@
         <h2>Incident Details</h2>
         <table>
             <tr>
-                <td class="label">Reporter Involvement</td>
+                <td class="label">Betrokkenheid Melder</td>
                 <td class="value">{{.ReporterInvolvement}}</td>
             </tr>
             <tr>
-                <td class="label">Informed Parties</td>
+                <td class="label">Geïnformeerde Partijen</td>
                 <td class="value">
                     {{if .InformWho}}
                     <div class="inline-list">
@@ -102,47 +102,47 @@
                         {{end}}
                     </div>
                     {{else}}
-                    N/A
+                    N.v.t.
                     {{end}}
                 </td>
             </tr>
             <tr>
-                <td class="label">Runtime Incident</td>
+                <td class="label">Looptijd Incident</td>
                 <td class="value">{{.RuntimeIncident}}</td>
             </tr>
             <tr>
-                <td class="label">Incident Type</td>
+                <td class="label">Type Incident</td>
                 <td class="value">{{.IncidentType}}</td>
             </tr>
             <tr>
-                <td class="label">Severity of Incident</td>
+                <td class="label">Ernst van het Incident</td>
                 <td class="value">{{.SeverityOfIncident}}</td>
             </tr>
             <tr>
-                <td class="label">Explanation</td>
-                <td class="value">{{if .IncidentExplanation}}{{.IncidentExplanation}}{{else}}N/A{{end}}</td>
+                <td class="label">Toelichting</td>
+                <td class="value">{{if .IncidentExplanation}}{{.IncidentExplanation}}{{else}}N.v.t.{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Recurrence Risk</td>
+                <td class="label">Herhalingsrisico</td>
                 <td class="value">{{.RecurrenceRisk}}</td>
             </tr>
             <tr>
-                <td class="label">Preventive Steps</td>
-                <td class="value">{{if .IncidentPreventSteps}}{{.IncidentPreventSteps}}{{else}}N/A{{end}}</td>
+                <td class="label">Preventieve Maatregelen</td>
+                <td class="value">{{if .IncidentPreventSteps}}{{.IncidentPreventSteps}}{{else}}N.v.t.{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Measures Taken</td>
-                <td class="value">{{if .IncidentTakenMeasures}}{{.IncidentTakenMeasures}}{{else}}N/A{{end}}</td>
+                <td class="label">Genomen Maatregelen</td>
+                <td class="value">{{if .IncidentTakenMeasures}}{{.IncidentTakenMeasures}}{{else}}N.v.t.{{end}}</td>
             </tr>
         </table>
     </div>
 
     <!-- Incident Causes -->
     <div class="section">
-        <h2>Incident Causes</h2>
+        <h2>Oorzaken Incident</h2>
         <table>
             <tr>
-                <td class="label">Technical</td>
+                <td class="label">Technisch</td>
                 <td class="value">
                     {{if .Technical}}
                     <div class="inline-list">
@@ -151,12 +151,12 @@
                         {{end}}
                     </div>
                     {{else}}
-                    N/A
+                    N.v.t.
                     {{end}}
                 </td>
             </tr>
             <tr>
-                <td class="label">Organizational</td>
+                <td class="label">Organisatorisch</td>
                 <td class="value">
                     {{if .Organizational}}
                     <div class="inline-list">
@@ -165,12 +165,12 @@
                         {{end}}
                     </div>
                     {{else}}
-                    N/A
+                    N.v.t.
                     {{end}}
                 </td>
             </tr>
             <tr>
-                <td class="label">Mese Worker</td>
+                <td class="label">Menselijk Handelen</td>
                 <td class="value">
                     {{if .MeseWorker}}
                     <div class="inline-list">
@@ -179,12 +179,12 @@
                         {{end}}
                     </div>
                     {{else}}
-                    N/A
+                    N.v.t.
                     {{end}}
                 </td>
             </tr>
             <tr>
-                <td class="label">Client Options</td>
+                <td class="label">Cliënt Opties</td>
                 <td class="value">
                     {{if .ClientOptions}}
                     <div class="inline-list">
@@ -193,32 +193,32 @@
                         {{end}}
                     </div>
                     {{else}}
-                    N/A
+                    N.v.t.
                     {{end}}
                 </td>
             </tr>
             <tr>
-                <td class="label">Other Cause</td>
-                <td class="value">{{if .OtherCause}}{{.OtherCause}}{{else}}N/A{{end}}</td>
+                <td class="label">Andere Oorzaak</td>
+                <td class="value">{{if .OtherCause}}{{.OtherCause}}{{else}}N.v.t.{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Cause Explanation</td>
-                <td class="value">{{if .CauseExplanation}}{{.CauseExplanation}}{{else}}N/A{{end}}</td>
+                <td class="label">Toelichting Oorzaak</td>
+                <td class="value">{{if .CauseExplanation}}{{.CauseExplanation}}{{else}}N.v.t.{{end}}</td>
             </tr>
         </table>
     </div>
 
     <!-- Injuries and Damages -->
     <div class="section">
-        <h2>Injuries and Damages</h2>
+        <h2>Verwondingen en Schade</h2>
         <table>
             <tr>
-                <td class="label">Physical Injury</td>
+                <td class="label">Lichamelijk Letsel</td>
                 <td class="value">{{.PhysicalInjury}} {{if .PhysicalInjuryDesc}}- {{.PhysicalInjuryDesc}}{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Psychological Damage</td>
-                <td class="value">{{.PsychologicalDamage}} {{if .PsychologicalDamageDesc}}-
+                <td class="label">Psychologische Schade</td>
+                <td class="value">{{.PsychologicalDamage}} {{if .PsychologicalDamageDesc}}- 
                     {{.PsychologicalDamageDesc}}{{end}}</td>
             </tr>
         </table>
@@ -226,57 +226,57 @@
 
     <!-- Additional Incident Flags -->
     <div class="section">
-        <h2>Additional Incident Details</h2>
+        <h2>Aanvullende Incident Details</h2>
         <table>
             <tr>
-                <td class="label">Passing Away</td>
-                <td class="value">{{if .PassingAway}}Yes{{else}}No{{end}}</td>
+                <td class="label">Overlijden</td>
+                <td class="value">{{if .PassingAway}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Self Harm</td>
-                <td class="value">{{if .SelfHarm}}Yes{{else}}No{{end}}</td>
+                <td class="label">Zelfbeschadiging</td>
+                <td class="value">{{if .SelfHarm}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Violence</td>
-                <td class="value">{{if .Violence}}Yes{{else}}No{{end}}</td>
+                <td class="label">Geweld</td>
+                <td class="value">{{if .Violence}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Fire/Water Damage</td>
-                <td class="value">{{if .FireWaterDamage}}Yes{{else}}No{{end}}</td>
+                <td class="label">Brand/Waterschade</td>
+                <td class="value">{{if .FireWaterDamage}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Accident</td>
-                <td class="value">{{if .Accident}}Yes{{else}}No{{end}}</td>
+                <td class="label">Ongeval</td>
+                <td class="value">{{if .Accident}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Client Absence</td>
-                <td class="value">{{if .ClientAbsence}}Yes{{else}}No{{end}}</td>
+                <td class="label">Afwezigheid Cliënt</td>
+                <td class="value">{{if .ClientAbsence}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Medicines Involved</td>
-                <td class="value">{{if .Medicines}}Yes{{else}}No{{end}}</td>
+                <td class="label">Medicijnen Betrokken</td>
+                <td class="value">{{if .Medicines}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Organizational Factors</td>
-                <td class="value">{{if .Organization}}Yes{{else}}No{{end}}</td>
+                <td class="label">Organisatorische Factoren</td>
+                <td class="value">{{if .Organization}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Use of Prohibited Substances</td>
-                <td class="value">{{if .UseProhibitedSubstances}}Yes{{else}}No{{end}}</td>
+                <td class="label">Gebruik van Verboden Middelen</td>
+                <td class="value">{{if .UseProhibitedSubstances}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Other Notifications</td>
-                <td class="value">{{if .OtherNotifications}}Yes{{else}}No{{end}}</td>
+                <td class="label">Overige Meldingen</td>
+                <td class="value">{{if .OtherNotifications}}Ja{{else}}Nee{{end}}</td>
             </tr>
         </table>
     </div>
 
     <!-- Succession & Other Details -->
     <div class="section">
-        <h2>Succession & Additional Details</h2>
+        <h2>Vervolgacties & Aanvullende Details</h2>
         <table>
             <tr>
-                <td class="label">Succession</td>
+                <td class="label">Vervolgacties</td>
                 <td class="value">
                     {{if .Succession}}
                     <div class="inline-list">
@@ -285,28 +285,28 @@
                         {{end}}
                     </div>
                     {{else}}
-                    N/A
+                    N.v.t.
                     {{end}}
                 </td>
             </tr>
             <tr>
-                <td class="label">Succession Description</td>
-                <td class="value">{{if .SuccessionDesc}}{{.SuccessionDesc}}{{else}}N/A{{end}}</td>
+                <td class="label">Toelichting Vervolgacties</td>
+                <td class="value">{{if .SuccessionDesc}}{{.SuccessionDesc}}{{else}}N.v.t.{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Other</td>
-                <td class="value">{{if .Other}}Yes{{else}}No{{end}}</td>
+                <td class="label">Overig</td>
+                <td class="value">{{if .Other}}Ja{{else}}Nee{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Other Description</td>
-                <td class="value">{{if .OtherDesc}}{{.OtherDesc}}{{else}}N/A{{end}}</td>
+                <td class="label">Overige Toelichting</td>
+                <td class="value">{{if .OtherDesc}}{{.OtherDesc}}{{else}}N.v.t.{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Additional Appointments</td>
-                <td class="value">{{if .AdditionalAppointments}}{{.AdditionalAppointments}}{{else}}N/A{{end}}</td>
+                <td class="label">Aanvullende Afspraken</td>
+                <td class="value">{{if .AdditionalAppointments}}{{.AdditionalAppointments}}{{else}}N.v.t.{{end}}</td>
             </tr>
             <tr>
-                <td class="label">Employee Absenteeism</td>
+                <td class="label">Verzuim Medewerker</td>
                 <td class="value">{{.EmployeeAbsenteeism}}</td>
             </tr>
         </table>
@@ -314,14 +314,14 @@
 
     <!-- Client and Consultation Information -->
     <div class="section">
-        <h2>Client & Consultation Information</h2>
+        <h2>Cliënt & Consultatie Informatie</h2>
         <table>
             <tr>
-                <td class="label">Client ID</td>
+                <td class="label">Cliënt ID</td>
                 <td class="value">{{.ClientID}}</td>
             </tr>
             <tr>
-                <td class="label">Needed Consultation</td>
+                <td class="label">Benodigde Consultatie</td>
                 <td class="value">{{.NeededConsultation}}</td>
             </tr>
         </table>

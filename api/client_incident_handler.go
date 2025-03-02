@@ -5,6 +5,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/pdf"
+	"maicare_go/tasks"
 	"net/http"
 	"strconv"
 	"time"
@@ -263,6 +264,53 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	server.asynqClient.EnqueueIncident(tasks.IncidentPayload{
+		ID:                      incident.ID,
+		EmployeeID:              incident.EmployeeID,
+		EmployeeFirstName:       "",
+		EmployeeLastName:        "",
+		LocationID:              incident.LocationID,
+		ReporterInvolvement:     incident.ReporterInvolvement,
+		InformWho:               informWho,
+		IncidentDate:            incident.IncidentDate.Time,
+		RuntimeIncident:         incident.RuntimeIncident,
+		IncidentType:            incident.IncidentType,
+		PassingAway:             incident.PassingAway,
+		SelfHarm:                incident.SelfHarm,
+		Violence:                incident.Violence,
+		FireWaterDamage:         incident.FireWaterDamage,
+		Accident:                incident.Accident,
+		ClientAbsence:           incident.ClientAbsence,
+		Medicines:               incident.Medicines,
+		Organization:            incident.Organization,
+		UseProhibitedSubstances: incident.UseProhibitedSubstances,
+		OtherNotifications:      incident.OtherNotifications,
+		SeverityOfIncident:      incident.SeverityOfIncident,
+		IncidentExplanation:     incident.IncidentExplanation,
+		RecurrenceRisk:          incident.RecurrenceRisk,
+		IncidentPreventSteps:    incident.IncidentPreventSteps,
+		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
+		Technical:               technical,
+		Organizational:          organizational,
+		MeseWorker:              meseWorker,
+		ClientOptions:           clientOptions,
+		OtherCause:              incident.OtherCause,
+		CauseExplanation:        incident.CauseExplanation,
+		PhysicalInjury:          incident.PhysicalInjury,
+		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
+		PsychologicalDamage:     incident.PsychologicalDamage,
+		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
+		NeededConsultation:      incident.NeededConsultation,
+		Succession:              succession,
+		SuccessionDesc:          incident.SuccessionDesc,
+		Other:                   incident.Other,
+		OtherDesc:               incident.OtherDesc,
+		AdditionalAppointments:  incident.AdditionalAppointments,
+		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		ClientID:                incident.ClientID,
+		LocationName:            "",
+		To:                      incident.Emails,
+	}, ctx)
 
 	res := SuccessResponse(CreateIncidentResponse{
 		ID:                      incident.ID,
@@ -955,6 +1003,54 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	server.asynqClient.EnqueueIncident(tasks.IncidentPayload{
+		ID:                      incident.ID,
+		EmployeeID:              incident.EmployeeID,
+		EmployeeFirstName:       "",
+		EmployeeLastName:        "",
+		LocationID:              incident.LocationID,
+		ReporterInvolvement:     incident.ReporterInvolvement,
+		InformWho:               informWho,
+		IncidentDate:            incident.IncidentDate.Time,
+		RuntimeIncident:         incident.RuntimeIncident,
+		IncidentType:            incident.IncidentType,
+		PassingAway:             incident.PassingAway,
+		SelfHarm:                incident.SelfHarm,
+		Violence:                incident.Violence,
+		FireWaterDamage:         incident.FireWaterDamage,
+		Accident:                incident.Accident,
+		ClientAbsence:           incident.ClientAbsence,
+		Medicines:               incident.Medicines,
+		Organization:            incident.Organization,
+		UseProhibitedSubstances: incident.UseProhibitedSubstances,
+		OtherNotifications:      incident.OtherNotifications,
+		SeverityOfIncident:      incident.SeverityOfIncident,
+		IncidentExplanation:     incident.IncidentExplanation,
+		RecurrenceRisk:          incident.RecurrenceRisk,
+		IncidentPreventSteps:    incident.IncidentPreventSteps,
+		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
+		Technical:               technical,
+		Organizational:          organizational,
+		MeseWorker:              meseWorker,
+		ClientOptions:           clientOptions,
+		OtherCause:              incident.OtherCause,
+		CauseExplanation:        incident.CauseExplanation,
+		PhysicalInjury:          incident.PhysicalInjury,
+		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
+		PsychologicalDamage:     incident.PsychologicalDamage,
+		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
+		NeededConsultation:      incident.NeededConsultation,
+		Succession:              succession,
+		SuccessionDesc:          incident.SuccessionDesc,
+		Other:                   incident.Other,
+		OtherDesc:               incident.OtherDesc,
+		AdditionalAppointments:  incident.AdditionalAppointments,
+		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		ClientID:                incident.ClientID,
+		LocationName:            "",
+		To:                      incident.Emails,
+	}, ctx)
 
 	res := SuccessResponse(UpdateIncidentResponse{
 		ID:                      incident.ID,

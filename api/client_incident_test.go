@@ -134,7 +134,7 @@ func TestCreateIncident(t *testing.T) {
 					AdditionalAppointments:  util.StringPtr("test appointments"),
 					EmployeeAbsenteeism:     "client",
 					ClientID:                client.ID,
-					Emails:                  []string{"testemail@gg.com", "gaga@gog.com"},
+					Emails:                  []string{"farjiataha@gmail.com", "tahafarjia@gmail.com"},
 				}
 				url := fmt.Sprintf("/clients/%d/incidents", client.ID)
 				reqBody, err := json.Marshal(incidentReq)

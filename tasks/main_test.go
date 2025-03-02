@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"log"
+	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 
@@ -29,12 +30,16 @@ func TestMain(m *testing.M) {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
 	defer conn.Close()
+	testB2client, err := bucket.NewB2Client(config)
+	if err != nil {
+		log.Fatalf("unable to create b2 client: %v", err)
+	}
 
 	testStore = db.NewStore(conn)
 	testSmtp := email.NewSmtpConf(config.SmtpName, config.SmtpAddress, config.SmtpAuth, config.SmtpHost, config.SmtpPort)
 	testasynqClient = NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 
-	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{}, testSmtp)
+	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{}, testSmtp, testB2client)
 
 	os.Exit(m.Run())
 }
