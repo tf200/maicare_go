@@ -168,7 +168,7 @@ func (server *Server) ListRolesApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	response := make([]ListRolesApiResponse, 0)
+	response := make([]ListRolesApiResponse, len(roles))
 	for i, role := range roles {
 		response[i] = ListRolesApiResponse{
 			ID:   role.ID,
