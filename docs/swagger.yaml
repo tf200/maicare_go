@@ -2752,6 +2752,23 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ListStatusHistoryApiResponse:
+    properties:
+      changed_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      changed_by:
+        type: integer
+      client_id:
+        type: integer
+      id:
+        type: integer
+      new_status:
+        type: string
+      old_status:
+        type: string
+      reason:
+        type: string
+    type: object
   api.LoginUserRequest:
     properties:
       email:
@@ -3309,6 +3326,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ListClientEmergencyContactsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListStatusHistoryApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListStatusHistoryApiResponse'
       message:
         type: string
       success:
@@ -6998,6 +7024,36 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update a client
+      tags:
+      - clients
+  /clients/{id}/status_history:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListStatusHistoryApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List status history of a client
       tags:
       - clients
   /employees:
