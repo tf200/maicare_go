@@ -520,6 +520,68 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 
 }
 
+// ListStatusHistoryApiResponse represents a response to a list status history request
+type ListStatusHistoryApiResponse struct {
+	ID        int64              `json:"id"`
+	ClientID  int64              `json:"client_id"`
+	OldStatus *string            `json:"old_status"`
+	NewStatus string             `json:"new_status"`
+	ChangedAt pgtype.Timestamptz `json:"changed_at"`
+	ChangedBy *int64             `json:"changed_by"`
+	Reason    *string            `json:"reason"`
+}
+
+// ListStatusHistoryApi lists status history of a client
+// @Summary List status history of a client
+// @Tags clients
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[ListStatusHistoryApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/status_history [get]
+func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListClientStatusHistoryParams{
+		ClientID: clientID,
+		Limit:    10,
+		Offset:   0,
+	}
+
+	statusHistory, err := server.store.ListClientStatusHistory(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(statusHistory) == 0 {
+		res := SuccessResponse([]string{}, "No status history found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
+	statusHistoryList := make([]ListStatusHistoryApiResponse, len(statusHistory))
+	for i, status := range statusHistory {
+		statusHistoryList[i] = ListStatusHistoryApiResponse{
+			ID:        status.ID,
+			ClientID:  status.ClientID,
+			OldStatus: status.OldStatus,
+			NewStatus: status.NewStatus,
+			ChangedAt: status.ChangedAt,
+			ChangedBy: status.ChangedBy,
+			Reason:    status.Reason,
+		}
+	}
+
+	res := SuccessResponse(statusHistoryList, "Status history fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // SetClientProfilePictureRequest represents a request to update a client
 type SetClientProfilePictureRequest struct {
 	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
