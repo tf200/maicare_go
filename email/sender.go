@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/wneessen/go-mail"
 )
 
@@ -97,8 +98,12 @@ func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 	if err := message.To(to...); err != nil {
 		return fmt.Errorf("failed to set To address: %w", err)
 	}
-	message.Subject("Welcome to Maicare!")
-	message.SetBodyString(mail.TypeTextHTML, body.String())
+	message.Subject("Maicare Credentials")
+	message.SetBodyString(mail.TypeTextPlain, "Your Maicare credentials are below:")
+	message.AddAlternativeString(mail.TypeTextHTML, body.String())
+	message.SetGenHeader("Message-ID", fmt.Sprintf("<%s@%s>", uuid.New().String(), "maicare.online"))
+	message.SetGenHeader("Precedence", "bulk")
+	message.SetGenHeader("MIME-Version", "1.0")
 
 	client, err := mail.NewClient(
 		s.SmtpHost,
