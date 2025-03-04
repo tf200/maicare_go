@@ -2,5 +2,6 @@ app.env
 venv/
 admin.py
 dev.env
+prod.env
 entrypoint.sh
 /admin
