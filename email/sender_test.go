@@ -14,13 +14,14 @@ func TestSend(t *testing.T) {
 }
 
 func TestSendCredentials(t *testing.T) {
-	email := NewSmtpConf("config", "dev@maicare.online", "u,Q4(;9^$tzWZjm", "mail.privateemail.com", 587)
+	email := NewSmtpConf("config", "dev@maicare.online", "u,Q4(;9^$tzWZjm", "mail.privateemail.com", 465)
 	err := email.SendCredentials(context.Background(), []string{"farjiataha@gmail.com"}, Credentials{
+		Name:     "John Doe",
 		Email:    "farjiataha@gmail.com",
 		Password: "password",
 	})
 	require.NoError(t, err)
-} 
+}
 
 func TestSendIncident(t *testing.T) {
 	email := NewSmtpConf("config", "dev@maicare.online", "u,Q4(;9^$tzWZjm", "mail.privateemail.com", 587)
