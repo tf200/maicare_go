@@ -23,6 +23,7 @@ type SmtpConf struct {
 }
 
 type Credentials struct {
+	Name     string
 	Email    string
 	Password string
 }

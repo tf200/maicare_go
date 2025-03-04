@@ -26,7 +26,7 @@ func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Tas
 
 	log.Printf("Sending email to %s", p.To)
 
-	err := processor.smtp.SendCredentials(ctx, []string{p.To}, email.Credentials{Email: p.UserEmail, Password: p.UserPassword})
+	err := processor.smtp.SendCredentials(ctx, []string{p.To}, email.Credentials{Email: p.UserEmail, Password: p.UserPassword, Name: p.Name})
 	if err != nil {
 		log.Printf("Failed to send email to %s: %v", p.To, err)
 		return fmt.Errorf("failed to send email to %s: %v: %w", p.To, err, asynq.SkipRetry)

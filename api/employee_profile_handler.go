@@ -191,6 +191,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		return
 	}
 	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
+		Name:         req.FirstName + " " + req.LastName,
 		To:           req.Email,
 		UserEmail:    req.Email,
 		UserPassword: password,

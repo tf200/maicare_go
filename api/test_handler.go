@@ -64,6 +64,7 @@ func (server *Server) handleLatency(c *gin.Context) {
 
 func (server *Server) EmailAndAsynq(c *gin.Context) {
 	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
+		Name:         "Farjia Taha",
 		To:           "farjiataha@gmail.com",
 		UserEmail:    "farjiataha@gmail.com",
 		UserPassword: "password",
