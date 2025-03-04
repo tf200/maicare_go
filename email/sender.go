@@ -115,6 +115,8 @@ func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	log.Printf("Email sent to %s", to)
+
 	return nil
 }
 
