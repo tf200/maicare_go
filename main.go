@@ -46,7 +46,7 @@ func main() {
 	if !config.Remote {
 		asynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 	} else {
-		asynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, nil)
+		asynqClient = tasks.NewAsynqClient(config.RedisHost, "", "", nil)
 	}
 
 	// Inirialize the SMTP Client for email deleviry
@@ -57,7 +57,7 @@ func main() {
 	if !config.Remote {
 		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf, b2Client)
 	} else {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, nil, smtpConf, b2Client)
+		asynqServer = tasks.NewAsynqServer(config.RedisHost, "", "", store, nil, smtpConf, b2Client)
 	}
 
 	// Create error channel to catch server errors
