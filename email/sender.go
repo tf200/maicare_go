@@ -106,6 +106,7 @@ func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 		mail.WithUsername(s.Address),
 		mail.WithPassword(s.Athentication),
 		mail.WithPort(s.SmtpPort),
+		mail.WithSSL(),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create mail client: %w", err)
