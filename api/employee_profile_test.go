@@ -88,6 +88,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 func TestCreateEmployeeProfileApi(t *testing.T) {
 	locationID := createRandomLocation(t).ID
 	userID := rand.Int63()
+
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -109,7 +110,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					LastName:                  util.RandomString(8),
 					DateOfBirth:               util.StringPtr("2000-01-05"),
 					Gender:                    util.StringPtr("male"),
-					Email:                     "farjiataha@gmail.com",
+					Email:                     "farsjiataha@gmail.com",
 					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
 					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
@@ -127,6 +128,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body)
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
 				var response Response[CreateEmployeeProfileResponse]
