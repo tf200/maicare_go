@@ -5,7 +5,6 @@ import "github.com/gin-gonic/gin"
 // setupTestRoutes configures all test-related routes
 func (server *Server) setupTestRoutes(baseRouter *gin.RouterGroup) {
 	testGroup := baseRouter.Group("/test")
-	testGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
 		// Basic health check endpoint
 		testGroup.GET("/health", RBACMiddleware(server.store, "TEST_VIEW"), server.handleHealthCheck)
@@ -15,6 +14,8 @@ func (server *Server) setupTestRoutes(baseRouter *gin.RouterGroup) {
 
 		// Simulated latency endpoint for testing timeouts
 		testGroup.GET("/latency/:ms", server.handleLatency)
+
+		testGroup.GET("/send-email", RBACMiddleware(server.store, "TEST_VIEW"), server.EmailAndAsynq)
 
 	}
 }

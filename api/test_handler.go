@@ -1,6 +1,7 @@
 package api
 
 import (
+	"maicare_go/tasks"
 	"net/http"
 	"time"
 
@@ -58,5 +59,18 @@ func (server *Server) handleLatency(c *gin.Context) {
 		Status:    "success",
 		Message:   "delayed response",
 		Timestamp: time.Now(),
+	})
+}
+
+func (server *Server) EmailAndAsynq(c *gin.Context) {
+	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
+		To:           "farjiataha@gmail.com",
+		UserEmail:    "farjiataha@gmail.com",
+		UserPassword: "password",
+	}, c)
+
+	c.JSON(http.StatusOK, gin.H{
+		"echo":      "Email sent",
+		"timestamp": time.Now(),
 	})
 }
