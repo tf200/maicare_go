@@ -103,7 +103,7 @@ roles:
       - PROFILE.VIEW
       - CARE_COORDINATION.VIEW
 
-  - name: test
+  - name: Worker
     id: 2
     description: "Test role"
     permissions:

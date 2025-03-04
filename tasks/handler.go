@@ -23,6 +23,8 @@ func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Tas
 		return fmt.Errorf("invalid email payload: missing required fields: %w", asynq.SkipRetry)
 	}
 
+	log.Printf("Sending email to %s", p.To)
+
 	err := processor.smtp.SendCredentials(ctx, []string{p.To}, email.Credentials{Email: p.UserEmail, Password: p.UserPassword})
 	if err != nil {
 		log.Printf("Failed to send email to %s: %v", p.To, err)
