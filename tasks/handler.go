@@ -21,6 +21,7 @@ func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Tas
 
 	if p.To == "" || p.UserEmail == "" || p.UserPassword == "" {
 		return fmt.Errorf("invalid email payload: missing required fields: %w", asynq.SkipRetry)
+
 	}
 
 	log.Printf("Sending email to %s", p.To)
