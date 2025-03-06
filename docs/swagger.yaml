@@ -3403,6 +3403,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateClientDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateClientDetailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateClientDiagnosisResponse:
     properties:
       data:
@@ -3931,6 +3940,108 @@ definitions:
       reaction:
         type: string
       severity:
+        type: string
+    type: object
+  api.UpdateClientDetailsRequest:
+    properties:
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+    type: object
+  api.UpdateClientDetailsResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/api.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      created:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_untaken_medications:
+        type: boolean
+      id:
+        type: integer
+      identity:
+        type: boolean
+      identity_attachment_ids:
+        items:
+          type: string
+        type: array
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
         type: string
     type: object
   api.UpdateClientDiagnosisRequest:
@@ -5110,6 +5221,43 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get a client
+      tags:
+      - clients
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Client details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientDetailsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientDetailsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client
       tags:
       - clients
   /clients/{id}/ai_progress_reports:
