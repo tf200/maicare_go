@@ -206,6 +206,20 @@ func TestGetClientDetails(t *testing.T) {
 	require.Equal(t, client.Departement, client1.Departement)
 }
 
+func TestUpdateClientDetails(t *testing.T) {
+	client := createRandomClientDetails(t)
+	arg := UpdateClientDetailsParams{
+		ID:        client.ID,
+		FirstName: util.StringPtr(faker.FirstName()),
+	}
+
+	clientUp, err := testQueries.UpdateClientDetails(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, clientUp)
+	require.Equal(t, arg.ID, clientUp.ID)
+	require.Equal(t, arg.FirstName, &clientUp.FirstName)
+
+}
 func TestUpdateClientStatus(t *testing.T) {
 	client := createRandomClientDetails(t)
 	arg := UpdateClientStatusParams{

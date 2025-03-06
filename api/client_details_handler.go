@@ -407,6 +407,144 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type UpdateClientDetailsRequest struct {
+	FirstName       *string   `json:"first_name"`
+	LastName        *string   `json:"last_name"`
+	DateOfBirth     time.Time `json:"date_of_birth"`
+	Identity        *bool     `json:"identity"`
+	Bsn             *string   `json:"bsn"`
+	Source          *string   `json:"source"`
+	Birthplace      *string   `json:"birthplace"`
+	Email           *string   `json:"email"`
+	PhoneNumber     *string   `json:"phone_number"`
+	Organisation    *string   `json:"organisation"`
+	Departement     *string   `json:"departement"`
+	Gender          *string   `json:"gender"`
+	Filenumber      *string   `json:"filenumber"`
+	ProfilePicture  *string   `json:"profile_picture"`
+	Infix           *string   `json:"infix"`
+	SenderID        *int64    `json:"sender_id"`
+	LocationID      *int64    `json:"location_id"`
+	DepartureReason *string   `json:"departure_reason"`
+	DepartureReport *string   `json:"departure_report"`
+	LegalMeasure    *string   `json:"legal_measure"`
+}
+
+type UpdateClientDetailsResponse struct {
+	ID                    int64       `json:"id"`
+	FirstName             string      `json:"first_name"`
+	LastName              string      `json:"last_name"`
+	DateOfBirth           time.Time   `json:"date_of_birth"`
+	Identity              bool        `json:"identity"`
+	Status                *string     `json:"status"`
+	Bsn                   *string     `json:"bsn"`
+	Source                *string     `json:"source"`
+	Birthplace            *string     `json:"birthplace"`
+	Email                 string      `json:"email"`
+	PhoneNumber           *string     `json:"phone_number"`
+	Organisation          *string     `json:"organisation"`
+	Departement           *string     `json:"departement"`
+	Gender                string      `json:"gender"`
+	Filenumber            string      `json:"filenumber"`
+	ProfilePicture        *string     `json:"profile_picture"`
+	Infix                 *string     `json:"infix"`
+	Created               time.Time   `json:"created"`
+	SenderID              int64       `json:"sender_id"`
+	LocationID            *int64      `json:"location_id"`
+	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
+	DepartureReason       *string     `json:"departure_reason"`
+	DepartureReport       *string     `json:"departure_report"`
+	Addresses             []Address   `json:"addresses"`
+	LegalMeasure          *string     `json:"legal_measure"`
+	HasUntakenMedications bool        `json:"has_untaken_medications"`
+}
+
+func (server *Server) UpdateClientApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req UpdateClientDetailsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	client, err := server.store.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
+		ID:              clientID,
+		FirstName:       req.FirstName,
+		LastName:        req.LastName,
+		DateOfBirth:     pgtype.Date{Time: req.DateOfBirth, Valid: true},
+		Identity:        req.Identity,
+		Bsn:             req.Bsn,
+		Source:          req.Source,
+		Birthplace:      req.Birthplace,
+		Email:           req.Email,
+		PhoneNumber:     req.PhoneNumber,
+		Organisation:    req.Organisation,
+		Departement:     req.Departement,
+		Gender:          req.Gender,
+		Filenumber:      req.Filenumber,
+		ProfilePicture:  req.ProfilePicture,
+		Infix:           req.Infix,
+		SenderID:        req.SenderID,
+		LocationID:      req.LocationID,
+		DepartureReason: req.DepartureReason,
+		DepartureReport: req.DepartureReport,
+		LegalMeasure:    req.LegalMeasure,
+	},
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var addresses []Address
+	err = json.Unmarshal(client.Addresses, &addresses)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var identityAttachmentIds []uuid.UUID
+	err = json.Unmarshal(client.IdentityAttachmentIds, &identityAttachmentIds)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(UpdateClientDetailsResponse{
+		ID:                    client.ID,
+		FirstName:             client.FirstName,
+		LastName:              client.LastName,
+		DateOfBirth:           client.DateOfBirth.Time,
+		Identity:              client.Identity,
+		Status:                client.Status,
+		Bsn:                   client.Bsn,
+		Source:                client.Source,
+		Birthplace:            client.Birthplace,
+		Email:                 client.Email,
+		PhoneNumber:           client.PhoneNumber,
+		Organisation:          client.Organisation,
+		Departement:           client.Departement,
+		Gender:                client.Gender,
+		Filenumber:            client.Filenumber,
+		ProfilePicture:        client.ProfilePicture,
+		Infix:                 client.Infix,
+		SenderID:              client.SenderID,
+		LocationID:            client.LocationID,
+		IdentityAttachmentIds: identityAttachmentIds,
+		DepartureReason:       client.DepartureReason,
+		DepartureReport:       client.DepartureReport,
+		Addresses:             addresses,
+		LegalMeasure:          client.LegalMeasure,
+		HasUntakenMedications: client.HasUntakenMedications,
+	}, "Client updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // UpdateClientDetailsRequest represents a request to update a client
 type UpdateClientStatusRequest struct {
 	Status        string    `json:"status" binding:"required"`

@@ -300,6 +300,66 @@ func TestGetClientDetails(t *testing.T) {
 
 }
 
+func TestUpdateClientDetailsApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	location := createRandomLocation(t)
+	_ = createRandomSender(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				clientReq := UpdateClientDetailsRequest{
+					FirstName:    util.StringPtr(faker.FirstName()),
+					LastName:     util.StringPtr(faker.LastName()),
+					Email:        util.StringPtr(faker.Email()),
+					Organisation: util.StringPtr("Test Organisation"),
+					LocationID:   &location.ID,
+					LegalMeasure: util.StringPtr("Test Legal Measure"),
+					Birthplace:   util.StringPtr("Test Birthplace"),
+					Departement:  util.StringPtr("Test Departement"),
+				}
+				reqBody, err := json.Marshal(clientReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/clients/%d", client.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(reqBody))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Logf("Response Status Code: %d", recorder.Code)
+				t.Logf("Raw Response Body: %s", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var clientRes Response[UpdateClientDetailsResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, clientRes.Data)
+				require.NotEmpty(t, clientRes.Data.ID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func TestSetClientProfilePictureApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	file := createRandomAttachmentFile(t)

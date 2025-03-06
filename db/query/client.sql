@@ -51,6 +51,32 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 SELECT * FROM client_details
 WHERE id = $1 LIMIT 1;
 
+-- name: UpdateClientDetails :one
+UPDATE client_details
+SET 
+    first_name = COALESCE (sqlc.narg('first_name'), first_name),
+    last_name = COALESCE (sqlc.narg('last_name'), last_name),
+    date_of_birth = COALESCE (sqlc.narg('date_of_birth'), date_of_birth),
+    "identity" = COALESCE (sqlc.narg('identity'), "identity"),
+    bsn = COALESCE (sqlc.narg('bsn'), bsn),
+    source = COALESCE (sqlc.narg('source'), source),
+    birthplace = COALESCE (sqlc.narg('birthplace'), birthplace),
+    email = COALESCE (sqlc.narg('email'), email),
+    phone_number = COALESCE (sqlc.narg('phone_number'), phone_number),
+    organisation = COALESCE (sqlc.narg('organisation'), organisation),
+    departement = COALESCE (sqlc.narg('departement'), departement),
+    gender = COALESCE (sqlc.narg('gender'), gender),
+    filenumber = COALESCE (sqlc.narg('filenumber'), filenumber),
+    profile_picture = COALESCE (sqlc.narg('profile_picture'), profile_picture),
+    infix = COALESCE (sqlc.narg('infix'), infix),
+    sender_id = COALESCE (sqlc.narg('sender_id'), sender_id),
+    location_id = COALESCE (sqlc.narg('location_id'), location_id),
+    departure_reason = COALESCE (sqlc.narg('departure_reason'), departure_reason),
+    departure_report = COALESCE (sqlc.narg('departure_report'), departure_report),
+    legal_measure = COALESCE (sqlc.narg('legal_measure'), legal_measure)
+WHERE id = $1
+RETURNING *;
+
 -- name: UpdateClientStatus :one
 UPDATE client_details
 SET status = $2
