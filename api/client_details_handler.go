@@ -407,6 +407,7 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// UpdateClientDetailsRequest represents a request to update a client
 type UpdateClientDetailsRequest struct {
 	FirstName       *string   `json:"first_name"`
 	LastName        *string   `json:"last_name"`
@@ -430,6 +431,7 @@ type UpdateClientDetailsRequest struct {
 	LegalMeasure    *string   `json:"legal_measure"`
 }
 
+// UpdateClientDetailsResponse represents a response to an update client request
 type UpdateClientDetailsResponse struct {
 	ID                    int64       `json:"id"`
 	FirstName             string      `json:"first_name"`
@@ -459,6 +461,16 @@ type UpdateClientDetailsResponse struct {
 	HasUntakenMedications bool        `json:"has_untaken_medications"`
 }
 
+// UpdateClientApi updates a client
+// @Summary Update a client
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body UpdateClientDetailsRequest true "Client details"
+// @Success 200 {object} Response[UpdateClientDetailsResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id} [put]
 func (server *Server) UpdateClientApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
