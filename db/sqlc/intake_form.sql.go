@@ -264,3 +264,232 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 	)
 	return i, err
 }
+
+const getIntakeForm = `-- name: GetIntakeForm :one
+SELECT id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, attachement_ids FROM intake_forms
+WHERE id = $1
+`
+
+func (q *Queries) GetIntakeForm(ctx context.Context, id int64) (IntakeForm, error) {
+	row := q.db.QueryRow(ctx, getIntakeForm, id)
+	var i IntakeForm
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Nationality,
+		&i.Bsn,
+		&i.Address,
+		&i.City,
+		&i.PostalCode,
+		&i.PhoneNumber,
+		&i.Gender,
+		&i.Email,
+		&i.IDType,
+		&i.IDNumber,
+		&i.ReferrerName,
+		&i.ReferrerOrganization,
+		&i.ReferrerFunction,
+		&i.ReferrerPhone,
+		&i.ReferrerEmail,
+		&i.SignedBy,
+		&i.HasValidIndication,
+		&i.LawType,
+		&i.OtherLawSpecification,
+		&i.MainProviderName,
+		&i.MainProviderContact,
+		&i.IndicationStartDate,
+		&i.IndicationEndDate,
+		&i.RegistrationReason,
+		&i.GuidanceGoals,
+		&i.RegistrationType,
+		&i.LivingSituation,
+		&i.OtherLivingSituation,
+		&i.ParentalAuthority,
+		&i.CurrentSchool,
+		&i.MentorName,
+		&i.MentorPhone,
+		&i.MentorEmail,
+		&i.PreviousCare,
+		&i.GuardianDetails,
+		&i.Diagnoses,
+		&i.UsesMedication,
+		&i.MedicationDetails,
+		&i.AddictionIssues,
+		&i.JudicialInvolvement,
+		&i.RiskAggression,
+		&i.RiskSuicidality,
+		&i.RiskRunningAway,
+		&i.RiskSelfHarm,
+		&i.RiskWeaponPossession,
+		&i.RiskDrugDealing,
+		&i.OtherRisks,
+		&i.SharingPermission,
+		&i.TruthDeclaration,
+		&i.ClientSignature,
+		&i.GuardianSignature,
+		&i.ReferrerSignature,
+		&i.SignatureDate,
+		&i.AttachementIds,
+	)
+	return i, err
+}
+
+const listIntakeForms = `-- name: ListIntakeForms :many
+SELECT id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, attachement_ids, COUNT(*) OVER() AS total_count FROM intake_forms
+WHERE (
+    LOWER(first_name) LIKE LOWER(CONCAT('%', COALESCE($3::text, ''), '%')) OR
+    LOWER(last_name) LIKE LOWER(CONCAT('%', COALESCE($3::text, ''), '%'))
+)
+ORDER BY id DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListIntakeFormsParams struct {
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
+}
+
+type ListIntakeFormsRow struct {
+	ID                    int64       `json:"id"`
+	FirstName             string      `json:"first_name"`
+	LastName              string      `json:"last_name"`
+	DateOfBirth           pgtype.Date `json:"date_of_birth"`
+	Nationality           string      `json:"nationality"`
+	Bsn                   string      `json:"bsn"`
+	Address               string      `json:"address"`
+	City                  string      `json:"city"`
+	PostalCode            string      `json:"postal_code"`
+	PhoneNumber           string      `json:"phone_number"`
+	Gender                string      `json:"gender"`
+	Email                 string      `json:"email"`
+	IDType                string      `json:"id_type"`
+	IDNumber              string      `json:"id_number"`
+	ReferrerName          *string     `json:"referrer_name"`
+	ReferrerOrganization  *string     `json:"referrer_organization"`
+	ReferrerFunction      *string     `json:"referrer_function"`
+	ReferrerPhone         *string     `json:"referrer_phone"`
+	ReferrerEmail         *string     `json:"referrer_email"`
+	SignedBy              *string     `json:"signed_by"`
+	HasValidIndication    bool        `json:"has_valid_indication"`
+	LawType               *string     `json:"law_type"`
+	OtherLawSpecification *string     `json:"other_law_specification"`
+	MainProviderName      *string     `json:"main_provider_name"`
+	MainProviderContact   *string     `json:"main_provider_contact"`
+	IndicationStartDate   pgtype.Date `json:"indication_start_date"`
+	IndicationEndDate     pgtype.Date `json:"indication_end_date"`
+	RegistrationReason    *string     `json:"registration_reason"`
+	GuidanceGoals         *string     `json:"guidance_goals"`
+	RegistrationType      *string     `json:"registration_type"`
+	LivingSituation       *string     `json:"living_situation"`
+	OtherLivingSituation  *string     `json:"other_living_situation"`
+	ParentalAuthority     bool        `json:"parental_authority"`
+	CurrentSchool         *string     `json:"current_school"`
+	MentorName            *string     `json:"mentor_name"`
+	MentorPhone           *string     `json:"mentor_phone"`
+	MentorEmail           *string     `json:"mentor_email"`
+	PreviousCare          *string     `json:"previous_care"`
+	GuardianDetails       []byte      `json:"guardian_details"`
+	Diagnoses             *string     `json:"diagnoses"`
+	UsesMedication        bool        `json:"uses_medication"`
+	MedicationDetails     *string     `json:"medication_details"`
+	AddictionIssues       bool        `json:"addiction_issues"`
+	JudicialInvolvement   bool        `json:"judicial_involvement"`
+	RiskAggression        bool        `json:"risk_aggression"`
+	RiskSuicidality       bool        `json:"risk_suicidality"`
+	RiskRunningAway       bool        `json:"risk_running_away"`
+	RiskSelfHarm          bool        `json:"risk_self_harm"`
+	RiskWeaponPossession  bool        `json:"risk_weapon_possession"`
+	RiskDrugDealing       bool        `json:"risk_drug_dealing"`
+	OtherRisks            *string     `json:"other_risks"`
+	SharingPermission     bool        `json:"sharing_permission"`
+	TruthDeclaration      bool        `json:"truth_declaration"`
+	ClientSignature       bool        `json:"client_signature"`
+	GuardianSignature     *bool       `json:"guardian_signature"`
+	ReferrerSignature     *bool       `json:"referrer_signature"`
+	SignatureDate         pgtype.Date `json:"signature_date"`
+	AttachementIds        []uuid.UUID `json:"attachement_ids"`
+	TotalCount            int64       `json:"total_count"`
+}
+
+func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error) {
+	rows, err := q.db.Query(ctx, listIntakeForms, arg.Limit, arg.Offset, arg.Search)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListIntakeFormsRow
+	for rows.Next() {
+		var i ListIntakeFormsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.DateOfBirth,
+			&i.Nationality,
+			&i.Bsn,
+			&i.Address,
+			&i.City,
+			&i.PostalCode,
+			&i.PhoneNumber,
+			&i.Gender,
+			&i.Email,
+			&i.IDType,
+			&i.IDNumber,
+			&i.ReferrerName,
+			&i.ReferrerOrganization,
+			&i.ReferrerFunction,
+			&i.ReferrerPhone,
+			&i.ReferrerEmail,
+			&i.SignedBy,
+			&i.HasValidIndication,
+			&i.LawType,
+			&i.OtherLawSpecification,
+			&i.MainProviderName,
+			&i.MainProviderContact,
+			&i.IndicationStartDate,
+			&i.IndicationEndDate,
+			&i.RegistrationReason,
+			&i.GuidanceGoals,
+			&i.RegistrationType,
+			&i.LivingSituation,
+			&i.OtherLivingSituation,
+			&i.ParentalAuthority,
+			&i.CurrentSchool,
+			&i.MentorName,
+			&i.MentorPhone,
+			&i.MentorEmail,
+			&i.PreviousCare,
+			&i.GuardianDetails,
+			&i.Diagnoses,
+			&i.UsesMedication,
+			&i.MedicationDetails,
+			&i.AddictionIssues,
+			&i.JudicialInvolvement,
+			&i.RiskAggression,
+			&i.RiskSuicidality,
+			&i.RiskRunningAway,
+			&i.RiskSelfHarm,
+			&i.RiskWeaponPossession,
+			&i.RiskDrugDealing,
+			&i.OtherRisks,
+			&i.SharingPermission,
+			&i.TruthDeclaration,
+			&i.ClientSignature,
+			&i.GuardianSignature,
+			&i.ReferrerSignature,
+			&i.SignatureDate,
+			&i.AttachementIds,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

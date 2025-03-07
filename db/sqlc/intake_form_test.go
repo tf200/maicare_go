@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateIntakeForm(t *testing.T) {
+func createRandomIntakeForm(t *testing.T) IntakeForm {
 	// Helper function to get random enum value
 	getRandomEnum := func(values []string) string {
 		r, _ := faker.RandomInt(0, len(values)-1)
@@ -73,7 +73,13 @@ func TestCreateIntakeForm(t *testing.T) {
 		MentorEmail:       util.StringPtr(faker.Email()),
 		PreviousCare:      util.StringPtr(faker.Sentence()),
 
-		GuardianDetails: []byte(`{"name": "` + faker.Name() + `", "phone": "` + faker.Phonenumber() + `"}`),
+		GuardianDetails: []byte(`[{
+			"first_name": "` + faker.FirstName() + `",
+			"last_name": "` + faker.LastName() + `",
+			"phone_number": "` + faker.Phonenumber() + `",
+			"email": "` + faker.Email() + `",
+			"address": "` + faker.GetRealAddress().City + `"
+		}]`),
 
 		UsesMedication:      util.RandomBool(),
 		AddictionIssues:     util.RandomBool(),
@@ -105,4 +111,36 @@ func TestCreateIntakeForm(t *testing.T) {
 	require.Equal(t, arg.FirstName, form.FirstName)
 	require.Equal(t, arg.LastName, form.LastName)
 	require.Equal(t, arg.Email, form.Email)
+	return form
+
+}
+
+func TestCreateIntakeForm(t *testing.T) {
+	createRandomIntakeForm(t)
+}
+
+func TestListIntakeForms(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomIntakeForm(t)
+	}
+
+	arg := ListIntakeFormsParams{
+		Limit:  5,
+		Offset: 5,
+	}
+
+	forms, err := testQueries.ListIntakeForms(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, forms, 5)
+}
+
+func TestGetIntakeForm(t *testing.T) {
+	form1 := createRandomIntakeForm(t)
+	form2, err := testQueries.GetIntakeForm(context.Background(), form1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, form2)
+	require.Equal(t, form1.ID, form2.ID)
+	require.Equal(t, form1.FirstName, form2.FirstName)
+	require.Equal(t, form1.LastName, form2.LastName)
+	require.Equal(t, form1.Email, form2.Email)
 }

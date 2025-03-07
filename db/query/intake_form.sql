@@ -66,3 +66,20 @@ INSERT INTO intake_forms (
     $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
     $51, $52, $53, $54, $55, $56, $57
 ) RETURNING *;
+
+
+
+
+-- name: ListIntakeForms :many
+SELECT *, COUNT(*) OVER() AS total_count FROM intake_forms
+WHERE (
+    LOWER(first_name) LIKE LOWER(CONCAT('%', COALESCE(@search::text, ''), '%')) OR
+    LOWER(last_name) LIKE LOWER(CONCAT('%', COALESCE(@search::text, ''), '%'))
+)
+ORDER BY id DESC
+LIMIT $1 OFFSET $2;
+
+
+-- name: GetIntakeForm :one
+SELECT * FROM intake_forms
+WHERE id = $1;
