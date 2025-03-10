@@ -394,3 +394,78 @@ func TestGetIntakeForm(t *testing.T) {
 
 	}
 }
+
+func TestAddUrgencyScoreApi(t *testing.T) {
+	form := createRandomIntakeForm(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				reqBody := AddUrgencyScoreRequest{
+					UrgencyScore: 5,
+				}
+				data, err := json.Marshal(reqBody)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/intake_form/%d/urgency_score", form.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+			tc.setupAuth(t, req, testServer.tokenMaker)
+
+			recorder := httptest.NewRecorder()
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+
+	}
+}
+
+// func TestMoveToWaitingList(ctx *gin.Context) {
+// 	form := createRandomIntakeForm(t)
+// 	testCases := []struct {
+// 		name          string
+// 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+// 		buildRequest  func() (*http.Request, error)
+// 		checkResponse func(recorder *httptest.ResponseRecorder)
+// 	}{
+// 		{
+// 			name: "OK",
+// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+// 			},
+// 			buildRequest: func() (*http.Request, error) {
+// 				data, err := json.Marshal(reqBody)
+// 				require.NoError(t, err)
+// 				url := fmt.Sprintf("/intake_form/%d/waiting_list", form.ID)
+// 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+// 				require.NoError(t, err)
+// 				return req, nil
+// 			},
+// 			checkResponse: func(recorder *httptest.ResponseRecorder) {
+// 				t.Log(recorder.Body.String())
+// 				require.Equal(t, http.StatusOK, recorder.Code)
+// 			},
+// 		},
+// 	}
+// }

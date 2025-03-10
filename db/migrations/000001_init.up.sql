@@ -200,8 +200,95 @@ CREATE INDEX idx_sender_audit_changed_at ON sender_audit(changed_at DESC);
 CREATE INDEX idx_sender_audit_changed_by ON sender_audit(changed_by);
 
 
+CREATE TABLE intake_forms (
+    id BIGSERIAL PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    nationality VARCHAR(100) NOT NULL,
+    bsn VARCHAR(20) NOT NULL,
+    address TEXT NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    postal_code  VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    gender VARCHAR(20) NOT NULL,
+    email VARCHAR(254) NOT NULL,
+    id_type VARCHAR(100) NOT NULL CHECK (id_type IN ('passport', 'id_card', 'residence_permit')),
+    id_number VARCHAR(100) NOT NULL,
+
+    -- 2. Referrer information
+    referrer_name VARCHAR(255),
+    referrer_organization VARCHAR(255),
+    referrer_function VARCHAR(150),
+    referrer_phone VARCHAR(50),
+    referrer_email VARCHAR(255),
+    signed_by VARCHAR(50) CHECK (signed_by IN ('Referrer', 'Parent/Guardian', 'Client')),
+
+    -- 3. Care indication details
+    has_valid_indication BOOLEAN NOT NULL DEFAULT FALSE,
+    law_type VARCHAR(50) CHECK (law_type IN ('Youth Act', 'WLZ', 'WMO', 'Other')),
+    other_law_specification VARCHAR(255),
+    main_provider_name VARCHAR(255),
+    main_provider_contact VARCHAR(255),
+    indication_start_date DATE,
+    indication_end_date DATE,
+    registration_reason TEXT,
+    guidance_goals TEXT,
+    registration_type VARCHAR(50) CHECK (registration_type IN ('Protected Living', 'Supervised Independent Living', 'Outpatient Guidance')),
+
+    -- 4. Client current situation
+    living_situation VARCHAR(50) CHECK (living_situation IN ('Home', 'Foster care', 'Youth care institution', 'Other')),
+    other_living_situation VARCHAR(255),
+    parental_authority BOOLEAN NOT NULL DEFAULT FALSE,
+    current_school VARCHAR(255),
+    mentor_name VARCHAR(255),
+    mentor_phone VARCHAR(50),
+    mentor_email VARCHAR(255),
+    previous_care TEXT,
+
+    -- guardian information
+    guardian_details JSONB NOT NULL DEFAULT '{}',
+
+    -- 5. Medical and psychosocial information
+    diagnoses TEXT,
+    uses_medication BOOLEAN NOT NULL DEFAULT FALSE,
+    medication_details TEXT,
+    addiction_issues BOOLEAN NOT NULL DEFAULT FALSE,
+    judicial_involvement BOOLEAN NOT NULL DEFAULT FALSE,
+
+    -- 6. Risk factors
+    risk_aggression BOOLEAN NOT NULL DEFAULT FALSE,
+    risk_suicidality BOOLEAN NOT NULL DEFAULT FALSE,
+    risk_running_away BOOLEAN NOT NULL DEFAULT FALSE,
+    risk_self_harm BOOLEAN NOT NULL DEFAULT FALSE,
+    risk_weapon_possession BOOLEAN NOT NULL DEFAULT FALSE,
+    risk_drug_dealing BOOLEAN NOT NULL DEFAULT FALSE,
+    other_risks TEXT,
+
+    -- 7. Consent and signatures
+    sharing_permission BOOLEAN NOT NULL DEFAULT FALSE,
+    truth_declaration BOOLEAN NOT NULL DEFAULT FALSE,
+    client_signature BOOLEAN NOT NULL DEFAULT FALSE,
+    guardian_signature BOOLEAN,
+    referrer_signature BOOLEAN,
+    signature_date DATE,
+
+    -- status
+    status VARCHAR(20) NOT NULL CHECK (status IN ('submitted', 'under review', 'approved', 'rejected')) DEFAULT 'submitted',
+    -- urgency
+    urgency_score INT  NULL DEFAULT 0,
+    description TEXT,
+
+    attachement_ids UUID[] NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+
+
+
 CREATE TABLE client_details (
     id BIGSERIAL PRIMARY KEY,
+    intake_form_id BIGINT NULL REFERENCES intake_forms(id) ON DELETE SET NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
@@ -1688,80 +1775,6 @@ CREATE TABLE objectives_report (
 
 
 
-CREATE TABLE intake_forms (
-    id BIGSERIAL PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    date_of_birth DATE NOT NULL,
-    nationality VARCHAR(100) NOT NULL,
-    bsn VARCHAR(20) NOT NULL,
-    address TEXT NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    postal_code  VARCHAR(20) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
-    gender VARCHAR(20) NOT NULL,
-    email VARCHAR(254) NOT NULL,
-    id_type VARCHAR(100) NOT NULL CHECK (id_type IN ('passport', 'id_card', 'residence_permit')),
-    id_number VARCHAR(100) NOT NULL,
 
-    -- 2. Referrer information
-    referrer_name VARCHAR(255),
-    referrer_organization VARCHAR(255),
-    referrer_function VARCHAR(150),
-    referrer_phone VARCHAR(50),
-    referrer_email VARCHAR(255),
-    signed_by VARCHAR(50) CHECK (signed_by IN ('Referrer', 'Parent/Guardian', 'Client')),
-
-    -- 3. Care indication details
-    has_valid_indication BOOLEAN NOT NULL DEFAULT FALSE,
-    law_type VARCHAR(50) CHECK (law_type IN ('Youth Act', 'WLZ', 'WMO', 'Other')),
-    other_law_specification VARCHAR(255),
-    main_provider_name VARCHAR(255),
-    main_provider_contact VARCHAR(255),
-    indication_start_date DATE,
-    indication_end_date DATE,
-    registration_reason TEXT,
-    guidance_goals TEXT,
-    registration_type VARCHAR(50) CHECK (registration_type IN ('Protected Living', 'Supervised Independent Living', 'Outpatient Guidance')),
-
-    -- 4. Client current situation
-    living_situation VARCHAR(50) CHECK (living_situation IN ('Home', 'Foster care', 'Youth care institution', 'Other')),
-    other_living_situation VARCHAR(255),
-    parental_authority BOOLEAN NOT NULL DEFAULT FALSE,
-    current_school VARCHAR(255),
-    mentor_name VARCHAR(255),
-    mentor_phone VARCHAR(50),
-    mentor_email VARCHAR(255),
-    previous_care TEXT,
-
-    -- guardian information
-    guardian_details JSONB NOT NULL DEFAULT '{}',
-
-    -- 5. Medical and psychosocial information
-    diagnoses TEXT,
-    uses_medication BOOLEAN NOT NULL DEFAULT FALSE,
-    medication_details TEXT,
-    addiction_issues BOOLEAN NOT NULL DEFAULT FALSE,
-    judicial_involvement BOOLEAN NOT NULL DEFAULT FALSE,
-
-    -- 6. Risk factors
-    risk_aggression BOOLEAN NOT NULL DEFAULT FALSE,
-    risk_suicidality BOOLEAN NOT NULL DEFAULT FALSE,
-    risk_running_away BOOLEAN NOT NULL DEFAULT FALSE,
-    risk_self_harm BOOLEAN NOT NULL DEFAULT FALSE,
-    risk_weapon_possession BOOLEAN NOT NULL DEFAULT FALSE,
-    risk_drug_dealing BOOLEAN NOT NULL DEFAULT FALSE,
-    other_risks TEXT,
-
-    -- 7. Consent and signatures
-    sharing_permission BOOLEAN NOT NULL DEFAULT FALSE,
-    truth_declaration BOOLEAN NOT NULL DEFAULT FALSE,
-    client_signature BOOLEAN NOT NULL DEFAULT FALSE,
-    guardian_signature BOOLEAN,
-    referrer_signature BOOLEAN,
-    signature_date DATE,
-
-    attachement_ids UUID[] NULL DEFAULT '{}'
-);
 
 

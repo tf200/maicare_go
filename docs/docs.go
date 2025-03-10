@@ -4880,6 +4880,103 @@ const docTemplate = `{
                 }
             }
         },
+        "/intake_form/{id}/move_to_waiting_list": {
+            "post": {
+                "description": "Move an intake form to waiting list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Move an intake form to waiting list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_MoveToWaitingListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_form/{id}/urgency_score": {
+            "post": {
+                "description": "Add urgency score to an intake form",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Add urgency score to an intake form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Urgency score request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.AddUrgencyScoreRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_AddUrgencyScoreResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/locations": {
             "get": {
                 "description": "Get a list of all locations",
@@ -5761,6 +5858,25 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                }
+            }
+        },
+        "api.AddUrgencyScoreRequest": {
+            "type": "object",
+            "properties": {
+                "urgency_score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.AddUrgencyScoreResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "urgency_score": {
+                    "type": "integer"
                 }
             }
         },
@@ -9770,6 +9886,14 @@ const docTemplate = `{
                 }
             }
         },
+        "api.MoveToWaitingListResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.Permission": {
             "type": "object",
             "properties": {
@@ -9867,6 +9991,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.AddEmployeeExperienceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_AddUrgencyScoreResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.AddUrgencyScoreResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10609,6 +10747,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.LoginUserResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_MoveToWaitingListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.MoveToWaitingListResponse"
                 },
                 "message": {
                     "type": "string"

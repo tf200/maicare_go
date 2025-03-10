@@ -83,3 +83,10 @@ LIMIT $1 OFFSET $2;
 -- name: GetIntakeForm :one
 SELECT * FROM intake_forms
 WHERE id = $1;
+
+
+-- name: AddUrgencyScore :one
+UPDATE intake_forms
+SET urgency_score = $2
+WHERE id = $1
+RETURNING *;

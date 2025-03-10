@@ -136,6 +136,18 @@ definitions:
       start_date:
         type: string
     type: object
+  api.AddUrgencyScoreRequest:
+    properties:
+      urgency_score:
+        type: integer
+    type: object
+  api.AddUrgencyScoreResponse:
+    properties:
+      id:
+        type: integer
+      urgency_score:
+        type: integer
+    type: object
   api.Address:
     properties:
       address:
@@ -2803,6 +2815,11 @@ definitions:
       start_date:
         type: string
     type: object
+  api.MoveToWaitingListResponse:
+    properties:
+      client_id:
+        type: integer
+    type: object
   api.Permission:
     properties:
       id:
@@ -2867,6 +2884,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.AddEmployeeExperienceResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_AddUrgencyScoreResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AddUrgencyScoreResponse'
       message:
         type: string
       success:
@@ -3344,6 +3370,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.LoginUserResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_MoveToWaitingListResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.MoveToWaitingListResponse'
       message:
         type: string
       success:
@@ -8091,6 +8126,70 @@ paths:
       security:
       - '-': []
       summary: Create an intake form
+      tags:
+      - intake_form
+  /intake_form/{id}/move_to_waiting_list:
+    post:
+      consumes:
+      - application/json
+      description: Move an intake form to waiting list
+      parameters:
+      - description: Intake form ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_MoveToWaitingListResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Move an intake form to waiting list
+      tags:
+      - intake_form
+  /intake_form/{id}/urgency_score:
+    post:
+      consumes:
+      - application/json
+      description: Add urgency score to an intake form
+      parameters:
+      - description: Intake form ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Urgency score request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddUrgencyScoreRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_AddUrgencyScoreResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add urgency score to an intake form
       tags:
       - intake_form
   /intake_form/upload:

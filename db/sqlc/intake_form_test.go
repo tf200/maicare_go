@@ -144,3 +144,20 @@ func TestGetIntakeForm(t *testing.T) {
 	require.Equal(t, form1.LastName, form2.LastName)
 	require.Equal(t, form1.Email, form2.Email)
 }
+
+func TestAddUrgencyScore(t *testing.T) {
+	form := createRandomIntakeForm(t)
+	arg := AddUrgencyScoreParams{
+		ID:           form.ID,
+		UrgencyScore: util.Int32Ptr(5),
+	}
+	_, err := testQueries.AddUrgencyScore(context.Background(), arg)
+	require.NoError(t, err)
+
+	form2, err := testQueries.GetIntakeForm(context.Background(), form.ID)
+	require.NoError(t, err)
+	require.Equal(t, arg.UrgencyScore, form2.UrgencyScore)
+}
+
+
+

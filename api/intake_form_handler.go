@@ -651,6 +651,7 @@ type GetIntakeFormResponse struct {
 	ReferrerSignature     *bool          `json:"referrer_signature"`
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
+	TimeSinceSubmission   string         `json:"time_since_submission"`
 }
 
 func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
@@ -673,6 +674,8 @@ func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	timeSinceSubmission := time.Since(form.CreatedAt.Time).String()
 
 	res := SuccessResponse(GetIntakeFormResponse{
 		ID:                    form.ID,
@@ -733,7 +736,116 @@ func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 		ReferrerSignature:     form.ReferrerSignature,
 		SignatureDate:         form.SignatureDate.Time,
 		AttachementIds:        form.AttachementIds,
+		TimeSinceSubmission:   timeSinceSubmission,
 	}, "Intake form retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// AddUrgencyScoreRequest represents a request to add urgency score to an intake form
+type AddUrgencyScoreRequest struct {
+	UrgencyScore int32 `json:"urgency_score"`
+}
+
+// AddUrgencyScoreResponse represents a response from the add urgency score handler
+type AddUrgencyScoreResponse struct {
+	ID           int64  `json:"id"`
+	UrgencyScore *int32 `json:"urgency_score"`
+}
+
+// @Summary Add urgency score to an intake form
+// @Description Add urgency score to an intake form
+// @Tags intake_form
+// @Accept json
+// @Produce json
+// @Param id path string true "Intake form ID"
+// @Param request body AddUrgencyScoreRequest true "Urgency score request"
+// @Success 200 {object} Response[AddUrgencyScoreResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /intake_form/{id}/urgency_score [post]
+func (server *Server) AddUrgencyScoreApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	formID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req AddUrgencyScoreRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	form, err := server.store.AddUrgencyScore(ctx, db.AddUrgencyScoreParams{
+		ID:           formID,
+		UrgencyScore: &req.UrgencyScore,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(AddUrgencyScoreResponse{
+		ID:           form.ID,
+		UrgencyScore: form.UrgencyScore,
+	}, "Urgency score added successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// MoveToWaitingListResponse represents a response from the move to waiting list handler
+type MoveToWaitingListResponse struct {
+	ClientID int64 `json:"client_id"`
+}
+
+// @Summary Move an intake form to waiting list
+// @Description Move an intake form to waiting list
+// @Tags intake_form
+// @Accept json
+// @Produce json
+// @Param id path string true "Intake form ID"
+// @Success 200 {object} Response[MoveToWaitingListResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /intake_form/{id}/move_to_waiting_list [post]
+func (server *Server) MoveToWaitingList(ctx *gin.Context) {
+	id := ctx.Param("id")
+	formID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	form, err := server.store.GetIntakeForm(ctx, formID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	client, err := server.store.CreateClientDetails(ctx,
+		db.CreateClientDetailsParams{
+			FirstName:   form.FirstName,
+			LastName:    form.LastName,
+			DateOfBirth: form.DateOfBirth,
+			Identity:    true,
+			Status:      util.StringPtr("On Waiting List"),
+			Bsn:         &form.Bsn,
+			Birthplace:  &form.Nationality,
+			Email:       form.Email,
+			PhoneNumber: &form.PhoneNumber,
+			Gender:      form.Gender,
+		},
+	)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(MoveToWaitingListResponse{
+		ClientID: client.ID,
+	}, "Client moved to waiting list successfully")
+	ctx.JSON(http.StatusOK, res)
+
 }
