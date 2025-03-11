@@ -493,6 +493,7 @@ type ListIntakeFormsResponse struct {
 	ReferrerSignature     *bool          `json:"referrer_signature"`
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
+	TimeSinceSubmission   string         `json:"time_since_submission"`
 }
 
 func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
@@ -522,6 +523,9 @@ func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
+
+		timeSinceSubmission := time.Since(form.CreatedAt.Time)
+		daysElapsed := timeSinceSubmission.Hours() / 24
 
 		formList[i] = ListIntakeFormsResponse{
 			ID:                    form.ID,
@@ -582,6 +586,7 @@ func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 			ReferrerSignature:     form.ReferrerSignature,
 			SignatureDate:         form.SignatureDate.Time,
 			AttachementIds:        form.AttachementIds,
+			TimeSinceSubmission:   fmt.Sprintf("%d days", int(daysElapsed)),
 		}
 	}
 
@@ -675,7 +680,8 @@ func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 		return
 	}
 
-	timeSinceSubmission := time.Since(form.CreatedAt.Time).String()
+	timeSinceSubmission := time.Since(form.CreatedAt.Time)
+	daysElapsed := timeSinceSubmission.Hours() / 24
 
 	res := SuccessResponse(GetIntakeFormResponse{
 		ID:                    form.ID,
@@ -736,7 +742,7 @@ func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 		ReferrerSignature:     form.ReferrerSignature,
 		SignatureDate:         form.SignatureDate.Time,
 		AttachementIds:        form.AttachementIds,
-		TimeSinceSubmission:   timeSinceSubmission,
+		TimeSinceSubmission:   fmt.Sprintf("%d days", int(daysElapsed)),
 	}, "Intake form retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)

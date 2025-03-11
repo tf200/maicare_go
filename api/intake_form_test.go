@@ -453,7 +453,7 @@ func TestAddUrgencyScoreApi(t *testing.T) {
 // 			name: "OK",
 // 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 // 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
-// 			},
+// 			},ma
 // 			buildRequest: func() (*http.Request, error) {
 // 				data, err := json.Marshal(reqBody)
 // 				require.NoError(t, err)
