@@ -66,7 +66,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		Filenumber:            "testfile",
 		ProfilePicture:        util.StringPtr(util.GetRandomImageURL()),
 		Infix:                 util.StringPtr("van"),
-		SenderID:              sender.ID,
+		SenderID:              &sender.ID,
 		LocationID:            util.IntPtr(location.ID),
 		IdentityAttachmentIds: []byte("[]"),
 		DepartureReason:       util.StringPtr("test Reason"),
@@ -143,7 +143,7 @@ func TestCreateClientApi(t *testing.T) {
 						},
 					},
 					IdentityAttachmentIds: filesUuids[:],
-					SenderID:              sender.ID,
+					SenderID:              &sender.ID,
 				}
 				reqBody, err := json.Marshal(clientReq)
 				require.NoError(t, err)

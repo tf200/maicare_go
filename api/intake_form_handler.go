@@ -854,20 +854,34 @@ func (server *Server) MoveToWaitingList(ctx *gin.Context) {
 		return
 	}
 
-	client, err := server.store.CreateClientDetails(ctx,
-		db.CreateClientDetailsParams{
-			FirstName:   form.FirstName,
-			LastName:    form.LastName,
-			DateOfBirth: form.DateOfBirth,
-			Identity:    true,
-			Status:      util.StringPtr("On Waiting List"),
-			Bsn:         &form.Bsn,
-			Birthplace:  &form.Nationality,
-			Email:       form.Email,
-			PhoneNumber: &form.PhoneNumber,
-			Gender:      form.Gender,
+	address := []Address{
+		{
+			Address: &form.Address,
+			City:    &form.City,
+			ZipCode: &form.PostalCode,
 		},
-	)
+	}
+
+	AddressesJSON, err := json.Marshal(address)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	arg := db.CreateClientDetailsParams{
+		FirstName:   form.FirstName,
+		LastName:    form.LastName,
+		DateOfBirth: form.DateOfBirth,
+		Identity:    true,
+		Status:      util.StringPtr("On Waiting List"),
+		Bsn:         &form.Bsn,
+		Birthplace:  &form.Nationality,
+		Email:       form.Email,
+		PhoneNumber: &form.PhoneNumber,
+		Gender:      form.Gender,
+		Addresses:   AddressesJSON,
+	}
+	client, err := server.store.CreateClientDetails(ctx, arg)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

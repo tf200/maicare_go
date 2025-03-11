@@ -29,7 +29,7 @@ type CreateClientDetailsRequest struct {
 	Filenumber            string      `json:"filenumber" binding:"required"`
 	DateOfBirth           string      `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
 	PhoneNumber           *string     `json:"phone_number" binding:"required"`
-	SenderID              int64       `json:"sender_id" binding:"required"`
+	SenderID              *int64      `json:"sender_id" binding:"required"`
 	Infix                 *string     `json:"infix"`
 	Source                *string     `json:"source" binding:"required"`
 	Bsn                   *string     `json:"bsn"`
@@ -66,7 +66,7 @@ type CreateClientDetailsResponse struct {
 	ProfilePicture        *string     `json:"profile_picture"`
 	Infix                 *string     `json:"infix"`
 	Created               time.Time   `json:"created"`
-	SenderID              int64       `json:"sender_id"`
+	SenderID              *int64      `json:"sender_id"`
 	LocationID            *int64      `json:"location_id"`
 	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
 	DepartureReason       *string     `json:"departure_reason"`
@@ -217,7 +217,7 @@ type ListClientsApiResponse struct {
 	ProfilePicture        *string   `json:"profile_picture"`
 	Infix                 *string   `json:"infix"`
 	CreatedAt             time.Time `json:"created_at"`
-	SenderID              int64     `json:"sender_id"`
+	SenderID              *int64    `json:"sender_id"`
 	LocationID            *int64    `json:"location_id"`
 	DepartureReason       *string   `json:"departure_reason"`
 	DepartureReport       *string   `json:"departure_report"`
@@ -330,7 +330,7 @@ type GetClientApiResponse struct {
 	ProfilePicture        *string     `json:"profile_picture"`
 	Infix                 *string     `json:"infix"`
 	CreatedAt             time.Time   `json:"created_at"`
-	SenderID              int64       `json:"sender_id"`
+	SenderID              *int64      `json:"sender_id"`
 	LocationID            *int64      `json:"location_id"`
 	DepartureReason       *string     `json:"departure_reason"`
 	DepartureReport       *string     `json:"departure_report"`
@@ -451,7 +451,7 @@ type UpdateClientDetailsResponse struct {
 	ProfilePicture        *string     `json:"profile_picture"`
 	Infix                 *string     `json:"infix"`
 	Created               time.Time   `json:"created"`
-	SenderID              int64       `json:"sender_id"`
+	SenderID              *int64      `json:"sender_id"`
 	LocationID            *int64      `json:"location_id"`
 	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
 	DepartureReason       *string     `json:"departure_reason"`
