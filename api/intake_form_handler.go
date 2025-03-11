@@ -496,6 +496,7 @@ type ListIntakeFormsResponse struct {
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
 	TimeSinceSubmission   string         `json:"time_since_submission"`
+	UrgencyScore          *int32         `json:"urgency_score"`
 }
 
 // @Summary List intake forms
@@ -601,6 +602,7 @@ func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 			SignatureDate:         form.SignatureDate.Time,
 			AttachementIds:        form.AttachementIds,
 			TimeSinceSubmission:   fmt.Sprintf("%d days", int(daysElapsed)),
+			UrgencyScore:          form.UrgencyScore,
 		}
 	}
 
@@ -672,6 +674,7 @@ type GetIntakeFormResponse struct {
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
 	TimeSinceSubmission   string         `json:"time_since_submission"`
+	UrgencyScore          *int32         `json:"urgency_score"`
 }
 
 // @Summary Get an intake form
@@ -768,6 +771,7 @@ func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 		SignatureDate:         form.SignatureDate.Time,
 		AttachementIds:        form.AttachementIds,
 		TimeSinceSubmission:   fmt.Sprintf("%d days", int(daysElapsed)),
+		UrgencyScore:          form.UrgencyScore,
 	}, "Intake form retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
