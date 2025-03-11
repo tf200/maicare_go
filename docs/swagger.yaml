@@ -2073,6 +2073,131 @@ definitions:
       violence:
         type: boolean
     type: object
+  api.GetIntakeFormResponse:
+    properties:
+      addiction_issues:
+        type: boolean
+      address:
+        type: string
+      attachement_ids:
+        items:
+          type: string
+        type: array
+      bsn:
+        type: string
+      city:
+        type: string
+      client_signature:
+        type: boolean
+      current_school:
+        type: string
+      date_of_birth:
+        type: string
+      diagnoses:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      guardian_details:
+        items:
+          $ref: '#/definitions/api.GuardionInfo'
+        type: array
+      guardian_signature:
+        type: boolean
+      guidance_goals:
+        type: string
+      has_valid_indication:
+        type: boolean
+      id:
+        type: integer
+      id_number:
+        type: string
+      id_type:
+        type: string
+      indication_end_date:
+        type: string
+      indication_start_date:
+        type: string
+      judicial_involvement:
+        type: boolean
+      last_name:
+        type: string
+      law_type:
+        type: string
+      living_situation:
+        type: string
+      main_provider_contact:
+        type: string
+      main_provider_name:
+        type: string
+      medication_details:
+        type: string
+      mentor_email:
+        type: string
+      mentor_name:
+        type: string
+      mentor_phone:
+        type: string
+      nationality:
+        type: string
+      other_law_specification:
+        type: string
+      other_living_situation:
+        type: string
+      other_risks:
+        type: string
+      parental_authority:
+        type: boolean
+      phone_number:
+        type: string
+      postal_code:
+        type: string
+      previous_care:
+        type: string
+      referrer_email:
+        type: string
+      referrer_function:
+        type: string
+      referrer_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone:
+        type: string
+      referrer_signature:
+        type: boolean
+      registration_reason:
+        type: string
+      registration_type:
+        type: string
+      risk_aggression:
+        type: boolean
+      risk_drug_dealing:
+        type: boolean
+      risk_running_away:
+        type: boolean
+      risk_self_harm:
+        type: boolean
+      risk_suicidality:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+      sharing_permission:
+        type: boolean
+      signature_date:
+        type: string
+      signed_by:
+        type: string
+      time_since_submission:
+        type: string
+      truth_declaration:
+        type: boolean
+      uses_medication:
+        type: boolean
+    type: object
   api.GetLocationResponse:
     properties:
       address:
@@ -2679,6 +2804,131 @@ definitions:
       use_prohibited_substances:
         type: boolean
       violence:
+        type: boolean
+    type: object
+  api.ListIntakeFormsResponse:
+    properties:
+      addiction_issues:
+        type: boolean
+      address:
+        type: string
+      attachement_ids:
+        items:
+          type: string
+        type: array
+      bsn:
+        type: string
+      city:
+        type: string
+      client_signature:
+        type: boolean
+      current_school:
+        type: string
+      date_of_birth:
+        type: string
+      diagnoses:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      guardian_details:
+        items:
+          $ref: '#/definitions/api.GuardionInfo'
+        type: array
+      guardian_signature:
+        type: boolean
+      guidance_goals:
+        type: string
+      has_valid_indication:
+        type: boolean
+      id:
+        type: integer
+      id_number:
+        type: string
+      id_type:
+        type: string
+      indication_end_date:
+        type: string
+      indication_start_date:
+        type: string
+      judicial_involvement:
+        type: boolean
+      last_name:
+        type: string
+      law_type:
+        type: string
+      living_situation:
+        type: string
+      main_provider_contact:
+        type: string
+      main_provider_name:
+        type: string
+      medication_details:
+        type: string
+      mentor_email:
+        type: string
+      mentor_name:
+        type: string
+      mentor_phone:
+        type: string
+      nationality:
+        type: string
+      other_law_specification:
+        type: string
+      other_living_situation:
+        type: string
+      other_risks:
+        type: string
+      parental_authority:
+        type: boolean
+      phone_number:
+        type: string
+      postal_code:
+        type: string
+      previous_care:
+        type: string
+      referrer_email:
+        type: string
+      referrer_function:
+        type: string
+      referrer_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone:
+        type: string
+      referrer_signature:
+        type: boolean
+      registration_reason:
+        type: string
+      registration_type:
+        type: string
+      risk_aggression:
+        type: boolean
+      risk_drug_dealing:
+        type: boolean
+      risk_running_away:
+        type: boolean
+      risk_self_harm:
+        type: boolean
+      risk_suicidality:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+      sharing_permission:
+        type: boolean
+      signature_date:
+        type: string
+      signed_by:
+        type: string
+      time_since_submission:
+        type: string
+      truth_declaration:
+        type: boolean
+      uses_medication:
         type: boolean
     type: object
   api.ListLocationsResponse:
@@ -3294,6 +3544,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetIntakeFormResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetIntakeFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetLocationResponse:
     properties:
       data:
@@ -3748,6 +4007,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListIncidentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListIntakeFormsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListIntakeFormsResponse'
       message:
         type: string
       success:
@@ -4868,6 +5136,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListIncidentsResponse'
+        type: array
+    type: object
+  pagination.Response-api_ListIntakeFormsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListIntakeFormsResponse'
         type: array
     type: object
   pagination.Response-api_ListSendersResponse:
@@ -8097,6 +8380,41 @@ paths:
       tags:
       - incidents
   /intake_form:
+    get:
+      consumes:
+      - application/json
+      description: List intake forms
+      parameters:
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListIntakeFormsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List intake forms
+      tags:
+      - intake_form
     post:
       consumes:
       - application/json
@@ -8126,6 +8444,35 @@ paths:
       security:
       - '-': []
       summary: Create an intake form
+      tags:
+      - intake_form
+  /intake_form/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get an intake form
+      parameters:
+      - description: Intake form ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetIntakeFormResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get an intake form
       tags:
       - intake_form
   /intake_form/{id}/move_to_waiting_list:

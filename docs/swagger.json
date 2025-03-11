@@ -4762,6 +4762,59 @@
             }
         },
         "/intake_form": {
+            "get": {
+                "description": "List intake forms",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "List intake forms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListIntakeFormsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -4860,6 +4913,50 @@
                     },
                     "413": {
                         "description": "Request entity too large",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_form/{id}": {
+            "get": {
+                "description": "Get an intake form",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intake_form"
+                ],
+                "summary": "Get an intake form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake form ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetIntakeFormResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -8752,6 +8849,194 @@
                 }
             }
         },
+        "api.GetIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "addiction_issues": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "attachement_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "bsn": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "client_signature": {
+                    "type": "boolean"
+                },
+                "current_school": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "diagnoses": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "guardian_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GuardionInfo"
+                    }
+                },
+                "guardian_signature": {
+                    "type": "boolean"
+                },
+                "guidance_goals": {
+                    "type": "string"
+                },
+                "has_valid_indication": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
+                    "type": "string"
+                },
+                "indication_end_date": {
+                    "type": "string"
+                },
+                "indication_start_date": {
+                    "type": "string"
+                },
+                "judicial_involvement": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "law_type": {
+                    "type": "string"
+                },
+                "living_situation": {
+                    "type": "string"
+                },
+                "main_provider_contact": {
+                    "type": "string"
+                },
+                "main_provider_name": {
+                    "type": "string"
+                },
+                "medication_details": {
+                    "type": "string"
+                },
+                "mentor_email": {
+                    "type": "string"
+                },
+                "mentor_name": {
+                    "type": "string"
+                },
+                "mentor_phone": {
+                    "type": "string"
+                },
+                "nationality": {
+                    "type": "string"
+                },
+                "other_law_specification": {
+                    "type": "string"
+                },
+                "other_living_situation": {
+                    "type": "string"
+                },
+                "other_risks": {
+                    "type": "string"
+                },
+                "parental_authority": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "previous_care": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_function": {
+                    "type": "string"
+                },
+                "referrer_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "registration_reason": {
+                    "type": "string"
+                },
+                "registration_type": {
+                    "type": "string"
+                },
+                "risk_aggression": {
+                    "type": "boolean"
+                },
+                "risk_drug_dealing": {
+                    "type": "boolean"
+                },
+                "risk_running_away": {
+                    "type": "boolean"
+                },
+                "risk_self_harm": {
+                    "type": "boolean"
+                },
+                "risk_suicidality": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "sharing_permission": {
+                    "type": "boolean"
+                },
+                "signature_date": {
+                    "type": "string"
+                },
+                "signed_by": {
+                    "type": "string"
+                },
+                "time_since_submission": {
+                    "type": "string"
+                },
+                "truth_declaration": {
+                    "type": "boolean"
+                },
+                "uses_medication": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.GetLocationResponse": {
             "type": "object",
             "properties": {
@@ -9672,6 +9957,194 @@
                     "type": "boolean"
                 },
                 "violence": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.ListIntakeFormsResponse": {
+            "type": "object",
+            "properties": {
+                "addiction_issues": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "attachement_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "bsn": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "client_signature": {
+                    "type": "boolean"
+                },
+                "current_school": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "diagnoses": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "guardian_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GuardionInfo"
+                    }
+                },
+                "guardian_signature": {
+                    "type": "boolean"
+                },
+                "guidance_goals": {
+                    "type": "string"
+                },
+                "has_valid_indication": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
+                    "type": "string"
+                },
+                "indication_end_date": {
+                    "type": "string"
+                },
+                "indication_start_date": {
+                    "type": "string"
+                },
+                "judicial_involvement": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "law_type": {
+                    "type": "string"
+                },
+                "living_situation": {
+                    "type": "string"
+                },
+                "main_provider_contact": {
+                    "type": "string"
+                },
+                "main_provider_name": {
+                    "type": "string"
+                },
+                "medication_details": {
+                    "type": "string"
+                },
+                "mentor_email": {
+                    "type": "string"
+                },
+                "mentor_name": {
+                    "type": "string"
+                },
+                "mentor_phone": {
+                    "type": "string"
+                },
+                "nationality": {
+                    "type": "string"
+                },
+                "other_law_specification": {
+                    "type": "string"
+                },
+                "other_living_situation": {
+                    "type": "string"
+                },
+                "other_risks": {
+                    "type": "string"
+                },
+                "parental_authority": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "previous_care": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_function": {
+                    "type": "string"
+                },
+                "referrer_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "registration_reason": {
+                    "type": "string"
+                },
+                "registration_type": {
+                    "type": "string"
+                },
+                "risk_aggression": {
+                    "type": "boolean"
+                },
+                "risk_drug_dealing": {
+                    "type": "boolean"
+                },
+                "risk_running_away": {
+                    "type": "boolean"
+                },
+                "risk_self_harm": {
+                    "type": "boolean"
+                },
+                "risk_suicidality": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "sharing_permission": {
+                    "type": "boolean"
+                },
+                "signature_date": {
+                    "type": "string"
+                },
+                "signed_by": {
+                    "type": "string"
+                },
+                "time_since_submission": {
+                    "type": "string"
+                },
+                "truth_declaration": {
+                    "type": "boolean"
+                },
+                "uses_medication": {
                     "type": "boolean"
                 }
             }
@@ -10623,6 +11096,20 @@
                 }
             }
         },
+        "api.Response-api_GetIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetIntakeFormResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_GetLocationResponse": {
             "type": "object",
             "properties": {
@@ -11327,6 +11814,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListIncidentsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-api_ListIntakeFormsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_ListIntakeFormsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -13031,6 +13532,29 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListIncidentsResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-api_ListIntakeFormsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListIntakeFormsResponse"
                     }
                 }
             }

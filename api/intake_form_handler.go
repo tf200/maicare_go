@@ -429,11 +429,13 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, res)
 }
 
+// ListIntakeFormsRequest represents a request to list intake forms
 type ListIntakeFormsRequest struct {
 	pagination.Request
 	Search string `form:"search"`
 }
 
+// ListIntakeFormsResponse represents a response from the list intake forms handler
 type ListIntakeFormsResponse struct {
 	ID                    int64          `json:"id"`
 	FirstName             string         `json:"first_name"`
@@ -496,6 +498,18 @@ type ListIntakeFormsResponse struct {
 	TimeSinceSubmission   string         `json:"time_since_submission"`
 }
 
+// @Summary List intake forms
+// @Description List intake forms
+// @Tags intake_form
+// @Accept json
+// @Produce json
+// @Param search query string false "Search query"
+// @Param limit query integer false "Limit"
+// @Param offset query integer false "Offset"
+// @Success 200 {object} Response[pagination.Response[ListIntakeFormsResponse]]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /intake_form [get]
 func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 	var req ListIntakeFormsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
@@ -597,6 +611,7 @@ func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// GetIntakeFormResponse represents a response from the get intake form handler
 type GetIntakeFormResponse struct {
 	ID                    int64          `json:"id"`
 	FirstName             string         `json:"first_name"`
@@ -659,6 +674,16 @@ type GetIntakeFormResponse struct {
 	TimeSinceSubmission   string         `json:"time_since_submission"`
 }
 
+// @Summary Get an intake form
+// @Description Get an intake form
+// @Tags intake_form
+// @Accept json
+// @Produce json
+// @Param id path string true "Intake form ID"
+// @Success 200 {object} Response[GetIntakeFormResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /intake_form/{id} [get]
 func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	formID, err := strconv.ParseInt(id, 10, 64)
