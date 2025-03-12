@@ -4790,14 +4790,26 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Limit",
-                        "name": "limit",
+                        "description": "Page",
+                        "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Offset",
-                        "name": "offset",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by (options: created_at, urgency_score)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (options: asc, desc)",
+                        "name": "sort_order",
                         "in": "query"
                     }
                 ],
@@ -9039,6 +9051,9 @@ const docTemplate = `{
                 "truth_declaration": {
                     "type": "boolean"
                 },
+                "urgency_score": {
+                    "type": "integer"
+                },
                 "uses_medication": {
                     "type": "boolean"
                 }
@@ -10150,6 +10165,9 @@ const docTemplate = `{
                 },
                 "truth_declaration": {
                     "type": "boolean"
+                },
+                "urgency_score": {
+                    "type": "integer"
                 },
                 "uses_medication": {
                     "type": "boolean"

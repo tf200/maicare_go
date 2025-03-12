@@ -36,7 +36,7 @@ func createRandomClientDetails(t *testing.T) ClientDetail {
 		Filenumber:            "testfile",
 		ProfilePicture:        util.StringPtr(util.GetRandomImageURL()),
 		Infix:                 util.StringPtr("van"),
-		SenderID:              sender.ID,
+		SenderID:              &sender.ID,
 		LocationID:            util.IntPtr(location.ID),
 		IdentityAttachmentIds: []byte("[]"),
 		DepartureReason:       util.StringPtr("test Reason"),
@@ -71,6 +71,8 @@ func TestCreateClientDetails(t *testing.T) {
 }
 
 func TestCreateClientDetailsTx(t *testing.T) {
+	sender := createRandomSenders(t)
+	location := CreateRandomLocation(t)
 	store := NewStore(testDB)
 	attachement := createRandomAttachmentFile(t)
 
@@ -95,8 +97,8 @@ func TestCreateClientDetailsTx(t *testing.T) {
 		Filenumber:            "testfile",
 		ProfilePicture:        util.StringPtr("test-profile.jpg"),
 		Infix:                 util.StringPtr("van"),
-		SenderID:              1,
-		LocationID:            util.IntPtr(1),
+		SenderID:              &sender.ID,
+		LocationID:            &location.ID,
 		IdentityAttachmentIds: identityAttachmentIds,
 		DepartureReason:       util.StringPtr("test Reason"),
 		DepartureReport:       util.StringPtr("test report"),

@@ -2195,6 +2195,8 @@ definitions:
         type: string
       truth_declaration:
         type: boolean
+      urgency_score:
+        type: integer
       uses_medication:
         type: boolean
     type: object
@@ -2928,6 +2930,8 @@ definitions:
         type: string
       truth_declaration:
         type: boolean
+      urgency_score:
+        type: integer
       uses_medication:
         type: boolean
     type: object
@@ -8389,14 +8393,22 @@ paths:
         in: query
         name: search
         type: string
-      - description: Limit
+      - description: Page
         in: query
-        name: limit
+        name: page
         type: integer
-      - description: Offset
+      - description: Page size
         in: query
-        name: offset
+        name: page_size
         type: integer
+      - description: 'Sort by (options: created_at, urgency_score)'
+        in: query
+        name: sort_by
+        type: string
+      - description: 'Sort order (options: asc, desc)'
+        in: query
+        name: sort_order
+        type: string
       produces:
       - application/json
       responses:

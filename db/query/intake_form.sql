@@ -76,7 +76,22 @@ WHERE (
     LOWER(first_name) LIKE LOWER(CONCAT('%', COALESCE(@search::text, ''), '%')) OR
     LOWER(last_name) LIKE LOWER(CONCAT('%', COALESCE(@search::text, ''), '%'))
 )
-ORDER BY id DESC
+ORDER BY
+    CASE 
+        WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'asc' THEN created_at
+    END ASC,
+    CASE 
+        WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'desc' THEN created_at
+    END DESC,
+    CASE 
+        WHEN @sort_by::text = 'urgency_score' AND @sort_order::text = 'asc' THEN urgency_score
+    END ASC,
+    CASE 
+        WHEN @sort_by::text = 'urgency_score' AND @sort_order::text = 'desc' THEN urgency_score
+    END DESC,
+    CASE
+        WHEN @sort_by::text IS NULL OR @sort_by::text = '' THEN id
+    END DESC
 LIMIT $1 OFFSET $2;
 
 

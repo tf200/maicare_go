@@ -432,14 +432,31 @@ WHERE (
     LOWER(first_name) LIKE LOWER(CONCAT('%', COALESCE($3::text, ''), '%')) OR
     LOWER(last_name) LIKE LOWER(CONCAT('%', COALESCE($3::text, ''), '%'))
 )
-ORDER BY id DESC
+ORDER BY
+    CASE 
+        WHEN $4::text = 'created_at' AND $5::text = 'asc' THEN created_at
+    END ASC,
+    CASE 
+        WHEN $4::text = 'created_at' AND $5::text = 'desc' THEN created_at
+    END DESC,
+    CASE 
+        WHEN $4::text = 'urgency_score' AND $5::text = 'asc' THEN urgency_score
+    END ASC,
+    CASE 
+        WHEN $4::text = 'urgency_score' AND $5::text = 'desc' THEN urgency_score
+    END DESC,
+    CASE
+        WHEN $4::text IS NULL OR $4::text = '' THEN id
+    END DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListIntakeFormsParams struct {
-	Limit  int32  `json:"limit"`
-	Offset int32  `json:"offset"`
-	Search string `json:"search"`
+	Limit     int32  `json:"limit"`
+	Offset    int32  `json:"offset"`
+	Search    string `json:"search"`
+	SortBy    string `json:"sort_by"`
+	SortOrder string `json:"sort_order"`
 }
 
 type ListIntakeFormsRow struct {
@@ -509,7 +526,13 @@ type ListIntakeFormsRow struct {
 }
 
 func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error) {
-	rows, err := q.db.Query(ctx, listIntakeForms, arg.Limit, arg.Offset, arg.Search)
+	rows, err := q.db.Query(ctx, listIntakeForms,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+		arg.SortBy,
+		arg.SortOrder,
+	)
 	if err != nil {
 		return nil, err
 	}

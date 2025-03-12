@@ -120,20 +120,124 @@ func TestCreateIntakeForm(t *testing.T) {
 }
 
 func TestListIntakeForms(t *testing.T) {
+	// Create 10 random intake forms with random urgency scores
 	for i := 0; i < 10; i++ {
-		createRandomIntakeForm(t)
+		form := createRandomIntakeForm(t)
+		testQueries.AddUrgencyScore(context.Background(), AddUrgencyScoreParams{
+			ID:           form.ID,
+			UrgencyScore: util.Int32Ptr(int32(util.RandomInt(1, 10))),
+		})
 	}
 
-	arg := ListIntakeFormsParams{
+	testCases := []struct {
+		name      string
+		sortBy    string
+		sortOrder string
+		checkSort func([]ListIntakeFormsRow) bool
+	}{
+		{
+			name:      "Default sort",
+			sortBy:    "",
+			sortOrder: "",
+			// Default sort is by ID DESC
+			checkSort: func(forms []ListIntakeFormsRow) bool {
+				for i := 0; i < len(forms)-1; i++ {
+					if forms[i].ID < forms[i+1].ID {
+						return false
+					}
+				}
+				return true
+			},
+		},
+		{
+			name:      "Sort by urgency_score desc",
+			sortBy:    "urgency_score",
+			sortOrder: "desc",
+			checkSort: func(forms []ListIntakeFormsRow) bool {
+				for i := 0; i < len(forms)-1; i++ {
+					if *forms[i].UrgencyScore < *forms[i+1].UrgencyScore {
+						return false
+					}
+				}
+				return true
+			},
+		},
+		{
+			name:      "Sort by urgency_score asc",
+			sortBy:    "urgency_score",
+			sortOrder: "asc",
+			checkSort: func(forms []ListIntakeFormsRow) bool {
+				for i := 0; i < len(forms)-1; i++ {
+					if *forms[i].UrgencyScore > *forms[i+1].UrgencyScore {
+						return false
+					}
+				}
+				return true
+			},
+		},
+		{
+			name:      "Sort by created_at desc",
+			sortBy:    "created_at",
+			sortOrder: "desc",
+			checkSort: func(forms []ListIntakeFormsRow) bool {
+				for i := 0; i < len(forms)-1; i++ {
+					if forms[i].CreatedAt.Time.Before(forms[i+1].CreatedAt.Time) {
+						return false
+					}
+				}
+				return true
+			},
+		},
+		{
+			name:      "Sort by created_at asc",
+			sortBy:    "created_at",
+			sortOrder: "asc",
+			checkSort: func(forms []ListIntakeFormsRow) bool {
+				for i := 0; i < len(forms)-1; i++ {
+					if forms[i].CreatedAt.Time.After(forms[i+1].CreatedAt.Time) {
+						return false
+					}
+				}
+				return true
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			arg := ListIntakeFormsParams{
+				Limit:     5,
+				Offset:    0,
+				SortBy:    tc.sortBy,
+				SortOrder: tc.sortOrder,
+			}
+
+			forms, err := testQueries.ListIntakeForms(context.Background(), arg)
+			require.NoError(t, err)
+			require.NotEmpty(t, forms)
+
+			// Check sorting is correct
+			if len(forms) > 1 {
+				require.True(t, tc.checkSort(forms), "Sort order is incorrect for %s", tc.name)
+			}
+
+			// Make sure we're getting results with correct total count
+			if len(forms) > 0 {
+				require.True(t, forms[0].TotalCount >= int64(len(forms)))
+			}
+		})
+	}
+
+	// Original pagination test
+	paginationArg := ListIntakeFormsParams{
 		Limit:  5,
 		Offset: 5,
 	}
 
-	forms, err := testQueries.ListIntakeForms(context.Background(), arg)
+	paginatedForms, err := testQueries.ListIntakeForms(context.Background(), paginationArg)
 	require.NoError(t, err)
-	require.Len(t, forms, 5)
+	require.Len(t, paginatedForms, 5)
 }
-
 func TestGetIntakeForm(t *testing.T) {
 	form1 := createRandomIntakeForm(t)
 	form2, err := testQueries.GetIntakeForm(context.Background(), form1.ID)
@@ -158,6 +262,3 @@ func TestAddUrgencyScore(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, arg.UrgencyScore, form2.UrgencyScore)
 }
-
-
-

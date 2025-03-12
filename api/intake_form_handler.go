@@ -432,7 +432,9 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 // ListIntakeFormsRequest represents a request to list intake forms
 type ListIntakeFormsRequest struct {
 	pagination.Request
-	Search string `form:"search"`
+	Search    string `form:"search"`
+	SortBy    string `form:"sort_by" binding:"omitempty,oneof=created_at urgency_score"`
+	SortOrder string `form:"sort_order" binding:"omitempty,oneof=asc desc"`
 }
 
 // ListIntakeFormsResponse represents a response from the list intake forms handler
@@ -505,8 +507,10 @@ type ListIntakeFormsResponse struct {
 // @Accept json
 // @Produce json
 // @Param search query string false "Search query"
-// @Param limit query integer false "Limit"
-// @Param offset query integer false "Offset"
+// @Param page query integer false "Page"
+// @Param page_size query integer false "Page size"
+// @Param sort_by query string false "Sort by (options: created_at, urgency_score)"
+// @Param sort_order query string false "Sort order (options: asc, desc)"
 // @Success 200 {object} Response[pagination.Response[ListIntakeFormsResponse]]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -521,9 +525,11 @@ func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 	param := req.GetParams()
 
 	forms, err := server.store.ListIntakeForms(ctx, db.ListIntakeFormsParams{
-		Search: req.Search,
-		Limit:  param.Limit,
-		Offset: param.Offset,
+		Search:    req.Search,
+		Limit:     param.Limit,
+		Offset:    param.Offset,
+		SortBy:    req.SortBy,
+		SortOrder: req.SortOrder,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
