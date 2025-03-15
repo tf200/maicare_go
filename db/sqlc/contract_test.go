@@ -1,0 +1,118 @@
+package db
+
+import (
+	"context"
+	"maicare_go/util"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stretchr/testify/require"
+)
+
+func createRandomContractType(t *testing.T) ContractType {
+	// Create a random contract type
+
+	contractType, err := testQueries.CreateContractType(context.Background(), "Test Contract Type")
+	require.NoError(t, err)
+	require.NotEmpty(t, contractType)
+	require.NotEmpty(t, contractType.ID)
+	require.Equal(t, "Test Contract Type", contractType.Name)
+	return contractType
+}
+
+func TestCreateContractType(t *testing.T) {
+	createRandomContractType(t)
+
+}
+
+func TestListContractType(t *testing.T) {
+	// Create 10 random contract types
+	for i := 0; i < 10; i++ {
+		createRandomContractType(t)
+	}
+
+	contractTypes, err := testQueries.ListContractTypes(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, contractTypes)
+	require.Len(t, contractTypes, 10)
+}
+
+func createRandomContract(t *testing.T) Contract {
+	priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
+	hoursType := []string{"weekly", "all_period"}
+	careType := []string{"ambulante", "accommodation"}
+	financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
+	financingOption := []string{"ZIN", "PGB"}
+
+	client := createRandomClientDetails(t)
+	contractType := createRandomContractType(t)
+	attachment := createRandomAttachmentFile(t)
+
+	arg := CreateContractParams{
+		TypeID:          &contractType.ID,
+		StartDate:       pgtype.Timestamptz{Time: time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC), Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC), Valid: true},
+		ReminderPeriod:  10,
+		Tax:             util.Int32Ptr(15),
+		Price:           5.58,
+		PriceFrequency:  util.RandomEnum(priceFrequency),
+		Hours:           util.Int32Ptr(100),
+		HoursType:       util.RandomEnum(hoursType),
+		CareName:        "Test Care",
+		CareType:        util.RandomEnum(careType),
+		ClientID:        client.ID,
+		SenderID:        client.SenderID,
+		FinancingAct:    util.RandomEnum(financingAct),
+		FinancingOption: util.RandomEnum(financingOption),
+		AttachmentIds:   []uuid.UUID{attachment.Uuid},
+	}
+
+	contract, err := testQueries.CreateContract(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, contract)
+	require.Equal(t, arg.TypeID, contract.TypeID)
+	require.Equal(t, arg.ReminderPeriod, contract.ReminderPeriod)
+	require.Equal(t, arg.Tax, contract.Tax)
+	require.Equal(t, arg.Price, contract.Price)
+	require.Equal(t, arg.PriceFrequency, contract.PriceFrequency)
+	require.Equal(t, arg.Hours, contract.Hours)
+	require.Equal(t, arg.HoursType, contract.HoursType)
+	require.Equal(t, arg.CareName, contract.CareName)
+	require.Equal(t, arg.CareType, contract.CareType)
+	require.Equal(t, arg.ClientID, contract.ClientID)
+	require.Equal(t, arg.SenderID, contract.SenderID)
+	require.Equal(t, arg.FinancingAct, contract.FinancingAct)
+	require.Equal(t, arg.FinancingOption, contract.FinancingOption)
+	require.NotZero(t, contract.ID)
+	return contract
+}
+
+func TestCreateContract(t *testing.T) {
+	createRandomContract(t)
+}
+
+func TestGetClientContract(t *testing.T) {
+	contract := createRandomContract(t)
+	contract2, err := testQueries.GetClientContract(context.Background(), contract.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, contract2)
+	require.Equal(t, contract.ID, contract2.ID)
+	require.Equal(t, contract.TypeID, contract2.TypeID)
+	require.Equal(t, contract.ReminderPeriod, contract2.ReminderPeriod)
+	require.Equal(t, contract.Tax, contract2.Tax)
+	require.Equal(t, contract.Price, contract2.Price)
+	require.Equal(t, contract.PriceFrequency, contract2.PriceFrequency)
+	require.Equal(t, contract.Hours, contract2.Hours)
+	require.Equal(t, contract.HoursType, contract2.HoursType)
+	require.Equal(t, contract.CareName, contract2.CareName)
+	require.Equal(t, contract.CareType, contract2.CareType)
+	require.Equal(t, contract.ClientID, contract2.ClientID)
+	require.Equal(t, contract.SenderID, contract2.SenderID)
+	require.Equal(t, contract.FinancingAct, contract2.FinancingAct)
+	require.Equal(t, contract.FinancingOption, contract2.FinancingOption)
+	require.Equal(t, contract.AttachmentIds, contract2.AttachmentIds)
+	require.Equal(t, contract.DepartureReason, contract2.DepartureReason)
+	require.Equal(t, contract.DepartureReport, contract2.DepartureReport)
+}

@@ -342,7 +342,7 @@ type Contract struct {
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
 	Tax             *int32             `json:"tax"`
-	Price           pgtype.Numeric     `json:"price"`
+	Price           float64            `json:"price"`
 	PriceFrequency  string             `json:"price_frequency"`
 	Hours           *int32             `json:"hours"`
 	HoursType       string             `json:"hours_type"`
@@ -350,7 +350,7 @@ type Contract struct {
 	CareType        string             `json:"care_type"`
 	ClientID        int64              `json:"client_id"`
 	SenderID        *int64             `json:"sender_id"`
-	AttachmentIds   []byte             `json:"attachment_ids"`
+	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct    string             `json:"financing_act"`
 	FinancingOption string             `json:"financing_option"`
 	DepartureReason *string            `json:"departure_reason"`
@@ -483,7 +483,7 @@ type EmployeeProfile struct {
 
 type Expense struct {
 	ID            int64              `json:"id"`
-	Amount        pgtype.Numeric     `json:"amount"`
+	Amount        float64            `json:"amount"`
 	Tax           float64            `json:"tax"`
 	Desc          *string            `json:"desc"`
 	AttachmentIds []byte             `json:"attachment_ids"`
@@ -675,7 +675,7 @@ type Invoice struct {
 	DueDate         pgtype.Date        `json:"due_date"`
 	Status          string             `json:"status"`
 	InvoiceDetails  []byte             `json:"invoice_details"`
-	TotalAmount     pgtype.Numeric     `json:"total_amount"`
+	TotalAmount     float64            `json:"total_amount"`
 	PdfAttachmentID pgtype.UUID        `json:"pdf_attachment_id"`
 	ExtraContent    *string            `json:"extra_content"`
 	ClientID        int64              `json:"client_id"`
@@ -687,10 +687,10 @@ type InvoiceContract struct {
 	ID          int64              `json:"id"`
 	InvoiceID   *int64             `json:"invoice_id"`
 	ContractID  *int64             `json:"contract_id"`
-	PreVatTotal pgtype.Numeric     `json:"pre_vat_total"`
-	VatRate     pgtype.Numeric     `json:"vat_rate"`
-	VatAmount   pgtype.Numeric     `json:"vat_amount"`
-	TotalAmount pgtype.Numeric     `json:"total_amount"`
+	PreVatTotal float64            `json:"pre_vat_total"`
+	VatRate     float64            `json:"vat_rate"`
+	VatAmount   float64            `json:"vat_amount"`
+	TotalAmount float64            `json:"total_amount"`
 	Updated     pgtype.Timestamptz `json:"updated"`
 	Created     pgtype.Timestamptz `json:"created"`
 }
@@ -698,7 +698,7 @@ type InvoiceContract struct {
 type InvoiceHistory struct {
 	ID            int64              `json:"id"`
 	PaymentMethod *string            `json:"payment_method"`
-	Amount        pgtype.Numeric     `json:"amount"`
+	Amount        float64            `json:"amount"`
 	Updated       pgtype.Timestamptz `json:"updated"`
 	Created       pgtype.Timestamptz `json:"created"`
 	InvoiceID     int64              `json:"invoice_id"`

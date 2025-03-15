@@ -69,3 +69,8 @@ func GenerateUsername(firstName, lastName string) string {
 func RandomTIme() time.Time {
 	return time.Now().Add(time.Duration(rand.Int63()))
 }
+
+// RandomEnum returns a random string from the given slice of strings
+func RandomEnum(values []string) string {
+	return values[rand.Intn(len(values))]
+}

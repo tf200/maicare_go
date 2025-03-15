@@ -23,10 +23,6 @@ import (
 
 func createRandomIntakeForm(t *testing.T) db.IntakeForm {
 	// Helper function to get random enum value
-	getRandomEnum := func(values []string) string {
-		r, _ := faker.RandomInt(0, len(values)-1)
-		return values[r[0]]
-	}
 
 	idTypes := []string{"passport", "id_card", "residence_permit"}
 	signedByOptions := []string{"Referrer", "Parent/Guardian", "Client"}
@@ -49,7 +45,7 @@ func createRandomIntakeForm(t *testing.T) db.IntakeForm {
 		PhoneNumber: faker.Phonenumber(),
 		Gender:      faker.Gender(),
 		Email:       faker.Email(),
-		IDType:      getRandomEnum(idTypes),
+		IDType:      util.RandomEnum(idTypes),
 		IDNumber:    faker.CCNumber(),
 
 		ReferrerName:         util.StringPtr(faker.Name()),
@@ -57,10 +53,10 @@ func createRandomIntakeForm(t *testing.T) db.IntakeForm {
 		ReferrerFunction:     util.StringPtr(faker.NAME),
 		ReferrerPhone:        util.StringPtr(faker.Phonenumber()),
 		ReferrerEmail:        util.StringPtr(faker.Email()),
-		SignedBy:             util.StringPtr(getRandomEnum(signedByOptions)),
+		SignedBy:             util.StringPtr(util.RandomEnum(signedByOptions)),
 
 		HasValidIndication:  true,
-		LawType:             util.StringPtr(getRandomEnum(lawTypes)),
+		LawType:             util.StringPtr(util.RandomEnum(lawTypes)),
 		MainProviderName:    util.StringPtr(faker.Name()),
 		MainProviderContact: util.StringPtr(faker.Phonenumber()),
 		IndicationStartDate: pgtype.Date{
@@ -73,9 +69,9 @@ func createRandomIntakeForm(t *testing.T) db.IntakeForm {
 		},
 		RegistrationReason: util.StringPtr(faker.Sentence()),
 		GuidanceGoals:      util.StringPtr(faker.Sentence()),
-		RegistrationType:   util.StringPtr(getRandomEnum(registrationTypes)),
+		RegistrationType:   util.StringPtr(util.RandomEnum(registrationTypes)),
 
-		LivingSituation:   util.StringPtr(getRandomEnum(livingSituations)),
+		LivingSituation:   util.StringPtr(util.RandomEnum(livingSituations)),
 		ParentalAuthority: false,
 		CurrentSchool:     util.StringPtr(faker.Word()),
 		MentorName:        util.StringPtr(faker.Name()),

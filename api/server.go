@@ -111,6 +111,7 @@ func (server *Server) setupRoutes() {
 	server.setupAppointmentCardRoutes(baseRouter)
 	server.setupMaturityMatrixRoutes(baseRouter)
 	server.setupIntakeFormRoutes(baseRouter)
+	server.setupContractRoutes(baseRouter)
 
 	// Add more route setups as needed
 

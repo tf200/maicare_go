@@ -1065,6 +1065,46 @@
                 }
             }
         },
+        "/clients/{id}/contracts": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Create a new contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create Contract Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateContractResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/diagnosis": {
             "get": {
                 "consumes": [
@@ -3466,6 +3506,62 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/contract_types": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "List contract types",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.ListContractTypesResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Create a new contract type",
+                "parameters": [
+                    {
+                        "description": "Create Contract Type Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateContractTypeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateContractTypeResponse"
                         }
                     }
                 }
@@ -6792,6 +6888,152 @@
                 }
             }
         },
+        "api.CreateContractRequest": {
+            "type": "object",
+            "properties": {
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "integer"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "type_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.CreateContractResponse": {
+            "type": "object",
+            "properties": {
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "integer"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
+        "api.CreateContractTypeRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateContractTypeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateEmployeeProfileRequest": {
             "type": "object",
             "required": [
@@ -9653,6 +9895,17 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ListContractTypesResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }
