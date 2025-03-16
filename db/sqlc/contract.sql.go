@@ -235,41 +235,114 @@ func (q *Queries) ListContractTypes(ctx context.Context) ([]ContractType, error)
 }
 
 const listContracts = `-- name: ListContracts :many
-SELECT id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created FROM contract
+WITH filtered_contracts AS (
+    SELECT
+        c.id,
+        c.status,
+        c.start_date,
+        c.end_date,
+        c.price,
+        c.price_frequency,
+        c.care_name,
+        c.care_type,
+        c.financing_act,
+        c.financing_option,
+        c.created,
+        s.name AS sender_name,
+        cd.first_name AS client_first_name,
+        cd.last_name AS client_last_name
+    FROM
+        contract c
+    LEFT JOIN
+        sender s ON c.sender_id = s.id
+    JOIN
+        client_details cd ON c.client_id = cd.id
+    WHERE
+        ($3::varchar IS NULL OR 
+            s.name ILIKE '%' || $3 || '%' OR
+            cd.first_name ILIKE '%' || $3 || '%' OR
+            cd.last_name ILIKE '%' || $3 || '%')
+    AND
+        ($4::varchar[] IS NULL OR c.status = ANY($4))
+    AND
+        ($5::varchar[] IS NULL OR c.care_type = ANY($5))
+    AND
+        ($6::varchar[] IS NULL OR c.financing_act = ANY($6))
+    AND
+        ($7::varchar[] IS NULL OR c.financing_option = ANY($7))
+)
+SELECT
+    (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
+    id, status, start_date, end_date, price, price_frequency, care_name, care_type, financing_act, financing_option, created, sender_name, client_first_name, client_last_name
+FROM
+    filtered_contracts
+ORDER BY
+    created DESC
+LIMIT $1
+OFFSET $2
 `
 
-func (q *Queries) ListContracts(ctx context.Context) ([]Contract, error) {
-	rows, err := q.db.Query(ctx, listContracts)
+type ListContractsParams struct {
+	Limit           int32    `json:"limit"`
+	Offset          int32    `json:"offset"`
+	Search          *string  `json:"search"`
+	Status          []string `json:"status"`
+	CareType        []string `json:"care_type"`
+	FinancingAct    []string `json:"financing_act"`
+	FinancingOption []string `json:"financing_option"`
+}
+
+type ListContractsRow struct {
+	TotalCount      int64              `json:"total_count"`
+	ID              int64              `json:"id"`
+	Status          string             `json:"status"`
+	StartDate       pgtype.Timestamptz `json:"start_date"`
+	EndDate         pgtype.Timestamptz `json:"end_date"`
+	Price           float64            `json:"price"`
+	PriceFrequency  string             `json:"price_frequency"`
+	CareName        string             `json:"care_name"`
+	CareType        string             `json:"care_type"`
+	FinancingAct    string             `json:"financing_act"`
+	FinancingOption string             `json:"financing_option"`
+	Created         pgtype.Timestamptz `json:"created"`
+	SenderName      *string            `json:"sender_name"`
+	ClientFirstName string             `json:"client_first_name"`
+	ClientLastName  string             `json:"client_last_name"`
+}
+
+func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([]ListContractsRow, error) {
+	rows, err := q.db.Query(ctx, listContracts,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+		arg.Status,
+		arg.CareType,
+		arg.FinancingAct,
+		arg.FinancingOption,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Contract
+	var items []ListContractsRow
 	for rows.Next() {
-		var i Contract
+		var i ListContractsRow
 		if err := rows.Scan(
+			&i.TotalCount,
 			&i.ID,
-			&i.TypeID,
 			&i.Status,
 			&i.StartDate,
 			&i.EndDate,
-			&i.ReminderPeriod,
-			&i.Tax,
 			&i.Price,
 			&i.PriceFrequency,
-			&i.Hours,
-			&i.HoursType,
 			&i.CareName,
 			&i.CareType,
-			&i.ClientID,
-			&i.SenderID,
-			&i.AttachmentIds,
 			&i.FinancingAct,
 			&i.FinancingOption,
-			&i.DepartureReason,
-			&i.DepartureReport,
-			&i.Updated,
 			&i.Created,
+			&i.SenderName,
+			&i.ClientFirstName,
+			&i.ClientLastName,
 		); err != nil {
 			return nil, err
 		}

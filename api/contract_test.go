@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -299,6 +300,74 @@ func TestGetclientContract(t *testing.T) {
 				require.Equal(t, contract.SenderID, response.Data.SenderID)
 				require.Contains(t, FinancingAct, response.Data.FinancingAct)
 				require.Contains(t, FinancingOption, response.Data.FinancingOption)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestListContractsApi(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomContract(t)
+	}
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+
+				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5", nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[pagination.Response[ListContractsResponse]]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data.Results)
+				require.Len(t, response.Data.Results, 5)
+			},
+		},
+		{
+			name: "Filter By Status",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+
+				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5&status=draft", nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[pagination.Response[ListContractsResponse]]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.Len(t, response.Data.Results, 5)
+				require.Equal(t, "draft", response.Data.Results[0].Status)
 			},
 		},
 	}

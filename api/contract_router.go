@@ -15,4 +15,6 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	baseRouter.POST("/contract_types", server.CreateContractTypeApi)
 	baseRouter.GET("/contract_types", server.ListContractTypesApi)
 
+	baseRouter.GET("/contracts", server.ListContractsApi)
+
 }

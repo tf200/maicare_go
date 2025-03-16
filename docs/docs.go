@@ -3574,6 +3574,106 @@ const docTemplate = `{
                 }
             }
         },
+        "/contracts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "List contracts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "approved",
+                                "draft",
+                                "terminated",
+                                "stopped"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "ambulante",
+                                "accommodation"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Care type",
+                        "name": "care_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "WMO",
+                                "ZVW",
+                                "WLZ",
+                                "JW",
+                                "WPG"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Financing act",
+                        "name": "financing_act",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "ZIN",
+                                "PGB"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Financing option",
+                        "name": "financing_option",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pagination.Response-api_ListContractsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "get": {
                 "description": "Get a paginated list of employee profiles with optional filters",
@@ -9917,6 +10017,53 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListContractsResponse": {
+            "type": "object",
+            "properties": {
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "end_date": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListEmployeeCertificationResponse": {
             "type": "object",
             "properties": {
@@ -13764,6 +13911,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListClientsApiResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-api_ListContractsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListContractsResponse"
                     }
                 }
             }

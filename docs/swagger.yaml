@@ -2700,6 +2700,37 @@ definitions:
       name:
         type: string
     type: object
+  api.ListContractsResponse:
+    properties:
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_first_name:
+        type: string
+      client_last_name:
+        type: string
+      created:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      end_date:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_frequency:
+        type: string
+      sender_name:
+        type: string
+      start_date:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      status:
+        type: string
+    type: object
   api.ListEmployeeCertificationResponse:
     properties:
       date_issued:
@@ -5215,6 +5246,21 @@ definitions:
           $ref: '#/definitions/api.ListClientsApiResponse'
         type: array
     type: object
+  pagination.Response-api_ListContractsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListContractsResponse'
+        type: array
+    type: object
   pagination.Response-api_ListEmployeeResponse:
     properties:
       count:
@@ -7689,6 +7735,76 @@ paths:
           schema:
             $ref: '#/definitions/api.CreateContractTypeResponse'
       summary: Create a new contract type
+      tags:
+      - contracts
+  /contracts:
+    get:
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      - collectionFormat: csv
+        description: Status
+        in: query
+        items:
+          enum:
+          - approved
+          - draft
+          - terminated
+          - stopped
+          type: string
+        name: status
+        type: array
+      - collectionFormat: csv
+        description: Care type
+        in: query
+        items:
+          enum:
+          - ambulante
+          - accommodation
+          type: string
+        name: care_type
+        type: array
+      - collectionFormat: csv
+        description: Financing act
+        in: query
+        items:
+          enum:
+          - WMO
+          - ZVW
+          - WLZ
+          - JW
+          - WPG
+          type: string
+        name: financing_act
+        type: array
+      - collectionFormat: csv
+        description: Financing option
+        in: query
+        items:
+          enum:
+          - ZIN
+          - PGB
+          type: string
+        name: financing_option
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Response-api_ListContractsResponse'
+      summary: List contracts
       tags:
       - contracts
   /employees:

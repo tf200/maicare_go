@@ -2,6 +2,7 @@ package api
 
 import (
 	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
 	"net/http"
 	"strconv"
 	"time"
@@ -72,6 +73,13 @@ func (s *Server) ListContractTypesApi(ctx *gin.Context) {
 	}
 
 	contractTypesRes := make([]ListContractTypesResponse, len(contractTypes))
+
+	if len(contractTypes) == 0 {
+		res := SuccessResponse(contractTypesRes, "No contract types found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
 	for i, contractType := range contractTypes {
 		contractTypesRes[i] = ListContractTypesResponse{
 			ID:   contractType.ID,
@@ -276,5 +284,103 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 		Updated:         contract.Updated,
 		Created:         contract.Created,
 	}, "Contract retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ListContractsRequest defines the request for ListContracts handler
+type ListContractsRequest struct {
+	pagination.Request
+	Search          *string  `form:"search" binding:"omitempty"`
+	Status          []string `form:"status" binding:"omitempty,dive,oneof=approved draft terminated stopped"`
+	CareType        []string `form:"care_type" binding:"omitempty,dive,oneof=ambulante accommodation"`
+	FinancingAct    []string `form:"financing_act" binding:"omitempty,dive,oneof=WMO ZVW WLZ JW WPG"`
+	FinancingOption []string `form:"financing_option" binding:"omitempty,dive,oneof=ZIN PGB"`
+}
+
+// ListContractsResponse defines the response for ListContracts handler
+type ListContractsResponse struct {
+	ID              int64              `json:"id"`
+	Status          string             `json:"status"`
+	StartDate       pgtype.Timestamptz `json:"start_date"`
+	EndDate         pgtype.Timestamptz `json:"end_date"`
+	Price           float64            `json:"price"`
+	PriceFrequency  string             `json:"price_frequency"`
+	CareName        string             `json:"care_name"`
+	CareType        string             `json:"care_type"`
+	FinancingAct    string             `json:"financing_act"`
+	FinancingOption string             `json:"financing_option"`
+	Created         pgtype.Timestamptz `json:"created"`
+	SenderName      *string            `json:"sender_name"`
+	ClientFirstName string             `json:"client_first_name"`
+	ClientLastName  string             `json:"client_last_name"`
+}
+
+// ListContractsApi returns a list of contracts
+// @Summary List contracts
+// @Tags contracts
+// @Produce json
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Param search query string false "Search query"
+// @Param status query []string false "Status" Enums(approved, draft, terminated, stopped)
+// @Param care_type query []string false "Care type" Enums(ambulante, accommodation)
+// @Param financing_act query []string false "Financing act" Enums(WMO, ZVW, WLZ, JW, WPG)
+// @Param financing_option query []string false "Financing option" Enums(ZIN, PGB)
+// @Success 200 {object} pagination.Response[ListContractsResponse]
+// @Router /contracts [get]
+func (server *Server) ListContractsApi(ctx *gin.Context) {
+	var req ListContractsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	params := req.GetParams()
+
+	contracts, err := server.store.ListContracts(ctx, db.ListContractsParams{
+		Limit:           params.Limit,
+		Offset:          params.Offset,
+		Search:          req.Search,
+		Status:          req.Status,
+		CareType:        req.CareType,
+		FinancingAct:    req.FinancingAct,
+		FinancingOption: req.FinancingOption,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(contracts) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListContractsResponse{}, 0)
+		res := SuccessResponse(pag, "No contracts found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
+	totalCount := contracts[0].TotalCount
+
+	contractsRes := make([]ListContractsResponse, len(contracts))
+	for i, contract := range contracts {
+		contractsRes[i] = ListContractsResponse{
+			ID:              contract.ID,
+			Status:          contract.Status,
+			StartDate:       contract.StartDate,
+			EndDate:         contract.EndDate,
+			Price:           contract.Price,
+			PriceFrequency:  contract.PriceFrequency,
+			CareName:        contract.CareName,
+			CareType:        contract.CareType,
+			FinancingAct:    contract.FinancingAct,
+			FinancingOption: contract.FinancingOption,
+			SenderName:      contract.SenderName,
+			ClientFirstName: contract.ClientFirstName,
+			ClientLastName:  contract.ClientLastName,
+			Created:         contract.Created,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, contractsRes, totalCount)
+	res := SuccessResponse(pag, "Contracts retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

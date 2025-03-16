@@ -37,10 +37,6 @@ INSERT INTO contract (
 RETURNING *;
 
 
--- name: ListContracts :many
-SELECT * FROM contract;
-
-
 -- name: GetClientContract :one
 SELECT * FROM contract
 WHERE client_id = $1
@@ -50,3 +46,52 @@ limit 1;
 SELECT * FROM contract
 WHERE sender_id = $1;
 
+
+
+
+-- name: ListContracts :many
+WITH filtered_contracts AS (
+    SELECT
+        c.id,
+        c.status,
+        c.start_date,
+        c.end_date,
+        c.price,
+        c.price_frequency,
+        c.care_name,
+        c.care_type,
+        c.financing_act,
+        c.financing_option,
+        c.created,
+        s.name AS sender_name,
+        cd.first_name AS client_first_name,
+        cd.last_name AS client_last_name
+    FROM
+        contract c
+    LEFT JOIN
+        sender s ON c.sender_id = s.id
+    JOIN
+        client_details cd ON c.client_id = cd.id
+    WHERE
+        (sqlc.narg(search)::varchar IS NULL OR 
+            s.name ILIKE '%' || sqlc.narg(search) || '%' OR
+            cd.first_name ILIKE '%' || sqlc.narg(search) || '%' OR
+            cd.last_name ILIKE '%' || sqlc.narg(search) || '%')
+    AND
+        (sqlc.narg(status)::varchar[] IS NULL OR c.status = ANY(sqlc.narg(status)))
+    AND
+        (sqlc.narg(care_type)::varchar[] IS NULL OR c.care_type = ANY(sqlc.narg(care_type)))
+    AND
+        (sqlc.narg(financing_act)::varchar[] IS NULL OR c.financing_act = ANY(sqlc.narg(financing_act)))
+    AND
+        (sqlc.narg(financing_option)::varchar[] IS NULL OR c.financing_option = ANY(sqlc.narg(financing_option)))
+)
+SELECT
+    (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
+    *
+FROM
+    filtered_contracts
+ORDER BY
+    created DESC
+LIMIT $1
+OFFSET $2;

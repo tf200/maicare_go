@@ -116,3 +116,20 @@ func TestGetClientContract(t *testing.T) {
 	require.Equal(t, contract.DepartureReason, contract2.DepartureReason)
 	require.Equal(t, contract.DepartureReport, contract2.DepartureReport)
 }
+
+func TestListContracts(t *testing.T) {
+	// Create 10 random contracts
+	for i := 0; i < 10; i++ {
+		createRandomContract(t)
+	}
+
+	contracts, err := testQueries.ListContracts(context.Background(), ListContractsParams{
+		Limit:  5,
+		Offset: 0,
+	})
+
+	require.NoError(t, err)
+	require.NotEmpty(t, contracts)
+	require.Len(t, contracts, 5)
+
+}
