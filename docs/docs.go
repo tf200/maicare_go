@@ -1073,6 +1073,44 @@ const docTemplate = `{
             }
         },
         "/clients/{id}/contracts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "List contracts for a client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pagination.Response-api_ListClientContractsResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -6170,7 +6208,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "urgency_score": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -6181,7 +6219,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "urgency_score": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -7858,6 +7896,14 @@ const docTemplate = `{
                 "truth_declaration": {
                     "type": "boolean"
                 },
+                "urgency_score": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                    ]
+                },
                 "uses_medication": {
                     "type": "boolean"
                 }
@@ -8042,6 +8088,9 @@ const docTemplate = `{
                 },
                 "truth_declaration": {
                     "type": "boolean"
+                },
+                "urgency_score": {
+                    "type": "string"
                 },
                 "uses_medication": {
                     "type": "boolean"
@@ -9394,7 +9443,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "urgency_score": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "uses_medication": {
                     "type": "boolean"
@@ -9685,6 +9734,80 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "severity": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ListClientContractsResponse": {
+            "type": "object",
+            "properties": {
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "integer"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "updated": {
                     "type": "string"
                 }
             }
@@ -10567,7 +10690,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "urgency_score": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "uses_medication": {
                     "type": "boolean"
@@ -13773,6 +13896,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListClientAllergiesResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-api_ListClientContractsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListClientContractsResponse"
                     }
                 }
             }
