@@ -276,7 +276,7 @@ CREATE TABLE intake_forms (
     -- status
     status VARCHAR(20) NOT NULL CHECK (status IN ('submitted', 'under review', 'approved', 'rejected')) DEFAULT 'submitted',
     -- urgency
-    urgency_score INT  NULL DEFAULT 0,
+    urgency_score varchar(20) NOT NULL CHECK (urgency_score IN ('low', 'medium', 'high')) DEFAULT 'low',
     description TEXT,
 
     attachement_ids UUID[] NULL DEFAULT '{}',
@@ -480,7 +480,7 @@ CREATE TABLE contract (
     hours_type VARCHAR(20) NOT NULL CHECK (hours_type IN ('weekly', 'all_period')) DEFAULT 'all_period',
     care_name VARCHAR(255) NOT NULL,
     care_type VARCHAR(20) NOT NULL CHECK (care_type IN ('ambulante', 'accommodation')),
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE UNIQUE, 
+    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE, 
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL,
     attachment_ids UUID[] NOT NULL DEFAULT '{}',  
     financing_act VARCHAR(50) NOT NULL CHECK (financing_act IN ('WMO', 'ZVW', 'WLZ', 'JW', 'WPG')) DEFAULT 'WMO',

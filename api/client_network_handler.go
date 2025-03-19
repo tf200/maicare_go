@@ -695,7 +695,7 @@ type GetClientRelatedEmailsResponse struct {
 // @Success 200 {object} Response[GetClientRelatedEmailsResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/related_emails [get]
-func (serve *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
+func (server *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -703,7 +703,7 @@ func (serve *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
 		return
 	}
 
-	emails, err := serve.store.GetClientRelatedEmails(ctx, clientID)
+	emails, err := server.store.GetClientRelatedEmails(ctx, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

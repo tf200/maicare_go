@@ -31,14 +31,14 @@ type CreateContractTypeResponse struct {
 // @Param request body CreateContractTypeRequest true "Create Contract Type Request"
 // @Success 200 {object} CreateContractTypeResponse
 // @Router /contract_types [post]
-func (s *Server) CreateContractTypeApi(ctx *gin.Context) {
+func (server *Server) CreateContractTypeApi(ctx *gin.Context) {
 	var req CreateContractTypeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	contractType, err := s.store.CreateContractType(ctx, req.Name)
+	contractType, err := server.store.CreateContractType(ctx, req.Name)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -65,8 +65,8 @@ type ListContractTypesResponse struct {
 // @Produce json
 // @Success 200 {array} ListContractTypesResponse
 // @Router /contract_types [get]
-func (s *Server) ListContractTypesApi(ctx *gin.Context) {
-	contractTypes, err := s.store.ListContractTypes(ctx)
+func (server *Server) ListContractTypesApi(ctx *gin.Context) {
+	contractTypes, err := server.store.ListContractTypes(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -211,7 +211,115 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 
 }
 
-// GetContractResponse defines the response for GetContract handler
+// ListClientContractsRequest defines the request for ListClientContracts handler
+type ListClientContractsRequest struct {
+	pagination.Request
+}
+
+// ListClientContractsResponse defines the response for ListClientContracts handler
+type ListClientContractsResponse struct {
+	ID              int64       `json:"id"`
+	TypeID          *int64      `json:"type_id"`
+	Status          string      `json:"status"`
+	StartDate       time.Time   `json:"start_date"`
+	EndDate         time.Time   `json:"end_date"`
+	ReminderPeriod  int32       `json:"reminder_period"`
+	Tax             *int32      `json:"tax"`
+	Price           float64     `json:"price"`
+	PriceFrequency  string      `json:"price_frequency"`
+	Hours           *int32      `json:"hours"`
+	HoursType       string      `json:"hours_type"`
+	CareName        string      `json:"care_name"`
+	CareType        string      `json:"care_type"`
+	ClientID        int64       `json:"client_id"`
+	SenderID        *int64      `json:"sender_id"`
+	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
+	FinancingAct    string      `json:"financing_act"`
+	FinancingOption string      `json:"financing_option"`
+	DepartureReason *string     `json:"departure_reason"`
+	DepartureReport *string     `json:"departure_report"`
+	Updated         time.Time   `json:"updated"`
+	Created         time.Time   `json:"created"`
+}
+
+// ListClientContractsApi returns a list of contracts for a client
+// @Summary List contracts for a client
+// @Tags contracts
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} pagination.Response[ListClientContractsResponse]
+// @Router /clients/{id}/contracts [get]
+func (server *Server) ListClientContractsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ListClientContractsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	params := req.GetParams()
+
+	contracts, err := server.store.ListClientContracts(ctx, db.ListClientContractsParams{
+		ClientID: clientID,
+		Limit:    params.Limit,
+		Offset:   params.Offset,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(contracts) == 0 {
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientContractsResponse{}, 0)
+		res := SuccessResponse(pag, "No contracts found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
+	totalCount := contracts[0].TotalCount
+
+	contractsRes := make([]ListClientContractsResponse, len(contracts))
+	for i, contract := range contracts {
+		contractsRes[i] = ListClientContractsResponse{
+			ID:              contract.ID,
+			TypeID:          contract.TypeID,
+			Status:          contract.Status,
+			StartDate:       contract.StartDate.Time,
+			EndDate:         contract.EndDate.Time,
+			ReminderPeriod:  contract.ReminderPeriod,
+			Tax:             contract.Tax,
+			Price:           contract.Price,
+			PriceFrequency:  contract.PriceFrequency,
+			Hours:           contract.Hours,
+			HoursType:       contract.HoursType,
+			CareName:        contract.CareName,
+			CareType:        contract.CareType,
+			ClientID:        contract.ClientID,
+			SenderID:        contract.SenderID,
+			AttachmentIds:   contract.AttachmentIds,
+			FinancingAct:    contract.FinancingAct,
+			FinancingOption: contract.FinancingOption,
+			DepartureReason: contract.DepartureReason,
+			DepartureReport: contract.DepartureReport,
+			Updated:         contract.Updated.Time,
+			Created:         contract.Created.Time,
+		}
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, contractsRes, totalCount)
+	res := SuccessResponse(pag, "Contracts retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetClientContractResponse defines the response for GetContract handler
 type GetClientContractResponse struct {
 	ID              int64              `json:"id"`
 	TypeID          *int64             `json:"type_id"`
@@ -244,10 +352,10 @@ type GetClientContractResponse struct {
 // @Produce json
 // @Param id path string true "Contract ID"
 // @Success 200 {object} GetContractResponse
-// @Router /clients/{id}/contracts [get]
+// @Router /clients/{id}/contracts/{contract_id} [get]
 
 func (server *Server) GetClientContractApi(ctx *gin.Context) {
-	id := ctx.Param("id")
+	id := ctx.Param("contract_id")
 	contractID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

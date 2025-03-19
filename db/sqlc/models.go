@@ -662,7 +662,7 @@ type IntakeForm struct {
 	ReferrerSignature     *bool              `json:"referrer_signature"`
 	SignatureDate         pgtype.Date        `json:"signature_date"`
 	Status                string             `json:"status"`
-	UrgencyScore          *int32             `json:"urgency_score"`
+	UrgencyScore          string             `json:"urgency_score"`
 	Description           *string            `json:"description"`
 	AttachementIds        []uuid.UUID        `json:"attachement_ids"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`

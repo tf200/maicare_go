@@ -138,9 +138,8 @@ var (
 	FinancingOption = []string{"ZIN", "PGB"}
 )
 
-func createRandomContract(t *testing.T) db.Contract {
+func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Contract {
 
-	client := createRandomClientDetails(t)
 	contractType := createRandomContractType(t)
 	attachment := createRandomAttachmentFile(t)
 
@@ -156,8 +155,8 @@ func createRandomContract(t *testing.T) db.Contract {
 		HoursType:       util.RandomEnum(HoursType),
 		CareName:        "Test Care",
 		CareType:        util.RandomEnum(CareType),
-		ClientID:        client.ID,
-		SenderID:        client.SenderID,
+		ClientID:        clientID,
+		SenderID:        senderID,
 		FinancingAct:    util.RandomEnum(FinancingAct),
 		FinancingOption: util.RandomEnum(FinancingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
@@ -261,8 +260,11 @@ func TestCreateClientContractApi(t *testing.T) {
 	}
 }
 
-func TestGetclientContract(t *testing.T) {
-	contract := createRandomContract(t)
+func TestListClientContractsApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	for i := 0; i < 10; i++ {
+		createRandomContract(t, client.ID, client.SenderID)
+	}
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -275,7 +277,53 @@ func TestGetclientContract(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/clients/%d/contracts", contract.ClientID)
+
+				url := fmt.Sprintf("/clients/%d/contracts?page=1&page_size=5", client.ID)
+				request, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[pagination.Response[ListClientContractsResponse]]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data.Results)
+				require.Len(t, response.Data.Results, 5)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestGetClientContract(t *testing.T) {
+	client := createRandomClientDetails(t)
+	contract := createRandomContract(t, client.ID, client.SenderID)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/contracts/%d", contract.ClientID, contract.ID)
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return request, nil
@@ -319,7 +367,8 @@ func TestGetclientContract(t *testing.T) {
 
 func TestListContractsApi(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomContract(t)
+		client := createRandomClientDetails(t)
+		createRandomContract(t, client.ID, client.SenderID)
 	}
 	testCases := []struct {
 		name          string

@@ -406,7 +406,7 @@ func TestAddUrgencyScoreApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				reqBody := AddUrgencyScoreRequest{
-					UrgencyScore: 5,
+					UrgencyScore: "medium",
 				}
 				data, err := json.Marshal(reqBody)
 				require.NoError(t, err)

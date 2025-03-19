@@ -39,14 +39,13 @@ func TestListContractType(t *testing.T) {
 	require.Len(t, contractTypes, 10)
 }
 
-func createRandomContract(t *testing.T) Contract {
+func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contract {
 	priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
 	hoursType := []string{"weekly", "all_period"}
 	careType := []string{"ambulante", "accommodation"}
 	financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
 	financingOption := []string{"ZIN", "PGB"}
 
-	client := createRandomClientDetails(t)
 	contractType := createRandomContractType(t)
 	attachment := createRandomAttachmentFile(t)
 
@@ -62,8 +61,8 @@ func createRandomContract(t *testing.T) Contract {
 		HoursType:       util.RandomEnum(hoursType),
 		CareName:        "Test Care",
 		CareType:        util.RandomEnum(careType),
-		ClientID:        client.ID,
-		SenderID:        client.SenderID,
+		ClientID:        clientID,
+		SenderID:        senderID,
 		FinancingAct:    util.RandomEnum(financingAct),
 		FinancingOption: util.RandomEnum(financingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
@@ -90,11 +89,14 @@ func createRandomContract(t *testing.T) Contract {
 }
 
 func TestCreateContract(t *testing.T) {
-	createRandomContract(t)
+	client := createRandomClientDetails(t)
+
+	createRandomContract(t, client.ID, client.SenderID)
 }
 
 func TestGetClientContract(t *testing.T) {
-	contract := createRandomContract(t)
+	client := createRandomClientDetails(t)
+	contract := createRandomContract(t, client.ID, client.SenderID)
 	contract2, err := testQueries.GetClientContract(context.Background(), contract.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, contract2)
@@ -117,10 +119,29 @@ func TestGetClientContract(t *testing.T) {
 	require.Equal(t, contract.DepartureReport, contract2.DepartureReport)
 }
 
+func TestListClientContracts(t *testing.T) {
+	client := createRandomClientDetails(t)
+	for i := 0; i < 10; i++ {
+		createRandomContract(t, client.ID, client.SenderID)
+	}
+
+	contracts, err := testQueries.ListClientContracts(context.Background(), ListClientContractsParams{
+		ClientID: client.ID,
+		Limit:    5,
+		Offset:   0,
+	})
+
+	require.NoError(t, err)
+	require.NotEmpty(t, contracts)
+	require.Len(t, contracts, 5)
+
+}
+
 func TestListContracts(t *testing.T) {
 	// Create 10 random contracts
 	for i := 0; i < 10; i++ {
-		createRandomContract(t)
+		client := createRandomClientDetails(t)
+		createRandomContract(t, client.ID, client.SenderID)
 	}
 
 	contracts, err := testQueries.ListContracts(context.Background(), ListContractsParams{

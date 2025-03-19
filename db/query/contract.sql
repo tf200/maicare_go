@@ -36,18 +36,29 @@ INSERT INTO contract (
 )
 RETURNING *;
 
+-- name: ListClientContracts :many
+WITH client_contracts AS (
+    SELECT * FROM contract
+    WHERE client_id = $1
+)
+SELECT
+    (SELECT COUNT(*) FROM client_contracts) AS total_count,
+    *
+FROM client_contracts
+ORDER BY created DESC
+LIMIT $2
+OFFSET $3;
+
+
 
 -- name: GetClientContract :one
 SELECT * FROM contract
-WHERE client_id = $1
+WHERE id = $1
 limit 1;
 
 -- name: GetSenderContracts :many
 SELECT * FROM contract
 WHERE sender_id = $1;
-
-
-
 
 -- name: ListContracts :many
 WITH filtered_contracts AS (

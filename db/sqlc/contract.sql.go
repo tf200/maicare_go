@@ -128,12 +128,12 @@ func (q *Queries) DeleteContractType(ctx context.Context, id int64) error {
 
 const getClientContract = `-- name: GetClientContract :one
 SELECT id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created FROM contract
-WHERE client_id = $1
+WHERE id = $1
 limit 1
 `
 
-func (q *Queries) GetClientContract(ctx context.Context, clientID int64) (Contract, error) {
-	row := q.db.QueryRow(ctx, getClientContract, clientID)
+func (q *Queries) GetClientContract(ctx context.Context, id int64) (Contract, error) {
+	row := q.db.QueryRow(ctx, getClientContract, id)
 	var i Contract
 	err := row.Scan(
 		&i.ID,
@@ -177,6 +177,96 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 	for rows.Next() {
 		var i Contract
 		if err := rows.Scan(
+			&i.ID,
+			&i.TypeID,
+			&i.Status,
+			&i.StartDate,
+			&i.EndDate,
+			&i.ReminderPeriod,
+			&i.Tax,
+			&i.Price,
+			&i.PriceFrequency,
+			&i.Hours,
+			&i.HoursType,
+			&i.CareName,
+			&i.CareType,
+			&i.ClientID,
+			&i.SenderID,
+			&i.AttachmentIds,
+			&i.FinancingAct,
+			&i.FinancingOption,
+			&i.DepartureReason,
+			&i.DepartureReport,
+			&i.Updated,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClientContracts = `-- name: ListClientContracts :many
+WITH client_contracts AS (
+    SELECT id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created FROM contract
+    WHERE client_id = $1
+)
+SELECT
+    (SELECT COUNT(*) FROM client_contracts) AS total_count,
+    id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created
+FROM client_contracts
+ORDER BY created DESC
+LIMIT $2
+OFFSET $3
+`
+
+type ListClientContractsParams struct {
+	ClientID int64 `json:"client_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
+}
+
+type ListClientContractsRow struct {
+	TotalCount      int64              `json:"total_count"`
+	ID              int64              `json:"id"`
+	TypeID          *int64             `json:"type_id"`
+	Status          string             `json:"status"`
+	StartDate       pgtype.Timestamptz `json:"start_date"`
+	EndDate         pgtype.Timestamptz `json:"end_date"`
+	ReminderPeriod  int32              `json:"reminder_period"`
+	Tax             *int32             `json:"tax"`
+	Price           float64            `json:"price"`
+	PriceFrequency  string             `json:"price_frequency"`
+	Hours           *int32             `json:"hours"`
+	HoursType       string             `json:"hours_type"`
+	CareName        string             `json:"care_name"`
+	CareType        string             `json:"care_type"`
+	ClientID        int64              `json:"client_id"`
+	SenderID        *int64             `json:"sender_id"`
+	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
+	FinancingAct    string             `json:"financing_act"`
+	FinancingOption string             `json:"financing_option"`
+	DepartureReason *string            `json:"departure_reason"`
+	DepartureReport *string            `json:"departure_report"`
+	Updated         pgtype.Timestamptz `json:"updated"`
+	Created         pgtype.Timestamptz `json:"created"`
+}
+
+func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContractsParams) ([]ListClientContractsRow, error) {
+	rows, err := q.db.Query(ctx, listClientContracts, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClientContractsRow
+	for rows.Next() {
+		var i ListClientContractsRow
+		if err := rows.Scan(
+			&i.TotalCount,
 			&i.ID,
 			&i.TypeID,
 			&i.Status,

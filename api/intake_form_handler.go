@@ -180,6 +180,7 @@ type CreateIntakeFormRequest struct {
 	ReferrerSignature     *bool          `json:"referrer_signature"`
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
+	UrgencyScore          string         `json:"urgency_score" binding:"oneof=low medium high"`
 }
 
 // CreateIntakeFormResponse represents a response from the create intake form handler
@@ -242,6 +243,7 @@ type CreateIntakeFormResponse struct {
 	ReferrerSignature     *bool          `json:"referrer_signature"`
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
+	UrgencyScore          string         `json:"urgency_score"`
 }
 
 // @Summary Create an intake form
@@ -334,6 +336,8 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 		GuardianSignature:     req.GuardianSignature,
 		ReferrerSignature:     req.ReferrerSignature,
 		SignatureDate:         pgtype.Date{Time: req.SignatureDate, Valid: true},
+		UrgencyScore:          req.UrgencyScore,
+		AttachementIds:        req.AttachementIds,
 	}
 
 	form, err := qtx.CreateIntakeForm(ctx, arg)
@@ -424,6 +428,7 @@ func (server *Server) CreateIntakeFormApi(ctx *gin.Context) {
 		ReferrerSignature:     form.ReferrerSignature,
 		SignatureDate:         form.SignatureDate.Time,
 		AttachementIds:        form.AttachementIds,
+		UrgencyScore:          form.UrgencyScore,
 	}, "Intake form created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
@@ -498,7 +503,7 @@ type ListIntakeFormsResponse struct {
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
 	TimeSinceSubmission   string         `json:"time_since_submission"`
-	UrgencyScore          *int32         `json:"urgency_score"`
+	UrgencyScore          string         `json:"urgency_score"`
 }
 
 // @Summary List intake forms
@@ -680,7 +685,7 @@ type GetIntakeFormResponse struct {
 	SignatureDate         time.Time      `json:"signature_date"`
 	AttachementIds        []uuid.UUID    `json:"attachement_ids"`
 	TimeSinceSubmission   string         `json:"time_since_submission"`
-	UrgencyScore          *int32         `json:"urgency_score"`
+	UrgencyScore          string         `json:"urgency_score"`
 }
 
 // @Summary Get an intake form
@@ -785,13 +790,13 @@ func (server *Server) GetIntakeFormApi(ctx *gin.Context) {
 
 // AddUrgencyScoreRequest represents a request to add urgency score to an intake form
 type AddUrgencyScoreRequest struct {
-	UrgencyScore int32 `json:"urgency_score"`
+	UrgencyScore string `json:"urgency_score"`
 }
 
 // AddUrgencyScoreResponse represents a response from the add urgency score handler
 type AddUrgencyScoreResponse struct {
 	ID           int64  `json:"id"`
-	UrgencyScore *int32 `json:"urgency_score"`
+	UrgencyScore string `json:"urgency_score"`
 }
 
 // @Summary Add urgency score to an intake form
@@ -821,7 +826,7 @@ func (server *Server) AddUrgencyScoreApi(ctx *gin.Context) {
 
 	form, err := server.store.AddUrgencyScore(ctx, db.AddUrgencyScoreParams{
 		ID:           formID,
-		UrgencyScore: &req.UrgencyScore,
+		UrgencyScore: req.UrgencyScore,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

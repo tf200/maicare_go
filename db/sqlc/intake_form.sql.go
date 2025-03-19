@@ -21,7 +21,7 @@ RETURNING id, first_name, last_name, date_of_birth, nationality, bsn, address, c
 
 type AddUrgencyScoreParams struct {
 	ID           int64  `json:"id"`
-	UrgencyScore *int32 `json:"urgency_score"`
+	UrgencyScore string `json:"urgency_score"`
 }
 
 func (q *Queries) AddUrgencyScore(ctx context.Context, arg AddUrgencyScoreParams) (IntakeForm, error) {
@@ -152,14 +152,15 @@ INSERT INTO intake_forms (
     guardian_signature,
     referrer_signature,
     signature_date,
-    attachement_ids
+    attachement_ids,
+    urgency_score
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
     $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
     $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
     $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-    $51, $52, $53, $54, $55, $56, $57
+    $51, $52, $53, $54, $55, $56, $57, $58
 ) RETURNING id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, status, urgency_score, description, attachement_ids, created_at
 `
 
@@ -221,6 +222,7 @@ type CreateIntakeFormParams struct {
 	ReferrerSignature     *bool       `json:"referrer_signature"`
 	SignatureDate         pgtype.Date `json:"signature_date"`
 	AttachementIds        []uuid.UUID `json:"attachement_ids"`
+	UrgencyScore          string      `json:"urgency_score"`
 }
 
 func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error) {
@@ -282,6 +284,7 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 		arg.ReferrerSignature,
 		arg.SignatureDate,
 		arg.AttachementIds,
+		arg.UrgencyScore,
 	)
 	var i IntakeForm
 	err := row.Scan(
@@ -518,7 +521,7 @@ type ListIntakeFormsRow struct {
 	ReferrerSignature     *bool              `json:"referrer_signature"`
 	SignatureDate         pgtype.Date        `json:"signature_date"`
 	Status                string             `json:"status"`
-	UrgencyScore          *int32             `json:"urgency_score"`
+	UrgencyScore          string             `json:"urgency_score"`
 	Description           *string            `json:"description"`
 	AttachementIds        []uuid.UUID        `json:"attachement_ids"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`

@@ -270,7 +270,7 @@ func (ai *AiHandler) GenerateObjectives(levelDescription, goal, description, sta
 	// Get the content from the response
 	content := openRouterResponse.Choices[0].Message.Content
 
-	// Remove markdown code block indicators if they exist
+	// Remove Markdown code block indicators if they exist
 	content = strings.TrimPrefix(content, "```json")
 	content = strings.TrimPrefix(content, "```")
 	content = strings.TrimSuffix(content, "```")
