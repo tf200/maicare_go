@@ -26,7 +26,7 @@ func createRandomClientDetails(t *testing.T) ClientDetail {
 		PhoneNumber:           util.StringPtr(faker.Phonenumber()),
 		DateOfBirth:           pgtype.Date{Time: time.Now().AddDate(-20, 0, 0), Valid: true},
 		Identity:              false,
-		Status:                util.StringPtr("On Waiting List"),
+		Status:                util.StringPtr("In Care"),
 		Bsn:                   util.StringPtr(util.RandomString(9)),
 		Source:                util.StringPtr("Test Source"),
 		Birthplace:            util.StringPtr("test city"),

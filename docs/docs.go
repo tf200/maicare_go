@@ -3712,6 +3712,145 @@ const docTemplate = `{
                 }
             }
         },
+        "/ecr/contract_end_count": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ECR"
+                ],
+                "summary": "Returns the contract end count.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ContractEndCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecr/discharge_overview": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ECR"
+                ],
+                "summary": "Returns a list of discharge overview.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "number of items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DischargeOverviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecr/status_change_count": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ECR"
+                ],
+                "summary": "Returns the status change count.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.StatusChangeCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecr/total_discharge_count": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ECR"
+                ],
+                "summary": "Returns the total discharge count.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.TotalDischargeCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecr/urgent_cases_count": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ECR"
+                ],
+                "summary": "Returns the urgent cases count.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UrgentCasesCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "get": {
                 "description": "Get a paginated list of employee profiles with optional filters",
@@ -6369,6 +6508,14 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ContractEndCountResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.CorrectSpellingRequest": {
             "type": "object",
             "properties": {
@@ -8476,6 +8623,47 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_status": {
+                    "type": "string"
+                },
+                "current_status": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "discharge_type": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "follow_up_plan": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "scheduled_status": {
+                    "type": "string"
+                },
+                "status_change_date": {
+                    "type": "string"
+                },
+                "status_change_reason": {
+                    "type": "string"
                 }
             }
         },
@@ -12494,6 +12682,22 @@ const docTemplate = `{
                 }
             }
         },
+        "api.StatusChangeCountResponse": {
+            "type": "object",
+            "properties": {
+                "status_change_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.TotalDischargeCountResponse": {
+            "type": "object",
+            "properties": {
+                "total_discharge_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.UpdateAppointmentCardRequest": {
             "type": "object",
             "properties": {
@@ -13850,6 +14054,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.UrgentCasesCountResponse": {
+            "type": "object",
+            "properties": {
+                "urgent_cases_count": {
                     "type": "integer"
                 }
             }

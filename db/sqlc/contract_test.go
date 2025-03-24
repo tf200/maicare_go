@@ -51,8 +51,8 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 
 	arg := CreateContractParams{
 		TypeID:          &contractType.ID,
-		StartDate:       pgtype.Timestamptz{Time: time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC), Valid: true},
-		EndDate:         pgtype.Timestamptz{Time: time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC), Valid: true},
+		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
 		ReminderPeriod:  10,
 		Tax:             util.Int32Ptr(15),
 		Price:           5.58,
@@ -66,6 +66,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 		FinancingAct:    util.RandomEnum(financingAct),
 		FinancingOption: util.RandomEnum(financingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
+		Status: "approved",
 	}
 
 	contract, err := testQueries.CreateContract(context.Background(), arg)

@@ -243,6 +243,11 @@ definitions:
       phone_number:
         type: string
     type: object
+  api.ContractEndCountResponse:
+    properties:
+      contract_end_count:
+        type: integer
+    type: object
   api.CorrectSpellingRequest:
     properties:
       initial_text:
@@ -1662,6 +1667,33 @@ definitions:
     properties:
       id:
         type: integer
+    type: object
+  api.DischargeOverviewResponse:
+    properties:
+      contract_end_date:
+        type: string
+      contract_status:
+        type: string
+      current_status:
+        type: string
+      departure_reason:
+        type: string
+      discharge_type:
+        type: string
+      first_name:
+        type: string
+      follow_up_plan:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      scheduled_status:
+        type: string
+      status_change_date:
+        type: string
+      status_change_reason:
+        type: string
     type: object
   api.GenerateAutoReportsRequest:
     properties:
@@ -4286,6 +4318,16 @@ definitions:
       role_id:
         type: integer
     type: object
+  api.StatusChangeCountResponse:
+    properties:
+      status_change_count:
+        type: integer
+    type: object
+  api.TotalDischargeCountResponse:
+    properties:
+      total_discharge_count:
+        type: integer
+    type: object
   api.UpdateAppointmentCardRequest:
     properties:
       general_information:
@@ -5181,6 +5223,11 @@ definitions:
       file_url:
         type: string
       size:
+        type: integer
+    type: object
+  api.UrgentCasesCountResponse:
+    properties:
+      urgent_cases_count:
         type: integer
     type: object
   pagination.Response-api_ListAssignedEmployeesResponse:
@@ -7904,6 +7951,95 @@ paths:
       summary: List contracts
       tags:
       - contracts
+  /ecr/contract_end_count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ContractEndCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Returns the contract end count.
+      tags:
+      - ECR
+  /ecr/discharge_overview:
+    get:
+      parameters:
+      - description: page number
+        in: query
+        name: page
+        type: integer
+      - description: number of items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DischargeOverviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Returns a list of discharge overview.
+      tags:
+      - ECR
+  /ecr/status_change_count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.StatusChangeCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Returns the status change count.
+      tags:
+      - ECR
+  /ecr/total_discharge_count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.TotalDischargeCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Returns the total discharge count.
+      tags:
+      - ECR
+  /ecr/urgent_cases_count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UrgentCasesCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Returns the urgent cases count.
+      tags:
+      - ECR
   /employees:
     get:
       description: Get a paginated list of employee profiles with optional filters

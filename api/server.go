@@ -112,7 +112,7 @@ func (server *Server) setupRoutes() {
 	server.setupMaturityMatrixRoutes(baseRouter)
 	server.setupIntakeFormRoutes(baseRouter)
 	server.setupContractRoutes(baseRouter)
-
+	server.setupECRRoutes(baseRouter)
 	// Add more route setups as needed
 
 	server.router = router
