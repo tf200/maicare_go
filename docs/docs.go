@@ -3712,31 +3712,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/ecr/contract_end_count": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ECR"
-                ],
-                "summary": "Returns the contract end count.",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.ContractEndCountResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/ecr/discharge_overview": {
             "get": {
                 "produces": [
@@ -3758,6 +3733,18 @@ const docTemplate = `{
                         "description": "number of items per page",
                         "name": "page_size",
                         "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "urgent",
+                            "contract",
+                            "status_change",
+                            "all"
+                        ],
+                        "type": "string",
+                        "description": "filter type",
+                        "name": "filter_type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3765,31 +3752,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.DischargeOverviewResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/ecr/status_change_count": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ECR"
-                ],
-                "summary": "Returns the status change count.",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.StatusChangeCountResponse"
                         }
                     },
                     "400": {
@@ -3815,31 +3777,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.TotalDischargeCountResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/ecr/urgent_cases_count": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ECR"
-                ],
-                "summary": "Returns the urgent cases count.",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.UrgentCasesCountResponse"
                         }
                     },
                     "400": {
@@ -6505,14 +6442,6 @@ const docTemplate = `{
                 },
                 "phone_number": {
                     "type": "string"
-                }
-            }
-        },
-        "api.ContractEndCountResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_count": {
-                    "type": "integer"
                 }
             }
         },
@@ -12682,18 +12611,19 @@ const docTemplate = `{
                 }
             }
         },
-        "api.StatusChangeCountResponse": {
-            "type": "object",
-            "properties": {
-                "status_change_count": {
-                    "type": "integer"
-                }
-            }
-        },
         "api.TotalDischargeCountResponse": {
             "type": "object",
             "properties": {
+                "contract_end_count": {
+                    "type": "integer"
+                },
+                "status_change_count": {
+                    "type": "integer"
+                },
                 "total_discharge_count": {
+                    "type": "integer"
+                },
+                "urgent_cases_count": {
                     "type": "integer"
                 }
             }
@@ -14054,14 +13984,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "size": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UrgentCasesCountResponse": {
-            "type": "object",
-            "properties": {
-                "urgent_cases_count": {
                     "type": "integer"
                 }
             }

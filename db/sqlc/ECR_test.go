@@ -24,8 +24,9 @@ func TestDischargeOverview(t *testing.T) {
 	require.NoError(t, err)
 
 	overview, err := testQueries.DischargeOverview(context.Background(), DischargeOverviewParams{
-		Limit:  5,
-		Offset: 0,
+		Limit:      5,
+		Offset:     0,
+		FilterType: "all",
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, overview)

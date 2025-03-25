@@ -89,14 +89,28 @@ WITH client_discharges AS (
       )
 )
 SELECT id, first_name, last_name, current_status, scheduled_status, status_change_reason, status_change_date, contract_end_date, contract_status, departure_reason, follow_up_plan, discharge_type FROM client_discharges 
+WHERE 
+    -- Filter based on parameter filter_type:
+    -- 'all' or NULL = Show all (default)
+    -- 'status_change' = Show only status changes within 3 months
+    -- 'contract' = Show only contract endings within 3 months
+    -- 'urgent' = Show both status changes and contract endings within 1 month
+    ($3::text IS NULL OR $3::text = 'all') OR 
+    ($3::text = 'status_change' AND discharge_type = 'scheduled_status' AND status_change_date <= CURRENT_DATE + INTERVAL '3 months') OR
+    ($3::text = 'contract' AND discharge_type = 'contract_end' AND contract_end_date <= CURRENT_DATE + INTERVAL '3 months') OR
+    ($3::text = 'urgent' AND (
+        (discharge_type = 'scheduled_status' AND status_change_date <= CURRENT_DATE + INTERVAL '1 month') OR
+        (discharge_type = 'contract_end' AND contract_end_date <= CURRENT_DATE + INTERVAL '1 month')
+    ))
 ORDER BY 
     CASE WHEN discharge_type = 'scheduled_status' THEN status_change_date ELSE contract_end_date END ASC
 LIMIT $1 OFFSET $2
 `
 
 type DischargeOverviewParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit      int32  `json:"limit"`
+	Offset     int32  `json:"offset"`
+	FilterType string `json:"filter_type"`
 }
 
 type DischargeOverviewRow struct {
@@ -115,7 +129,7 @@ type DischargeOverviewRow struct {
 }
 
 func (q *Queries) DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error) {
-	rows, err := q.db.Query(ctx, dischargeOverview, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, dischargeOverview, arg.Limit, arg.Offset, arg.FilterType)
 	if err != nil {
 		return nil, err
 	}

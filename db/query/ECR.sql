@@ -53,6 +53,19 @@ WITH client_discharges AS (
       )
 )
 SELECT * FROM client_discharges 
+WHERE 
+    -- Filter based on parameter filter_type:
+    -- 'all' or NULL = Show all (default)
+    -- 'status_change' = Show only status changes within 3 months
+    -- 'contract' = Show only contract endings within 3 months
+    -- 'urgent' = Show both status changes and contract endings within 1 month
+    (@filter_type::text IS NULL OR @filter_type::text = 'all') OR 
+    (@filter_type::text = 'status_change' AND discharge_type = 'scheduled_status' AND status_change_date <= CURRENT_DATE + INTERVAL '3 months') OR
+    (@filter_type::text = 'contract' AND discharge_type = 'contract_end' AND contract_end_date <= CURRENT_DATE + INTERVAL '3 months') OR
+    (@filter_type::text = 'urgent' AND (
+        (discharge_type = 'scheduled_status' AND status_change_date <= CURRENT_DATE + INTERVAL '1 month') OR
+        (discharge_type = 'contract_end' AND contract_end_date <= CURRENT_DATE + INTERVAL '1 month')
+    ))
 ORDER BY 
     CASE WHEN discharge_type = 'scheduled_status' THEN status_change_date ELSE contract_end_date END ASC
 LIMIT $1 OFFSET $2;
