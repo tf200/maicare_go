@@ -1,5 +1,5 @@
 permissions:
-  - name: TEST_VIEW
+  - name: TEST.VIEW
     resource: /test
     method: [GET]
   - name: EMPLOYEE.CREATE

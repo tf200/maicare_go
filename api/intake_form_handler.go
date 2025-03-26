@@ -863,7 +863,7 @@ func (server *Server) MoveToWaitingList(ctx *gin.Context) {
 		return
 	}
 
-	form, err := server.store.GetIntakeForm(ctx, formID)
+	form, err := server.store.MoveToWaitingList(ctx, formID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -884,17 +884,19 @@ func (server *Server) MoveToWaitingList(ctx *gin.Context) {
 	}
 
 	arg := db.CreateClientDetailsParams{
-		FirstName:   form.FirstName,
-		LastName:    form.LastName,
-		DateOfBirth: form.DateOfBirth,
-		Identity:    true,
-		Status:      util.StringPtr("On Waiting List"),
-		Bsn:         &form.Bsn,
-		Birthplace:  &form.Nationality,
-		Email:       form.Email,
-		PhoneNumber: &form.PhoneNumber,
-		Gender:      form.Gender,
-		Addresses:   AddressesJSON,
+		IntakeFormID:          &form.ID,
+		FirstName:             form.FirstName,
+		LastName:              form.LastName,
+		DateOfBirth:           form.DateOfBirth,
+		Identity:              true,
+		Status:                util.StringPtr("On Waiting List"),
+		Bsn:                   &form.Bsn,
+		Birthplace:            &form.Nationality,
+		Email:                 form.Email,
+		PhoneNumber:           &form.PhoneNumber,
+		Gender:                form.Gender,
+		Addresses:             AddressesJSON,
+		IdentityAttachmentIds: []byte("[]"),
 	}
 	client, err := server.store.CreateClientDetails(ctx, arg)
 
@@ -907,5 +909,4 @@ func (server *Server) MoveToWaitingList(ctx *gin.Context) {
 		ClientID: client.ID,
 	}, "Client moved to waiting list successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

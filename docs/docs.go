@@ -3712,6 +3712,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/contracts/{id}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Update a contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Contract Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateContractRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateContractResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/ecr/discharge_overview": {
             "get": {
                 "produces": [
@@ -13260,6 +13300,136 @@ const docTemplate = `{
                 }
             }
         },
+        "api.UpdateContractRequest": {
+            "type": "object",
+            "properties": {
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "integer"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "price": {
+                    "$ref": "#/definitions/pgtype.Numeric"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "type_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.UpdateContractResponse": {
+            "type": "object",
+            "properties": {
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "integer"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "type": "string"
+                }
+            }
+        },
         "api.UpdateEmployeeCertificationRequest": {
             "type": "object",
             "properties": {
@@ -13988,6 +14158,9 @@ const docTemplate = `{
                 }
             }
         },
+        "big.Int": {
+            "type": "object"
+        },
         "pagination.Response-api_ListAssignedEmployeesResponse": {
             "type": "object",
             "properties": {
@@ -14388,6 +14561,26 @@ const docTemplate = `{
                 "Finite",
                 "NegativeInfinity"
             ]
+        },
+        "pgtype.Numeric": {
+            "type": "object",
+            "properties": {
+                "exp": {
+                    "type": "integer"
+                },
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "int": {
+                    "$ref": "#/definitions/big.Int"
+                },
+                "naN": {
+                    "type": "boolean"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
         },
         "pgtype.Timestamptz": {
             "type": "object",

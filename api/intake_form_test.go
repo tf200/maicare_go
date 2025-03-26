@@ -108,6 +108,7 @@ func createRandomIntakeForm(t *testing.T) db.IntakeForm {
 			Time:  time.Now(),
 			Valid: true,
 		},
+		UrgencyScore: util.RandomEnum([]string{"low", "medium", "high"}),
 	}
 
 	form, err := testStore.CreateIntakeForm(context.Background(), arg)
@@ -189,6 +190,7 @@ func TestCreateIntakeFormApi(t *testing.T) {
 	lawTypes := []string{"Youth Act", "WLZ", "WMO", "Other"}
 	registrationTypes := []string{"Protected Living", "Supervised Independent Living", "Outpatient Guidance"}
 	livingSituations := []string{"Home", "Foster care", "Youth care institution", "Other"}
+	urgencyScore := []string{"low", "medium", "high"}
 
 	testCases := []struct {
 		name          string
@@ -268,6 +270,7 @@ func TestCreateIntakeFormApi(t *testing.T) {
 					ReferrerSignature: util.BoolPtr(util.RandomBool()),
 					SignatureDate:     time.Now(),
 					AttachementIds:    []uuid.UUID{},
+					UrgencyScore:      getRandomEnum(urgencyScore),
 				}
 				data, err := json.Marshal(reqBody)
 				require.NoError(t, err)

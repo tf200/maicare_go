@@ -665,6 +665,7 @@ type IntakeForm struct {
 	UrgencyScore          string             `json:"urgency_score"`
 	Description           *string            `json:"description"`
 	AttachementIds        []uuid.UUID        `json:"attachement_ids"`
+	IsInWaitingList       bool               `json:"is_in_waiting_list"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 }
 

@@ -276,10 +276,11 @@ CREATE TABLE intake_forms (
     -- status
     status VARCHAR(20) NOT NULL CHECK (status IN ('submitted', 'under review', 'approved', 'rejected')) DEFAULT 'submitted',
     -- urgency
-    urgency_score varchar(20) NOT NULL CHECK (urgency_score IN ('low', 'medium', 'high')) DEFAULT 'low',
+    urgency_score varchar(20) NOT NULL DEFAULT 'low' CHECK (urgency_score IN ('low', 'medium', 'high')),
     description TEXT,
 
     attachement_ids UUID[] NULL DEFAULT '{}',
+    is_in_waiting_list BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 

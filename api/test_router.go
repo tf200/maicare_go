@@ -7,7 +7,7 @@ func (server *Server) setupTestRoutes(baseRouter *gin.RouterGroup) {
 	testGroup := baseRouter.Group("/test")
 	{
 		// Basic health check endpoint
-		testGroup.GET("/health", server.handleHealthCheck)
+		testGroup.GET("/health", AuthMiddleware(server.tokenMaker), RBACMiddleware(server.store, "CLIENT.VIEW"), server.handleHealthCheck)
 
 		// Echo endpoint to test request handling
 		testGroup.POST("/echo", server.handleEcho)

@@ -4740,6 +4740,92 @@ definitions:
       status:
         type: string
     type: object
+  api.UpdateContractRequest:
+    properties:
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      end_date:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: integer
+      hours_type:
+        type: string
+      price:
+        $ref: '#/definitions/pgtype.Numeric'
+      price_frequency:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      start_date:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      status:
+        type: string
+      tax:
+        type: integer
+      type_id:
+        type: integer
+    type: object
+  api.UpdateContractResponse:
+    properties:
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_id:
+        type: integer
+      created:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: integer
+      hours_type:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_frequency:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      tax:
+        type: integer
+      type_id:
+        type: integer
+      updated:
+        type: string
+    type: object
   api.UpdateEmployeeCertificationRequest:
     properties:
       date_issued:
@@ -5221,6 +5307,8 @@ definitions:
       size:
         type: integer
     type: object
+  big.Int:
+    type: object
   pagination.Response-api_ListAssignedEmployeesResponse:
     properties:
       count:
@@ -5484,6 +5572,19 @@ definitions:
     - Infinity
     - Finite
     - NegativeInfinity
+  pgtype.Numeric:
+    properties:
+      exp:
+        type: integer
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      int:
+        $ref: '#/definitions/big.Int'
+      naN:
+        type: boolean
+      valid:
+        type: boolean
+    type: object
   pgtype.Timestamptz:
     properties:
       infinityModifier:
@@ -7940,6 +8041,32 @@ paths:
           schema:
             $ref: '#/definitions/pagination.Response-api_ListContractsResponse'
       summary: List contracts
+      tags:
+      - contracts
+  /contracts/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Contract Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateContractRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UpdateContractResponse'
+      summary: Update a contract
       tags:
       - contracts
   /ecr/discharge_overview:

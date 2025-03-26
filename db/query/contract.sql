@@ -51,6 +51,27 @@ LIMIT $2
 OFFSET $3;
 
 
+-- name: UpdateContract :one
+UPDATE contract
+SET 
+    type_id = COALESCE(sqlc.narg('type_id'), type_id),
+    start_date = COALESCE(sqlc.narg('start_date'), start_date),
+    end_date = COALESCE(sqlc.narg('end_date'), end_date),
+    reminder_period = COALESCE(sqlc.narg('reminder_period'), reminder_period),
+    tax = COALESCE(sqlc.narg('tax'), tax),
+    price = COALESCE(sqlc.narg('price'), price),
+    price_frequency = COALESCE(sqlc.narg('price_frequency'), price_frequency),
+    hours = COALESCE(sqlc.narg('hours'), hours),
+    hours_type = COALESCE(sqlc.narg('hours_type'), hours_type),
+    care_name = COALESCE(sqlc.narg('care_name'), care_name),
+    care_type = COALESCE(sqlc.narg('care_type'), care_type),
+    sender_id = COALESCE(sqlc.narg('sender_id'), sender_id),
+    attachment_ids = COALESCE(sqlc.narg('attachment_ids'), attachment_ids),
+    financing_act = COALESCE(sqlc.narg('financing_act'), financing_act),
+    financing_option = COALESCE(sqlc.narg('financing_option'), financing_option),
+    status = COALESCE(sqlc.narg('status'), status)
+WHERE id = $1
+RETURNING *;
 
 -- name: GetClientContract :one
 SELECT * FROM contract

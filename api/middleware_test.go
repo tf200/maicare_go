@@ -112,6 +112,7 @@ func TestRBACMiddleware(t *testing.T) {
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute, 1)
+
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -123,6 +124,7 @@ func TestRBACMiddleware(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute, 2)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusForbidden, recorder.Code)
 			},
 		},

@@ -66,7 +66,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 		FinancingAct:    util.RandomEnum(financingAct),
 		FinancingOption: util.RandomEnum(financingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
-		Status: "approved",
+		Status:          "approved",
 	}
 
 	contract, err := testQueries.CreateContract(context.Background(), arg)
@@ -93,6 +93,41 @@ func TestCreateContract(t *testing.T) {
 	client := createRandomClientDetails(t)
 
 	createRandomContract(t, client.ID, client.SenderID)
+}
+
+func TestUpdateContract(t *testing.T) {
+	client := createRandomClientDetails(t)
+	contract := createRandomContract(t, client.ID, client.SenderID)
+
+	arg := UpdateContractParams{
+		ID:             contract.ID,
+		StartDate:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		EndDate:        pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
+		ReminderPeriod: util.Int32Ptr(10),
+		Tax:            util.Int32Ptr(15),
+		PriceFrequency: util.StringPtr("monthly"),
+		Hours:          util.Int32Ptr(100),
+		HoursType:      util.StringPtr("all_period"),
+		CareName:       util.StringPtr("Test Care"),
+		CareType:       util.StringPtr("accommodation"),
+		SenderID:       client.SenderID,
+	}
+
+	contract2, err := testQueries.UpdateContract(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, contract2)
+	require.Equal(t, arg.ID, contract2.ID)
+	require.Equal(t, arg.ReminderPeriod, contract2.ReminderPeriod)
+	require.Equal(t, arg.Tax, contract2.Tax)
+	require.Equal(t, arg.Price, contract2.Price)
+	require.Equal(t, arg.PriceFrequency, contract2.PriceFrequency)
+	require.Equal(t, arg.Hours, contract2.Hours)
+	require.Equal(t, arg.HoursType, contract2.HoursType)
+	require.Equal(t, arg.CareName, contract2.CareName)
+	require.Equal(t, arg.CareType, contract2.CareType)
+	require.Equal(t, arg.SenderID, contract2.SenderID)
+	require.Equal(t, arg.FinancingAct, contract2.FinancingAct)
+	require.Equal(t, arg.FinancingOption, contract2.FinancingOption)
 }
 
 func TestGetClientContract(t *testing.T) {

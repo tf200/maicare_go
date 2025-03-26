@@ -446,3 +446,94 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 	}
 	return items, nil
 }
+
+const updateContract = `-- name: UpdateContract :one
+UPDATE contract
+SET 
+    type_id = COALESCE($2, type_id),
+    start_date = COALESCE($3, start_date),
+    end_date = COALESCE($4, end_date),
+    reminder_period = COALESCE($5, reminder_period),
+    tax = COALESCE($6, tax),
+    price = COALESCE($7, price),
+    price_frequency = COALESCE($8, price_frequency),
+    hours = COALESCE($9, hours),
+    hours_type = COALESCE($10, hours_type),
+    care_name = COALESCE($11, care_name),
+    care_type = COALESCE($12, care_type),
+    sender_id = COALESCE($13, sender_id),
+    attachment_ids = COALESCE($14, attachment_ids),
+    financing_act = COALESCE($15, financing_act),
+    financing_option = COALESCE($16, financing_option),
+    status = COALESCE($17, status)
+WHERE id = $1
+RETURNING id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created
+`
+
+type UpdateContractParams struct {
+	ID              int64              `json:"id"`
+	TypeID          *int64             `json:"type_id"`
+	StartDate       pgtype.Timestamptz `json:"start_date"`
+	EndDate         pgtype.Timestamptz `json:"end_date"`
+	ReminderPeriod  *int32             `json:"reminder_period"`
+	Tax             *int32             `json:"tax"`
+	Price           pgtype.Numeric     `json:"price"`
+	PriceFrequency  *string            `json:"price_frequency"`
+	Hours           *int32             `json:"hours"`
+	HoursType       *string            `json:"hours_type"`
+	CareName        *string            `json:"care_name"`
+	CareType        *string            `json:"care_type"`
+	SenderID        *int64             `json:"sender_id"`
+	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
+	FinancingAct    *string            `json:"financing_act"`
+	FinancingOption *string            `json:"financing_option"`
+	Status          *string            `json:"status"`
+}
+
+func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error) {
+	row := q.db.QueryRow(ctx, updateContract,
+		arg.ID,
+		arg.TypeID,
+		arg.StartDate,
+		arg.EndDate,
+		arg.ReminderPeriod,
+		arg.Tax,
+		arg.Price,
+		arg.PriceFrequency,
+		arg.Hours,
+		arg.HoursType,
+		arg.CareName,
+		arg.CareType,
+		arg.SenderID,
+		arg.AttachmentIds,
+		arg.FinancingAct,
+		arg.FinancingOption,
+		arg.Status,
+	)
+	var i Contract
+	err := row.Scan(
+		&i.ID,
+		&i.TypeID,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.ReminderPeriod,
+		&i.Tax,
+		&i.Price,
+		&i.PriceFrequency,
+		&i.Hours,
+		&i.HoursType,
+		&i.CareName,
+		&i.CareType,
+		&i.ClientID,
+		&i.SenderID,
+		&i.AttachmentIds,
+		&i.FinancingAct,
+		&i.FinancingOption,
+		&i.DepartureReason,
+		&i.DepartureReport,
+		&i.Updated,
+		&i.Created,
+	)
+	return i, err
+}

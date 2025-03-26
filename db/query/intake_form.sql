@@ -106,3 +106,10 @@ UPDATE intake_forms
 SET urgency_score = $2
 WHERE id = $1
 RETURNING *;
+
+
+-- name: MoveToWaitingList :one
+UPDATE intake_forms
+SET is_in_waiting_list = true
+WHERE id = $1
+RETURNING *;

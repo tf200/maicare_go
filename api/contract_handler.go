@@ -319,6 +319,126 @@ func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// UpdateContractRequest defines the request for UpdateContract handler
+type UpdateContractRequest struct {
+	TypeID          *int64             `json:"type_id"`
+	StartDate       pgtype.Timestamptz `json:"start_date"`
+	EndDate         pgtype.Timestamptz `json:"end_date"`
+	ReminderPeriod  *int32             `json:"reminder_period"`
+	Tax             *int32             `json:"tax"`
+	Price           pgtype.Numeric     `json:"price"`
+	PriceFrequency  *string            `json:"price_frequency"`
+	Hours           *int32             `json:"hours"`
+	HoursType       *string            `json:"hours_type"`
+	CareName        *string            `json:"care_name"`
+	CareType        *string            `json:"care_type"`
+	SenderID        *int64             `json:"sender_id"`
+	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
+	FinancingAct    *string            `json:"financing_act"`
+	FinancingOption *string            `json:"financing_option"`
+	Status          *string            `json:"status"`
+}
+
+// UpdateContractResponse defines the response for UpdateContract handler
+type UpdateContractResponse struct {
+	ID              int64       `json:"id"`
+	TypeID          *int64      `json:"type_id"`
+	Status          string      `json:"status"`
+	StartDate       time.Time   `json:"start_date"`
+	EndDate         time.Time   `json:"end_date"`
+	ReminderPeriod  int32       `json:"reminder_period"`
+	Tax             *int32      `json:"tax"`
+	Price           float64     `json:"price"`
+	PriceFrequency  string      `json:"price_frequency"`
+	Hours           *int32      `json:"hours"`
+	HoursType       string      `json:"hours_type"`
+	CareName        string      `json:"care_name"`
+	CareType        string      `json:"care_type"`
+	ClientID        int64       `json:"client_id"`
+	SenderID        *int64      `json:"sender_id"`
+	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
+	FinancingAct    string      `json:"financing_act"`
+	FinancingOption string      `json:"financing_option"`
+	DepartureReason *string     `json:"departure_reason"`
+	DepartureReport *string     `json:"departure_report"`
+	Updated         time.Time   `json:"updated"`
+	Created         time.Time   `json:"created"`
+}
+
+// UpdateContractApi updates a contract
+// @Summary Update a contract
+// @Tags contracts
+// @Accept json
+// @Produce json
+// @Param id path string true "Contract ID"
+// @Param request body UpdateContractRequest true "Update Contract Request"
+// @Success 200 {object} UpdateContractResponse
+// @Router /contracts/{id} [put]
+func (server *Server) UpdateContractApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	contractID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateContractRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	contract, err := server.store.UpdateContract(ctx, db.UpdateContractParams{
+		ID:              contractID,
+		TypeID:          req.TypeID,
+		StartDate:       req.StartDate,
+		EndDate:         req.EndDate,
+		ReminderPeriod:  req.ReminderPeriod,
+		Tax:             req.Tax,
+		Price:           req.Price,
+		PriceFrequency:  req.PriceFrequency,
+		Hours:           req.Hours,
+		HoursType:       req.HoursType,
+		CareName:        req.CareName,
+		CareType:        req.CareType,
+		SenderID:        req.SenderID,
+		AttachmentIds:   req.AttachmentIds,
+		FinancingAct:    req.FinancingAct,
+		FinancingOption: req.FinancingOption,
+		Status:          req.Status,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(UpdateContractResponse{
+		ID:              contract.ID,
+		TypeID:          contract.TypeID,
+		Status:          contract.Status,
+		StartDate:       contract.StartDate.Time,
+		EndDate:         contract.EndDate.Time,
+		ReminderPeriod:  contract.ReminderPeriod,
+		Tax:             contract.Tax,
+		Price:           contract.Price,
+		PriceFrequency:  contract.PriceFrequency,
+		Hours:           contract.Hours,
+		HoursType:       contract.HoursType,
+		CareName:        contract.CareName,
+		CareType:        contract.CareType,
+		ClientID:        contract.ClientID,
+		SenderID:        contract.SenderID,
+		AttachmentIds:   contract.AttachmentIds,
+		FinancingAct:    contract.FinancingAct,
+		FinancingOption: contract.FinancingOption,
+		DepartureReason: contract.DepartureReason,
+		DepartureReport: contract.DepartureReport,
+		Updated:         contract.Updated.Time,
+		Created:         contract.Created.Time,
+	}, "Contract updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetClientContractResponse defines the response for GetContract handler
 type GetClientContractResponse struct {
 	ID              int64              `json:"id"`
