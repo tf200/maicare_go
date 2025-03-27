@@ -29,10 +29,9 @@ INSERT INTO contract (
     sender_id,
     attachment_ids,
     financing_act,
-    financing_option,
-    status
+    financing_option
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 )
 RETURNING id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created
 `
@@ -54,7 +53,6 @@ type CreateContractParams struct {
 	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct    string             `json:"financing_act"`
 	FinancingOption string             `json:"financing_option"`
-	Status          string             `json:"status"`
 }
 
 func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
@@ -75,7 +73,6 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 		arg.AttachmentIds,
 		arg.FinancingAct,
 		arg.FinancingOption,
-		arg.Status,
 	)
 	var i Contract
 	err := row.Scan(
