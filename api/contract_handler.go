@@ -123,21 +123,21 @@ func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 
 // CreateContractRequest defines the request for CreateContract handler
 type CreateContractRequest struct {
-	TypeID          *int64      `json:"type_id"`
-	StartDate       time.Time   `json:"start_date"`
-	EndDate         time.Time   `json:"end_date"`
-	ReminderPeriod  int32       `json:"reminder_period"`
-	Tax             *int32      `json:"tax"`
-	Price           float64     `json:"price"`
-	PriceFrequency  string      `json:"price_frequency"`
-	Hours           *int32      `json:"hours"`
-	HoursType       string      `json:"hours_type"`
-	CareName        string      `json:"care_name"`
-	CareType        string      `json:"care_type"`
-	SenderID        *int64      `json:"sender_id"`
+	TypeID          *int64      `json:"type_id" example:"1"`
+	StartDate       time.Time   `json:"start_date" example:"2023-01-01T00:00:00Z"`
+	EndDate         time.Time   `json:"end_date" example:"2023-12-31T00:00:00Z"`
+	ReminderPeriod  int32       `json:"reminder_period" example:"30"`
+	Tax             *int32      `json:"tax" example:"21"`
+	Price           float64     `json:"price" example:"100.50"`
+	PriceFrequency  string      `json:"price_frequency" binding:"required,oneof=minute hourly daily weekly monthly yearly" example:"monthly" enum:"minute,hourly,daily,weekly,monthly,yearly"`
+	Hours           *int32      `json:"hours" example:"40"`
+	HoursType       string      `json:"hours_type" binding:"required,oneof=weekly all_period" example:"weekly" enum:"weekly,all_period"`
+	CareName        string      `json:"care_name" example:"Home Care"`
+	CareType        string      `json:"care_type" binding:"required,oneof=ambulante accommodation" example:"ambulante" enum:"ambulante,accommodation"`
+	SenderID        *int64      `json:"sender_id" example:"2"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
-	FinancingAct    string      `json:"financing_act"`
-	FinancingOption string      `json:"financing_option"`
+	FinancingAct    string      `json:"financing_act" binding:"required,oneof=WMO ZVW WLZ JW WPG" example:"WMO" enum:"WMO,ZVW,WLZ,JW,WPG"`
+	FinancingOption string      `json:"financing_option" binding:"required,oneof=ZIN PGB" example:"ZIN" enum:"ZIN,PGB"`
 }
 
 // CreateContractResponse defines the response for CreateContract handler

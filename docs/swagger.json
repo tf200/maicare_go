@@ -7172,6 +7172,13 @@
         },
         "api.CreateContractRequest": {
             "type": "object",
+            "required": [
+                "care_type",
+                "financing_act",
+                "financing_option",
+                "hours_type",
+                "price_frequency"
+            ],
             "properties": {
                 "attachment_ids": {
                     "type": "array",
@@ -7180,46 +7187,87 @@
                     }
                 },
                 "care_name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Home Care"
                 },
                 "care_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ambulante",
+                        "accommodation"
+                    ],
+                    "example": "ambulante"
                 },
                 "end_date": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-12-31T00:00:00Z"
                 },
                 "financing_act": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "WMO",
+                        "ZVW",
+                        "WLZ",
+                        "JW",
+                        "WPG"
+                    ],
+                    "example": "WMO"
                 },
                 "financing_option": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ZIN",
+                        "PGB"
+                    ],
+                    "example": "ZIN"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 40
                 },
                 "hours_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "weekly",
+                        "all_period"
+                    ],
+                    "example": "weekly"
                 },
                 "price": {
-                    "type": "number"
+                    "type": "number",
+                    "example": 100.5
                 },
                 "price_frequency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "minute",
+                        "hourly",
+                        "daily",
+                        "weekly",
+                        "monthly",
+                        "yearly"
+                    ],
+                    "example": "monthly"
                 },
                 "reminder_period": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 30
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 2
                 },
                 "start_date": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
                 },
                 "tax": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 21
                 },
                 "type_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },

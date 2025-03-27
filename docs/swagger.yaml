@@ -693,33 +693,75 @@ definitions:
           type: string
         type: array
       care_name:
+        example: Home Care
         type: string
       care_type:
+        enum:
+        - ambulante
+        - accommodation
+        example: ambulante
         type: string
       end_date:
+        example: "2023-12-31T00:00:00Z"
         type: string
       financing_act:
+        enum:
+        - WMO
+        - ZVW
+        - WLZ
+        - JW
+        - WPG
+        example: WMO
         type: string
       financing_option:
+        enum:
+        - ZIN
+        - PGB
+        example: ZIN
         type: string
       hours:
+        example: 40
         type: integer
       hours_type:
+        enum:
+        - weekly
+        - all_period
+        example: weekly
         type: string
       price:
+        example: 100.5
         type: number
       price_frequency:
+        enum:
+        - minute
+        - hourly
+        - daily
+        - weekly
+        - monthly
+        - yearly
+        example: monthly
         type: string
       reminder_period:
+        example: 30
         type: integer
       sender_id:
+        example: 2
         type: integer
       start_date:
+        example: "2023-01-01T00:00:00Z"
         type: string
       tax:
+        example: 21
         type: integer
       type_id:
+        example: 1
         type: integer
+    required:
+    - care_type
+    - financing_act
+    - financing_option
+    - hours_type
+    - price_frequency
     type: object
   api.CreateContractResponse:
     properties:
