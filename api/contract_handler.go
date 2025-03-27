@@ -92,6 +92,35 @@ func (server *Server) ListContractTypesApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type DeleteContractTypeResponse struct {
+	ID int64 `json:"id"`
+}
+
+// DeleteContractTypeApi deletes a contract type
+// @Summary Delete a contract type
+// @Tags contracts
+// @Produce json
+// @Param id path string true "Contract Type ID"
+// @Success 200 {object} DeleteContractTypeResponse
+// @Router /contract_types/{id} [delete]
+func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	contractTypeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteContractType(ctx, contractTypeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(DeleteContractTypeResponse{ID: contractTypeID}, "Contract type deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // CreateContractRequest defines the request for CreateContract handler
 type CreateContractRequest struct {
 	TypeID          *int64      `json:"type_id"`

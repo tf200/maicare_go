@@ -15,6 +15,7 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	// Routes without /client prefix
 	baseRouter.POST("/contract_types", server.CreateContractTypeApi)
 	baseRouter.GET("/contract_types", server.ListContractTypesApi)
+	baseRouter.DELETE("/contract_types/:id", server.DeleteContractTypeApi)
 
 	baseRouter.GET("/contracts", server.ListContractsApi)
 

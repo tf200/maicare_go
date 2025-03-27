@@ -1609,6 +1609,11 @@ definitions:
       id:
         type: integer
     type: object
+  api.DeleteContractTypeResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   api.DeleteEmployeeCertificationResponse:
     properties:
       created_at:
@@ -7971,6 +7976,24 @@ paths:
           schema:
             $ref: '#/definitions/api.CreateContractTypeResponse'
       summary: Create a new contract type
+      tags:
+      - contracts
+  /contract_types/{id}:
+    delete:
+      parameters:
+      - description: Contract Type ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.DeleteContractTypeResponse'
+      summary: Delete a contract type
       tags:
       - contracts
   /contracts:

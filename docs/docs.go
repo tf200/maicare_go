@@ -3612,6 +3612,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/contract_types/{id}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Delete a contract type",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract Type ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.DeleteContractTypeResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/contracts": {
             "get": {
                 "produces": [
@@ -8505,6 +8533,14 @@ const docTemplate = `{
             }
         },
         "api.DeleteClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.DeleteContractTypeResponse": {
             "type": "object",
             "properties": {
                 "id": {
