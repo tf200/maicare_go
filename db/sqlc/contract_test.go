@@ -66,7 +66,6 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 		FinancingAct:    util.RandomEnum(financingAct),
 		FinancingOption: util.RandomEnum(financingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
-		Status:          "approved",
 	}
 
 	contract, err := testQueries.CreateContract(context.Background(), arg)

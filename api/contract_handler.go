@@ -500,9 +500,8 @@ type GetClientContractResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path string true "Contract ID"
-// @Success 200 {object} GetContractResponse
+// @Success 200 {object} GetClientContractResponse
 // @Router /clients/{id}/contracts/{contract_id} [get]
-
 func (server *Server) GetClientContractApi(ctx *gin.Context) {
 	id := ctx.Param("contract_id")
 	contractID, err := strconv.ParseInt(id, 10, 64)
