@@ -339,6 +339,8 @@ WITH filtered_contracts AS (
         c.financing_option,
         c.created,
         s.name AS sender_name,
+        cd.id AS client_id,
+        cd.sender_id AS sender_id,
         cd.first_name AS client_first_name,
         cd.last_name AS client_last_name
     FROM
@@ -363,7 +365,7 @@ WITH filtered_contracts AS (
 )
 SELECT
     (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
-    id, status, start_date, end_date, price, price_frequency, care_name, care_type, financing_act, financing_option, created, sender_name, client_first_name, client_last_name
+    id, status, start_date, end_date, price, price_frequency, care_name, care_type, financing_act, financing_option, created, sender_name, client_id, sender_id, client_first_name, client_last_name
 FROM
     filtered_contracts
 ORDER BY
@@ -396,6 +398,8 @@ type ListContractsRow struct {
 	FinancingOption string             `json:"financing_option"`
 	Created         pgtype.Timestamptz `json:"created"`
 	SenderName      *string            `json:"sender_name"`
+	ClientID        int64              `json:"client_id"`
+	SenderID        *int64             `json:"sender_id"`
 	ClientFirstName string             `json:"client_first_name"`
 	ClientLastName  string             `json:"client_last_name"`
 }
@@ -431,6 +435,8 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 			&i.FinancingOption,
 			&i.Created,
 			&i.SenderName,
+			&i.ClientID,
+			&i.SenderID,
 			&i.ClientFirstName,
 			&i.ClientLastName,
 		); err != nil {

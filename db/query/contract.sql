@@ -96,6 +96,8 @@ WITH filtered_contracts AS (
         c.financing_option,
         c.created,
         s.name AS sender_name,
+        cd.id AS client_id,
+        cd.sender_id AS sender_id,
         cd.first_name AS client_first_name,
         cd.last_name AS client_last_name
     FROM

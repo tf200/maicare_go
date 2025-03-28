@@ -470,28 +470,28 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 
 // GetClientContractResponse defines the response for GetContract handler
 type GetClientContractResponse struct {
-	ID              int64              `json:"id"`
-	TypeID          *int64             `json:"type_id"`
-	Status          string             `json:"status"`
-	StartDate       time.Time          `json:"start_date"`
-	EndDate         time.Time          `json:"end_date"`
-	ReminderPeriod  int32              `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
-	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
-	HoursType       string             `json:"hours_type"`
-	CareName        string             `json:"care_name"`
-	CareType        string             `json:"care_type"`
-	ClientID        int64              `json:"client_id"`
-	SenderID        *int64             `json:"sender_id"`
-	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
-	FinancingAct    string             `json:"financing_act"`
-	FinancingOption string             `json:"financing_option"`
-	DepartureReason *string            `json:"departure_reason"`
-	DepartureReport *string            `json:"departure_report"`
-	Updated         pgtype.Timestamptz `json:"updated"`
-	Created         pgtype.Timestamptz `json:"created"`
+	ID              int64       `json:"id"`
+	TypeID          *int64      `json:"type_id"`
+	Status          string      `json:"status"`
+	StartDate       time.Time   `json:"start_date"`
+	EndDate         time.Time   `json:"end_date"`
+	ReminderPeriod  int32       `json:"reminder_period"`
+	Tax             *int32      `json:"tax"`
+	Price           float64     `json:"price"`
+	PriceFrequency  string      `json:"price_frequency"`
+	Hours           *int32      `json:"hours"`
+	HoursType       string      `json:"hours_type"`
+	CareName        string      `json:"care_name"`
+	CareType        string      `json:"care_type"`
+	ClientID        int64       `json:"client_id"`
+	SenderID        *int64      `json:"sender_id"`
+	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
+	FinancingAct    string      `json:"financing_act"`
+	FinancingOption string      `json:"financing_option"`
+	DepartureReason *string     `json:"departure_reason"`
+	DepartureReport *string     `json:"departure_report"`
+	Updated         time.Time   `json:"updated"`
+	Created         time.Time   `json:"created"`
 }
 
 // GetClientContractApi returns a contract by ID
@@ -537,8 +537,8 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 		FinancingOption: contract.FinancingOption,
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
-		Updated:         contract.Updated,
-		Created:         contract.Created,
+		Updated:         contract.Updated.Time,
+		Created:         contract.Created.Time,
 	}, "Contract retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -555,20 +555,22 @@ type ListContractsRequest struct {
 
 // ListContractsResponse defines the response for ListContracts handler
 type ListContractsResponse struct {
-	ID              int64              `json:"id"`
-	Status          string             `json:"status"`
-	StartDate       pgtype.Timestamptz `json:"start_date"`
-	EndDate         pgtype.Timestamptz `json:"end_date"`
-	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
-	CareName        string             `json:"care_name"`
-	CareType        string             `json:"care_type"`
-	FinancingAct    string             `json:"financing_act"`
-	FinancingOption string             `json:"financing_option"`
-	Created         pgtype.Timestamptz `json:"created"`
-	SenderName      *string            `json:"sender_name"`
-	ClientFirstName string             `json:"client_first_name"`
-	ClientLastName  string             `json:"client_last_name"`
+	ID              int64     `json:"id"`
+	ClientID        int64     `json:"client_id"`
+	Status          string    `json:"status"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
+	Price           float64   `json:"price"`
+	PriceFrequency  string    `json:"price_frequency"`
+	CareName        string    `json:"care_name"`
+	CareType        string    `json:"care_type"`
+	FinancingAct    string    `json:"financing_act"`
+	FinancingOption string    `json:"financing_option"`
+	Created         time.Time `json:"created"`
+	SenderID        *int64    `json:"sender_id"`
+	SenderName      *string   `json:"sender_name"`
+	ClientFirstName string    `json:"client_first_name"`
+	ClientLastName  string    `json:"client_last_name"`
 }
 
 // ListContractsApi returns a list of contracts
@@ -620,19 +622,21 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 	for i, contract := range contracts {
 		contractsRes[i] = ListContractsResponse{
 			ID:              contract.ID,
+			ClientID:        contract.ClientID,
 			Status:          contract.Status,
-			StartDate:       contract.StartDate,
-			EndDate:         contract.EndDate,
+			StartDate:       contract.StartDate.Time,
+			EndDate:         contract.EndDate.Time,
 			Price:           contract.Price,
 			PriceFrequency:  contract.PriceFrequency,
 			CareName:        contract.CareName,
 			CareType:        contract.CareType,
 			FinancingAct:    contract.FinancingAct,
 			FinancingOption: contract.FinancingOption,
+			SenderID:        contract.SenderID,
 			SenderName:      contract.SenderName,
 			ClientFirstName: contract.ClientFirstName,
 			ClientLastName:  contract.ClientLastName,
-			Created:         contract.Created,
+			Created:         contract.Created.Time,
 		}
 	}
 

@@ -9058,7 +9058,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "created": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "departure_reason": {
                     "type": "string"
@@ -9109,7 +9109,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "updated": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 }
             }
         },
@@ -10498,14 +10498,17 @@ const docTemplate = `{
                 "client_first_name": {
                     "type": "string"
                 },
+                "client_id": {
+                    "type": "integer"
+                },
                 "client_last_name": {
                     "type": "string"
                 },
                 "created": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "end_date": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "financing_act": {
                     "type": "string"
@@ -10522,11 +10525,14 @@ const docTemplate = `{
                 "price_frequency": {
                     "type": "string"
                 },
+                "sender_id": {
+                    "type": "integer"
+                },
                 "sender_name": {
                     "type": "string"
                 },
                 "start_date": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
