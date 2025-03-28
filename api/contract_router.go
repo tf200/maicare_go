@@ -18,5 +18,6 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	baseRouter.DELETE("/contract_types/:id", server.DeleteContractTypeApi)
 
 	baseRouter.GET("/contracts", server.ListContractsApi)
+	baseRouter.PUT("/contracts/:id", server.UpdateContractApi)
 
 }
