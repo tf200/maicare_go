@@ -339,6 +339,35 @@ func (q *Queries) DeleteEmployeeExperience(ctx context.Context, id int64) (Emplo
 	return i, err
 }
 
+const getEmployeeCounts = `-- name: GetEmployeeCounts :one
+SELECT
+    COUNT(*) FILTER (WHERE is_subcontractor IS NOT TRUE) AS total_employees,
+    COUNT(*) FILTER (WHERE is_subcontractor = TRUE) AS total_subcontractors,
+    COUNT(*) FILTER (WHERE is_archived = TRUE) AS total_archived,
+    COUNT(*) FILTER (WHERE out_of_service = TRUE) AS total_out_of_service
+FROM
+    employee_profile
+`
+
+type GetEmployeeCountsRow struct {
+	TotalEmployees      int64 `json:"total_employees"`
+	TotalSubcontractors int64 `json:"total_subcontractors"`
+	TotalArchived       int64 `json:"total_archived"`
+	TotalOutOfService   int64 `json:"total_out_of_service"`
+}
+
+func (q *Queries) GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeCounts)
+	var i GetEmployeeCountsRow
+	err := row.Scan(
+		&i.TotalEmployees,
+		&i.TotalSubcontractors,
+		&i.TotalArchived,
+		&i.TotalOutOfService,
+	)
+	return i, err
+}
+
 const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
 SELECT 
     ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,

@@ -9,6 +9,7 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 	{
 		employeeGroup.POST("", RBACMiddleware(server.store, "EMPLOYEE.CREATE"), server.CreateEmployeeProfileApi)
 		employeeGroup.GET("", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeProfileApi)
+		employeeGroup.GET("/counts", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.GetEmployeeCountsApi)
 		employeeGroup.GET("/:id", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.GetEmployeeProfileByIDApi)
 		employeeGroup.PUT("/:id", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.UpdateEmployeeProfileApi)
 		employeeGroup.GET("/profile", server.GetEmployeeProfileApi)

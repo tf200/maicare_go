@@ -349,6 +349,36 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type GetEmployeeCountsResponse struct {
+	TotalEmployees      int64 `json:"total_employees"`
+	TotalSubcontractors int64 `json:"total_subcontractors"`
+	TotalArchived       int64 `json:"total_archived"`
+	TotalOutOfService   int64 `json:"total_out_of_service"`
+}
+
+// @Summary Get employee counts
+// @Description Get total counts of employees, subcontractors, archived, and out of service employees
+// @Tags employees
+// @Produce json
+// @Success 200 {object} Response[GetEmployeeCountsResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/counts [get]
+func (server *Server) GetEmployeeCountsApi(ctx *gin.Context) {
+	counts, err := server.store.GetEmployeeCounts(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetEmployeeCountsResponse{
+		TotalEmployees:      counts.TotalEmployees,
+		TotalSubcontractors: counts.TotalSubcontractors,
+		TotalArchived:       counts.TotalArchived,
+		TotalOutOfService:   counts.TotalOutOfService,
+	}, "Employee counts retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetEmployeeProfileByIDApiResponse represents the response for GetEmployeeProfileByIDApi
 type GetEmployeeProfileByIDApiResponse struct {
 	ID                        int64     `json:"id"`

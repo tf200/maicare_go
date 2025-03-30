@@ -250,3 +250,13 @@ WHERE
     last_name ILIKE '%' || @search || '%' OR
     email ILIKE '%' || @search || '%'
 LIMIT 10;
+
+
+-- name: GetEmployeeCounts :one
+SELECT
+    COUNT(*) FILTER (WHERE is_subcontractor IS NOT TRUE) AS total_employees,
+    COUNT(*) FILTER (WHERE is_subcontractor = TRUE) AS total_subcontractors,
+    COUNT(*) FILTER (WHERE is_archived = TRUE) AS total_archived,
+    COUNT(*) FILTER (WHERE out_of_service = TRUE) AS total_out_of_service
+FROM
+    employee_profile;
