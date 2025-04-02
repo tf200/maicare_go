@@ -2115,6 +2115,17 @@ definitions:
           type: string
         type: array
     type: object
+  api.GetEmployeeCountsResponse:
+    properties:
+      total_archived:
+        type: integer
+      total_employees:
+        type: integer
+      total_out_of_service:
+        type: integer
+      total_subcontractors:
+        type: integer
+    type: object
   api.GetEmployeeProfileByIDApiResponse:
     properties:
       authentication_phone_number:
@@ -3834,6 +3845,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetClientRelatedEmailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetEmployeeCountsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetEmployeeCountsResponse'
       message:
         type: string
       success:
@@ -9010,6 +9030,40 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Set employee profile picture by ID
+      tags:
+      - employees
+  /employees/counts:
+    get:
+      description: Get total counts of employees, subcontractors, archived, and out
+        of service employees
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetEmployeeCountsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get employee counts
       tags:
       - employees
   /employees/emails:

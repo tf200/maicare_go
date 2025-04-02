@@ -349,6 +349,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// GetEmployeeCountsResponse represents the response for GetEmployeeCountsApi
 type GetEmployeeCountsResponse struct {
 	TotalEmployees      int64 `json:"total_employees"`
 	TotalSubcontractors int64 `json:"total_subcontractors"`
