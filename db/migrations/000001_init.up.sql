@@ -842,52 +842,6 @@ CREATE TABLE data_sharing_statement (
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- CREATE TABLE maturity_matrix (
---     id BIGSERIAL PRIMARY KEY,
---     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
---     start_date DATE NOT NULL,
---     end_date DATE NOT NULL,
---     is_approved BOOLEAN NOT NULL DEFAULT FALSE,
---     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
--- );
-
--- CREATE TABLE selected_maturity_matrix_assessment (
---     id BIGSERIAL PRIMARY KEY,  -- Adding the id column
---     maturity_matrix_id BIGINT NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
---     assessment_id BIGINT NOT NULL REFERENCES assessment(id) ON DELETE CASCADE
-    
--- );
-
--- CREATE INDEX data_sharing_statement_client_id_idx ON data_sharing_statement(client_id);
--- CREATE INDEX maturity_matrix_client_id_idx ON maturity_matrix(client_id);
-
-
-
-
--- CREATE TABLE ai_generated_report (
---     id BIGSERIAL PRIMARY KEY,
---     report_type VARCHAR(100) NOT NULL CHECK (report_type IN (
---         'client_reports_summary',
---         'client_profile_summary',
---         'client_goals_and_objectives_summary',
---         'employee_performance'
---     )),
---     title VARCHAR(255) NOT NULL,
---     content TEXT NULL,
---     user_id BIGINT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
---     user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('client', 'employee')),
---     start_date TIMESTAMPTZ NULL,
---     end_date TIMESTAMPTZ NULL,
---     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
--- );
-
--- CREATE INDEX ai_generated_report_user_id_idx ON ai_generated_report(user_id);
--- CREATE INDEX ai_generated_report_created_idx ON ai_generated_report(created DESC);
--- CREATE INDEX ai_generated_report_updated_idx ON ai_generated_report(updated);
-
-
 
 CREATE TABLE employee_profile (
     id BIGSERIAL PRIMARY KEY,
