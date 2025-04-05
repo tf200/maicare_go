@@ -98,21 +98,21 @@ CREATE TABLE db_settings (
     option_type VARCHAR(5) NOT NULL CHECK (option_type IN ('str', 'int', 'float', 'bool')) DEFAULT 'str'
 );
 
-CREATE TABLE notification (
-    id BIGSERIAL PRIMARY KEY,
-    event VARCHAR(50) NOT NULL CHECK (event IN (
-        'normal', 'login_send_credentials', 'appointment_created', 
-        'appointment_updated', 'appointment_rescheduled', 
-        'appointment_canceled', 'invoice_expired', 'invoice_created',
-        'progress_report_available', 'progress_report_created',
-        'medication_time', 'contract_reminder'
-    )) DEFAULT 'normal',
-    title VARCHAR(100) NULL,
-    content TEXT NULL,
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    metadata JSONB NULL DEFAULT '{}',
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE notification (
+--     id BIGSERIAL PRIMARY KEY,
+--     event VARCHAR(50) NOT NULL CHECK (event IN (
+--         'normal', 'login_send_credentials', 'appointment_created', 
+--         'appointment_updated', 'appointment_rescheduled', 
+--         'appointment_canceled', 'invoice_expired', 'invoice_created',
+--         'progress_report_available', 'progress_report_created',
+--         'medication_time', 'contract_reminder'
+--     )) DEFAULT 'normal',
+--     title VARCHAR(100) NULL,
+--     content TEXT NULL,
+--     is_read BOOLEAN NOT NULL DEFAULT FALSE,
+--     metadata JSONB NULL DEFAULT '{}',
+--     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
 
 CREATE TABLE attachment_file (
@@ -1773,6 +1773,25 @@ CREATE TABLE objectives_report (
 );
 
 
+
+-- Table to store notifications for users
+CREATE TABLE notifications (
+    id BIGSERIAL PRIMARY KEY,
+
+    user_id BIGINT NOT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
+    -- Type of notification (e.g., 'new_timesheet', 'approval_request', 'system_update')
+    type VARCHAR(100) NOT NULL,
+    -- JSON blob containing notification details (message, links, related IDs, etc.)
+    -- Use JSONB for better indexing and performance in PostgreSQL
+    data JSONB NULL,
+    -- Timestamp when the notification was marked as read (NULL if unread)
+    read_at TIMESTAMPTZ  NULL DEFAULT NULL,
+    -- Timestamp when the notification was created
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_notifications_user_id_created_at ON notifications (user_id, created_at DESC);
+CREATE INDEX idx_notifications_user_id_read_at ON notifications (user_id, read_at);
 
 
 

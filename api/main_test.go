@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"log"
+	"maicare_go/async"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
-	"maicare_go/tasks"
+	"maicare_go/hub"
+
 	"maicare_go/util"
 	"net/http"
 	"os"
@@ -19,7 +21,7 @@ import (
 var testStore *db.Store
 var testServer *Server
 var testb2Client *bucket.B2Client
-var testasynqClient *tasks.AsynqClient
+var testasynqClient *async.AsynqClient
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
@@ -39,9 +41,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
-	testasynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+	testasynqClient = async.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+	hubInstance := hub.NewHub()
 
-	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey)
+	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

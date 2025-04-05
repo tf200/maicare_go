@@ -1,4 +1,4 @@
-package tasks
+package async
 
 import (
 	"context"

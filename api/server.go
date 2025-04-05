@@ -19,13 +19,15 @@ package api
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"maicare_go/ai"
+	"maicare_go/async"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
-	"maicare_go/tasks"
+	"maicare_go/hub"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -41,12 +43,13 @@ type Server struct {
 	config      util.Config
 	tokenMaker  token.Maker
 	b2Client    *bucket.B2Client
-	asynqClient *tasks.AsynqClient
+	asynqClient *async.AsynqClient
 	httpServer  *http.Server
 	aiHandler   *ai.AiHandler
+	hub         *hub.Hub
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.AsynqClient, apiKey string) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)
@@ -58,6 +61,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.Asy
 	}
 
 	aiHandler := ai.NewAiHandler(apiKey)
+
 	server := &Server{
 		store:       store,
 		config:      config,
@@ -65,6 +69,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *tasks.Asy
 		b2Client:    b2Client,
 		asynqClient: asyqClient,
 		aiHandler:   aiHandler,
+		hub:         hubInstance,
 	}
 
 	// Initialize swagger docs
@@ -115,31 +120,71 @@ func (server *Server) setupRoutes() {
 	server.setupECRRoutes(baseRouter)
 	// Add more route setups as needed
 
+	server.setupWebsocketRoutes(baseRouter)
+
 	server.router = router
 }
 
 func (server *Server) Start() error {
-	// Create http.Server with your gin router
+	// --- Start the Hub's processing loop ---
+	// Start this in a goroutine BEFORE starting the blocking HTTP server listener.
+	go server.hub.Run() // <-- START HUB HERE
+	log.Println("WebSocket Hub processing loop started")
+	// ---
+
+	// Create http.Server (if not already done in NewServer, though your code does it here)
 	server.httpServer = &http.Server{
 		Addr:    server.config.ServerAddress,
 		Handler: server.router,
-		// You can add other http.Server configurations here if needed
-		// ReadTimeout:  5 * time.Second,
-		// WriteTimeout: 10 * time.Second,
-		// IdleTimeout:  15 * time.Second,
+		// ... other http.Server configurations ...
 	}
 
-	// Start the server
+	// Start the HTTP server listener (this is blocking)
+	log.Printf("Starting HTTP server on %s", server.config.ServerAddress)
 	if err := server.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		// Log the error from ListenAndServe failing
+		log.Printf("Failed to start HTTP server: %v", err)
+		// Consider if you need to signal the hub to shut down here,
+		// although currently hub.Run() doesn't have a shutdown mechanism.
 		return fmt.Errorf("failed to start server: %v", err)
 	}
 
+	log.Println("HTTP server stopped gracefully or encountered an error.")
 	return nil
 }
 
 func (server *Server) Shutdown(ctx context.Context) error {
-	if err := server.httpServer.Shutdown(ctx); err != nil {
-		return fmt.Errorf("server shutdown failed: %v", err)
+	var httpErr error
+	shutdownComplete := make(chan struct{})
+
+	log.Println("Initiating server shutdown...")
+
+	// Signal the WebSocket Hub to shut down first
+	// This happens quickly; the actual cleanup runs in the Hub's goroutine.
+	server.hub.Shutdown()
+	log.Println("Hub shutdown signaled.")
+
+	// Shutdown HTTP server concurrently
+	go func() {
+		log.Println("Shutting down HTTP server...")
+		if err := server.httpServer.Shutdown(ctx); err != nil {
+			httpErr = fmt.Errorf("http server shutdown failed: %v", err)
+			log.Printf("HTTP server shutdown error: %v", err)
+		} else {
+			log.Println("HTTP server shut down successfully.")
+		}
+		close(shutdownComplete)
+	}()
+
+	// Wait for HTTP shutdown to complete or context deadline
+	select {
+	case <-ctx.Done():
+		log.Printf("Shutdown context timed out/canceled: %v", ctx.Err())
+		// Return the context error, potentially masking the httpErr if it also occurred
+		return ctx.Err()
+	case <-shutdownComplete:
+		log.Println("HTTP server shutdown process finished.")
+		// Return any error encountered during HTTP shutdown
+		return httpErr
 	}
-	return nil
 }

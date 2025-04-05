@@ -3403,6 +3403,13 @@ definitions:
       client_id:
         type: integer
     type: object
+  api.NotificationResponse:
+    properties:
+      echo:
+        type: string
+      timestamp:
+        type: string
+    type: object
   api.Permission:
     properties:
       id:
@@ -9822,6 +9829,17 @@ paths:
       summary: Update a sender
       tags:
       - senders
+  /test/notification:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.NotificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
 security:
 - Bearer: []
 securityDefinitions:

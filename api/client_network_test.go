@@ -289,7 +289,7 @@ func TestDeleteEmergencyContactApi(t *testing.T) {
 	}
 }
 
-func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) db.AssignedEmployee {
+func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) db.AssignEmployeeRow {
 	arg := db.AssignEmployeeParams{
 		ClientID:   clientID,
 		EmployeeID: employeeID,

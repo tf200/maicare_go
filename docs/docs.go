@@ -6221,6 +6221,24 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/test/notification": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -11324,6 +11342,17 @@ const docTemplate = `{
             "properties": {
                 "client_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.NotificationResponse": {
+            "type": "object",
+            "properties": {
+                "echo": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
                 }
             }
         },

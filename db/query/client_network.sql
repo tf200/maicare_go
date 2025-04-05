@@ -58,14 +58,26 @@ RETURNING *;
 
 
 -- name: AssignEmployee :one
-INSERT INTO assigned_employee (
-    client_id,
-    employee_id,
-    start_date,
-    role
-) VALUES (
-    $1, $2, $3, $4
-) RETURNING *;
+WITH inserted_assignment AS (
+    -- Perform the insert and return the inserted row
+    INSERT INTO assigned_employee (
+        client_id,
+        employee_id,
+        start_date,
+        role
+    ) VALUES (
+        $1, $2, $3, $4
+    )
+    RETURNING * -- Return all columns from the inserted assigned_employee row
+)
+-- Select the columns from the inserted row AND join to get the user_id
+SELECT
+    ia.*,  -- Select all columns from the inserted_assignment CTE
+    ep.user_id -- Select the user_id from the employee_profile table
+FROM
+    inserted_assignment ia
+JOIN
+    employee_profile ep ON ia.employee_id = ep.employee_id; -- Join based on employee_id
 
 
 -- name: ListAssignedEmployees :many

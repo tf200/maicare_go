@@ -1,4 +1,4 @@
-package tasks
+package async
 
 import (
 	"context"
@@ -107,5 +107,42 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.
 		return fmt.Errorf("failed to send incident email to %s: %v: %w", p.To, err, asynq.SkipRetry)
 	}
 
+	return nil
+}
+
+// ProcessNotificationTask handles tasks of type TypeNotificationSend.
+// It decodes the payload and delegates to the NotificationService.
+func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *asynq.Task) error {
+	var payload NotificationPayload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		// Return a non-nil error to indicate failure, but don't retry if payload is invalid
+		return fmt.Errorf("failed to unmarshal notification payload: %w: %v", asynq.SkipRetry, err)
+	}
+
+	log.Printf("Received notification task: %+v", payload) // Log received payload
+
+	// Ensure the notification service is available
+	if a.notificationService == nil {
+		// Don't retry if the fundamental dependency is missing
+		return fmt.Errorf("notification service not initialized on AsynqServer: %w", asynq.SkipRetry)
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		// Log the error and return it
+		log.Printf("Failed to marshal notification payload: %v", err)
+		return fmt.Errorf("failed to marshal notification payload: %w", err)
+	}
+
+	// Delegate the actual work to the notification service
+	err = a.notificationService.CreateAndDeliver(ctx, payloadBytes)
+	if err != nil {
+		// Log the error from the service
+		log.Printf("Error processing notification task (ID: %s, Type: %s): %v", t.ResultWriter().TaskID(), payload.Type, err)
+		// Return the error so Asynq can handle retries based on its configuration
+		return fmt.Errorf("notification service failed to process task: %w", err)
+	}
+
+	log.Printf("Successfully processed notification task (ID: %s, Type: %s)", t.ResultWriter().TaskID(), payload.Type)
 	return nil
 }

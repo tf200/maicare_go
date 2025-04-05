@@ -8,9 +8,9 @@ import (
 
 	"github.com/goccy/go-json"
 
+	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
-	"maicare_go/tasks"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -139,6 +139,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	}
 
 	password := util.RandomString(6)
+	log.Printf("password is %v", password)
 
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
@@ -190,7 +191,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
+	server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
 		Name:         req.FirstName + " " + req.LastName,
 		To:           req.Email,
 		UserEmail:    req.Email,
