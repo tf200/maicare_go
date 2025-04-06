@@ -96,7 +96,7 @@ func TestDeleteEmergencyContact(t *testing.T) {
 	require.Empty(t, contact2)
 }
 
-func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) AssignedEmployee {
+func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) AssignEmployeeRow {
 	arg := AssignEmployeeParams{
 		ClientID:   clientID,
 		EmployeeID: employeeID,
