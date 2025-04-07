@@ -77,7 +77,7 @@ SELECT
 FROM
     inserted_assignment ia
 JOIN
-    employee_profile ep ON ia.employee_id = ep.employee_id; -- Join based on employee_id
+    employee_profile ep ON ia.employee_id = ep.id; -- Join based on employee_id
 
 
 -- name: ListAssignedEmployees :many

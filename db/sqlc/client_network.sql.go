@@ -30,7 +30,7 @@ SELECT
 FROM
     inserted_assignment ia
 JOIN
-    employee_profile ep ON ia.employee_id = ep.employee_id
+    employee_profile ep ON ia.employee_id = ep.id
 `
 
 type AssignEmployeeParams struct {
