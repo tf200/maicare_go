@@ -9,8 +9,75 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+// GetClientSenderResponse defines the request for getting a client sender
+type GetClientSenderResponse struct {
+	ID           int64     `json:"id"`
+	Types        string    `json:"types"`
+	Name         string    `json:"name"`
+	Address      *string   `json:"address"`
+	PostalCode   *string   `json:"postal_code"`
+	Place        *string   `json:"place"`
+	Land         *string   `json:"land"`
+	Kvknumber    *string   `json:"kvknumber"`
+	Btwnumber    *string   `json:"btwnumber"`
+	PhoneNumber  *string   `json:"phone_number"`
+	ClientNumber *string   `json:"client_number"`
+	EmailAddress *string   `json:"email_address"`
+	Contacts     []Contact `json:"contacts"`
+	IsArchived   bool      `json:"is_archived"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// GetClientSenderApi gets a client sender
+// @Summary Get a client sender
+// @Tags client_network
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[GetClientSenderResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/sender [get]
+func (server *Server) GetClientSenderApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	sender, err := server.store.GetClientSender(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var contactsResp []Contact
+	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetClientSenderResponse{
+		ID:           sender.ID,
+		Types:        sender.Types,
+		Name:         sender.Name,
+		Address:      sender.Address,
+		PostalCode:   sender.PostalCode,
+		Place:        sender.Place,
+		Land:         sender.Land,
+		Kvknumber:    sender.Kvknumber,
+		Btwnumber:    sender.Btwnumber,
+		PhoneNumber:  sender.PhoneNumber,
+		ClientNumber: sender.ClientNumber,
+		IsArchived:   sender.IsArchived,
+		Contacts:     contactsResp,
+	}, "Client Sender fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
 
 // CreateClientEmergencyContactParams defines the request for creating a client emergency contact
 type CreateClientEmergencyContactParams struct {

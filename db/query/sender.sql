@@ -22,6 +22,7 @@ INSERT INTO sender (
 SELECT * FROM sender
 WHERE id = $1 LIMIT 1;
 
+
 -- name: ListSenders :many
 SELECT * FROM sender
 WHERE 
@@ -64,4 +65,5 @@ SET
 WHERE 
     id = sqlc.arg('id')
 RETURNING *;
+
 

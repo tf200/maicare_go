@@ -10,6 +10,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAssignSender(t *testing.T) {
+	client := createRandomClientDetails(t)
+	sender := createRandomSenders(t)
+
+	newClient, err := testQueries.AssignSender(context.Background(), AssignSenderParams{
+		ID:       client.ID,
+		SenderID: &sender.ID,
+	})
+
+	require.NoError(t, err)
+	require.NotEmpty(t, newClient)
+	require.Equal(t, client.ID, newClient.ID)
+	require.Equal(t, &sender.ID, newClient.SenderID)
+}
+func TestGetClientSender(t *testing.T) {
+	client := createRandomClientDetails(t)
+
+	sender, err := testQueries.GetClientSender(context.Background(), client.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, sender)
+	require.Equal(t, client.SenderID, &sender.ID)
+}
+
 func createRandomEmergencyContact(t *testing.T, clientID int64) ClientEmergencyContact {
 
 	arg := CreateEmemrgencyContactParams{

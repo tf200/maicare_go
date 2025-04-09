@@ -34,7 +34,7 @@ func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 		DateOfBirth:               pgtype.Date{Time: time.Now(), Valid: true},
 		HomeTelephoneNumber:       util.StringPtr(util.RandomString(5)),
 		IsSubcontractor:           util.BoolPtr(true),
-		Gender:                    util.StringPtr(util.RandomString(5)),
+		Gender:                    util.StringPtr("male"),
 		LocationID:                util.IntPtr(location.ID),
 		HasBorrowed:               false,
 		OutOfService:              util.BoolPtr(util.RandomBool()),

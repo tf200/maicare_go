@@ -48,6 +48,55 @@ func (q *Queries) AssignEmployee(ctx context.Context, arg AssignEmployeeParams) 
 	return i, err
 }
 
+const assignSender = `-- name: AssignSender :one
+UPDATE client_details
+SET sender_id = $1
+WHERE id = $2
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+`
+
+type AssignSenderParams struct {
+	SenderID *int64 `json:"sender_id"`
+	ID       int64  `json:"id"`
+}
+
+func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, assignSender, arg.SenderID, arg.ID)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.IntakeFormID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.Source,
+		&i.Birthplace,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Organisation,
+		&i.Departement,
+		&i.Gender,
+		&i.Filenumber,
+		&i.ProfilePicture,
+		&i.Infix,
+		&i.CreatedAt,
+		&i.SenderID,
+		&i.LocationID,
+		&i.IdentityAttachmentIds,
+		&i.DepartureReason,
+		&i.DepartureReport,
+		&i.GpsPosition,
+		&i.MaturityDomains,
+		&i.Addresses,
+		&i.LegalMeasure,
+		&i.HasUntakenMedications,
+	)
+	return i, err
+}
+
 const createEmemrgencyContact = `-- name: CreateEmemrgencyContact :one
 INSERT INTO client_emergency_contact (
     client_id,
@@ -234,6 +283,37 @@ func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID int64) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const getClientSender = `-- name: GetClientSender :one
+SELECT s.id, s.types, s.name, s.address, s.postal_code, s.place, s.land, s.kvknumber, s.btwnumber, s.phone_number, s.client_number, s.email_address, s.contacts, s.is_archived, s.created_at, s.updated_at FROM sender s
+JOIN client_details cd ON s.id = cd.sender_id
+WHERE cd.id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetClientSender(ctx context.Context, id int64) (Sender, error) {
+	row := q.db.QueryRow(ctx, getClientSender, id)
+	var i Sender
+	err := row.Scan(
+		&i.ID,
+		&i.Types,
+		&i.Name,
+		&i.Address,
+		&i.PostalCode,
+		&i.Place,
+		&i.Land,
+		&i.Kvknumber,
+		&i.Btwnumber,
+		&i.PhoneNumber,
+		&i.ClientNumber,
+		&i.EmailAddress,
+		&i.Contacts,
+		&i.IsArchived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getEmergencyContact = `-- name: GetEmergencyContact :one

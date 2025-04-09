@@ -115,7 +115,7 @@ type CreateEmployeeProfileResponse struct {
 	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
 	CreatedAt                 time.Time `json:"created_at"`
 	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
+	Gender                    *string   `json:"gender" binding:"oneof= male female not_specified"`
 	LocationID                *int64    `json:"location_id"`
 	HasBorrowed               bool      `json:"has_borrowed"`
 	OutOfService              *bool     `json:"out_of_service"`
@@ -258,6 +258,7 @@ type ListEmployeeResponse struct {
 	OutOfService              *bool     `json:"out_of_service"`
 	IsArchived                bool      `json:"is_archived"`
 	ProfilePicture            *string   `json:"profile_picture"`
+	Age                       int64     `json:"age"`
 }
 
 // @Summary List employee profiles
@@ -341,6 +342,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 			OutOfService:              employee.OutOfService,
 			IsArchived:                employee.IsArchived,
 			ProfilePicture:            employee.ProfilePicture,
+			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
 		}
 	}
 

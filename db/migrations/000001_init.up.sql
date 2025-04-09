@@ -861,7 +861,7 @@ CREATE TABLE employee_profile (
     home_telephone_number VARCHAR(100) NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_subcontractor BOOLEAN NULL,
-    gender VARCHAR(100) NULL,
+    gender VARCHAR(20) NULL CHECK (gender IN ('male', 'female', 'not_specified')),
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,

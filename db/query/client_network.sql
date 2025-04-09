@@ -1,3 +1,16 @@
+
+-- name: GetClientSender :one
+SELECT s.* FROM sender s
+JOIN client_details cd ON s.id = cd.sender_id
+WHERE cd.id = $1
+LIMIT 1;
+
+-- name: AssignSender :one
+UPDATE client_details
+SET sender_id = $1
+WHERE id = $2
+RETURNING *;
+
 -- name: CreateEmemrgencyContact :one
 INSERT INTO client_emergency_contact (
     client_id,
