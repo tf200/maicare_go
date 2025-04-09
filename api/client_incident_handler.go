@@ -2,10 +2,10 @@ package api
 
 import (
 	"errors"
+	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/pdf"
-	"maicare_go/tasks"
 	"net/http"
 	"strconv"
 	"time"
@@ -264,7 +264,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	server.asynqClient.EnqueueIncident(tasks.IncidentPayload{
+	server.asynqClient.EnqueueIncident(async.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -1004,7 +1004,7 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	server.asynqClient.EnqueueIncident(tasks.IncidentPayload{
+	server.asynqClient.EnqueueIncident(async.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",

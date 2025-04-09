@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"log"
 	"maicare_go/api"
+	"maicare_go/async"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
-	"maicare_go/tasks"
+	"maicare_go/hub"
+	"maicare_go/notification"
 	"maicare_go/util"
 	"os"
 	"os/signal"
@@ -42,22 +44,28 @@ func main() {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}
 
-	var asynqClient *tasks.AsynqClient
+	var asynqClient *async.AsynqClient
 	if !config.Remote {
-		asynqClient = tasks.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+		asynqClient = async.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
 	} else {
-		asynqClient = tasks.NewAsynqClient(config.RedisHost, "", "", nil)
+		asynqClient = async.NewAsynqClient(config.RedisHost, "", "", nil)
 	}
 
 	// Inirialize the SMTP Client for email deleviry
 	smtpConf := email.NewSmtpConf(config.SmtpName, config.SmtpAddress, config.SmtpAuth, config.SmtpHost, config.SmtpPort)
 
+	// Initialize the ws Hub
+	hubInstance := hub.NewHub()
+
+	// Initialize the notification service
+	notificationService := notification.NewService(store, hubInstance)
+
 	// Initialize Asynq server
-	var asynqServer *tasks.AsynqServer
+	var asynqServer *async.AsynqServer
 	if !config.Remote {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf, b2Client)
+		asynqServer = async.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf, b2Client, notificationService)
 	} else {
-		asynqServer = tasks.NewAsynqServer(config.RedisHost, "", "", store, nil, smtpConf, b2Client)
+		asynqServer = async.NewAsynqServer(config.RedisHost, "", "", store, nil, smtpConf, b2Client, notificationService)
 	}
 
 	// Create error channel to catch server errors
@@ -76,7 +84,7 @@ func main() {
 	log.Println("Asynq server started successfully in background")
 
 	// Start your main server
-	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey)
+	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey, hubInstance)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="352" failures="33" errors="0" time="64.370505">
+	<testsuite tests="0" failures="0" time="0.009000" name="maicare_go" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="3" failures="0" time="16.183000" name="maicare_go/ai" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/ai" name="TestSpellingCheck" time="5.410000"></testcase>
+		<testcase classname="maicare_go/ai" name="TestGenerateAutoReports" time="7.490000"></testcase>
+		<testcase classname="maicare_go/ai" name="TestGenerateObjectives" time="3.270000"></testcase>
+	</testsuite>
+	<testsuite tests="187" failures="12" time="62.217000" name="maicare_go/api" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/api" name="TestSpellCheckApi/OK" time="2.970000">
+			<failure message="Failed" type="">=== RUN   TestSpellCheckApi/OK&#xA;2025/04/05 18:48:47 Received request: {InitialText:The qwick brown fox jumpped over the laazy dog. It was a beutiful day, but sudenly, the wheather changed dramaticaly. Peopel ran for sheltr as the rain began pooring down. In the distanse, a lound thunder clap made everyonne jump. This storm came out of no where! exclaimed a passerby.}&#xA;2025/04/05 18:48:50 Corrected text: &amp;{CorrectedText:}&#xA;2025/04/05 18:48:50 Response: {Success:true Message:Spelling check successful Data:{CorrectedText: InitialText:The qwick brown fox jumpped over the laazy dog. It was a beutiful day, but sudenly, the wheather changed dramaticaly. Peopel ran for sheltr as the rain began pooring down. In the distanse, a lound thunder clap made everyonne jump. This storm came out of no where! exclaimed a passerby.}}&#xA;[GIN] 2025/04/05 - 18:48:50 | 200 |  2.967385102s |                 | POST     &#34;/ai/spelling_check&#34;&#xA;    testing.go:1577: test executed panic(nil) or runtime.Goexit: subtest may have called FailNow on a parent test&#xA;--- FAIL: TestSpellCheckApi/OK (2.97s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestSpellCheckApi" time="2.970000">
+			<failure message="Failed" type="">=== RUN   TestSpellCheckApi&#xA;    ai_test.go:44: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/ai_test.go:44&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/ai_test.go:57&#xA;        &#x9;Error:      &#x9;Should NOT be empty, but was &#xA;        &#x9;Test:       &#x9;TestSpellCheckApi&#xA;--- FAIL: TestSpellCheckApi (2.97s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestCreateIncident/OK" time="2.430000">
+			<failure message="Failed" type="">=== RUN   TestCreateIncident/OK&#xA;2025/04/05 18:49:07 task enqueued: id=4794671f-a0c3-4544-bf46-d80de4ae2cda queue=default&#xA;[GIN] 2025/04/05 - 18:49:07 | 201 |  2.429435575s |                 | POST     &#34;/clients/51/incidents&#34;&#xA;    testing.go:1577: test executed panic(nil) or runtime.Goexit: subtest may have called FailNow on a parent test&#xA;--- FAIL: TestCreateIncident/OK (2.43s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestCreateIncident" time="2.630000">
+			<failure message="Failed" type="">=== RUN   TestCreateIncident&#xA;    client_incident_test.go:148: {&#34;success&#34;:true,&#34;message&#34;:&#34;Incident created successfully&#34;,&#34;data&#34;:{&#34;id&#34;:9,&#34;employee_id&#34;:1,&#34;location_id&#34;:74,&#34;reporter_involvement&#34;:&#34;directly_involved&#34;,&#34;inform_who&#34;:[&#34;client&#34;],&#34;incident_date&#34;:&#34;2025-04-05T00:00:00Z&#34;,&#34;runtime_incident&#34;:&#34;no&#34;,&#34;incident_type&#34;:&#34;accident&#34;,&#34;passing_away&#34;:false,&#34;self_harm&#34;:false,&#34;violence&#34;:false,&#34;fire_water_damage&#34;:false,&#34;accident&#34;:false,&#34;client_absence&#34;:false,&#34;medicines&#34;:false,&#34;organization&#34;:false,&#34;use_prohibited_substances&#34;:false,&#34;other_notifications&#34;:false,&#34;severity_of_incident&#34;:&#34;fatal&#34;,&#34;incident_explanation&#34;:&#34;test explanation&#34;,&#34;recurrence_risk&#34;:&#34;high&#34;,&#34;incident_prevent_steps&#34;:&#34;test steps&#34;,&#34;incident_taken_measures&#34;:&#34;test measures&#34;,&#34;technical&#34;:[&#34;client&#34;],&#34;organizational&#34;:[&#34;client&#34;],&#34;mese_worker&#34;:[&#34;client&#34;],&#34;client_options&#34;:[&#34;client&#34;],&#34;other_cause&#34;:&#34;test cause&#34;,&#34;cause_explanation&#34;:&#34;test cause explanation&#34;,&#34;physical_injury&#34;:&#34;no_injuries&#34;,&#34;physical_injury_desc&#34;:&#34;test injuries&#34;,&#34;psychological_damage&#34;:&#34;other&#34;,&#34;psychological_damage_desc&#34;:&#34;test damage&#34;,&#34;needed_consultation&#34;:&#34;no&#34;,&#34;succession&#34;:[&#34;client&#34;],&#34;succession_desc&#34;:&#34;test succession&#34;,&#34;other&#34;:false,&#34;other_desc&#34;:&#34;test other&#34;,&#34;additional_appointments&#34;:&#34;test appointments&#34;,&#34;employee_absenteeism&#34;:&#34;client&#34;,&#34;client_id&#34;:51,&#34;emails&#34;:[&#34;farjiataha@gmail.com&#34;,&#34;tahafarjia@gmail.com&#34;],&#34;soft_delete&#34;:false,&#34;updated&#34;:&#34;2025-04-05T18:49:06.006462Z&#34;,&#34;created&#34;:&#34;2025-04-05T18:49:06.006462Z&#34;}}&#xA;    client_incident_test.go:194: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/client_incident_test.go:194&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/client_incident_test.go:207&#xA;        &#x9;Error:      &#x9;Not equal: &#xA;        &#x9;            &#x9;expected: []string{&#34;farjiataha@gmail.com&#34;, &#34;tahafarjia@gmail.com&#34;}&#xA;        &#x9;            &#x9;actual  : []string{&#34;testemail@gg.com&#34;, &#34;gaga@gog.com&#34;}&#xA;        &#x9;            &#x9;&#xA;        &#x9;            &#x9;Diff:&#xA;        &#x9;            &#x9;--- Expected&#xA;        &#x9;            &#x9;+++ Actual&#xA;        &#x9;            &#x9;@@ -1,4 +1,4 @@&#xA;        &#x9;            &#x9; ([]string) (len=2) {&#xA;        &#x9;            &#x9;- (string) (len=20) &#34;farjiataha@gmail.com&#34;,&#xA;        &#x9;            &#x9;- (string) (len=20) &#34;tahafarjia@gmail.com&#34;&#xA;        &#x9;            &#x9;+ (string) (len=16) &#34;testemail@gg.com&#34;,&#xA;        &#x9;            &#x9;+ (string) (len=12) &#34;gaga@gog.com&#34;&#xA;        &#x9;            &#x9; }&#xA;        &#x9;Test:       &#x9;TestCreateIncident&#xA;--- FAIL: TestCreateIncident (2.63s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestAssignEmployeeApi/OK" time="0.100000">
+			<failure message="Failed" type="">=== RUN   TestAssignEmployeeApi/OK&#xA;[GIN] 2025/04/05 - 18:49:23 | 500 |   97.600591ms |                 | POST     &#34;/clients/121/involved_employees&#34;&#xA;    testing.go:1577: test executed panic(nil) or runtime.Goexit: subtest may have called FailNow on a parent test&#xA;--- FAIL: TestAssignEmployeeApi/OK (0.10s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestAssignEmployeeApi" time="0.440000">
+			<failure message="Failed" type="">=== RUN   TestAssignEmployeeApi&#xA;    client_network_test.go:338: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:338&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:357&#xA;        &#x9;Error:      &#x9;Not equal: &#xA;        &#x9;            &#x9;expected: 201&#xA;        &#x9;            &#x9;actual  : 500&#xA;        &#x9;Test:       &#x9;TestAssignEmployeeApi&#xA;--- FAIL: TestAssignEmployeeApi (0.44s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestListAssignedEmployeesApi" time="0.380000">
+			<failure message="Failed" type="">=== RUN   TestListAssignedEmployeesApi&#xA;    client_network_test.go:300: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:300&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:366&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestListAssignedEmployeesApi&#xA;--- FAIL: TestListAssignedEmployeesApi (0.38s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestGetAssignedEmployeeApi" time="0.480000">
+			<failure message="Failed" type="">=== RUN   TestGetAssignedEmployeeApi&#xA;    client_network_test.go:300: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:300&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:414&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestGetAssignedEmployeeApi&#xA;--- FAIL: TestGetAssignedEmployeeApi (0.48s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateAssignedEmployeeApi" time="0.390000">
+			<failure message="Failed" type="">=== RUN   TestUpdateAssignedEmployeeApi&#xA;    client_network_test.go:300: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:300&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:460&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestUpdateAssignedEmployeeApi&#xA;--- FAIL: TestUpdateAssignedEmployeeApi (0.39s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientRelatedEmailsApi" time="0.510000">
+			<failure message="Failed" type="">=== RUN   TestGetClientRelatedEmailsApi&#xA;    client_network_test.go:513: 127 54&#xA;    client_network_test.go:300: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:300&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/client_network_test.go:514&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestGetClientRelatedEmailsApi&#xA;--- FAIL: TestGetClientRelatedEmailsApi (0.51s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestListEmployeeProfileApi/OK" time="0.300000">
+			<failure message="Failed" type="">=== RUN   TestListEmployeeProfileApi/OK&#xA;[GIN] 2025/04/05 - 18:49:42 | 200 |  296.356696ms |                 | GET      &#34;/employees?page=1&amp;page_size=10&#34;&#xA;    testing.go:1577: test executed panic(nil) or runtime.Goexit: subtest may have called FailNow on a parent test&#xA;--- FAIL: TestListEmployeeProfileApi/OK (0.30s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestListEmployeeProfileApi" time="2.910000">
+			<failure message="Failed" type="">=== RUN   TestListEmployeeProfileApi&#xA;    employee_profile_test.go:251: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/api/employee_profile_test.go:251&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/api/employee_profile_test.go:327&#xA;        &#x9;Error:      &#x9;Not equal: &#xA;        &#x9;            &#x9;expected: 130&#xA;        &#x9;            &#x9;actual  : 137&#xA;        &#x9;Test:       &#x9;TestListEmployeeProfileApi&#xA;--- FAIL: TestListEmployeeProfileApi (2.91s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/api" name="TestCreateAppointmentCardApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateAppointmentCardApi" time="1.190000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUploadHandler/OK" time="0.440000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUploadHandler/NoFile" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUploadHandler/EmptyFile" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUploadHandler" time="0.440000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetAttachmentById/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetAttachmentById/NotFound" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetAttachmentById" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestLogin/OK" time="0.240000"></testcase>
+		<testcase classname="maicare_go/api" name="TestLogin/UserNotFound" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestLogin/WrongPassword" time="0.090000"></testcase>
+		<testcase classname="maicare_go/api" name="TestLogin" time="0.510000"></testcase>
+		<testcase classname="maicare_go/api" name="TestRefreshTokenHandler/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestRefreshTokenHandler/InvalidToken" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestRefreshTokenHandler" time="0.240000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientApi/OK" time="0.890000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientApi" time="1.490000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClient/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClient/Invalid_Page_Size" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClient/Invalid_Page_Number" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClient" time="1.760000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientDetails/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientDetails" time="0.300000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientDetailsApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientDetailsApi" time="0.410000"></testcase>
+		<testcase classname="maicare_go/api" name="TestSetClientProfilePictureApi/OK" time="0.290000"></testcase>
+		<testcase classname="maicare_go/api" name="TestSetClientProfilePictureApi" time="0.500000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddClientDocumentApi/OK" time="0.290000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddClientDocumentApi" time="0.490000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientDocumentsApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientDocumentsApi" time="2.760000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteClientDocumentApi/OK" time="0.300000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteClientDocumentApi" time="0.690000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetMissingClientDocumentsApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetMissingClientDocumentsApi" time="0.550000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientStatusApi/OK_No_Scheduling" time="0.390000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientStatusApi/OK_With_Scheduling" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientStatusApi" time="0.690000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListIncidentsApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListIncidentsApi" time="6.160000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetIncidentApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetIncidentApi/Not_Found" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetIncidentApi" time="0.680000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateIncidentApi/OK" time="0.200000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateIncidentApi" time="0.830000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientAllergyApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientAllergyApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientAllergies/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientAllergies" time="1.290000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientAllergyApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientAllergyApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientAllergyyApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientAllergyyApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteClientAllergyApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteClientAllergyApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientDiagnosisApi/OK" time="0.160000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientDiagnosisApi" time="0.310000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientDiagnoses/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientDiagnoses" time="1.320000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientDiagnosisApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientDiagnosisApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientDiagnosisApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateClientDiagnosisApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateEmemrgencyContactApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateEmemrgencyContactApi" time="0.310000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientEmergencyContactsApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientEmergencyContactsApi" time="1.310000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetEmergencyContactApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetEmergencyContactApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateEmergencyContactApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateEmergencyContactApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteEmergencyContactApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteEmergencyContactApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateProgressReportApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateProgressReportApi" time="0.490000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListProgressReportApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListProgressReportApi" time="1.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetProgressReportApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetProgressReportApi" time="0.530000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateProgressReportApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateProgressReportApi" time="0.540000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGenerateAutoReportsApi/OK" time="1.180000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGenerateAutoReportsApi" time="1.670000"></testcase>
+		<testcase classname="maicare_go/api" name="TestConfirmProgressReportApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestConfirmProgressReportApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListAiGeneratedReportsApi/OK" time="0.160000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListAiGeneratedReportsApi" time="0.810000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateContractTypeApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateContractTypeApi" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListContractTypeApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListContractTypeApi" time="0.600000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientContractApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientContractApi" time="0.350000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientContractsApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListClientContractsApi" time="1.820000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientContract/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetClientContract" time="0.400000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListContractsApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListContractsApi/Filter_By_Status" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListContractsApi" time="3.220000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateEmployeeProfileApi/OK" time="0.340000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateEmployeeProfileApi/NoPermission" time="0.340000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateEmployeeProfileApi" time="0.720000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetEmployeeProfileByIDApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetEmployeeProfileByIDApi" time="0.330000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateEmployeeProfileApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateEmployeeProfileApi" time="0.330000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetEmployeeProfileApi/OK" time="0.120000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetEmployeeProfileApi" time="0.320000"></testcase>
+		<testcase classname="maicare_go/api" name="TestSetEmployeeProfilePictureApi/OK" time="0.340000"></testcase>
+		<testcase classname="maicare_go/api" name="TestSetEmployeeProfilePictureApi" time="0.670000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddEducationToEmployeeProfileApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddEducationToEmployeeProfileApi" time="0.330000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListEmployeeEducationApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListEmployeeEducationApi/OK#01" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListEmployeeEducationApi" time="0.440000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddEmployeeExperienceApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddEmployeeExperienceApi" time="0.330000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddEmployeeCertificationApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddEmployeeCertificationApi" time="0.330000"></testcase>
+		<testcase classname="maicare_go/api" name="TestSearchEmployeesByNameOrEmailApi/OK" time="0.140000"></testcase>
+		<testcase classname="maicare_go/api" name="TestSearchEmployeesByNameOrEmailApi" time="2.009000"></testcase>
+		<testcase classname="maicare_go/api" name="TestIntakeFormUploadHandlerApi/OK" time="0.250000"></testcase>
+		<testcase classname="maicare_go/api" name="TestIntakeFormUploadHandlerApi" time="0.250000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateIntakeFormApi/OK" time="0.200000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateIntakeFormApi" time="0.200000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListIntakeFormsApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListIntakeFormsApi" time="0.590000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetIntakeForm/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetIntakeForm" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddUrgencyScoreApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAddUrgencyScoreApi" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestMoveToWaitingList/OK" time="0.200000"></testcase>
+		<testcase classname="maicare_go/api" name="TestMoveToWaitingList" time="0.240000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateLocationApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateLocationApi" time="0.180000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateLocationApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateLocationApi" time="0.280000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteLocationApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestDeleteLocationApi" time="0.280000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetLocationApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetLocationApi" time="0.230000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientMaturityMatrixAssessmentApi/OK" time="0.290000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateClientMaturityMatrixAssessmentApi" time="0.490000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAuthMiddleware/OK" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAuthMiddleware/NoAuthorization" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAuthMiddleware/UnsupportedAuthorization" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAuthMiddleware/InvalidAuthorizationFormat" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAuthMiddleware/ExpiredToken" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestAuthMiddleware" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestRBACMiddleware/OK" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestRBACMiddleware/NoAuthorization" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestRBACMiddleware" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetPermissionsByRoleIDApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetPermissionsByRoleIDApi" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetRoleByIDApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetRoleByIDApi" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListRolesApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListRolesApi" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateSenderApi/OK" time="0.100000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateSenderApi/InvalidType" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateSenderApi/InvalidEmail" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateSenderApi/MissingRequiredField" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestCreateSenderApi" time="0.240000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListSendersAPI/OK" time="0.290000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListSendersAPI/NoAuthorization" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListSendersAPI/ExpiredToken" time="0.000000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListSendersAPI/InvalidPageSize" time="0.050000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListSendersAPI/SecondPage" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestListSendersAPI" time="1.160000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateSenderApi/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestUpdateSenderApi" time="0.200000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetSenderByIdAPI/OK" time="0.150000"></testcase>
+		<testcase classname="maicare_go/api" name="TestGetSenderByIdAPI" time="0.200000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="1" time="5.523000" name="maicare_go/async" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/async" name="TestEnqueueEmailDelivery" time="4.450000">
+			<failure message="Failed" type="">=== RUN   TestEnqueueEmailDelivery&#xA;2025/04/05 18:48:50 task enqueued: id=17acfa60-8b27-4cd4-a28a-2521c0e82888 queue=default&#xA;    task_test.go:28: &lt;nil&gt;&#xA;    task_test.go:40: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/async/task_test.go:40&#xA;        &#x9;Error:      &#x9;Should NOT be empty, but was []&#xA;        &#x9;Test:       &#x9;TestEnqueueEmailDelivery&#xA;--- FAIL: TestEnqueueEmailDelivery (4.45s)&#xA;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.002000" name="maicare_go/bucket" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="156" failures="18" time="60.947000" name="maicare_go/db/sqlc" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/db/sqlc" name="TestContractEndCount" time="0.370000">
+			<failure message="Failed" type="">=== RUN   TestContractEndCount&#xA;    ECR_test.go:98: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/ECR_test.go:98&#xA;        &#x9;Error:      &#x9;Should NOT be empty, but was 0&#xA;        &#x9;Test:       &#x9;TestContractEndCount&#xA;--- FAIL: TestContractEndCount (0.37s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAssignEmployee" time="0.360000">
+			<failure message="Failed" type="">=== RUN   TestAssignEmployee&#xA;    client_network_test.go:107: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:107&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:118&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestAssignEmployee&#xA;--- FAIL: TestAssignEmployee (0.36s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListAssignedEmployees" time="0.360000">
+			<failure message="Failed" type="">=== RUN   TestListAssignedEmployees&#xA;    client_network_test.go:107: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:107&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:126&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestListAssignedEmployees&#xA;--- FAIL: TestListAssignedEmployees (0.36s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetAssignEmployee" time="0.360000">
+			<failure message="Failed" type="">=== RUN   TestGetAssignEmployee&#xA;    client_network_test.go:107: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:107&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:141&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestGetAssignEmployee&#xA;--- FAIL: TestGetAssignEmployee (0.36s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateAssignEmployee" time="0.360000">
+			<failure message="Failed" type="">=== RUN   TestUpdateAssignEmployee&#xA;    client_network_test.go:107: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:107&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:152&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestUpdateAssignEmployee&#xA;--- FAIL: TestUpdateAssignEmployee (0.36s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientRelatedEmails" time="0.360000">
+			<failure message="Failed" type="">=== RUN   TestGetClientRelatedEmails&#xA;    client_network_test.go:107: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:107&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_network_test.go:167&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: column ep.employee_id does not exist (SQLSTATE 42703)&#xA;        &#x9;Test:       &#x9;TestGetClientRelatedEmails&#xA;--- FAIL: TestGetClientRelatedEmails (0.36s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetProgressReportsByDateRange" time="0.870000">
+			<failure message="Failed" type="">=== RUN   TestGetProgressReportsByDateRange&#xA;    client_progress_report_test.go:94: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/client_progress_report_test.go:94&#xA;        &#x9;Error:      &#x9;&#34;[]&#34; should have 5 item(s), but has 0&#xA;        &#x9;Test:       &#x9;TestGetProgressReportsByDateRange&#xA;--- FAIL: TestGetProgressReportsByDateRange (0.87s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListContractType" time="0.630000">
+			<failure message="Failed" type="">=== RUN   TestListContractType&#xA;    contract_test.go:39: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/contract_test.go:39&#xA;        &#x9;Error:      &#x9;&#34;[{1 Test Contract Type} {2 Test Contract Type} {3 Test Contract Type} {4 Test Contract Type} {5 Test Contract Type} {6 Test Contract Type} {7 Test Contract Type} {8 Test Contract Type} {9 Test Contract Type} {10 Test Contract Type} {11 Test Contract Type} {12 Test Contract Type} {13 Test Contract Type} {14 Test Contract Type} {15 Test Contract Type}]&#34; should have 10 item(s), but has 15&#xA;        &#x9;Test:       &#x9;TestListContractType&#xA;--- FAIL: TestListContractType (0.63s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateContract" time="0.370000">
+			<failure message="Failed" type="">=== RUN   TestUpdateContract&#xA;    contract_test.go:119: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/contract_test.go:119&#xA;        &#x9;Error:      &#x9;Not equal: &#xA;        &#x9;            &#x9;expected: *int32((*int32)(0xc0004c63d0))&#xA;        &#x9;            &#x9;actual  : int32(10)&#xA;        &#x9;Test:       &#x9;TestUpdateContract&#xA;--- FAIL: TestUpdateContract (0.37s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestSetEmployeeProfilePicture" time="0.360000">
+			<failure message="Failed" type="">=== RUN   TestSetEmployeeProfilePicture&#xA;    employee_profile_test.go:259: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/employee_profile_test.go:259&#xA;        &#x9;Error:      &#x9;Not equal: &#xA;        &#x9;            &#x9;expected: 81&#xA;        &#x9;            &#x9;actual  : 85&#xA;        &#x9;Test:       &#x9;TestSetEmployeeProfilePicture&#xA;--- FAIL: TestSetEmployeeProfilePicture (0.36s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateIntakeForm" time="0.100000">
+			<failure message="Failed" type="">=== RUN   TestCreateIntakeForm&#xA;    intake_form_test.go:108: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:108&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:119&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: new row for relation &#34;intake_forms&#34; violates check constraint &#34;intake_forms_urgency_score_check&#34; (SQLSTATE 23514)&#xA;        &#x9;Test:       &#x9;TestCreateIntakeForm&#xA;--- FAIL: TestCreateIntakeForm (0.10s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListIntakeForms" time="0.140000">
+			<failure message="Failed" type="">=== RUN   TestListIntakeForms&#xA;    intake_form_test.go:108: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:108&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:125&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: new row for relation &#34;intake_forms&#34; violates check constraint &#34;intake_forms_urgency_score_check&#34; (SQLSTATE 23514)&#xA;        &#x9;Test:       &#x9;TestListIntakeForms&#xA;--- FAIL: TestListIntakeForms (0.14s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetIntakeForm" time="0.140000">
+			<failure message="Failed" type="">=== RUN   TestGetIntakeForm&#xA;    intake_form_test.go:108: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:108&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:242&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: new row for relation &#34;intake_forms&#34; violates check constraint &#34;intake_forms_urgency_score_check&#34; (SQLSTATE 23514)&#xA;        &#x9;Test:       &#x9;TestGetIntakeForm&#xA;--- FAIL: TestGetIntakeForm (0.14s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAddUrgencyScore" time="0.140000">
+			<failure message="Failed" type="">=== RUN   TestAddUrgencyScore&#xA;    intake_form_test.go:108: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:108&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/intake_form_test.go:254&#xA;        &#x9;Error:      &#x9;Received unexpected error:&#xA;        &#x9;            &#x9;ERROR: new row for relation &#34;intake_forms&#34; violates check constraint &#34;intake_forms_urgency_score_check&#34; (SQLSTATE 23514)&#xA;        &#x9;Test:       &#x9;TestAddUrgencyScore&#xA;--- FAIL: TestAddUrgencyScore (0.14s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientMaturityMatrixAssessments" time="0.290000">
+			<failure message="Failed" type="">=== RUN   TestListClientMaturityMatrixAssessments&#xA;    maturity_matrix_test.go:77: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/maturity_matrix_test.go:77&#xA;        &#x9;Error:      &#x9;&#34;[]&#34; should have 5 item(s), but has 0&#xA;        &#x9;Test:       &#x9;TestListClientMaturityMatrixAssessments&#xA;--- FAIL: TestListClientMaturityMatrixAssessments (0.29s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountSenders/Count_all_senders" time="0.110000">
+			<failure message="Failed" type="">=== RUN   TestCountSenders/Count_all_senders&#xA;    sender_test.go:130: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/sender_test.go:130&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/sender_test.go:148&#xA;        &#x9;Error:      &#x9;Not equal: &#xA;        &#x9;            &#x9;expected: 196&#xA;        &#x9;            &#x9;actual  : 197&#xA;        &#x9;Test:       &#x9;TestCountSenders/Count_all_senders&#xA;        &#x9;Messages:   &#x9;should match initial count plus newly created employees&#xA;--- FAIL: TestCountSenders/Count_all_senders (0.11s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountSenders/Count_non-archived_senders" time="0.050000">
+			<failure message="Failed" type="">=== RUN   TestCountSenders/Count_non-archived_senders&#xA;    sender_test.go:138: &#xA;        &#x9;Error Trace:&#x9;/home/taha/maicare/maicare_go/db/sqlc/sender_test.go:138&#xA;        &#x9;            &#x9;&#x9;&#x9;&#x9;/home/taha/maicare/maicare_go/db/sqlc/sender_test.go:148&#xA;        &#x9;Error:      &#x9;&#34;197&#34; is not less than or equal to &#34;196&#34;&#xA;        &#x9;Test:       &#x9;TestCountSenders/Count_non-archived_senders&#xA;--- FAIL: TestCountSenders/Count_non-archived_senders (0.05s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountSenders" time="0.410000">
+			<failure message="Failed" type="">=== RUN   TestCountSenders&#xA;--- FAIL: TestCountSenders (0.41s)&#xA;</failure>
+		</testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDischargeOverview" time="2.750000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestTotalDischargeCount" time="0.420000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUrgentCasesCount" time="0.580000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestStatusChangeCount" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateAppointmentCard" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetAppointmentCard" time="0.360000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateAppointmentCard" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateAttachment" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetAttachmentById" time="0.140000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteAttachement" time="0.190000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateIncident" time="0.540000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListIncidents" time="1.300000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetIncident" time="0.520000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateIncident" time="0.500000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteIncident" time="0.540000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientAllergy" time="0.230000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientAllergies/base_case" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientAllergies/with_offset" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientAllergies" time="1.190000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientAllergy" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateClientAllergyy" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteClientAllergy" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientDiagnosis" time="0.230000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDiagnoses/base_case" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDiagnoses/with_offset" time="0.040000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDiagnoses" time="1.190000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientDiagnosis" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateClientDiagnosis" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteClientDiagnosis" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientMedication" time="0.410000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientMedications/base_case" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientMedications/with_offset" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientMedications" time="1.380000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientMedication" time="0.460000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateClientMedication" time="0.450000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteClientMedication" time="0.520000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateEmemrgencyContact" time="0.640000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmergencyContacts" time="0.740000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetEmergencyContact" time="0.300000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateEmergencyContact" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteEmergencyContact" time="0.330000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateProgressReport" time="0.410000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListProgressReport" time="0.870000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetProgressReport" time="0.450000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateProgressReport" time="0.460000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateAiGeneratedReport" time="0.230000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListAiGeneratedReports" time="0.710000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetAiGeneratedReport" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientDetails" time="0.140000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientDetailsTx" time="0.380000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDetails/base_case" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDetails/with_offset" time="0.040000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDetails/with_search" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDetails/with_status" time="0.040000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDetails" time="3.080000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientDetails" time="0.230000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateClientDetails" time="0.230000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateClientStatus" time="0.250000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientStatusHistory" time="0.240000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientStatusHistory" time="0.320000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateSchedueledClientStatusChange" time="0.180000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestSetClientProfilePictureTx" time="0.420000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientDocument" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAddClientDocumentTx" time="0.360000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDocuments/base_case" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDocuments/with_offset" time="0.040000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientDocuments" time="2.550000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteClientDocument" time="0.500000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteClientDocumentTx" time="0.600000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetMissingClientDocuments" time="0.520000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateContractType" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateContract" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientContract" time="0.370000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientContracts" time="1.630000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListContracts" time="2.860000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateUser" time="0.080000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetUserByID" time="0.170000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateEmployeeProfile" time="0.180000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/List_all_employees_with_limit_5" time="0.100000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/List_with_offset" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/Exclude_archived_only" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/Exclude_out_of_service_only" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/Exclude_both_archived_and_out_of_service" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/Check_ordering" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/Check_offset_beyond_total" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile/Filter_by_Location" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeProfile" time="3.320000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestSetEmployeeProfilePictureTx" time="0.540000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile/Count_all_employees" time="0.100000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile/Count_non-archived_employees" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile/Count_non-out-of-service_employees" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile/Filter_by_department" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile/Filter_by_non-existent_department" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile/Count_with_all_filters" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCountEmployeeProfile" time="0.790000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetEmployeeProfileByUserID" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetEmployeeProfileByID" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateEmployeeProfile" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAddEducationToEmployeeProfile" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEducations" time="0.420000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateEducation" time="0.330000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteEmployeeEducation" time="0.140000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAddEmployeeExperience" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeExperience" time="0.420000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateEmployeeExperience" time="0.310000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteEmployeeExperience" time="0.140000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAddEmployeeCertification" time="0.270000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListEmployeeCertifications" time="0.510000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateEmployeeCertification" time="0.420000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteEmployeeCertification" time="0.150000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestSearchEmployeesByNameOrEmail" time="1.970000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateLocation" time="0.100000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListLocations" time="0.350000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateLocation" time="0.180000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestDeleteLocation" time="0.200000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetLocation" time="0.140000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListMaturityMatrix" time="0.100000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetLevelDescription" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientMaturityMatrixAssessment" time="0.340000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientMaturityMatrixAssessment" time="0.300000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateClientGoal" time="0.290000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListClientGoals" time="0.800000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetClientGoal" time="0.330000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateGoalObjective" time="0.340000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListGoalObjectives" time="0.830000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetPermissionsByRoleID" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetRoleByID" time="0.100000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestAssignRoleToUser" time="0.180000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListRoles" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateSender" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListsenders/base_case" time="0.090000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListsenders/with_offset" time="0.050000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestListsenders" time="0.280000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestUpdateSender" time="0.160000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetSenderById" time="0.160000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateSession" time="0.200000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestGetSessionByID" time="0.250000"></testcase>
+		<testcase classname="maicare_go/db/sqlc" name="TestCreateEmployeeWithAccountTx" time="0.270000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.002000" name="maicare_go/docs" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="1" failures="1" time="3.289000" name="maicare_go/email" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/email" name="TestSend" time="-0.000000">
+			<failure message="Failed" type="">=== RUN   TestSend&#xA;failed to send mail: dial failed: SMTP AUTH failed: 535 5.7.8 Error: authentication failed: (reason unavailable)&#xA;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.003000" name="maicare_go/hub" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.003000" name="maicare_go/notification" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.003000" name="maicare_go/pagination" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="2" failures="0" time="3.286000" name="maicare_go/pdf" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/pdf" name="TestGenerateAppointmentcardPDF" time="1.900000"></testcase>
+		<testcase classname="maicare_go/pdf" name="TestGenerateIncidentPDF" time="1.380000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="1" time="0.007000" name="maicare_go/token" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/token" name="TestJWTMaker" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestJWTMaker&#xA;--- FAIL: TestJWTMaker (0.00s)&#xA;panic: invalid argument to Int63n [recovered]&#xA;&#x9;panic: invalid argument to Int63n&#xA;&#xA;goroutine 20 [running]:&#xA;testing.tRunner.func1.2({0x668680, 0x73aa40})&#xA;&#x9;/usr/local/go/src/testing/testing.go:1632 +0x230&#xA;testing.tRunner.func1()&#xA;&#x9;/usr/local/go/src/testing/testing.go:1635 +0x35e&#xA;panic({0x668680?, 0x73aa40?})&#xA;&#x9;/usr/local/go/src/runtime/panic.go:785 +0x132&#xA;math/rand.(*Rand).Int63n(0x20?, 0x20?)&#xA;&#x9;/usr/local/go/src/math/rand/rand.go:122 +0xcb&#xA;math/rand.Int63n(0xffffffffffffeea5)&#xA;&#x9;/usr/local/go/src/math/rand/rand.go:443 +0x25&#xA;maicare_go/util.RandomInt(...)&#xA;&#x9;/home/taha/maicare/maicare_go/util/random.go:19&#xA;maicare_go/token.TestJWTMaker(0xc0001669c0)&#xA;&#x9;/home/taha/maicare/maicare_go/token/jwt_maker_test.go:18 +0x92&#xA;testing.tRunner(0xc0001669c0, 0x6f0c40)&#xA;&#x9;/usr/local/go/src/testing/testing.go:1690 +0xf4&#xA;created by testing.(*T).Run in goroutine 1&#xA;&#x9;/usr/local/go/src/testing/testing.go:1743 +0x390&#xA;</failure>
+		</testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="0.151000" name="maicare_go/util" timestamp="2025-04-05T18:48:44Z">
+		<properties>
+			<property name="go.version" value="go1.23.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="maicare_go/util" name="TestPassword" time="0.150000"></testcase>
+	</testsuite>
+</testsuites>

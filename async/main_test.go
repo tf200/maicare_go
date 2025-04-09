@@ -1,4 +1,4 @@
-package tasks
+package async
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
+	"maicare_go/hub"
+	"maicare_go/notification"
 
 	"maicare_go/util"
 	"os"
@@ -38,8 +40,10 @@ func TestMain(m *testing.M) {
 	testStore = db.NewStore(conn)
 	testSmtp := email.NewSmtpConf(config.SmtpName, config.SmtpAddress, config.SmtpAuth, config.SmtpHost, config.SmtpPort)
 	testasynqClient = NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+	hubInstance := hub.NewHub()
+	testNotifService := notification.NewService(testStore, hubInstance)
 
-	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{}, testSmtp, testB2client)
+	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{}, testSmtp, testB2client, testNotifService)
 
 	os.Exit(m.Run())
 }

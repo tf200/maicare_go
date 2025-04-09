@@ -1,45 +1,6 @@
-package tasks
+package async
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"time"
-
-	"github.com/goccy/go-json"
-
-	"github.com/hibiken/asynq"
-)
-
-const (
-	TypeEmailDelivery = "email:deliver"
-	TypeIncident      = "incident:process"
-)
-
-type EmailDeliveryPayload struct {
-	To           string `json:"to"`
-	Name         string `json:"name"`
-	UserEmail    string `json:"user_email"`
-	UserPassword string `json:"user_password"`
-}
-
-func (c *AsynqClient) EnqueueEmailDelivery(
-	payload EmailDeliveryPayload,
-	ctx context.Context,
-	opts ...asynq.Option) error {
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("json.Marshal failed: %v", err)
-	}
-	task := asynq.NewTask(TypeEmailDelivery, jsonPayload)
-	info, err := c.client.EnqueueContext(ctx, task, opts...)
-	if err != nil {
-		return fmt.Errorf("client.EnqueueContext failed: %v", err)
-	}
-	log.Printf("task enqueued: id=%s queue=%s", info.ID, info.Queue)
-	return nil
-
-}
+import "time"
 
 type IncidentPayload struct {
 	ID                      int64     `json:"id"`
@@ -89,19 +50,15 @@ type IncidentPayload struct {
 	To                      []string  `json:"to"`
 }
 
-func (c *AsynqClient) EnqueueIncident(
-	payload IncidentPayload,
-	ctx context.Context,
-	opts ...asynq.Option) error {
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("json.Marshal failed: %v", err)
-	}
-	task := asynq.NewTask(TypeIncident, jsonPayload)
-	info, err := c.client.EnqueueContext(ctx, task, opts...)
-	if err != nil {
-		return fmt.Errorf("client.EnqueueContext failed: %v", err)
-	}
-	log.Printf("task enqueued: id=%s queue=%s", info.ID, info.Queue)
-	return nil
+type EmailDeliveryPayload struct {
+	To           string `json:"to"`
+	Name         string `json:"name"`
+	UserEmail    string `json:"user_email"`
+	UserPassword string `json:"user_password"`
+}
+
+type NotificationPayload struct {
+	RecipientUserIDs []int64 `json:"recipient_user_ids"`
+	Type             string  `json:"type"`
+	Data             []byte  `json:"data"`
 }

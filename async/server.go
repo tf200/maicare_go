@@ -1,23 +1,25 @@
-package tasks
+package async
 
 import (
 	"crypto/tls"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
+	"maicare_go/notification"
 	"time"
 
 	"github.com/hibiken/asynq"
 )
 
 type AsynqServer struct {
-	server   *asynq.Server
-	store    *db.Store
-	smtp     *email.SmtpConf
-	b2Bucket *bucket.B2Client
+	server              *asynq.Server
+	store               *db.Store
+	smtp                *email.SmtpConf
+	b2Bucket            *bucket.B2Client
+	notificationService *notification.Service
 }
 
-func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, smtp *email.SmtpConf, b2Bucket *bucket.B2Client) *AsynqServer {
+func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, smtp *email.SmtpConf, b2Bucket *bucket.B2Client, notificationService *notification.Service) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
 			Addr:         redisHost,
@@ -40,13 +42,15 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store,
 			},
 		},
 	)
-	return &AsynqServer{server: srv, store: store, smtp: smtp, b2Bucket: b2Bucket}
+	return &AsynqServer{server: srv, store: store, smtp: smtp, b2Bucket: b2Bucket, notificationService: notificationService}
 }
 
 func (a *AsynqServer) Start() error {
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(TypeEmailDelivery, a.ProcessEmailTask)
-	mux.HandleFunc(TypeIncident, a.ProcessIncidentTask)
+	mux.HandleFunc(TypeIncidentProcess, a.ProcessIncidentTask)
+	mux.HandleFunc(TypeNotificationSend, a.ProcessNotificationTask)
+
 	return a.server.Start(mux)
 }
 

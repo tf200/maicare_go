@@ -2,6 +2,7 @@ package api
 
 import (
 	"log"
+	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -509,6 +510,12 @@ func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	server.asynqClient.EnqueueNotificationTask(ctx, async.NotificationPayload{
+		RecipientUserIDs: []int64{assign.UserID},
+		Type:             "employee_assigned",
+		Data:             []byte(`{"client_id":` + strconv.FormatInt(clientID, 10) + `,"employee_id":` + strconv.FormatInt(assign.EmployeeID, 10) + `}`),
+	})
 
 	res := SuccessResponse(AssignEmployeeResponse{
 		ID:         assign.ID,

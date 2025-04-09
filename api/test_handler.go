@@ -1,8 +1,9 @@
 package api
 
 import (
-	"maicare_go/tasks"
+	"maicare_go/async"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -63,7 +64,7 @@ func (server *Server) handleLatency(c *gin.Context) {
 }
 
 func (server *Server) EmailAndAsynq(c *gin.Context) {
-	server.asynqClient.EnqueueEmailDelivery(tasks.EmailDeliveryPayload{
+	server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
 		Name:         "Farjia Taha",
 		To:           "farjiataha@gmail.com",
 		UserEmail:    "farjiataha@gmail.com",
@@ -72,6 +73,40 @@ func (server *Server) EmailAndAsynq(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"echo":      "Email sent",
+		"timestamp": time.Now(),
+	})
+}
+
+// NotificationResponse is the response structure for the notification endpoint
+type NotificationResponse struct {
+	Echo      string    `json:"echo"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+// Notification to test Notification delivery .
+// @Summary: Test Notification delivery
+// @Description: Test Notification delivery
+// @Tags: Test
+// @Produces: json
+// @Success 200 {object} NotificationResponse
+// @Failure 400 {object} Response[any]
+// @Router /test/notification [get]
+func (server *Server) Notification(c *gin.Context) {
+	payload, err := GetAuthPayload(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	// Get the user ID from the payload
+	userID := payload.UserId
+	// Enqueue the notification task
+	server.asynqClient.EnqueueNotificationTask(c, async.NotificationPayload{
+		RecipientUserIDs: []int64{userID},
+		Type:             "employee_assigned",
+		Data:             []byte(`{"client_id":` + strconv.FormatInt(1, 10) + `,"employee_id":` + strconv.FormatInt(userID, 10) + `}`),
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"echo":      "Notification sent",
 		"timestamp": time.Now(),
 	})
 }

@@ -4049,6 +4049,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/counts": {
+            "get": {
+                "description": "Get total counts of employees, subcontractors, archived, and out of service employees",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Get employee counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetEmployeeCountsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/emails": {
             "get": {
                 "description": "Search employees by name or email",
@@ -6165,6 +6215,24 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/test/notification": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -9326,6 +9394,23 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetEmployeeCountsResponse": {
+            "type": "object",
+            "properties": {
+                "total_archived": {
+                    "type": "integer"
+                },
+                "total_employees": {
+                    "type": "integer"
+                },
+                "total_out_of_service": {
+                    "type": "integer"
+                },
+                "total_subcontractors": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.GetEmployeeProfileByIDApiResponse": {
             "type": "object",
             "properties": {
@@ -11260,6 +11345,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.NotificationResponse": {
+            "type": "object",
+            "properties": {
+                "echo": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
         "api.Permission": {
             "type": "object",
             "properties": {
@@ -11945,6 +12041,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetClientRelatedEmailsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetEmployeeCountsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetEmployeeCountsResponse"
                 },
                 "message": {
                     "type": "string"

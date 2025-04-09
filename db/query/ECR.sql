@@ -165,3 +165,23 @@ WHERE cd.status = 'In Care'
         AND ssc.new_status = 'Out Of Care'
         AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months'
   );
+
+
+
+
+-- name: TotalActiveClients :one
+SELECT COUNT(id) AS total_active_clients 
+FROM client_details
+WHERE status = 'In Care';
+
+-- name: ClientsOnWaitlist :one
+SELECT COUNT(id) AS total_clients_on_waitlist
+FROM client_details
+WHERE status = 'On Waitlist';
+
+-- name: RecentIncidents :one
+SELECT COUNT(id) AS total_recent_incidents
+FROM incident
+WHERE created_at >= CURRENT_DATE - INTERVAL '48 hours';
+
+
