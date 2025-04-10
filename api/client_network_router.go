@@ -7,6 +7,8 @@ func (server *Server) setupClientNetworkRoutes(baseRouter *gin.RouterGroup) {
 	ClientNetwork := baseRouter.Group("/clients")
 	ClientNetwork.Use(AuthMiddleware(server.tokenMaker))
 	{
+		ClientNetwork.GET("/:id/sender", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientSenderApi)
+
 		ClientNetwork.POST("/:id/emergency_contacts", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateClientEmergencyContactApi)
 		ClientNetwork.GET("/:id/emergency_contacts", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientEmergencyContactsApi)
 		ClientNetwork.GET("/:id/emergency_contacts/:contact_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientEmergencyContactApi)

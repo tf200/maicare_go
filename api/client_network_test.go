@@ -41,6 +41,50 @@ func createRandomEmergencyContact(t *testing.T, clientID int64) db.ClientEmergen
 	return contact
 }
 
+func TestGetClientSenderApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/sender", client.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var res Response[GetClientSenderResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				require.NotEmpty(t, res.Data)
+				require.Equal(t, &res.Data.ID, client.SenderID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+
+	}
+}
+
 func TestCreateEmemrgencyContactApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 
