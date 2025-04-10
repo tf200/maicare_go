@@ -419,6 +419,8 @@ type ListIncidentsResponse struct {
 	UpdatedAt               time.Time `json:"updated_at"`
 	CreatedAt               time.Time `json:"created_at"`
 	IsConfirmed             bool      `json:"is_confirmed"`
+	EmployeeProfilePicture  *string   `json:"employee_profile_picture"`
+	LocationName            string    `json:"location_name"`
 }
 
 // ListIncidentsApi lists all incidents
@@ -558,6 +560,8 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 			UpdatedAt:               incident.UpdatedAt.Time,
 			CreatedAt:               incident.CreatedAt.Time,
 			IsConfirmed:             incident.IsConfirmed,
+			EmployeeProfilePicture:  incident.EmployeeProfilePicture,
+			LocationName:            incident.LocationName,
 		}
 	}
 

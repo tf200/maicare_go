@@ -54,9 +54,13 @@ SELECT
     i.*,
     COUNT(*) OVER() AS total_count,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    u.profile_picture AS employee_profile_picture,
+    l.name AS location_name
 FROM incident i
 JOIN employee_profile e ON i.employee_id = e.id
+JOIN custom_user u ON e.user_id = u.id
+JOIN location l ON i.location_id = l.id
 WHERE i.client_id = $1
 ORDER BY i.incident_date DESC
 LIMIT $2 OFFSET $3;
