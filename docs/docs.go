@@ -181,6 +181,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "description": "Logout user and invalidate refresh token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_LogoutResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/refresh": {
             "post": {
                 "security": [
@@ -3466,6 +3516,46 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_GetClientRelatedEmailsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/sender": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Get a client sender",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetClientSenderResponse"
                         }
                     },
                     "400": {
@@ -7580,7 +7670,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "not_specified"
+                    ]
                 },
                 "has_borrowed": {
                     "type": "boolean"
@@ -9394,6 +9489,62 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetClientSenderResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btwnumber": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Contact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "kvknumber": {
+                    "type": "string"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetEmployeeCountsResponse": {
             "type": "object",
             "properties": {
@@ -10702,6 +10853,9 @@ const docTemplate = `{
         "api.ListEmployeeResponse": {
             "type": "object",
             "properties": {
+                "age": {
+                    "type": "integer"
+                },
                 "authentication_phone_number": {
                     "type": "string"
                 },
@@ -10818,6 +10972,9 @@ const docTemplate = `{
                 "employee_last_name": {
                     "type": "string"
                 },
+                "employee_profile_picture": {
+                    "type": "string"
+                },
                 "fire_water_damage": {
                     "type": "boolean"
                 },
@@ -10850,6 +11007,9 @@ const docTemplate = `{
                 },
                 "location_id": {
                     "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -11314,6 +11474,15 @@ const docTemplate = `{
                 "refresh": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "api.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "logout successful"
                 }
             }
         },
@@ -12050,6 +12219,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_GetClientSenderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetClientSenderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_GetEmployeeCountsResponse": {
             "type": "object",
             "properties": {
@@ -12237,6 +12420,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.LoginUserResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.LogoutResponse"
                 },
                 "message": {
                     "type": "string"

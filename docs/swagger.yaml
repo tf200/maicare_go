@@ -904,6 +904,10 @@ definitions:
       first_name:
         type: string
       gender:
+        enum:
+        - male
+        - female
+        - not_specified
         type: string
       has_borrowed:
         type: boolean
@@ -2115,6 +2119,43 @@ definitions:
           type: string
         type: array
     type: object
+  api.GetClientSenderResponse:
+    properties:
+      address:
+        type: string
+      btwnumber:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/api.Contact'
+        type: array
+      created_at:
+        type: string
+      email_address:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      kvknumber:
+        type: string
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.GetEmployeeCountsResponse:
     properties:
       total_archived:
@@ -2977,6 +3018,8 @@ definitions:
     type: object
   api.ListEmployeeResponse:
     properties:
+      age:
+        type: integer
       authentication_phone_number:
         type: string
       created_at:
@@ -3054,6 +3097,8 @@ definitions:
         type: integer
       employee_last_name:
         type: string
+      employee_profile_picture:
+        type: string
       fire_water_damage:
         type: boolean
       id:
@@ -3076,6 +3121,8 @@ definitions:
         type: boolean
       location_id:
         type: integer
+      location_name:
+        type: string
       medicines:
         type: boolean
       mese_worker:
@@ -3383,6 +3430,12 @@ definitions:
         type: string
       refresh:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  api.LogoutResponse:
+    properties:
+      message:
+        example: logout successful
         type: string
     type: object
   api.MatrixAssessment:
@@ -3857,6 +3910,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetClientSenderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientSenderResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetEmployeeCountsResponse:
     properties:
       data:
@@ -3978,6 +4040,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.LoginUserResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_LogoutResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.LogoutResponse'
       message:
         type: string
       success:
@@ -5837,6 +5908,39 @@ paths:
       summary: Upload a file
       tags:
       - attachments
+  /auth/logout:
+    post:
+      description: Logout user and invalidate refresh token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_LogoutResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Logout user
+      tags:
+      - authentication
   /auth/refresh:
     post:
       consumes:
@@ -8014,6 +8118,32 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get client related emails
+      tags:
+      - client_network
+  /clients/{id}/sender:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientSenderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client sender
       tags:
       - client_network
   /clients/{id}/status:

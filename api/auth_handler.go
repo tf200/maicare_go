@@ -187,3 +187,42 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, res)
 }
+
+// LogoutRequest represents the logout request payload
+type LogoutResponse struct {
+	Message string `json:"message" example:"logout successful"`
+}
+
+// @Summary Logout user
+// @Description Logout user and invalidate refresh token
+// @Tags authentication
+// @Produce json
+// @Success 200 {object} Response[LogoutResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /auth/logout [post]
+func (server *Server) LogOutApi(ctx *gin.Context) {
+	payload, exist := ctx.Get(authorizationPayloadKey)
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("authorization payload not found")))
+		return
+	}
+	sessionPayload, ok := payload.(*token.Payload)
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("invalid authorization payload type")))
+		return
+	}
+
+	err := server.store.DeleteSession(ctx, sessionPayload.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(LogoutResponse{
+		Message: "logout successful",
+	}, "logout successful")
+	ctx.JSON(http.StatusOK, res)
+}
