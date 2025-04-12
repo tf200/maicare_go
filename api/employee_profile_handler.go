@@ -409,6 +409,7 @@ type GetEmployeeProfileByIDApiResponse struct {
 	IsArchived                bool      `json:"is_archived"`
 	ProfilePicture            *string   `json:"profile_picture"`
 	RoleID                    int32     `json:"role_id"`
+	IsLoggedInUser            bool      `json:"is_logged_in_user"`
 }
 
 // @Summary Get employee profile by  ID
@@ -419,6 +420,13 @@ type GetEmployeeProfileByIDApiResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id} [get]
 func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	currentUserID := payload.UserId
+
 	id := ctx.Param("id")
 	employeeID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -455,6 +463,7 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		IsArchived:                employee.IsArchived,
 		ProfilePicture:            employee.ProfilePicture,
 		RoleID:                    employee.RoleID,
+		IsLoggedInUser:            employee.UserID == currentUserID,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

@@ -20,3 +20,9 @@ SELECT * FROM custom_user
 WHERE email= $1 LIMIT 1;
 
 
+-- name: UpdatePassword :exec
+UPDATE custom_user
+SET password = $2
+WHERE id = $1;
+
+

@@ -226,3 +226,80 @@ func (server *Server) LogOutApi(ctx *gin.Context) {
 	}, "logout successful")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// ChangePasswordRequest represents the change password request payload
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+// @Summary Change user password
+// @Description Change user password
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body ChangePasswordRequest true "Change password request"
+// @Success 200 {object} Response[any] "Password changed successfully"
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - User not found"
+// @Failure 409 {object} Response[any] "Conflict - Password change issue"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /auth/change_password [post]
+func (server *Server) ChangePasswordApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	userID := payload.UserId
+
+	var req ChangePasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	user, err := server.store.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	err = util.CheckPassword(req.OldPassword, user.Password)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		log.Printf("failed password check for user: %v", err)
+		return
+	}
+	hashedPassword, err := util.HashPassword(req.NewPassword)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.store.UpdatePassword(ctx, db.UpdatePasswordParams{
+		ID:       user.ID,
+		Password: hashedPassword,
+	})
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Code {
+			case "23505": // unique_violation
+				ctx.JSON(http.StatusConflict, errorResponse(err))
+				return
+			case "23503": // foreign_key_violation
+				ctx.JSON(http.StatusNotFound, errorResponse(err))
+				return
+			}
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse[any](nil, "password changed successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
