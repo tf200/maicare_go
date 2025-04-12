@@ -1109,6 +1109,15 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 
 }
 
+// DeleteIncidentApi deletes an incident
+// @Summary Delete an incident
+// @Tags incidents
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param incident_id path int true "Incident ID"
+// @Success 200 {object} Response[any]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/incidents/{incident_id} [delete]
 func (server *Server) DeleteIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
 	incidentID, err := strconv.ParseInt(id, 10, 64)
@@ -1117,7 +1126,7 @@ func (server *Server) DeleteIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = server.store.DeleteIncident(ctx, incidentID)
+	err = server.store.DeleteIncident(ctx, incidentID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

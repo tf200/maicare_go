@@ -125,10 +125,9 @@ WHERE id = $1
 RETURNING *;
 
 
--- name: DeleteIncident :one
+-- name: DeleteIncident :exec
 DELETE FROM incident
-WHERE id = $1
-RETURNING *;
+WHERE id = $1;
 
 
 -- name: ConfirmIncident :one
