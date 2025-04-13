@@ -98,17 +98,18 @@ type ListProgressReportsRequest struct {
 
 // ListProgressReportsResponse defines the response payload for ListProgressReports API
 type ListProgressReportsResponse struct {
-	ID                int64     `json:"id"`
-	ClientID          int64     `json:"client_id"`
-	Date              time.Time `json:"date"`
-	Title             *string   `json:"title"`
-	ReportText        string    `json:"report_text"`
-	EmployeeID        *int64    `json:"employee_id"`
-	Type              string    `json:"type"`
-	EmotionalState    string    `json:"emotional_state"`
-	CreatedAt         time.Time `json:"created_at"`
-	EmployeeFirstName string    `json:"employee_first_name"`
-	EmployeeLastName  string    `json:"employee_last_name"`
+	ID                     int64     `json:"id"`
+	ClientID               int64     `json:"client_id"`
+	Date                   time.Time `json:"date"`
+	Title                  *string   `json:"title"`
+	ReportText             string    `json:"report_text"`
+	EmployeeID             *int64    `json:"employee_id"`
+	Type                   string    `json:"type"`
+	EmotionalState         string    `json:"emotional_state"`
+	CreatedAt              time.Time `json:"created_at"`
+	EmployeeFirstName      string    `json:"employee_first_name"`
+	EmployeeLastName       string    `json:"employee_last_name"`
+	EmployeeProfilePicture *string   `json:"employee_profile_picture"`
 }
 
 // ListProgressReportsApi lists all progress reports for a client
@@ -157,17 +158,18 @@ func (server *Server) ListProgressReportsApi(ctx *gin.Context) {
 	repList := make([]ListProgressReportsResponse, len(progressReports))
 	for i, progressReport := range progressReports {
 		repList[i] = ListProgressReportsResponse{
-			ID:                progressReport.ID,
-			ClientID:          progressReport.ClientID,
-			Date:              progressReport.Date.Time,
-			Title:             progressReport.Title,
-			ReportText:        progressReport.ReportText,
-			EmployeeID:        progressReport.EmployeeID,
-			Type:              progressReport.Type,
-			EmotionalState:    progressReport.EmotionalState,
-			CreatedAt:         progressReport.CreatedAt.Time,
-			EmployeeFirstName: progressReport.EmployeeFirstName,
-			EmployeeLastName:  progressReport.EmployeeLastName,
+			ID:                     progressReport.ID,
+			ClientID:               progressReport.ClientID,
+			Date:                   progressReport.Date.Time,
+			Title:                  progressReport.Title,
+			ReportText:             progressReport.ReportText,
+			EmployeeID:             progressReport.EmployeeID,
+			Type:                   progressReport.Type,
+			EmotionalState:         progressReport.EmotionalState,
+			CreatedAt:              progressReport.CreatedAt.Time,
+			EmployeeFirstName:      progressReport.EmployeeFirstName,
+			EmployeeLastName:       progressReport.EmployeeLastName,
+			EmployeeProfilePicture: progressReport.EmployeeProfilePicture,
 		}
 	}
 
@@ -178,17 +180,18 @@ func (server *Server) ListProgressReportsApi(ctx *gin.Context) {
 
 // GetProgressReportResponse defines the response payload for GetProgressReport API
 type GetProgressReportResponse struct {
-	ID                int64     `json:"id"`
-	ClientID          int64     `json:"client_id"`
-	Date              time.Time `json:"date"`
-	Title             *string   `json:"title"`
-	ReportText        string    `json:"report_text"`
-	EmployeeID        *int64    `json:"employee_id"`
-	Type              string    `json:"type"`
-	EmotionalState    string    `json:"emotional_state"`
-	CreatedAt         time.Time `json:"created_at"`
-	EmployeeFirstName string    `json:"employee_first_name"`
-	EmployeeLastName  string    `json:"employee_last_name"`
+	ID                     int64     `json:"id"`
+	ClientID               int64     `json:"client_id"`
+	Date                   time.Time `json:"date"`
+	Title                  *string   `json:"title"`
+	ReportText             string    `json:"report_text"`
+	EmployeeID             *int64    `json:"employee_id"`
+	Type                   string    `json:"type"`
+	EmotionalState         string    `json:"emotional_state"`
+	CreatedAt              time.Time `json:"created_at"`
+	EmployeeFirstName      string    `json:"employee_first_name"`
+	EmployeeLastName       string    `json:"employee_last_name"`
+	EmployeeProfilePicture *string   `json:"employee_profile_picture"`
 }
 
 // GetProgressReportApi retrieves a progress report for a client
@@ -215,17 +218,18 @@ func (server *Server) GetProgressReportApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(GetProgressReportResponse{
-		ID:                progressReport.ID,
-		ClientID:          progressReport.ClientID,
-		Date:              progressReport.Date.Time,
-		Title:             progressReport.Title,
-		ReportText:        progressReport.ReportText,
-		EmployeeID:        progressReport.EmployeeID,
-		Type:              progressReport.Type,
-		EmotionalState:    progressReport.EmotionalState,
-		CreatedAt:         progressReport.CreatedAt.Time,
-		EmployeeFirstName: progressReport.EmployeeFirstName,
-		EmployeeLastName:  progressReport.EmployeeLastName,
+		ID:                     progressReport.ID,
+		ClientID:               progressReport.ClientID,
+		Date:                   progressReport.Date.Time,
+		Title:                  progressReport.Title,
+		ReportText:             progressReport.ReportText,
+		EmployeeID:             progressReport.EmployeeID,
+		Type:                   progressReport.Type,
+		EmotionalState:         progressReport.EmotionalState,
+		CreatedAt:              progressReport.CreatedAt.Time,
+		EmployeeFirstName:      progressReport.EmployeeFirstName,
+		EmployeeLastName:       progressReport.EmployeeLastName,
+		EmployeeProfilePicture: progressReport.EmployeeProfilePicture,
 	}, "Progress Report retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
@@ -308,6 +312,33 @@ func (server *Server) UpdateProgressReportApi(ctx *gin.Context) {
 		CreatedAt:      updatedProgressReport.CreatedAt.Time,
 	}, "Progress Report updated successfully")
 
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteProgressReportApi deletes a progress report for a client
+// @Summary Delete a progress report for a client
+// @Tags progress_reports
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param report_id path int true "Progress Report ID"
+// @Success 200 {object} Response[any]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/progress_reports/{report_id} [delete]
+func (server *Server) DeleteProgressReportApi(ctx *gin.Context) {
+	id := ctx.Param("report_id")
+	reportID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteProgressReport(ctx, reportID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Progress Report deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

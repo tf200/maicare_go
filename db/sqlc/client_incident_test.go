@@ -116,7 +116,7 @@ func TestUpdateIncident(t *testing.T) {
 func TestDeleteIncident(t *testing.T) {
 	client := createRandomClientDetails(t)
 	incident1 := createRandomClientIncident(t, client.ID)
-	_, err := testQueries.DeleteIncident(context.Background(), incident1.ID)
+	err := testQueries.DeleteIncident(context.Background(), incident1.ID)
 	require.NoError(t, err)
 	incident2, err := testQueries.GetIncident(context.Background(), incident1.ID)
 	require.Error(t, err)

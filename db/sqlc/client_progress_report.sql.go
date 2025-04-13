@@ -98,6 +98,16 @@ func (q *Queries) CreateProgressReport(ctx context.Context, arg CreateProgressRe
 	return i, err
 }
 
+const deleteProgressReport = `-- name: DeleteProgressReport :exec
+DELETE FROM progress_report
+WHERE id = $1
+`
+
+func (q *Queries) DeleteProgressReport(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteProgressReport, id)
+	return err
+}
+
 const getAiGeneratedReport = `-- name: GetAiGeneratedReport :one
 SELECT 
     agr.id, agr.report_text, agr.client_id, agr.start_date, agr.end_date, agr.created_at
@@ -123,24 +133,27 @@ const getProgressReport = `-- name: GetProgressReport :one
 SELECT 
     pr.id, pr.client_id, pr.date, pr.title, pr.report_text, pr.employee_id, pr.type, pr.emotional_state, pr.created_at,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    u.profile_picture AS employee_profile_picture
 FROM progress_report pr
 JOIN employee_profile e ON pr.employee_id = e.id
+JOIN custom_User u ON e.user_id = u.id
 WHERE pr.id = $1 LIMIT 1
 `
 
 type GetProgressReportRow struct {
-	ID                int64              `json:"id"`
-	ClientID          int64              `json:"client_id"`
-	Date              pgtype.Timestamptz `json:"date"`
-	Title             *string            `json:"title"`
-	ReportText        string             `json:"report_text"`
-	EmployeeID        *int64             `json:"employee_id"`
-	Type              string             `json:"type"`
-	EmotionalState    string             `json:"emotional_state"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	EmployeeFirstName string             `json:"employee_first_name"`
-	EmployeeLastName  string             `json:"employee_last_name"`
+	ID                     int64              `json:"id"`
+	ClientID               int64              `json:"client_id"`
+	Date                   pgtype.Timestamptz `json:"date"`
+	Title                  *string            `json:"title"`
+	ReportText             string             `json:"report_text"`
+	EmployeeID             *int64             `json:"employee_id"`
+	Type                   string             `json:"type"`
+	EmotionalState         string             `json:"emotional_state"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+	EmployeeFirstName      string             `json:"employee_first_name"`
+	EmployeeLastName       string             `json:"employee_last_name"`
+	EmployeeProfilePicture *string            `json:"employee_profile_picture"`
 }
 
 func (q *Queries) GetProgressReport(ctx context.Context, id int64) (GetProgressReportRow, error) {
@@ -158,6 +171,7 @@ func (q *Queries) GetProgressReport(ctx context.Context, id int64) (GetProgressR
 		&i.CreatedAt,
 		&i.EmployeeFirstName,
 		&i.EmployeeLastName,
+		&i.EmployeeProfilePicture,
 	)
 	return i, err
 }
@@ -266,9 +280,11 @@ SELECT
     pr.id, pr.client_id, pr.date, pr.title, pr.report_text, pr.employee_id, pr.type, pr.emotional_state, pr.created_at,
     COUNT(*) OVER() AS total_count,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    u.profile_picture AS employee_profile_picture
 FROM progress_report pr
 JOIN employee_profile e ON pr.employee_id = e.id
+Join custom_User u ON e.user_id = u.id
 WHERE pr.client_id = $1
 ORDER BY pr.date DESC
 LIMIT $2 OFFSET $3
@@ -281,18 +297,19 @@ type ListProgressReportsParams struct {
 }
 
 type ListProgressReportsRow struct {
-	ID                int64              `json:"id"`
-	ClientID          int64              `json:"client_id"`
-	Date              pgtype.Timestamptz `json:"date"`
-	Title             *string            `json:"title"`
-	ReportText        string             `json:"report_text"`
-	EmployeeID        *int64             `json:"employee_id"`
-	Type              string             `json:"type"`
-	EmotionalState    string             `json:"emotional_state"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	TotalCount        int64              `json:"total_count"`
-	EmployeeFirstName string             `json:"employee_first_name"`
-	EmployeeLastName  string             `json:"employee_last_name"`
+	ID                     int64              `json:"id"`
+	ClientID               int64              `json:"client_id"`
+	Date                   pgtype.Timestamptz `json:"date"`
+	Title                  *string            `json:"title"`
+	ReportText             string             `json:"report_text"`
+	EmployeeID             *int64             `json:"employee_id"`
+	Type                   string             `json:"type"`
+	EmotionalState         string             `json:"emotional_state"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+	TotalCount             int64              `json:"total_count"`
+	EmployeeFirstName      string             `json:"employee_first_name"`
+	EmployeeLastName       string             `json:"employee_last_name"`
+	EmployeeProfilePicture *string            `json:"employee_profile_picture"`
 }
 
 func (q *Queries) ListProgressReports(ctx context.Context, arg ListProgressReportsParams) ([]ListProgressReportsRow, error) {
@@ -317,6 +334,7 @@ func (q *Queries) ListProgressReports(ctx context.Context, arg ListProgressRepor
 			&i.TotalCount,
 			&i.EmployeeFirstName,
 			&i.EmployeeLastName,
+			&i.EmployeeProfilePicture,
 		); err != nil {
 			return nil, err
 		}

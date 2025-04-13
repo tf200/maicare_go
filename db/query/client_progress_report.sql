@@ -17,9 +17,11 @@ SELECT
     pr.*,
     COUNT(*) OVER() AS total_count,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    u.profile_picture AS employee_profile_picture
 FROM progress_report pr
 JOIN employee_profile e ON pr.employee_id = e.id
+Join custom_User u ON e.user_id = u.id
 WHERE pr.client_id = $1
 ORDER BY pr.date DESC
 LIMIT $2 OFFSET $3;
@@ -29,9 +31,11 @@ LIMIT $2 OFFSET $3;
 SELECT 
     pr.*,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    u.profile_picture AS employee_profile_picture
 FROM progress_report pr
 JOIN employee_profile e ON pr.employee_id = e.id
+JOIN custom_User u ON e.user_id = u.id
 WHERE pr.id = $1 LIMIT 1;
 
 -- name: UpdateProgressReport :one
@@ -45,6 +49,10 @@ SET
     emotional_state = COALESCE(sqlc.narg('emotional_state'), emotional_state)
 WHERE id = $1
 RETURNING *;
+
+-- name: DeleteProgressReport :exec
+DELETE FROM progress_report
+WHERE id = $1;
 
 
 -- name: GetProgressReportsByDateRange :many

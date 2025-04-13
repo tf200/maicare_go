@@ -11,6 +11,7 @@ func (server *Server) setupProgressReportsRoutes(baseRouter *gin.RouterGroup) {
 		ProgressReports.GET("/:id/progress_reports", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListProgressReportsApi)
 		ProgressReports.GET("/:id/progress_reports/:report_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetProgressReportApi)
 		ProgressReports.PUT("/:id/progress_reports/:report_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateProgressReportApi)
+		ProgressReports.DELETE("/:id/progress_reports/:report_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteProgressReportApi)
 
 		ProgressReports.POST("/:id/ai_progress_reports", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GenerateAutoReportsApi)
 		ProgressReports.POST("/:id/ai_progress_reports/confirm", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ConfirmProgressReportApi)

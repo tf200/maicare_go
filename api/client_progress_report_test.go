@@ -246,6 +246,48 @@ func TestUpdateProgressReportApi(t *testing.T) {
 
 // TO DO DELTE
 
+func TestDeleteProgressReportApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
+	progressReport1 := createRandomProgressReport(t, client.ID, employee.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/progress_reports/%d", client.ID, progressReport1.ID)
+				request, err := http.NewRequest(http.MethodDelete, url, nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func createRandomAiGeneratedReport(t *testing.T, clientID int64) db.AiGeneratedReport {
 	startdate := util.RandomTIme()
 	enddate := startdate.AddDate(0, 0, 7)
