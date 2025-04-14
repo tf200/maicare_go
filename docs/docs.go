@@ -181,6 +181,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/change_password": {
+            "post": {
+                "description": "Change user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Change user password",
+                "parameters": [
+                    {
+                        "description": "Change password request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - User not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Password change issue",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/logout": {
             "post": {
                 "description": "Logout user and invalidate refresh token",
@@ -3542,6 +3606,51 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress_reports"
+                ],
+                "summary": "Delete a progress report for a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Progress Report ID",
+                        "name": "report_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
             }
         },
         "/clients/{id}/related_emails": {
@@ -6686,6 +6795,21 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ConfirmIncidentResponse": {
             "type": "object",
             "properties": {
@@ -9655,6 +9779,9 @@ const docTemplate = `{
                 "is_archived": {
                     "type": "boolean"
                 },
+                "is_logged_in_user": {
+                    "type": "boolean"
+                },
                 "is_subcontractor": {
                     "type": "boolean"
                 },
@@ -10150,6 +10277,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "employee_last_name": {
+                    "type": "string"
+                },
+                "employee_profile_picture": {
                     "type": "string"
                 },
                 "id": {
@@ -11395,6 +11525,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "employee_last_name": {
+                    "type": "string"
+                },
+                "employee_profile_picture": {
                     "type": "string"
                 },
                 "id": {

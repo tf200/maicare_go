@@ -199,6 +199,16 @@ definitions:
       role_id:
         type: integer
     type: object
+  api.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   api.ConfirmIncidentResponse:
     properties:
       file_url:
@@ -2195,6 +2205,8 @@ definitions:
         type: integer
       is_archived:
         type: boolean
+      is_logged_in_user:
+        type: boolean
       is_subcontractor:
         type: boolean
       last_name:
@@ -2523,6 +2535,8 @@ definitions:
       employee_id:
         type: integer
       employee_last_name:
+        type: string
+      employee_profile_picture:
         type: string
       id:
         type: integer
@@ -3344,6 +3358,8 @@ definitions:
       employee_id:
         type: integer
       employee_last_name:
+        type: string
+      employee_profile_picture:
         type: string
       id:
         type: integer
@@ -5908,6 +5924,48 @@ paths:
       summary: Upload a file
       tags:
       - attachments
+  /auth/change_password:
+    post:
+      consumes:
+      - application/json
+      description: Change user password
+      parameters:
+      - description: Change password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - User not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - Password change issue
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Change user password
+      tags:
+      - authentication
   /auth/logout:
     post:
       description: Logout user and invalidate refresh token
@@ -8060,6 +8118,36 @@ paths:
       tags:
       - progress_reports
   /clients/{id}/progress_reports/{report_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress Report ID
+        in: path
+        name: report_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a progress report for a client
+      tags:
+      - progress_reports
     get:
       parameters:
       - description: Client ID
