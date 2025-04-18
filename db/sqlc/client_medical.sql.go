@@ -11,50 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createClientAllergy = `-- name: CreateClientAllergy :one
-INSERT INTO client_allergy (
-    client_id,
-    allergy_type,
-    severity,
-    reaction,
-    notes,
-    created_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, client_id, allergy_type, severity, reaction, notes, created_at
-`
-
-type CreateClientAllergyParams struct {
-	ClientID    int64              `json:"client_id"`
-	AllergyType string             `json:"allergy_type"`
-	Severity    string             `json:"severity"`
-	Reaction    string             `json:"reaction"`
-	Notes       *string            `json:"notes"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) CreateClientAllergy(ctx context.Context, arg CreateClientAllergyParams) (ClientAllergy, error) {
-	row := q.db.QueryRow(ctx, createClientAllergy,
-		arg.ClientID,
-		arg.AllergyType,
-		arg.Severity,
-		arg.Reaction,
-		arg.Notes,
-		arg.CreatedAt,
-	)
-	var i ClientAllergy
-	err := row.Scan(
-		&i.ID,
-		&i.ClientID,
-		&i.AllergyType,
-		&i.Severity,
-		&i.Reaction,
-		&i.Notes,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const createClientDiagnosis = `-- name: CreateClientDiagnosis :one
 INSERT INTO client_diagnosis (
     client_id,
@@ -110,47 +66,48 @@ func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDia
 
 const createClientMedication = `-- name: CreateClientMedication :one
 INSERT INTO client_medication (
+    diagnosis_id,
     name,
     dosage,
     start_date,
     end_date,
     notes,
     self_administered,
-    client_id,
     administered_by_id,
     is_critical
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING id, name, dosage, start_date, end_date, notes, self_administered, slots, client_id, administered_by_id, is_critical, updated_at, created_at
+) RETURNING id, diagnosis_id, name, dosage, start_date, end_date, notes, self_administered, slots, administered_by_id, is_critical, updated_at, created_at
 `
 
 type CreateClientMedicationParams struct {
+	DiagnosisID      *int64      `json:"diagnosis_id"`
 	Name             string      `json:"name"`
 	Dosage           string      `json:"dosage"`
 	StartDate        pgtype.Date `json:"start_date"`
 	EndDate          pgtype.Date `json:"end_date"`
 	Notes            *string     `json:"notes"`
 	SelfAdministered bool        `json:"self_administered"`
-	ClientID         int64       `json:"client_id"`
 	AdministeredByID *int64      `json:"administered_by_id"`
 	IsCritical       bool        `json:"is_critical"`
 }
 
 func (q *Queries) CreateClientMedication(ctx context.Context, arg CreateClientMedicationParams) (ClientMedication, error) {
 	row := q.db.QueryRow(ctx, createClientMedication,
+		arg.DiagnosisID,
 		arg.Name,
 		arg.Dosage,
 		arg.StartDate,
 		arg.EndDate,
 		arg.Notes,
 		arg.SelfAdministered,
-		arg.ClientID,
 		arg.AdministeredByID,
 		arg.IsCritical,
 	)
 	var i ClientMedication
 	err := row.Scan(
 		&i.ID,
+		&i.DiagnosisID,
 		&i.Name,
 		&i.Dosage,
 		&i.StartDate,
@@ -158,31 +115,9 @@ func (q *Queries) CreateClientMedication(ctx context.Context, arg CreateClientMe
 		&i.Notes,
 		&i.SelfAdministered,
 		&i.Slots,
-		&i.ClientID,
 		&i.AdministeredByID,
 		&i.IsCritical,
 		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const deleteClientAllergy = `-- name: DeleteClientAllergy :one
-DELETE FROM client_allergy
-WHERE id = $1
-RETURNING id, client_id, allergy_type, severity, reaction, notes, created_at
-`
-
-func (q *Queries) DeleteClientAllergy(ctx context.Context, id int64) (ClientAllergy, error) {
-	row := q.db.QueryRow(ctx, deleteClientAllergy, id)
-	var i ClientAllergy
-	err := row.Scan(
-		&i.ID,
-		&i.ClientID,
-		&i.AllergyType,
-		&i.Severity,
-		&i.Reaction,
-		&i.Notes,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -212,56 +147,20 @@ func (q *Queries) DeleteClientDiagnosis(ctx context.Context, id int64) (ClientDi
 	return i, err
 }
 
-const deleteClientMedication = `-- name: DeleteClientMedication :one
+const deleteClientMedication = `-- name: DeleteClientMedication :exec
 DELETE FROM client_medication
 WHERE id = $1
-RETURNING id, name, dosage, start_date, end_date, notes, self_administered, slots, client_id, administered_by_id, is_critical, updated_at, created_at
 `
 
-func (q *Queries) DeleteClientMedication(ctx context.Context, id int64) (ClientMedication, error) {
-	row := q.db.QueryRow(ctx, deleteClientMedication, id)
-	var i ClientMedication
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Dosage,
-		&i.StartDate,
-		&i.EndDate,
-		&i.Notes,
-		&i.SelfAdministered,
-		&i.Slots,
-		&i.ClientID,
-		&i.AdministeredByID,
-		&i.IsCritical,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const getClientAllergy = `-- name: GetClientAllergy :one
-SELECT id, client_id, allergy_type, severity, reaction, notes, created_at FROM client_allergy
-WHERE id = $1 LIMIT 1
-`
-
-func (q *Queries) GetClientAllergy(ctx context.Context, id int64) (ClientAllergy, error) {
-	row := q.db.QueryRow(ctx, getClientAllergy, id)
-	var i ClientAllergy
-	err := row.Scan(
-		&i.ID,
-		&i.ClientID,
-		&i.AllergyType,
-		&i.Severity,
-		&i.Reaction,
-		&i.Notes,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) DeleteClientMedication(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteClientMedication, id)
+	return err
 }
 
 const getClientDiagnosis = `-- name: GetClientDiagnosis :one
 SELECT id, title, client_id, diagnosis_code, description, severity, status, diagnosing_clinician, notes, created_at FROM client_diagnosis
-WHERE id = $1 LIMIT 1
+WHERE id = $1
+LIMIT 1
 `
 
 func (q *Queries) GetClientDiagnosis(ctx context.Context, id int64) (ClientDiagnosis, error) {
@@ -282,15 +181,16 @@ func (q *Queries) GetClientDiagnosis(ctx context.Context, id int64) (ClientDiagn
 	return i, err
 }
 
-const getClientMedication = `-- name: GetClientMedication :one
-SELECT m.id, m.name, m.dosage, m.start_date, m.end_date, m.notes, m.self_administered, m.slots, m.client_id, m.administered_by_id, m.is_critical, m.updated_at, m.created_at, e.first_name AS administered_by_first_name, e.last_name AS administered_by_last_name
+const getMedication = `-- name: GetMedication :one
+SELECT m.id, m.diagnosis_id, m.name, m.dosage, m.start_date, m.end_date, m.notes, m.self_administered, m.slots, m.administered_by_id, m.is_critical, m.updated_at, m.created_at, e.first_name AS administered_by_first_name, e.last_name AS administered_by_last_name
 FROM client_medication m
 JOIN employee_profile e ON m.administered_by_id = e.id
 WHERE m.id = $1 LIMIT 1
 `
 
-type GetClientMedicationRow struct {
+type GetMedicationRow struct {
 	ID                      int64              `json:"id"`
+	DiagnosisID             *int64             `json:"diagnosis_id"`
 	Name                    string             `json:"name"`
 	Dosage                  string             `json:"dosage"`
 	StartDate               pgtype.Date        `json:"start_date"`
@@ -298,7 +198,6 @@ type GetClientMedicationRow struct {
 	Notes                   *string            `json:"notes"`
 	SelfAdministered        bool               `json:"self_administered"`
 	Slots                   []byte             `json:"slots"`
-	ClientID                int64              `json:"client_id"`
 	AdministeredByID        *int64             `json:"administered_by_id"`
 	IsCritical              bool               `json:"is_critical"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
@@ -307,11 +206,12 @@ type GetClientMedicationRow struct {
 	AdministeredByLastName  string             `json:"administered_by_last_name"`
 }
 
-func (q *Queries) GetClientMedication(ctx context.Context, id int64) (GetClientMedicationRow, error) {
-	row := q.db.QueryRow(ctx, getClientMedication, id)
-	var i GetClientMedicationRow
+func (q *Queries) GetMedication(ctx context.Context, id int64) (GetMedicationRow, error) {
+	row := q.db.QueryRow(ctx, getMedication, id)
+	var i GetMedicationRow
 	err := row.Scan(
 		&i.ID,
+		&i.DiagnosisID,
 		&i.Name,
 		&i.Dosage,
 		&i.StartDate,
@@ -319,7 +219,6 @@ func (q *Queries) GetClientMedication(ctx context.Context, id int64) (GetClientM
 		&i.Notes,
 		&i.SelfAdministered,
 		&i.Slots,
-		&i.ClientID,
 		&i.AdministeredByID,
 		&i.IsCritical,
 		&i.UpdatedAt,
@@ -328,61 +227,6 @@ func (q *Queries) GetClientMedication(ctx context.Context, id int64) (GetClientM
 		&i.AdministeredByLastName,
 	)
 	return i, err
-}
-
-const listClientAllergies = `-- name: ListClientAllergies :many
-SELECT 
-    al.id, al.client_id, al.allergy_type, al.severity, al.reaction, al.notes, al.created_at,
-    (SELECT COUNT(*) FROM client_allergy WHERE client_allergy.client_id = al.client_id) AS total_allergies
-FROM client_allergy al
-WHERE al.client_id = $1
-LIMIT $2 OFFSET $3
-`
-
-type ListClientAllergiesParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
-}
-
-type ListClientAllergiesRow struct {
-	ID             int64              `json:"id"`
-	ClientID       int64              `json:"client_id"`
-	AllergyType    string             `json:"allergy_type"`
-	Severity       string             `json:"severity"`
-	Reaction       string             `json:"reaction"`
-	Notes          *string            `json:"notes"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	TotalAllergies int64              `json:"total_allergies"`
-}
-
-func (q *Queries) ListClientAllergies(ctx context.Context, arg ListClientAllergiesParams) ([]ListClientAllergiesRow, error) {
-	rows, err := q.db.Query(ctx, listClientAllergies, arg.ClientID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListClientAllergiesRow
-	for rows.Next() {
-		var i ListClientAllergiesRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.ClientID,
-			&i.AllergyType,
-			&i.Severity,
-			&i.Reaction,
-			&i.Notes,
-			&i.CreatedAt,
-			&i.TotalAllergies,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const listClientDiagnoses = `-- name: ListClientDiagnoses :many
@@ -446,54 +290,51 @@ func (q *Queries) ListClientDiagnoses(ctx context.Context, arg ListClientDiagnos
 	return items, nil
 }
 
-const listClientMedications = `-- name: ListClientMedications :many
+const listMedicationsByDiagnosisID = `-- name: ListMedicationsByDiagnosisID :many
 SELECT 
-    m.id, m.name, m.dosage, m.start_date, m.end_date, m.notes, m.self_administered, m.slots, m.client_id, m.administered_by_id, m.is_critical, m.updated_at, m.created_at,
-    e.first_name AS administered_by_first_name,
-    e.last_name AS administered_by_last_name,
-    (SELECT COUNT(*) FROM client_medication WHERE client_medication.client_id = m.client_id) AS total_medications
+    m.id, m.diagnosis_id, m.name, m.dosage, m.start_date, m.end_date, m.notes, m.self_administered, m.slots, m.administered_by_id, m.is_critical, m.updated_at, m.created_at,
+    (SELECT COUNT(*) FROM client_medication WHERE client_medication.diagnosis_id = $1) AS total_medications
 FROM client_medication m
-JOIN employee_profile e ON m.administered_by_id = e.id
-WHERE m.client_id = $1
+WHERE m.diagnosis_id = $1
+ORDER BY m.id
 LIMIT $2 OFFSET $3
 `
 
-type ListClientMedicationsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+type ListMedicationsByDiagnosisIDParams struct {
+	DiagnosisID *int64 `json:"diagnosis_id"`
+	Limit       int32  `json:"limit"`
+	Offset      int32  `json:"offset"`
 }
 
-type ListClientMedicationsRow struct {
-	ID                      int64              `json:"id"`
-	Name                    string             `json:"name"`
-	Dosage                  string             `json:"dosage"`
-	StartDate               pgtype.Date        `json:"start_date"`
-	EndDate                 pgtype.Date        `json:"end_date"`
-	Notes                   *string            `json:"notes"`
-	SelfAdministered        bool               `json:"self_administered"`
-	Slots                   []byte             `json:"slots"`
-	ClientID                int64              `json:"client_id"`
-	AdministeredByID        *int64             `json:"administered_by_id"`
-	IsCritical              bool               `json:"is_critical"`
-	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt               pgtype.Timestamptz `json:"created_at"`
-	AdministeredByFirstName string             `json:"administered_by_first_name"`
-	AdministeredByLastName  string             `json:"administered_by_last_name"`
-	TotalMedications        int64              `json:"total_medications"`
+type ListMedicationsByDiagnosisIDRow struct {
+	ID               int64              `json:"id"`
+	DiagnosisID      *int64             `json:"diagnosis_id"`
+	Name             string             `json:"name"`
+	Dosage           string             `json:"dosage"`
+	StartDate        pgtype.Date        `json:"start_date"`
+	EndDate          pgtype.Date        `json:"end_date"`
+	Notes            *string            `json:"notes"`
+	SelfAdministered bool               `json:"self_administered"`
+	Slots            []byte             `json:"slots"`
+	AdministeredByID *int64             `json:"administered_by_id"`
+	IsCritical       bool               `json:"is_critical"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	TotalMedications int64              `json:"total_medications"`
 }
 
-func (q *Queries) ListClientMedications(ctx context.Context, arg ListClientMedicationsParams) ([]ListClientMedicationsRow, error) {
-	rows, err := q.db.Query(ctx, listClientMedications, arg.ClientID, arg.Limit, arg.Offset)
+func (q *Queries) ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedicationsByDiagnosisIDParams) ([]ListMedicationsByDiagnosisIDRow, error) {
+	rows, err := q.db.Query(ctx, listMedicationsByDiagnosisID, arg.DiagnosisID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientMedicationsRow
+	var items []ListMedicationsByDiagnosisIDRow
 	for rows.Next() {
-		var i ListClientMedicationsRow
+		var i ListMedicationsByDiagnosisIDRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.DiagnosisID,
 			&i.Name,
 			&i.Dosage,
 			&i.StartDate,
@@ -501,13 +342,10 @@ func (q *Queries) ListClientMedications(ctx context.Context, arg ListClientMedic
 			&i.Notes,
 			&i.SelfAdministered,
 			&i.Slots,
-			&i.ClientID,
 			&i.AdministeredByID,
 			&i.IsCritical,
 			&i.UpdatedAt,
 			&i.CreatedAt,
-			&i.AdministeredByFirstName,
-			&i.AdministeredByLastName,
 			&i.TotalMedications,
 		); err != nil {
 			return nil, err
@@ -518,46 +356,6 @@ func (q *Queries) ListClientMedications(ctx context.Context, arg ListClientMedic
 		return nil, err
 	}
 	return items, nil
-}
-
-const updateClientAllergy = `-- name: UpdateClientAllergy :one
-UPDATE client_allergy
-SET
-    allergy_type = COALESCE($2, allergy_type),
-    severity = COALESCE($3, severity),
-    reaction = COALESCE($4, reaction),
-    notes = COALESCE($5, notes)
-WHERE id = $1
-RETURNING id, client_id, allergy_type, severity, reaction, notes, created_at
-`
-
-type UpdateClientAllergyParams struct {
-	ID          int64   `json:"id"`
-	AllergyType *string `json:"allergy_type"`
-	Severity    *string `json:"severity"`
-	Reaction    *string `json:"reaction"`
-	Notes       *string `json:"notes"`
-}
-
-func (q *Queries) UpdateClientAllergy(ctx context.Context, arg UpdateClientAllergyParams) (ClientAllergy, error) {
-	row := q.db.QueryRow(ctx, updateClientAllergy,
-		arg.ID,
-		arg.AllergyType,
-		arg.Severity,
-		arg.Reaction,
-		arg.Notes,
-	)
-	var i ClientAllergy
-	err := row.Scan(
-		&i.ID,
-		&i.ClientID,
-		&i.AllergyType,
-		&i.Severity,
-		&i.Reaction,
-		&i.Notes,
-		&i.CreatedAt,
-	)
-	return i, err
 }
 
 const updateClientDiagnosis = `-- name: UpdateClientDiagnosis :one
@@ -624,7 +422,7 @@ SET
     administered_by_id = COALESCE($8, administered_by_id),
     is_critical = COALESCE($9, is_critical)
 WHERE id = $1
-RETURNING id, name, dosage, start_date, end_date, notes, self_administered, slots, client_id, administered_by_id, is_critical, updated_at, created_at
+RETURNING id, diagnosis_id, name, dosage, start_date, end_date, notes, self_administered, slots, administered_by_id, is_critical, updated_at, created_at
 `
 
 type UpdateClientMedicationParams struct {
@@ -654,6 +452,7 @@ func (q *Queries) UpdateClientMedication(ctx context.Context, arg UpdateClientMe
 	var i ClientMedication
 	err := row.Scan(
 		&i.ID,
+		&i.DiagnosisID,
 		&i.Name,
 		&i.Dosage,
 		&i.StartDate,
@@ -661,7 +460,6 @@ func (q *Queries) UpdateClientMedication(ctx context.Context, arg UpdateClientMe
 		&i.Notes,
 		&i.SelfAdministered,
 		&i.Slots,
-		&i.ClientID,
 		&i.AdministeredByID,
 		&i.IsCritical,
 		&i.UpdatedAt,

@@ -199,6 +199,16 @@ definitions:
       role_id:
         type: integer
     type: object
+  api.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   api.ConfirmIncidentResponse:
     properties:
       file_url:
@@ -359,38 +369,6 @@ definitions:
           type: string
         type: array
     type: object
-  api.CreateClientAllergyRequest:
-    properties:
-      allergy_id:
-        type: string
-      notes:
-        type: string
-      reaction:
-        type: string
-      severity:
-        type: string
-    required:
-    - allergy_id
-    - reaction
-    - severity
-    type: object
-  api.CreateClientAllergyResponse:
-    properties:
-      allergy_type_id:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      reaction:
-        type: string
-      severity:
-        type: string
-    type: object
   api.CreateClientDetailsRequest:
     properties:
       addresses:
@@ -515,6 +493,10 @@ definitions:
         type: string
       diagnosis_code:
         type: string
+      medications:
+        items:
+          $ref: '#/definitions/api.DiagnosisMedicationCreate'
+        type: array
       notes:
         type: string
       severity:
@@ -663,10 +645,10 @@ definitions:
     properties:
       administered_by_id:
         type: integer
-      client_id:
-        type: integer
       created_at:
         type: string
+      diagnosis_id:
+        type: integer
       dosage:
         type: string
       end_date:
@@ -1608,7 +1590,7 @@ definitions:
       dosage:
         type: string
       end_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       is_critical:
         type: boolean
       name:
@@ -1618,7 +1600,7 @@ definitions:
       self_administered:
         type: boolean
       start_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
     type: object
   api.DeleteAssignedEmployeeResponse:
     properties:
@@ -1713,6 +1695,52 @@ definitions:
     properties:
       id:
         type: integer
+    type: object
+  api.DiagnosisMedicationCreate:
+    properties:
+      administered_by_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+    type: object
+  api.DiagnosisMedicationList:
+    properties:
+      administered_by_id:
+        type: integer
+      created_at:
+        type: string
+      diagnosis_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        $ref: '#/definitions/pgtype.Date'
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        $ref: '#/definitions/pgtype.Date'
+      updated_at:
+        type: string
     type: object
   api.DischargeOverviewResponse:
     properties:
@@ -1854,23 +1882,6 @@ definitions:
       size:
         type: integer
     type: object
-  api.GetClientAllergyResponse:
-    properties:
-      allergy_type_id:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      reaction:
-        type: string
-      severity:
-        type: string
-    type: object
   api.GetClientApiResponse:
     properties:
       addresses:
@@ -1995,6 +2006,10 @@ definitions:
         type: string
       id:
         type: integer
+      medications:
+        items:
+          $ref: '#/definitions/api.DiagnosisMedicationList'
+        type: array
       notes:
         type: string
       severity:
@@ -2089,10 +2104,10 @@ definitions:
         type: integer
       administered_by_last_name:
         type: string
-      client_id:
-        type: integer
       created_at:
         type: string
+      diagnosis_id:
+        type: integer
       dosage:
         type: string
       end_date:
@@ -2194,6 +2209,8 @@ definitions:
       id:
         type: integer
       is_archived:
+        type: boolean
+      is_logged_in_user:
         type: boolean
       is_subcontractor:
         type: boolean
@@ -2524,6 +2541,8 @@ definitions:
         type: integer
       employee_last_name:
         type: string
+      employee_profile_picture:
+        type: string
       id:
         type: integer
       report_text:
@@ -2648,23 +2667,6 @@ definitions:
       role:
         type: string
       start_date:
-        type: string
-    type: object
-  api.ListClientAllergiesResponse:
-    properties:
-      allergy_type:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      reaction:
-        type: string
-      severity:
         type: string
     type: object
   api.ListClientContractsResponse:
@@ -2841,16 +2843,12 @@ definitions:
     type: object
   api.ListClientMedicationsResponse:
     properties:
-      administered_by_first_name:
-        type: string
       administered_by_id:
-        type: integer
-      administered_by_last_name:
-        type: string
-      client_id:
         type: integer
       created_at:
         type: string
+      diagnosis_id:
+        type: integer
       dosage:
         type: string
       end_date:
@@ -3345,6 +3343,8 @@ definitions:
         type: integer
       employee_last_name:
         type: string
+      employee_profile_picture:
+        type: string
       id:
         type: integer
       report_text:
@@ -3595,15 +3595,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateClientAllergyResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateClientAllergyResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateClientDetailsResponse:
     properties:
       data:
@@ -3833,15 +3824,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetAttachmentByIdResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetClientAllergyResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientAllergyResponse'
       message:
         type: string
       success:
@@ -4108,15 +4090,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UpdateClientAllergyResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientAllergyResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_UpdateClientDetailsResponse:
     properties:
       data:
@@ -4346,15 +4319,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListAssignedEmployeesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListClientAllergiesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListClientAllergiesResponse'
       message:
         type: string
       success:
@@ -4648,34 +4612,6 @@ definitions:
       start_date:
         type: string
     type: object
-  api.UpdateClientAllergyRequest:
-    properties:
-      allergy_type_id:
-        type: string
-      notes:
-        type: string
-      reaction:
-        type: string
-      severity:
-        type: string
-    type: object
-  api.UpdateClientAllergyResponse:
-    properties:
-      allergy_type_id:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      reaction:
-        type: string
-      severity:
-        type: string
-    type: object
   api.UpdateClientDetailsRequest:
     properties:
       birthplace:
@@ -4895,10 +4831,10 @@ definitions:
     properties:
       administered_by_id:
         type: integer
-      client_id:
-        type: integer
       created_at:
         type: string
+      diagnosis_id:
+        type: integer
       dosage:
         type: string
       end_date:
@@ -5522,21 +5458,6 @@ definitions:
           $ref: '#/definitions/api.ListAssignedEmployeesResponse'
         type: array
     type: object
-  pagination.Response-api_ListClientAllergiesResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListClientAllergiesResponse'
-        type: array
-    type: object
   pagination.Response-api_ListClientContractsResponse:
     properties:
       count:
@@ -5908,6 +5829,48 @@ paths:
       summary: Upload a file
       tags:
       - attachments
+  /auth/change_password:
+    post:
+      consumes:
+      - application/json
+      description: Change user password
+      parameters:
+      - description: Change password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - User not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - Password change issue
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Change user password
+      tags:
+      - authentication
   /auth/logout:
     post:
       description: Logout user and invalidate refresh token
@@ -6267,174 +6230,6 @@ paths:
       summary: Confirm a progress report for a client
       tags:
       - progress_reports
-  /clients/{id}/allergies:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientAllergiesResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List all client allergies
-      tags:
-      - client_Medical
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Client allergy data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateClientAllergyRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateClientAllergyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create a client allergy
-      tags:
-      - client_Medical
-  /clients/{id}/allergies/{allergy_id}:
-    delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Allergy ID
-        in: path
-        name: allergy_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete a client allergy
-      tags:
-      - client_Medical
-    get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Allergy ID
-        in: path
-        name: allergy_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_GetClientAllergyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get a client allergy
-      tags:
-      - client_Medical
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Allergy ID
-        in: path
-        name: allergy_id
-        required: true
-        type: integer
-      - description: Client allergy data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.UpdateClientAllergyRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientAllergyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update a client allergy
-      tags:
-      - client_Medical
   /clients/{id}/appointment_cards:
     get:
       description: Get an appointment card by client ID
@@ -6762,6 +6557,164 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update a client diagnosis
+      tags:
+      - client_Medical
+  /clients/{id}/diagnosis/{diagnosis_id}/medications:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all client medications
+      tags:
+      - client_Medical
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      - description: Client medication data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateclientMedicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientMedicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a client medication
+      tags:
+      - client_Medical
+  /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id}:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Medication ID
+        in: path
+        name: medication_id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientMedicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client medication
+      tags:
+      - client_Medical
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
+        required: true
+        type: integer
+      - description: Medication ID
+        in: path
+        name: medication_id
+        required: true
+        type: integer
+      - description: Client medication data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateClientMedicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateClientMedicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a client medication
       tags:
       - client_Medical
   /clients/{id}/documents:
@@ -7758,79 +7711,17 @@ paths:
       summary: Get client maturity matrix assessment
       tags:
       - maturity_matrix
-  /clients/{id}/medications:
-    get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List all client medications
-      tags:
-      - client_Medical
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Client medication data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateclientMedicationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateClientMedicationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create a client medication
-      tags:
-      - client_Medical
   /clients/{id}/medications/{medication_id}:
     delete:
       parameters:
       - description: Client ID
         in: path
         name: id
+        required: true
+        type: integer
+      - description: Diagnosis ID
+        in: path
+        name: diagnosis_id
         required: true
         type: integer
       - description: Medication ID
@@ -7854,74 +7745,6 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Delete a client medication
-      tags:
-      - client_Medical
-    get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Medication ID
-        in: path
-        name: medication_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_GetClientMedicationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get a client medication
-      tags:
-      - client_Medical
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Medication ID
-        in: path
-        name: medication_id
-        required: true
-        type: integer
-      - description: Client medication data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.UpdateClientMedicationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientMedicationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update a client medication
       tags:
       - client_Medical
   /clients/{id}/missing_documents:
@@ -8060,6 +7883,36 @@ paths:
       tags:
       - progress_reports
   /clients/{id}/progress_reports/{report_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress Report ID
+        in: path
+        name: report_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a progress report for a client
+      tags:
+      - progress_reports
     get:
       parameters:
       - description: Client ID

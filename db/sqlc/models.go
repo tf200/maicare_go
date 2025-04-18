@@ -18,6 +18,23 @@ type AiGeneratedReport struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type Appointment struct {
+	ID                    int32            `json:"id"`
+	CreatorEmployeeID     int32            `json:"creator_employee_id"`
+	StartTime             pgtype.Timestamp `json:"start_time"`
+	EndTime               pgtype.Timestamp `json:"end_time"`
+	Location              *string          `json:"location"`
+	Description           *string          `json:"description"`
+	Status                string           `json:"status"`
+	RecurrenceType        *string          `json:"recurrence_type"`
+	RecurrenceInterval    *int32           `json:"recurrence_interval"`
+	RecurrenceEndDate     pgtype.Date      `json:"recurrence_end_date"`
+	ConfirmedByEmployeeID *int32           `json:"confirmed_by_employee_id"`
+	ConfirmedAt           pgtype.Timestamp `json:"confirmed_at"`
+	CreatedAt             pgtype.Timestamp `json:"created_at"`
+	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
+}
+
 type AppointmentCard struct {
 	ID                     int64              `json:"id"`
 	ClientID               int64              `json:"client_id"`
@@ -35,6 +52,13 @@ type AppointmentCard struct {
 	FileUrl                *string            `json:"file_url"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
+}
+
+type AppointmentParticipant struct {
+	AppointmentParticipantID int32            `json:"appointment_participant_id"`
+	AppointmentID            int32            `json:"appointment_id"`
+	EmployeeID               int32            `json:"employee_id"`
+	AddedAt                  pgtype.Timestamp `json:"added_at"`
 }
 
 type Assessment struct {
@@ -233,6 +257,7 @@ type ClientMaturityMatrixAssessment struct {
 
 type ClientMedication struct {
 	ID               int64              `json:"id"`
+	DiagnosisID      *int64             `json:"diagnosis_id"`
 	Name             string             `json:"name"`
 	Dosage           string             `json:"dosage"`
 	StartDate        pgtype.Date        `json:"start_date"`
@@ -240,7 +265,6 @@ type ClientMedication struct {
 	Notes            *string            `json:"notes"`
 	SelfAdministered bool               `json:"self_administered"`
 	Slots            []byte             `json:"slots"`
-	ClientID         int64              `json:"client_id"`
 	AdministeredByID *int64             `json:"administered_by_id"`
 	IsCritical       bool               `json:"is_critical"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`

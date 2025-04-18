@@ -11,313 +11,27 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// CreateClientAllergyRequest defines the request for creating a client allergy
-type CreateClientAllergyRequest struct {
-	AllergyType string  `json:"allergy_id" binding:"required"`
-	Severity    string  `json:"severity" binding:"required"`
-	Reaction    string  `json:"reaction" binding:"required"`
-	Notes       *string `json:"notes"`
-}
-
-// CreateClientAllergyResponse defines the response for creating a client allergy
-type CreateClientAllergyResponse struct {
-	ID          int64     `json:"id"`
-	ClientID    int64     `json:"client_id"`
-	AllergyType string    `json:"allergy_type_id"`
-	Severity    string    `json:"severity"`
-	Reaction    string    `json:"reaction"`
-	Notes       *string   `json:"notes"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-// CreateClientAllergyApi creates a client allergy
-// @Summary Create a client allergy
-// @Tags client_Medical
-// @Accept json
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param request body CreateClientAllergyRequest true "Client allergy data"
-// @Success 201 {object} Response[CreateClientAllergyResponse]
-// @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/allergies [post]
-func (server *Server) CreateClientAllergyApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	var req CreateClientAllergyRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	arg := db.CreateClientAllergyParams{
-		ClientID:    clientID,
-		AllergyType: req.AllergyType,
-		Severity:    req.Severity,
-		Reaction:    req.Reaction,
-		Notes:       req.Notes,
-	}
-	clientAllergy, err := server.store.CreateClientAllergy(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(CreateClientAllergyResponse{
-		ID:          clientAllergy.ID,
-		ClientID:    clientAllergy.ClientID,
-		AllergyType: clientAllergy.AllergyType,
-		Severity:    clientAllergy.Severity,
-		Reaction:    clientAllergy.Reaction,
-		Notes:       clientAllergy.Notes,
-		CreatedAt:   clientAllergy.CreatedAt.Time,
-	}, "Client allergy created successfully")
-	ctx.JSON(http.StatusCreated, res)
-}
-
-// ListClientAllergiesRequest defines the request for listing client allergies
-type ListClientAllergiesRequest struct {
-	pagination.Request
-}
-
-// ListClientAllergiesResponse defines the response for listing client allergies
-type ListClientAllergiesResponse struct {
-	ID          int64     `json:"id"`
-	ClientID    int64     `json:"client_id"`
-	Severity    string    `json:"severity"`
-	Reaction    string    `json:"reaction"`
-	Notes       *string   `json:"notes"`
-	CreatedAt   time.Time `json:"created_at"`
-	AllergyType string    `json:"allergy_type"`
-}
-
-// ListClientAllergiesApi lists all client allergies
-// @Summary List all client allergies
-// @Tags client_Medical
-// @Accept json
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param page query int false "Page number"
-// @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[ListClientAllergiesResponse]]
-// @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/allergies [get]
-func (server *Server) ListClientAllergiesApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	var req ListClientAllergiesRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	params := req.GetParams()
-	arg := db.ListClientAllergiesParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
-	}
-	clientAllergies, err := server.store.ListClientAllergies(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if len(clientAllergies) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListClientAllergiesResponse{}, 0)
-		res := SuccessResponse(pag, "No client allergies found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	totalCount := clientAllergies[0].TotalAllergies
-
-	allergies := make([]ListClientAllergiesResponse, len(clientAllergies))
-	for i, allergy := range clientAllergies {
-		allergies[i] = ListClientAllergiesResponse{
-			ID:          allergy.ID,
-			ClientID:    allergy.ClientID,
-			AllergyType: allergy.AllergyType,
-			Severity:    allergy.Severity,
-			Reaction:    allergy.Reaction,
-			Notes:       allergy.Notes,
-			CreatedAt:   allergy.CreatedAt.Time,
-		}
-	}
-
-	pag := pagination.NewResponse(ctx, req.Request, allergies, totalCount)
-	res := SuccessResponse(pag, "Client allergies fetched successfully")
-
-	ctx.JSON(http.StatusOK, res)
-}
-
-// GetClientAllergyResponse defines the request for geting a client allergy
-type GetClientAllergyResponse struct {
-	ID          int64     `json:"id"`
-	ClientID    int64     `json:"client_id"`
-	AllergyType string    `json:"allergy_type_id"`
-	Severity    string    `json:"severity"`
-	Reaction    string    `json:"reaction"`
-	Notes       *string   `json:"notes"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-// GetClientAllergyApi gets a client allergy
-// @Summary Get a client allergy
-// @Tags client_Medical
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param allergy_id path int true "Allergy ID"
-// @Success 200 {object} Response[GetClientAllergyResponse]
-// @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/allergies/{allergy_id} [get]
-func (server *Server) GetClientAllergyApi(ctx *gin.Context) {
-	id := ctx.Param("allergy_id")
-	allergyID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	allergy, err := server.store.GetClientAllergy(ctx, allergyID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(GetClientAllergyResponse{
-		ID:          allergy.ID,
-		ClientID:    allergy.ClientID,
-		AllergyType: allergy.AllergyType,
-		Severity:    allergy.Severity,
-		Reaction:    allergy.Reaction,
-		Notes:       allergy.Notes,
-		CreatedAt:   allergy.CreatedAt.Time,
-	}, "Client allergy fetched successfully")
-	ctx.JSON(http.StatusOK, res)
-
-}
-
-// UpdateClientAllergyRequest defines the request for updating a client allergy
-type UpdateClientAllergyRequest struct {
-	AllergyType *string `json:"allergy_type_id"`
-	Severity    *string `json:"severity"`
-	Reaction    *string `json:"reaction"`
-	Notes       *string `json:"notes"`
-}
-
-// UpdateClientAllergyResponse defines the response for updating a client allergy
-type UpdateClientAllergyResponse struct {
-	ID          int64     `json:"id"`
-	ClientID    int64     `json:"client_id"`
-	AllergyType string    `json:"allergy_type_id"`
-	Severity    string    `json:"severity"`
-	Reaction    string    `json:"reaction"`
-	Notes       *string   `json:"notes"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
-// UpdateClientAllergyApi updates a client allergy
-// @Summary Update a client allergy
-// @Tags client_Medical
-// @Accept json
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param allergy_id path int true "Allergy ID"
-// @Param request body UpdateClientAllergyRequest true "Client allergy data"
-// @Success 200 {object} Response[UpdateClientAllergyResponse]
-// @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/allergies/{allergy_id} [put]
-func (server *Server) UpdateClientAllergyApi(ctx *gin.Context) {
-	id := ctx.Param("allergy_id")
-	allergyID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	var req UpdateClientAllergyRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	arg := db.UpdateClientAllergyParams{
-		ID:          allergyID,
-		AllergyType: req.AllergyType,
-		Severity:    req.Severity,
-		Reaction:    req.Reaction,
-		Notes:       req.Notes,
-	}
-
-	allergy, err := server.store.UpdateClientAllergy(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(UpdateClientAllergyResponse{
-		ID:          allergy.ID,
-		ClientID:    allergy.ClientID,
-		AllergyType: allergy.AllergyType,
-		Severity:    allergy.Severity,
-		Reaction:    allergy.Reaction,
-		Notes:       allergy.Notes,
-		CreatedAt:   allergy.CreatedAt.Time,
-	}, "Client allergy updated successfully")
-
-	ctx.JSON(http.StatusOK, res)
-}
-
-// DeleteClientAllergyResponse defines the response for deleting a client allergy
-type DeleteClientAllergyResponse struct {
-	ID int64 `json:"id"`
-}
-
-// DeleteClientAllergyApi deletes a client allergy
-// @Summary Delete a client allergy
-// @Tags client_Medical
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param allergy_id path int true "Allergy ID"
-// @Success 200 {object} Response[any]
-// @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/allergies/{allergy_id} [delete]
-func (server *Server) DeleteClientAllergyApi(ctx *gin.Context) {
-	id := ctx.Param("allergy_id")
-	allergyID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	allergy, err := server.store.DeleteClientAllergy(ctx, allergyID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(DeleteClientAllergyResponse{
-		ID: allergy.ID,
-	}, "Client allergy deleted successfully")
-	ctx.JSON(http.StatusOK, res)
+type DiagnosisMedicationCreate struct {
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
 }
 
 // CreateClientDiagnosisRequest defines the request for creating a client diagnosis
 type CreateClientDiagnosisRequest struct {
-	Title               *string `json:"title"`
-	DiagnosisCode       string  `json:"diagnosis_code"`
-	Description         string  `json:"description"`
-	Severity            *string `json:"severity"`
-	Status              string  `json:"status"`
-	DiagnosingClinician *string `json:"diagnosing_clinician"`
-	Notes               *string `json:"notes"`
+	Title               *string                     `json:"title"`
+	DiagnosisCode       string                      `json:"diagnosis_code"`
+	Description         string                      `json:"description"`
+	Severity            *string                     `json:"severity"`
+	Status              string                      `json:"status"`
+	DiagnosingClinician *string                     `json:"diagnosing_clinician"`
+	Notes               *string                     `json:"notes"`
+	Medications         []DiagnosisMedicationCreate `json:"medications"`
 }
 
 // CreateClientDiagnosisResponse defines the response for creating a client diagnosis
@@ -368,8 +82,43 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 		DiagnosingClinician: req.DiagnosingClinician,
 		Notes:               req.Notes,
 	}
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
 
-	clientDiagnosis, err := server.store.CreateClientDiagnosis(ctx, arg)
+	qtx := server.store.WithTx(tx)
+
+	clientDiagnosis, err := qtx.CreateClientDiagnosis(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(req.Medications) > 0 {
+		for _, medication := range req.Medications {
+			medicationArg := db.CreateClientMedicationParams{
+				DiagnosisID:      &clientDiagnosis.ID,
+				Name:             medication.Name,
+				Dosage:           medication.Dosage,
+				StartDate:        pgtype.Date{Time: medication.StartDate, Valid: true},
+				EndDate:          pgtype.Date{Time: medication.EndDate, Valid: true},
+				Notes:            medication.Notes,
+				SelfAdministered: medication.SelfAdministered,
+				AdministeredByID: medication.AdministeredByID,
+				IsCritical:       medication.IsCritical,
+			}
+			_, err := qtx.CreateClientMedication(ctx, medicationArg)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+	}
+
+	err = tx.Commit(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -479,19 +228,35 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type DiagnosisMedicationList struct {
+	ID               int64       `json:"id"`
+	DiagnosisID      *int64      `json:"diagnosis_id"`
+	Name             string      `json:"name"`
+	Dosage           string      `json:"dosage"`
+	StartDate        pgtype.Date `json:"start_date"`
+	EndDate          pgtype.Date `json:"end_date"`
+	Notes            *string     `json:"notes"`
+	SelfAdministered bool        `json:"self_administered"`
+	AdministeredByID *int64      `json:"administered_by_id"`
+	IsCritical       bool        `json:"is_critical"`
+	UpdatedAt        time.Time   `json:"updated_at"`
+	CreatedAt        time.Time   `json:"created_at"`
+}
+
 // GetClientDiagnosisResponse defines the response for getting a client diagnosis
 type GetClientDiagnosisResponse struct {
-	ID                  int64     `json:"id"`
-	Title               *string   `json:"title"`
-	ClientID            int64     `json:"client_id"`
-	DiagnosisCode       string    `json:"diagnosis_code"`
-	Description         string    `json:"description"`
-	DateOfDiagnosis     time.Time `json:"date_of_diagnosis"`
-	Severity            *string   `json:"severity"`
-	Status              string    `json:"status"`
-	DiagnosingClinician *string   `json:"diagnosing_clinician"`
-	Notes               *string   `json:"notes"`
-	CreatedAt           time.Time `json:"created_at"`
+	ID                  int64                     `json:"id"`
+	Title               *string                   `json:"title"`
+	ClientID            int64                     `json:"client_id"`
+	DiagnosisCode       string                    `json:"diagnosis_code"`
+	Description         string                    `json:"description"`
+	DateOfDiagnosis     time.Time                 `json:"date_of_diagnosis"`
+	Severity            *string                   `json:"severity"`
+	Status              string                    `json:"status"`
+	DiagnosingClinician *string                   `json:"diagnosing_clinician"`
+	Notes               *string                   `json:"notes"`
+	CreatedAt           time.Time                 `json:"created_at"`
+	Medications         []DiagnosisMedicationList `json:"medications"`
 }
 
 // GetClientDiagnosisApi gets a client diagnosis
@@ -518,6 +283,35 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 		return
 	}
 
+	arg := db.ListMedicationsByDiagnosisIDParams{
+		DiagnosisID: &diagnosis.ID,
+		Limit:       10,
+		Offset:      0,
+	}
+
+	medications, err := server.store.ListMedicationsByDiagnosisID(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	medicationList := make([]DiagnosisMedicationList, len(medications))
+	for i, medication := range medications {
+		medicationList[i] = DiagnosisMedicationList{
+			ID:               medication.ID,
+			DiagnosisID:      medication.DiagnosisID,
+			Name:             medication.Name,
+			Dosage:           medication.Dosage,
+			StartDate:        medication.StartDate,
+			EndDate:          medication.EndDate,
+			Notes:            medication.Notes,
+			SelfAdministered: medication.SelfAdministered,
+			AdministeredByID: medication.AdministeredByID,
+			IsCritical:       medication.IsCritical,
+			UpdatedAt:        medication.UpdatedAt.Time,
+			CreatedAt:        medication.CreatedAt.Time,
+		}
+	}
+
 	res := SuccessResponse(GetClientDiagnosisResponse{
 		ID:                  diagnosis.ID,
 		Title:               diagnosis.Title,
@@ -529,6 +323,7 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 		DiagnosingClinician: diagnosis.DiagnosingClinician,
 		Notes:               diagnosis.Notes,
 		CreatedAt:           diagnosis.CreatedAt.Time,
+		Medications:         medicationList,
 	}, "Client diagnosis fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 
@@ -654,20 +449,20 @@ func (server *Server) DeleteClientDiagnosisApi(ctx *gin.Context) {
 
 // CreateclientMedicationRequest defines the request for creating a client medication
 type CreateclientMedicationRequest struct {
-	Name             string      `json:"name"`
-	Dosage           string      `json:"dosage"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	Notes            *string     `json:"notes"`
-	SelfAdministered bool        `json:"self_administered"`
-	AdministeredByID *int64      `json:"administered_by_id"`
-	IsCritical       bool        `json:"is_critical"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
 }
 
 // CreateClientMedicationResponse defines the response for creating a client medication
 type CreateClientMedicationResponse struct {
 	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
 	Name             string    `json:"name"`
 	Dosage           string    `json:"dosage"`
 	StartDate        time.Time `json:"start_date"`
@@ -686,13 +481,14 @@ type CreateClientMedicationResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
+// @Param diagnosis_id path int true "Diagnosis ID"
 // @Param request body CreateclientMedicationRequest true "Client medication data"
 // @Success 201 {object} Response[CreateClientMedicationResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/medications [post]
+// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications [post]
 func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	id := ctx.Param("diagnosis_id")
+	diagnosisID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -705,11 +501,11 @@ func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
 	}
 
 	arg := db.CreateClientMedicationParams{
-		ClientID:         clientID,
+		DiagnosisID:      &diagnosisID,
 		Name:             req.Name,
 		Dosage:           req.Dosage,
-		StartDate:        req.StartDate,
-		EndDate:          req.EndDate,
+		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
+		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
 		Notes:            req.Notes,
 		SelfAdministered: req.SelfAdministered,
 		AdministeredByID: req.AdministeredByID,
@@ -724,7 +520,7 @@ func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
 
 	res := SuccessResponse(CreateClientMedicationResponse{
 		ID:               clientMedication.ID,
-		ClientID:         clientMedication.ClientID,
+		DiagnosisID:      clientMedication.DiagnosisID,
 		Name:             clientMedication.Name,
 		Dosage:           clientMedication.Dosage,
 		StartDate:        clientMedication.StartDate.Time,
@@ -741,42 +537,41 @@ func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
 
 }
 
-// ListClientMedicationsRequest defines the request for listing client medications
 type ListClientMedicationsRequest struct {
 	pagination.Request
 }
 
 // ListClientMedicationsResponse defines the response for listing client medications
 type ListClientMedicationsResponse struct {
-	ID                      int64     `json:"id"`
-	Name                    string    `json:"name"`
-	Dosage                  string    `json:"dosage"`
-	StartDate               time.Time `json:"start_date"`
-	EndDate                 time.Time `json:"end_date"`
-	Notes                   *string   `json:"notes"`
-	SelfAdministered        bool      `json:"self_administered"`
-	ClientID                int64     `json:"client_id"`
-	AdministeredByID        *int64    `json:"administered_by_id"`
-	IsCritical              bool      `json:"is_critical"`
-	UpdatedAt               time.Time `json:"updated_at"`
-	CreatedAt               time.Time `json:"created_at"`
-	AdministeredByFirstName string    `json:"administered_by_first_name"`
-	AdministeredByLastName  string    `json:"administered_by_last_name"`
+	ID               int64     `json:"id"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 
 // ListClientMedicationsApi lists all client medications
 // @Summary List all client medications
 // @Tags client_Medical
+// @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
+// @Param diagnosis_id path int true "Diagnosis ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[ListClientMedicationsResponse]]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/medications [get]
+// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications [get]
 func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	id := ctx.Param("diagnosis_id")
+	diagnosisID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -789,13 +584,13 @@ func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
 	}
 
 	params := req.GetParams()
-	arg := db.ListClientMedicationsParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
+	arg := db.ListMedicationsByDiagnosisIDParams{
+		DiagnosisID: &diagnosisID,
+		Limit:       params.Limit,
+		Offset:      params.Offset,
 	}
 
-	clientMedications, err := server.store.ListClientMedications(ctx, arg)
+	clientMedications, err := server.store.ListMedicationsByDiagnosisID(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -810,29 +605,25 @@ func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
 
 	totalCount := clientMedications[0].TotalMedications
 
-	medications := make([]ListClientMedicationsResponse, len(clientMedications))
+	clientMedicationList := make([]ListClientMedicationsResponse, len(clientMedications))
 	for i, medication := range clientMedications {
-		medications[i] = ListClientMedicationsResponse{
-			ID:                      medication.ID,
-			Name:                    medication.Name,
-			Dosage:                  medication.Dosage,
-			StartDate:               medication.StartDate.Time,
-			EndDate:                 medication.EndDate.Time,
-			Notes:                   medication.Notes,
-			SelfAdministered:        medication.SelfAdministered,
-			ClientID:                medication.ClientID,
-			AdministeredByID:        medication.AdministeredByID,
-			IsCritical:              medication.IsCritical,
-			UpdatedAt:               medication.UpdatedAt.Time,
-			CreatedAt:               medication.CreatedAt.Time,
-			AdministeredByFirstName: medication.AdministeredByFirstName,
-			AdministeredByLastName:  medication.AdministeredByLastName,
+		clientMedicationList[i] = ListClientMedicationsResponse{
+			ID:               medication.ID,
+			Name:             medication.Name,
+			Dosage:           medication.Dosage,
+			StartDate:        medication.StartDate.Time,
+			EndDate:          medication.EndDate.Time,
+			Notes:            medication.Notes,
+			SelfAdministered: medication.SelfAdministered,
+			IsCritical:       medication.IsCritical,
+			DiagnosisID:      medication.DiagnosisID,
+			AdministeredByID: medication.AdministeredByID,
+			UpdatedAt:        medication.UpdatedAt.Time,
+			CreatedAt:        medication.CreatedAt.Time,
 		}
 	}
-
-	pag := pagination.NewResponse(ctx, req.Request, medications, totalCount)
+	pag := pagination.NewResponse(ctx, req.Request, clientMedicationList, totalCount)
 	res := SuccessResponse(pag, "Client medications fetched successfully")
-
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -845,7 +636,7 @@ type GetClientMedicationResponse struct {
 	EndDate                 time.Time `json:"end_date"`
 	Notes                   *string   `json:"notes"`
 	SelfAdministered        bool      `json:"self_administered"`
-	ClientID                int64     `json:"client_id"`
+	DiagnosisID             *int64    `json:"diagnosis_id"`
 	AdministeredByID        *int64    `json:"administered_by_id"`
 	IsCritical              bool      `json:"is_critical"`
 	UpdatedAt               time.Time `json:"updated_at"`
@@ -860,9 +651,10 @@ type GetClientMedicationResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param medication_id path int true "Medication ID"
+// @Param diagnosis_id path int true "Diagnosis ID"
 // @Success 200 {object} Response[GetClientMedicationResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/medications/{medication_id} [get]
+// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id} [get]
 func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 	id := ctx.Param("medication_id")
 	medicationID, err := strconv.ParseInt(id, 10, 64)
@@ -871,7 +663,7 @@ func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 		return
 	}
 
-	medication, err := server.store.GetClientMedication(ctx, medicationID)
+	medication, err := server.store.GetMedication(ctx, medicationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -885,7 +677,7 @@ func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 		EndDate:                 medication.EndDate.Time,
 		Notes:                   medication.Notes,
 		SelfAdministered:        medication.SelfAdministered,
-		ClientID:                medication.ClientID,
+		DiagnosisID:             medication.DiagnosisID,
 		AdministeredByID:        medication.AdministeredByID,
 		IsCritical:              medication.IsCritical,
 		UpdatedAt:               medication.UpdatedAt.Time,
@@ -918,7 +710,7 @@ type UpdateClientMedicationResponse struct {
 	EndDate          time.Time `json:"end_date"`
 	Notes            *string   `json:"notes"`
 	SelfAdministered bool      `json:"self_administered"`
-	ClientID         int64     `json:"client_id"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
 	AdministeredByID *int64    `json:"administered_by_id"`
 	IsCritical       bool      `json:"is_critical"`
 	UpdatedAt        time.Time `json:"updated_at"`
@@ -931,11 +723,12 @@ type UpdateClientMedicationResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
+// @Param diagnosis_id path int true "Diagnosis ID"
 // @Param medication_id path int true "Medication ID"
 // @Param request body UpdateClientMedicationRequest true "Client medication data"
 // @Success 200 {object} Response[UpdateClientMedicationResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/medications/{medication_id} [put]
+// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id} [put]
 func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
 	id := ctx.Param("medication_id")
 	medicationID, err := strconv.ParseInt(id, 10, 64)
@@ -976,7 +769,7 @@ func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
 		EndDate:          medication.EndDate.Time,
 		Notes:            medication.Notes,
 		SelfAdministered: medication.SelfAdministered,
-		ClientID:         medication.ClientID,
+		DiagnosisID:      medication.DiagnosisID,
 		AdministeredByID: medication.AdministeredByID,
 		IsCritical:       medication.IsCritical,
 		UpdatedAt:        medication.UpdatedAt.Time,
@@ -986,16 +779,12 @@ func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// DeleteClientMedicationResponse defines the response for deleting a client medication
-type DeleteClientMedicationResponse struct {
-	ID int64 `json:"id"`
-}
-
 // DeleteClientMedicationApi deletes a client medication
 // @Summary Delete a client medication
 // @Tags client_Medical
 // @Produce json
 // @Param id path int true "Client ID"
+// @Param diagnosis_id path int true "Diagnosis ID"
 // @Param medication_id path int true "Medication ID"
 // @Success 200 {object} Response[any]
 // @Failure 400,404 {object} Response[any]
@@ -1008,15 +797,13 @@ func (server *Server) DeleteClientMedicationApi(ctx *gin.Context) {
 		return
 	}
 
-	medication, err := server.store.DeleteClientMedication(ctx, medicationID)
+	err = server.store.DeleteClientMedication(ctx, medicationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(DeleteClientMedicationResponse{
-		ID: medication.ID,
-	}, "Client medication deleted successfully")
+	res := SuccessResponse[any](nil, "Client medication deleted successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

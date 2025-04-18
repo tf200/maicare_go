@@ -1081,6 +1081,7 @@ CREATE TABLE physical_state (
 
 CREATE TABLE client_medication (
     id BIGSERIAL PRIMARY KEY,
+    diagnosis_id BIGINT NULL REFERENCES client_diagnosis(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     dosage VARCHAR(100) NOT NULL,
     start_date DATE NOT NULL,
@@ -1088,7 +1089,7 @@ CREATE TABLE client_medication (
     notes TEXT NULL,
     self_administered BOOLEAN NOT NULL DEFAULT TRUE,
     slots JSONB NULL DEFAULT '[]',
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    
     administered_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1101,7 +1102,6 @@ CREATE INDEX feedback_client_id_idx ON feedback(client_id);
 CREATE INDEX feedback_author_id_idx ON feedback(author_id);
 CREATE INDEX emotional_state_client_id_idx ON emotional_state(client_id);
 CREATE INDEX physical_state_client_id_idx ON physical_state(client_id);
-CREATE INDEX client_medication_client_id_idx ON client_medication(client_id);
 CREATE INDEX client_medication_administered_by_id_idx ON client_medication(administered_by_id);
 CREATE INDEX client_medication_updated_idx ON client_medication(updated_at);
 CREATE INDEX client_medication_created_idx ON client_medication(created_at);
@@ -1750,5 +1750,28 @@ CREATE INDEX idx_notifications_user_id_read_at ON notifications (user_id, read_a
 
 
 
+CREATE TABLE appointments (
+    id SERIAL PRIMARY KEY,
+    creator_employee_id INT NOT NULL REFERENCES employee_profile(id),
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    location VARCHAR(255),
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    recurrence_type VARCHAR(50) DEFAULT 'NONE',
+    recurrence_interval INT DEFAULT 1,
+    recurrence_end_date DATE,
+    confirmed_by_employee_id INT REFERENCES employee_profile(id),
+    confirmed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+CREATE TABLE appointment_participants (
+    appointment_participant_id SERIAL PRIMARY KEY,
+    appointment_id INT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+    employee_id INT NOT NULL REFERENCES employee_profile(id),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    UNIQUE (appointment_id, employee_id)
+);

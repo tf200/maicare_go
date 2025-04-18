@@ -181,6 +181,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/change_password": {
+            "post": {
+                "description": "Change user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Change user password",
+                "parameters": [
+                    {
+                        "description": "Change password request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - User not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Password change issue",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/logout": {
             "post": {
                 "description": "Logout user and invalidate refresh token",
@@ -732,260 +796,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/allergies": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "List all client allergies",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientAllergiesResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Create a client allergy",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Client allergy data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CreateClientAllergyRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateClientAllergyResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/allergies/{allergy_id}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Get a client allergy",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Allergy ID",
-                        "name": "allergy_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientAllergyResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Update a client allergy",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Allergy ID",
-                        "name": "allergy_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Client allergy data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.UpdateClientAllergyRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateClientAllergyResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Delete a client allergy",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Allergy ID",
-                        "name": "allergy_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/clients/{id}/appointment_cards": {
             "get": {
                 "description": "Get an appointment card by client ID",
@@ -1468,6 +1278,243 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/diagnosis/{diagnosis_id}/medications": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "List all client medications",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Diagnosis ID",
+                        "name": "diagnosis_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Create a client medication",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Diagnosis ID",
+                        "name": "diagnosis_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Client medication data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateclientMedicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateClientMedicationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Get a client medication",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Medication ID",
+                        "name": "medication_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Diagnosis ID",
+                        "name": "diagnosis_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetClientMedicationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Update a client medication",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Diagnosis ID",
+                        "name": "diagnosis_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Medication ID",
+                        "name": "medication_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Client medication data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateClientMedicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateClientMedicationResponse"
                         }
                     },
                     "400": {
@@ -2983,211 +3030,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/medications": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "List all client medications",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Create a client medication",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Client medication data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CreateclientMedicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateClientMedicationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/clients/{id}/medications/{medication_id}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Get a client medication",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Medication ID",
-                        "name": "medication_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientMedicationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Update a client medication",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Medication ID",
-                        "name": "medication_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Client medication data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.UpdateClientMedicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateClientMedicationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
             "delete": {
                 "produces": [
                     "application/json"
@@ -3201,6 +3044,13 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Client ID",
                         "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Diagnosis ID",
+                        "name": "diagnosis_id",
                         "in": "path",
                         "required": true
                     },
@@ -3527,6 +3377,51 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_UpdateProgressReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress_reports"
+                ],
+                "summary": "Delete a progress report for a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Progress Report ID",
+                        "name": "report_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "400": {
@@ -6686,6 +6581,21 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ConfirmIncidentResponse": {
             "type": "object",
             "properties": {
@@ -6929,54 +6839,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateClientAllergyRequest": {
-            "type": "object",
-            "required": [
-                "allergy_id",
-                "reaction",
-                "severity"
-            ],
-            "properties": {
-                "allergy_id": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateClientAllergyResponse": {
-            "type": "object",
-            "properties": {
-                "allergy_type_id": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CreateClientDetailsRequest": {
             "type": "object",
             "required": [
@@ -7157,6 +7019,12 @@ const docTemplate = `{
                 },
                 "diagnosis_code": {
                     "type": "string"
+                },
+                "medications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.DiagnosisMedicationCreate"
+                    }
                 },
                 "notes": {
                     "type": "string"
@@ -7382,11 +7250,11 @@ const docTemplate = `{
                 "administered_by_id": {
                     "type": "integer"
                 },
-                "client_id": {
-                    "type": "integer"
-                },
                 "created_at": {
                     "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
                 },
                 "dosage": {
                     "type": "string"
@@ -8759,7 +8627,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "end_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -8774,7 +8642,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "start_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 }
             }
         },
@@ -8921,6 +8789,76 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.DiagnosisMedicationCreate": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.DiagnosisMedicationList": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -9138,32 +9076,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetClientAllergyResponse": {
-            "type": "object",
-            "properties": {
-                "allergy_type_id": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetClientApiResponse": {
             "type": "object",
             "properties": {
@@ -9351,6 +9263,12 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "medications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.DiagnosisMedicationList"
+                    }
+                },
                 "notes": {
                     "type": "string"
                 },
@@ -9494,11 +9412,11 @@ const docTemplate = `{
                 "administered_by_last_name": {
                     "type": "string"
                 },
-                "client_id": {
-                    "type": "integer"
-                },
                 "created_at": {
                     "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
                 },
                 "dosage": {
                     "type": "string"
@@ -9653,6 +9571,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "is_archived": {
+                    "type": "boolean"
+                },
+                "is_logged_in_user": {
                     "type": "boolean"
                 },
                 "is_subcontractor": {
@@ -10152,6 +10073,9 @@ const docTemplate = `{
                 "employee_last_name": {
                     "type": "string"
                 },
+                "employee_profile_picture": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10341,32 +10265,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListClientAllergiesResponse": {
-            "type": "object",
-            "properties": {
-                "allergy_type": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                },
-                "severity": {
                     "type": "string"
                 }
             }
@@ -10635,20 +10533,14 @@ const docTemplate = `{
         "api.ListClientMedicationsResponse": {
             "type": "object",
             "properties": {
-                "administered_by_first_name": {
-                    "type": "string"
-                },
                 "administered_by_id": {
-                    "type": "integer"
-                },
-                "administered_by_last_name": {
-                    "type": "string"
-                },
-                "client_id": {
                     "type": "integer"
                 },
                 "created_at": {
                     "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
                 },
                 "dosage": {
                     "type": "string"
@@ -11397,6 +11289,9 @@ const docTemplate = `{
                 "employee_last_name": {
                     "type": "string"
                 },
+                "employee_profile_picture": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -11780,20 +11675,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateClientAllergyResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateClientAllergyResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CreateClientDetailsResponse": {
             "type": "object",
             "properties": {
@@ -12149,20 +12030,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetAttachmentByIdResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetClientAllergyResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientAllergyResponse"
                 },
                 "message": {
                     "type": "string"
@@ -12578,20 +12445,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_UpdateClientAllergyResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateClientAllergyResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_UpdateClientDetailsResponse": {
             "type": "object",
             "properties": {
@@ -12946,20 +12799,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListAssignedEmployeesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-pagination_Response-api_ListClientAllergiesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListClientAllergiesResponse"
                 },
                 "message": {
                     "type": "string"
@@ -13412,49 +13251,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.UpdateClientAllergyRequest": {
-            "type": "object",
-            "properties": {
-                "allergy_type_id": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateClientAllergyResponse": {
-            "type": "object",
-            "properties": {
-                "allergy_type_id": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                }
-            }
-        },
         "api.UpdateClientDetailsRequest": {
             "type": "object",
             "properties": {
@@ -13787,11 +13583,11 @@ const docTemplate = `{
                 "administered_by_id": {
                     "type": "integer"
                 },
-                "client_id": {
-                    "type": "integer"
-                },
                 "created_at": {
                     "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
                 },
                 "dosage": {
                     "type": "string"
@@ -14733,29 +14529,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListAssignedEmployeesResponse"
-                    }
-                }
-            }
-        },
-        "pagination.Response-api_ListClientAllergiesResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListClientAllergiesResponse"
                     }
                 }
             }

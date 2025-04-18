@@ -1,47 +1,3 @@
--- name: CreateClientAllergy :one
-INSERT INTO client_allergy (
-    client_id,
-    allergy_type,
-    severity,
-    reaction,
-    notes,
-    created_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING *;
-
-
-
--- name: ListClientAllergies :many
-SELECT 
-    al.*,
-    (SELECT COUNT(*) FROM client_allergy WHERE client_allergy.client_id = al.client_id) AS total_allergies
-FROM client_allergy al
-WHERE al.client_id = $1
-LIMIT $2 OFFSET $3;
-
-
--- name: GetClientAllergy :one
-SELECT * FROM client_allergy
-WHERE id = $1 LIMIT 1;
-
--- name: UpdateClientAllergy :one
-UPDATE client_allergy
-SET
-    allergy_type = COALESCE(sqlc.narg('allergy_type'), allergy_type),
-    severity = COALESCE(sqlc.narg('severity'), severity),
-    reaction = COALESCE(sqlc.narg('reaction'), reaction),
-    notes = COALESCE(sqlc.narg('notes'), notes)
-WHERE id = $1
-RETURNING *;
-
-
--- name: DeleteClientAllergy :one
-DELETE FROM client_allergy
-WHERE id = $1
-RETURNING *;
-
-
 -- name: CreateClientDiagnosis :one
 INSERT INTO client_diagnosis (
     client_id,
@@ -56,8 +12,6 @@ INSERT INTO client_diagnosis (
     $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
-
-
 -- name: ListClientDiagnoses :many
 SELECT 
     d.*,
@@ -66,11 +20,11 @@ FROM client_diagnosis d
 WHERE d.client_id = $1
 LIMIT $2 OFFSET $3;
 
-
-
 -- name: GetClientDiagnosis :one
 SELECT * FROM client_diagnosis
-WHERE id = $1 LIMIT 1;
+WHERE id = $1
+LIMIT 1; 
+
 
 
 -- name: UpdateClientDiagnosis :one
@@ -95,38 +49,18 @@ RETURNING *;
 
 -- name: CreateClientMedication :one
 INSERT INTO client_medication (
+    diagnosis_id,
     name,
     dosage,
     start_date,
     end_date,
     notes,
     self_administered,
-    client_id,
     administered_by_id,
     is_critical
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
 ) RETURNING *;
-
-
--- name: ListClientMedications :many
-SELECT 
-    m.*,
-    e.first_name AS administered_by_first_name,
-    e.last_name AS administered_by_last_name,
-    (SELECT COUNT(*) FROM client_medication WHERE client_medication.client_id = m.client_id) AS total_medications
-FROM client_medication m
-JOIN employee_profile e ON m.administered_by_id = e.id
-WHERE m.client_id = $1
-LIMIT $2 OFFSET $3;
-
-
--- name: GetClientMedication :one
-SELECT m.*, e.first_name AS administered_by_first_name, e.last_name AS administered_by_last_name
-FROM client_medication m
-JOIN employee_profile e ON m.administered_by_id = e.id
-WHERE m.id = $1 LIMIT 1;
-
 
 
 -- name: UpdateClientMedication :one
@@ -143,10 +77,46 @@ SET
 WHERE id = $1
 RETURNING *;
 
-
--- name: DeleteClientMedication :one
+-- name: DeleteClientMedication :exec
 DELETE FROM client_medication
-WHERE id = $1
-RETURNING *;
+WHERE id = $1;
+
+-- name: ListMedicationsByDiagnosisID :many
+SELECT 
+    m.*,
+    (SELECT COUNT(*) FROM client_medication WHERE client_medication.diagnosis_id = $1) AS total_medications
+FROM client_medication m
+WHERE m.diagnosis_id = $1
+ORDER BY m.id
+LIMIT $2 OFFSET $3;
+
+
+-- name: GetMedication :one
+SELECT m.*, e.first_name AS administered_by_first_name, e.last_name AS administered_by_last_name
+FROM client_medication m
+JOIN employee_profile e ON m.administered_by_id = e.id
+WHERE m.id = $1 LIMIT 1;
+
+
+
+-- -- name: UpdateClientMedication :one
+-- UPDATE client_medication
+-- SET
+--     name = COALESCE(sqlc.narg('name'), name),
+--     dosage = COALESCE(sqlc.narg('dosage'), dosage),
+--     start_date = COALESCE(sqlc.narg('start_date'), start_date),
+--     end_date = COALESCE(sqlc.narg('end_date'), end_date),
+--     notes = COALESCE(sqlc.narg('notes'), notes),
+--     self_administered = COALESCE(sqlc.narg('self_administered'), self_administered),
+--     administered_by_id = COALESCE(sqlc.narg('administered_by_id'), administered_by_id),
+--     is_critical = COALESCE(sqlc.narg('is_critical'), is_critical)
+-- WHERE id = $1
+-- RETURNING *;
+
+
+-- -- name: DeleteClientMedication :one
+-- DELETE FROM client_medication
+-- WHERE id = $1
+-- RETURNING *;
 
 
