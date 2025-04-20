@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -145,18 +146,34 @@ type ListClientDiagnosesRequest struct {
 	pagination.Request
 }
 
+type DiagnosisMedicationList struct {
+	ID               int64     `json:"id"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
 // ListClientDiagnosesResponse defines the response for listing client diagnoses
 type ListClientDiagnosesResponse struct {
-	ID                  int64     `json:"id"`
-	Title               *string   `json:"title"`
-	ClientID            int64     `json:"client_id"`
-	DiagnosisCode       string    `json:"diagnosis_code"`
-	Description         string    `json:"description"`
-	Severity            *string   `json:"severity"`
-	Status              string    `json:"status"`
-	DiagnosingClinician *string   `json:"diagnosing_clinician"`
-	Notes               *string   `json:"notes"`
-	CreatedAt           time.Time `json:"created_at"`
+	ID                  int64                     `json:"id"`
+	Title               *string                   `json:"title"`
+	ClientID            int64                     `json:"client_id"`
+	DiagnosisCode       string                    `json:"diagnosis_code"`
+	Description         string                    `json:"description"`
+	Severity            *string                   `json:"severity"`
+	Status              string                    `json:"status"`
+	DiagnosingClinician *string                   `json:"diagnosing_clinician"`
+	Notes               *string                   `json:"notes"`
+	CreatedAt           time.Time                 `json:"created_at"`
+	Medications         []DiagnosisMedicationList `json:"medications"`
 }
 
 // ListClientDiagnosesApi lists all client diagnoses
@@ -206,41 +223,78 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 
 	totalCount := clientDiagnoses[0].TotalDiagnoses
 
-	diagnoses := make([]ListClientDiagnosesResponse, len(clientDiagnoses))
-	for i, diagnosis := range clientDiagnoses {
-		diagnoses[i] = ListClientDiagnosesResponse{
-			ID:                  diagnosis.ID,
-			Title:               diagnosis.Title,
-			ClientID:            diagnosis.ClientID,
-			DiagnosisCode:       diagnosis.DiagnosisCode,
-			Description:         diagnosis.Description,
-			Severity:            diagnosis.Severity,
-			Status:              diagnosis.Status,
-			DiagnosingClinician: diagnosis.DiagnosingClinician,
-			Notes:               diagnosis.Notes,
-			CreatedAt:           diagnosis.CreatedAt.Time,
+	diagnosisIDs := make([]int64, 0, len(clientDiagnoses))
+	for _, diagnosis := range clientDiagnoses {
+		diagnosisIDs = append(diagnosisIDs, diagnosis.ID)
+	}
+
+	var medicationsDb []db.ClientMedication
+	if len(diagnosisIDs) > 0 {
+		medicationsDb, err = server.store.ListMedicationsByDiagnosisIDs(ctx, diagnosisIDs)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			medicationsDb = []db.ClientMedication{}
+		}
+	} else {
+		medicationsDb = []db.ClientMedication{}
+	}
+
+	medsByDiagnosisID := make(map[int64][]DiagnosisMedicationList)
+	for _, medDb := range medicationsDb {
+		// Make sure medDb.DiagnosisID is not nil before dereferencing
+		if medDb.DiagnosisID != nil {
+			diagID := *medDb.DiagnosisID
+			apiMed := DiagnosisMedicationList{ // Map db struct to api struct here
+				ID:               medDb.ID,
+				DiagnosisID:      medDb.DiagnosisID,
+				Name:             medDb.Name,
+				Dosage:           medDb.Dosage,
+				StartDate:        medDb.StartDate.Time,
+				EndDate:          medDb.EndDate.Time,
+				Notes:            medDb.Notes,
+				SelfAdministered: medDb.SelfAdministered,
+				AdministeredByID: medDb.AdministeredByID,
+				IsCritical:       medDb.IsCritical,
+				UpdatedAt:        medDb.UpdatedAt.Time,
+				CreatedAt:        medDb.CreatedAt.Time,
+			}
+			medsByDiagnosisID[diagID] = append(medsByDiagnosisID[diagID], apiMed)
+		} else {
+			log.Printf("Warning: Medication found with nil DiagnosisID: ID %d", medDb.ID)
 		}
 	}
 
-	pag := pagination.NewResponse(ctx, req.Request, diagnoses, totalCount)
+	// === Build Final Response ===
+	diagnosesApi := make([]ListClientDiagnosesResponse, 0, len(clientDiagnoses))
+	for _, diagnosisDb := range clientDiagnoses {
+		// Look up medications for the current diagnosis ID in the map
+		// If not found in the map, it defaults to a nil slice, which becomes empty JSON array `[]`
+		medicationsForThisDiagnosis := medsByDiagnosisID[diagnosisDb.ID]
+		if medicationsForThisDiagnosis == nil {
+			medicationsForThisDiagnosis = []DiagnosisMedicationList{} // Ensure [] instead of null in JSON
+		}
+
+		diagnosisApi := ListClientDiagnosesResponse{
+			ID:                  diagnosisDb.ID,
+			Title:               diagnosisDb.Title,
+			ClientID:            diagnosisDb.ClientID,
+			DiagnosisCode:       diagnosisDb.DiagnosisCode,
+			Description:         diagnosisDb.Description,
+			Severity:            diagnosisDb.Severity,
+			Status:              diagnosisDb.Status,
+			DiagnosingClinician: diagnosisDb.DiagnosingClinician,
+			Notes:               diagnosisDb.Notes,
+			CreatedAt:           diagnosisDb.CreatedAt.Time,
+			Medications:         medicationsForThisDiagnosis, // Assign the looked-up slice
+		}
+		diagnosesApi = append(diagnosesApi, diagnosisApi)
+	}
+
+	// Create and return the paginated response
+	pag := pagination.NewResponse(ctx, req.Request, diagnosesApi, totalCount)
 	res := SuccessResponse(pag, "Client diagnoses fetched successfully")
-
 	ctx.JSON(http.StatusOK, res)
-}
 
-type DiagnosisMedicationList struct {
-	ID               int64       `json:"id"`
-	DiagnosisID      *int64      `json:"diagnosis_id"`
-	Name             string      `json:"name"`
-	Dosage           string      `json:"dosage"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	Notes            *string     `json:"notes"`
-	SelfAdministered bool        `json:"self_administered"`
-	AdministeredByID *int64      `json:"administered_by_id"`
-	IsCritical       bool        `json:"is_critical"`
-	UpdatedAt        time.Time   `json:"updated_at"`
-	CreatedAt        time.Time   `json:"created_at"`
 }
 
 // GetClientDiagnosisResponse defines the response for getting a client diagnosis
@@ -301,8 +355,8 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 			DiagnosisID:      medication.DiagnosisID,
 			Name:             medication.Name,
 			Dosage:           medication.Dosage,
-			StartDate:        medication.StartDate,
-			EndDate:          medication.EndDate,
+			StartDate:        medication.StartDate.Time,
+			EndDate:          medication.EndDate.Time,
 			Notes:            medication.Notes,
 			SelfAdministered: medication.SelfAdministered,
 			AdministeredByID: medication.AdministeredByID,
@@ -331,13 +385,14 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 
 // UpdateClientDiagnosisApi updates a client diagnosis
 type UpdateClientDiagnosisRequest struct {
-	Title               *string `json:"title"`
-	DiagnosisCode       *string `json:"diagnosis_code"`
-	Description         *string `json:"description"`
-	Severity            *string `json:"severity"`
-	Status              *string `json:"status"`
-	DiagnosingClinician *string `json:"diagnosing_clinician"`
-	Notes               *string `json:"notes"`
+	Title               *string                     `json:"title"`
+	DiagnosisCode       *string                     `json:"diagnosis_code"`
+	Description         *string                     `json:"description"`
+	Severity            *string                     `json:"severity"`
+	Status              *string                     `json:"status"`
+	DiagnosingClinician *string                     `json:"diagnosing_clinician"`
+	Notes               *string                     `json:"notes"`
+	MedicationIDs       []DiagnosisMedicationCreate `json:"medications"`
 }
 
 // UpdateClientDiagnosisApi updates a client diagnosis

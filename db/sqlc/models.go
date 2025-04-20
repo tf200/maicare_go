@@ -19,8 +19,8 @@ type AiGeneratedReport struct {
 }
 
 type Appointment struct {
-	ID                    int32            `json:"id"`
-	CreatorEmployeeID     int32            `json:"creator_employee_id"`
+	ID                    int64            `json:"id"`
+	CreatorEmployeeID     int64            `json:"creator_employee_id"`
 	StartTime             pgtype.Timestamp `json:"start_time"`
 	EndTime               pgtype.Timestamp `json:"end_time"`
 	Location              *string          `json:"location"`
@@ -54,10 +54,17 @@ type AppointmentCard struct {
 	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
 }
 
+type AppointmentClient struct {
+	AppointmentClientID int64            `json:"appointment_client_id"`
+	AppointmentID       int64            `json:"appointment_id"`
+	ClientID            int64            `json:"client_id"`
+	AddedAt             pgtype.Timestamp `json:"added_at"`
+}
+
 type AppointmentParticipant struct {
-	AppointmentParticipantID int32            `json:"appointment_participant_id"`
-	AppointmentID            int32            `json:"appointment_id"`
-	EmployeeID               int32            `json:"employee_id"`
+	AppointmentParticipantID int64            `json:"appointment_participant_id"`
+	AppointmentID            int64            `json:"appointment_id"`
+	EmployeeID               int64            `json:"employee_id"`
 	AddedAt                  pgtype.Timestamp `json:"added_at"`
 }
 

@@ -1,0 +1,145 @@
+package api
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	db "maicare_go/db/sqlc"
+	"maicare_go/token"
+	"maicare_go/util"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"github.com/goccy/go-json"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stretchr/testify/require"
+)
+
+func createRandomAppointment(t *testing.T, employeeID int64) db.Appointment {
+	arg := db.CreateAppointmentParams{
+		CreatorEmployeeID:  employeeID,
+		StartTime:          pgtype.Timestamp{Time: time.Now(), Valid: true},
+		EndTime:            pgtype.Timestamp{Time: time.Now().Add(1 * time.Hour), Valid: true},
+		Location:           util.StringPtr("Test Location"),
+		Description:        util.StringPtr("Test Description"),
+		Status:             "Scheduled",
+		RecurrenceType:     util.StringPtr("NONE"),
+		RecurrenceInterval: util.Int32Ptr(0),
+		RecurrenceEndDate:  pgtype.Date{Time: time.Now().Add(30 * 24 * time.Hour), Valid: true},
+	}
+
+	appointment, err := testStore.CreateAppointment(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, appointment)
+	return appointment
+}
+
+func TestCreateAppointmentApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+	client := createRandomClientDetails(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				appointReq := CreateAppointmentRequest{
+					StartTime:              time.Now(),
+					EndTime:                time.Now().Add(1 * time.Hour),
+					Location:               util.StringPtr("Test Location"),
+					Description:            util.StringPtr("Test Description"),
+					Status:                 "Scheduled",
+					RecurrenceType:         util.StringPtr("NONE"),
+					RecurrenceInterval:     util.Int32Ptr(0),
+					RecurrenceEndDate:      time.Date(2006, 1, 1, 0, 0, 0, 0, time.UTC),
+					ParticipantEmployeeIDs: []int64{employee.ID},
+					ClientIDs:              []int64{client.ID},
+				}
+				reqBody, err := json.Marshal(appointReq)
+				require.NoError(t, err)
+				request, err := http.NewRequest(http.MethodPost, "/appointments", bytes.NewBuffer(reqBody))
+				require.NoError(t, err)
+				request.Header.Set("Content-Type", "application/json")
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusCreated, recorder.Code)
+				var response Response[CreateAppointmentResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response)
+
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestAddParticipantToAppointmentApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+
+	appointment := createRandomAppointment(t, employee.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				addParticipantReq := AddParticipantToAppointmentRequest{
+					ParticipantEmployeeIDs: []int64{employee.ID},
+				}
+				reqBody, err := json.Marshal(addParticipantReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/appointments/%d/participants", appointment.ID)
+				request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(reqBody))
+				require.NoError(t, err)
+				request.Header.Set("Content-Type", "application/json")
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}

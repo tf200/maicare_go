@@ -1751,27 +1751,37 @@ CREATE INDEX idx_notifications_user_id_read_at ON notifications (user_id, read_a
 
 
 CREATE TABLE appointments (
-    id SERIAL PRIMARY KEY,
-    creator_employee_id INT NOT NULL REFERENCES employee_profile(id),
+    id BIGSERIAL PRIMARY KEY,
+    creator_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
     description TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    recurrence_type VARCHAR(50) DEFAULT 'NONE',
-    recurrence_interval INT DEFAULT 1,
+    recurrence_type VARCHAR(50) DEFAULT 'NONE' CHECK (recurrence_type IN ('NONE', 'DAILY', 'WEEKLY', 'MONTHLY')),
+    recurrence_interval INT  NULL,
     recurrence_end_date DATE,
     confirmed_by_employee_id INT REFERENCES employee_profile(id),
-    confirmed_at TIMESTAMP,
+    confirmed_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE appointment_participants (
-    appointment_participant_id SERIAL PRIMARY KEY,
-    appointment_id INT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
-    employee_id INT NOT NULL REFERENCES employee_profile(id),
+    appointment_participant_id BIGSERIAL PRIMARY KEY,
+    appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+    employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     UNIQUE (appointment_id, employee_id)
+);
+
+
+CREATE TABLE appointment_clients (
+    appointment_client_id BIGSERIAL PRIMARY KEY,
+    appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+    client_id BIGINT NOT NULL REFERENCES client_details(id),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE (appointment_id, client_id)
 );

@@ -128,8 +128,10 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 
 func TestListClientDiagnoses(t *testing.T) {
 	client := createRandomClientDetails(t)
+	employee, _ := createRandomEmployee(t)
 	for i := 0; i < 20; i++ {
-		createRandomClientDiagnosis(t, client.ID)
+		diag := createRandomClientDiagnosis(t, client.ID)
+		createRandomClientMedication(t, diag.ID, employee.ID)
 	}
 
 	testCases := []struct {

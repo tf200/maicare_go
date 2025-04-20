@@ -156,7 +156,7 @@ func TestGetMedication(t *testing.T) {
 	require.Equal(t, medication1.ID, medication2.ID)
 }
 
-func TestGetMedicationsByDiagnosisID(t *testing.T) {
+func TestListMedicationsByDiagnosisID(t *testing.T) {
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
 	employee, _ := createRandomEmployee(t)
@@ -173,6 +173,25 @@ func TestGetMedicationsByDiagnosisID(t *testing.T) {
 	require.NotEmpty(t, medication2)
 	require.Equal(t, medication1.ID, medication2[0].ID)
 	require.Equal(t, medication1.Name, medication2[0].Name)
+}
+
+func TestListMedicationsByDiagnosisIDs(t *testing.T) {
+	client := createRandomClientDetails(t)
+	diagnosis1 := createRandomClientDiagnosis(t, client.ID)
+	diagnosis2 := createRandomClientDiagnosis(t, client.ID)
+	employee, _ := createRandomEmployee(t)
+	medication1 := createRandomClientMedication(t, diagnosis1.ID, employee.ID)
+	medication2 := createRandomClientMedication(t, diagnosis2.ID, employee.ID)
+
+	arg := []int64{diagnosis1.ID, diagnosis2.ID}
+
+	medications, err := testQueries.ListMedicationsByDiagnosisIDs(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, medications)
+	require.Len(t, medications, 2)
+	require.Equal(t, medication1.ID, medications[0].ID)
+	require.Equal(t, medication2.ID, medications[1].ID)
+
 }
 
 func TestUpdateClientMedication(t *testing.T) {

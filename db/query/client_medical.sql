@@ -90,6 +90,11 @@ WHERE m.diagnosis_id = $1
 ORDER BY m.id
 LIMIT $2 OFFSET $3;
 
+-- name: ListMedicationsByDiagnosisIDs :many
+SELECT *
+FROM client_medication
+WHERE diagnosis_id = ANY($1::bigint[]);
+
 
 -- name: GetMedication :one
 SELECT m.*, e.first_name AS administered_by_first_name, e.last_name AS administered_by_last_name

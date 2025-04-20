@@ -358,6 +358,46 @@ func (q *Queries) ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedi
 	return items, nil
 }
 
+const listMedicationsByDiagnosisIDs = `-- name: ListMedicationsByDiagnosisIDs :many
+SELECT id, diagnosis_id, name, dosage, start_date, end_date, notes, self_administered, slots, administered_by_id, is_critical, updated_at, created_at
+FROM client_medication
+WHERE diagnosis_id = ANY($1::bigint[])
+`
+
+func (q *Queries) ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []int64) ([]ClientMedication, error) {
+	rows, err := q.db.Query(ctx, listMedicationsByDiagnosisIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ClientMedication
+	for rows.Next() {
+		var i ClientMedication
+		if err := rows.Scan(
+			&i.ID,
+			&i.DiagnosisID,
+			&i.Name,
+			&i.Dosage,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Notes,
+			&i.SelfAdministered,
+			&i.Slots,
+			&i.AdministeredByID,
+			&i.IsCritical,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateClientDiagnosis = `-- name: UpdateClientDiagnosis :one
 UPDATE client_diagnosis
 SET

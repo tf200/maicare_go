@@ -39,6 +39,13 @@ definitions:
       updated:
         type: string
     type: object
+  api.AddClientToAppointmentRequest:
+    properties:
+      client_ids:
+        items:
+          type: integer
+        type: array
+    type: object
   api.AddEducationToEmployeeProfileRequest:
     properties:
       degree:
@@ -135,6 +142,13 @@ definitions:
         type: string
       start_date:
         type: string
+    type: object
+  api.AddParticipantToAppointmentRequest:
+    properties:
+      participant_employee_ids:
+        items:
+          type: integer
+        type: array
     type: object
   api.AddUrgencyScoreRequest:
     properties:
@@ -368,6 +382,52 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  api.CreateAppointmentRequest:
+    properties:
+      client_ids:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      end_time:
+        type: string
+      location:
+        type: string
+      participant_employee_ids:
+        items:
+          type: integer
+        type: array
+      recurrence_end_date:
+        type: string
+      recurrence_interval:
+        type: integer
+      recurrence_type:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+    required:
+    - end_time
+    - start_time
+    - status
+    type: object
+  api.CreateAppointmentResponse:
+    properties:
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: integer
+      location:
+        type: string
+      start_time:
+        type: string
     type: object
   api.CreateClientDetailsRequest:
     properties:
@@ -1726,7 +1786,7 @@ definitions:
       dosage:
         type: string
       end_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       id:
         type: integer
       is_critical:
@@ -1738,7 +1798,7 @@ definitions:
       self_administered:
         type: boolean
       start_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       updated_at:
         type: string
     type: object
@@ -2732,6 +2792,10 @@ definitions:
         type: string
       id:
         type: integer
+      medications:
+        items:
+          $ref: '#/definitions/api.DiagnosisMedicationList'
+        type: array
       notes:
         type: string
       severity:
@@ -3590,6 +3654,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateAppointmentCardResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateAppointmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateAppointmentResponse'
       message:
         type: string
       success:
@@ -4722,6 +4795,10 @@ definitions:
         type: string
       diagnosis_code:
         type: string
+      medications:
+        items:
+          $ref: '#/definitions/api.DiagnosisMedicationCreate'
+        type: array
       notes:
         type: string
       severity:
@@ -5747,6 +5824,142 @@ paths:
       summary: Check spelling of a text
       tags:
       - ai
+  /appointments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new appointment
+      parameters:
+      - description: Create appointment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateAppointmentResponse'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - User not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - Appointment already exists
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create an appointment
+      tags:
+      - appointments
+  /appointments/{appointment_id}/clients:
+    post:
+      consumes:
+      - application/json
+      description: Add clients to an existing appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: appointment_id
+        required: true
+        type: integer
+      - description: Add client request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddClientToAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - Appointment not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - Client already exists
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add clients to an appointment
+      tags:
+      - appointments
+  /appointments/{appointment_id}/participants:
+    post:
+      consumes:
+      - application/json
+      description: Add participants to an existing appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: appointment_id
+        required: true
+        type: integer
+      - description: Add participant request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddParticipantToAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - Appointment not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - Participant already exists
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Add participants to an appointment
+      tags:
+      - appointments
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID

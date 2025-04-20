@@ -22,3 +22,4 @@ func (server *Server) setupClientMedicalRoutes(baseRouter *gin.RouterGroup) {
 
 	}
 }
+
