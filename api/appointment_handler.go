@@ -13,7 +13,7 @@ import (
 
 // CreateAppointmentRequest represents the request payload for creating an appointment
 type CreateAppointmentRequest struct {
-	StartTime              time.Time `json:"start_time" binding:"required"`
+	StartTime              time.Time `json:"start_time" binding:"required" example:"2023-10-01T10:00:00Z"`
 	EndTime                time.Time `json:"end_time" binding:"required"`
 	Location               *string   `json:"location"`
 	Description            *string   `json:"description"`
@@ -259,4 +259,86 @@ func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// ListAppointmentsForEmployeeInRangeRequest represents the request payload for listing appointments for an employee in a date range
+type ListAppointmentsForEmployeeInRangeRequest struct {
+	EmployeeID int64     `json:"employee_id" binding:"required" example:"1"`
+	StartDate  time.Time `json:"start_date" binding:"required" example:"2025-04-27T00:00:00Z"`
+	EndDate    time.Time `json:"end_date" binding:"required" example:"2025-04-30T23:59:59Z"`
+}
 
+// ListAppointmentsForEmployeeInRangeResponse represents the response payload for listing appointments for an employee in a date range
+type ListAppointmentsForEmployeeInRangeResponse struct {
+	ID                    int64       `json:"id"`
+	CreatorEmployeeID     int64       `json:"creator_employee_id"`
+	StartTime             time.Time   `json:"start_time"`
+	EndTime               time.Time   `json:"end_time"`
+	Location              *string     `json:"location"`
+	Description           *string     `json:"description"`
+	Status                string      `json:"status"`
+	RecurrenceType        *string     `json:"recurrence_type"`
+	RecurrenceInterval    *int32      `json:"recurrence_interval"`
+	RecurrenceEndDate     pgtype.Date `json:"recurrence_end_date"`
+	ConfirmedByEmployeeID *int32      `json:"confirmed_by_employee_id"`
+	ConfirmedAt           time.Time   `json:"confirmed_at"`
+	CreatedAt             time.Time   `json:"created_at"`
+	UpdatedAt             time.Time   `json:"updated_at"`
+	IsRecurringOccurrence bool        `json:"is_recurring_occurrence"`
+}
+
+// ListAppointmentsForEmployeeInRange lists appointments for an employee in a date range
+// @Summary List appointments for an employee in a date range
+// @Description List appointments for an employee in a date range
+// @Tags appointments
+// @Accept json
+// @Produce json
+// @Param request body ListAppointmentsForEmployeeInRangeRequest true "List appointments request"
+// @Success 200 {object} Response[ListAppointmentsForEmployeeInRangeResponse]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Employee not found"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /appointments/employee_list [post]
+func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
+
+	var req ListAppointmentsForEmployeeInRangeRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListAppointmentsForEmployeeInRangeParams{
+		EmployeeID: req.EmployeeID,
+		StartDate:  pgtype.Timestamp{Time: req.StartDate, Valid: true},
+		EndDate:    pgtype.Timestamp{Time: req.EndDate, Valid: true},
+	}
+
+	appointments, err := server.store.ListAppointmentsForEmployeeInRange(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	appointmentList := make([]ListAppointmentsForEmployeeInRangeResponse, len(appointments))
+	for i, appointment := range appointments {
+		appointmentList[i] = ListAppointmentsForEmployeeInRangeResponse{
+			ID:                    appointment.ID,
+			CreatorEmployeeID:     appointment.CreatorEmployeeID,
+			StartTime:             appointment.StartTime.Time,
+			EndTime:               appointment.EndTime.Time,
+			Location:              appointment.Location,
+			Description:           appointment.Description,
+			Status:                appointment.Status,
+			RecurrenceType:        appointment.RecurrenceType,
+			RecurrenceInterval:    appointment.RecurrenceInterval,
+			RecurrenceEndDate:     appointment.RecurrenceEndDate,
+			ConfirmedByEmployeeID: appointment.ConfirmedByEmployeeID,
+			ConfirmedAt:           appointment.ConfirmedAt.Time,
+			CreatedAt:             appointment.CreatedAt.Time,
+			UpdatedAt:             appointment.UpdatedAt.Time,
+			IsRecurringOccurrence: appointment.IsRecurringOccurrence,
+		}
+	}
+	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}

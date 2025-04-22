@@ -61,3 +61,22 @@ func TestAddAppointmentClient(t *testing.T) {
 	err := testQueries.AddAppointmentClient(context.Background(), arg)
 	require.NoError(t, err)
 }
+
+func TestListAppointmentsForEmployeeInRange(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	appointment1 := createRandomAppointment(t, employee.ID)
+	appointment2 := createRandomAppointment(t, employee.ID)
+
+	startTime := appointment1.StartTime.Time.Add(-1 * time.Hour)
+	endTime := appointment2.EndTime.Time.Add(1 * time.Hour)
+
+	arg := ListAppointmentsForEmployeeInRangeParams{
+		EmployeeID: employee.ID,
+		StartDate:  pgtype.Timestamp{Time: startTime, Valid: true},
+		EndDate:    pgtype.Timestamp{Time: endTime, Valid: true},
+	}
+
+	appointments, err := testQueries.ListAppointmentsForEmployeeInRange(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, appointments)
+}

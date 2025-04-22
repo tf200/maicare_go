@@ -121,6 +121,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/appointments/employee_list": {
+            "post": {
+                "description": "List appointments for an employee in a date range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "List appointments for an employee in a date range",
+                "parameters": [
+                    {
+                        "description": "List appointments request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ListAppointmentsForEmployeeInRangeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - Employee not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/appointments/{appointment_id}/clients": {
             "post": {
                 "description": "Add clients to an existing appointment",
@@ -7106,7 +7164,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_time": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-10-01T10:00:00Z"
                 },
                 "status": {
                     "type": "string"
@@ -10540,6 +10599,78 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListAppointmentsForEmployeeInRangeRequest": {
+            "type": "object",
+            "required": [
+                "employee_id",
+                "end_date",
+                "start_date"
+            ],
+            "properties": {
+                "employee_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-04-30T23:59:59Z"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-04-27T00:00:00Z"
+                }
+            }
+        },
+        "api.ListAppointmentsForEmployeeInRangeResponse": {
+            "type": "object",
+            "properties": {
+                "confirmed_at": {
+                    "type": "string"
+                },
+                "confirmed_by_employee_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator_employee_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_recurring_occurrence": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "recurrence_end_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "recurrence_interval": {
+                    "type": "integer"
+                },
+                "recurrence_type": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListAssignedEmployeesResponse": {
             "type": "object",
             "properties": {
@@ -12613,6 +12744,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.IntakeFormUploadHandlerResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_ListAppointmentsForEmployeeInRangeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ListAppointmentsForEmployeeInRangeResponse"
                 },
                 "message": {
                     "type": "string"

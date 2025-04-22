@@ -109,7 +109,68 @@ func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentPa
 	return i, err
 }
 
-const getAppointmentTemplatesForEmployee = `-- name: GetAppointmentTemplatesForEmployee :many
+const listAppointmentsForEmployeeInRange = `-- name: ListAppointmentsForEmployeeInRange :many
+WITH EmployeeAppointments AS (
+    -- CTE to get all relevant appointment IDs (both created and participated)
+    -- This avoids repeating the logic in the main query parts
+    SELECT id AS appointment_id
+    FROM appointments a
+    WHERE a.creator_employee_id = $1 -- Use parameter $1 for employee_id
+
+    UNION -- Use UNION to automatically handle duplicates
+
+    SELECT appointment_id
+    FROM appointment_participants ap
+    WHERE ap.employee_id = $1 -- Use parameter $1 for employee_id
+),
+
+RecurringOccurrences AS (
+    -- CTE to generate potential future occurrences for recurring appointments
+    SELECT
+        a.id AS original_appointment_id,
+        a.creator_employee_id,
+        -- Calculate the start time of the specific occurrence
+        ts.occurrence_start_time::timestamp AS start_time,
+        -- Calculate the end time of the specific occurrence by adding the original duration
+        (ts.occurrence_start_time + (a.end_time - a.start_time))::timestamp AS end_time,
+        a.location,
+        a.description,
+        a.status,
+        a.recurrence_type,
+        a.recurrence_interval,
+        a.recurrence_end_date,
+        a.confirmed_by_employee_id,
+        a.confirmed_at,
+        a.created_at,
+        a.updated_at,
+        TRUE AS is_recurring_occurrence -- Add a flag to indicate this is a generated occurrence
+    FROM
+        appointments a
+    INNER JOIN EmployeeAppointments ea ON a.id = ea.appointment_id -- Only consider appointments involving the employee
+    -- Use generate_series to create timestamps based on recurrence rules
+    CROSS JOIN LATERAL generate_series(
+        -- Start generating from the appointment's original start time
+        a.start_time,
+        -- Stop generating at the recurrence end date OR the query's end date, whichever is EARLIER
+        LEAST(COALESCE(a.recurrence_end_date::timestamp, 'infinity'::timestamp), $2::timestamp), -- Use parameter $3 for end_date
+        -- Calculate the interval step based on recurrence type and interval
+        CASE a.recurrence_type
+            WHEN 'DAILY' THEN (COALESCE(a.recurrence_interval, 1) || ' day')::interval
+            WHEN 'WEEKLY' THEN (COALESCE(a.recurrence_interval, 1) || ' week')::interval
+            WHEN 'MONTHLY' THEN (COALESCE(a.recurrence_interval, 1) || ' month')::interval
+            -- Default to a very large interval if type is NONE or unexpected
+            ELSE '1000 years'::interval
+        END
+    ) AS ts(occurrence_start_time)
+    WHERE
+        a.recurrence_type != 'NONE' -- Only process recurring appointments
+        AND a.recurrence_type IS NOT NULL -- Safety check
+        -- Optimization: Ensure the base appointment's start is before the query window ends
+        AND a.start_time <= $2::timestamp -- Use parameter $3 for end_date
+        -- Optimization: Ensure the recurrence doesn't end before the query window starts
+        AND COALESCE(a.recurrence_end_date::timestamp, 'infinity'::timestamp) >= $3::timestamp -- Use parameter $2 for start_date
+)
+
 SELECT
     a.id,
     a.creator_employee_id,
@@ -120,52 +181,85 @@ SELECT
     a.status,
     a.recurrence_type,
     a.recurrence_interval,
-    a.recurrence_end_date
+    a.recurrence_end_date,
+    a.confirmed_by_employee_id,
+    a.confirmed_at,
+    a.created_at,
+    a.updated_at,
+    FALSE AS is_recurring_occurrence -- Flag for non-recurring
 FROM
     appointments a
-LEFT JOIN appointment_participants ap ON a.id = ap.appointment_id
+INNER JOIN EmployeeAppointments ea ON a.id = ea.appointment_id
 WHERE
-    (a.creator_employee_id = $1 OR ap.employee_id = $1)
-AND a.status = ANY($4::VARCHAR[])
-AND a.start_time >= $3
-AND (a.recurrence_end_date IS NULL OR a.recurrence_end_date >= $2)
-GROUP BY a.id
+    a.recurrence_type = 'NONE' -- Select only non-recurring appointments
+    -- Standard overlap check: (StartA <= EndB) AND (EndA >= StartB)
+    AND (a.start_time <= $2::timestamp) -- Use parameter $3 for end_date
+    AND (a.end_time >= $3::timestamp) -- Use parameter $2 for start_date
+
+UNION ALL -- Combine with recurring occurrences, keeping all rows
+
+SELECT
+    ro.original_appointment_id AS id, -- Use the original ID for consistency
+    ro.creator_employee_id,
+    ro.start_time, -- Calculated start time
+    ro.end_time,   -- Calculated end time
+    ro.location,
+    ro.description,
+    ro.status,
+    ro.recurrence_type,
+    ro.recurrence_interval,
+    ro.recurrence_end_date,
+    ro.confirmed_by_employee_id,
+    ro.confirmed_at,
+    ro.created_at,
+    ro.updated_at,
+    ro.is_recurring_occurrence -- Flag indicating it's a calculated occurrence
+FROM
+    RecurringOccurrences ro
+WHERE
+    -- Filter the generated occurrences to only those that OVERLAP the requested time frame
+    -- Standard overlap check: (StartA <= EndB) AND (EndA >= StartB)
+    (ro.start_time <= $2::timestamp) -- Use parameter $3 for end_date
+    AND (ro.end_time >= $3::timestamp) -- Use parameter $2 for start_date
+
+ORDER BY start_time
 `
 
-type GetAppointmentTemplatesForEmployeeParams struct {
-	CreatorEmployeeID int64            `json:"creator_employee_id"`
-	RecurrenceEndDate pgtype.Date      `json:"recurrence_end_date"`
-	StartTime         pgtype.Timestamp `json:"start_time"`
-	Column4           []string         `json:"column_4"`
+type ListAppointmentsForEmployeeInRangeParams struct {
+	EmployeeID int64            `json:"employee_id"`
+	EndDate    pgtype.Timestamp `json:"end_date"`
+	StartDate  pgtype.Timestamp `json:"start_date"`
 }
 
-type GetAppointmentTemplatesForEmployeeRow struct {
-	ID                 int64            `json:"id"`
-	CreatorEmployeeID  int64            `json:"creator_employee_id"`
-	StartTime          pgtype.Timestamp `json:"start_time"`
-	EndTime            pgtype.Timestamp `json:"end_time"`
-	Location           *string          `json:"location"`
-	Description        *string          `json:"description"`
-	Status             string           `json:"status"`
-	RecurrenceType     *string          `json:"recurrence_type"`
-	RecurrenceInterval *int32           `json:"recurrence_interval"`
-	RecurrenceEndDate  pgtype.Date      `json:"recurrence_end_date"`
+type ListAppointmentsForEmployeeInRangeRow struct {
+	ID                    int64            `json:"id"`
+	CreatorEmployeeID     int64            `json:"creator_employee_id"`
+	StartTime             pgtype.Timestamp `json:"start_time"`
+	EndTime               pgtype.Timestamp `json:"end_time"`
+	Location              *string          `json:"location"`
+	Description           *string          `json:"description"`
+	Status                string           `json:"status"`
+	RecurrenceType        *string          `json:"recurrence_type"`
+	RecurrenceInterval    *int32           `json:"recurrence_interval"`
+	RecurrenceEndDate     pgtype.Date      `json:"recurrence_end_date"`
+	ConfirmedByEmployeeID *int32           `json:"confirmed_by_employee_id"`
+	ConfirmedAt           pgtype.Timestamp `json:"confirmed_at"`
+	CreatedAt             pgtype.Timestamp `json:"created_at"`
+	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
+	IsRecurringOccurrence bool             `json:"is_recurring_occurrence"`
 }
 
-func (q *Queries) GetAppointmentTemplatesForEmployee(ctx context.Context, arg GetAppointmentTemplatesForEmployeeParams) ([]GetAppointmentTemplatesForEmployeeRow, error) {
-	rows, err := q.db.Query(ctx, getAppointmentTemplatesForEmployee,
-		arg.CreatorEmployeeID,
-		arg.RecurrenceEndDate,
-		arg.StartTime,
-		arg.Column4,
-	)
+// Final SELECT combining non-recurring and calculated recurring appointments
+// Optional: Order the final results for consistent output
+func (q *Queries) ListAppointmentsForEmployeeInRange(ctx context.Context, arg ListAppointmentsForEmployeeInRangeParams) ([]ListAppointmentsForEmployeeInRangeRow, error) {
+	rows, err := q.db.Query(ctx, listAppointmentsForEmployeeInRange, arg.EmployeeID, arg.EndDate, arg.StartDate)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAppointmentTemplatesForEmployeeRow
+	var items []ListAppointmentsForEmployeeInRangeRow
 	for rows.Next() {
-		var i GetAppointmentTemplatesForEmployeeRow
+		var i ListAppointmentsForEmployeeInRangeRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CreatorEmployeeID,
@@ -177,93 +271,11 @@ func (q *Queries) GetAppointmentTemplatesForEmployee(ctx context.Context, arg Ge
 			&i.RecurrenceType,
 			&i.RecurrenceInterval,
 			&i.RecurrenceEndDate,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getClientsForAppointments = `-- name: GetClientsForAppointments :many
-SELECT
-    ac.appointment_id,
-    ac.client_id,
-    c.first_name AS client_first_name,
-    c.last_name AS client_last_name 
-FROM appointment_clients ac
-JOIN client_details c ON ac.client_id = c.client_id -- Ensure 'clients' table and 'name' column exist
-WHERE ac.appointment_id = ANY($1::INT[])
-`
-
-type GetClientsForAppointmentsRow struct {
-	AppointmentID   int64  `json:"appointment_id"`
-	ClientID        int64  `json:"client_id"`
-	ClientFirstName string `json:"client_first_name"`
-	ClientLastName  string `json:"client_last_name"`
-}
-
-func (q *Queries) GetClientsForAppointments(ctx context.Context, dollar_1 []int32) ([]GetClientsForAppointmentsRow, error) {
-	rows, err := q.db.Query(ctx, getClientsForAppointments, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetClientsForAppointmentsRow
-	for rows.Next() {
-		var i GetClientsForAppointmentsRow
-		if err := rows.Scan(
-			&i.AppointmentID,
-			&i.ClientID,
-			&i.ClientFirstName,
-			&i.ClientLastName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getParticipantsForAppointments = `-- name: GetParticipantsForAppointments :many
-SELECT
-    ap.appointment_id,
-    ap.employee_id,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name -- Join to get names for the frontend
-    -- Include other employee details if needed by the frontend
-FROM appointment_participants ap
-JOIN employee_profile e ON ap.employee_id = e.employee_id -- Ensure 'employees' table and 'name' column exist
-WHERE ap.appointment_id = ANY($1::INT[])
-`
-
-type GetParticipantsForAppointmentsRow struct {
-	AppointmentID     int64  `json:"appointment_id"`
-	EmployeeID        int64  `json:"employee_id"`
-	EmployeeFirstName string `json:"employee_first_name"`
-	EmployeeLastName  string `json:"employee_last_name"`
-}
-
-func (q *Queries) GetParticipantsForAppointments(ctx context.Context, dollar_1 []int32) ([]GetParticipantsForAppointmentsRow, error) {
-	rows, err := q.db.Query(ctx, getParticipantsForAppointments, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetParticipantsForAppointmentsRow
-	for rows.Next() {
-		var i GetParticipantsForAppointmentsRow
-		if err := rows.Scan(
-			&i.AppointmentID,
-			&i.EmployeeID,
-			&i.EmployeeFirstName,
-			&i.EmployeeLastName,
+			&i.ConfirmedByEmployeeID,
+			&i.ConfirmedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsRecurringOccurrence,
 		); err != nil {
 			return nil, err
 		}

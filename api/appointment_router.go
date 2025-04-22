@@ -9,5 +9,7 @@ func (server *Server) setupAppointmentRoutes(baseRouter *gin.RouterGroup) {
 		appointmentsRouter.POST("/:appointment_id/participants", server.AddParticipantToAppointmentApi)
 		appointmentsRouter.POST("/:appointment_id/clients", server.AddClientToAppointmentApi)
 
+		appointmentsRouter.POST("/employee_list", server.ListAppointmentsForEmployee)
+
 	}
 }
