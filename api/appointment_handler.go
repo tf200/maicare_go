@@ -305,6 +305,10 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	if req.StartDate.After(req.EndDate) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("start date must be before end date")))
+		return
+	}
 
 	arg := db.ListAppointmentsForEmployeeInRangeParams{
 		EmployeeID: req.EmployeeID,
@@ -340,5 +344,9 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 	}
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
+
+}
+
+func (server *Server) ListAppointmentsForClient(ctx *gin.Context) {
 
 }
