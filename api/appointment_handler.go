@@ -290,16 +290,16 @@ type ListAppointmentsForEmployeeInRangeResponse struct {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param employee_id path int true "Employee ID"
+// @Param id path int true "Employee ID"
 // @Param request body ListAppointmentsForEmployeeInRangeRequest true "List appointments request"
 // @Success 200 {object} Response[ListAppointmentsForEmployeeInRangeResponse]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
 // @Failure 404 {object} Response[any] "Not found - Employee not found"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /employees/{employee_id}/appointments [post]
+// @Router /employees/{id}/appointments [post]
 func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("employee_id"), 10, 64)
+	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

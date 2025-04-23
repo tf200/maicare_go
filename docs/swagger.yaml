@@ -8676,49 +8676,6 @@ paths:
       summary: Create employee profile
       tags:
       - employees
-  /employees/{employee_id}/appointments:
-    post:
-      consumes:
-      - application/json
-      description: List appointments for an employee in a date range
-      parameters:
-      - description: Employee ID
-        in: path
-        name: employee_id
-        required: true
-        type: integer
-      - description: List appointments request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.ListAppointmentsForEmployeeInRangeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Employee not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List appointments for an employee in a date range
-      tags:
-      - appointments
   /employees/{id}:
     get:
       description: Get employee profile by ID
@@ -8790,6 +8747,49 @@ paths:
       summary: Update employee profile by ID
       tags:
       - employees
+  /employees/{id}/appointments:
+    post:
+      consumes:
+      - application/json
+      description: List appointments for an employee in a date range
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: List appointments request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ListAppointmentsForEmployeeInRangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - Employee not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List appointments for an employee in a date range
+      tags:
+      - appointments
   /employees/{id}/certification:
     get:
       description: Get a list of certifications for employee profile
