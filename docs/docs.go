@@ -4465,6 +4465,13 @@ const docTemplate = `{
                 "summary": "List appointments for an employee in a date range",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "List appointments request",
                         "name": "request",
                         "in": "body",
