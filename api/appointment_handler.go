@@ -290,6 +290,7 @@ type ListAppointmentsForEmployeeInRangeResponse struct {
 // @Tags appointments
 // @Accept json
 // @Produce json
+// @Param employee_id path int true "Employee ID"
 // @Param request body ListAppointmentsForEmployeeInRangeRequest true "List appointments request"
 // @Success 200 {object} Response[ListAppointmentsForEmployeeInRangeResponse]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
