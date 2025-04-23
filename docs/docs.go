@@ -121,64 +121,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/appointments/employee_list": {
-            "post": {
-                "description": "List appointments for an employee in a date range",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "appointments"
-                ],
-                "summary": "List appointments for an employee in a date range",
-                "parameters": [
-                    {
-                        "description": "List appointments request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.ListAppointmentsForEmployeeInRangeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - Invalid input",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - Invalid credentials",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not found - Employee not found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/appointments/{appointment_id}/clients": {
             "post": {
                 "description": "Add clients to an existing appointment",
@@ -4501,6 +4443,64 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/{employee_id}/appointments": {
+            "post": {
+                "description": "List appointments for an employee in a date range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "List appointments for an employee in a date range",
+                "parameters": [
+                    {
+                        "description": "List appointments request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ListAppointmentsForEmployeeInRangeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - Employee not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -10602,15 +10602,10 @@ const docTemplate = `{
         "api.ListAppointmentsForEmployeeInRangeRequest": {
             "type": "object",
             "required": [
-                "employee_id",
                 "end_date",
                 "start_date"
             ],
             "properties": {
-                "employee_id": {
-                    "type": "integer",
-                    "example": 1
-                },
                 "end_date": {
                     "type": "string",
                     "example": "2025-04-30T23:59:59Z"

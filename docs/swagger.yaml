@@ -2715,9 +2715,6 @@ definitions:
     type: object
   api.ListAppointmentsForEmployeeInRangeRequest:
     properties:
-      employee_id:
-        example: 1
-        type: integer
       end_date:
         example: "2025-04-30T23:59:59Z"
         type: string
@@ -2725,7 +2722,6 @@ definitions:
         example: "2025-04-27T00:00:00Z"
         type: string
     required:
-    - employee_id
     - end_date
     - start_date
     type: object
@@ -6019,44 +6015,6 @@ paths:
       summary: Add participants to an appointment
       tags:
       - appointments
-  /appointments/employee_list:
-    post:
-      consumes:
-      - application/json
-      description: List appointments for an employee in a date range
-      parameters:
-      - description: List appointments request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.ListAppointmentsForEmployeeInRangeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Employee not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List appointments for an employee in a date range
-      tags:
-      - appointments
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
@@ -8718,6 +8676,44 @@ paths:
       summary: Create employee profile
       tags:
       - employees
+  /employees/{employee_id}/appointments:
+    post:
+      consumes:
+      - application/json
+      description: List appointments for an employee in a date range
+      parameters:
+      - description: List appointments request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ListAppointmentsForEmployeeInRangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - Employee not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List appointments for an employee in a date range
+      tags:
+      - appointments
   /employees/{id}:
     get:
       description: Get employee profile by ID

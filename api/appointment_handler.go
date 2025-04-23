@@ -261,9 +261,8 @@ func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
 
 // ListAppointmentsForEmployeeInRangeRequest represents the request payload for listing appointments for an employee in a date range
 type ListAppointmentsForEmployeeInRangeRequest struct {
-	EmployeeID int64     `json:"employee_id" binding:"required" example:"1"`
-	StartDate  time.Time `json:"start_date" binding:"required" example:"2025-04-27T00:00:00Z"`
-	EndDate    time.Time `json:"end_date" binding:"required" example:"2025-04-30T23:59:59Z"`
+	StartDate time.Time `json:"start_date" binding:"required" example:"2025-04-27T00:00:00Z"`
+	EndDate   time.Time `json:"end_date" binding:"required" example:"2025-04-30T23:59:59Z"`
 }
 
 // ListAppointmentsForEmployeeInRangeResponse represents the response payload for listing appointments for an employee in a date range
@@ -297,8 +296,13 @@ type ListAppointmentsForEmployeeInRangeResponse struct {
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
 // @Failure 404 {object} Response[any] "Not found - Employee not found"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /appointments/employee_list [post]
+// @Router /employees/{employee_id}/appointments [post]
 func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
+	employeeID, err := strconv.ParseInt(ctx.Param("employee_id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 
 	var req ListAppointmentsForEmployeeInRangeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -311,7 +315,7 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 	}
 
 	arg := db.ListAppointmentsForEmployeeInRangeParams{
-		EmployeeID: req.EmployeeID,
+		EmployeeID: employeeID,
 		StartDate:  pgtype.Timestamp{Time: req.StartDate, Valid: true},
 		EndDate:    pgtype.Timestamp{Time: req.EndDate, Valid: true},
 	}
