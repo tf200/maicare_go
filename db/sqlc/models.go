@@ -18,23 +18,6 @@ type AiGeneratedReport struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
-type Appointment struct {
-	ID                    int64            `json:"id"`
-	CreatorEmployeeID     int64            `json:"creator_employee_id"`
-	StartTime             pgtype.Timestamp `json:"start_time"`
-	EndTime               pgtype.Timestamp `json:"end_time"`
-	Location              *string          `json:"location"`
-	Description           *string          `json:"description"`
-	Status                string           `json:"status"`
-	RecurrenceType        *string          `json:"recurrence_type"`
-	RecurrenceInterval    *int32           `json:"recurrence_interval"`
-	RecurrenceEndDate     pgtype.Date      `json:"recurrence_end_date"`
-	ConfirmedByEmployeeID *int32           `json:"confirmed_by_employee_id"`
-	ConfirmedAt           pgtype.Timestamp `json:"confirmed_at"`
-	CreatedAt             pgtype.Timestamp `json:"created_at"`
-	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
-}
-
 type AppointmentCard struct {
 	ID                     int64              `json:"id"`
 	ClientID               int64              `json:"client_id"`
@@ -66,6 +49,20 @@ type AppointmentParticipant struct {
 	AppointmentID            int64            `json:"appointment_id"`
 	EmployeeID               int64            `json:"employee_id"`
 	AddedAt                  pgtype.Timestamp `json:"added_at"`
+}
+
+type AppointmentTemplate struct {
+	ID                 int64            `json:"id"`
+	CreatorEmployeeID  int64            `json:"creator_employee_id"`
+	StartTime          pgtype.Timestamp `json:"start_time"`
+	EndTime            pgtype.Timestamp `json:"end_time"`
+	Location           *string          `json:"location"`
+	Description        *string          `json:"description"`
+	RecurrenceType     *string          `json:"recurrence_type"`
+	RecurrenceInterval *int32           `json:"recurrence_interval"`
+	RecurrenceEndDate  pgtype.Date      `json:"recurrence_end_date"`
+	CreatedAt          pgtype.Timestamp `json:"created_at"`
+	UpdatedAt          pgtype.Timestamp `json:"updated_at"`
 }
 
 type Assessment struct {
@@ -897,6 +894,21 @@ type Role struct {
 type RolePermission struct {
 	RoleID       int32 `json:"role_id"`
 	PermissionID int32 `json:"permission_id"`
+}
+
+type ScheduledAppointment struct {
+	ID                     int64            `json:"id"`
+	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`
+	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
+	StartTime              pgtype.Timestamp `json:"start_time"`
+	EndTime                pgtype.Timestamp `json:"end_time"`
+	Location               *string          `json:"location"`
+	Description            *string          `json:"description"`
+	Status                 string           `json:"status"`
+	ConfirmedByEmployeeID  *int32           `json:"confirmed_by_employee_id"`
+	ConfirmedAt            pgtype.Timestamp `json:"confirmed_at"`
+	CreatedAt              pgtype.Timestamp `json:"created_at"`
+	UpdatedAt              pgtype.Timestamp `json:"updated_at"`
 }
 
 type ScheduledStatusChange struct {

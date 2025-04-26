@@ -1,270 +1,128 @@
 -- name: CreateAppointment :one
-INSERT INTO appointments (
+INSERT INTO scheduled_appointments (
+    creator_employee_id, 
+    start_time,           
+    end_time,             
+    location,             
+    description       
+) VALUES (
+    $1, $2, $3, $4, $5
+) RETURNING *;
+
+-- name: CreateAppointmentTemplate :one
+INSERT INTO appointment_templates (
     creator_employee_id, 
     start_time,           
     end_time,             
     location,             
     description,          
-    status,               
-    recurrence_type,      
-    recurrence_interval,  
-    recurrence_end_date   
+    recurrence_type,
+    recurrence_interval,
+    recurrence_end_date
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 
--- name: AddAppointmentParticipant :exec
-INSERT INTO appointment_participants (
-    appointment_id,
-    employee_id     
-) VALUES (
-    $1, $2
-);
-
--- name: AddAppointmentClient :exec
-INSERT INTO appointment_clients (
-    appointment_id,
-    client_id       
-) VALUES (
-    $1, $2
-);
-
-
-
--- name: ListAppointmentsForEmployeeInRange :many
--- Parameters:
--- @employee_id: BIGINT
--- @start_date: TIMESTAMP - The beginning of the desired time range (inclusive)
--- @end_date: TIMESTAMP - The end of the desired time range (inclusive)
-WITH EmployeeAppointments AS (
-    -- CTE to get all relevant appointment IDs (both created and participated)
-    SELECT id AS appointment_id
-    FROM appointments a
-    WHERE a.creator_employee_id = @employee_id -- Use named parameter
-
-    UNION -- Use UNION to automatically handle duplicates
-
-    SELECT appointment_id
-    FROM appointment_participants
-    WHERE employee_id = @employee_id -- Use named parameter
-),
-
-RecurringOccurrences AS (
-    -- CTE to generate potential future occurrences for recurring appointments
-    SELECT
-        a.id AS original_appointment_id,
-        a.creator_employee_id,
-        -- Calculate the start time of the specific occurrence
-        ts.occurrence_start_time::timestamp AS start_time,
-        -- Calculate the end time of the specific occurrence by adding the original duration
-        (ts.occurrence_start_time + (a.end_time - a.start_time))::timestamp AS end_time,
-        a.location,
-        a.description,
-        a.status,
-        a.recurrence_type,
-        a.recurrence_interval,
-        a.recurrence_end_date,
-        a.confirmed_by_employee_id,
-        a.confirmed_at,
-        a.created_at,
-        a.updated_at,
-        TRUE AS is_recurring_occurrence -- Add a flag to indicate this is a generated occurrence
-    FROM
-        appointments a
-    INNER JOIN EmployeeAppointments ea ON a.id = ea.appointment_id -- Only consider appointments involving the employee
-    -- Use generate_series to create timestamps based on recurrence rules
-    CROSS JOIN LATERAL generate_series(
-        -- Start generating from the appointment's original start time
-        a.start_time,
-        -- Stop generating at the recurrence end date OR the query's end date, whichever is EARLIER
-        LEAST(COALESCE(a.recurrence_end_date::timestamp, 'infinity'::timestamp), @end_date::timestamp), -- Use named parameter
-        -- Calculate the interval step based on recurrence type and interval
-        CASE a.recurrence_type
-            WHEN 'DAILY' THEN (COALESCE(a.recurrence_interval, 1) || ' day')::interval
-            WHEN 'WEEKLY' THEN (COALESCE(a.recurrence_interval, 1) || ' week')::interval
-            WHEN 'MONTHLY' THEN (COALESCE(a.recurrence_interval, 1) || ' month')::interval
-            -- Default to a very large interval if type is NONE or unexpected
-            ELSE '1000 years'::interval
-        END
-    ) AS ts(occurrence_start_time)
-    WHERE
-        a.recurrence_type != 'NONE' -- Only process recurring appointments
-        AND a.recurrence_type IS NOT NULL -- Safety check
-        -- Optimization: Ensure the base appointment's start is before the query window ends
-        AND a.start_time <= @end_date::timestamp -- Use named parameter
-        -- Optimization: Ensure the recurrence doesn't end before the query window starts
-        AND COALESCE(a.recurrence_end_date::timestamp, 'infinity'::timestamp) >= @start_date::timestamp -- Use named parameter
-)
-
--- Final SELECT combining non-recurring and calculated recurring appointments
+-- name: BulkAddAppointmentParticipants :exec
+INSERT INTO appointment_participants (appointment_id, employee_id)
 SELECT
-    a.id,
-    a.creator_employee_id,
-    a.start_time,
-    a.end_time,
-    a.location,
-    a.description,
-    a.status,
-    a.recurrence_type,
-    a.recurrence_interval,
-    a.recurrence_end_date,
-    a.confirmed_by_employee_id,
-    a.confirmed_at,
-    a.created_at,
-    a.updated_at,
-    FALSE AS is_recurring_occurrence -- Flag for non-recurring
-FROM
-    appointments a
-INNER JOIN EmployeeAppointments ea ON a.id = ea.appointment_id
-WHERE
-    a.recurrence_type = 'NONE' -- Select only non-recurring appointments
-    -- Standard overlap check: (StartA <= EndB) AND (EndA >= StartB)
-    AND (a.start_time <= @end_date::timestamp) -- Use named parameter
-    AND (a.end_time >= @start_date::timestamp) -- Use named parameter
+    $1, -- The single appointment_id
+    unnest(sqlc.arg(employee_ids)::bigint[]); -- The array of employee_id
 
-UNION ALL -- Combine with recurring occurrences, keeping all rows
+-- name: BulkAddAppointmentClients :exec
+INSERT INTO appointment_clients (appointment_id, client_id)
+SELECT
+    $1, -- The single appointment_id
+    unnest(sqlc.arg(client_ids)::bigint[]); -- The array of client_ids
+
+
+
+
+-- name: GetAppointmentTemplate :one
+SELECT * FROM appointment_templates
+WHERE id = $1
+LIMIT 1;
+
+
+
+-- name: ListEmployeeAppointmentsInRange :many
+-- Define the parameters for the query
+-- employee_id: The ID of the employee whose appointments are being queried.
+-- start_date: The beginning of the time range to search within.
+-- end_date: The end of the time range to search within.
+SELECT
+    sa.id AS appointment_id,
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.status,
+    sa.creator_employee_id,
+    sa.created_at,
+    'CREATOR' AS involvement_type -- Indicate the employee created this appointment
+FROM
+    scheduled_appointments sa
+WHERE
+    sa.creator_employee_id = sqlc.arg(employee_id)
+    -- Check for overlap: Appointment starts before the range ends AND appointment ends after the range starts
+    AND sa.start_time < sqlc.arg(end_date)
+    AND sa.end_time > sqlc.arg(start_date)
+
+UNION -- Combine with participant appointments, removing duplicates
 
 SELECT
-    ro.original_appointment_id AS id, -- Use the original ID for consistency
-    ro.creator_employee_id,
-    ro.start_time, -- Calculated start time
-    ro.end_time,   -- Calculated end time
-    ro.location,
-    ro.description,
-    ro.status,
-    ro.recurrence_type,
-    ro.recurrence_interval,
-    ro.recurrence_end_date,
-    ro.confirmed_by_employee_id,
-    ro.confirmed_at,
-    ro.created_at,
-    ro.updated_at,
-    ro.is_recurring_occurrence -- Flag indicating it's a calculated occurrence
+    sa.id AS appointment_id,
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.status,
+    sa.creator_employee_id, -- Still show who created it
+    sa.created_at,
+    'PARTICIPANT' AS involvement_type -- Indicate the employee is a participant
 FROM
-    RecurringOccurrences ro
+    scheduled_appointments sa
+JOIN
+    appointment_participants ap ON sa.id = ap.appointment_id
 WHERE
-    -- Filter the generated occurrences to only those that OVERLAP the requested time frame
-    -- Standard overlap check: (StartA <= EndB) AND (EndA >= StartB)
-    (ro.start_time <= @end_date::timestamp)   -- Use named parameter
-    AND (ro.end_time >= @start_date::timestamp) -- <<<<< CORRECTED to use @start_date
+    ap.employee_id = sqlc.arg(employee_id)
+    -- Check for overlap: Appointment starts before the range ends AND appointment ends after the range starts
+    AND sa.start_time < sqlc.arg(end_date)
+    AND sa.end_time > sqlc.arg(start_date)
 
--- Optional: Order the final results for consistent output
-ORDER BY start_time;
+-- Order the combined results by start time
+ORDER BY
+    start_time;
 
 
 
--- name: ListAppointmentsForClientInRange :many
--- Parameters:
--- @client_id: BIGINT       - The ID of the client to find appointments for.
--- @start_date: TIMESTAMP  - The beginning of the desired time range (inclusive).
--- @end_date: TIMESTAMP    - The end of the desired time range (inclusive).
-WITH ClientAppointments AS (
-    -- CTE to get all relevant appointment IDs for the specified client
-    SELECT appointment_id
-    FROM appointment_clients
-    WHERE client_id = @client_id -- Use named parameter
 
-),
-
-RecurringOccurrences AS (
-    -- CTE to generate potential future occurrences for recurring appointments
-    SELECT
-        a.id AS original_appointment_id,
-        a.creator_employee_id,
-        -- Calculate the start time of the specific occurrence
-        ts.occurrence_start_time::timestamp AS start_time,
-        -- Calculate the end time of the specific occurrence by adding the original duration
-        (ts.occurrence_start_time + (a.end_time - a.start_time))::timestamp AS end_time,
-        a.location,
-        a.description,
-        a.status,
-        a.recurrence_type,       -- Uses the recurrence_type column from the corrected table definition
-        a.recurrence_interval,
-        a.recurrence_end_date,
-        a.confirmed_by_employee_id,
-        a.confirmed_at,
-        a.created_at,
-        a.updated_at,
-        TRUE AS is_recurring_occurrence -- Add a flag to indicate this is a generated occurrence
-    FROM
-        appointments a
-    INNER JOIN ClientAppointments ca ON a.id = ca.appointment_id -- Only consider appointments involving the client
-    -- Use generate_series to create timestamps based on recurrence rules
-    CROSS JOIN LATERAL generate_series(
-        -- Start generating from the appointment's original start time
-        a.start_time,
-        -- Stop generating at the recurrence end date OR the query's end date, whichever is EARLIER
-        LEAST(COALESCE(a.recurrence_end_date::timestamp, 'infinity'::timestamp), @end_date::timestamp), -- Use named parameter
-        -- Calculate the interval step based on recurrence type and interval
-        CASE a.recurrence_type -- Uses the recurrence_type column
-            WHEN 'DAILY' THEN (COALESCE(a.recurrence_interval, 1) || ' day')::interval
-            WHEN 'WEEKLY' THEN (COALESCE(a.recurrence_interval, 1) || ' week')::interval
-            WHEN 'MONTHLY' THEN (COALESCE(a.recurrence_interval, 1) || ' month')::interval
-            -- Default to a very large interval if type is NONE or unexpected
-            ELSE '1000 years'::interval
-        END
-    ) AS ts(occurrence_start_time)
-    WHERE
-        a.recurrence_type != 'NONE' -- Only process recurring appointments
-        AND a.recurrence_type IS NOT NULL -- Safety check (though DEFAULT 'NONE' helps)
-        -- Optimization: Ensure the base appointment's start is before the query window ends
-        AND a.start_time <= @end_date::timestamp -- Use named parameter
-        -- Optimization: Ensure the recurrence doesn't end before the query window starts
-        AND COALESCE(a.recurrence_end_date::timestamp, 'infinity'::timestamp) >= @start_date::timestamp -- Use named parameter
-)
-
--- Final SELECT combining non-recurring and calculated recurring appointments
+-- name: ListClientAppointmentsInRange :many
+-- Define the parameters for the query
+-- client_id: The ID of the client whose appointments are being queried.
+-- start_date: The beginning of the time range to search within (inclusive).
+-- end_date: The end of the time range to search within (exclusive).
 SELECT
-    a.id,
-    a.creator_employee_id,
-    a.start_time,
-    a.end_time,
-    a.location,
-    a.description,
-    a.status,
-    a.recurrence_type,       -- Select the recurrence_type
-    a.recurrence_interval,
-    a.recurrence_end_date,
-    a.confirmed_by_employee_id,
-    a.confirmed_at,
-    a.created_at,
-    a.updated_at,
-    FALSE AS is_recurring_occurrence -- Flag for non-recurring
+    sa.id AS appointment_id,
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.status,
+    sa.creator_employee_id, -- Include creator info if needed
+    sa.created_at
+    -- No 'involvement_type' needed as clients are always participants in this context
 FROM
-    appointments a
-INNER JOIN ClientAppointments ca ON a.id = ca.appointment_id -- Join based on client participation
+    scheduled_appointments sa
+JOIN
+    appointment_clients ac ON sa.id = ac.appointment_id
 WHERE
-    (a.recurrence_type = 'NONE' OR a.recurrence_type IS NULL) -- Select only non-recurring appointments (IS NULL check for safety)
-    -- Standard overlap check: (StartA <= EndB) AND (EndA >= StartB)
-    AND (a.start_time <= @end_date::timestamp) -- Use named parameter
-    AND (a.end_time >= @start_date::timestamp) -- Use named parameter
+    ac.client_id = sqlc.arg(client_id)
+    -- Check for overlap: Appointment starts before the range ends AND appointment ends after the range starts
+    AND sa.start_time < sqlc.arg(end_date)
+    AND sa.end_time > sqlc.arg(start_date)
 
-UNION ALL -- Combine with recurring occurrences, keeping all rows
-
-SELECT
-    ro.original_appointment_id AS id, -- Use the original ID for consistency
-    ro.creator_employee_id,
-    ro.start_time, -- Calculated start time
-    ro.end_time,   -- Calculated end time
-    ro.location,
-    ro.description,
-    ro.status,
-    ro.recurrence_type,
-    ro.recurrence_interval,
-    ro.recurrence_end_date,
-    ro.confirmed_by_employee_id,
-    ro.confirmed_at,
-    ro.created_at,
-    ro.updated_at,
-    ro.is_recurring_occurrence -- Flag indicating it's a calculated occurrence
-FROM
-    RecurringOccurrences ro
-WHERE
-    -- Filter the generated occurrences to only those that OVERLAP the requested time frame
-    -- Standard overlap check: (StartA <= EndB) AND (EndA >= StartB)
-    (ro.start_time <= @end_date::timestamp)   -- Use named parameter
-    AND (ro.end_time >= @start_date::timestamp) -- Use named parameter
-
--- Optional: Order the final results for consistent output
-ORDER BY start_time;
+-- Order the results by start time
+ORDER BY
+    sa.start_time;

@@ -7136,8 +7136,8 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "end_time",
-                "start_time",
-                "status"
+                "recurrence_type",
+                "start_time"
             ],
             "properties": {
                 "client_ids": {
@@ -7162,7 +7162,8 @@ const docTemplate = `{
                     }
                 },
                 "recurrence_end_date": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-10-01T10:00:00Z"
                 },
                 "recurrence_interval": {
                     "type": "integer"
@@ -7173,9 +7174,6 @@ const docTemplate = `{
                 "start_time": {
                     "type": "string",
                     "example": "2023-10-01T10:00:00Z"
-                },
-                "status": {
-                    "type": "string"
                 }
             }
         },
@@ -10626,12 +10624,6 @@ const docTemplate = `{
         "api.ListAppointmentsForEmployeeInRangeResponse": {
             "type": "object",
             "properties": {
-                "confirmed_at": {
-                    "type": "string"
-                },
-                "confirmed_by_employee_id": {
-                    "type": "integer"
-                },
                 "created_at": {
                     "type": "string"
                 },
@@ -10647,28 +10639,13 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "is_recurring_occurrence": {
-                    "type": "boolean"
-                },
                 "location": {
-                    "type": "string"
-                },
-                "recurrence_end_date": {
-                    "$ref": "#/definitions/pgtype.Date"
-                },
-                "recurrence_interval": {
-                    "type": "integer"
-                },
-                "recurrence_type": {
                     "type": "string"
                 },
                 "start_time": {
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }

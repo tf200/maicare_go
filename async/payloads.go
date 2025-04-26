@@ -62,3 +62,9 @@ type NotificationPayload struct {
 	Type             string  `json:"type"`
 	Data             []byte  `json:"data"`
 }
+
+type AppointmentPayload struct {
+	AppointmentTemplateID  int64   `json:"appointment_template_id"`
+	ParticipantEmployeeIDs []int64 `json:"participant_employee_ids"`
+	ClientIDs              []int64 `json:"client_ids"`
+}

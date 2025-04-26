@@ -22,5 +22,6 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 
 		clientsGroup.GET("/:id/missing_documents", RBACMiddleware(server.store, "CLIENT.CREATE"), server.GetMissingClientDocumentsApi)
 
+		clientsGroup.POST("/:id/appointments", RBACMiddleware(server.store, "CLIENT.CREATE"), server.ListAppointmentsForClientApi)
 	}
 }

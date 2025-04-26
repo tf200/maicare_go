@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -62,6 +63,22 @@ func main() {
 
 	// Initialize Asynq server
 	var asynqServer *async.AsynqServer
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
+		Username:  config.RedisUser, // if applicable
+		Password:  config.RedisPassword,
+		TLSConfig: &tls.Config{}, // Only if using TLS (rediss://)
+	})
+
+	rctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Ping Redis to verify connectivity
+	_, err = redisClient.Ping(rctx).Result()
+	if err != nil {
+		log.Fatalf("❌ Failed to connect to Redis: %v", err)
+	}
+	log.Println("✅ Redis connection successful!")
 	if !config.Remote {
 		asynqServer = async.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf, b2Client, notificationService)
 	} else {

@@ -17,17 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAppointment(t *testing.T, employeeID int64) db.Appointment {
+func createRandomAppointment(t *testing.T, employeeID int64) db.ScheduledAppointment {
 	arg := db.CreateAppointmentParams{
-		CreatorEmployeeID:  employeeID,
-		StartTime:          pgtype.Timestamp{Time: time.Now(), Valid: true},
-		EndTime:            pgtype.Timestamp{Time: time.Now().Add(1 * time.Hour), Valid: true},
-		Location:           util.StringPtr("Test Location"),
-		Description:        util.StringPtr("Test Description"),
-		Status:             "Scheduled",
-		RecurrenceType:     util.StringPtr("NONE"),
-		RecurrenceInterval: util.Int32Ptr(0),
-		RecurrenceEndDate:  pgtype.Date{Time: time.Now().Add(30 * 24 * time.Hour), Valid: true},
+		CreatorEmployeeID: &employeeID,
+		StartTime:         pgtype.Timestamp{Time: time.Now(), Valid: true},
+		EndTime:           pgtype.Timestamp{Time: time.Now().Add(1 * time.Hour), Valid: true},
+		Location:          util.StringPtr("Test Location"),
+		Description:       util.StringPtr("Test Description"),
 	}
 
 	appointment, err := testStore.CreateAppointment(context.Background(), arg)
@@ -57,8 +53,7 @@ func TestCreateAppointmentApi(t *testing.T) {
 					EndTime:                time.Now().Add(1 * time.Hour),
 					Location:               util.StringPtr("Test Location"),
 					Description:            util.StringPtr("Test Description"),
-					Status:                 "Scheduled",
-					RecurrenceType:         util.StringPtr("NONE"),
+					RecurrenceType:         "NONE",
 					RecurrenceInterval:     util.Int32Ptr(0),
 					RecurrenceEndDate:      time.Date(2006, 1, 1, 0, 0, 0, 0, time.UTC),
 					ParticipantEmployeeIDs: []int64{employee.ID},

@@ -2,12 +2,17 @@ package async
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
+	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"maicare_go/pdf"
+	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/hibiken/asynq"
 )
@@ -144,5 +149,121 @@ func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *asynq.Task
 	}
 
 	log.Printf("Successfully processed notification task (ID: %s, Type: %s)", t.ResultWriter().TaskID(), payload.Type)
+	return nil
+}
+
+func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task) error {
+	log.Printf("Processing appointment task: %s", t.Type())
+	var p AppointmentPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		log.Printf("Failed to unmarshal appointment task payload: %v", err)
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+	if p.AppointmentTemplateID == 0 {
+		return fmt.Errorf("invalid appointment payload: missing required fields: %w", asynq.SkipRetry)
+	}
+
+	appointemntTemplate, err := c.store.GetAppointmentTemplate(ctx, p.AppointmentTemplateID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Appointment template not found: %v", err)
+			return fmt.Errorf("appointment template not found: %v: %w", err, asynq.SkipRetry)
+		}
+		log.Printf("Failed to get appointment template: %v", err)
+		return fmt.Errorf("failed to get appointment template: %v", err)
+	}
+
+	if appointemntTemplate.RecurrenceType == nil {
+		return fmt.Errorf("invalid appointment template: missing recurrence type: %w", asynq.SkipRetry)
+	}
+
+	if !appointemntTemplate.StartTime.Valid || !appointemntTemplate.EndTime.Valid {
+		return fmt.Errorf("invalid appointment template: missing start or end time: %w", asynq.SkipRetry)
+	}
+
+	startTime := appointemntTemplate.StartTime.Time
+	endTime := appointemntTemplate.EndTime.Time
+	duration := endTime.Sub(startTime)
+	recurenceType := *appointemntTemplate.RecurrenceType
+	interval := int(*appointemntTemplate.RecurrenceInterval)
+	endDate := time.Time{}
+	hasEndDate := appointemntTemplate.RecurrenceEndDate.Valid
+	if hasEndDate {
+		endDate = appointemntTemplate.RecurrenceEndDate.Time
+	}
+
+	safetyHorizonDate := time.Now().AddDate(2, 0, 0)
+
+	maxOccurrences := 750
+
+	currentStartTime := startTime
+	occurrenceCount := 0
+
+	log.Printf("Starting generation for template %d. EndDate: %v, SafetyHorizon: %v",
+		appointemntTemplate.ID, appointemntTemplate.RecurrenceEndDate, safetyHorizonDate)
+
+	for occurrenceCount < maxOccurrences {
+		if hasEndDate && currentStartTime.After(endDate) {
+			break
+		}
+		if currentStartTime.After(safetyHorizonDate) {
+			break
+		}
+
+		currentEndTime := currentStartTime.Add(duration)
+
+		scheduledAppt, err := c.store.CreateAppointment(ctx, db.CreateAppointmentParams{
+			CreatorEmployeeID: &appointemntTemplate.CreatorEmployeeID,
+			StartTime:         pgtype.Timestamp{Time: currentStartTime, Valid: true},
+			EndTime:           pgtype.Timestamp{Time: currentEndTime, Valid: true},
+			Location:          appointemntTemplate.Location,
+			Description:       appointemntTemplate.Description,
+		})
+		if err != nil {
+			log.Printf("Failed to create appointment: %v", err)
+			return fmt.Errorf("failed to create appointment: %v: %w", err, asynq.SkipRetry)
+		}
+		occurrenceCount++
+		log.Printf("Created appointment %d for template %d", scheduledAppt.ID, appointemntTemplate.ID)
+
+		if len(p.ClientIDs) > 0 {
+			err = c.store.BulkAddAppointmentClients(ctx, db.BulkAddAppointmentClientsParams{
+				AppointmentID: scheduledAppt.ID,
+				ClientIds:     p.ClientIDs,
+			})
+			if err != nil {
+				log.Printf("Failed to add clients to appointment: %v", err)
+				return fmt.Errorf("failed to add clients to appointment: %v: %w", err, asynq.SkipRetry)
+			}
+		}
+		if len(p.ParticipantEmployeeIDs) > 0 {
+			err = c.store.BulkAddAppointmentParticipants(ctx, db.BulkAddAppointmentParticipantsParams{
+				AppointmentID: scheduledAppt.ID,
+				EmployeeIds:   p.ParticipantEmployeeIDs,
+			})
+			if err != nil {
+				log.Printf("Failed to add participants to appointment: %v", err)
+				return fmt.Errorf("failed to add participants to appointment: %v: %w", err, asynq.SkipRetry)
+			}
+		}
+
+		switch recurenceType {
+		case "DAILY":
+			currentStartTime = currentStartTime.AddDate(0, 0, interval)
+		case "WEEKLY":
+			currentStartTime = currentStartTime.AddDate(0, 0, interval*7)
+		case "MONTHLY":
+			currentStartTime = currentStartTime.AddDate(0, interval, 0)
+		default:
+			log.Printf("Unknown recurrence type: %s", recurenceType)
+			return fmt.Errorf("unknown recurrence type: %s: %w", recurenceType, asynq.SkipRetry)
+		}
+
+	}
+	if occurrenceCount >= maxOccurrences {
+		log.Printf("Max occurrences reached: %d", maxOccurrences)
+	}
+
+	log.Printf("Finished generating appointments for template %d. Created %d occurrences", appointemntTemplate.ID, occurrenceCount)
 	return nil
 }

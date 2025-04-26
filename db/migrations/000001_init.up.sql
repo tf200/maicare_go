@@ -1750,26 +1750,48 @@ CREATE INDEX idx_notifications_user_id_read_at ON notifications (user_id, read_a
 
 
 
-CREATE TABLE appointments (
+CREATE TABLE appointment_templates (
     id BIGSERIAL PRIMARY KEY,
     creator_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
     description TEXT,
-    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    recurrence_type VARCHAR(50) DEFAULT 'NONE' CHECK (recurrence_type IN ('NONE', 'DAILY', 'WEEKLY', 'MONTHLY')),
+    recurrence_type VARCHAR(50) DEFAULT 'DAILY' CHECK (recurrence_type IN ('DAILY', 'WEEKLY', 'MONTHLY')),
     recurrence_interval INT  NULL,
     recurrence_end_date DATE,
-    confirmed_by_employee_id INT REFERENCES employee_profile(id),
-    confirmed_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+
+CREATE TABLE scheduled_appointments (
+    id BIGSERIAL PRIMARY KEY,
+    appointment_templates_id BIGINT NULL REFERENCES appointment_templates(id) ON DELETE CASCADE, -- Link to template (NULL if non-recurring)
+    creator_employee_id BIGINT NULL REFERENCES employee_profile(id),
+    
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    location VARCHAR(255),
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING', 
+    confirmed_by_employee_id INT REFERENCES employee_profile(id),
+    confirmed_at TIMESTAMP NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- When this occurrence record was created
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- When this occurrence record was last modified
+);
+
+-- Then create indexes separately
+CREATE INDEX idx_scheduled_appointments_time_range ON scheduled_appointments (start_time, end_time);
+-- If you need an index on appointment_templates_id:
+CREATE INDEX idx_scheduled_appointments_template_id ON scheduled_appointments (appointment_templates_id);
+
+
 CREATE TABLE appointment_participants (
     appointment_participant_id BIGSERIAL PRIMARY KEY,
-    appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+    appointment_id BIGINT NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
     employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -1779,7 +1801,7 @@ CREATE TABLE appointment_participants (
 
 CREATE TABLE appointment_clients (
     appointment_client_id BIGSERIAL PRIMARY KEY,
-    appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+    appointment_id BIGINT NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
     client_id BIGINT NOT NULL REFERENCES client_details(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     

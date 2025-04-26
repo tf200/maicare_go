@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"net/http"
 	"strconv"
@@ -17,10 +18,9 @@ type CreateAppointmentRequest struct {
 	EndTime                time.Time `json:"end_time" binding:"required"`
 	Location               *string   `json:"location"`
 	Description            *string   `json:"description"`
-	Status                 string    `json:"status" binding:"required"`
-	RecurrenceType         *string   `json:"recurrence_type"`
+	RecurrenceType         string    `json:"recurrence_type" enum:"NONE, DAILY, WEEKLY, MONTHLY" binding:"required"`
 	RecurrenceInterval     *int32    `json:"recurrence_interval"`
-	RecurrenceEndDate      time.Time `json:"recurrence_end_date"`
+	RecurrenceEndDate      time.Time `json:"recurrence_end_date" example:"2025-10-01T10:00:00Z"`
 	ParticipantEmployeeIDs []int64   `json:"participant_employee_ids"`
 	ClientIDs              []int64   `json:"client_ids"`
 }
@@ -74,67 +74,100 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 		return
 	}
 
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
-	qtx := server.store.WithTx(tx)
+	var response CreateAppointmentResponse
 
-	appointment, err := qtx.CreateAppointment(ctx, db.CreateAppointmentParams{
-		CreatorEmployeeID:  employeeID,
-		StartTime:          pgtype.Timestamp{Time: req.StartTime, Valid: true},
-		EndTime:            pgtype.Timestamp{Time: req.EndTime, Valid: true},
-		Location:           req.Location,
-		Description:        req.Description,
-		Status:             req.Status,
-		RecurrenceType:     req.RecurrenceType,
-		RecurrenceInterval: req.RecurrenceInterval,
-		RecurrenceEndDate:  pgtype.Date{Time: req.RecurrenceEndDate, Valid: true},
-	})
+	if req.RecurrenceType == "NONE" {
+		tx, err := server.store.ConnPool.Begin(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		defer tx.Rollback(ctx)
+		qtx := server.store.WithTx(tx)
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	for _, participantID := range req.ParticipantEmployeeIDs {
-		err = qtx.AddAppointmentParticipant(ctx, db.AddAppointmentParticipantParams{
-			AppointmentID: appointment.ID,
-			EmployeeID:    participantID,
+		appointment, err := qtx.CreateAppointment(ctx, db.CreateAppointmentParams{
+			CreatorEmployeeID: &employeeID,
+			StartTime:         pgtype.Timestamp{Time: req.StartTime, Valid: true},
+			EndTime:           pgtype.Timestamp{Time: req.EndTime, Valid: true},
+			Location:          req.Location,
+			Description:       req.Description,
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-	}
-	for _, clientID := range req.ClientIDs {
-		err = qtx.AddAppointmentClient(ctx, db.AddAppointmentClientParams{
-			AppointmentID: appointment.ID,
-			ClientID:      clientID,
+
+		if len(req.ParticipantEmployeeIDs) > 0 {
+			err = qtx.BulkAddAppointmentParticipants(ctx, db.BulkAddAppointmentParticipantsParams{
+				AppointmentID: appointment.ID,
+				EmployeeIds:   req.ParticipantEmployeeIDs,
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+
+		if len(req.ClientIDs) > 0 {
+			err = qtx.BulkAddAppointmentClients(ctx, db.BulkAddAppointmentClientsParams{
+				AppointmentID: appointment.ID,
+				ClientIds:     req.ClientIDs,
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+
+		err = tx.Commit(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		response = CreateAppointmentResponse{
+			ID:                appointment.ID,
+			CreatorEmployeeID: *appointment.CreatorEmployeeID,
+			StartTime:         appointment.StartTime.Time,
+			EndTime:           appointment.EndTime.Time,
+			Location:          appointment.Location,
+			Description:       appointment.Description,
+		}
+
+	} else {
+		appointmentTemp, err := server.store.CreateAppointmentTemplate(ctx, db.CreateAppointmentTemplateParams{
+			CreatorEmployeeID:  employeeID,
+			StartTime:          pgtype.Timestamp{Time: req.StartTime, Valid: true},
+			EndTime:            pgtype.Timestamp{Time: req.EndTime, Valid: true},
+			Location:           req.Location,
+			Description:        req.Description,
+			RecurrenceType:     &req.RecurrenceType,
+			RecurrenceInterval: req.RecurrenceInterval,
+			RecurrenceEndDate:  pgtype.Date{Time: req.RecurrenceEndDate, Valid: true},
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-	}
-	err = tx.Commit(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		response = CreateAppointmentResponse{
+			ID:                appointmentTemp.ID,
+			CreatorEmployeeID: appointmentTemp.CreatorEmployeeID,
+			StartTime:         appointmentTemp.StartTime.Time,
+			EndTime:           appointmentTemp.EndTime.Time,
+			Location:          appointmentTemp.Location,
+			Description:       appointmentTemp.Description,
+		}
+
+		server.asynqClient.EnqueueAppointmentTask(ctx, async.AppointmentPayload{
+			AppointmentTemplateID:  appointmentTemp.ID,
+			ParticipantEmployeeIDs: req.ParticipantEmployeeIDs,
+			ClientIDs:              req.ClientIDs,
+		})
+
 	}
 
-	res := SuccessResponse(CreateAppointmentResponse{
-		ID:                appointment.ID,
-		CreatorEmployeeID: appointment.CreatorEmployeeID,
-		StartTime:         appointment.StartTime.Time,
-		EndTime:           appointment.EndTime.Time,
-		Location:          appointment.Location,
-		Description:       appointment.Description,
-	}, "Appointment created successfully")
-
+	res := SuccessResponse(response, "Appointment created successfully")
 	ctx.JSON(http.StatusCreated, res)
+
 }
 
 // AddParticipantToAppointmentRequest represents the request payload for adding participants to an appointment
@@ -170,25 +203,10 @@ func (server *Server) AddParticipantToAppointmentApi(ctx *gin.Context) {
 		return
 	}
 
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
-	qtx := server.store.WithTx(tx)
-
-	for _, participantID := range req.ParticipantEmployeeIDs {
-		err = qtx.AddAppointmentParticipant(ctx, db.AddAppointmentParticipantParams{
-			AppointmentID: appointmentID,
-			EmployeeID:    participantID,
-		})
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-	}
-	err = tx.Commit(ctx)
+	err = server.store.BulkAddAppointmentParticipants(ctx, db.BulkAddAppointmentParticipantsParams{
+		AppointmentID: appointmentID,
+		EmployeeIds:   req.ParticipantEmployeeIDs,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -231,25 +249,10 @@ func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
 		return
 	}
 
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
-	qtx := server.store.WithTx(tx)
-
-	for _, clientID := range req.ClientIDs {
-		err = qtx.AddAppointmentClient(ctx, db.AddAppointmentClientParams{
-			AppointmentID: appointmentID,
-			ClientID:      clientID,
-		})
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-	}
-	err = tx.Commit(ctx)
+	err = server.store.BulkAddAppointmentClients(ctx, db.BulkAddAppointmentClientsParams{
+		AppointmentID: appointmentID,
+		ClientIds:     req.ClientIDs,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -267,21 +270,14 @@ type ListAppointmentsForEmployeeInRangeRequest struct {
 
 // ListAppointmentsForEmployeeInRangeResponse represents the response payload for listing appointments for an employee in a date range
 type ListAppointmentsForEmployeeInRangeResponse struct {
-	ID                    int64       `json:"id"`
-	CreatorEmployeeID     int64       `json:"creator_employee_id"`
-	StartTime             time.Time   `json:"start_time"`
-	EndTime               time.Time   `json:"end_time"`
-	Location              *string     `json:"location"`
-	Description           *string     `json:"description"`
-	Status                string      `json:"status"`
-	RecurrenceType        *string     `json:"recurrence_type"`
-	RecurrenceInterval    *int32      `json:"recurrence_interval"`
-	RecurrenceEndDate     pgtype.Date `json:"recurrence_end_date"`
-	ConfirmedByEmployeeID *int32      `json:"confirmed_by_employee_id"`
-	ConfirmedAt           time.Time   `json:"confirmed_at"`
-	CreatedAt             time.Time   `json:"created_at"`
-	UpdatedAt             time.Time   `json:"updated_at"`
-	IsRecurringOccurrence bool        `json:"is_recurring_occurrence"`
+	ID                int64     `json:"id"`
+	CreatorEmployeeID *int64    `json:"creator_employee_id"`
+	StartTime         time.Time `json:"start_time"`
+	EndTime           time.Time `json:"end_time"`
+	Location          *string   `json:"location"`
+	Description       *string   `json:"description"`
+	Status            string    `json:"status"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 // ListAppointmentsForEmployeeInRange lists appointments for an employee in a date range
@@ -315,13 +311,13 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListAppointmentsForEmployeeInRangeParams{
-		EmployeeID: employeeID,
+	arg := db.ListEmployeeAppointmentsInRangeParams{
+		EmployeeID: &employeeID,
 		StartDate:  pgtype.Timestamp{Time: req.StartDate, Valid: true},
 		EndDate:    pgtype.Timestamp{Time: req.EndDate, Valid: true},
 	}
 
-	appointments, err := server.store.ListAppointmentsForEmployeeInRange(ctx, arg)
+	appointments, err := server.store.ListEmployeeAppointmentsInRange(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -330,21 +326,14 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 	appointmentList := make([]ListAppointmentsForEmployeeInRangeResponse, len(appointments))
 	for i, appointment := range appointments {
 		appointmentList[i] = ListAppointmentsForEmployeeInRangeResponse{
-			ID:                    appointment.ID,
-			CreatorEmployeeID:     appointment.CreatorEmployeeID,
-			StartTime:             appointment.StartTime.Time,
-			EndTime:               appointment.EndTime.Time,
-			Location:              appointment.Location,
-			Description:           appointment.Description,
-			Status:                appointment.Status,
-			RecurrenceType:        appointment.RecurrenceType,
-			RecurrenceInterval:    appointment.RecurrenceInterval,
-			RecurrenceEndDate:     appointment.RecurrenceEndDate,
-			ConfirmedByEmployeeID: appointment.ConfirmedByEmployeeID,
-			ConfirmedAt:           appointment.ConfirmedAt.Time,
-			CreatedAt:             appointment.CreatedAt.Time,
-			UpdatedAt:             appointment.UpdatedAt.Time,
-			IsRecurringOccurrence: appointment.IsRecurringOccurrence,
+			ID:                appointment.AppointmentID,
+			CreatorEmployeeID: appointment.CreatorEmployeeID,
+			StartTime:         appointment.StartTime.Time,
+			EndTime:           appointment.EndTime.Time,
+			Location:          appointment.Location,
+			Description:       appointment.Description,
+			Status:            appointment.Status,
+			CreatedAt:         appointment.CreatedAt.Time,
 		}
 	}
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
@@ -352,6 +341,85 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 
 }
 
-func (server *Server) ListAppointmentsForClient(ctx *gin.Context) {
+// ListAppointmentsForClientRequest represents the request payload for listing appointments for a client in a date range
+type ListAppointmentsForClientRequest struct {
+	StartDate time.Time `json:"start_date" binding:"required" example:"2025-04-27T00:00:00Z"`
+	EndDate   time.Time `json:"end_date" binding:"required" example:"2025-04-30T23:59:59Z"`
+}
 
+// ListAppointmentsForClientResponse represents the response payload for listing appointments for a client in a date range
+// @Summary List appointments for a client in a date range
+// @Description List appointments for a client in a date range
+// @Tags appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body ListAppointmentsForClientRequest true "List appointments request"
+// @Success 200 {object} Response[ListAppointmentsForClientResponse]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Client not found"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /clients/{id}/appointments [post]
+type ListAppointmentsForClientResponse struct {
+	ID                    int64       `json:"id"`
+	CreatorEmployeeID     *int64      `json:"creator_employee_id"`
+	StartTime             time.Time   `json:"start_time"`
+	EndTime               time.Time   `json:"end_time"`
+	Location              *string     `json:"location"`
+	Description           *string     `json:"description"`
+	Status                string      `json:"status"`
+	RecurrenceType        *string     `json:"recurrence_type"`
+	RecurrenceInterval    *int32      `json:"recurrence_interval"`
+	RecurrenceEndDate     pgtype.Date `json:"recurrence_end_date"`
+	ConfirmedByEmployeeID *int32      `json:"confirmed_by_employee_id"`
+	ConfirmedAt           time.Time   `json:"confirmed_at"`
+	CreatedAt             time.Time   `json:"created_at"`
+	UpdatedAt             time.Time   `json:"updated_at"`
+	IsRecurringOccurrence bool        `json:"is_recurring_occurrence"`
+}
+
+func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
+	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req ListAppointmentsForClientRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	if req.StartDate.After(req.EndDate) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("start date must be before end date")))
+		return
+	}
+
+	arg := db.ListClientAppointmentsInRangeParams{
+		ClientID:  clientID,
+		StartDate: pgtype.Timestamp{Time: req.StartDate, Valid: true},
+		EndDate:   pgtype.Timestamp{Time: req.EndDate, Valid: true},
+	}
+
+	appointments, err := server.store.ListClientAppointmentsInRange(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	appointmentList := make([]ListAppointmentsForClientResponse, len(appointments))
+	for i, appointment := range appointments {
+		appointmentList[i] = ListAppointmentsForClientResponse{
+			ID:                appointment.AppointmentID,
+			CreatorEmployeeID: appointment.CreatorEmployeeID,
+			StartTime:         appointment.StartTime.Time,
+			EndTime:           appointment.EndTime.Time,
+			Location:          appointment.Location,
+			Description:       appointment.Description,
+			Status:            appointment.Status,
+			CreatedAt:         appointment.CreatedAt.Time,
+		}
+	}
+	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
 }

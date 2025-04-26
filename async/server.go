@@ -50,6 +50,7 @@ func (a *AsynqServer) Start() error {
 	mux.HandleFunc(TypeEmailDelivery, a.ProcessEmailTask)
 	mux.HandleFunc(TypeIncidentProcess, a.ProcessIncidentTask)
 	mux.HandleFunc(TypeNotificationSend, a.ProcessNotificationTask)
+	mux.HandleFunc(TypeAppointmentCreate, a.ProcessAppointmentTask)
 
 	return a.server.Start(mux)
 }
