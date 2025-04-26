@@ -423,3 +423,116 @@ func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// GetAppointmentResponse represents the response payload for getting an appointment
+type ParticipantsDetails struct {
+	EmployeeID int64  `json:"employee_id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+}
+
+// ClientsDetails represents the details of a client
+type ClientsDetails struct {
+	ClientID  int64  `json:"client_id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+// GetAppointmentResponse represents the response payload for getting an appointment
+type GetAppointmentResponse struct {
+	ID                     int64                 `json:"id"`
+	AppointmentTemplatesID *int64                `json:"appointment_templates_id"`
+	CreatorEmployeeID      *int64                `json:"creator_employee_id"`
+	CreatorFirstName       *string               `json:"creator_first_name"`
+	CreatorLastName        *string               `json:"creator_last_name"`
+	StartTime              time.Time             `json:"start_time"`
+	EndTime                time.Time             `json:"end_time"`
+	Location               *string               `json:"location"`
+	Description            *string               `json:"description"`
+	Status                 string                `json:"status"`
+	IsConfirmed            bool                  `json:"is_confirmed"`
+	ConfirmedByEmployeeID  *int32                `json:"confirmed_by_employee_id"`
+	ConfirmerFirstName     *string               `json:"confirmer_first_name"`
+	ConfirmerLastName      *string               `json:"confirmer_last_name"`
+	ConfirmedAt            time.Time             `json:"confirmed_at"`
+	CreatedAt              time.Time             `json:"created_at"`
+	UpdatedAt              time.Time             `json:"updated_at"`
+	ParticipantsDetails    []ParticipantsDetails `json:"participants_details"`
+	ClientsDetails         []ClientsDetails      `json:"clients_details"`
+}
+
+// GetAppointmentApi retrieves an appointment by ID
+// @Summary Get an appointment by ID
+// @Description Get an appointment by ID
+// @Tags appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Success 200 {object} Response[GetAppointmentResponse]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Appointment not found"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /appointments/{id} [get]
+func (server *Server) GetAppointmentApi(ctx *gin.Context) {
+	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	appointment, err := server.store.GetScheduledAppointmentByID(ctx, appointmentID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	participants, err := server.store.GetAppointmentParticipants(ctx, appointment.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	clientDetails, err := server.store.GetAppointmentClients(ctx, appointment.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	participantsDetails := make([]ParticipantsDetails, len(participants))
+	for i, participant := range participants {
+		participantsDetails[i] = ParticipantsDetails{
+			EmployeeID: participant.EmployeeID,
+			FirstName:  participant.FirstName,
+			LastName:   participant.LastName,
+		}
+	}
+
+	clientsDetails := make([]ClientsDetails, len(clientDetails))
+	for i, client := range clientDetails {
+		clientsDetails[i] = ClientsDetails{
+			ClientID:  client.ClientID,
+			FirstName: client.FirstName,
+			LastName:  client.LastName,
+		}
+	}
+
+	response := GetAppointmentResponse{
+		ID:                    appointment.ID,
+		CreatorEmployeeID:     appointment.CreatorEmployeeID,
+		CreatorFirstName:      appointment.CreatorFirstName,
+		CreatorLastName:       appointment.CreatorLastName,
+		StartTime:             appointment.StartTime.Time,
+		EndTime:               appointment.EndTime.Time,
+		Location:              appointment.Location,
+		Description:           appointment.Description,
+		Status:                appointment.Status,
+		IsConfirmed:           appointment.IsConfirmed,
+		ConfirmedByEmployeeID: appointment.ConfirmedByEmployeeID,
+		ConfirmerFirstName:    appointment.ConfirmerFirstName,
+		ConfirmerLastName:     appointment.ConfirmerLastName,
+	}
+
+	res := SuccessResponse(response, "Appointment retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}

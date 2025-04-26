@@ -1775,7 +1775,9 @@ CREATE TABLE scheduled_appointments (
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
     description TEXT,
-    status VARCHAR(50) NOT NULL DEFAULT 'PENDING', 
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+
+    is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     confirmed_by_employee_id INT REFERENCES employee_profile(id),
     confirmed_at TIMESTAMP NULL,
     

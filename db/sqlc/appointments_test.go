@@ -57,3 +57,51 @@ func TestAddAppointmentClient(t *testing.T) {
 	err := testQueries.BulkAddAppointmentClients(context.Background(), arg)
 	require.NoError(t, err)
 }
+
+func TestGetScheduledAppointmentByID(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	appointment := createRandomAppointment(t, &employee.ID)
+
+	appointment2, err := testQueries.GetScheduledAppointmentByID(context.Background(), appointment.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, appointment2)
+	require.Equal(t, appointment.ID, appointment2.ID)
+}
+
+func TestGetAppointmentParticipants(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	employee2, _ := createRandomEmployee(t)
+	appointment := createRandomAppointment(t, &employee.ID)
+
+	arg := BulkAddAppointmentParticipantsParams{
+		AppointmentID: appointment.ID,
+		EmployeeIds:   []int64{employee.ID, employee2.ID},
+	}
+
+	err := testQueries.BulkAddAppointmentParticipants(context.Background(), arg)
+	require.NoError(t, err)
+
+	participants, err := testQueries.GetAppointmentParticipants(context.Background(), appointment.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, participants)
+	require.Len(t, participants, 2)
+}
+
+func TestGetAppointmentClients(t *testing.T) {
+	employee, _ := createRandomEmployee(t)
+	client := createRandomClientDetails(t)
+	appointment := createRandomAppointment(t, &employee.ID)
+
+	arg := BulkAddAppointmentClientsParams{
+		AppointmentID: appointment.ID,
+		ClientIds:     []int64{client.ID},
+	}
+
+	err := testQueries.BulkAddAppointmentClients(context.Background(), arg)
+	require.NoError(t, err)
+
+	clients, err := testQueries.GetAppointmentClients(context.Background(), appointment.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, clients)
+	require.Len(t, clients, 1)
+}

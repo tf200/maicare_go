@@ -56,7 +56,7 @@ INSERT INTO scheduled_appointments (
     description       
 ) VALUES (
     $1, $2, $3, $4, $5
-) RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_time, location, description, status, confirmed_by_employee_id, confirmed_at, created_at, updated_at
+) RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_time, location, description, status, is_confirmed, confirmed_by_employee_id, confirmed_at, created_at, updated_at
 `
 
 type CreateAppointmentParams struct {
@@ -85,6 +85,7 @@ func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentPa
 		&i.Location,
 		&i.Description,
 		&i.Status,
+		&i.IsConfirmed,
 		&i.ConfirmedByEmployeeID,
 		&i.ConfirmedAt,
 		&i.CreatedAt,
@@ -147,6 +148,92 @@ func (q *Queries) CreateAppointmentTemplate(ctx context.Context, arg CreateAppoi
 	return i, err
 }
 
+const getAppointmentClients = `-- name: GetAppointmentClients :many
+
+
+
+SELECT
+    cd.id AS client_id,
+    cd.first_name,
+    cd.last_name
+FROM
+    appointment_clients ac
+JOIN
+    client_details cd ON ac.client_id = cd.id
+WHERE
+    ac.appointment_id = $1 -- Filter by appointment ID
+ORDER BY
+    cd.last_name, cd.first_name
+`
+
+type GetAppointmentClientsRow struct {
+	ClientID  int64  `json:"client_id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+// Optional ordering
+func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID int64) ([]GetAppointmentClientsRow, error) {
+	rows, err := q.db.Query(ctx, getAppointmentClients, appointmentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAppointmentClientsRow
+	for rows.Next() {
+		var i GetAppointmentClientsRow
+		if err := rows.Scan(&i.ClientID, &i.FirstName, &i.LastName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAppointmentParticipants = `-- name: GetAppointmentParticipants :many
+SELECT
+    ep.id AS employee_id,
+    ep.first_name,
+    ep.last_name
+FROM
+    appointment_participants ap
+JOIN
+    employee_profile ep ON ap.employee_id = ep.id
+WHERE
+    ap.appointment_id = $1 -- Filter by appointment ID
+ORDER BY
+    ep.last_name, ep.first_name
+`
+
+type GetAppointmentParticipantsRow struct {
+	EmployeeID int64  `json:"employee_id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+}
+
+func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentID int64) ([]GetAppointmentParticipantsRow, error) {
+	rows, err := q.db.Query(ctx, getAppointmentParticipants, appointmentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAppointmentParticipantsRow
+	for rows.Next() {
+		var i GetAppointmentParticipantsRow
+		if err := rows.Scan(&i.EmployeeID, &i.FirstName, &i.LastName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAppointmentTemplate = `-- name: GetAppointmentTemplate :one
 
 
@@ -171,6 +258,81 @@ func (q *Queries) GetAppointmentTemplate(ctx context.Context, id int64) (Appoint
 		&i.RecurrenceType,
 		&i.RecurrenceInterval,
 		&i.RecurrenceEndDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getScheduledAppointmentByID = `-- name: GetScheduledAppointmentByID :one
+SELECT
+    sa.id,
+    sa.appointment_templates_id,
+    sa.creator_employee_id,
+    creator.first_name AS creator_first_name, -- Alias creator details
+    creator.last_name AS creator_last_name,   -- Alias creator details
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.status,
+    sa.is_confirmed,
+    sa.confirmed_by_employee_id,
+    confirmer.first_name AS confirmer_first_name, -- Alias confirmer details
+    confirmer.last_name AS confirmer_last_name,   -- Alias confirmer details
+    sa.confirmed_at,
+    sa.created_at,
+    sa.updated_at
+FROM
+    scheduled_appointments sa
+LEFT JOIN
+    employee_profile creator ON sa.creator_employee_id = creator.id -- Join for creator
+LEFT JOIN
+    employee_profile confirmer ON sa.confirmed_by_employee_id = confirmer.id -- Join for confirmer
+WHERE
+    sa.id = $1 -- Filter by appointment ID
+LIMIT 1
+`
+
+type GetScheduledAppointmentByIDRow struct {
+	ID                     int64            `json:"id"`
+	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`
+	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
+	CreatorFirstName       *string          `json:"creator_first_name"`
+	CreatorLastName        *string          `json:"creator_last_name"`
+	StartTime              pgtype.Timestamp `json:"start_time"`
+	EndTime                pgtype.Timestamp `json:"end_time"`
+	Location               *string          `json:"location"`
+	Description            *string          `json:"description"`
+	Status                 string           `json:"status"`
+	IsConfirmed            bool             `json:"is_confirmed"`
+	ConfirmedByEmployeeID  *int32           `json:"confirmed_by_employee_id"`
+	ConfirmerFirstName     *string          `json:"confirmer_first_name"`
+	ConfirmerLastName      *string          `json:"confirmer_last_name"`
+	ConfirmedAt            pgtype.Timestamp `json:"confirmed_at"`
+	CreatedAt              pgtype.Timestamp `json:"created_at"`
+	UpdatedAt              pgtype.Timestamp `json:"updated_at"`
+}
+
+func (q *Queries) GetScheduledAppointmentByID(ctx context.Context, id int64) (GetScheduledAppointmentByIDRow, error) {
+	row := q.db.QueryRow(ctx, getScheduledAppointmentByID, id)
+	var i GetScheduledAppointmentByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.AppointmentTemplatesID,
+		&i.CreatorEmployeeID,
+		&i.CreatorFirstName,
+		&i.CreatorLastName,
+		&i.StartTime,
+		&i.EndTime,
+		&i.Location,
+		&i.Description,
+		&i.Status,
+		&i.IsConfirmed,
+		&i.ConfirmedByEmployeeID,
+		&i.ConfirmerFirstName,
+		&i.ConfirmerLastName,
+		&i.ConfirmedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

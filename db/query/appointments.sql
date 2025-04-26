@@ -126,3 +126,67 @@ WHERE
 -- Order the results by start time
 ORDER BY
     sa.start_time;
+
+
+
+
+-- name: GetScheduledAppointmentByID :one
+SELECT
+    sa.id,
+    sa.appointment_templates_id,
+    sa.creator_employee_id,
+    creator.first_name AS creator_first_name, -- Alias creator details
+    creator.last_name AS creator_last_name,   -- Alias creator details
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.status,
+    sa.is_confirmed,
+    sa.confirmed_by_employee_id,
+    confirmer.first_name AS confirmer_first_name, -- Alias confirmer details
+    confirmer.last_name AS confirmer_last_name,   -- Alias confirmer details
+    sa.confirmed_at,
+    sa.created_at,
+    sa.updated_at
+FROM
+    scheduled_appointments sa
+LEFT JOIN
+    employee_profile creator ON sa.creator_employee_id = creator.id -- Join for creator
+LEFT JOIN
+    employee_profile confirmer ON sa.confirmed_by_employee_id = confirmer.id -- Join for confirmer
+WHERE
+    sa.id = $1 -- Filter by appointment ID
+LIMIT 1;
+
+
+
+-- name: GetAppointmentParticipants :many
+SELECT
+    ep.id AS employee_id,
+    ep.first_name,
+    ep.last_name
+FROM
+    appointment_participants ap
+JOIN
+    employee_profile ep ON ap.employee_id = ep.id
+WHERE
+    ap.appointment_id = $1 -- Filter by appointment ID
+ORDER BY
+    ep.last_name, ep.first_name; -- Optional ordering
+
+
+
+-- name: GetAppointmentClients :many
+SELECT
+    cd.id AS client_id,
+    cd.first_name,
+    cd.last_name
+FROM
+    appointment_clients ac
+JOIN
+    client_details cd ON ac.client_id = cd.id
+WHERE
+    ac.appointment_id = $1 -- Filter by appointment ID
+ORDER BY
+    cd.last_name, cd.first_name; -- Optional ordering

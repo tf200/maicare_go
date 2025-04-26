@@ -905,6 +905,7 @@ type ScheduledAppointment struct {
 	Location               *string          `json:"location"`
 	Description            *string          `json:"description"`
 	Status                 string           `json:"status"`
+	IsConfirmed            bool             `json:"is_confirmed"`
 	ConfirmedByEmployeeID  *int32           `json:"confirmed_by_employee_id"`
 	ConfirmedAt            pgtype.Timestamp `json:"confirmed_at"`
 	CreatedAt              pgtype.Timestamp `json:"created_at"`

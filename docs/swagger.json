@@ -256,6 +256,62 @@
                 }
             }
         },
+        "/appointments/{id}": {
+            "get": {
+                "description": "Get an appointment by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Get an appointment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetAppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/attachments/upload": {
             "post": {
                 "description": "Upload a file to the server",
@@ -6882,6 +6938,20 @@
                 }
             }
         },
+        "api.ClientsDetails": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ConfirmIncidentResponse": {
             "type": "object",
             "properties": {
@@ -9387,6 +9457,74 @@
                 }
             }
         },
+        "api.GetAppointmentResponse": {
+            "type": "object",
+            "properties": {
+                "appointment_templates_id": {
+                    "type": "integer"
+                },
+                "clients_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ClientsDetails"
+                    }
+                },
+                "confirmed_at": {
+                    "type": "string"
+                },
+                "confirmed_by_employee_id": {
+                    "type": "integer"
+                },
+                "confirmer_first_name": {
+                    "type": "string"
+                },
+                "confirmer_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator_employee_id": {
+                    "type": "integer"
+                },
+                "creator_first_name": {
+                    "type": "string"
+                },
+                "creator_last_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_confirmed": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "participants_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ParticipantsDetails"
+                    }
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetAssignedEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -11877,6 +12015,20 @@
                 }
             }
         },
+        "api.ParticipantsDetails": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.Permission": {
             "type": "object",
             "properties": {
@@ -12422,6 +12574,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetAppointmentCardResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetAppointmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetAppointmentResponse"
                 },
                 "message": {
                     "type": "string"
