@@ -277,6 +277,7 @@ type ListAppointmentsForEmployeeInRangeResponse struct {
 	Location          *string   `json:"location"`
 	Description       *string   `json:"description"`
 	Status            string    `json:"status"`
+	IsConfirmed       bool      `json:"is_confirmed"`
 	CreatedAt         time.Time `json:"created_at"`
 }
 
@@ -333,6 +334,7 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 			Location:          appointment.Location,
 			Description:       appointment.Description,
 			Status:            appointment.Status,
+			IsConfirmed:       appointment.IsConfirmed,
 			CreatedAt:         appointment.CreatedAt.Time,
 		}
 	}
@@ -451,7 +453,7 @@ type GetAppointmentResponse struct {
 	Description            *string               `json:"description"`
 	Status                 string                `json:"status"`
 	IsConfirmed            bool                  `json:"is_confirmed"`
-	ConfirmedByEmployeeID  *int32                `json:"confirmed_by_employee_id"`
+	ConfirmedByEmployeeID  *int64                `json:"confirmed_by_employee_id"`
 	ConfirmerFirstName     *string               `json:"confirmer_first_name"`
 	ConfirmerLastName      *string               `json:"confirmer_last_name"`
 	ConfirmedAt            time.Time             `json:"confirmed_at"`
@@ -534,5 +536,52 @@ func (server *Server) GetAppointmentApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(response, "Appointment retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ConfirmAppointmentApi confirms an appointment
+// @Summary Confirm an appointment
+// @Description Confirm an appointment
+// @Tags appointments
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Appointment not found"
+// @Failure 409 {object} Response[any] "Conflict - Appointment already exists"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /appointments/{id}/confirm [post]
+func (server *Server) ConfirmAppointmentApi(ctx *gin.Context) {
+	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	userID := payload.UserId
+
+	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, userID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.store.ConfirmAppointment(ctx, db.ConfirmAppointmentParams{
+		ID:         appointmentID,
+		EmployeeID: &employeeID,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Appointment confirmed successfully")
 	ctx.JSON(http.StatusOK, res)
 }

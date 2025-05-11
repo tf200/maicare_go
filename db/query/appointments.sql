@@ -58,6 +58,7 @@ SELECT
     sa.location,
     sa.description,
     sa.status,
+    sa.is_confirmed,
     sa.creator_employee_id,
     sa.created_at,
     'CREATOR' AS involvement_type -- Indicate the employee created this appointment
@@ -190,3 +191,14 @@ WHERE
     ac.appointment_id = $1 -- Filter by appointment ID
 ORDER BY
     cd.last_name, cd.first_name; -- Optional ordering
+
+
+
+-- name: ConfirmAppointment :exec
+UPDATE scheduled_appointments
+SET
+    status = 'CONFIRMED',
+    is_confirmed = true,
+    confirmed_by_employee_id = sqlc.arg(employee_id),
+    confirmed_at = NOW()
+WHERE id = $1;

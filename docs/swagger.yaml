@@ -1996,12 +1996,15 @@ definitions:
       size:
         type: integer
     type: object
-  api.GetClientApiResponse:
+  api.GetClientAddressesApiResponse:
     properties:
       addresses:
         items:
           $ref: '#/definitions/api.Address'
         type: array
+    type: object
+  api.GetClientApiResponse:
+    properties:
       birthplace:
         type: string
       bsn:
@@ -2284,6 +2287,17 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  api.GetClientsCountResponse:
+    properties:
+      clients_in_care:
+        type: integer
+      clients_on_waiting_list:
+        type: integer
+      clients_out_of_care:
+        type: integer
+      total_clients:
+        type: integer
     type: object
   api.GetEmployeeCountsResponse:
     properties:
@@ -2790,6 +2804,8 @@ definitions:
         type: string
       id:
         type: integer
+      is_confirmed:
+        type: boolean
       location:
         type: string
       start_time:
@@ -4005,6 +4021,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetClientAddressesApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientAddressesApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetClientApiResponse:
     properties:
       data:
@@ -4072,6 +4097,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetClientSenderResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetClientsCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetClientsCountResponse'
       message:
         type: string
       success:
@@ -6109,6 +6143,45 @@ paths:
       summary: Get an appointment by ID
       tags:
       - appointments
+  /appointments/{id}/confirm:
+    post:
+      description: Confirm an appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - Appointment not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - Appointment already exists
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Confirm an appointment
+      tags:
+      - appointments
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
@@ -6496,6 +6569,36 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update a client
+      tags:
+      - clients
+  /clients/{id}/addresses:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientAddressesApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get a client addresses
       tags:
       - clients
   /clients/{id}/ai_progress_reports:
@@ -8461,6 +8564,30 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: List status history of a client
+      tags:
+      - clients
+  /clients/counts:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetClientsCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get the count of clients
       tags:
       - clients
   /contract_types:

@@ -184,3 +184,4 @@ func TestGetAppointmentApi(t *testing.T) {
 		})
 	}
 }
+

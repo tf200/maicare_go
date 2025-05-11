@@ -310,6 +310,37 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 
 }
 
+// GetClientsCountApi gets the count of clients
+type GetClientsCountResponse struct {
+	TotalClients         int64 `json:"total_clients"`
+	ClientsInCare        int64 `json:"clients_in_care"`
+	ClientsOnWaitingList int64 `json:"clients_on_waiting_list"`
+	ClientsOutOfCare     int64 `json:"clients_out_of_care"`
+}
+
+// GetClientsCountApi gets the count of clients
+// @Summary Get the count of clients
+// @Tags clients
+// @Produce json
+// @Success 200 {object} Response[GetClientsCountResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/counts [get]
+func (server *Server) GetClientsCountApi(ctx *gin.Context) {
+	count, err := server.store.GetClientCounts(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetClientsCountResponse{
+		TotalClients:         count.TotalClients,
+		ClientsInCare:        count.ClientsInCare,
+		ClientsOnWaitingList: count.ClientsOnWaitingList,
+		ClientsOutOfCare:     count.ClientsOutOfCare,
+	}, "Clients count fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetClientApiResponse represents a response to a get client request
 type GetClientApiResponse struct {
 	ID                    int64       `json:"id"`
@@ -334,7 +365,6 @@ type GetClientApiResponse struct {
 	LocationID            *int64      `json:"location_id"`
 	DepartureReason       *string     `json:"departure_reason"`
 	DepartureReport       *string     `json:"departure_report"`
-	Addresses             []Address   `json:"addresses"`
 	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
 	LegalMeasure          *string     `json:"legal_measure"`
 	HasUntakenMedications bool        `json:"has_untaken_medications"`
@@ -399,11 +429,50 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 		LocationID:            client.LocationID,
 		DepartureReason:       client.DepartureReason,
 		DepartureReport:       client.DepartureReport,
-		Addresses:             addresses,
 		IdentityAttachmentIds: identityAttachmentIds,
 		LegalMeasure:          client.LegalMeasure,
 		HasUntakenMedications: client.HasUntakenMedications,
 	}, "Client fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetClientAddressesApiResponse represents a response to a get client addresses request
+type GetClientAddressesApiResponse struct {
+	Addresses []Address `json:"addresses"`
+}
+
+// GetClientAddressesApi gets a client
+// @Summary Get a client addresses
+// @Tags clients
+// @Produce json
+// @Param id path int true "Client ID"
+// @Success 200 {object} Response[GetClientAddressesApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/addresses [get]
+func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	address, err := server.store.GetClientAddresses(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var addresses []Address
+	err = json.Unmarshal(address, &addresses)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GetClientAddressesApiResponse{
+		Addresses: addresses,
+	}, "Client addresses fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

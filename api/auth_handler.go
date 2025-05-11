@@ -3,8 +3,10 @@ package api
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	db "maicare_go/db/sqlc"
@@ -49,10 +51,13 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUserByEmail(ctx, req.Email)
+	// convert email to lowercase
+	lowerCaseEmail := strings.ToLower(req.Email)
+
+	user, err := server.store.GetUserByEmail(ctx, lowerCaseEmail)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("invalid password or email for user")))
 			return
 		}
 
@@ -63,7 +68,7 @@ func (server *Server) Login(ctx *gin.Context) {
 
 	err = util.CheckPassword(req.Password, user.Password)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid password or email for user")))
 		log.Printf("failed password check for user: %v", err)
 		return
 	}

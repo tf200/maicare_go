@@ -319,6 +319,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/appointments/{id}/confirm": {
+            "post": {
+                "description": "Confirm an appointment",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Confirm an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Appointment already exists",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/attachments/upload": {
             "post": {
                 "description": "Upload a file to the server",
@@ -813,6 +872,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/counts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Get the count of clients",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetClientsCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}": {
             "get": {
                 "produces": [
@@ -892,6 +988,52 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_UpdateClientDetailsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/addresses": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Get a client addresses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetClientAddressesApiResponse"
                         }
                     },
                     "400": {
@@ -9575,7 +9717,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetClientApiResponse": {
+        "api.GetClientAddressesApiResponse": {
             "type": "object",
             "properties": {
                 "addresses": {
@@ -9583,7 +9725,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.Address"
                     }
-                },
+                }
+            }
+        },
+        "api.GetClientApiResponse": {
+            "type": "object",
+            "properties": {
                 "birthplace": {
                     "type": "string"
                 },
@@ -10010,6 +10157,23 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "api.GetClientsCountResponse": {
+            "type": "object",
+            "properties": {
+                "clients_in_care": {
+                    "type": "integer"
+                },
+                "clients_on_waiting_list": {
+                    "type": "integer"
+                },
+                "clients_out_of_care": {
+                    "type": "integer"
+                },
+                "total_clients": {
+                    "type": "integer"
                 }
             }
         },
@@ -10776,6 +10940,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "is_confirmed": {
+                    "type": "boolean"
                 },
                 "location": {
                     "type": "string"
@@ -12632,6 +12799,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_GetClientAddressesApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetClientAddressesApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_GetClientApiResponse": {
             "type": "object",
             "properties": {
@@ -12735,6 +12916,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetClientSenderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetClientsCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetClientsCountResponse"
                 },
                 "message": {
                     "type": "string"

@@ -1733,14 +1733,16 @@ CREATE TABLE notifications (
     id BIGSERIAL PRIMARY KEY,
 
     user_id BIGINT NOT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
-    -- Type of notification (e.g., 'new_timesheet', 'approval_request', 'system_update')
-    type VARCHAR(100) NOT NULL,
-    -- JSON blob containing notification details (message, links, related IDs, etc.)
-    -- Use JSONB for better indexing and performance in PostgreSQL
+    type VARCHAR(100) NOT NULL CHECK (type IN (
+        'new_appointment',
+        'appointment_update',
+        'new_client_assigned',
+        'client_goal_update',
+        'incident_report'
+    )),
+
     data JSONB NULL,
-    -- Timestamp when the notification was marked as read (NULL if unread)
     read_at TIMESTAMPTZ  NULL DEFAULT NULL,
-    -- Timestamp when the notification was created
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1773,12 +1775,13 @@ CREATE TABLE scheduled_appointments (
     
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
+
     location VARCHAR(255),
     description TEXT,
-    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
 
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
-    confirmed_by_employee_id INT REFERENCES employee_profile(id),
+    confirmed_by_employee_id BIGINT REFERENCES employee_profile(id),
     confirmed_at TIMESTAMP NULL,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- When this occurrence record was created

@@ -47,10 +47,26 @@ WHERE
 ORDER BY created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
+-- name: GetClientCounts :one
+SELECT 
+    COUNT(*) AS total_clients,
+    COUNT(*) FILTER (WHERE status = 'In Care') AS clients_in_care,
+    COUNT(*) FILTER (WHERE status = 'On Waiting List') AS clients_on_waiting_list,
+    COUNT(*) FILTER (WHERE status = 'Out Of Care') AS clients_out_of_care
+FROM client_details;
+
+
+
 
 -- name: GetClientDetails :one
 SELECT * FROM client_details
 WHERE id = $1 LIMIT 1;
+
+-- name: GetClientAddresses :one
+SELECT addresses
+FROM client_details
+WHERE id = $1 LIMIT 1;
+
 
 -- name: UpdateClientDetails :one
 UPDATE client_details
