@@ -84,6 +84,7 @@ func createRandomIntakeForm(t *testing.T) IntakeForm {
 		UsesMedication:      util.RandomBool(),
 		AddictionIssues:     util.RandomBool(),
 		JudicialInvolvement: util.RandomBool(),
+		UrgencyScore:        "low",
 
 		RiskAggression:       util.RandomBool(),
 		RiskSuicidality:      util.RandomBool(),
