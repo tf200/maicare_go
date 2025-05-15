@@ -302,7 +302,7 @@ CREATE TABLE client_details (
     phone_number VARCHAR(20) NULL,
     organisation VARCHAR(100) NULL,
     departement VARCHAR(100) NULL,
-    gender VARCHAR(100) NOT NULL,
+    gender VARCHAR(100) NOT NULL CHECK (gender IN ('male', 'female', 'other')),
     filenumber VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(600) NULL,
     infix VARCHAR(100) NULL,
@@ -1818,9 +1818,9 @@ CREATE TABLE appointment_clients (
 
 CREATE TABLE registration_form (
     id BIGSERIAL PRIMARY KEY,
-    CLient_first_name VARCHAR(255) NOT NULL,
+    client_first_name VARCHAR(255) NOT NULL,
     client_last_name VARCHAR(255) NOT NULL,
-    Client_bsn_number VARCHAR(50) NOT NULL,
+    client_bsn_number VARCHAR(50) NOT NULL,
     client_gender VARCHAR(10) NOT NULL CHECK (client_gender IN ('male', 'female', 'other')),
     client_nationality VARCHAR(100) NOT NULL,
     client_phone_number VARCHAR(20) NOT NULL,
@@ -1916,7 +1916,7 @@ CREATE TABLE registration_form (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
-    processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL
 
 )
 
