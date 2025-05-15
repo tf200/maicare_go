@@ -1812,3 +1812,112 @@ CREATE TABLE appointment_clients (
     
     UNIQUE (appointment_id, client_id)
 );
+
+
+
+
+CREATE TABLE registration_form (
+    id BIGSERIAL PRIMARY KEY,
+    CLient_first_name VARCHAR(255) NOT NULL,
+    client_last_name VARCHAR(255) NOT NULL,
+    Client_bsn_number VARCHAR(50) NOT NULL,
+    client_gender VARCHAR(10) NOT NULL CHECK (client_gender IN ('male', 'female', 'other')),
+    client_nationality VARCHAR(100) NOT NULL,
+    client_phone_number VARCHAR(20) NOT NULL,
+    client_email VARCHAR(255) NOT NULL,
+
+    -- Client address details
+    client_street VARCHAR(255) NOT NULL,
+    client_house_number VARCHAR(20) NOT NULL,
+    client_postal_code VARCHAR(20) NOT NULL,
+    client_city VARCHAR(100) NOT NULL,
+
+
+    -- Referrer details
+    referrer_first_name VARCHAR(255) NOT NULL,
+    referrer_last_name VARCHAR(255) NOT NULL,
+    referrer_organization VARCHAR(255) NOT NULL,
+    referrer_job_title VARCHAR(255) NOT NULL,
+    referrer_phone_number VARCHAR(20) NOT NULL,
+    referrer_email VARCHAR(255) NOT NULL,
+
+
+
+    -- Parent/Guardian details
+    guardian1_first_name VARCHAR(255) NOT NULL,
+    guardian1_last_name VARCHAR(255) NOT NULL,
+    guardian1_relationship VARCHAR(100) NOT NULL,
+    guardian1_phone_number VARCHAR(20) NOT NULL,
+    guardian1_email VARCHAR(255) NOT NULL,
+
+
+    guardian2_first_name VARCHAR(255) NOT NULL,
+    guardian2_last_name VARCHAR(255) NOT NULL,
+    guardian2_relationship VARCHAR(100) NOT NULL,
+    guardian2_phone_number VARCHAR(20) NOT NULL,
+    guardian2_email VARCHAR(255) NOT NULL,
+
+
+    -- 4. Education/Daily Activities (Onderwijs / Dagbesteding)
+
+    education_institution VARCHAR(255) NOT NULL,
+    education_mentor_name VARCHAR(255) NOT NULL,
+    education_mentor_phone VARCHAR(20) NOT NULL,
+    education_mentor_email VARCHAR(255) NOT NULL,
+    education_currently_enrolled BOOLEAN NOT NULL,
+    education_additional_notes TEXT,
+
+
+    -- 5. Care Type (Gewenste zorgvorm)
+
+    care_protected_living BOOLEAN DEFAULT FALSE,
+    care_assisted_independent_living BOOLEAN DEFAULT FALSE,
+    care_room_training_center BOOLEAN DEFAULT FALSE,
+    care_ambulatory_guidance BOOLEAN DEFAULT FALSE,
+
+
+    -- 6. Additional Information (Aanvullende informatie)
+    application_reason TEXT,
+    client_goals TEXT,
+
+
+    -- 7. Risks and Attention Points (Risico's en aandachtspunten)
+    risk_aggressive_behavior BOOLEAN DEFAULT FALSE,
+    risk_suicidal_selfharm BOOLEAN DEFAULT FALSE,
+    risk_substance_abuse BOOLEAN DEFAULT FALSE,
+    risk_psychiatric_issues BOOLEAN DEFAULT FALSE,
+    risk_criminal_history BOOLEAN DEFAULT FALSE,
+    risk_flight_behavior BOOLEAN DEFAULT FALSE,
+    risk_weapon_possession BOOLEAN DEFAULT FALSE,
+    risk_sexual_behavior BOOLEAN DEFAULT FALSE,
+    risk_day_night_rhythm BOOLEAN DEFAULT FALSE,
+    risk_other BOOLEAN DEFAULT FALSE,
+    risk_other_description TEXT,
+    risk_additional_notes TEXT,
+
+    -- 8. Medical History (Medische geschiedenis)
+    document_referral UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+    document_education_report UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+    document_action_plan UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+    document_psychiatric_report UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+    document_diagnosis UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+    document_safety_plan UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+    document_id_copy UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+
+
+    -- 9. Date and Signature (Datum en ondertekening)
+    application_date DATE,
+    referrer_signature BOOLEAN DEFAULT FALSE,
+
+
+    -- System fields
+    form_status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (form_status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    submitted_at TIMESTAMPTZ NULL,
+    processed_at TIMESTAMPTZ NULL,
+    processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+
+)
+
+

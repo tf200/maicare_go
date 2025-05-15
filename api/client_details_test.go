@@ -56,7 +56,6 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		PhoneNumber:           util.StringPtr(faker.Phonenumber()),
 		DateOfBirth:           pgtype.Date{Time: time.Now().AddDate(-20, 0, 0), Valid: true},
 		Identity:              false,
-		Status:                util.StringPtr("On Waiting List"),
 		Bsn:                   util.StringPtr(util.RandomString(9)),
 		Source:                util.StringPtr("Test Source"),
 		Birthplace:            util.StringPtr("test city"),
@@ -131,7 +130,7 @@ func TestCreateClientApi(t *testing.T) {
 					DateOfBirth:  "2006-01-02",
 					PhoneNumber:  util.StringPtr("1234567890"),
 					Infix:        util.StringPtr("Test Infix"),
-					Source:       util.StringPtr("Test Source"),
+					Source:       util.StringPtr("Test Sources"),
 					Bsn:          util.StringPtr("Test Bsn"),
 					Addresses: []Address{
 						{

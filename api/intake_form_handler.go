@@ -888,8 +888,6 @@ func (server *Server) MoveToWaitingList(ctx *gin.Context) {
 		FirstName:             form.FirstName,
 		LastName:              form.LastName,
 		DateOfBirth:           form.DateOfBirth,
-		Identity:              true,
-		Status:                util.StringPtr("On Waiting List"),
 		Bsn:                   &form.Bsn,
 		Birthplace:            &form.Nationality,
 		Email:                 form.Email,

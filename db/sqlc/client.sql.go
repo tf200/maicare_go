@@ -19,7 +19,6 @@ INSERT INTO client_details (
     last_name,
     date_of_birth,
     "identity",
-    "status",
     bsn,
     source,
     birthplace,
@@ -40,7 +39,7 @@ INSERT INTO client_details (
     legal_measure
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24
+    $17, $18, $19, $20, $21, $22, $23
 ) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, identity_attachment_ids, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
@@ -50,7 +49,6 @@ type CreateClientDetailsParams struct {
 	LastName              string      `json:"last_name"`
 	DateOfBirth           pgtype.Date `json:"date_of_birth"`
 	Identity              bool        `json:"identity"`
-	Status                *string     `json:"status"`
 	Bsn                   *string     `json:"bsn"`
 	Source                *string     `json:"source"`
 	Birthplace            *string     `json:"birthplace"`
@@ -78,7 +76,6 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		arg.LastName,
 		arg.DateOfBirth,
 		arg.Identity,
-		arg.Status,
 		arg.Bsn,
 		arg.Source,
 		arg.Birthplace,
