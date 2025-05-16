@@ -541,7 +541,7 @@ func TestDeleteClientDocumentApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/documents/%d", cleint.ID, clientDoc.ID)
 				data := DeleteClientDocumentApiRequest{
-					AttachmentID: clientDoc.AttachmentUuid.Bytes,
+					AttachmentID: *clientDoc.AttachmentUuid,
 				}
 				reqBody, err := json.Marshal(data)
 				require.NoError(t, err)

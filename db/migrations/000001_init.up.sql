@@ -1911,13 +1911,12 @@ CREATE TABLE registration_form (
 
 
     -- System fields
-    form_status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (form_status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    form_status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (form_status IN ('pending', 'approved', 'rejected')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
     processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL
-
 )
 
 

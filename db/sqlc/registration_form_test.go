@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateRegistrationForm(t *testing.T) {
+func createRandomRegistrationForm(t *testing.T) RegistrationForm {
 	arg := CreateRegistrationFormParams{
 		ClientFirstName:               faker.FirstName(),
 		ClientLastName:                faker.LastName(),
@@ -62,12 +62,12 @@ func TestCreateRegistrationForm(t *testing.T) {
 		RiskOther:                     util.BoolPtr(false),
 		RiskOtherDescription:          nil,
 		RiskAdditionalNotes:           nil,
-		DocumentReferral:              pgtype.UUID{},
-		DocumentEducationReport:       pgtype.UUID{},
-		DocumentPsychiatricReport:     pgtype.UUID{},
-		DocumentDiagnosis:             pgtype.UUID{},
-		DocumentSafetyPlan:            pgtype.UUID{},
-		DocumentIDCopy:                pgtype.UUID{},
+		DocumentReferral:              nil,
+		DocumentEducationReport:       nil,
+		DocumentPsychiatricReport:     nil,
+		DocumentDiagnosis:             nil,
+		DocumentSafetyPlan:            nil,
+		DocumentIDCopy:                nil,
 		ApplicationDate: pgtype.Date{
 			Time:  time.Now(),
 			Valid: true,
@@ -78,4 +78,33 @@ func TestCreateRegistrationForm(t *testing.T) {
 	registrationForm, err := testQueries.CreateRegistrationForm(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, registrationForm)
+	return registrationForm
+}
+
+func TestCreateRegistrationForm(t *testing.T) {
+	createRandomRegistrationForm(t)
+}
+
+func TestListRegistrationForms(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomRegistrationForm(t)
+	}
+
+	arg := ListRegistrationFormsParams{
+		Limit:  5,
+		Offset: 0,
+	}
+	registrationForms, err := testQueries.ListRegistrationForms(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, registrationForms)
+	require.Len(t, registrationForms, 5)
+}
+
+func TestGetRegistrationForm(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+
+	registrationFormFromDB, err := testQueries.GetRegistrationForm(context.Background(), registrationForm.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, registrationFormFromDB)
+	require.Equal(t, registrationForm.ID, registrationFormFromDB.ID)
 }

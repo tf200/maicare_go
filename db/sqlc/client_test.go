@@ -318,7 +318,7 @@ func TestCreateClientDocument(t *testing.T) {
 
 	arg := CreateClientDocumentParams{
 		ClientID:       client.ID,
-		AttachmentUuid: pgtype.UUID{Bytes: attachment.Uuid, Valid: true},
+		AttachmentUuid: &attachment.Uuid,
 		Label:          "registration_form",
 	}
 
@@ -326,7 +326,7 @@ func TestCreateClientDocument(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, clientDoc)
 	require.Equal(t, arg.ClientID, clientDoc.ClientID)
-	require.Equal(t, arg.AttachmentUuid.Bytes, clientDoc.AttachmentUuid.Bytes)
+	require.Equal(t, arg.AttachmentUuid, clientDoc.AttachmentUuid)
 }
 
 func addRandomClientDocument(t *testing.T, ClientID int64) ClientDocument {
@@ -417,7 +417,7 @@ func TestDeleteClientDocumentTx(t *testing.T) {
 
 	store := NewStore(testDB)
 	_, err := store.DeleteClientDocumentTx(context.Background(), DeleteClientDocumentParams{
-		AttachmentID: clientDoc.AttachmentUuid.Bytes,
+		AttachmentID: *clientDoc.AttachmentUuid,
 	})
 	require.NoError(t, err)
 

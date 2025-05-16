@@ -66,3 +66,51 @@ INSERT INTO registration_form (
     $47, $48, $49, $50, $51, $52, $53, $54, $55,
     $56, $57
 ) RETURNING *;
+
+
+
+
+-- name: ListRegistrationForms :many
+SELECT * FROM registration_form
+WHERE 
+    -- Form status filtering
+    (sqlc.narg('status')::VARCHAR IS NULL OR form_status = sqlc.narg('status'))
+    -- Risk filtering
+    AND (sqlc.narg('risk_aggressive_behavior')::BOOLEAN IS NULL OR risk_aggressive_behavior = sqlc.narg('risk_aggressive_behavior'))
+    AND (sqlc.narg('risk_suicidal_selfharm')::BOOLEAN IS NULL OR risk_suicidal_selfharm = sqlc.narg('risk_suicidal_selfharm'))
+    AND (sqlc.narg('risk_substance_abuse')::BOOLEAN IS NULL OR risk_substance_abuse = sqlc.narg('risk_substance_abuse'))
+    AND (sqlc.narg('risk_psychiatric_issues')::BOOLEAN IS NULL OR risk_psychiatric_issues = sqlc.narg('risk_psychiatric_issues'))
+    AND (sqlc.narg('risk_criminal_history')::BOOLEAN IS NULL OR risk_criminal_history = sqlc.narg('risk_criminal_history'))
+    AND (sqlc.narg('risk_flight_behavior')::BOOLEAN IS NULL OR risk_flight_behavior = sqlc.narg('risk_flight_behavior'))
+    AND (sqlc.narg('risk_weapon_possession')::BOOLEAN IS NULL OR risk_weapon_possession = sqlc.narg('risk_weapon_possession'))
+    AND (sqlc.narg('risk_sexual_behavior')::BOOLEAN IS NULL OR risk_sexual_behavior = sqlc.narg('risk_sexual_behavior'))
+    AND (sqlc.narg('risk_day_night_rhythm')::BOOLEAN IS NULL OR risk_day_night_rhythm = sqlc.narg('risk_day_night_rhythm'))
+    AND (sqlc.narg('risk_other')::BOOLEAN IS NULL OR risk_other = sqlc.narg('risk_other'))
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+
+-- name: CountRegistrationForms :one
+SELECT COUNT(*) FROM registration_form
+WHERE 
+    -- Form status filtering
+    (sqlc.narg('status')::VARCHAR IS NULL OR form_status = sqlc.narg('status'))
+    -- Risk filtering
+    AND (sqlc.narg('risk_aggressive_behavior')::BOOLEAN IS NULL OR risk_aggressive_behavior = sqlc.narg('risk_aggressive_behavior'))
+    AND (sqlc.narg('risk_suicidal_selfharm')::BOOLEAN IS NULL OR risk_suicidal_selfharm = sqlc.narg('risk_suicidal_selfharm'))
+    AND (sqlc.narg('risk_substance_abuse')::BOOLEAN IS NULL OR risk_substance_abuse = sqlc.narg('risk_substance_abuse'))
+    AND (sqlc.narg('risk_psychiatric_issues')::BOOLEAN IS NULL OR risk_psychiatric_issues = sqlc.narg('risk_psychiatric_issues'))
+    AND (sqlc.narg('risk_criminal_history')::BOOLEAN IS NULL OR risk_criminal_history = sqlc.narg('risk_criminal_history'))
+    AND (sqlc.narg('risk_flight_behavior')::BOOLEAN IS NULL OR risk_flight_behavior = sqlc.narg('risk_flight_behavior'))
+    AND (sqlc.narg('risk_weapon_possession')::BOOLEAN IS NULL OR risk_weapon_possession = sqlc.narg('risk_weapon_possession'))
+    AND (sqlc.narg('risk_sexual_behavior')::BOOLEAN IS NULL OR risk_sexual_behavior = sqlc.narg('risk_sexual_behavior'))
+    AND (sqlc.narg('risk_day_night_rhythm')::BOOLEAN IS NULL OR risk_day_night_rhythm = sqlc.narg('risk_day_night_rhythm'));
+
+
+
+
+
+-- name: GetRegistrationForm :one
+SELECT * FROM registration_form
+WHERE id = $1
+LIMIT 1;

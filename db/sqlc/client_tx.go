@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CreateClientDetailsTxParams struct {
@@ -108,7 +107,7 @@ func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocume
 
 		result.ClientDocument, err = q.CreateClientDocument(ctx, CreateClientDocumentParams{
 			ClientID:       arg.ClientID,
-			AttachmentUuid: pgtype.UUID{Bytes: result.Attachment.Uuid, Valid: true},
+			AttachmentUuid: &result.Attachment.Uuid,
 			Label:          arg.Label,
 		})
 		if err != nil {
@@ -143,7 +142,7 @@ func (store *Store) DeleteClientDocumentTx(ctx context.Context, arg DeleteClient
 			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
 		}
 
-		result.ClientDocument, err = q.DeleteClientDocument(ctx, pgtype.UUID{Bytes: arg.AttachmentID, Valid: true})
+		result.ClientDocument, err = q.DeleteClientDocument(ctx, &arg.AttachmentID)
 		if err != nil {
 			return fmt.Errorf("failed to create client details: %w", err)
 		}

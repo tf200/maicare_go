@@ -859,17 +859,17 @@ type AddClientDocumentApiRequest struct {
 
 // AddClientDocumentApiResponse represents a response to an add client document request
 type AddClientDocumentApiResponse struct {
-	ID           int64     `json:"id"`
-	AttachmentID uuid.UUID `json:"attachment_id"`
-	ClientID     int64     `json:"client_id"`
-	Label        string    `json:"label"`
-	Name         string    `json:"name"`
-	File         string    `json:"file"`
-	Size         int32     `json:"size"`
-	IsUsed       bool      `json:"is_used"`
-	Tag          *string   `json:"tag"`
-	UpdatedAt    time.Time `json:"updated"`
-	CreatedAt    time.Time `json:"created"`
+	ID           int64      `json:"id"`
+	AttachmentID *uuid.UUID `json:"attachment_id"`
+	ClientID     int64      `json:"client_id"`
+	Label        string     `json:"label"`
+	Name         string     `json:"name"`
+	File         string     `json:"file"`
+	Size         int32      `json:"size"`
+	IsUsed       bool       `json:"is_used"`
+	Tag          *string    `json:"tag"`
+	UpdatedAt    time.Time  `json:"updated"`
+	CreatedAt    time.Time  `json:"created"`
 }
 
 // AddClientDocumentApi adds a document to a client
@@ -910,7 +910,7 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(AddClientDocumentApiResponse{
 		ID:           clientDoc.ClientDocument.ID,
-		AttachmentID: clientDoc.ClientDocument.AttachmentUuid.Bytes,
+		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
 		ClientID:     clientDoc.ClientDocument.ClientID,
 		Label:        clientDoc.ClientDocument.Label,
 		Name:         clientDoc.Attachment.Name,
@@ -931,18 +931,18 @@ type ListClientDocumentsApiRequest struct {
 
 // ListClientDocumentsApiResponse represents a response to a list client documents request
 type ListClientDocumentsApiResponse struct {
-	ID             int64     `json:"id"`
-	AttachmentUuid uuid.UUID `json:"attachment_uuid"`
-	ClientID       int64     `json:"client_id"`
-	Label          string    `json:"label"`
-	Uuid           uuid.UUID `json:"uuid"`
-	Name           string    `json:"name"`
-	File           string    `json:"file"`
-	Size           int32     `json:"size"`
-	IsUsed         bool      `json:"is_used"`
-	Tag            *string   `json:"tag"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID             int64      `json:"id"`
+	AttachmentUuid *uuid.UUID `json:"attachment_uuid"`
+	ClientID       int64      `json:"client_id"`
+	Label          string     `json:"label"`
+	Uuid           uuid.UUID  `json:"uuid"`
+	Name           string     `json:"name"`
+	File           string     `json:"file"`
+	Size           int32      `json:"size"`
+	IsUsed         bool       `json:"is_used"`
+	Tag            *string    `json:"tag"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+	CreatedAt      time.Time  `json:"created_at"`
 }
 
 // ListClientDocumentsApi lists documents of a client
@@ -992,7 +992,7 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 	for i, clientDoc := range clientDocs {
 		clientDocList[i] = ListClientDocumentsApiResponse{
 			ID:             clientDoc.ID,
-			AttachmentUuid: clientDoc.AttachmentUuid.Bytes,
+			AttachmentUuid: clientDoc.AttachmentUuid,
 			ClientID:       clientDoc.ClientID,
 			Label:          clientDoc.Label,
 			Uuid:           clientDoc.Uuid,
@@ -1019,8 +1019,8 @@ type DeleteClientDocumentApiRequest struct {
 
 // DeleteClientDocumentApiResponse represents a response to a delete client document request
 type DeleteClientDocumentApiResponse struct {
-	ID           int64     `json:"id"`
-	AttachmentID uuid.UUID `json:"attachment_id"`
+	ID           int64      `json:"id"`
+	AttachmentID *uuid.UUID `json:"attachment_id"`
 }
 
 // DeleteClientDocumentApi deletes a client document
@@ -1053,7 +1053,7 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(DeleteClientDocumentApiResponse{
 		ID:           clientDoc.ClientDocument.ID,
-		AttachmentID: clientDoc.ClientDocument.AttachmentUuid.Bytes,
+		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
 	}, "Client document deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 
