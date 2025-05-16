@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// CreateRegistrationFormRequest represents the request body for creating a registration form
 type CreateRegistrationFormRequest struct {
 	ClientFirstName               string     `json:"client_first_name"`
 	ClientLastName                string     `json:"client_last_name"`
@@ -73,6 +74,7 @@ type CreateRegistrationFormRequest struct {
 	ReferrerSignature             *bool      `json:"referrer_signature"`
 }
 
+// CreateRegistrationFormResponse represents the response body for creating a registration form
 type CreateRegistrationFormResponse struct {
 	ID                            int64      `json:"id"`
 	ClientFirstName               string     `json:"client_first_name"`
@@ -295,10 +297,11 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 		ProcessedByEmployeeID:         createdForm.ProcessedByEmployeeID,
 	}
 	res := SuccessResponse(response, "Registration form created successfully")
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusCreated, res)
 
 }
 
+// ListRegistrationFormsRequest represents the request body for listing registration forms
 type ListRegistrationFormsRequest struct {
 	pagination.Request
 	Status                 *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected"`
@@ -313,6 +316,7 @@ type ListRegistrationFormsRequest struct {
 	RiskDayNightRhythm     *bool   `form:"risk_day_night_rhythm"`
 }
 
+// ListRegistrationFormsResponse represents the response body for listing registration forms
 type ListRegistrationFormsResponse struct {
 	ID                            int64      `json:"id"`
 	ClientFirstName               string     `json:"client_first_name"`
@@ -698,5 +702,385 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// UpdateRegistrationFormRequest represents the request body for updating a registration form
+type UpdateRegistrationFormRequest struct {
+	ClientFirstName               *string     `json:"client_first_name"`
+	ClientLastName                *string     `json:"client_last_name"`
+	ClientBsnNumber               *string     `json:"client_bsn_number"`
+	ClientGender                  *string     `json:"client_gender"`
+	ClientNationality             *string     `json:"client_nationality"`
+	ClientPhoneNumber             *string     `json:"client_phone_number"`
+	ClientEmail                   *string     `json:"client_email"`
+	ClientStreet                  *string     `json:"client_street"`
+	ClientHouseNumber             *string     `json:"client_house_number"`
+	ClientPostalCode              *string     `json:"client_postal_code"`
+	ClientCity                    *string     `json:"client_city"`
+	ReferrerFirstName             *string     `json:"referrer_first_name"`
+	ReferrerLastName              *string     `json:"referrer_last_name"`
+	ReferrerOrganization          *string     `json:"referrer_organization"`
+	ReferrerJobTitle              *string     `json:"referrer_job_title"`
+	ReferrerPhoneNumber           *string     `json:"referrer_phone_number"`
+	ReferrerEmail                 *string     `json:"referrer_email"`
+	Guardian1FirstName            *string     `json:"guardian1_first_name"`
+	Guardian1LastName             *string     `json:"guardian1_last_name"`
+	Guardian1Relationship         *string     `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          *string     `json:"guardian1_phone_number"`
+	Guardian1Email                *string     `json:"guardian1_email"`
+	Guardian2FirstName            *string     `json:"guardian2_first_name"`
+	Guardian2LastName             *string     `json:"guardian2_last_name"`
+	Guardian2Relationship         *string     `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          *string     `json:"guardian2_phone_number"`
+	Guardian2Email                *string     `json:"guardian2_email"`
+	EducationInstitution          *string     `json:"education_institution"`
+	EducationMentorName           *string     `json:"education_mentor_name"`
+	EducationMentorPhone          *string     `json:"education_mentor_phone"`
+	EducationMentorEmail          *string     `json:"education_mentor_email"`
+	EducationCurrentlyEnrolled    *bool       `json:"education_currently_enrolled"`
+	EducationAdditionalNotes      *string     `json:"education_additional_notes"`
+	CareProtectedLiving           *bool       `json:"care_protected_living"`
+	CareAssistedIndependentLiving *bool       `json:"care_assisted_independent_living"`
+	CareRoomTrainingCenter        *bool       `json:"care_room_training_center"`
+	CareAmbulatoryGuidance        *bool       `json:"care_ambulatory_guidance"`
+	RiskAggressiveBehavior        *bool       `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm          *bool       `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse            *bool       `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues         *bool       `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory           *bool       `json:"risk_criminal_history"`
+	RiskFlightBehavior            *bool       `json:"risk_flight_behavior"`
+	RiskWeaponPossession          *bool       `json:"risk_weapon_possession"`
+	RiskSexualBehavior            *bool       `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm            *bool       `json:"risk_day_night_rhythm"`
+	RiskOther                     *bool       `json:"risk_other"`
+	RiskOtherDescription          *string     `json:"risk_other_description"`
+	RiskAdditionalNotes           *string     `json:"risk_additional_notes"`
+	DocumentReferral              *uuid.UUID  `json:"document_referral"`
+	DocumentEducationReport       *uuid.UUID  `json:"document_education_report"`
+	DocumentPsychiatricReport     *uuid.UUID  `json:"document_psychiatric_report"`
+	DocumentDiagnosis             *uuid.UUID  `json:"document_diagnosis"`
+	DocumentSafetyPlan            *uuid.UUID  `json:"document_safety_plan"`
+	DocumentIDCopy                *uuid.UUID  `json:"document_id_copy"`
+	ApplicationDate               pgtype.Date `json:"application_date"`
+	ReferrerSignature             *bool       `json:"referrer_signature"`
+}
 
+// UpdateRegistrationFormResponse represents the response body for updating a registration form
+type UpdateRegistrationFormResponse struct {
+	ID                            int64      `json:"id"`
+	ClientFirstName               string     `json:"client_first_name"`
+	ClientLastName                string     `json:"client_last_name"`
+	ClientBsnNumber               string     `json:"client_bsn_number"`
+	ClientGender                  string     `json:"client_gender"`
+	ClientNationality             string     `json:"client_nationality"`
+	ClientPhoneNumber             string     `json:"client_phone_number"`
+	ClientEmail                   string     `json:"client_email"`
+	ClientStreet                  string     `json:"client_street"`
+	ClientHouseNumber             string     `json:"client_house_number"`
+	ClientPostalCode              string     `json:"client_postal_code"`
+	ClientCity                    string     `json:"client_city"`
+	ReferrerFirstName             string     `json:"referrer_first_name"`
+	ReferrerLastName              string     `json:"referrer_last_name"`
+	ReferrerOrganization          string     `json:"referrer_organization"`
+	ReferrerJobTitle              string     `json:"referrer_job_title"`
+	ReferrerPhoneNumber           string     `json:"referrer_phone_number"`
+	ReferrerEmail                 string     `json:"referrer_email"`
+	Guardian1FirstName            string     `json:"guardian1_first_name"`
+	Guardian1LastName             string     `json:"guardian1_last_name"`
+	Guardian1Relationship         string     `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          string     `json:"guardian1_phone_number"`
+	Guardian1Email                string     `json:"guardian1_email"`
+	Guardian2FirstName            string     `json:"guardian2_first_name"`
+	Guardian2LastName             string     `json:"guardian2_last_name"`
+	Guardian2Relationship         string     `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
+	Guardian2Email                string     `json:"guardian2_email"`
+	EducationInstitution          string     `json:"education_institution"`
+	EducationMentorName           string     `json:"education_mentor_name"`
+	EducationMentorPhone          string     `json:"education_mentor_phone"`
+	EducationMentorEmail          string     `json:"education_mentor_email"`
+	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
+	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
+	CareProtectedLiving           *bool      `json:"care_protected_living"`
+	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
+	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
+	CareAmbulatoryGuidance        *bool      `json:"care_ambulatory_guidance"`
+	ApplicationReason             *string    `json:"application_reason"`
+	ClientGoals                   *string    `json:"client_goals"`
+	RiskAggressiveBehavior        *bool      `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm          *bool      `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse            *bool      `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues         *bool      `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory           *bool      `json:"risk_criminal_history"`
+	RiskFlightBehavior            *bool      `json:"risk_flight_behavior"`
+	RiskWeaponPossession          *bool      `json:"risk_weapon_possession"`
+	RiskSexualBehavior            *bool      `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm            *bool      `json:"risk_day_night_rhythm"`
+	RiskOther                     *bool      `json:"risk_other"`
+	RiskOtherDescription          *string    `json:"risk_other_description"`
+	RiskAdditionalNotes           *string    `json:"risk_additional_notes"`
+	DocumentReferral              *uuid.UUID `json:"document_referral"`
+	DocumentEducationReport       *uuid.UUID `json:"document_education_report"`
+	DocumentActionPlan            *uuid.UUID `json:"document_action_plan"`
+	DocumentPsychiatricReport     *uuid.UUID `json:"document_psychiatric_report"`
+	DocumentDiagnosis             *uuid.UUID `json:"document_diagnosis"`
+	DocumentSafetyPlan            *uuid.UUID `json:"document_safety_plan"`
+	DocumentIDCopy                *uuid.UUID `json:"document_id_copy"`
+	ApplicationDate               time.Time  `json:"application_date"`
+	ReferrerSignature             *bool      `json:"referrer_signature"`
+	FormStatus                    string     `json:"form_status"`
+	CreatedAt                     time.Time  `json:"created_at"`
+	UpdatedAt                     time.Time  `json:"updated_at"`
+	SubmittedAt                   time.Time  `json:"submitted_at"`
+	ProcessedAt                   time.Time  `json:"processed_at"`
+	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+}
 
+// @Summary Update Registration Form
+// @Description Update a registration form by ID
+// @Tags Registration Form
+// @Accept json
+// @Produce json
+// @Param id path int true "Registration Form ID"
+// @Param request body UpdateRegistrationFormRequest true "Update Registration Form Request"
+// @Success 200 {object} Response[UpdateRegistrationFormResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /registration_form/{id} [put]
+func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
+	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateRegistrationFormRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateRegistrationFormParams{
+		ID:                            rfId,
+		ClientFirstName:               req.ClientFirstName,
+		ClientLastName:                req.ClientLastName,
+		ClientBsnNumber:               req.ClientBsnNumber,
+		ClientGender:                  req.ClientGender,
+		ClientNationality:             req.ClientNationality,
+		ClientPhoneNumber:             req.ClientPhoneNumber,
+		ClientEmail:                   req.ClientEmail,
+		ClientStreet:                  req.ClientStreet,
+		ClientHouseNumber:             req.ClientHouseNumber,
+		ClientPostalCode:              req.ClientPostalCode,
+		ClientCity:                    req.ClientCity,
+		ReferrerFirstName:             req.ReferrerFirstName,
+		ReferrerLastName:              req.ReferrerLastName,
+		ReferrerOrganization:          req.ReferrerOrganization,
+		ReferrerJobTitle:              req.ReferrerJobTitle,
+		ReferrerPhoneNumber:           req.ReferrerPhoneNumber,
+		ReferrerEmail:                 req.ReferrerEmail,
+		Guardian1FirstName:            req.Guardian1FirstName,
+		Guardian1LastName:             req.Guardian1LastName,
+		Guardian1Relationship:         req.Guardian1Relationship,
+		Guardian1PhoneNumber:          req.Guardian1PhoneNumber,
+		Guardian1Email:                req.Guardian1Email,
+		Guardian2FirstName:            req.Guardian2FirstName,
+		Guardian2LastName:             req.Guardian2LastName,
+		Guardian2Relationship:         req.Guardian2Relationship,
+		Guardian2PhoneNumber:          req.Guardian2PhoneNumber,
+		Guardian2Email:                req.Guardian2Email,
+		EducationInstitution:          req.EducationInstitution,
+		EducationMentorName:           req.EducationMentorName,
+		EducationMentorPhone:          req.EducationMentorPhone,
+		EducationMentorEmail:          req.EducationMentorEmail,
+		EducationCurrentlyEnrolled:    req.EducationCurrentlyEnrolled,
+		EducationAdditionalNotes:      req.EducationAdditionalNotes,
+		CareProtectedLiving:           req.CareProtectedLiving,
+		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
+		CareRoomTrainingCenter:        req.CareRoomTrainingCenter,
+		CareAmbulatoryGuidance:        req.CareAmbulatoryGuidance,
+		RiskAggressiveBehavior:        req.RiskAggressiveBehavior,
+		RiskSuicidalSelfharm:          req.RiskSuicidalSelfharm,
+		RiskSubstanceAbuse:            req.RiskSubstanceAbuse,
+		RiskPsychiatricIssues:         req.RiskPsychiatricIssues,
+		RiskCriminalHistory:           req.RiskCriminalHistory,
+		RiskFlightBehavior:            req.RiskFlightBehavior,
+		RiskWeaponPossession:          req.RiskWeaponPossession,
+		RiskSexualBehavior:            req.RiskSexualBehavior,
+		RiskDayNightRhythm:            req.RiskDayNightRhythm,
+		RiskOther:                     req.RiskOther,
+		RiskOtherDescription:          req.RiskOtherDescription,
+		RiskAdditionalNotes:           req.RiskAdditionalNotes,
+		DocumentReferral:              req.DocumentReferral,
+		DocumentEducationReport:       req.DocumentEducationReport,
+		DocumentPsychiatricReport:     req.DocumentPsychiatricReport,
+		DocumentDiagnosis:             req.DocumentDiagnosis,
+		DocumentSafetyPlan:            req.DocumentSafetyPlan,
+		DocumentIDCopy:                req.DocumentIDCopy,
+		ApplicationDate:               req.ApplicationDate,
+		ReferrerSignature:             req.ReferrerSignature,
+	}
+	registrationForm, err := server.store.UpdateRegistrationForm(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := UpdateRegistrationFormResponse{
+		ID:                            registrationForm.ID,
+		ClientFirstName:               registrationForm.ClientFirstName,
+		ClientLastName:                registrationForm.ClientLastName,
+		ClientBsnNumber:               registrationForm.ClientBsnNumber,
+		ClientGender:                  registrationForm.ClientGender,
+		ClientNationality:             registrationForm.ClientNationality,
+		ClientPhoneNumber:             registrationForm.ClientPhoneNumber,
+		ClientEmail:                   registrationForm.ClientEmail,
+		ClientStreet:                  registrationForm.ClientStreet,
+		ClientHouseNumber:             registrationForm.ClientHouseNumber,
+		ClientPostalCode:              registrationForm.ClientPostalCode,
+		ClientCity:                    registrationForm.ClientCity,
+		ReferrerFirstName:             registrationForm.ReferrerFirstName,
+		ReferrerLastName:              registrationForm.ReferrerLastName,
+		ReferrerOrganization:          registrationForm.ReferrerOrganization,
+		ReferrerJobTitle:              registrationForm.ReferrerJobTitle,
+		ReferrerPhoneNumber:           registrationForm.ReferrerPhoneNumber,
+		ReferrerEmail:                 registrationForm.ReferrerEmail,
+		Guardian1FirstName:            registrationForm.Guardian1FirstName,
+		Guardian1LastName:             registrationForm.Guardian1LastName,
+		Guardian1Relationship:         registrationForm.Guardian1Relationship,
+		Guardian1PhoneNumber:          registrationForm.Guardian1PhoneNumber,
+		Guardian1Email:                registrationForm.Guardian1Email,
+		Guardian2FirstName:            registrationForm.Guardian2FirstName,
+		Guardian2LastName:             registrationForm.Guardian2LastName,
+		Guardian2Relationship:         registrationForm.Guardian2Relationship,
+		Guardian2PhoneNumber:          registrationForm.Guardian2PhoneNumber,
+		Guardian2Email:                registrationForm.Guardian2Email,
+		EducationInstitution:          registrationForm.EducationInstitution,
+		EducationMentorName:           registrationForm.EducationMentorName,
+		EducationMentorPhone:          registrationForm.EducationMentorPhone,
+		EducationMentorEmail:          registrationForm.EducationMentorEmail,
+		EducationCurrentlyEnrolled:    registrationForm.EducationCurrentlyEnrolled,
+		EducationAdditionalNotes:      registrationForm.EducationAdditionalNotes,
+		CareProtectedLiving:           registrationForm.CareProtectedLiving,
+		CareAssistedIndependentLiving: registrationForm.CareAssistedIndependentLiving,
+		CareRoomTrainingCenter:        registrationForm.CareRoomTrainingCenter,
+		CareAmbulatoryGuidance:        registrationForm.CareAmbulatoryGuidance,
+		ApplicationReason:             registrationForm.ApplicationReason,
+		ClientGoals:                   registrationForm.ClientGoals,
+		RiskAggressiveBehavior:        registrationForm.RiskAggressiveBehavior,
+		RiskSuicidalSelfharm:          registrationForm.RiskSuicidalSelfharm,
+		RiskSubstanceAbuse:            registrationForm.RiskSubstanceAbuse,
+		RiskPsychiatricIssues:         registrationForm.RiskPsychiatricIssues,
+		RiskCriminalHistory:           registrationForm.RiskCriminalHistory,
+		RiskFlightBehavior:            registrationForm.RiskFlightBehavior,
+		RiskWeaponPossession:          registrationForm.RiskWeaponPossession,
+		RiskSexualBehavior:            registrationForm.RiskSexualBehavior,
+		RiskDayNightRhythm:            registrationForm.RiskDayNightRhythm,
+		RiskOther:                     registrationForm.RiskOther,
+		RiskOtherDescription:          registrationForm.RiskOtherDescription,
+		RiskAdditionalNotes:           registrationForm.RiskAdditionalNotes,
+		DocumentReferral:              registrationForm.DocumentReferral,
+		DocumentEducationReport:       registrationForm.DocumentEducationReport,
+		DocumentActionPlan:            registrationForm.DocumentActionPlan,
+		DocumentPsychiatricReport:     registrationForm.DocumentPsychiatricReport,
+		DocumentDiagnosis:             registrationForm.DocumentDiagnosis,
+		DocumentSafetyPlan:            registrationForm.DocumentSafetyPlan,
+		DocumentIDCopy:                registrationForm.DocumentIDCopy,
+		ApplicationDate:               registrationForm.ApplicationDate.Time,
+		ReferrerSignature:             registrationForm.ReferrerSignature,
+		FormStatus:                    registrationForm.FormStatus,
+		CreatedAt:                     registrationForm.CreatedAt.Time,
+		UpdatedAt:                     registrationForm.UpdatedAt.Time,
+		SubmittedAt:                   registrationForm.SubmittedAt.Time,
+		ProcessedAt:                   registrationForm.ProcessedAt.Time,
+		ProcessedByEmployeeID:         registrationForm.ProcessedByEmployeeID,
+	}
+	res := SuccessResponse(response, "Registration form updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Delete Registration Form
+// @Description Delete a registration form by ID
+// @Tags Registration Form
+// @Produce json
+// @Param id path int true "Registration Form ID"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /registration_form/{id} [delete]
+func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
+	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteRegistrationForm(ctx, rfId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Registration form deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateRegistrationFormStatusRequest represents the response body for updating a registration form status
+type UpdateRegistrationFormStatusRequest struct {
+	FormStatus string `form:"status" binding:"required,oneof=approved rejected"`
+}
+
+// @Summary Update Registration Form Status
+// @Description Update the status of a registration form by ID
+// @Tags Registration Form
+// @Produce json
+// @Param id path int true "Registration Form ID"
+// @Param status query string true "Status" Enums(approved, rejected)
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /registration_form/{id}/status [post]
+func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+	}
+
+	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+	}
+
+	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateRegistrationFormStatusRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateRegistrationFormStatusParams{
+		ID:                    rfId,
+		FormStatus:            req.FormStatus,
+		ProcessedByEmployeeID: &employeeID,
+	}
+
+	err = server.store.UpdateRegistrationFormStatus(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+
+	res := SuccessResponse[any](nil, "Registration Form Status updated")
+	ctx.JSON(http.StatusOK, res)
+
+}

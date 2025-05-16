@@ -262,7 +262,7 @@ func TestGetRegistrationFormApi(t *testing.T) {
 				url := fmt.Sprintf("/registration_form/%d", registrationForm.ID)
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
-				
+
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -276,6 +276,141 @@ func TestGetRegistrationFormApi(t *testing.T) {
 		},
 	}
 
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateRegistrationFormApi(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				rfRequest := UpdateRegistrationFormRequest{
+					ClientFirstName: util.StringPtr(faker.FirstName()),
+					ClientLastName:  util.StringPtr(faker.LastName()),
+					ClientBsnNumber: util.StringPtr("123456789"),
+				}
+				data, err := json.Marshal(rfRequest)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/registration_form/%d", registrationForm.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var registrationFormCard Response[UpdateRegistrationFormResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &registrationFormCard)
+				require.NoError(t, err)
+				require.NotEmpty(t, registrationFormCard.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestDeleteRegistrationFormApi(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/registration_form/%d", registrationForm.ID)
+				req, err := http.NewRequest(http.MethodDelete, url, nil)
+				require.NoError(t, err)
+
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateRegistrationFormStatusApi(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/registration_form/%d/status?status=approved", registrationForm.ID)
+				req, err := http.NewRequest(http.MethodPost, url, nil)
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
 	for i := range testCases {
 		tc := testCases[i]
 		t.Run(tc.name, func(t *testing.T) {

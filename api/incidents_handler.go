@@ -15,7 +15,7 @@ type ListAllIncidentsRequest struct {
 	IsConfirmed bool `form:"is_confirmed" json:"is_confirmed"`
 }
 
-// ListAllIcidentsResponse represents the response body for listing all incidents
+// ListAllIncidentsResponse represents the response body for listing all incidents
 type ListAllIncidentsResponse struct {
 	ID                      int64     `json:"id"`
 	EmployeeID              int64     `json:"employee_id"`
@@ -72,9 +72,9 @@ type ListAllIncidentsResponse struct {
 // @Param is_confirmed query bool false "Filter by confirmation status"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Number of items per page"
-// @Success 200 {object} SuccessResponse{data=ListAllIncidentsResponse}
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} Response[pagination.Response[ListAllIncidentsResponse]]
+// @Failure 400 {object} Response[any]
+// @Failure 500 {object} Response[any]
 // @Router /incidents [get]
 func (serevr *Server) ListAllIncidentsApi(ctx *gin.Context) {
 	var req ListAllIncidentsRequest

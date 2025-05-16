@@ -108,3 +108,48 @@ func TestGetRegistrationForm(t *testing.T) {
 	require.NotEmpty(t, registrationFormFromDB)
 	require.Equal(t, registrationForm.ID, registrationFormFromDB.ID)
 }
+
+func TestUpdateRegistrationForm(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+
+	arg := UpdateRegistrationFormParams{
+		ID:                registrationForm.ID,
+		ClientFirstName:   util.StringPtr(faker.FirstName()),
+		ClientLastName:    util.StringPtr(faker.LastName()),
+		ClientBsnNumber:   util.StringPtr("987654321"),
+		ClientGender:      util.StringPtr("female"),
+		ClientNationality: util.StringPtr("Dutch"),
+	}
+
+	registrationFormFromDB, err := testQueries.UpdateRegistrationForm(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, registrationFormFromDB)
+	require.Equal(t, registrationForm.ID, registrationFormFromDB.ID)
+	require.Equal(t, arg.ClientFirstName, &registrationFormFromDB.ClientFirstName)
+	require.Equal(t, arg.ClientLastName, &registrationFormFromDB.ClientLastName)
+}
+
+func TestDeleteRegistrationForm(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+
+	err := testQueries.DeleteRegistrationForm(context.Background(), registrationForm.ID)
+	require.NoError(t, err)
+
+	registrationFormFromDB, err := testQueries.GetRegistrationForm(context.Background(), registrationForm.ID)
+	require.Error(t, err)
+	require.Empty(t, registrationFormFromDB)
+}
+
+func TestUpdateRegistrationFormStatus(t *testing.T) {
+	registrationForm := createRandomRegistrationForm(t)
+	employee, _ := createRandomEmployee(t)
+
+	arg := UpdateRegistrationFormStatusParams{
+		ID:                    registrationForm.ID,
+		FormStatus:            "approved",
+		ProcessedByEmployeeID: &employee.ID,
+	}
+
+	err := testQueries.UpdateRegistrationFormStatus(context.Background(), arg)
+	require.NoError(t, err)
+}

@@ -1584,6 +1584,260 @@ definitions:
       type:
         type: string
     type: object
+  api.CreateRegistrationFormRequest:
+    properties:
+      application_date:
+        type: string
+      care_ambulatory_guidance:
+        type: boolean
+      care_assisted_independent_living:
+        type: boolean
+      care_protected_living:
+        type: boolean
+      care_room_training_center:
+        type: boolean
+      client_bsn_number:
+        type: string
+      client_city:
+        type: string
+      client_email:
+        type: string
+      client_first_name:
+        type: string
+      client_gender:
+        type: string
+      client_house_number:
+        type: string
+      client_last_name:
+        type: string
+      client_nationality:
+        type: string
+      client_phone_number:
+        type: string
+      client_postal_code:
+        type: string
+      client_street:
+        type: string
+      document_diagnosis:
+        type: string
+      document_education_report:
+        type: string
+      document_id_copy:
+        type: string
+      document_psychiatric_report:
+        type: string
+      document_referral:
+        type: string
+      document_safety_plan:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      guardian1_email:
+        type: string
+      guardian1_first_name:
+        type: string
+      guardian1_last_name:
+        type: string
+      guardian1_phone_number:
+        type: string
+      guardian1_relationship:
+        type: string
+      guardian2_email:
+        type: string
+      guardian2_first_name:
+        type: string
+      guardian2_last_name:
+        type: string
+      guardian2_phone_number:
+        type: string
+      guardian2_relationship:
+        type: string
+      referrer_email:
+        type: string
+      referrer_first_name:
+        type: string
+      referrer_job_title:
+        type: string
+      referrer_last_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone_number:
+        type: string
+      referrer_signature:
+        type: boolean
+      risk_additional_notes:
+        type: string
+      risk_aggressive_behavior:
+        type: boolean
+      risk_criminal_history:
+        type: boolean
+      risk_day_night_rhythm:
+        type: boolean
+      risk_flight_behavior:
+        type: boolean
+      risk_other:
+        type: boolean
+      risk_other_description:
+        type: string
+      risk_psychiatric_issues:
+        type: boolean
+      risk_sexual_behavior:
+        type: boolean
+      risk_substance_abuse:
+        type: boolean
+      risk_suicidal_selfharm:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+    type: object
+  api.CreateRegistrationFormResponse:
+    properties:
+      application_date:
+        type: string
+      application_reason:
+        type: string
+      care_ambulatory_guidance:
+        type: boolean
+      care_assisted_independent_living:
+        type: boolean
+      care_protected_living:
+        type: boolean
+      care_room_training_center:
+        type: boolean
+      client_bsn_number:
+        type: string
+      client_city:
+        type: string
+      client_email:
+        type: string
+      client_first_name:
+        type: string
+      client_gender:
+        type: string
+      client_goals:
+        type: string
+      client_house_number:
+        type: string
+      client_last_name:
+        type: string
+      client_nationality:
+        type: string
+      client_phone_number:
+        type: string
+      client_postal_code:
+        type: string
+      client_street:
+        type: string
+      created_at:
+        type: string
+      document_action_plan:
+        type: string
+      document_diagnosis:
+        type: string
+      document_education_report:
+        type: string
+      document_id_copy:
+        type: string
+      document_psychiatric_report:
+        type: string
+      document_referral:
+        type: string
+      document_safety_plan:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      form_status:
+        type: string
+      guardian1_email:
+        type: string
+      guardian1_first_name:
+        type: string
+      guardian1_last_name:
+        type: string
+      guardian1_phone_number:
+        type: string
+      guardian1_relationship:
+        type: string
+      guardian2_email:
+        type: string
+      guardian2_first_name:
+        type: string
+      guardian2_last_name:
+        type: string
+      guardian2_phone_number:
+        type: string
+      guardian2_relationship:
+        type: string
+      id:
+        type: integer
+      processed_at:
+        type: string
+      processed_by_employee_id:
+        type: integer
+      referrer_email:
+        type: string
+      referrer_first_name:
+        type: string
+      referrer_job_title:
+        type: string
+      referrer_last_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone_number:
+        type: string
+      referrer_signature:
+        type: boolean
+      risk_additional_notes:
+        type: string
+      risk_aggressive_behavior:
+        type: boolean
+      risk_criminal_history:
+        type: boolean
+      risk_day_night_rhythm:
+        type: boolean
+      risk_flight_behavior:
+        type: boolean
+      risk_other:
+        type: boolean
+      risk_other_description:
+        type: string
+      risk_psychiatric_issues:
+        type: boolean
+      risk_sexual_behavior:
+        type: boolean
+      risk_substance_abuse:
+        type: boolean
+      risk_suicidal_selfharm:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+      submitted_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.CreateSenderRequest:
     properties:
       BTWnumber:
@@ -2680,6 +2934,143 @@ definitions:
       type:
         type: string
     type: object
+  api.GetRegistrationFormResponse:
+    properties:
+      application_date:
+        type: string
+      application_reason:
+        type: string
+      care_ambulatory_guidance:
+        type: boolean
+      care_assisted_independent_living:
+        type: boolean
+      care_protected_living:
+        type: boolean
+      care_room_training_center:
+        type: boolean
+      client_bsn_number:
+        type: string
+      client_city:
+        type: string
+      client_email:
+        type: string
+      client_first_name:
+        type: string
+      client_gender:
+        type: string
+      client_goals:
+        type: string
+      client_house_number:
+        type: string
+      client_last_name:
+        type: string
+      client_nationality:
+        type: string
+      client_phone_number:
+        type: string
+      client_postal_code:
+        type: string
+      client_street:
+        type: string
+      created_at:
+        type: string
+      document_action_plan:
+        type: string
+      document_diagnosis:
+        type: string
+      document_education_report:
+        type: string
+      document_id_copy:
+        type: string
+      document_psychiatric_report:
+        type: string
+      document_referral:
+        type: string
+      document_safety_plan:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      form_status:
+        type: string
+      guardian1_email:
+        type: string
+      guardian1_first_name:
+        type: string
+      guardian1_last_name:
+        type: string
+      guardian1_phone_number:
+        type: string
+      guardian1_relationship:
+        type: string
+      guardian2_email:
+        type: string
+      guardian2_first_name:
+        type: string
+      guardian2_last_name:
+        type: string
+      guardian2_phone_number:
+        type: string
+      guardian2_relationship:
+        type: string
+      id:
+        type: integer
+      processed_at:
+        type: string
+      processed_by_employee_id:
+        type: integer
+      referrer_email:
+        type: string
+      referrer_first_name:
+        type: string
+      referrer_job_title:
+        type: string
+      referrer_last_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone_number:
+        type: string
+      referrer_signature:
+        type: boolean
+      risk_additional_notes:
+        type: string
+      risk_aggressive_behavior:
+        type: boolean
+      risk_criminal_history:
+        type: boolean
+      risk_day_night_rhythm:
+        type: boolean
+      risk_flight_behavior:
+        type: boolean
+      risk_other:
+        type: boolean
+      risk_other_description:
+        type: string
+      risk_psychiatric_issues:
+        type: boolean
+      risk_sexual_behavior:
+        type: boolean
+      risk_substance_abuse:
+        type: boolean
+      risk_suicidal_selfharm:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+      submitted_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.GetRoleByIDApiResponse:
     properties:
       id:
@@ -2779,6 +3170,101 @@ definitions:
         type: string
       start_date:
         type: string
+    type: object
+  api.ListAllIncidentsResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      file_url:
+        type: string
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      is_confirmed:
+        type: boolean
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession_desc:
+        type: string
+      updated_at:
+        type: string
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
     type: object
   api.ListAppointmentsForEmployeeInRangeRequest:
     properties:
@@ -3519,6 +4005,143 @@ definitions:
       type:
         type: string
     type: object
+  api.ListRegistrationFormsResponse:
+    properties:
+      application_date:
+        type: string
+      application_reason:
+        type: string
+      care_ambulatory_guidance:
+        type: boolean
+      care_assisted_independent_living:
+        type: boolean
+      care_protected_living:
+        type: boolean
+      care_room_training_center:
+        type: boolean
+      client_bsn_number:
+        type: string
+      client_city:
+        type: string
+      client_email:
+        type: string
+      client_first_name:
+        type: string
+      client_gender:
+        type: string
+      client_goals:
+        type: string
+      client_house_number:
+        type: string
+      client_last_name:
+        type: string
+      client_nationality:
+        type: string
+      client_phone_number:
+        type: string
+      client_postal_code:
+        type: string
+      client_street:
+        type: string
+      created_at:
+        type: string
+      document_action_plan:
+        type: string
+      document_diagnosis:
+        type: string
+      document_education_report:
+        type: string
+      document_id_copy:
+        type: string
+      document_psychiatric_report:
+        type: string
+      document_referral:
+        type: string
+      document_safety_plan:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      form_status:
+        type: string
+      guardian1_email:
+        type: string
+      guardian1_first_name:
+        type: string
+      guardian1_last_name:
+        type: string
+      guardian1_phone_number:
+        type: string
+      guardian1_relationship:
+        type: string
+      guardian2_email:
+        type: string
+      guardian2_first_name:
+        type: string
+      guardian2_last_name:
+        type: string
+      guardian2_phone_number:
+        type: string
+      guardian2_relationship:
+        type: string
+      id:
+        type: integer
+      processed_at:
+        type: string
+      processed_by_employee_id:
+        type: integer
+      referrer_email:
+        type: string
+      referrer_first_name:
+        type: string
+      referrer_job_title:
+        type: string
+      referrer_last_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone_number:
+        type: string
+      referrer_signature:
+        type: boolean
+      risk_additional_notes:
+        type: string
+      risk_aggressive_behavior:
+        type: boolean
+      risk_criminal_history:
+        type: boolean
+      risk_day_night_rhythm:
+        type: boolean
+      risk_flight_behavior:
+        type: boolean
+      risk_other:
+        type: boolean
+      risk_other_description:
+        type: string
+      risk_psychiatric_issues:
+        type: boolean
+      risk_sexual_behavior:
+        type: boolean
+      risk_substance_abuse:
+        type: boolean
+      risk_suicidal_selfharm:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+      submitted_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.ListRolesApiResponse:
     properties:
       id:
@@ -4183,6 +4806,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetRegistrationFormResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetRegistrationFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetRoleByIDApiResponse:
     properties:
       data:
@@ -4417,6 +5049,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateRegistrationFormResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateRegistrationFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateSenderResponse:
     properties:
       data:
@@ -4534,6 +5175,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-api_ListAllIncidentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListAllIncidentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_ListAssignedEmployeesResponse:
     properties:
       data:
@@ -4619,6 +5269,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListIntakeFormsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListRegistrationFormsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListRegistrationFormsResponse'
       message:
         type: string
       success:
@@ -5580,6 +6239,260 @@ definitions:
       type:
         type: string
     type: object
+  api.UpdateRegistrationFormRequest:
+    properties:
+      application_date:
+        $ref: '#/definitions/pgtype.Date'
+      care_ambulatory_guidance:
+        type: boolean
+      care_assisted_independent_living:
+        type: boolean
+      care_protected_living:
+        type: boolean
+      care_room_training_center:
+        type: boolean
+      client_bsn_number:
+        type: string
+      client_city:
+        type: string
+      client_email:
+        type: string
+      client_first_name:
+        type: string
+      client_gender:
+        type: string
+      client_house_number:
+        type: string
+      client_last_name:
+        type: string
+      client_nationality:
+        type: string
+      client_phone_number:
+        type: string
+      client_postal_code:
+        type: string
+      client_street:
+        type: string
+      document_diagnosis:
+        type: string
+      document_education_report:
+        type: string
+      document_id_copy:
+        type: string
+      document_psychiatric_report:
+        type: string
+      document_referral:
+        type: string
+      document_safety_plan:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      guardian1_email:
+        type: string
+      guardian1_first_name:
+        type: string
+      guardian1_last_name:
+        type: string
+      guardian1_phone_number:
+        type: string
+      guardian1_relationship:
+        type: string
+      guardian2_email:
+        type: string
+      guardian2_first_name:
+        type: string
+      guardian2_last_name:
+        type: string
+      guardian2_phone_number:
+        type: string
+      guardian2_relationship:
+        type: string
+      referrer_email:
+        type: string
+      referrer_first_name:
+        type: string
+      referrer_job_title:
+        type: string
+      referrer_last_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone_number:
+        type: string
+      referrer_signature:
+        type: boolean
+      risk_additional_notes:
+        type: string
+      risk_aggressive_behavior:
+        type: boolean
+      risk_criminal_history:
+        type: boolean
+      risk_day_night_rhythm:
+        type: boolean
+      risk_flight_behavior:
+        type: boolean
+      risk_other:
+        type: boolean
+      risk_other_description:
+        type: string
+      risk_psychiatric_issues:
+        type: boolean
+      risk_sexual_behavior:
+        type: boolean
+      risk_substance_abuse:
+        type: boolean
+      risk_suicidal_selfharm:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+    type: object
+  api.UpdateRegistrationFormResponse:
+    properties:
+      application_date:
+        type: string
+      application_reason:
+        type: string
+      care_ambulatory_guidance:
+        type: boolean
+      care_assisted_independent_living:
+        type: boolean
+      care_protected_living:
+        type: boolean
+      care_room_training_center:
+        type: boolean
+      client_bsn_number:
+        type: string
+      client_city:
+        type: string
+      client_email:
+        type: string
+      client_first_name:
+        type: string
+      client_gender:
+        type: string
+      client_goals:
+        type: string
+      client_house_number:
+        type: string
+      client_last_name:
+        type: string
+      client_nationality:
+        type: string
+      client_phone_number:
+        type: string
+      client_postal_code:
+        type: string
+      client_street:
+        type: string
+      created_at:
+        type: string
+      document_action_plan:
+        type: string
+      document_diagnosis:
+        type: string
+      document_education_report:
+        type: string
+      document_id_copy:
+        type: string
+      document_psychiatric_report:
+        type: string
+      document_referral:
+        type: string
+      document_safety_plan:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      form_status:
+        type: string
+      guardian1_email:
+        type: string
+      guardian1_first_name:
+        type: string
+      guardian1_last_name:
+        type: string
+      guardian1_phone_number:
+        type: string
+      guardian1_relationship:
+        type: string
+      guardian2_email:
+        type: string
+      guardian2_first_name:
+        type: string
+      guardian2_last_name:
+        type: string
+      guardian2_phone_number:
+        type: string
+      guardian2_relationship:
+        type: string
+      id:
+        type: integer
+      processed_at:
+        type: string
+      processed_by_employee_id:
+        type: integer
+      referrer_email:
+        type: string
+      referrer_first_name:
+        type: string
+      referrer_job_title:
+        type: string
+      referrer_last_name:
+        type: string
+      referrer_organization:
+        type: string
+      referrer_phone_number:
+        type: string
+      referrer_signature:
+        type: boolean
+      risk_additional_notes:
+        type: string
+      risk_aggressive_behavior:
+        type: boolean
+      risk_criminal_history:
+        type: boolean
+      risk_day_night_rhythm:
+        type: boolean
+      risk_flight_behavior:
+        type: boolean
+      risk_other:
+        type: boolean
+      risk_other_description:
+        type: string
+      risk_psychiatric_issues:
+        type: boolean
+      risk_sexual_behavior:
+        type: boolean
+      risk_substance_abuse:
+        type: boolean
+      risk_suicidal_selfharm:
+        type: boolean
+      risk_weapon_possession:
+        type: boolean
+      submitted_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.UpdateSenderRequest:
     properties:
       address:
@@ -5665,6 +6578,21 @@ definitions:
         type: integer
     type: object
   big.Int:
+    type: object
+  pagination.Response-api_ListAllIncidentsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListAllIncidentsResponse'
+        type: array
     type: object
   pagination.Response-api_ListAssignedEmployeesResponse:
     properties:
@@ -5844,6 +6772,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListIntakeFormsResponse'
+        type: array
+    type: object
+  pagination.Response-api_ListRegistrationFormsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListRegistrationFormsResponse'
         type: array
     type: object
   pagination.Response-api_ListSendersResponse:
@@ -9694,6 +10637,40 @@ paths:
       summary: Get employee profile by user ID
       tags:
       - employees
+  /incidents:
+    get:
+      description: List all incidents with pagination and filtering options
+      parameters:
+      - description: Filter by confirmation status
+        in: query
+        name: is_confirmed
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListAllIncidentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all incidents
+      tags:
+      - incidents
   /incidents/{incident_id}/confirm:
     put:
       parameters:
@@ -10117,6 +11094,247 @@ paths:
       summary: List all maturity matrix
       tags:
       - maturity_matrix
+  /registration_form:
+    get:
+      description: List all registration forms
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Form status
+        enum:
+        - pending
+        - approved
+        - rejected
+        in: query
+        name: status
+        type: string
+      - description: Risk aggressive behavior
+        in: query
+        name: risk_aggressive_behavior
+        type: boolean
+      - description: Risk suicidal self-harm
+        in: query
+        name: risk_suicidal_selfharm
+        type: boolean
+      - description: Risk substance abuse
+        in: query
+        name: risk_substance_abuse
+        type: boolean
+      - description: Risk psychiatric issues
+        in: query
+        name: risk_psychiatric_issues
+        type: boolean
+      - description: Risk criminal history
+        in: query
+        name: risk_criminal_history
+        type: boolean
+      - description: Risk flight behavior
+        in: query
+        name: risk_flight_behavior
+        type: boolean
+      - description: Risk weapon possession
+        in: query
+        name: risk_weapon_possession
+        type: boolean
+      - description: Risk sexual behavior
+        in: query
+        name: risk_sexual_behavior
+        type: boolean
+      - description: Risk day-night rhythm
+        in: query
+        name: risk_day_night_rhythm
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListRegistrationFormsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List Registration Forms
+      tags:
+      - Registration Form
+    post:
+      consumes:
+      - application/json
+      description: Create a new registration form
+      parameters:
+      - description: Create Registration Form Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateRegistrationFormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CreateRegistrationFormResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create Registration Form
+      tags:
+      - Registration Form
+  /registration_form/{id}:
+    delete:
+      description: Delete a registration form by ID
+      parameters:
+      - description: Registration Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete Registration Form
+      tags:
+      - Registration Form
+    get:
+      description: Get a registration form by ID
+      parameters:
+      - description: Registration Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetRegistrationFormResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Registration Form
+      tags:
+      - Registration Form
+    put:
+      consumes:
+      - application/json
+      description: Update a registration form by ID
+      parameters:
+      - description: Registration Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Registration Form Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateRegistrationFormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateRegistrationFormResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Registration Form
+      tags:
+      - Registration Form
+  /registration_form/{id}/status:
+    post:
+      description: Update the status of a registration form by ID
+      parameters:
+      - description: Registration Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status
+        enum:
+        - approved
+        - rejected
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Registration Form Status
+      tags:
+      - Registration Form
   /roles:
     get:
       description: List all roles
