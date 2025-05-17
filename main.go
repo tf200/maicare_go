@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// Inirialize the SMTP Client for email deleviry
-	smtpConf := email.NewSmtpConf(config.SmtpName, config.SmtpAddress, config.SmtpAuth, config.SmtpHost, config.SmtpPort)
+	brevoConf := email.NewBrevoConf(config.BrevoSenderName, config.BrevoSenderEmail, config.BrevoApiKey)
 
 	// Initialize the ws Hub
 	hubInstance := hub.NewHub()
@@ -72,16 +72,31 @@ func main() {
 			TLSConfig: &tls.Config{}, // Only if using TLS (rediss://)
 		})
 
-		rctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+		maxAttempts := 5
+		delay := time.Second // start with 1 second delay
 
-		// Ping Redis to verify connectivity
-		_, err = redisClient.Ping(rctx).Result()
-		if err != nil {
-			log.Fatalf("❌ Failed to connect to Redis: %v", err)
+		var pingErr error
+		for attempt := 1; attempt <= maxAttempts; attempt++ {
+			rctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			_, pingErr = redisClient.Ping(rctx).Result()
+			if pingErr == nil {
+				log.Println("✅ Redis connection successful!")
+				break
+			}
+
+			log.Printf("⚠️ Redis ping failed (attempt %d/%d): %v", attempt, maxAttempts, pingErr)
+
+			// Wait before retrying
+			time.Sleep(delay)
+			delay *= 2 // exponential backoff
 		}
-		log.Println("✅ Redis connection successful!")
-		asynqServer = async.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, smtpConf, b2Client, notificationService)
+
+		if pingErr != nil {
+			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
+		}
+		asynqServer = async.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, brevoConf, b2Client, notificationService)
 	} else {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -90,16 +105,31 @@ func main() {
 			TLSConfig: nil, // Only if using TLS (rediss://)
 		})
 
-		rctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+		maxAttempts := 5
+		delay := time.Second // start with 1 second delay
 
-		// Ping Redis to verify connectivity
-		_, err = redisClient.Ping(rctx).Result()
-		if err != nil {
-			log.Fatalf("❌ Failed to connect to Redis: %v", err)
+		var pingErr error
+		for attempt := 1; attempt <= maxAttempts; attempt++ {
+			rctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			_, pingErr = redisClient.Ping(rctx).Result()
+			if pingErr == nil {
+				log.Println("✅ Redis connection successful!")
+				break
+			}
+
+			log.Printf("⚠️ Redis ping failed (attempt %d/%d): %v", attempt, maxAttempts, pingErr)
+
+			// Wait before retrying
+			time.Sleep(delay)
+			delay *= 2 // exponential backoff
 		}
-		log.Println("✅ Redis connection successful!")
-		asynqServer = async.NewAsynqServer(config.RedisHost, "", "", store, nil, smtpConf, b2Client, notificationService)
+
+		if pingErr != nil {
+			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
+		}
+		asynqServer = async.NewAsynqServer(config.RedisHost, "", "", store, nil, brevoConf, b2Client, notificationService)
 	}
 
 	// Create error channel to catch server errors

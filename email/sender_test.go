@@ -14,17 +14,17 @@ func TestSend(t *testing.T) {
 }
 
 func TestSendCredentials(t *testing.T) {
-	email := NewSmtpConf("config", "dev@maicare.online", "u,Q4(;9^$tzWZjm", "mail.privateemail.com", 465)
-	err := email.SendCredentials(context.Background(), []string{"farjiataha@gmail.com"}, Credentials{
+
+	err := testBrevo.SendCredentials(context.Background(), []string{"farjiataha@gmail.com"}, Credentials{
 		Name:     "John Doe",
 		Email:    "farjiataha@gmail.com",
 		Password: "password",
 	})
+	t.Log(err)
 	require.NoError(t, err)
 }
 
 func TestSendIncident(t *testing.T) {
-	email := NewSmtpConf("config", "dev@maicare.online", "u,Q4(;9^$tzWZjm", "mail.privateemail.com", 587)
 	arg := Incident{
 		IncidentID:   1,
 		ReportedBy:   "John Doe",
@@ -34,6 +34,6 @@ func TestSendIncident(t *testing.T) {
 		Location:     "Main Building - Floor 3",
 		DocumentLink: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
 	}
-	err := email.SendIncident(context.Background(), []string{"farjiataha@gmail.com"}, arg)
+	err := testBrevo.SendIncident(context.Background(), []string{"farjiataha@gmail.com"}, arg)
 	require.NoError(t, err)
 }

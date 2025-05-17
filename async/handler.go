@@ -31,7 +31,7 @@ func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Tas
 
 	log.Printf("Sending email to %s", p.To)
 
-	err := processor.smtp.SendCredentials(ctx, []string{p.To}, email.Credentials{Email: p.UserEmail, Password: p.UserPassword, Name: p.Name})
+	err := processor.brevoConf.SendCredentials(ctx, []string{p.To}, email.Credentials{Email: p.UserEmail, Password: p.UserPassword, Name: p.Name})
 	if err != nil {
 		log.Printf("Failed to send email to %s: %v", p.To, err)
 		return fmt.Errorf("failed to send email to %s: %v: %w", p.To, err, asynq.SkipRetry)
@@ -99,7 +99,7 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.
 		return fmt.Errorf("failed to generate and upload incident PDF: %v: %w", err, asynq.SkipRetry)
 	}
 
-	err = processor.smtp.SendIncident(ctx, p.To, email.Incident{
+	err = processor.brevoConf.SendIncident(ctx, p.To, email.Incident{
 		IncidentID:   p.ID,
 		IncidentType: p.IncidentType,
 		Severity:     p.SeverityOfIncident,

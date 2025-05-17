@@ -10,7 +10,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/uuid"
+	brevo "github.com/getbrevo/brevo-go/lib"
+
 	"github.com/wneessen/go-mail"
 )
 
@@ -20,6 +21,24 @@ type SmtpConf struct {
 	Athentication string
 	SmtpHost      string
 	SmtpPort      int
+}
+
+type BrevoConf struct {
+	SenderName  string
+	Senderemail string
+	ApiKey      string
+	client      *brevo.APIClient
+}
+
+func NewBrevoConf(senderName, senderEmail, apiKey string) *BrevoConf {
+	cfg := brevo.NewConfiguration()
+	cfg.AddDefaultHeader("api-key", apiKey)
+	return &BrevoConf{
+		SenderName:  senderName,
+		Senderemail: senderEmail,
+		ApiKey:      apiKey,
+		client:      brevo.NewAPIClient(cfg),
+	}
 }
 
 type Credentials struct {
@@ -73,13 +92,17 @@ func (e *SmtpConf) Send(subject, body string, to []string) error {
 //go:embed templates/credentials.html
 var credentialsTemplateFS embed.FS
 
-func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
+func (b *BrevoConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
 
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")
 	}
-	if s.SmtpHost == "" || s.SmtpPort == 0 {
-		return errors.New("invalid SMTP configuration")
+
+	if b.SenderName == "" || b.Senderemail == "" {
+		return errors.New("invalid sender configuration")
+	}
+	if b.ApiKey == "" {
+		return errors.New("invalid API key")
 	}
 
 	tmpl, err := template.ParseFS(credentialsTemplateFS, "templates/credentials.html")
@@ -91,52 +114,60 @@ func (s *SmtpConf) SendCredentials(ctx context.Context, to []string, data Creden
 	if err := tmpl.Execute(&body, data); err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
+	htmlContent := body.String()
 
-	message := mail.NewMsg()
-	if err := message.From(fmt.Sprintf("%s <%s>", s.Name, s.Address)); err != nil {
-		return fmt.Errorf("failed to set From address: %w", err)
+	sender := brevo.SendSmtpEmailSender{
+		Name:  b.SenderName,
+		Email: b.Senderemail,
 	}
-	if err := message.To(to...); err != nil {
-		return fmt.Errorf("failed to set To address: %w", err)
-	}
-	message.Subject("Maicare Credentials")
-	message.SetBodyString(mail.TypeTextPlain, "Your Maicare credentials are below:")
-	message.AddAlternativeString(mail.TypeTextHTML, body.String())
-	message.SetGenHeader("Message-ID", fmt.Sprintf("<%s@%s>", uuid.New().String(), "maicare.online"))
-	message.SetGenHeader("Precedence", "bulk")
-	message.SetGenHeader("MIME-Version", "1.0")
 
-	client, err := mail.NewClient(
-		s.SmtpHost,
-		mail.WithSMTPAuth(mail.SMTPAuthPlain),
-		mail.WithUsername(s.Address),
-		mail.WithPassword(s.Athentication),
-		mail.WithPort(s.SmtpPort),
-		mail.WithSSL(),
-	)
+	recipients := make([]brevo.SendSmtpEmailTo, 0, len(to))
+	for _, recipient := range to {
+		recipients = append(recipients, brevo.SendSmtpEmailTo{
+			Email: recipient,
+			Name:  recipient,
+		})
+	}
+
+	emailContent := brevo.SendSmtpEmail{
+		Sender:      &sender,
+		To:          recipients,
+		Subject:     "Maicare Credentials",
+		HtmlContent: htmlContent,
+	}
+
+	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
 	if err != nil {
-		return fmt.Errorf("failed to create mail client: %w", err)
-	}
-
-	if err := client.DialAndSendWithContext(ctx, message); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
-
+	if response.StatusCode != 201 {
+		return fmt.Errorf("failed to send email, status code: %d", response.StatusCode)
+	}
 	log.Printf("Email sent to %s", to)
+	log.Printf("Response: %s", result)
+	log.Printf("Response Status Code: %d", response.StatusCode)
+	log.Printf("Response Headers: %v", response.Header)
+	log.Printf("Response Body: %s", response.Body)
 
 	return nil
 }
 
-func (s *SmtpConf) SendIncident(ctx context.Context, to []string, data Incident) error {
+//go:embed templates/incident.html
+var incidentTemplateFS embed.FS
+
+func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident) error {
 
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")
 	}
-	if s.SmtpHost == "" || s.SmtpPort == 0 {
-		return errors.New("invalid SMTP configuration")
+	if b.SenderName == "" || b.Senderemail == "" {
+		return errors.New("invalid sender configuration")
+	}
+	if b.ApiKey == "" {
+		return errors.New("invalid API key")
 	}
 
-	tmpl, err := template.ParseFiles("templates/incident.html")
+	tmpl, err := template.ParseFS(incidentTemplateFS, "templates/incident.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse HTML template: %w", err)
 	}
@@ -146,30 +177,37 @@ func (s *SmtpConf) SendIncident(ctx context.Context, to []string, data Incident)
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	message := mail.NewMsg()
-	if err := message.From(fmt.Sprintf("%s <%s>", s.Name, s.Address)); err != nil {
-		return fmt.Errorf("failed to set From address: %w", err)
+	htmlContent := body.String()
+	sender := brevo.SendSmtpEmailSender{
+		Name:  b.SenderName,
+		Email: b.Senderemail,
 	}
-	if err := message.To(to...); err != nil {
-		return fmt.Errorf("failed to set To address: %w", err)
+	recipients := make([]brevo.SendSmtpEmailTo, 0, len(to))
+	for _, recipient := range to {
+		recipients = append(recipients, brevo.SendSmtpEmailTo{
+			Email: recipient,
+			Name:  recipient,
+		})
 	}
-	message.Subject("Incident!")
-	message.SetBodyString(mail.TypeTextHTML, body.String())
-
-	client, err := mail.NewClient(
-		s.SmtpHost,
-		mail.WithSMTPAuth(mail.SMTPAuthPlain),
-		mail.WithUsername(s.Address),
-		mail.WithPassword(s.Athentication),
-		mail.WithPort(s.SmtpPort),
-	)
+	emailContent := brevo.SendSmtpEmail{
+		Sender:      &sender,
+		To:          recipients,
+		Subject:     "Incident Report",
+		HtmlContent: htmlContent,
+	}
+	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
 	if err != nil {
-		return fmt.Errorf("failed to create mail client: %w", err)
-	}
-
-	if err := client.DialAndSendWithContext(ctx, message); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
+
+	if response.StatusCode != 201 {
+		return fmt.Errorf("failed to send email, status code: %d", response.StatusCode)
+	}
+	log.Printf("Email sent to %s", to)
+	log.Printf("Response: %s", result)
+	log.Printf("Response Status Code: %d", response.StatusCode)
+	log.Printf("Response Headers: %v", response.Header)
+	log.Printf("Response Body: %s", response.Body)
 
 	return nil
 }

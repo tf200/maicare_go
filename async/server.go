@@ -14,12 +14,12 @@ import (
 type AsynqServer struct {
 	server              *asynq.Server
 	store               *db.Store
-	smtp                *email.SmtpConf
+	brevoConf           *email.BrevoConf
 	b2Bucket            *bucket.B2Client
 	notificationService *notification.Service
 }
 
-func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, smtp *email.SmtpConf, b2Bucket *bucket.B2Client, notificationService *notification.Service) *AsynqServer {
+func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, brevoConf *email.BrevoConf, b2Bucket *bucket.B2Client, notificationService *notification.Service) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
 			Addr:         redisHost,
@@ -42,7 +42,7 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store,
 			},
 		},
 	)
-	return &AsynqServer{server: srv, store: store, smtp: smtp, b2Bucket: b2Bucket, notificationService: notificationService}
+	return &AsynqServer{server: srv, store: store, brevoConf: brevoConf, b2Bucket: b2Bucket, notificationService: notificationService}
 }
 
 func (a *AsynqServer) Start() error {

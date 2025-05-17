@@ -19,9 +19,9 @@ func NewAsynqClient(redisHost, redisUser, redisPassword string, tls *tls.Config)
 		Username:     redisUser,
 		Password:     redisPassword,
 		TLSConfig:    tls,
-		DialTimeout:  5 * time.Second,
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 3 * time.Second,
+		DialTimeout:  10 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	})
 	return &AsynqClient{client: client}
 }

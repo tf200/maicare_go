@@ -277,6 +277,11 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type GenerateAppointmentCardDocumentApiResponse struct {
+	ClientID int64   `json:"client_id"`
+	FileUrl  *string `json:"file_url"`
+}
+
 // GenerateAppointmentCardDocument generates an appointment card document by client ID
 // @Summary Generate an appointment card document by client ID
 // @Description Generate an appointment card document by client ID
@@ -334,6 +339,7 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	
 
 	res := SuccessResponse(updatedAppointmentCard, "Appointment card document generated successfully")
 	ctx.JSON(http.StatusOK, res)
