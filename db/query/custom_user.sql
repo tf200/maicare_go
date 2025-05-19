@@ -26,3 +26,20 @@ SET password = $2
 WHERE id = $1;
 
 
+-- name: CreateTemp2FaSecret :exec
+UPDATE custom_user
+SET two_factor_secret_temp = $2
+WHERE id = $1;
+
+-- name: GetTemp2FaSecret :one
+SELECT two_factor_secret_temp FROM custom_user
+WHERE id = $1 LIMIT 1;
+
+
+-- name: Enable2Fa :exec
+UPDATE custom_user
+SET two_factor_secret = $2,
+    two_factor_secret_temp = NULL,
+    two_factor_enabled = true,
+    recovery_codes = $3
+WHERE id = $1;

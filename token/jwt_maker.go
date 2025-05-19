@@ -13,16 +13,17 @@ const minSecretKeySize = 32
 type JWTMaker struct {
 	accessTokenKey  string
 	refreshTokenKey string
+	twoFATokenKey   string
 }
 
-func NewJWTMaker(accessTokenKey string, refreshTokenKey string) (Maker, error) {
+func NewJWTMaker(accessTokenKey string, refreshTokenKey string, twoFATokenKey string) (Maker, error) {
 	if len(accessTokenKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
 	if len(refreshTokenKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
-	return &JWTMaker{accessTokenKey, refreshTokenKey}, nil
+	return &JWTMaker{accessTokenKey, refreshTokenKey, twoFATokenKey}, nil
 }
 
 func (maker *JWTMaker) CreateToken(user_id int64, role_id int32, duration time.Duration, tokenType TokenType) (string, *Payload, error) {
@@ -37,6 +38,8 @@ func (maker *JWTMaker) CreateToken(user_id int64, role_id int32, duration time.D
 		secretKey = maker.accessTokenKey
 	case RefreshToken:
 		secretKey = maker.refreshTokenKey
+	case TwoFAToken:
+		secretKey = maker.twoFATokenKey
 	default:
 		return "", payload, fmt.Errorf("unsupported token type: %v", tokenType)
 	}
@@ -68,6 +71,8 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 			return []byte(maker.accessTokenKey), nil
 		case RefreshToken:
 			return []byte(maker.refreshTokenKey), nil
+		case TwoFAToken:
+			return []byte(maker.twoFATokenKey), nil
 		default:
 			return nil, fmt.Errorf("unknown token type: %v", claims.TokenType)
 		}

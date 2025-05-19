@@ -2092,6 +2092,13 @@ definitions:
       status_change_reason:
         type: string
     type: object
+  api.Enable2FARequest:
+    properties:
+      validation_code:
+        type: string
+    required:
+    - validation_code
+    type: object
   api.GenerateAutoReportsRequest:
     properties:
       end_date:
@@ -4219,6 +4226,12 @@ definitions:
       refresh:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
+      requires_2fa:
+        example: false
+        type: boolean
+      temp_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
     type: object
   api.LogoutResponse:
     properties:
@@ -4923,6 +4936,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_Setup2FAResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.Setup2FAResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateAppointmentCardResponse:
     properties:
       data:
@@ -5352,6 +5374,15 @@ definitions:
         type: string
       role_id:
         type: integer
+    type: object
+  api.Setup2FAResponse:
+    properties:
+      qr_code_base64:
+        example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+        type: string
+      secret:
+        example: JBSWY3DPEHPK3PXP
+        type: string
     type: object
   api.TotalDischargeCountResponse:
     properties:
@@ -6577,6 +6608,16 @@ definitions:
       size:
         type: integer
     type: object
+  api.Verify2FARequest:
+    properties:
+      temp_token:
+        type: string
+      validation_code:
+        type: string
+    required:
+    - temp_token
+    - validation_code
+    type: object
   big.Int:
     type: object
   pagination.Response-api_ListAllIncidentsResponse:
@@ -7249,6 +7290,48 @@ paths:
       summary: Change user password
       tags:
       - authentication
+  /auth/enable_2fa:
+    post:
+      consumes:
+      - application/json
+      description: Enable 2FA for user
+      parameters:
+      - description: Enable 2FA request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.Enable2FARequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 2FA enabled successfully
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - User not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - 2FA enable issue
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Enable 2FA
+      tags:
+      - authentication
   /auth/logout:
     post:
       description: Logout user and invalidate refresh token
@@ -7326,6 +7409,39 @@ paths:
       summary: Refresh access token
       tags:
       - authentication
+  /auth/setup_2fa:
+    post:
+      description: Setup 2FA for user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 2FA setup successful
+          schema:
+            $ref: '#/definitions/api.Response-api_Setup2FAResponse'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - User not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict - 2FA setup issue
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Setup 2FA
+      tags:
+      - authentication
   /auth/token:
     post:
       consumes:
@@ -7368,6 +7484,50 @@ paths:
       security:
       - '-': []
       summary: Generate authentication tokens
+      tags:
+      - authentication
+  /auth/verify_2fa:
+    post:
+      consumes:
+      - application/json
+      description: Verify 2FA code and generate access and refresh tokens
+      parameters:
+      - description: Verify 2FA request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.Verify2FARequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 2FA verification successful
+          schema:
+            $ref: '#/definitions/api.Response-api_LoginUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
+      summary: Verify 2FA code
       tags:
       - authentication
   /clients:

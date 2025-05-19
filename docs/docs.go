@@ -566,6 +566,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/enable_2fa": {
+            "post": {
+                "description": "Enable 2FA for user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Enable 2FA",
+                "parameters": [
+                    {
+                        "description": "Enable 2FA request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.Enable2FARequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "2FA enabled successfully",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - User not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - 2FA enable issue",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/logout": {
             "post": {
                 "description": "Logout user and invalidate refresh token",
@@ -685,6 +749,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/setup_2fa": {
+            "post": {
+                "description": "Setup 2FA for user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Setup 2FA",
+                "responses": {
+                    "200": {
+                        "description": "2FA setup successful",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_Setup2FAResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - User not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - 2FA setup issue",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/token": {
             "post": {
                 "security": [
@@ -747,6 +861,75 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify_2fa": {
+            "post": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "description": "Verify 2FA code and generate access and refresh tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Verify 2FA code",
+                "parameters": [
+                    {
+                        "description": "Verify 2FA request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.Verify2FARequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "2FA verification successful",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_LoginUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -10272,6 +10455,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Enable2FARequest": {
+            "type": "object",
+            "required": [
+                "validation_code"
+            ],
+            "properties": {
+                "validation_code": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GenerateAutoReportsRequest": {
             "type": "object",
             "properties": {
@@ -13489,6 +13683,14 @@ const docTemplate = `{
                 "refresh": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "requires_2fa": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "temp_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                 }
             }
         },
@@ -14584,6 +14786,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_Setup2FAResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.Setup2FAResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_UpdateAppointmentCardResponse": {
             "type": "object",
             "properties": {
@@ -15249,6 +15465,19 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.Setup2FAResponse": {
+            "type": "object",
+            "properties": {
+                "qr_code_base64": {
+                    "type": "string",
+                    "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                },
+                "secret": {
+                    "type": "string",
+                    "example": "JBSWY3DPEHPK3PXP"
                 }
             }
         },
@@ -17101,6 +17330,21 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.Verify2FARequest": {
+            "type": "object",
+            "required": [
+                "temp_token",
+                "validation_code"
+            ],
+            "properties": {
+                "temp_token": {
+                    "type": "string"
+                },
+                "validation_code": {
+                    "type": "string"
                 }
             }
         },

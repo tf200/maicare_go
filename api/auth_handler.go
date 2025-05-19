@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -16,6 +17,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pquerna/otp/totp"
+	"github.com/skip2/go-qrcode"
 )
 
 // LoginUserRequest represents the login request payload
@@ -26,8 +29,10 @@ type LoginUserRequest struct {
 
 // LoginUserResponse represents the login response
 type LoginUserResponse struct {
-	RefreshToken string `json:"refresh" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
-	AccessToken  string `json:"access" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken  string `json:"refresh" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	AccessToken   string `json:"access" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RequiresTwoFA bool   `json:"requires_2fa" example:"false"`
+	TempToken     string `json:"temp_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
 // @Summary Generate authentication tokens
@@ -70,6 +75,20 @@ func (server *Server) Login(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid password or email for user")))
 		log.Printf("failed password check for user: %v", err)
+		return
+	}
+
+	if user.TwoFactorEnabled {
+		tempToken, _, err := server.tokenMaker.CreateToken(user.ID, int32(user.RoleID), server.config.TwoFATokenDuration, token.TwoFAToken)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		res := SuccessResponse(LoginUserResponse{
+			RequiresTwoFA: true,
+			TempToken:     tempToken,
+		}, "2FA required")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
@@ -193,6 +212,91 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// Verify2FARequest represents the verify 2FA request payload
+type Verify2FARequest struct {
+	ValidationCode string `json:"validation_code" binding:"required"`
+	TempToken      string `json:"temp_token" binding:"required"`
+}
+
+// Verify2FAHandler verifies the 2FA code and generates access and refresh tokens
+// @Summary Verify 2FA code
+// @Description Verify 2FA code and generate access and refresh tokens
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body Verify2FARequest true "Verify 2FA request"
+// @Success 200 {object} Response[LoginUserResponse] "2FA verification successful"
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /auth/verify_2fa [post]
+// @Security -
+func (server *Server) Verify2FAHandler(ctx *gin.Context) {
+	var req Verify2FARequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	tempPayload, err := server.tokenMaker.VerifyToken(req.TempToken)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	user, err := server.store.GetUserByID(ctx, tempPayload.UserId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if !user.TwoFactorEnabled || user.TwoFactorSecret == nil || *user.TwoFactorSecret == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("2FA not enabled or secret not set")))
+		return
+	}
+	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecret)
+	if !valid {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("invalid validation code")))
+		return
+	}
+
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, int32(user.RoleID), server.config.AccessTokenDuration, token.AccessToken)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, int32(user.RoleID), server.config.RefreshTokenDuration, token.RefreshToken)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	clientIP := ctx.ClientIP()
+	userAgent := ctx.Request.UserAgent()
+	_, err = server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshPayload.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    userAgent,
+		ClientIp:     clientIP,
+		IsBlocked:    false,
+		ExpiresAt:    pgtype.Timestamptz{Time: refreshPayload.ExpiresAt, Valid: true},
+		CreatedAt:    pgtype.Timestamptz{Time: refreshPayload.IssuedAt, Valid: true},
+		UserID:       user.ID,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(LoginUserResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, "login successful")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
 // LogoutRequest represents the logout request payload
 type LogoutResponse struct {
 	Message string `json:"message" example:"logout successful"`
@@ -307,4 +411,163 @@ func (server *Server) ChangePasswordApi(ctx *gin.Context) {
 	res := SuccessResponse[any](nil, "password changed successfully")
 	ctx.JSON(http.StatusOK, res)
 
+}
+
+// Setup2FARequest represents the setup 2FA request payload
+type Setup2FAResponse struct {
+	QrCode string `json:"qr_code_base64" example:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."`
+	Secret string `json:"secret" example:"JBSWY3DPEHPK3PXP"`
+}
+
+// @Summary Setup 2FA
+// @Description Setup 2FA for user
+// @Tags authentication
+// @Produce json
+// @Success 200 {object} Response[Setup2FAResponse] "2FA setup successful"
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - User not found"
+// @Failure 409 {object} Response[any] "Conflict - 2FA setup issue"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /auth/setup_2fa [post]
+func (server *Server) Setup2FAHandler(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
+	userID := payload.UserId
+
+	user, err := server.store.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "Maicare",
+		AccountName: user.Email,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	secretKey := key.Secret()
+
+	err = server.store.CreateTemp2FaSecret(ctx, db.CreateTemp2FaSecretParams{
+		ID:                  user.ID,
+		TwoFactorSecretTemp: &secretKey,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	qrCode, err := qrcode.Encode(key.URL(), qrcode.Medium, 256)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	qrCodeBase64 := base64.StdEncoding.EncodeToString(qrCode)
+
+	res := SuccessResponse(Setup2FAResponse{
+		QrCode: "data:image/png;base64," + qrCodeBase64,
+		Secret: secretKey,
+	}, "2FA setup successful")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// Enable2FARequest represents the enable 2FA request payload
+type Enable2FARequest struct {
+	ValidationCode string `json:"validation_code" binding:"required"`
+}
+
+type Enable2FAResponse struct {
+	RecoveryCodes []string `json:"recovery_codes" example:"[\"code1\", \"code2\"]"`
+}
+
+// @Summary Enable 2FA
+// @Description Enable 2FA for user
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body Enable2FARequest true "Enable 2FA request"
+// @Success 200 {object} Response[any] "2FA enabled successfully"
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - User not found"
+// @Failure 409 {object} Response[any] "Conflict - 2FA enable issue"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /auth/enable_2fa [post]
+func (server *Server) Enable2FAHandler(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	userID := payload.UserId
+
+	var req Enable2FARequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if user.TwoFactorSecretTemp == nil || *user.TwoFactorSecretTemp == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("2FA setup not initiated")))
+		return
+	}
+
+	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecretTemp)
+	if !valid {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("invalid validation code")))
+		return
+	}
+
+	recoveryCodes := util.GenerateRecoveryCodes(10)
+
+	hashedRecoveryCodes := make([]string, len(recoveryCodes))
+	for i, code := range recoveryCodes {
+		hashedCode, err := util.HashPassword(code)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		hashedRecoveryCodes[i] = hashedCode
+	}
+
+	err = server.store.Enable2Fa(ctx, db.Enable2FaParams{
+		ID:              user.ID,
+		TwoFactorSecret: user.TwoFactorSecretTemp,
+		RecoveryCodes:   hashedRecoveryCodes,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(Enable2FAResponse{
+		RecoveryCodes: recoveryCodes,
+	}, "2FA enabled successfully")
+	ctx.JSON(http.StatusOK, res)
 }

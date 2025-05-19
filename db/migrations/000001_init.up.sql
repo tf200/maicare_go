@@ -42,10 +42,14 @@ CREATE TABLE custom_user (
     "password" VARCHAR(128) NOT NULL,
     last_login TIMESTAMPTZ NULL,
     email VARCHAR(254) NOT NULL UNIQUE,
-    role_id INT NOT NULL REFERENCES Roles(id) ON DELETE CASCADE DEFAULT 1,
+    role_id INT NOT NULL DEFAULT 1 REFERENCES roles(id) ON DELETE CASCADE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     date_joined TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    profile_picture VARCHAR(100) NULL
+    profile_picture VARCHAR(100) NULL,
+    two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    two_factor_secret VARCHAR(100) NULL,
+    two_factor_secret_temp VARCHAR(100) NULL,
+    recovery_codes TEXT[] NULL DEFAULT '{}'
 );
 
 CREATE INDEX custom_user_email_idx ON custom_user(email);

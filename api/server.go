@@ -55,7 +55,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 		return nil, fmt.Errorf("cannot load env %v", err)
 	}
 
-	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey)
+	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create tokenmaker %v", err)
 	}

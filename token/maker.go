@@ -7,6 +7,7 @@ type TokenType string
 const (
 	AccessToken  TokenType = "access_token"
 	RefreshToken TokenType = "refresh_token"
+	TwoFAToken   TokenType = "2fa_token"
 )
 
 func (t TokenType) String() string {

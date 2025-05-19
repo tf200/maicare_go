@@ -13,6 +13,8 @@ type Config struct {
 	AccessTokenDuration   time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenSecretKey string        `mapstructure:"REFRESH_TOKEN_SECRET_KEY"`
 	RefreshTokenDuration  time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	TwoFATokenSecretKey   string        `mapstructure:"2FA_TOKEN_SECRET_KEY"`
+	TwoFATokenDuration    time.Duration `mapstructure:"2FA_TOKEN_DURATION"`
 	B2Key                 string        `mapstructure:"B2_KEY"`
 	B2KeyID               string        `mapstructure:"B2_KEY_ID"`
 	B2Bucket              string        `mapstructure:"B2_BUCKET"`
