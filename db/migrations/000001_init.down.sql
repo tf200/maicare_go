@@ -96,3 +96,4 @@ DROP TABLE IF EXISTS "public"."appointment_participants" CASCADE;
 DROP TABLE IF EXISTS "public"."notifications" CASCADE;
 DROP TABLE IF EXISTS "public"."appointment_clients" CASCADE;
 drop TABLE IF EXISTS "public"."registration_form" CASCADE;
+DROP TABLE IF EXISTS "public"."schedules" CASCADE;

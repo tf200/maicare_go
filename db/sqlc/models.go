@@ -970,6 +970,16 @@ type RolePermission struct {
 	PermissionID int32 `json:"permission_id"`
 }
 
+type Schedule struct {
+	ID            int32            `json:"id"`
+	EmployeeID    int64            `json:"employee_id"`
+	LocationID    int64            `json:"location_id"`
+	StartDatetime pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
+	CreatedAt     pgtype.Timestamp `json:"created_at"`
+	UpdatedAt     pgtype.Timestamp `json:"updated_at"`
+}
+
 type ScheduledAppointment struct {
 	ID                     int64            `json:"id"`
 	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`

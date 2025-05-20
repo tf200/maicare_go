@@ -1921,6 +1921,17 @@ CREATE TABLE registration_form (
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
     processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL
-)
+);
 
 
+CREATE TABLE schedules (
+  id SERIAL PRIMARY KEY,
+  employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+  location_id BIGINT NOT NULL REFERENCES location(id),
+  start_datetime TIMESTAMP NOT NULL,
+  end_datetime TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ,
+  -- Ensure end time is after start time
+  CONSTRAINT valid_timeframe CHECK (end_datetime > start_datetime)
+);
