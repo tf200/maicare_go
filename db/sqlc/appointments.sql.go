@@ -48,9 +48,6 @@ func (q *Queries) BulkAddAppointmentParticipants(ctx context.Context, arg BulkAd
 }
 
 const confirmAppointment = `-- name: ConfirmAppointment :exec
-
-
-
 UPDATE scheduled_appointments
 SET
     status = 'CONFIRMED',
@@ -65,7 +62,6 @@ type ConfirmAppointmentParams struct {
 	EmployeeID *int64 `json:"employee_id"`
 }
 
-// Optional ordering
 func (q *Queries) ConfirmAppointment(ctx context.Context, arg ConfirmAppointmentParams) error {
 	_, err := q.db.Exec(ctx, confirmAppointment, arg.ID, arg.EmployeeID)
 	return err
@@ -170,6 +166,36 @@ func (q *Queries) CreateAppointmentTemplate(ctx context.Context, arg CreateAppoi
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const deleteAppointment = `-- name: DeleteAppointment :exec
+DELETE FROM scheduled_appointments
+WHERE id = $1
+`
+
+func (q *Queries) DeleteAppointment(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteAppointment, id)
+	return err
+}
+
+const deleteAppointmentClients = `-- name: DeleteAppointmentClients :exec
+DELETE FROM appointment_clients
+WHERE appointment_id = $1
+`
+
+func (q *Queries) DeleteAppointmentClients(ctx context.Context, appointmentID int64) error {
+	_, err := q.db.Exec(ctx, deleteAppointmentClients, appointmentID)
+	return err
+}
+
+const deleteAppointmentParticipants = `-- name: DeleteAppointmentParticipants :exec
+DELETE FROM appointment_participants
+WHERE appointment_id = $1
+`
+
+func (q *Queries) DeleteAppointmentParticipants(ctx context.Context, appointmentID int64) error {
+	_, err := q.db.Exec(ctx, deleteAppointmentParticipants, appointmentID)
+	return err
 }
 
 const getAppointmentClients = `-- name: GetAppointmentClients :many
@@ -538,4 +564,55 @@ func (q *Queries) ListEmployeeAppointmentsInRange(ctx context.Context, arg ListE
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAppointment = `-- name: UpdateAppointment :one
+
+
+
+UPDATE scheduled_appointments
+SET
+    start_time = COALESCE($2, start_time),
+    end_time = COALESCE($3, end_time),
+    location = COALESCE ($4, location),
+    description = COALESCE ($5, description),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_time, location, description, status, is_confirmed, confirmed_by_employee_id, confirmed_at, created_at, updated_at
+`
+
+type UpdateAppointmentParams struct {
+	ID          int64            `json:"id"`
+	StartTime   pgtype.Timestamp `json:"start_time"`
+	EndTime     pgtype.Timestamp `json:"end_time"`
+	Location    *string          `json:"location"`
+	Description *string          `json:"description"`
+}
+
+// Optional ordering
+func (q *Queries) UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (ScheduledAppointment, error) {
+	row := q.db.QueryRow(ctx, updateAppointment,
+		arg.ID,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Location,
+		arg.Description,
+	)
+	var i ScheduledAppointment
+	err := row.Scan(
+		&i.ID,
+		&i.AppointmentTemplatesID,
+		&i.CreatorEmployeeID,
+		&i.StartTime,
+		&i.EndTime,
+		&i.Location,
+		&i.Description,
+		&i.Status,
+		&i.IsConfirmed,
+		&i.ConfirmedByEmployeeID,
+		&i.ConfirmedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

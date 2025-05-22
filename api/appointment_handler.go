@@ -539,6 +539,181 @@ func (server *Server) GetAppointmentApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// ConfirmAppointmentRequest represents the request payload for confirming an appointment
+type UpdateAppointmentRequest struct {
+	StartTime              time.Time `json:"start_time" binding:"required" example:"2023-10-01T10:00:00Z"`
+	EndTime                time.Time `json:"end_time" binding:"required"`
+	Location               *string   `json:"location"`
+	Description            *string   `json:"description"`
+	ClientIDs              *[]int64  `json:"client_ids"`
+	ParticipantEmployeeIDs *[]int64  `json:"participant_employee_ids"`
+}
+
+// UpdateAppointmentResponse represents the response payload for updating an appointment
+type UpdateAppointmentResponse struct {
+	ID                     int64            `json:"id"`
+	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`
+	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
+	StartTime              pgtype.Timestamp `json:"start_time"`
+	EndTime                pgtype.Timestamp `json:"end_time"`
+	Location               *string          `json:"location"`
+	Description            *string          `json:"description"`
+	Status                 string           `json:"status"`
+	IsConfirmed            bool             `json:"is_confirmed"`
+	ConfirmedByEmployeeID  *int64           `json:"confirmed_by_employee_id"`
+	ConfirmedAt            pgtype.Timestamp `json:"confirmed_at"`
+	CreatedAt              pgtype.Timestamp `json:"created_at"`
+	UpdatedAt              pgtype.Timestamp `json:"updated_at"`
+}
+
+// UpdateAppointmentApi updates an appointment
+// @Summary Update an appointment
+// @Description Update an appointment
+// @Tags appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Param request body UpdateAppointmentRequest true "Update appointment request"
+// @Success 200 {object} Response[UpdateAppointmentResponse]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Appointment not found"
+// @Failure 409 {object} Response[any] "Conflict - Appointment already exists"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /appointments/{id} [put]
+func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
+	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req UpdateAppointmentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if req.StartTime.After(req.EndTime) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("start time must be before end time")))
+		return
+	}
+
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	defer tx.Rollback(ctx)
+	qtx := server.store.WithTx(tx)
+
+	appointment, err := qtx.UpdateAppointment(ctx, db.UpdateAppointmentParams{
+		ID:          appointmentID,
+		StartTime:   pgtype.Timestamp{Time: req.StartTime, Valid: true},
+		EndTime:     pgtype.Timestamp{Time: req.EndTime, Valid: true},
+		Location:    req.Location,
+		Description: req.Description,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if req.ParticipantEmployeeIDs != nil {
+		err = qtx.DeleteAppointmentParticipants(ctx, appointment.ID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		if len(*req.ParticipantEmployeeIDs) > 0 {
+			err = qtx.BulkAddAppointmentParticipants(ctx, db.BulkAddAppointmentParticipantsParams{
+				AppointmentID: appointment.ID,
+				EmployeeIds:   *req.ParticipantEmployeeIDs,
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+	}
+
+	if req.ClientIDs != nil {
+		err = qtx.DeleteAppointmentClients(ctx, appointment.ID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		if len(*req.ClientIDs) > 0 {
+			err = qtx.BulkAddAppointmentClients(ctx, db.BulkAddAppointmentClientsParams{
+				AppointmentID: appointment.ID,
+				ClientIds:     *req.ClientIDs,
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := UpdateAppointmentResponse{
+		ID:                     appointment.ID,
+		AppointmentTemplatesID: appointment.AppointmentTemplatesID,
+		CreatorEmployeeID:      appointment.CreatorEmployeeID,
+		StartTime:              appointment.StartTime,
+		EndTime:                appointment.EndTime,
+		Location:               appointment.Location,
+		Description:            appointment.Description,
+		Status:                 appointment.Status,
+		IsConfirmed:            appointment.IsConfirmed,
+		ConfirmedByEmployeeID:  appointment.ConfirmedByEmployeeID,
+		ConfirmedAt:            appointment.ConfirmedAt,
+		CreatedAt:              appointment.CreatedAt,
+		UpdatedAt:              appointment.UpdatedAt,
+	}
+
+	res := SuccessResponse(response, "Appointment updated successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// DeleteAppointmentApi deletes an appointment
+// @Summary Delete an appointment
+// @Description Delete an appointment
+// @Tags appointments
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Appointment not found"
+// @Failure 409 {object} Response[any] "Conflict - Appointment already exists"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /appointments/{id} [delete]
+func (server *Server) DeleteAppointmentApi(ctx *gin.Context) {
+	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteAppointment(ctx, appointmentID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Appointment deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // ConfirmAppointmentApi confirms an appointment
 // @Summary Confirm an appointment
 // @Description Confirm an appointment

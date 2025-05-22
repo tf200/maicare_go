@@ -194,6 +194,40 @@ ORDER BY
 
 
 
+-- name: UpdateAppointment :one
+UPDATE scheduled_appointments
+SET
+    start_time = COALESCE($2, start_time),
+    end_time = COALESCE($3, end_time),
+    location = COALESCE ($4, location),
+    description = COALESCE ($5, description),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteAppointment :exec
+DELETE FROM scheduled_appointments
+WHERE id = $1;
+
+
+-- name: DeleteAppointmentParticipants :exec
+DELETE FROM appointment_participants
+WHERE appointment_id = $1;
+
+-- name: DeleteAppointmentClients :exec
+DELETE FROM appointment_clients
+WHERE appointment_id = $1;
+
+
+
+
+
+
+
+
+
+
+
 -- name: ConfirmAppointment :exec
 UPDATE scheduled_appointments
 SET

@@ -7,6 +7,8 @@ func (server *Server) setupAppointmentRoutes(baseRouter *gin.RouterGroup) {
 	{
 		appointmentsRouter.POST("", server.CreateAppointmentApi)
 		appointmentsRouter.GET("/:id", server.GetAppointmentApi)
+		appointmentsRouter.PUT("/:id", server.UpdateAppointmentApi)
+		appointmentsRouter.DELETE("/:id", server.DeleteAppointmentApi)
 
 		appointmentsRouter.POST("/:appointment_id/participants", server.AddParticipantToAppointmentApi)
 		appointmentsRouter.POST("/:appointment_id/clients", server.AddClientToAppointmentApi)
