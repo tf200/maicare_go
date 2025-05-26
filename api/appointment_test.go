@@ -287,3 +287,54 @@ func TestDeleteAppointmentApi(t *testing.T) {
 		})
 	}
 }
+
+func TestListAppointmentsForEmployeeApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+
+	for i := 0; i < 5; i++ {
+		createRandomAppointment(t, employee.ID)
+	}
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				req := ListAppointmentsForEmployeeInRangeRequest{
+					StartDate: time.Now().Add(-24 * time.Hour),
+					EndDate:   time.Now().Add(24 * time.Hour),
+				}
+				reqBody, err := json.Marshal(req)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/employees/%d/appointments", employee.ID)
+				request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(reqBody))
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}

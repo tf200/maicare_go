@@ -79,6 +79,7 @@ SELECT
     sa.location,
     sa.description,
     sa.status,
+    sa.is_confirmed,
     sa.creator_employee_id, -- Still show who created it
     sa.created_at,
     'PARTICIPANT' AS involvement_type -- Indicate the employee is a participant
