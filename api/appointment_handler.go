@@ -74,6 +74,14 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 		return
 	}
 
+	filteredParticipants := req.ParticipantEmployeeIDs[:0] // Reuse the slice's backing array
+	for _, participantID := range req.ParticipantEmployeeIDs {
+		if participantID != employeeID {
+			filteredParticipants = append(filteredParticipants, participantID)
+		}
+	}
+	req.ParticipantEmployeeIDs = filteredParticipants
+
 	var response CreateAppointmentResponse
 
 	if req.RecurrenceType == "NONE" {
@@ -533,6 +541,8 @@ func (server *Server) GetAppointmentApi(ctx *gin.Context) {
 		ConfirmedByEmployeeID: appointment.ConfirmedByEmployeeID,
 		ConfirmerFirstName:    appointment.ConfirmerFirstName,
 		ConfirmerLastName:     appointment.ConfirmerLastName,
+		ParticipantsDetails:   participantsDetails,
+		ClientsDetails:        clientsDetails,
 	}
 
 	res := SuccessResponse(response, "Appointment retrieved successfully")
