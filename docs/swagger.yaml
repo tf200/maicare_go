@@ -3273,6 +3273,55 @@ definitions:
       violence:
         type: boolean
     type: object
+  api.ListAppointmentsForClientRequest:
+    properties:
+      end_date:
+        example: "2025-04-30T23:59:59Z"
+        type: string
+      start_date:
+        example: "2025-04-27T00:00:00Z"
+        type: string
+    required:
+    - end_date
+    - start_date
+    type: object
+  api.ListAppointmentsForClientResponse:
+    properties:
+      clients_details:
+        items:
+          $ref: '#/definitions/api.ClientsDetails'
+        type: array
+      confirmed_at:
+        type: string
+      confirmed_by_employee_id:
+        type: integer
+      created_at:
+        type: string
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: integer
+      location:
+        type: string
+      participants_details:
+        items:
+          $ref: '#/definitions/api.ParticipantsDetails'
+        type: array
+      recurrence_end_date:
+        $ref: '#/definitions/pgtype.Date'
+      recurrence_interval:
+        type: integer
+      recurrence_type:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+    type: object
   api.ListAppointmentsForEmployeeInRangeRequest:
     properties:
       end_date:
@@ -4858,6 +4907,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.IntakeFormUploadHandlerResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListAppointmentsForClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListAppointmentsForClientResponse'
       message:
         type: string
       success:
@@ -8051,6 +8109,49 @@ paths:
       summary: Generate an appointment card document by client ID
       tags:
       - appointment_cards
+  /clients/{id}/appointments:
+    post:
+      consumes:
+      - application/json
+      description: List appointments for a client in a date range
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: List appointments request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ListAppointmentsForClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListAppointmentsForClientResponse'
+        "400":
+          description: Bad request - Invalid input
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not found - Client not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List appointments for a client in a date range
+      tags:
+      - appointments
   /clients/{id}/contracts:
     get:
       parameters:

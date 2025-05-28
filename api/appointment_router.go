@@ -10,10 +10,10 @@ func (server *Server) setupAppointmentRoutes(baseRouter *gin.RouterGroup) {
 		appointmentsRouter.PUT("/:id", server.UpdateAppointmentApi)
 		appointmentsRouter.DELETE("/:id", server.DeleteAppointmentApi)
 
-		appointmentsRouter.POST("/:appointment_id/participants", server.AddParticipantToAppointmentApi)
-		appointmentsRouter.POST("/:appointment_id/clients", server.AddClientToAppointmentApi)
+		appointmentsRouter.POST("/:id/participants", server.AddParticipantToAppointmentApi)
+		appointmentsRouter.POST("/:id/clients", server.AddClientToAppointmentApi)
+
 
 		appointmentsRouter.POST("/:id/confirm", server.ConfirmAppointmentApi)
-
 	}
 }

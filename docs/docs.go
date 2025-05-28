@@ -1645,6 +1645,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/appointments": {
+            "post": {
+                "description": "List appointments for a client in a date range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "List appointments for a client in a date range",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "List appointments request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ListAppointmentsForClientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ListAppointmentsForClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - Client not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/contracts": {
             "get": {
                 "produces": [
@@ -12371,6 +12436,79 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListAppointmentsForClientRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-04-30T23:59:59Z"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-04-27T00:00:00Z"
+                }
+            }
+        },
+        "api.ListAppointmentsForClientResponse": {
+            "type": "object",
+            "properties": {
+                "clients_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ClientsDetails"
+                    }
+                },
+                "confirmed_at": {
+                    "type": "string"
+                },
+                "confirmed_by_employee_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "creator_employee_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "participants_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ParticipantsDetails"
+                    }
+                },
+                "recurrence_end_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "recurrence_interval": {
+                    "type": "integer"
+                },
+                "recurrence_type": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListAppointmentsForEmployeeInRangeRequest": {
             "type": "object",
             "required": [
@@ -14789,6 +14927,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.IntakeFormUploadHandlerResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_ListAppointmentsForClientResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ListAppointmentsForClientResponse"
                 },
                 "message": {
                     "type": "string"

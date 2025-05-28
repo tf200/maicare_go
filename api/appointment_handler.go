@@ -199,7 +199,7 @@ type AddParticipantToAppointmentRequest struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{appointment_id}/participants [post]
 func (server *Server) AddParticipantToAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("appointment_id"), 10, 64)
+	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -245,7 +245,7 @@ type AddClientToAppointmentRequest struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{appointment_id}/clients [post]
 func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("appointment_id"), 10, 64)
+	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -389,19 +389,6 @@ type ListAppointmentsForClientRequest struct {
 }
 
 // ListAppointmentsForClientResponse represents the response payload for listing appointments for a client in a date range
-// @Summary List appointments for a client in a date range
-// @Description List appointments for a client in a date range
-// @Tags appointments
-// @Accept json
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param request body ListAppointmentsForClientRequest true "List appointments request"
-// @Success 200 {object} Response[ListAppointmentsForClientResponse]
-// @Failure 400 {object} Response[any] "Bad request - Invalid input"
-// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
-// @Failure 404 {object} Response[any] "Not found - Client not found"
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /clients/{id}/appointments [post]
 type ListAppointmentsForClientResponse struct {
 	ID                    int64                 `json:"id"`
 	CreatorEmployeeID     *int64                `json:"creator_employee_id"`
@@ -420,6 +407,19 @@ type ListAppointmentsForClientResponse struct {
 	ClientsDetails        []ClientsDetails      `json:"clients_details"`
 }
 
+// @Summary List appointments for a client in a date range
+// @Description List appointments for a client in a date range
+// @Tags appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID"
+// @Param request body ListAppointmentsForClientRequest true "List appointments request"
+// @Success 200 {object} Response[ListAppointmentsForClientResponse]
+// @Failure 400 {object} Response[any] "Bad request - Invalid input"
+// @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
+// @Failure 404 {object} Response[any] "Not found - Client not found"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /clients/{id}/appointments [post]
 func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
 	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
