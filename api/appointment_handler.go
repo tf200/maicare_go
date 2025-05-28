@@ -278,15 +278,17 @@ type ListAppointmentsForEmployeeInRangeRequest struct {
 
 // ListAppointmentsForEmployeeInRangeResponse represents the response payload for listing appointments for an employee in a date range
 type ListAppointmentsForEmployeeInRangeResponse struct {
-	ID                int64     `json:"id"`
-	CreatorEmployeeID *int64    `json:"creator_employee_id"`
-	StartTime         time.Time `json:"start_time"`
-	EndTime           time.Time `json:"end_time"`
-	Location          *string   `json:"location"`
-	Description       *string   `json:"description"`
-	Status            string    `json:"status"`
-	IsConfirmed       bool      `json:"is_confirmed"`
-	CreatedAt         time.Time `json:"created_at"`
+	ID                  int64                 `json:"id"`
+	CreatorEmployeeID   *int64                `json:"creator_employee_id"`
+	StartTime           time.Time             `json:"start_time"`
+	EndTime             time.Time             `json:"end_time"`
+	Location            *string               `json:"location"`
+	Description         *string               `json:"description"`
+	Status              string                `json:"status"`
+	IsConfirmed         bool                  `json:"is_confirmed"`
+	CreatedAt           time.Time             `json:"created_at"`
+	ParticipantsDetails []ParticipantsDetails `json:"participants_details"`
+	ClientsDetails      []ClientsDetails      `json:"clients_details"`
 }
 
 // ListAppointmentsForEmployeeInRange lists appointments for an employee in a date range
@@ -334,16 +336,45 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 
 	appointmentList := make([]ListAppointmentsForEmployeeInRangeResponse, len(appointments))
 	for i, appointment := range appointments {
+		participants, err := server.store.GetAppointmentParticipants(ctx, appointment.AppointmentID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		clientDetails, err := server.store.GetAppointmentClients(ctx, appointment.AppointmentID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		participantsDetails := make([]ParticipantsDetails, len(participants))
+		for j, participant := range participants {
+			participantsDetails[j] = ParticipantsDetails{
+				EmployeeID: participant.EmployeeID,
+				FirstName:  participant.FirstName,
+				LastName:   participant.LastName,
+			}
+		}
+		clientsDetails := make([]ClientsDetails, len(clientDetails))
+		for j, client := range clientDetails {
+			clientsDetails[j] = ClientsDetails{
+				ClientID:  client.ClientID,
+				FirstName: client.FirstName,
+				LastName:  client.LastName,
+			}
+		}
+
 		appointmentList[i] = ListAppointmentsForEmployeeInRangeResponse{
-			ID:                appointment.AppointmentID,
-			CreatorEmployeeID: appointment.CreatorEmployeeID,
-			StartTime:         appointment.StartTime.Time,
-			EndTime:           appointment.EndTime.Time,
-			Location:          appointment.Location,
-			Description:       appointment.Description,
-			Status:            appointment.Status,
-			IsConfirmed:       appointment.IsConfirmed,
-			CreatedAt:         appointment.CreatedAt.Time,
+			ID:                  appointment.AppointmentID,
+			CreatorEmployeeID:   appointment.CreatorEmployeeID,
+			StartTime:           appointment.StartTime.Time,
+			EndTime:             appointment.EndTime.Time,
+			Location:            appointment.Location,
+			Description:         appointment.Description,
+			Status:              appointment.Status,
+			IsConfirmed:         appointment.IsConfirmed,
+			CreatedAt:           appointment.CreatedAt.Time,
+			ParticipantsDetails: participantsDetails,
+			ClientsDetails:      clientsDetails,
 		}
 	}
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
@@ -372,21 +403,23 @@ type ListAppointmentsForClientRequest struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /clients/{id}/appointments [post]
 type ListAppointmentsForClientResponse struct {
-	ID                    int64       `json:"id"`
-	CreatorEmployeeID     *int64      `json:"creator_employee_id"`
-	StartTime             time.Time   `json:"start_time"`
-	EndTime               time.Time   `json:"end_time"`
-	Location              *string     `json:"location"`
-	Description           *string     `json:"description"`
-	Status                string      `json:"status"`
-	RecurrenceType        *string     `json:"recurrence_type"`
-	RecurrenceInterval    *int32      `json:"recurrence_interval"`
-	RecurrenceEndDate     pgtype.Date `json:"recurrence_end_date"`
-	ConfirmedByEmployeeID *int32      `json:"confirmed_by_employee_id"`
-	ConfirmedAt           time.Time   `json:"confirmed_at"`
-	CreatedAt             time.Time   `json:"created_at"`
-	UpdatedAt             time.Time   `json:"updated_at"`
-	IsRecurringOccurrence bool        `json:"is_recurring_occurrence"`
+	ID                    int64                 `json:"id"`
+	CreatorEmployeeID     *int64                `json:"creator_employee_id"`
+	StartTime             time.Time             `json:"start_time"`
+	EndTime               time.Time             `json:"end_time"`
+	Location              *string               `json:"location"`
+	Description           *string               `json:"description"`
+	Status                string                `json:"status"`
+	RecurrenceType        *string               `json:"recurrence_type"`
+	RecurrenceInterval    *int32                `json:"recurrence_interval"`
+	RecurrenceEndDate     pgtype.Date           `json:"recurrence_end_date"`
+	ConfirmedByEmployeeID *int32                `json:"confirmed_by_employee_id"`
+	ConfirmedAt           time.Time             `json:"confirmed_at"`
+	CreatedAt             time.Time             `json:"created_at"`
+	UpdatedAt             time.Time             `json:"updated_at"`
+	IsRecurringOccurrence bool                  `json:"is_recurring_occurrence"`
+	ParticipantsDetails   []ParticipantsDetails `json:"participants_details"`
+	ClientsDetails        []ClientsDetails      `json:"clients_details"`
 }
 
 func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
@@ -417,17 +450,53 @@ func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	if len(appointments) == 0 {
+		res := SuccessResponse([]ListAppointmentsForClientResponse{}, "No appointments found")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+
 	appointmentList := make([]ListAppointmentsForClientResponse, len(appointments))
 	for i, appointment := range appointments {
+		participants, err := server.store.GetAppointmentParticipants(ctx, appointment.AppointmentID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		clientDetails, err := server.store.GetAppointmentClients(ctx, appointment.AppointmentID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		participantsDetails := make([]ParticipantsDetails, len(participants))
+		for j, participant := range participants {
+			participantsDetails[j] = ParticipantsDetails{
+				EmployeeID: participant.EmployeeID,
+				FirstName:  participant.FirstName,
+				LastName:   participant.LastName,
+			}
+		}
+		clientsDetails := make([]ClientsDetails, len(clientDetails))
+		for j, client := range clientDetails {
+			clientsDetails[j] = ClientsDetails{
+				ClientID:  client.ClientID,
+				FirstName: client.FirstName,
+				LastName:  client.LastName,
+			}
+		}
+
 		appointmentList[i] = ListAppointmentsForClientResponse{
-			ID:                appointment.AppointmentID,
-			CreatorEmployeeID: appointment.CreatorEmployeeID,
-			StartTime:         appointment.StartTime.Time,
-			EndTime:           appointment.EndTime.Time,
-			Location:          appointment.Location,
-			Description:       appointment.Description,
-			Status:            appointment.Status,
-			CreatedAt:         appointment.CreatedAt.Time,
+			ID:                  appointment.AppointmentID,
+			CreatorEmployeeID:   appointment.CreatorEmployeeID,
+			StartTime:           appointment.StartTime.Time,
+			EndTime:             appointment.EndTime.Time,
+			Location:            appointment.Location,
+			Description:         appointment.Description,
+			Status:              appointment.Status,
+			CreatedAt:           appointment.CreatedAt.Time,
+			ParticipantsDetails: participantsDetails,
+			ClientsDetails:      clientsDetails,
 		}
 	}
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
