@@ -416,8 +416,6 @@ type ListAppointmentsForClientResponse struct {
 	ConfirmedByEmployeeID *int32                `json:"confirmed_by_employee_id"`
 	ConfirmedAt           time.Time             `json:"confirmed_at"`
 	CreatedAt             time.Time             `json:"created_at"`
-	UpdatedAt             time.Time             `json:"updated_at"`
-	IsRecurringOccurrence bool                  `json:"is_recurring_occurrence"`
 	ParticipantsDetails   []ParticipantsDetails `json:"participants_details"`
 	ClientsDetails        []ClientsDetails      `json:"clients_details"`
 }

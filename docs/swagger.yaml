@@ -3287,6 +3287,10 @@ definitions:
     type: object
   api.ListAppointmentsForEmployeeInRangeResponse:
     properties:
+      clients_details:
+        items:
+          $ref: '#/definitions/api.ClientsDetails'
+        type: array
       created_at:
         type: string
       creator_employee_id:
@@ -3301,6 +3305,10 @@ definitions:
         type: boolean
       location:
         type: string
+      participants_details:
+        items:
+          $ref: '#/definitions/api.ParticipantsDetails'
+        type: array
       start_time:
         type: string
       status:

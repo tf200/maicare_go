@@ -12391,6 +12391,12 @@ const docTemplate = `{
         "api.ListAppointmentsForEmployeeInRangeResponse": {
             "type": "object",
             "properties": {
+                "clients_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ClientsDetails"
+                    }
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -12411,6 +12417,12 @@ const docTemplate = `{
                 },
                 "location": {
                     "type": "string"
+                },
+                "participants_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ParticipantsDetails"
+                    }
                 },
                 "start_time": {
                     "type": "string"
