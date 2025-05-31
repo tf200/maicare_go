@@ -30,14 +30,70 @@ shift_days AS (
     s.start_datetime,
     s.end_datetime,
     d.day,
-    e.first_name AS employee_first_name
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
   FROM schedules s
   JOIN dates d 
     ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
   JOIN employee_profile e 
-    ON s.employee_id = e.employee_id
+    ON s.employee_id = e.id
   WHERE s.location_id = $3
 )
 SELECT *
 FROM shift_days
 ORDER BY day, start_datetime;
+
+
+
+-- name: GetDailySchedulesByLocation :many
+WITH target_day AS (
+  SELECT make_date($1, $2, $3) AS day
+),
+shift_days AS (
+  SELECT 
+    s.id AS shift_id,
+    s.employee_id,
+    s.location_id,
+    s.start_datetime,
+    s.end_datetime,
+    d.day,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
+  FROM schedules s
+  JOIN target_day d 
+    ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
+  JOIN employee_profile e 
+    ON s.employee_id = e.id
+  WHERE s.location_id = $4
+)
+SELECT *
+FROM shift_days
+ORDER BY start_datetime;
+
+
+-- name: GetScheduleById :one
+SELECT s.*,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    l.name AS location_name
+FROM schedules s
+JOIN employee_profile e ON s.employee_id = e.id
+JOIN location l ON s.location_id = l.id
+WHERE s.id = $1
+LIMIT 1;
+
+-- name: UpdateSchedule :one
+UPDATE schedules
+SET
+    employee_id = $2,
+    location_id = $3,
+    start_datetime = $4,
+    end_datetime = $5
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteSchedule :exec
+DELETE FROM schedules
+WHERE id = $1;
+
+

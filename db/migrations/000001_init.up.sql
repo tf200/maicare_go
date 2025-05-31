@@ -1925,7 +1925,7 @@ CREATE TABLE registration_form (
 
 
 CREATE TABLE schedules (
-  id SERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
   location_id BIGINT NOT NULL REFERENCES location(id),
   start_datetime TIMESTAMP NOT NULL,

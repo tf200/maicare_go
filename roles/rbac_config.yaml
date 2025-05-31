@@ -71,6 +71,18 @@ permissions:
   - name: SETTINGS.VIEW
     resource: /settings
     method: [GET]
+  - name: SCHEDULE.CREATE
+    resource: /schedules
+    method: [POST]
+  - name: SCHEDULE.VIEW
+    resource: /schedules
+    method: [GET]
+  - name: SCHEDULE.UPDATE
+    resource: /schedules
+    method: [PUT]
+  - name: SCHEDULE.DELETE
+    resource: /schedules
+    method: [DELETE]
   - name: CARE_COORDINATION.VIEW
     resource: "none"
     method: [none]
@@ -101,6 +113,10 @@ roles:
       - CLIENT.UPDATE
       - CLIENT.DELETE
       - PROFILE.VIEW
+      - SCHEDULE.CREATE
+      - SCHEDULE.VIEW
+      - SCHEDULE.UPDATE
+      - SCHEDULE.DELETE
       - CARE_COORDINATION.VIEW
 
   - name: Worker

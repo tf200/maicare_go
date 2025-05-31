@@ -971,7 +971,7 @@ type RolePermission struct {
 }
 
 type Schedule struct {
-	ID            int32            `json:"id"`
+	ID            int64            `json:"id"`
 	EmployeeID    int64            `json:"employee_id"`
 	LocationID    int64            `json:"location_id"`
 	StartDatetime pgtype.Timestamp `json:"start_datetime"`

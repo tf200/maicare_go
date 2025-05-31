@@ -1838,6 +1838,19 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.CreateScheduleRequest:
+    properties:
+      employee_id:
+        type: integer
+      end_datetime:
+        example: "2023-10-01T17:00:00Z"
+        type: string
+      location_id:
+        type: integer
+      start_datetime:
+        example: "2023-10-01T09:00:00Z"
+        type: string
+    type: object
   api.CreateSenderRequest:
     properties:
       BTWnumber:
@@ -2560,6 +2573,15 @@ definitions:
       total_clients:
         type: integer
     type: object
+  api.GetDailySchedulesByLocationResponse:
+    properties:
+      date:
+        type: string
+      shifts:
+        items:
+          $ref: '#/definitions/api.Shift'
+        type: array
+    type: object
   api.GetEmployeeCountsResponse:
     properties:
       total_archived:
@@ -2903,6 +2925,15 @@ definitions:
           type: string
         type: array
     type: object
+  api.GetMonthlySchedulesByLocationResponse:
+    properties:
+      date:
+        type: string
+      shifts:
+        items:
+          $ref: '#/definitions/api.Shift'
+        type: array
+    type: object
   api.GetPermissionsByRoleIDApiResponse:
     properties:
       id:
@@ -3083,6 +3114,29 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.GetScheduleByIdResponse:
+    properties:
+      created_at:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      end_datetime:
+        type: string
+      id:
+        type: integer
+      location_id:
+        type: integer
+      location_name:
+        type: string
+      start_datetime:
+        type: string
+      updated_at:
         type: string
     type: object
   api.GetSenderByIdResponse:
@@ -4570,6 +4624,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateScheduleRequest:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateScheduleRequest'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateSenderResponse:
     properties:
       data:
@@ -4804,6 +4867,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetDailySchedulesByLocationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetDailySchedulesByLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetEmployeeCountsResponse:
     properties:
       data:
@@ -4889,6 +4961,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetRoleByIDApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetScheduleByIdResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetScheduleByIdResponse'
       message:
         type: string
       success:
@@ -5155,6 +5236,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateScheduleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateScheduleResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateSenderResponse:
     properties:
       data:
@@ -5178,6 +5268,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.CreateGoalObjectiveResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetMonthlySchedulesByLocationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetMonthlySchedulesByLocationResponse'
         type: array
       message:
         type: string
@@ -5457,6 +5558,23 @@ definitions:
         type: string
       secret:
         example: JBSWY3DPEHPK3PXP
+        type: string
+    type: object
+  api.Shift:
+    properties:
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      end_time:
+        type: string
+      location_id:
+        type: integer
+      shift_id:
+        type: integer
+      start_time:
         type: string
     type: object
   api.TotalDischargeCountResponse:
@@ -6647,6 +6765,34 @@ definitions:
       risk_weapon_possession:
         type: boolean
       submitted_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.UpdateScheduleRequest:
+    properties:
+      employee_id:
+        type: integer
+      end_datetime:
+        type: string
+      location_id:
+        type: integer
+      start_datetime:
+        type: string
+    type: object
+  api.UpdateScheduleResponse:
+    properties:
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      end_datetime:
+        type: string
+      id:
+        type: integer
+      location_id:
+        type: integer
+      start_datetime:
         type: string
       updated_at:
         type: string
@@ -11493,6 +11639,86 @@ paths:
       summary: Update a location
       tags:
       - locations
+  /locations/{id}/daily_schedules:
+    get:
+      description: Get all schedules for a specific location for a given day
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: Month
+        in: query
+        name: month
+        required: true
+        type: integer
+      - description: Day
+        in: query
+        name: day
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daily schedules retrieved successfully
+          schema:
+            $ref: '#/definitions/api.Response-api_GetDailySchedulesByLocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get daily schedules by location
+      tags:
+      - Schedule
+  /locations/{id}/monthly_schedules:
+    get:
+      description: Get all schedules for a specific location for a given month and
+        year
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: Month
+        in: query
+        name: month
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly schedules retrieved successfully
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetMonthlySchedulesByLocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get monthly schedules by location
+      tags:
+      - Schedule
   /maturity_matrix:
     get:
       description: Get a list of all maturity matrix
@@ -11874,6 +12100,123 @@ paths:
       summary: Get role by ID
       tags:
       - roles
+  /schedules:
+    post:
+      consumes:
+      - application/json
+      description: Create a new schedule for an employee at a specific location
+      parameters:
+      - description: Create Schedule Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule created successfully
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateScheduleRequest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new schedule
+      tags:
+      - Schedule
+  /schedules/{id}:
+    delete:
+      description: Delete an existing schedule by its ID
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule deleted successfully
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a schedule
+      tags:
+      - Schedule
+    get:
+      description: Get a schedule by its ID
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule retrieved successfully
+          schema:
+            $ref: '#/definitions/api.Response-api_GetScheduleByIdResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get schedule by ID
+      tags:
+      - Schedule
+    put:
+      consumes:
+      - application/json
+      description: Update an existing schedule by its ID
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Schedule Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule updated successfully
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateScheduleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update a schedule
+      tags:
+      - Schedule
   /senders:
     get:
       consumes:

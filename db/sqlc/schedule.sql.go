@@ -50,6 +50,94 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 	return i, err
 }
 
+const deleteSchedule = `-- name: DeleteSchedule :exec
+DELETE FROM schedules
+WHERE id = $1
+`
+
+func (q *Queries) DeleteSchedule(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteSchedule, id)
+	return err
+}
+
+const getDailySchedulesByLocation = `-- name: GetDailySchedulesByLocation :many
+WITH target_day AS (
+  SELECT make_date($1, $2, $3) AS day
+),
+shift_days AS (
+  SELECT 
+    s.id AS shift_id,
+    s.employee_id,
+    s.location_id,
+    s.start_datetime,
+    s.end_datetime,
+    d.day,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
+  FROM schedules s
+  JOIN target_day d 
+    ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
+  JOIN employee_profile e 
+    ON s.employee_id = e.id
+  WHERE s.location_id = $4
+)
+SELECT shift_id, employee_id, location_id, start_datetime, end_datetime, day, employee_first_name, employee_last_name
+FROM shift_days
+ORDER BY start_datetime
+`
+
+type GetDailySchedulesByLocationParams struct {
+	Year       int32 `json:"year"`
+	Month      int32 `json:"month"`
+	Day        int32 `json:"day"`
+	LocationID int64 `json:"location_id"`
+}
+
+type GetDailySchedulesByLocationRow struct {
+	ShiftID           int64            `json:"shift_id"`
+	EmployeeID        int64            `json:"employee_id"`
+	LocationID        int64            `json:"location_id"`
+	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
+	Day               pgtype.Date      `json:"day"`
+	EmployeeFirstName string           `json:"employee_first_name"`
+	EmployeeLastName  string           `json:"employee_last_name"`
+}
+
+func (q *Queries) GetDailySchedulesByLocation(ctx context.Context, arg GetDailySchedulesByLocationParams) ([]GetDailySchedulesByLocationRow, error) {
+	rows, err := q.db.Query(ctx, getDailySchedulesByLocation,
+		arg.Year,
+		arg.Month,
+		arg.Day,
+		arg.LocationID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDailySchedulesByLocationRow
+	for rows.Next() {
+		var i GetDailySchedulesByLocationRow
+		if err := rows.Scan(
+			&i.ShiftID,
+			&i.EmployeeID,
+			&i.LocationID,
+			&i.StartDatetime,
+			&i.EndDatetime,
+			&i.Day,
+			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMonthlySchedulesByLocation = `-- name: GetMonthlySchedulesByLocation :many
 WITH target_month AS (
   SELECT make_date($1, $2, 1) AS start_date
@@ -69,15 +157,16 @@ shift_days AS (
     s.start_datetime,
     s.end_datetime,
     d.day,
-    e.first_name AS employee_first_name
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name
   FROM schedules s
   JOIN dates d 
     ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
   JOIN employee_profile e 
-    ON s.employee_id = e.employee_id
+    ON s.employee_id = e.id
   WHERE s.location_id = $3
 )
-SELECT shift_id, employee_id, location_id, start_datetime, end_datetime, day, employee_first_name
+SELECT shift_id, employee_id, location_id, start_datetime, end_datetime, day, employee_first_name, employee_last_name
 FROM shift_days
 ORDER BY day, start_datetime
 `
@@ -89,13 +178,14 @@ type GetMonthlySchedulesByLocationParams struct {
 }
 
 type GetMonthlySchedulesByLocationRow struct {
-	ShiftID           int32            `json:"shift_id"`
+	ShiftID           int64            `json:"shift_id"`
 	EmployeeID        int64            `json:"employee_id"`
 	LocationID        int64            `json:"location_id"`
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
 	Day               pgtype.Date      `json:"day"`
 	EmployeeFirstName string           `json:"employee_first_name"`
+	EmployeeLastName  string           `json:"employee_last_name"`
 }
 
 func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMonthlySchedulesByLocationParams) ([]GetMonthlySchedulesByLocationRow, error) {
@@ -115,6 +205,7 @@ func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMont
 			&i.EndDatetime,
 			&i.Day,
 			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
 		); err != nil {
 			return nil, err
 		}
@@ -124,4 +215,87 @@ func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMont
 		return nil, err
 	}
 	return items, nil
+}
+
+const getScheduleById = `-- name: GetScheduleById :one
+SELECT s.id, s.employee_id, s.location_id, s.start_datetime, s.end_datetime, s.created_at, s.updated_at,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    l.name AS location_name
+FROM schedules s
+JOIN employee_profile e ON s.employee_id = e.id
+JOIN location l ON s.location_id = l.id
+WHERE s.id = $1
+LIMIT 1
+`
+
+type GetScheduleByIdRow struct {
+	ID                int64            `json:"id"`
+	EmployeeID        int64            `json:"employee_id"`
+	LocationID        int64            `json:"location_id"`
+	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
+	UpdatedAt         pgtype.Timestamp `json:"updated_at"`
+	EmployeeFirstName string           `json:"employee_first_name"`
+	EmployeeLastName  string           `json:"employee_last_name"`
+	LocationName      string           `json:"location_name"`
+}
+
+func (q *Queries) GetScheduleById(ctx context.Context, id int64) (GetScheduleByIdRow, error) {
+	row := q.db.QueryRow(ctx, getScheduleById, id)
+	var i GetScheduleByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.LocationID,
+		&i.StartDatetime,
+		&i.EndDatetime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
+		&i.LocationName,
+	)
+	return i, err
+}
+
+const updateSchedule = `-- name: UpdateSchedule :one
+UPDATE schedules
+SET
+    employee_id = $2,
+    location_id = $3,
+    start_datetime = $4,
+    end_datetime = $5
+WHERE id = $1
+RETURNING id, employee_id, location_id, start_datetime, end_datetime, created_at, updated_at
+`
+
+type UpdateScheduleParams struct {
+	ID            int64            `json:"id"`
+	EmployeeID    int64            `json:"employee_id"`
+	LocationID    int64            `json:"location_id"`
+	StartDatetime pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
+}
+
+func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (Schedule, error) {
+	row := q.db.QueryRow(ctx, updateSchedule,
+		arg.ID,
+		arg.EmployeeID,
+		arg.LocationID,
+		arg.StartDatetime,
+		arg.EndDatetime,
+	)
+	var i Schedule
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.LocationID,
+		&i.StartDatetime,
+		&i.EndDatetime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
