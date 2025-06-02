@@ -32,6 +32,7 @@ type CreateAppointmentResponse struct {
 	CreatorEmployeeID int64     `json:"creator_employee_id"`
 	StartTime         time.Time `json:"start_time"`
 	EndTime           time.Time `json:"end_time"`
+	Color             *string   `json:"color"`
 	Location          *string   `json:"location"`
 	Description       *string   `json:"description"`
 }
@@ -140,6 +141,7 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			StartTime:         appointment.StartTime.Time,
 			EndTime:           appointment.EndTime.Time,
 			Location:          appointment.Location,
+			Color:             appointment.Color,
 			Description:       appointment.Description,
 		}
 
@@ -165,6 +167,7 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			StartTime:         appointmentTemp.StartTime.Time,
 			EndTime:           appointmentTemp.EndTime.Time,
 			Location:          appointmentTemp.Location,
+			Color:             appointmentTemp.Color,
 			Description:       appointmentTemp.Description,
 		}
 
