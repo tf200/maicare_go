@@ -1763,13 +1763,13 @@ CREATE TABLE appointment_templates (
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
     description TEXT,
+    color VARCHAR(20) DEFAULT '#0000FF', 
     recurrence_type VARCHAR(50) DEFAULT 'DAILY' CHECK (recurrence_type IN ('DAILY', 'WEEKLY', 'MONTHLY')),
     recurrence_interval INT  NULL,
     recurrence_end_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 
 CREATE TABLE scheduled_appointments (
@@ -1783,6 +1783,7 @@ CREATE TABLE scheduled_appointments (
     location VARCHAR(255),
     description TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
+    color VARCHAR(20) DEFAULT '#0000FF', -- Default color for the appointment
 
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     confirmed_by_employee_id BIGINT REFERENCES employee_profile(id),
@@ -1927,6 +1928,7 @@ CREATE TABLE registration_form (
 CREATE TABLE schedules (
   id BIGSERIAL PRIMARY KEY,
   employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+  color VARCHAR(20) DEFAULT '#0000FF', -- Default color for the schedule
   location_id BIGINT NOT NULL REFERENCES location(id),
   start_datetime TIMESTAMP NOT NULL,
   end_datetime TIMESTAMP NOT NULL,

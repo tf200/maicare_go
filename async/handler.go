@@ -218,6 +218,7 @@ func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task)
 			EndTime:           pgtype.Timestamp{Time: currentEndTime, Valid: true},
 			Location:          appointemntTemplate.Location,
 			Description:       appointemntTemplate.Description,
+			Color:             appointemntTemplate.Color,
 		})
 		if err != nil {
 			log.Printf("Failed to create appointment: %v", err)

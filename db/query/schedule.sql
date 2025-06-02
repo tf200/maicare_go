@@ -3,10 +3,11 @@
 INSERT INTO schedules (
     employee_id,
     location_id,
+    color,
     start_datetime,
     end_datetime
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -29,6 +30,7 @@ shift_days AS (
     s.location_id,
     s.start_datetime,
     s.end_datetime,
+    s.color,
     d.day,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
@@ -54,6 +56,7 @@ shift_days AS (
     s.id AS shift_id,
     s.employee_id,
     s.location_id,
+    s.color,
     s.start_datetime,
     s.end_datetime,
     d.day,

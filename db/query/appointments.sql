@@ -3,10 +3,11 @@ INSERT INTO scheduled_appointments (
     creator_employee_id, 
     start_time,           
     end_time,             
-    location,             
+    location,
+    color,             
     description       
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 ) RETURNING *;
 
 -- name: CreateAppointmentTemplate :one
@@ -15,12 +16,13 @@ INSERT INTO appointment_templates (
     start_time,           
     end_time,             
     location,             
-    description,          
+    description,  
+    color,        
     recurrence_type,
     recurrence_interval,
     recurrence_end_date
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
 ) RETURNING *;
 
 
@@ -57,6 +59,7 @@ SELECT
     sa.end_time,
     sa.location,
     sa.description,
+    sa.color,
     sa.status,
     sa.is_confirmed,
     sa.creator_employee_id,
@@ -78,6 +81,7 @@ SELECT
     sa.end_time,
     sa.location,
     sa.description,
+    sa.color,
     sa.status,
     sa.is_confirmed,
     sa.creator_employee_id, -- Still show who created it
@@ -111,6 +115,7 @@ SELECT
     sa.end_time,
     sa.location,
     sa.description,
+    sa.color,
     sa.status,
     sa.creator_employee_id, -- Include creator info if needed
     sa.created_at
@@ -143,6 +148,7 @@ SELECT
     sa.end_time,
     sa.location,
     sa.description,
+    sa.color,
     sa.status,
     sa.is_confirmed,
     sa.confirmed_by_employee_id,
@@ -202,6 +208,7 @@ SET
     end_time = COALESCE($3, end_time),
     location = COALESCE ($4, location),
     description = COALESCE ($5, description),
+    color = COALESCE ($6, color),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

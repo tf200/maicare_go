@@ -8439,6 +8439,10 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "color": {
+                    "type": "string",
+                    "example": "#FF5733"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -10556,6 +10560,11 @@ const docTemplate = `{
         "api.CreateScheduleRequest": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string",
+                    "example": "#FF5733"
+                },
                 "employee_id": {
                     "type": "integer"
                 },
@@ -11111,6 +11120,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.ClientsDetails"
                     }
+                },
+                "color": {
+                    "type": "string"
                 },
                 "confirmed_at": {
                     "type": "string"
@@ -12495,6 +12507,10 @@ const docTemplate = `{
         "api.GetScheduleByIdResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -12838,6 +12854,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/api.ClientsDetails"
                     }
                 },
+                "color": {
+                    "type": "string"
+                },
                 "confirmed_at": {
                     "type": "string"
                 },
@@ -12910,6 +12929,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.ClientsDetails"
                     }
+                },
+                "color": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -16237,6 +16259,10 @@ const docTemplate = `{
         "api.Shift": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
                 "employee_first_name": {
                     "type": "string"
                 },
@@ -16470,6 +16496,9 @@ const docTemplate = `{
             "properties": {
                 "appointment_templates_id": {
                     "type": "integer"
+                },
+                "color": {
+                    "type": "string"
                 },
                 "confirmed_at": {
                     "$ref": "#/definitions/pgtype.Timestamp"
@@ -18067,6 +18096,11 @@ const docTemplate = `{
         "api.UpdateScheduleRequest": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string",
+                    "example": "#FF5733"
+                },
                 "employee_id": {
                     "type": "integer"
                 },
@@ -18084,6 +18118,10 @@ const docTemplate = `{
         "api.UpdateScheduleResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },

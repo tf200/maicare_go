@@ -18,6 +18,7 @@ type CreateAppointmentRequest struct {
 	EndTime                time.Time `json:"end_time" binding:"required"`
 	Location               *string   `json:"location"`
 	Description            *string   `json:"description"`
+	Color                  *string   `json:"color" example:"#FF5733"`
 	RecurrenceType         string    `json:"recurrence_type" example:"NONE" enum:"NONE,DAILY,WEEKLY,MONTHLY"`
 	RecurrenceInterval     *int32    `json:"recurrence_interval"`
 	RecurrenceEndDate      time.Time `json:"recurrence_end_date" example:"2025-10-01T10:00:00Z"`
@@ -99,6 +100,7 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			EndTime:           pgtype.Timestamp{Time: req.EndTime, Valid: true},
 			Location:          req.Location,
 			Description:       req.Description,
+			Color:             req.Color,
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -148,6 +150,7 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			EndTime:            pgtype.Timestamp{Time: req.EndTime, Valid: true},
 			Location:           req.Location,
 			Description:        req.Description,
+			Color:              req.Color,
 			RecurrenceType:     &req.RecurrenceType,
 			RecurrenceInterval: req.RecurrenceInterval,
 			RecurrenceEndDate:  pgtype.Date{Time: req.RecurrenceEndDate, Valid: true},
@@ -284,6 +287,7 @@ type ListAppointmentsForEmployeeInRangeResponse struct {
 	EndTime             time.Time             `json:"end_time"`
 	Location            *string               `json:"location"`
 	Description         *string               `json:"description"`
+	Color               *string               `json:"color"`
 	Status              string                `json:"status"`
 	IsConfirmed         bool                  `json:"is_confirmed"`
 	CreatedAt           time.Time             `json:"created_at"`
@@ -370,6 +374,7 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 			EndTime:             appointment.EndTime.Time,
 			Location:            appointment.Location,
 			Description:         appointment.Description,
+			Color:               appointment.Color,
 			Status:              appointment.Status,
 			IsConfirmed:         appointment.IsConfirmed,
 			CreatedAt:           appointment.CreatedAt.Time,
@@ -396,6 +401,7 @@ type ListAppointmentsForClientResponse struct {
 	EndTime               time.Time             `json:"end_time"`
 	Location              *string               `json:"location"`
 	Description           *string               `json:"description"`
+	Color                 *string               `json:"color"`
 	Status                string                `json:"status"`
 	RecurrenceType        *string               `json:"recurrence_type"`
 	RecurrenceInterval    *int32                `json:"recurrence_interval"`
@@ -491,6 +497,7 @@ func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
 			EndTime:             appointment.EndTime.Time,
 			Location:            appointment.Location,
 			Description:         appointment.Description,
+			Color:               appointment.Color,
 			Status:              appointment.Status,
 			CreatedAt:           appointment.CreatedAt.Time,
 			ParticipantsDetails: participantsDetails,
@@ -526,6 +533,7 @@ type GetAppointmentResponse struct {
 	EndTime                time.Time             `json:"end_time"`
 	Location               *string               `json:"location"`
 	Description            *string               `json:"description"`
+	Color                  *string               `json:"color"`
 	Status                 string                `json:"status"`
 	IsConfirmed            bool                  `json:"is_confirmed"`
 	ConfirmedByEmployeeID  *int64                `json:"confirmed_by_employee_id"`
@@ -603,6 +611,7 @@ func (server *Server) GetAppointmentApi(ctx *gin.Context) {
 		EndTime:               appointment.EndTime.Time,
 		Location:              appointment.Location,
 		Description:           appointment.Description,
+		Color:                 appointment.Color,
 		Status:                appointment.Status,
 		IsConfirmed:           appointment.IsConfirmed,
 		ConfirmedByEmployeeID: appointment.ConfirmedByEmployeeID,
@@ -635,6 +644,7 @@ type UpdateAppointmentResponse struct {
 	EndTime                pgtype.Timestamp `json:"end_time"`
 	Location               *string          `json:"location"`
 	Description            *string          `json:"description"`
+	Color                  *string          `json:"color"`
 	Status                 string           `json:"status"`
 	IsConfirmed            bool             `json:"is_confirmed"`
 	ConfirmedByEmployeeID  *int64           `json:"confirmed_by_employee_id"`
@@ -748,6 +758,7 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 		EndTime:                appointment.EndTime,
 		Location:               appointment.Location,
 		Description:            appointment.Description,
+		Color:                  appointment.Color,
 		Status:                 appointment.Status,
 		IsConfirmed:            appointment.IsConfirmed,
 		ConfirmedByEmployeeID:  appointment.ConfirmedByEmployeeID,

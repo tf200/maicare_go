@@ -15,6 +15,7 @@ import (
 type CreateScheduleRequest struct {
 	EmployeeID    int64     `json:"employee_id"`
 	LocationID    int64     `json:"location_id"`
+	Color         *string   `json:"color" example:"#FF5733"` // Optional field for color coding
 	StartDatetime time.Time `json:"start_datetime" example:"2023-10-01T09:00:00Z"`
 	EndDatetime   time.Time `json:"end_datetime" example:"2023-10-01T17:00:00Z"`
 }
@@ -56,6 +57,7 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 	arg := db.CreateScheduleParams{
 		EmployeeID:    req.EmployeeID,
 		LocationID:    req.LocationID,
+		Color:         req.Color,
 		StartDatetime: pgtype.Timestamp{Time: req.StartDatetime, Valid: true},
 		EndDatetime:   pgtype.Timestamp{Time: req.EndDatetime, Valid: true},
 	}
@@ -92,6 +94,7 @@ type Shift struct {
 	StartTime         time.Time `json:"start_time"`
 	EndTime           time.Time `json:"end_time"`
 	LocationID        int64     `json:"location_id"`
+	Color             *string   `json:"color"` // Optional field for color coding
 }
 
 // GetMonthlySchedulesByLocationResponse represents the response body for monthly schedules.
@@ -147,6 +150,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 			StartTime:         schedule.StartDatetime.Time,
 			EndTime:           schedule.EndDatetime.Time,
 			LocationID:        schedule.LocationID,
+			Color:             schedule.Color,
 		}
 		calendar[day] = append(calendar[day], shift)
 	}
@@ -228,6 +232,7 @@ func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
 			StartTime:         schedule.StartDatetime.Time,
 			EndTime:           schedule.EndDatetime.Time,
 			LocationID:        schedule.LocationID,
+			Color:             schedule.Color,
 		}
 		shifts = append(shifts, shift)
 	}
@@ -254,6 +259,7 @@ type GetScheduleByIdResponse struct {
 	EmployeeLastName  string    `json:"employee_last_name"`
 	LocationID        int64     `json:"location_id"`
 	LocationName      string    `json:"location_name"`
+	Color             *string   `json:"color"` // Optional field for color coding
 	StartDatetime     time.Time `json:"start_datetime"`
 	EndDatetime       time.Time `json:"end_datetime"`
 	CreatedAt         time.Time `json:"created_at"`
@@ -293,6 +299,7 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 		EndDatetime:       schedule.EndDatetime.Time,
 		CreatedAt:         schedule.CreatedAt.Time,
 		UpdatedAt:         schedule.UpdatedAt.Time,
+		Color:             schedule.Color,
 	}, "Schedule retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -301,6 +308,7 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 type UpdateScheduleRequest struct {
 	EmployeeID    int64     `json:"employee_id"`
 	LocationID    int64     `json:"location_id"`
+	Color         *string   `json:"color" example:"#FF5733"` // Optional field for color coding
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`
 }
@@ -312,6 +320,7 @@ type UpdateScheduleResponse struct {
 	LocationID    int64     `json:"location_id"`
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`
+	Color         *string   `json:"color"` // Optional field for color coding
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -360,6 +369,7 @@ func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
 		LocationID:    schedule.LocationID,
 		StartDatetime: schedule.StartDatetime.Time,
 		EndDatetime:   schedule.EndDatetime.Time,
+		Color:         schedule.Color,
 		CreatedAt:     schedule.CreatedAt.Time,
 		UpdatedAt:     schedule.UpdatedAt.Time,
 	}, "Schedule updated successfully")

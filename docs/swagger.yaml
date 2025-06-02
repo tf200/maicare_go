@@ -398,6 +398,9 @@ definitions:
         items:
           type: integer
         type: array
+      color:
+        example: '#FF5733'
+        type: string
       description:
         type: string
       end_time:
@@ -1840,6 +1843,10 @@ definitions:
     type: object
   api.CreateScheduleRequest:
     properties:
+      color:
+        description: Optional field for color coding
+        example: '#FF5733'
+        type: string
       employee_id:
         type: integer
       end_datetime:
@@ -2205,6 +2212,8 @@ definitions:
         items:
           $ref: '#/definitions/api.ClientsDetails'
         type: array
+      color:
+        type: string
       confirmed_at:
         type: string
       confirmed_by_employee_id:
@@ -3118,6 +3127,9 @@ definitions:
     type: object
   api.GetScheduleByIdResponse:
     properties:
+      color:
+        description: Optional field for color coding
+        type: string
       created_at:
         type: string
       employee_first_name:
@@ -3345,6 +3357,8 @@ definitions:
         items:
           $ref: '#/definitions/api.ClientsDetails'
         type: array
+      color:
+        type: string
       confirmed_at:
         type: string
       confirmed_by_employee_id:
@@ -3394,6 +3408,8 @@ definitions:
         items:
           $ref: '#/definitions/api.ClientsDetails'
         type: array
+      color:
+        type: string
       created_at:
         type: string
       creator_employee_id:
@@ -5562,6 +5578,9 @@ definitions:
     type: object
   api.Shift:
     properties:
+      color:
+        description: Optional field for color coding
+        type: string
       employee_first_name:
         type: string
       employee_id:
@@ -5717,6 +5736,8 @@ definitions:
     properties:
       appointment_templates_id:
         type: integer
+      color:
+        type: string
       confirmed_at:
         $ref: '#/definitions/pgtype.Timestamp'
       confirmed_by_employee_id:
@@ -6771,6 +6792,10 @@ definitions:
     type: object
   api.UpdateScheduleRequest:
     properties:
+      color:
+        description: Optional field for color coding
+        example: '#FF5733'
+        type: string
       employee_id:
         type: integer
       end_datetime:
@@ -6782,6 +6807,9 @@ definitions:
     type: object
   api.UpdateScheduleResponse:
     properties:
+      color:
+        description: Optional field for color coding
+        type: string
       created_at:
         type: string
       employee_id:

@@ -8432,6 +8432,10 @@
                         "type": "integer"
                     }
                 },
+                "color": {
+                    "type": "string",
+                    "example": "#FF5733"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -10549,6 +10553,11 @@
         "api.CreateScheduleRequest": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string",
+                    "example": "#FF5733"
+                },
                 "employee_id": {
                     "type": "integer"
                 },
@@ -11104,6 +11113,9 @@
                     "items": {
                         "$ref": "#/definitions/api.ClientsDetails"
                     }
+                },
+                "color": {
+                    "type": "string"
                 },
                 "confirmed_at": {
                     "type": "string"
@@ -12488,6 +12500,10 @@
         "api.GetScheduleByIdResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -12831,6 +12847,9 @@
                         "$ref": "#/definitions/api.ClientsDetails"
                     }
                 },
+                "color": {
+                    "type": "string"
+                },
                 "confirmed_at": {
                     "type": "string"
                 },
@@ -12903,6 +12922,9 @@
                     "items": {
                         "$ref": "#/definitions/api.ClientsDetails"
                     }
+                },
+                "color": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -16230,6 +16252,10 @@
         "api.Shift": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
                 "employee_first_name": {
                     "type": "string"
                 },
@@ -16463,6 +16489,9 @@
             "properties": {
                 "appointment_templates_id": {
                     "type": "integer"
+                },
+                "color": {
+                    "type": "string"
                 },
                 "confirmed_at": {
                     "$ref": "#/definitions/pgtype.Timestamp"
@@ -18060,6 +18089,11 @@
         "api.UpdateScheduleRequest": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string",
+                    "example": "#FF5733"
+                },
                 "employee_id": {
                     "type": "integer"
                 },
@@ -18077,6 +18111,10 @@
         "api.UpdateScheduleResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
