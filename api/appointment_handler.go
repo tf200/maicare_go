@@ -633,6 +633,7 @@ type UpdateAppointmentRequest struct {
 	StartTime              time.Time `json:"start_time" binding:"required" example:"2023-10-01T10:00:00Z"`
 	EndTime                time.Time `json:"end_time" binding:"required"`
 	Location               *string   `json:"location"`
+	Color                  *string   `json:"color" example:"#FF5733"`
 	Description            *string   `json:"description"`
 	ClientIDs              *[]int64  `json:"client_ids"`
 	ParticipantEmployeeIDs *[]int64  `json:"participant_employee_ids"`
@@ -703,6 +704,7 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 		StartTime:   pgtype.Timestamp{Time: req.StartTime, Valid: true},
 		EndTime:     pgtype.Timestamp{Time: req.EndTime, Valid: true},
 		Location:    req.Location,
+		Color:       req.Color,
 		Description: req.Description,
 	})
 	if err != nil {

@@ -428,6 +428,8 @@ definitions:
     type: object
   api.CreateAppointmentResponse:
     properties:
+      color:
+        type: string
       creator_employee_id:
         type: integer
       description:
@@ -5715,6 +5717,9 @@ definitions:
         items:
           type: integer
         type: array
+      color:
+        example: '#FF5733'
+        type: string
       description:
         type: string
       end_time:

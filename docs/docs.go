@@ -8478,6 +8478,9 @@ const docTemplate = `{
         "api.CreateAppointmentResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "type": "string"
+                },
                 "creator_employee_id": {
                     "type": "integer"
                 },
@@ -16469,6 +16472,10 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "color": {
+                    "type": "string",
+                    "example": "#FF5733"
                 },
                 "description": {
                     "type": "string"

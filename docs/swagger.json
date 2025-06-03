@@ -8471,6 +8471,9 @@
         "api.CreateAppointmentResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "type": "string"
+                },
                 "creator_employee_id": {
                     "type": "integer"
                 },
@@ -16462,6 +16465,10 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "color": {
+                    "type": "string",
+                    "example": "#FF5733"
                 },
                 "description": {
                     "type": "string"
