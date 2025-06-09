@@ -86,6 +86,19 @@ permissions:
   - name: CARE_COORDINATION.VIEW
     resource: "none"
     method: [none]
+  - name: SHIFT.CREATE
+    resource: /shifts
+    method: [POST]
+  - name: SHIFT.VIEW
+    resource: /shifts
+    method: [GET]
+  - name: SHIFT.UPDATE
+    resource: /shifts
+    method: [PUT] 
+  - name: SHIFT.DELETE
+    resource: /shifts
+    method: [DELETE]
+
   
   
 
@@ -118,6 +131,10 @@ roles:
       - SCHEDULE.UPDATE
       - SCHEDULE.DELETE
       - CARE_COORDINATION.VIEW
+      - SHIFT.CREATE
+      - SHIFT.VIEW
+      - SHIFT.UPDATE
+      - SHIFT.DELETE
 
   - name: Worker
     id: 2

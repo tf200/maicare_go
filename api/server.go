@@ -122,6 +122,7 @@ func (server *Server) setupRoutes() {
 	server.setupIncidentsAllRoutes(baseRouter)
 	server.setupRegistrationFormRoutes(baseRouter)
 	server.setupScheduleRoutes(baseRouter)
+	server.setupShiftsRoutes(baseRouter)
 	// Add more route setups as needed
 
 	server.setupWebsocketRoutes(baseRouter)

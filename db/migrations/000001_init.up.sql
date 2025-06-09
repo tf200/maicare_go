@@ -13,6 +13,21 @@ CREATE TABLE location (
     capacity INTEGER NULL
 );
 
+-- Alternative: Direct approach without shift_type table
+CREATE TABLE location_shift (
+    id BIGSERIAL PRIMARY KEY,
+    location_id BIGINT NOT NULL REFERENCES location(id) ON DELETE CASCADE,
+    shift_name VARCHAR(50) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(location_id, shift_name)
+);
+
+
+
+
 -- Table: Roles
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,       
@@ -1930,6 +1945,7 @@ CREATE TABLE schedules (
   employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
   color VARCHAR(20) DEFAULT '#0000FF', -- Default color for the schedule
   location_id BIGINT NOT NULL REFERENCES location(id),
+  location_shift_id BIGINT NULL REFERENCES location_shift(id),
   start_datetime TIMESTAMP NOT NULL,
   end_datetime TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

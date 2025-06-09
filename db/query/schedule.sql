@@ -3,11 +3,12 @@
 INSERT INTO schedules (
     employee_id,
     location_id,
+    location_shift_id,
     color,
     start_datetime,
     end_datetime
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5 , $6
 )
 RETURNING *;
 
@@ -31,10 +32,13 @@ shift_days AS (
     s.start_datetime,
     s.end_datetime,
     s.color,
+    ls.shift_name,
     d.day,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
   FROM schedules s
+  LEFT JOIN location_shift ls 
+    ON s.location_shift_id = ls.id
   JOIN dates d 
     ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
   JOIN employee_profile e 
@@ -59,10 +63,13 @@ shift_days AS (
     s.color,
     s.start_datetime,
     s.end_datetime,
+    ls.shift_name,
     d.day,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
   FROM schedules s
+  LEFT JOIN location_shift ls 
+    ON s.location_shift_id = ls.id
   JOIN target_day d 
     ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
   JOIN employee_profile e 

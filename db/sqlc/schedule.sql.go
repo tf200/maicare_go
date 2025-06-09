@@ -15,27 +15,30 @@ const createSchedule = `-- name: CreateSchedule :one
 INSERT INTO schedules (
     employee_id,
     location_id,
+    location_shift_id,
     color,
     start_datetime,
     end_datetime
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5 , $6
 )
-RETURNING id, employee_id, color, location_id, start_datetime, end_datetime, created_at, updated_at
+RETURNING id, employee_id, color, location_id, location_shift_id, start_datetime, end_datetime, created_at, updated_at
 `
 
 type CreateScheduleParams struct {
-	EmployeeID    int64            `json:"employee_id"`
-	LocationID    int64            `json:"location_id"`
-	Color         *string          `json:"color"`
-	StartDatetime pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
+	EmployeeID      int64            `json:"employee_id"`
+	LocationID      int64            `json:"location_id"`
+	LocationShiftID *int64           `json:"location_shift_id"`
+	Color           *string          `json:"color"`
+	StartDatetime   pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime     pgtype.Timestamp `json:"end_datetime"`
 }
 
 func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) (Schedule, error) {
 	row := q.db.QueryRow(ctx, createSchedule,
 		arg.EmployeeID,
 		arg.LocationID,
+		arg.LocationShiftID,
 		arg.Color,
 		arg.StartDatetime,
 		arg.EndDatetime,
@@ -46,6 +49,7 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 		&i.EmployeeID,
 		&i.Color,
 		&i.LocationID,
+		&i.LocationShiftID,
 		&i.StartDatetime,
 		&i.EndDatetime,
 		&i.CreatedAt,
@@ -76,17 +80,20 @@ shift_days AS (
     s.color,
     s.start_datetime,
     s.end_datetime,
+    ls.shift_name,
     d.day,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
   FROM schedules s
+  LEFT JOIN location_shift ls 
+    ON s.location_shift_id = ls.id
   JOIN target_day d 
     ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
   JOIN employee_profile e 
     ON s.employee_id = e.id
   WHERE s.location_id = $4
 )
-SELECT shift_id, employee_id, location_id, color, start_datetime, end_datetime, day, employee_first_name, employee_last_name
+SELECT shift_id, employee_id, location_id, color, start_datetime, end_datetime, shift_name, day, employee_first_name, employee_last_name
 FROM shift_days
 ORDER BY start_datetime
 `
@@ -105,6 +112,7 @@ type GetDailySchedulesByLocationRow struct {
 	Color             *string          `json:"color"`
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
+	ShiftName         *string          `json:"shift_name"`
 	Day               pgtype.Date      `json:"day"`
 	EmployeeFirstName string           `json:"employee_first_name"`
 	EmployeeLastName  string           `json:"employee_last_name"`
@@ -131,6 +139,7 @@ func (q *Queries) GetDailySchedulesByLocation(ctx context.Context, arg GetDailyS
 			&i.Color,
 			&i.StartDatetime,
 			&i.EndDatetime,
+			&i.ShiftName,
 			&i.Day,
 			&i.EmployeeFirstName,
 			&i.EmployeeLastName,
@@ -164,17 +173,20 @@ shift_days AS (
     s.start_datetime,
     s.end_datetime,
     s.color,
+    ls.shift_name,
     d.day,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
   FROM schedules s
+  LEFT JOIN location_shift ls 
+    ON s.location_shift_id = ls.id
   JOIN dates d 
     ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
   JOIN employee_profile e 
     ON s.employee_id = e.id
   WHERE s.location_id = $3
 )
-SELECT shift_id, employee_id, location_id, start_datetime, end_datetime, color, day, employee_first_name, employee_last_name
+SELECT shift_id, employee_id, location_id, start_datetime, end_datetime, color, shift_name, day, employee_first_name, employee_last_name
 FROM shift_days
 ORDER BY day, start_datetime
 `
@@ -192,6 +204,7 @@ type GetMonthlySchedulesByLocationRow struct {
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
 	Color             *string          `json:"color"`
+	ShiftName         *string          `json:"shift_name"`
 	Day               pgtype.Date      `json:"day"`
 	EmployeeFirstName string           `json:"employee_first_name"`
 	EmployeeLastName  string           `json:"employee_last_name"`
@@ -213,6 +226,7 @@ func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMont
 			&i.StartDatetime,
 			&i.EndDatetime,
 			&i.Color,
+			&i.ShiftName,
 			&i.Day,
 			&i.EmployeeFirstName,
 			&i.EmployeeLastName,
@@ -228,7 +242,7 @@ func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMont
 }
 
 const getScheduleById = `-- name: GetScheduleById :one
-SELECT s.id, s.employee_id, s.color, s.location_id, s.start_datetime, s.end_datetime, s.created_at, s.updated_at,
+SELECT s.id, s.employee_id, s.color, s.location_id, s.location_shift_id, s.start_datetime, s.end_datetime, s.created_at, s.updated_at,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
     l.name AS location_name
@@ -244,6 +258,7 @@ type GetScheduleByIdRow struct {
 	EmployeeID        int64            `json:"employee_id"`
 	Color             *string          `json:"color"`
 	LocationID        int64            `json:"location_id"`
+	LocationShiftID   *int64           `json:"location_shift_id"`
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
 	CreatedAt         pgtype.Timestamp `json:"created_at"`
@@ -261,6 +276,7 @@ func (q *Queries) GetScheduleById(ctx context.Context, id int64) (GetScheduleByI
 		&i.EmployeeID,
 		&i.Color,
 		&i.LocationID,
+		&i.LocationShiftID,
 		&i.StartDatetime,
 		&i.EndDatetime,
 		&i.CreatedAt,
@@ -280,7 +296,7 @@ SET
     start_datetime = $4,
     end_datetime = $5
 WHERE id = $1
-RETURNING id, employee_id, color, location_id, start_datetime, end_datetime, created_at, updated_at
+RETURNING id, employee_id, color, location_id, location_shift_id, start_datetime, end_datetime, created_at, updated_at
 `
 
 type UpdateScheduleParams struct {
@@ -305,6 +321,7 @@ func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) 
 		&i.EmployeeID,
 		&i.Color,
 		&i.LocationID,
+		&i.LocationShiftID,
 		&i.StartDatetime,
 		&i.EndDatetime,
 		&i.CreatedAt,

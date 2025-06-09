@@ -6836,6 +6836,215 @@ const docTemplate = `{
                 }
             }
         },
+        "/locations/{id}/shifts": {
+            "get": {
+                "description": "List all shifts for a specific location",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Shifts"
+                ],
+                "summary": "List shifts by location ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Location ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_ListShiftsByLocationIDResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new shift for a specific location",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Shifts"
+                ],
+                "summary": "Create a new shift",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Location ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Shift creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateShiftApiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateShiftApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/locations/{id}/shifts/{shift_id}": {
+            "put": {
+                "description": "Update an existing shift by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Shifts"
+                ],
+                "summary": "Update an existing shift",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Location ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Shift ID",
+                        "name": "shift_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Shift update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateShiftApiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateShiftApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a shift by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Shifts"
+                ],
+                "summary": "Delete a shift by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shift ID",
+                        "name": "shift_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/maturity_matrix": {
             "get": {
                 "description": "Get a list of all maturity matrix",
@@ -7413,7 +7622,7 @@ const docTemplate = `{
         },
         "/schedules": {
             "post": {
-                "description": "Create a new schedule for an employee at a specific location",
+                "description": "Create a new schedule for an employee at a specific location. Supports both custom schedules and preset shifts.\nSet is_custom=true and provide start_datetime/end_datetime for custom schedules\nSet is_custom=false and provide location_shift_id/shift_date for preset shifts",
                 "consumes": [
                     "application/json"
                 ],
@@ -7439,7 +7648,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Schedule created successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateScheduleRequest"
+                            "$ref": "#/definitions/api.Response-api_CreateScheduleResponse"
                         }
                     },
                     "400": {
@@ -10563,11 +10772,6 @@ const docTemplate = `{
         "api.CreateScheduleRequest": {
             "type": "object",
             "properties": {
-                "color": {
-                    "description": "Optional field for color coding",
-                    "type": "string",
-                    "example": "#FF5733"
-                },
                 "employee_id": {
                     "type": "integer"
                 },
@@ -10575,12 +10779,64 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2023-10-01T17:00:00Z"
                 },
+                "is_custom": {
+                    "description": "true for custom schedule, false for preset shift",
+                    "type": "boolean",
+                    "example": true
+                },
                 "location_id": {
                     "type": "integer"
                 },
+                "location_shift_id": {
+                    "description": "For preset shift-based schedules (required when is_custom = false)",
+                    "type": "integer",
+                    "example": 1
+                },
+                "shift_date": {
+                    "description": "Date to apply the shift",
+                    "type": "string",
+                    "example": "2023-10-01"
+                },
                 "start_datetime": {
+                    "description": "For custom schedules (required when is_custom = true)",
                     "type": "string",
                     "example": "2023-10-01T09:00:00Z"
+                }
+            }
+        },
+        "api.CreateScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "end_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_shift_id": {
+                    "description": "Additional info if created from preset shift",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "type": "string"
+                },
+                "start_datetime": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -10681,6 +10937,40 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateShiftApiRequest": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateShiftApiResponse": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
                     "type": "string"
                 }
             }
@@ -14307,6 +14597,26 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListShiftsByLocationIDResponse": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListStatusHistoryApiResponse": {
             "type": "object",
             "properties": {
@@ -14805,11 +15115,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateScheduleRequest": {
+        "api.Response-api_CreateScheduleResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/api.CreateScheduleRequest"
+                    "$ref": "#/definitions/api.CreateScheduleResponse"
                 },
                 "message": {
                     "type": "string"
@@ -14824,6 +15134,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateSenderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateShiftApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateShiftApiResponse"
                 },
                 "message": {
                     "type": "string"
@@ -15785,6 +16109,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_UpdateShiftApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UpdateShiftApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_UploadHandlerResponse": {
             "type": "object",
             "properties": {
@@ -15942,6 +16280,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListRolesApiResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListShiftsByLocationIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListShiftsByLocationIDResponse"
                     }
                 },
                 "message": {
@@ -16283,6 +16638,10 @@ const docTemplate = `{
                 },
                 "shift_id": {
                     "type": "integer"
+                },
+                "shift_name": {
+                    "description": "Optional field for shift name",
+                    "type": "string"
                 },
                 "start_time": {
                     "type": "string"
@@ -18257,6 +18616,40 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UpdateShiftApiRequest": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UpdateShiftApiResponse": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
                     "type": "string"
                 }
             }

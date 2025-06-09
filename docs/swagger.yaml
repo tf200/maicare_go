@@ -1845,19 +1845,52 @@ definitions:
     type: object
   api.CreateScheduleRequest:
     properties:
-      color:
-        description: Optional field for color coding
-        example: '#FF5733'
-        type: string
       employee_id:
         type: integer
       end_datetime:
         example: "2023-10-01T17:00:00Z"
         type: string
+      is_custom:
+        description: true for custom schedule, false for preset shift
+        example: true
+        type: boolean
       location_id:
         type: integer
+      location_shift_id:
+        description: For preset shift-based schedules (required when is_custom = false)
+        example: 1
+        type: integer
+      shift_date:
+        description: Date to apply the shift
+        example: "2023-10-01"
+        type: string
       start_datetime:
+        description: For custom schedules (required when is_custom = true)
         example: "2023-10-01T09:00:00Z"
+        type: string
+    type: object
+  api.CreateScheduleResponse:
+    properties:
+      color:
+        type: string
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      end_datetime:
+        type: string
+      id:
+        type: integer
+      location_id:
+        type: integer
+      location_shift_id:
+        description: Additional info if created from preset shift
+        type: integer
+      shift_name:
+        type: string
+      start_datetime:
+        type: string
+      updated_at:
         type: string
     type: object
   api.CreateSenderRequest:
@@ -1926,6 +1959,28 @@ definitions:
       types:
         type: string
       updated_at:
+        type: string
+    type: object
+  api.CreateShiftApiRequest:
+    properties:
+      end_time:
+        type: string
+      shift:
+        type: string
+      start_time:
+        type: string
+    type: object
+  api.CreateShiftApiResponse:
+    properties:
+      end_time:
+        type: string
+      id:
+        type: integer
+      location_id:
+        type: integer
+      shift:
+        type: string
+      start_time:
         type: string
     type: object
   api.CreateclientMedicationRequest:
@@ -4318,6 +4373,19 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ListShiftsByLocationIDResponse:
+    properties:
+      end_time:
+        type: string
+      id:
+        type: integer
+      location_id:
+        type: integer
+      shift:
+        type: string
+      start_time:
+        type: string
+    type: object
   api.ListStatusHistoryApiResponse:
     properties:
       changed_at:
@@ -4642,10 +4710,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateScheduleRequest:
+  api.Response-api_CreateScheduleResponse:
     properties:
       data:
-        $ref: '#/definitions/api.CreateScheduleRequest'
+        $ref: '#/definitions/api.CreateScheduleResponse'
       message:
         type: string
       success:
@@ -4655,6 +4723,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateSenderResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateShiftApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateShiftApiResponse'
       message:
         type: string
       success:
@@ -5272,6 +5349,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateShiftApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateShiftApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UploadHandlerResponse:
     properties:
       data:
@@ -5374,6 +5460,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.ListRolesApiResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListShiftsByLocationIDResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListShiftsByLocationIDResponse'
         type: array
       message:
         type: string
@@ -5595,6 +5692,9 @@ definitions:
         type: integer
       shift_id:
         type: integer
+      shift_name:
+        description: Optional field for shift name
+        type: string
       start_time:
         type: string
     type: object
@@ -6901,6 +7001,28 @@ definitions:
       types:
         type: string
       updated_at:
+        type: string
+    type: object
+  api.UpdateShiftApiRequest:
+    properties:
+      end_time:
+        type: string
+      shift:
+        type: string
+      start_time:
+        type: string
+    type: object
+  api.UpdateShiftApiResponse:
+    properties:
+      end_time:
+        type: string
+      id:
+        type: integer
+      location_id:
+        type: integer
+      shift:
+        type: string
+      start_time:
         type: string
     type: object
   api.UploadHandlerResponse:
@@ -11752,6 +11874,145 @@ paths:
       summary: Get monthly schedules by location
       tags:
       - Schedule
+  /locations/{id}/shifts:
+    get:
+      description: List all shifts for a specific location
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListShiftsByLocationIDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List shifts by location ID
+      tags:
+      - Shifts
+    post:
+      consumes:
+      - application/json
+      description: Create a new shift for a specific location
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Shift creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateShiftApiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateShiftApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new shift
+      tags:
+      - Shifts
+  /locations/{id}/shifts/{shift_id}:
+    delete:
+      description: Delete a shift by its ID
+      parameters:
+      - description: Shift ID
+        in: path
+        name: shift_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a shift by ID
+      tags:
+      - Shifts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing shift by ID
+      parameters:
+      - description: Location ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Shift ID
+        in: path
+        name: shift_id
+        required: true
+        type: integer
+      - description: Shift update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateShiftApiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateShiftApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update an existing shift
+      tags:
+      - Shifts
   /maturity_matrix:
     get:
       description: Get a list of all maturity matrix
@@ -12137,7 +12398,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new schedule for an employee at a specific location
+      description: |-
+        Create a new schedule for an employee at a specific location. Supports both custom schedules and preset shifts.
+        Set is_custom=true and provide start_datetime/end_datetime for custom schedules
+        Set is_custom=false and provide location_shift_id/shift_date for preset shifts
       parameters:
       - description: Create Schedule Request
         in: body
@@ -12151,7 +12415,7 @@ paths:
         "200":
           description: Schedule created successfully
           schema:
-            $ref: '#/definitions/api.Response-api_CreateScheduleRequest'
+            $ref: '#/definitions/api.Response-api_CreateScheduleResponse'
         "400":
           description: Bad Request
           schema:

@@ -35,6 +35,7 @@ func createRandomSchedule(t *testing.T, employeeID int64) db.Schedule {
 func TestCreateScheduleApi(t *testing.T) {
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
+	shift := createRandomShift(t, location.ID)
 
 	testCases := []struct {
 		name          string
@@ -43,16 +44,52 @@ func TestCreateScheduleApi(t *testing.T) {
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "OK",
+			name: "OK IS CUSTOM",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
+				now := time.Now()
+				endTime := time.Now().Add(1 * time.Hour)
 				createScheduleReq := CreateScheduleRequest{
 					EmployeeID:    employee.ID,
 					LocationID:    location.ID,
-					StartDatetime: time.Now(),
-					EndDatetime:   time.Now().Add(1 * time.Hour),
+					IsCustom:      true,
+					StartDatetime: &now,
+					EndDatetime:   &endTime,
+				}
+				data, err := json.Marshal(createScheduleReq)
+				require.NoError(t, err)
+				request, err := http.NewRequest(http.MethodPost, "/schedules", bytes.NewBuffer(data))
+				require.NoError(t, err)
+				request.Header.Set("Content-Type", "application/json")
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[CreateScheduleResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.Equal(t, "Schedule created successfully", response.Message)
+			},
+		},
+		{
+			name: "OK IS NOT CUSTOM",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				now := time.Now().Format("2006-01-02")
+				createScheduleReq := CreateScheduleRequest{
+					EmployeeID:      employee.ID,
+					LocationID:      location.ID,
+					IsCustom:        false,
+					StartDatetime:   nil,
+					EndDatetime:     nil,
+					LocationShiftID: &shift.ID,
+					ShiftDate:       &now,
 				}
 				data, err := json.Marshal(createScheduleReq)
 				require.NoError(t, err)

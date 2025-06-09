@@ -754,6 +754,16 @@ type Location struct {
 	Capacity *int32 `json:"capacity"`
 }
 
+type LocationShift struct {
+	ID         int64            `json:"id"`
+	LocationID int64            `json:"location_id"`
+	ShiftName  string           `json:"shift_name"`
+	StartTime  pgtype.Time      `json:"start_time"`
+	EndTime    pgtype.Time      `json:"end_time"`
+	CreatedAt  pgtype.Timestamp `json:"created_at"`
+	UpdatedAt  pgtype.Timestamp `json:"updated_at"`
+}
+
 type MaturityMatrix struct {
 	ID               int64  `json:"id"`
 	TopicName        string `json:"topic_name"`
@@ -972,14 +982,15 @@ type RolePermission struct {
 }
 
 type Schedule struct {
-	ID            int64            `json:"id"`
-	EmployeeID    int64            `json:"employee_id"`
-	Color         *string          `json:"color"`
-	LocationID    int64            `json:"location_id"`
-	StartDatetime pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
-	CreatedAt     pgtype.Timestamp `json:"created_at"`
-	UpdatedAt     pgtype.Timestamp `json:"updated_at"`
+	ID              int64            `json:"id"`
+	EmployeeID      int64            `json:"employee_id"`
+	Color           *string          `json:"color"`
+	LocationID      int64            `json:"location_id"`
+	LocationShiftID *int64           `json:"location_shift_id"`
+	StartDatetime   pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime     pgtype.Timestamp `json:"end_datetime"`
+	CreatedAt       pgtype.Timestamp `json:"created_at"`
+	UpdatedAt       pgtype.Timestamp `json:"updated_at"`
 }
 
 type ScheduledAppointment struct {
