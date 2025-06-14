@@ -2,7 +2,7 @@ name: Deploy Backend to VPS
 
 on:
   push:
-    branches: [ main ]  # Change to your main branch name if different
+    branches: [ dev ]  # Change to your main branch name if different
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/maicare-backend
@@ -11,7 +11,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production  # Set this up in GitHub repo settings
+    environment: maicare-prod   # Set this up in GitHub repo settings
 
     steps:
       - name: Checkout code
