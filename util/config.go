@@ -41,21 +41,35 @@ func LoadConfig(path string) (config Config, err error) {
 	// Enable automatic environment variable reading
 	viper.AutomaticEnv()
 
-	// Try to read the config file
+	// Bind all environment variables explicitly
+	// This works for both file-based config and environment variables
+	envVars := []string{
+		"DB_SOURCE", "SERVER_ADDRESS", "ACCESS_TOKEN_SECRET_KEY",
+		"ACCESS_TOKEN_DURATION", "REFRESH_TOKEN_SECRET_KEY",
+		"REFRESH_TOKEN_DURATION", "2FA_TOKEN_SECRET_KEY",
+		"2FA_TOKEN_DURATION", "B2_KEY", "B2_KEY_ID", "B2_BUCKET",
+		"HOST", "REDIS_HOST", "REDIS_PASSWORD", "REMOTE",
+		"OPEN_ROUTER_API_KEY", "SMTP_NAME", "SMTP_ADDRESS",
+		"SMTP_AUTH", "SMTP_HOST", "SMTP_PORT", "BREVO_SENDER_NAME",
+		"BREVO_SENDER_EMAIL", "BREVO_API_KEY",
+	}
+
+	for _, envVar := range envVars {
+		viper.BindEnv(envVar)
+	}
+
+	// Try to read the config file (works locally)
 	err = viper.ReadInConfig()
 	if err != nil {
-		// Check if the error is specifically about the config file not being found
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found, but that's okay - we'll use environment variables
-			// Log this if you want to know when fallback is happening
-			// fmt.Println("Config file not found, using environment variables only")
+			// Config file not found (normal in Docker), using environment variables only
 		} else {
-			// Config file was found but another error occurred (e.g., parsing error)
+			// Config file was found but another error occurred
 			return config, err
 		}
 	}
 
-	// Unmarshal the configuration (from file if found, or from env vars only)
+	// Unmarshal the configuration
 	err = viper.Unmarshal(&config)
 	return config, err
 }
