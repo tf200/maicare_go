@@ -110,11 +110,12 @@ jobs:
             echo "Starting new container..."
             echo "Using env file: /opt/maicare/app.env"
             docker run -d \
-              --name maicare-backend \
-              -p 8080:8080 \
-              --restart unless-stopped \
-              --env-file /opt/maicare/app.env \
-              ${{ env.DOCKER_IMAGE }}:back
+            --name maicare-backend \
+            --network maicare-network \
+            -p 8080:8080 \
+            --restart unless-stopped \
+            --env-file /opt/maicare/app.env \
+            ${{ env.DOCKER_IMAGE }}:back
             
             echo "=== Deployment Complete ==="
             
