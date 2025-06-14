@@ -100,7 +100,7 @@ func main() {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
 			Username:  "",               // if applicable
-			Password:  "",
+			Password:  config.RedisPassword,
 			TLSConfig: nil, // Only if using TLS (rediss://)
 		})
 
