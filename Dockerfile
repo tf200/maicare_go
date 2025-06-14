@@ -42,7 +42,6 @@ WORKDIR /app
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/main .
-COPY --from=builder /app/dev.env app.env
 
 # Copy the entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
