@@ -48,9 +48,12 @@ jobs:
             
             echo "=== Starting Deployment ==="
             
+            # Define variables
+            APP_DIR="/opt/maicare"
+            
             # Create app directory if it doesn't exist
-            sudo mkdir -p ${{ env.VPS_APP_DIR }}
-            sudo chown -R ${{ secrets.VPS_USERNAME }}:${{ secrets.VPS_USERNAME }} ${{ env.VPS_APP_DIR }}
+            sudo mkdir -p $APP_DIR
+            sudo chown -R ${{ secrets.VPS_USERNAME }}:${{ secrets.VPS_USERNAME }} $APP_DIR
             
             # Login to Docker Hub
             echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
@@ -68,7 +71,7 @@ jobs:
             
             # Create environment file
             echo "Creating environment file..."
-            cat <<EOF > ${{ env.VPS_APP_DIR }}/app.env
+            cat <<EOF > $APP_DIR/app.env
             DB_SOURCE=${{ secrets.DB_SOURCE }}
             SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}
             ACCESS_TOKEN_SECRET_KEY=${{ secrets.ACCESS_TOKEN_SECRET_KEY }}
@@ -96,7 +99,11 @@ jobs:
             EOF
             
             # Set proper permissions for env file
-            chmod 600 ${{ env.VPS_APP_DIR }}/app.env
+            chmod 600 $APP_DIR/app.env
+            
+            # Verify the file was created
+            echo "Verifying environment file..."
+            ls -la $APP_DIR/app.env
             
             # Run the new container
             echo "Starting new container..."
@@ -104,7 +111,7 @@ jobs:
               --name maicare-backend \
               -p 8080:8080 \
               --restart unless-stopped \
-              --env-file ${{ env.VPS_APP_DIR }}/app.env \
+              --env-file $APP_DIR/app.env \
               ${{ env.DOCKER_IMAGE }}:back
             
             echo "=== Deployment Complete ==="
