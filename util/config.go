@@ -20,7 +20,6 @@ type Config struct {
 	B2Bucket              string        `mapstructure:"B2_BUCKET"`
 	Host                  string        `mapstructure:"HOST"`
 	RedisHost             string        `mapstructure:"REDIS_HOST"`
-	RedisUser             string        `mapstructure:"REDIS_USER"`
 	RedisPassword         string        `mapstructure:"REDIS_PASSWORD"`
 	Remote                bool          `mapstructure:"REMOTE"`
 	OpenRouterAPIKey      string        `mapstructure:"OPEN_ROUTER_API_KEY"`
@@ -39,14 +38,24 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
 
+	// Enable automatic environment variable reading
 	viper.AutomaticEnv()
 
+	// Try to read the config file
 	err = viper.ReadInConfig()
 	if err != nil {
-		return
+		// Check if the error is specifically about the config file not being found
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found, but that's okay - we'll use environment variables
+			// Log this if you want to know when fallback is happening
+			// fmt.Println("Config file not found, using environment variables only")
+		} else {
+			// Config file was found but another error occurred (e.g., parsing error)
+			return config, err
+		}
 	}
 
+	// Unmarshal the configuration (from file if found, or from env vars only)
 	err = viper.Unmarshal(&config)
-
-	return
+	return config, err
 }

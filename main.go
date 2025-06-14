@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"maicare_go/api"
@@ -47,9 +46,9 @@ func main() {
 
 	var asynqClient *async.AsynqClient
 	if !config.Remote {
-		asynqClient = async.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+		asynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
 	} else {
-		asynqClient = async.NewAsynqClient(config.RedisHost, "", "", nil)
+		asynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
 	}
 
 	// Inirialize the SMTP Client for email deleviry
@@ -67,9 +66,9 @@ func main() {
 	if !config.Remote {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
-			Username:  config.RedisUser, // if applicable
+			Username:  "",               // if applicable
 			Password:  config.RedisPassword,
-			TLSConfig: &tls.Config{}, // Only if using TLS (rediss://)
+			TLSConfig: nil, // Only if using TLS (rediss://)
 		})
 
 		maxAttempts := 5
@@ -96,7 +95,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = async.NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, store, &tls.Config{}, brevoConf, b2Client, notificationService)
+		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService)
 	} else {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -129,7 +128,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = async.NewAsynqServer(config.RedisHost, "", "", store, nil, brevoConf, b2Client, notificationService)
+		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService)
 	}
 
 	// Create error channel to catch server errors

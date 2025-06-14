@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
-	testasynqClient = async.NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+	testasynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, &tls.Config{})
 	hubInstance := hub.NewHub()
 
 	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance)

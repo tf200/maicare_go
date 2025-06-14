@@ -1,0 +1,113 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches: [ main ]  # Change to your main branch name if different
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/maicare-backend
+  VPS_APP_DIR: /opt/maicare  # Directory on your VPS where app will run
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production  # Set this up in GitHub repo settings
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/maicare:back
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            #!/bin/bash
+            set -e
+            
+            echo "=== Starting Deployment ==="
+            
+            # Create app directory if it doesn't exist
+            sudo mkdir -p ${{ env.VPS_APP_DIR }}
+            sudo chown -R ${{ secrets.VPS_USERNAME }}:${{ secrets.VPS_USERNAME }} ${{ env.VPS_APP_DIR }}
+            
+            # Login to Docker Hub
+            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            
+            # Stop and remove existing container if running
+            if [ "$(docker ps -aq -f name=maicare-backend)" ]; then
+              echo "Stopping and removing existing container..."
+              docker stop maicare-backend
+              docker rm maicare-backend
+            fi
+            
+            # Pull the new image
+            echo "Pulling new image..."
+            docker pull ${{ env.DOCKER_IMAGE }}:latest
+            
+            # Create environment file
+            echo "Creating environment file..."
+            cat <<EOF > ${{ env.VPS_APP_DIR }}/app.env
+            DB_SOURCE=${{ secrets.DB_SOURCE }}
+            SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}
+            ACCESS_TOKEN_SECRET_KEY=${{ secrets.ACCESS_TOKEN_SECRET_KEY }}
+            ACCESS_TOKEN_DURATION=${{ secrets.ACCESS_TOKEN_DURATION }}
+            REFRESH_TOKEN_SECRET_KEY=${{ secrets.REFRESH_TOKEN_SECRET_KEY }}
+            REFRESH_TOKEN_DURATION=${{ secrets.REFRESH_TOKEN_DURATION }}
+            2FA_TOKEN_SECRET_KEY=${{ secrets.TWO_FA_TOKEN_SECRET_KEY }}
+            2FA_TOKEN_DURATION=${{ secrets.TWO_FA_TOKEN_DURATION }}
+            B2_KEY=${{ secrets.B2_KEY }}
+            B2_KEY_ID=${{ secrets.B2_KEY_ID }}
+            B2_BUCKET=${{ secrets.B2_BUCKET }}
+            HOST=${{ secrets.HOST }}
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            REMOTE=${{ secrets.REMOTE }}
+            OPEN_ROUTER_API_KEY=${{ secrets.OPEN_ROUTER_API_KEY }}
+            SMTP_NAME=${{ secrets.SMTP_NAME }}
+            SMTP_ADDRESS=${{ secrets.SMTP_ADDRESS }}
+            SMTP_AUTH=${{ secrets.SMTP_AUTH }}
+            SMTP_HOST=${{ secrets.SMTP_HOST }}
+            SMTP_PORT=${{ secrets.SMTP_PORT }}
+            BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}
+            BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}
+            BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
+            EOF
+            
+            # Set proper permissions for env file
+            chmod 600 ${{ env.VPS_APP_DIR }}/app.env
+            
+            # Run the new container
+            echo "Starting new container..."
+            docker run -d \
+              --name maicare-backend \
+              -p 8080:8080 \
+              --restart unless-stopped \
+              --env-file ${{ env.VPS_APP_DIR }}/app.env \
+              ${{ env.DOCKER_IMAGE }}:latest
+            
+            echo "=== Deployment Complete ==="
+            
+            # Clean up unused images
+            echo "Cleaning up..."
+            docker image prune -af

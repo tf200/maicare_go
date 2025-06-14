@@ -39,11 +39,11 @@ func TestMain(m *testing.M) {
 
 	testStore = db.NewStore(conn)
 	testBrevo := email.NewBrevoConf(config.BrevoApiKey, config.BrevoSenderName, config.BrevoSenderEmail)
-	testasynqClient = NewAsynqClient(config.RedisHost, config.RedisUser, config.RedisPassword, &tls.Config{})
+	testasynqClient = NewAsynqClient(config.RedisHost, "", config.RedisPassword, &tls.Config{})
 	hubInstance := hub.NewHub()
 	testNotifService := notification.NewService(testStore, hubInstance)
 
-	testWorker = NewAsynqServer(config.RedisHost, config.RedisUser, config.RedisPassword, testStore, &tls.Config{}, testBrevo, testB2client, testNotifService)
+	testWorker = NewAsynqServer(config.RedisHost, "", config.RedisPassword, testStore, &tls.Config{}, testBrevo, testB2client, testNotifService)
 
 	os.Exit(m.Run())
 }

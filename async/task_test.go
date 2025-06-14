@@ -31,7 +31,7 @@ func TestEnqueueEmailDelivery(t *testing.T) {
 	inspector := asynq.NewInspector(asynq.RedisClientOpt{
 		Addr:      config.RedisHost,
 		Password:  config.RedisPassword,
-		Username:  config.RedisUser,
+		Username:  "",
 		TLSConfig: &tls.Config{},
 	})
 
