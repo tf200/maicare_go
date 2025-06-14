@@ -41,7 +41,7 @@ func main() {
 	store := db.NewStore(conn)
 	b2Client, err := bucket.NewB2Client(config)
 	if err != nil {
-		log.Fatalf("unable to create b2 client: %v, %v", err, config.B2KeyID)
+		log.Fatalf("unable to create b2 client: %v", err)
 	}
 
 	var asynqClient *async.AsynqClient
