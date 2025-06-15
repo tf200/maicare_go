@@ -7707,7 +7707,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update an existing schedule by its ID",
+                "description": "Update an existing schedule for an employee at a specific location. Supports both custom schedules and preset shifts.\nSet is_custom=true and provide start_datetime/end_datetime for custom schedules\nSet is_custom=false and provide location_shift_id/shift_date for preset shifts",
                 "consumes": [
                     "application/json"
                 ],
@@ -7717,7 +7717,7 @@ const docTemplate = `{
                 "tags": [
                     "Schedule"
                 ],
-                "summary": "Update a schedule",
+                "summary": "Update an existing schedule",
                 "parameters": [
                     {
                         "type": "integer",
@@ -7745,6 +7745,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Schedule not found",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -12826,6 +12832,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "location_name": {
+                    "type": "string"
+                },
+                "location_shift_id": {
+                    "description": "Optional field for preset shift",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "description": "Optional field for shift name",
                     "type": "string"
                 },
                 "start_datetime": {
@@ -18463,7 +18477,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "color": {
-                    "description": "Optional field for color coding",
                     "type": "string",
                     "example": "#FF5733"
                 },
@@ -18471,13 +18484,31 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "end_datetime": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-10-01T17:00:00Z"
+                },
+                "is_custom": {
+                    "description": "true for custom schedule, false for preset shift",
+                    "type": "boolean",
+                    "example": true
                 },
                 "location_id": {
                     "type": "integer"
                 },
+                "location_shift_id": {
+                    "description": "For preset shift-based schedules (required when is_custom = false)",
+                    "type": "integer",
+                    "example": 1
+                },
+                "shift_date": {
+                    "description": "Date to apply the shift",
+                    "type": "string",
+                    "example": "2023-10-01"
+                },
                 "start_datetime": {
-                    "type": "string"
+                    "description": "For custom schedules (required when is_custom = true)",
+                    "type": "string",
+                    "example": "2023-10-01T09:00:00Z"
                 }
             }
         },
@@ -18485,7 +18516,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "color": {
-                    "description": "Optional field for color coding",
                     "type": "string"
                 },
                 "created_at": {
@@ -18502,6 +18532,13 @@ const docTemplate = `{
                 },
                 "location_id": {
                     "type": "integer"
+                },
+                "location_shift_id": {
+                    "description": "Additional info if updated from preset shift",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "type": "string"
                 },
                 "start_datetime": {
                     "type": "string"

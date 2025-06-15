@@ -3203,6 +3203,12 @@ definitions:
         type: integer
       location_name:
         type: string
+      location_shift_id:
+        description: Optional field for preset shift
+        type: integer
+      shift_name:
+        description: Optional field for shift name
+        type: string
       start_datetime:
         type: string
       updated_at:
@@ -6898,22 +6904,35 @@ definitions:
   api.UpdateScheduleRequest:
     properties:
       color:
-        description: Optional field for color coding
         example: '#FF5733'
         type: string
       employee_id:
         type: integer
       end_datetime:
+        example: "2023-10-01T17:00:00Z"
         type: string
+      is_custom:
+        description: true for custom schedule, false for preset shift
+        example: true
+        type: boolean
       location_id:
         type: integer
+      location_shift_id:
+        description: For preset shift-based schedules (required when is_custom = false)
+        example: 1
+        type: integer
+      shift_date:
+        description: Date to apply the shift
+        example: "2023-10-01"
+        type: string
       start_datetime:
+        description: For custom schedules (required when is_custom = true)
+        example: "2023-10-01T09:00:00Z"
         type: string
     type: object
   api.UpdateScheduleResponse:
     properties:
       color:
-        description: Optional field for color coding
         type: string
       created_at:
         type: string
@@ -6925,6 +6944,11 @@ definitions:
         type: integer
       location_id:
         type: integer
+      location_shift_id:
+        description: Additional info if updated from preset shift
+        type: integer
+      shift_name:
+        type: string
       start_datetime:
         type: string
       updated_at:
@@ -12483,7 +12507,10 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update an existing schedule by its ID
+      description: |-
+        Update an existing schedule for an employee at a specific location. Supports both custom schedules and preset shifts.
+        Set is_custom=true and provide start_datetime/end_datetime for custom schedules
+        Set is_custom=false and provide location_shift_id/shift_date for preset shifts
       parameters:
       - description: Schedule ID
         in: path
@@ -12507,11 +12534,15 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Schedule not found
+          schema:
+            $ref: '#/definitions/api.Response-any'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Update a schedule
+      summary: Update an existing schedule
       tags:
       - Schedule
   /senders:

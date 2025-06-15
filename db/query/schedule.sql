@@ -16,38 +16,27 @@ RETURNING *;
 -- name: GetMonthlySchedulesByLocation :many
 WITH target_month AS (
   SELECT make_date($1, $2, 1) AS start_date
-),
-dates AS (
-  SELECT generate_series(
-    (SELECT start_date FROM target_month),
-    (SELECT start_date + INTERVAL '1 month - 1 day' FROM target_month),
-    INTERVAL '1 day'
-  )::date AS day
-),
-shift_days AS (
-  SELECT 
-    s.id AS shift_id,
-    s.employee_id,
-    s.location_id,
-    s.start_datetime,
-    s.end_datetime,
-    s.color,
-    ls.shift_name,
-    d.day,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
-  FROM schedules s
-  LEFT JOIN location_shift ls 
-    ON s.location_shift_id = ls.id
-  JOIN dates d 
-    ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
-  JOIN employee_profile e 
-    ON s.employee_id = e.id
-  WHERE s.location_id = $3
 )
-SELECT *
-FROM shift_days
-ORDER BY day, start_datetime;
+SELECT 
+  s.id AS shift_id,
+  s.employee_id,
+  s.location_id,
+  s.start_datetime,
+  s.end_datetime,
+  s.color,
+  ls.shift_name,
+  DATE(s.start_datetime) AS day,
+  e.first_name AS employee_first_name,
+  e.last_name AS employee_last_name
+FROM schedules s
+LEFT JOIN location_shift ls 
+  ON s.location_shift_id = ls.id
+JOIN employee_profile e 
+  ON s.employee_id = e.id
+WHERE s.location_id = $3
+  AND DATE(s.start_datetime) >= (SELECT start_date FROM target_month)
+  AND DATE(s.start_datetime) < (SELECT start_date + INTERVAL '1 month' FROM target_month)
+ORDER BY DATE(s.start_datetime), s.start_datetime;
 
 
 
@@ -85,8 +74,10 @@ ORDER BY start_datetime;
 SELECT s.*,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
-    l.name AS location_name
+    l.name AS location_name,
+    ls.shift_name AS location_shift_name
 FROM schedules s
+LEFT JOIN location_shift ls ON s.location_shift_id = ls.id
 JOIN employee_profile e ON s.employee_id = e.id
 JOIN location l ON s.location_id = l.id
 WHERE s.id = $1
@@ -97,8 +88,10 @@ UPDATE schedules
 SET
     employee_id = $2,
     location_id = $3,
-    start_datetime = $4,
-    end_datetime = $5
+    location_shift_id = $4,
+    color = $5,
+    start_datetime = $6,
+    end_datetime = $7
 WHERE id = $1
 RETURNING *;
 

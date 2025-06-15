@@ -19,9 +19,9 @@ import (
 func createRandomShift(t *testing.T, locationID int64) db.LocationShift {
 	arg := db.CreateShiftParams{
 		LocationID: locationID,
-		ShiftName:  "Morning Shift",
-		StartTime:  pgtype.Time{Microseconds: 8 * 3600 * 1000000, Valid: true},  // 08:00:00
-		EndTime:    pgtype.Time{Microseconds: 16 * 3600 * 1000000, Valid: true}, // 16:00:00
+		ShiftName:  "Slaapdienst of Waakdienst",
+		StartTime:  pgtype.Time{Microseconds: 23 * 3600 * 1000000, Valid: true},  // 23:00:00
+		EndTime:    pgtype.Time{Microseconds: 7 * 3600 * 1000000, Valid: true}, // 07:00:00
 	}
 	shift, err := testStore.CreateShift(context.Background(), arg)
 	require.NoError(t, err)

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/util"
@@ -371,7 +372,9 @@ type GetScheduleByIdResponse struct {
 	EmployeeLastName  string    `json:"employee_last_name"`
 	LocationID        int64     `json:"location_id"`
 	LocationName      string    `json:"location_name"`
-	Color             *string   `json:"color"` // Optional field for color coding
+	LocationShiftID   *int64    `json:"location_shift_id,omitempty"` // Optional field for preset shift
+	LocationShiftName *string   `json:"shift_name,omitempty"`        // Optional field for shift name
+	Color             *string   `json:"color"`                       // Optional field for color coding
 	StartDatetime     time.Time `json:"start_datetime"`
 	EndDatetime       time.Time `json:"end_datetime"`
 	CreatedAt         time.Time `json:"created_at"`
@@ -412,17 +415,27 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 		CreatedAt:         schedule.CreatedAt.Time,
 		UpdatedAt:         schedule.UpdatedAt.Time,
 		Color:             schedule.Color,
+		LocationShiftID:   schedule.LocationShiftID,
+		LocationShiftName: schedule.LocationShiftName,
 	}, "Schedule retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
 // UpdateScheduleRequest represents the request body for updating a schedule.
 type UpdateScheduleRequest struct {
-	EmployeeID    int64     `json:"employee_id"`
-	LocationID    int64     `json:"location_id"`
-	Color         *string   `json:"color" example:"#FF5733"` // Optional field for color coding
-	StartDatetime time.Time `json:"start_datetime"`
-	EndDatetime   time.Time `json:"end_datetime"`
+	EmployeeID *int64 `json:"employee_id,omitempty"`
+	LocationID *int64 `json:"location_id,omitempty"`
+	IsCustom   *bool  `json:"is_custom,omitempty" example:"true"` // true for custom schedule, false for preset shift
+
+	// For custom schedules (required when is_custom = true)
+	StartDatetime *time.Time `json:"start_datetime,omitempty" example:"2023-10-01T09:00:00Z"`
+	EndDatetime   *time.Time `json:"end_datetime,omitempty" example:"2023-10-01T17:00:00Z"`
+
+	// For preset shift-based schedules (required when is_custom = false)
+	LocationShiftID *int64  `json:"location_shift_id,omitempty" example:"1"`
+	ShiftDate       *string `json:"shift_date,omitempty" example:"2023-10-01"` // Date to apply the shift
+
+	Color *string `json:"color,omitempty" example:"#FF5733"`
 }
 
 // UpdateScheduleResponse represents the response body after updating a schedule.
@@ -432,26 +445,46 @@ type UpdateScheduleResponse struct {
 	LocationID    int64     `json:"location_id"`
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`
-	Color         *string   `json:"color"` // Optional field for color coding
+	Color         *string   `json:"color"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+
+	// Additional info if updated from preset shift
+	LocationShiftID *int64  `json:"location_shift_id,omitempty"`
+	ShiftName       *string `json:"shift_name,omitempty"`
 }
 
-// @Summary Update a schedule
-// @Description Update an existing schedule by its ID
+// @Summary Update an existing schedule
+// @Description Update an existing schedule for an employee at a specific location. Supports both custom schedules and preset shifts.
+// @Description Set is_custom=true and provide start_datetime/end_datetime for custom schedules
+// @Description Set is_custom=false and provide location_shift_id/shift_date for preset shifts
 // @Tags Schedule
 // @Accept json
 // @Produce json
-// @Param id path int true "Schedule ID"
+// @Param id path int64 true "Schedule ID"
 // @Param request body UpdateScheduleRequest true "Update Schedule Request"
 // @Success 200 {object} Response[UpdateScheduleResponse] "Schedule updated successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
+// @Failure 404 {object} Response[any] "Schedule not found"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules/{id} [put]
 func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
-	scheduleID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	// Get schedule ID from URL parameter
+	scheduleIDStr := ctx.Param("id")
+	scheduleID, err := strconv.ParseInt(scheduleIDStr, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid schedule ID")))
+		return
+	}
+
+	// Get existing schedule
+	existingSchedule, err := server.store.GetScheduleById(ctx, scheduleID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("schedule not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -461,12 +494,156 @@ func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
 		return
 	}
 
+	// Determine if this is a custom schedule update
+	// is_custom must be explicitly provided to use start_datetime and end_datetime
+	isCustom := req.IsCustom != nil && *req.IsCustom
+
+	// If is_custom is not provided or false, ignore start_datetime and end_datetime
+	if req.IsCustom == nil || !*req.IsCustom {
+		req.StartDatetime = nil
+		req.EndDatetime = nil
+
+		// Determine schedule type based on other fields or existing schedule
+		if req.IsCustom == nil {
+			if req.LocationShiftID != nil || req.ShiftDate != nil {
+				isCustom = false
+			} else {
+				// If no schedule type fields are provided, keep existing type
+				// Check if existing schedule has location_shift_id to determine type
+				isCustom = existingSchedule.LocationShiftID == nil
+			}
+		}
+	}
+
+	// Validate request based on schedule type
+	if isCustom {
+		// Custom schedule validation
+		if req.LocationShiftID != nil || req.ShiftDate != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id and shift_date should not be provided for custom schedules")))
+			return
+		}
+	} else {
+		// For preset shift schedules, ignore start_datetime and end_datetime if provided
+		// No validation error, just ignore these fields
+		req.StartDatetime = nil
+		req.EndDatetime = nil
+	}
+
+	// Prepare update parameters with existing values as defaults
+	var startDatetime, endDatetime time.Time
+	var locationShiftID *int64
+	var shiftName *string
+	var employeeID int64 = existingSchedule.EmployeeID
+	var locationID int64 = existingSchedule.LocationID
+	var color *string = existingSchedule.Color
+
+	// Update fields if provided
+	if req.EmployeeID != nil {
+		employeeID = *req.EmployeeID
+	}
+	if req.LocationID != nil {
+		locationID = *req.LocationID
+	}
+	if req.Color != nil {
+		color = req.Color
+	}
+
+	if isCustom {
+		// Handle custom schedule
+		startDatetime = existingSchedule.StartDatetime.Time
+		endDatetime = existingSchedule.EndDatetime.Time
+
+		if req.StartDatetime != nil {
+			startDatetime = *req.StartDatetime
+		}
+		if req.EndDatetime != nil {
+			endDatetime = *req.EndDatetime
+		}
+
+		// Validate datetime order
+		if startDatetime.After(endDatetime) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start_datetime must be before end_datetime")))
+			return
+		}
+
+		locationShiftID = nil // Clear location_shift_id for custom schedules
+	} else {
+		// Handle preset shift
+		var shiftIDToUse int64
+		var shiftDateToUse string
+
+		// Use existing values if not provided
+		if req.LocationShiftID != nil {
+			shiftIDToUse = *req.LocationShiftID
+		} else if existingSchedule.LocationShiftID != nil {
+			shiftIDToUse = *existingSchedule.LocationShiftID
+		} else {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id is required for preset shift schedules")))
+			return
+		}
+
+		if req.ShiftDate != nil {
+			shiftDateToUse = *req.ShiftDate
+		} else {
+			// Extract date from existing start_datetime
+			shiftDateToUse = existingSchedule.StartDatetime.Time.Format("2006-01-02")
+		}
+
+		// Get the location_shift details
+		locationShift, err := server.store.GetShiftByID(ctx, shiftIDToUse)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid location_shift_id: %v", err)))
+			return
+		}
+
+		// Verify the shift belongs to the specified location
+		if locationShift.LocationID != locationID {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id does not belong to the specified location")))
+			return
+		}
+
+		// Parse the shift date
+		shiftDate, err := time.Parse("2006-01-02", shiftDateToUse)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid shift_date format, expected YYYY-MM-DD: %v", err)))
+			return
+		}
+
+		// Convert pgtype.Time (microseconds since midnight) to time components
+		startHour, startMin, startSec, startNano := util.MicrosecondsToTimeComponents(locationShift.StartTime.Microseconds)
+		endHour, endMin, endSec, endNano := util.MicrosecondsToTimeComponents(locationShift.EndTime.Microseconds)
+
+		// Combine date with shift times to create full datetime
+		startDatetime = time.Date(
+			shiftDate.Year(), shiftDate.Month(), shiftDate.Day(),
+			startHour, startMin, startSec, startNano,
+			shiftDate.Location(),
+		)
+
+		endDatetime = time.Date(
+			shiftDate.Year(), shiftDate.Month(), shiftDate.Day(),
+			endHour, endMin, endSec, endNano,
+			shiftDate.Location(),
+		)
+
+		// Handle shifts that cross midnight (end time is before start time)
+		if locationShift.EndTime.Microseconds < locationShift.StartTime.Microseconds {
+			endDatetime = endDatetime.AddDate(0, 0, 1)
+		}
+
+		locationShiftID = &shiftIDToUse
+		shiftName = &locationShift.ShiftName
+	}
+
+	// Update the schedule
 	arg := db.UpdateScheduleParams{
-		ID:            scheduleID,
-		EmployeeID:    req.EmployeeID,
-		LocationID:    req.LocationID,
-		StartDatetime: pgtype.Timestamp{Time: req.StartDatetime, Valid: true},
-		EndDatetime:   pgtype.Timestamp{Time: req.EndDatetime, Valid: true},
+		ID:              scheduleID,
+		EmployeeID:      employeeID,
+		LocationID:      locationID,
+		LocationShiftID: locationShiftID,
+		StartDatetime:   pgtype.Timestamp{Time: startDatetime, Valid: true},
+		EndDatetime:     pgtype.Timestamp{Time: endDatetime, Valid: true},
+		Color:           color,
 	}
 
 	schedule, err := server.store.UpdateSchedule(ctx, arg)
@@ -476,14 +653,16 @@ func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(UpdateScheduleResponse{
-		ID:            schedule.ID,
-		EmployeeID:    schedule.EmployeeID,
-		LocationID:    schedule.LocationID,
-		StartDatetime: schedule.StartDatetime.Time,
-		EndDatetime:   schedule.EndDatetime.Time,
-		Color:         schedule.Color,
-		CreatedAt:     schedule.CreatedAt.Time,
-		UpdatedAt:     schedule.UpdatedAt.Time,
+		ID:              schedule.ID,
+		EmployeeID:      schedule.EmployeeID,
+		LocationID:      schedule.LocationID,
+		StartDatetime:   schedule.StartDatetime.Time,
+		EndDatetime:     schedule.EndDatetime.Time,
+		Color:           schedule.Color,
+		CreatedAt:       schedule.CreatedAt.Time,
+		UpdatedAt:       schedule.UpdatedAt.Time,
+		LocationShiftID: locationShiftID,
+		ShiftName:       shiftName,
 	}, "Schedule updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
