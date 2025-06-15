@@ -249,6 +249,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 			EndTime:           schedule.EndDatetime.Time,
 			LocationID:        schedule.LocationID,
 			Color:             schedule.Color,
+			ShiftName:         schedule.ShiftName,
 		}
 		if schedule.ShiftName != nil {
 			// If shift name is provided, add it to the shift
