@@ -1946,6 +1946,7 @@ CREATE TABLE schedules (
   color VARCHAR(20) DEFAULT '#0000FF', -- Default color for the schedule
   location_id BIGINT NOT NULL REFERENCES location(id),
   location_shift_id BIGINT NULL REFERENCES location_shift(id),
+  is_custom BOOLEAN NOT NULL DEFAULT FALSE,
   start_datetime TIMESTAMP NOT NULL,
   end_datetime TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -151,6 +151,7 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 		EmployeeID:      req.EmployeeID,
 		LocationID:      req.LocationID,
 		LocationShiftID: locationShiftID,
+		IsCustom:        req.IsCustom,
 		StartDatetime:   pgtype.Timestamp{Time: startDatetime, Valid: true},
 		EndDatetime:     pgtype.Timestamp{Time: endDatetime, Valid: true},
 	}
@@ -191,8 +192,9 @@ type Shift struct {
 	StartTime         time.Time `json:"start_time"`
 	EndTime           time.Time `json:"end_time"`
 	LocationID        int64     `json:"location_id"`
-	Color             *string   `json:"color"`                // Optional field for color coding
-	ShiftName         *string   `json:"shift_name,omitempty"` // Optional field for shift name
+	Color             *string   `json:"color"` // Optional field for color coding
+	ShiftName         *string   `json:"shift_name,omitempty"`
+	LocationShiftID   *int64    `json:"location_shift_id,omitempty"` // Optional field for preset shift
 }
 
 // GetMonthlySchedulesByLocationResponse represents the response body for monthly schedules.
@@ -250,6 +252,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 			LocationID:        schedule.LocationID,
 			Color:             schedule.Color,
 			ShiftName:         schedule.ShiftName,
+			LocationShiftID:   schedule.LocationShiftID,
 		}
 		if schedule.ShiftName != nil {
 			// If shift name is provided, add it to the shift
@@ -340,6 +343,8 @@ func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
 			EndTime:           schedule.EndDatetime.Time,
 			LocationID:        schedule.LocationID,
 			Color:             schedule.Color,
+			LocationShiftID:   schedule.LocationShiftID,
+			ShiftName:         schedule.ShiftName,
 		}
 		if schedule.ShiftName != nil {
 			// If shift name is provided, add it to the shift

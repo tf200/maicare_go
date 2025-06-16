@@ -16650,11 +16650,14 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer"
                 },
+                "location_shift_id": {
+                    "description": "Optional field for preset shift",
+                    "type": "integer"
+                },
                 "shift_id": {
                     "type": "integer"
                 },
                 "shift_name": {
-                    "description": "Optional field for shift name",
                     "type": "string"
                 },
                 "start_time": {
