@@ -616,6 +616,10 @@ func (server *Server) ListIntakeFormsApi(ctx *gin.Context) {
 			UrgencyScore:          form.UrgencyScore,
 		}
 	}
+	if len(forms) == 0 {
+		ctx.JSON(http.StatusOK, SuccessResponse([]ListIntakeFormsResponse{}, "No intake forms found"))
+		return
+	}
 
 	totalCount := forms[0].TotalCount
 	pag := pagination.NewResponse(ctx, req.Request, formList, totalCount)
