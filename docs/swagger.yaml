@@ -3199,6 +3199,9 @@ definitions:
         type: string
       id:
         type: integer
+      is_custom:
+        description: Indicates if this is a custom schedule
+        type: boolean
       location_id:
         type: integer
       location_name:
@@ -5694,6 +5697,9 @@ definitions:
         type: string
       end_time:
         type: string
+      is_custom:
+        description: Indicates if this is a custom schedule
+        type: boolean
       location_id:
         type: integer
       location_shift_id:

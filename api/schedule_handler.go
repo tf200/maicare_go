@@ -195,6 +195,7 @@ type Shift struct {
 	Color             *string   `json:"color"` // Optional field for color coding
 	ShiftName         *string   `json:"shift_name,omitempty"`
 	LocationShiftID   *int64    `json:"location_shift_id,omitempty"` // Optional field for preset shift
+	IsCustom          bool      `json:"is_custom"`                   // Indicates if this is a custom schedule
 }
 
 // GetMonthlySchedulesByLocationResponse represents the response body for monthly schedules.
@@ -253,6 +254,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 			Color:             schedule.Color,
 			ShiftName:         schedule.ShiftName,
 			LocationShiftID:   schedule.LocationShiftID,
+			IsCustom:          schedule.IsCustom,
 		}
 		if schedule.ShiftName != nil {
 			// If shift name is provided, add it to the shift
@@ -345,6 +347,7 @@ func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
 			Color:             schedule.Color,
 			LocationShiftID:   schedule.LocationShiftID,
 			ShiftName:         schedule.ShiftName,
+			IsCustom:          schedule.IsCustom,
 		}
 		if schedule.ShiftName != nil {
 			// If shift name is provided, add it to the shift
@@ -383,6 +386,7 @@ type GetScheduleByIdResponse struct {
 	Color             *string   `json:"color"`                       // Optional field for color coding
 	StartDatetime     time.Time `json:"start_datetime"`
 	EndDatetime       time.Time `json:"end_datetime"`
+	IsCustom          bool      `json:"is_custom"` // Indicates if this is a custom schedule
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
@@ -423,6 +427,7 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 		Color:             schedule.Color,
 		LocationShiftID:   schedule.LocationShiftID,
 		LocationShiftName: schedule.LocationShiftName,
+		IsCustom:          schedule.IsCustom,
 	}, "Schedule retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

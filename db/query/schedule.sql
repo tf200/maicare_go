@@ -25,6 +25,7 @@ SELECT
   s.start_datetime,
   s.end_datetime,
   s.color,
+  S.is_custom,
   ls.shift_name,
   ls.id AS location_shift_id,
   DATE(s.start_datetime) AS day,
@@ -54,6 +55,7 @@ shift_days AS (
     s.color,
     s.start_datetime,
     s.end_datetime,
+    s.is_custom,
     ls.id AS location_shift_id,
     ls.shift_name,
     d.day,
@@ -78,7 +80,7 @@ SELECT s.*,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
     l.name AS location_name,
-    ls.shift_name AS location_shift_name
+    ls.shift_name AS location_shift_name,
     ls.id AS location_shift_id
 FROM schedules s
 LEFT JOIN location_shift ls ON s.location_shift_id = ls.id

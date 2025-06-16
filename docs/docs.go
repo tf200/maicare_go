@@ -12828,6 +12828,10 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "is_custom": {
+                    "description": "Indicates if this is a custom schedule",
+                    "type": "boolean"
+                },
                 "location_id": {
                     "type": "integer"
                 },
@@ -16646,6 +16650,10 @@ const docTemplate = `{
                 },
                 "end_time": {
                     "type": "string"
+                },
+                "is_custom": {
+                    "description": "Indicates if this is a custom schedule",
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "integer"
