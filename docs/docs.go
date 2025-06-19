@@ -14516,6 +14516,9 @@ const docTemplate = `{
                 "risk_aggressive_behavior": {
                     "type": "boolean"
                 },
+                "risk_count": {
+                    "type": "integer"
+                },
                 "risk_criminal_history": {
                     "type": "boolean"
                 },

@@ -885,6 +885,11 @@ CREATE TABLE employee_profile (
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,
     is_archived BOOLEAN NOT NULL DEFAULT FALSE
+
+    fixed_contract_hours FLOAT NULL DEFAULT 0.0,
+    variable_contract_hours FLOAT NULL DEFAULT 0.0,
+    contract_start_date DATE NULL,
+    contract_end_date DATE NULL,
 );
 
 

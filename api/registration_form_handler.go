@@ -370,6 +370,7 @@ type ListRegistrationFormsResponse struct {
 	RiskOther                     *bool      `json:"risk_other"`
 	RiskOtherDescription          *string    `json:"risk_other_description"`
 	RiskAdditionalNotes           *string    `json:"risk_additional_notes"`
+	RiskCount                     int        `json:"risk_count"`
 	DocumentReferral              *uuid.UUID `json:"document_referral"`
 	DocumentEducationReport       *uuid.UUID `json:"document_education_report"`
 	DocumentActionPlan            *uuid.UUID `json:"document_action_plan"`
@@ -385,6 +386,49 @@ type ListRegistrationFormsResponse struct {
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
 	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+}
+
+// calculateRiskCount counts the number of true risk factors for a registration form
+func calculateRiskCount(rf db.RegistrationForm) int {
+	count := 0
+
+	// Helper function to check if a *bool is true
+	isTruePtr := func(b *bool) bool {
+		return b != nil && *b
+	}
+
+	if isTruePtr(rf.RiskAggressiveBehavior) {
+		count++
+	}
+	if isTruePtr(rf.RiskSuicidalSelfharm) {
+		count++
+	}
+	if isTruePtr(rf.RiskSubstanceAbuse) {
+		count++
+	}
+	if isTruePtr(rf.RiskPsychiatricIssues) {
+		count++
+	}
+	if isTruePtr(rf.RiskCriminalHistory) {
+		count++
+	}
+	if isTruePtr(rf.RiskFlightBehavior) {
+		count++
+	}
+	if isTruePtr(rf.RiskWeaponPossession) {
+		count++
+	}
+	if isTruePtr(rf.RiskSexualBehavior) {
+		count++
+	}
+	if isTruePtr(rf.RiskDayNightRhythm) {
+		count++
+	}
+	if isTruePtr(rf.RiskOther) {
+		count++
+	}
+
+	return count
 }
 
 // @Summary List Registration Forms
@@ -433,6 +477,11 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 	registrationForms, err := server.store.ListRegistrationForms(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(registrationForms) == 0 {
+		ctx.JSON(http.StatusOK, SuccessResponse([]ListRegistrationFormsResponse{}, "No registration forms found"))
 		return
 	}
 
@@ -524,6 +573,7 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 			SubmittedAt:                   rf.SubmittedAt.Time,
 			ProcessedAt:                   rf.ProcessedAt.Time,
 			ProcessedByEmployeeID:         rf.ProcessedByEmployeeID,
+			RiskCount:                     calculateRiskCount(rf),
 		}
 	}
 
