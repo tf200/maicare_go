@@ -1081,7 +1081,8 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 
 // UpdateRegistrationFormStatusRequest represents the response body for updating a registration form status
 type UpdateRegistrationFormStatusRequest struct {
-	FormStatus string `form:"status" binding:"required,oneof=approved rejected"`
+	FormStatus            string    `form:"status" binding:"required,oneof=approved rejected"`
+	IntakeAppointmentDate time.Time `form:"intake_appointment_date" binding:"required"` // Required field for intake appointment date
 }
 
 // @Summary Update Registration Form Status
@@ -1123,6 +1124,10 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 		ID:                    rfId,
 		FormStatus:            req.FormStatus,
 		ProcessedByEmployeeID: &employeeID,
+		IntakeAppointmentDatetime: pgtype.Timestamptz{
+			Time:  req.IntakeAppointmentDate,
+			Valid: true,
+		},
 	}
 
 	err = server.store.UpdateRegistrationFormStatus(ctx, arg)

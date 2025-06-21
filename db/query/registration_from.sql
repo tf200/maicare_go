@@ -189,5 +189,7 @@ UPDATE registration_form
 SET
     form_status = $2,
     updated_at = NOW(),
-    processed_by_employee_id = $3
+    processed_by_employee_id = $3,
+    intake_appointment_datetime = $4
+
 WHERE id = $1;

@@ -399,7 +399,8 @@ func TestUpdateRegistrationFormStatusApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/registration_form/%d/status?status=approved", registrationForm.ID)
+				intakeDate := time.Now().AddDate(0, 0, 14).Format("2006-01-02T15:04:05Z")
+				url := fmt.Sprintf("/registration_form/%d/status?status=approved&intake_appointment_date=%s", registrationForm.ID, intakeDate)
 				req, err := http.NewRequest(http.MethodPost, url, nil)
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")

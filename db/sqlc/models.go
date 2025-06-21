@@ -512,6 +512,10 @@ type EmployeeProfile struct {
 	HasBorrowed               bool               `json:"has_borrowed"`
 	OutOfService              *bool              `json:"out_of_service"`
 	IsArchived                bool               `json:"is_archived"`
+	FixedContractHours        *float64           `json:"fixed_contract_hours"`
+	VariableContractHours     *float64           `json:"variable_contract_hours"`
+	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
+	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 }
 
 type Expense struct {
@@ -922,6 +926,7 @@ type RegistrationForm struct {
 	SubmittedAt                   pgtype.Timestamptz `json:"submitted_at"`
 	ProcessedAt                   pgtype.Timestamptz `json:"processed_at"`
 	ProcessedByEmployeeID         *int64             `json:"processed_by_employee_id"`
+	IntakeAppointmentDatetime     pgtype.Timestamptz `json:"intake_appointment_datetime"`
 }
 
 type RiskAssessment struct {

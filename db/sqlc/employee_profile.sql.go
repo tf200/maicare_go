@@ -204,7 +204,7 @@ INSERT INTO employee_profile (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
+) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, fixed_contract_hours, variable_contract_hours, contract_start_date, contract_end_date
 `
 
 type CreateEmployeeProfileParams struct {
@@ -277,6 +277,10 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
+		&i.FixedContractHours,
+		&i.VariableContractHours,
+		&i.ContractStartDate,
+		&i.ContractEndDate,
 	)
 	return i, err
 }
@@ -385,7 +389,7 @@ func (q *Queries) GetEmployeeIDByUserID(ctx context.Context, id int64) (int64, e
 
 const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
 SELECT 
-    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_start_date, ep.contract_end_date,
     cu.profile_picture as profile_picture,
     cu.role_id
 FROM employee_profile ep
@@ -416,6 +420,10 @@ type GetEmployeeProfileByIDRow struct {
 	HasBorrowed               bool               `json:"has_borrowed"`
 	OutOfService              *bool              `json:"out_of_service"`
 	IsArchived                bool               `json:"is_archived"`
+	FixedContractHours        *float64           `json:"fixed_contract_hours"`
+	VariableContractHours     *float64           `json:"variable_contract_hours"`
+	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
+	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 	ProfilePicture            *string            `json:"profile_picture"`
 	RoleID                    int32              `json:"role_id"`
 }
@@ -446,6 +454,10 @@ func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmpl
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
+		&i.FixedContractHours,
+		&i.VariableContractHours,
+		&i.ContractStartDate,
+		&i.ContractEndDate,
 		&i.ProfilePicture,
 		&i.RoleID,
 	)
@@ -598,7 +610,7 @@ func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) 
 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT 
-    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived,
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_start_date, ep.contract_end_date,
     u.profile_picture as profile_picture
 FROM employee_profile ep
 JOIN custom_user u ON ep.user_id = u.id
@@ -657,6 +669,10 @@ type ListEmployeeProfileRow struct {
 	HasBorrowed               bool               `json:"has_borrowed"`
 	OutOfService              *bool              `json:"out_of_service"`
 	IsArchived                bool               `json:"is_archived"`
+	FixedContractHours        *float64           `json:"fixed_contract_hours"`
+	VariableContractHours     *float64           `json:"variable_contract_hours"`
+	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
+	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 	ProfilePicture            *string            `json:"profile_picture"`
 }
 
@@ -701,6 +717,10 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 			&i.HasBorrowed,
 			&i.OutOfService,
 			&i.IsArchived,
+			&i.FixedContractHours,
+			&i.VariableContractHours,
+			&i.ContractStartDate,
+			&i.ContractEndDate,
 			&i.ProfilePicture,
 		); err != nil {
 			return nil, err
@@ -942,7 +962,7 @@ SET
     out_of_service = COALESCE($18, out_of_service),
     is_archived = COALESCE($19, is_archived)
 WHERE id = $20
-RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived
+RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, fixed_contract_hours, variable_contract_hours, contract_start_date, contract_end_date
 `
 
 type UpdateEmployeeProfileParams struct {
@@ -1015,6 +1035,10 @@ func (q *Queries) UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeP
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
+		&i.FixedContractHours,
+		&i.VariableContractHours,
+		&i.ContractStartDate,
+		&i.ContractEndDate,
 	)
 	return i, err
 }

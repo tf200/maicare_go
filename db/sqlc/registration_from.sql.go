@@ -127,7 +127,7 @@ INSERT INTO registration_form (
     $38, $39, $40, $41, $42, $43, $44, $45, $46,
     $47, $48, $49, $50, $51, $52, $53, $54, $55,
     $56, $57
-) RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id
+) RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime
 `
 
 type CreateRegistrationFormParams struct {
@@ -319,6 +319,7 @@ func (q *Queries) CreateRegistrationForm(ctx context.Context, arg CreateRegistra
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
+		&i.IntakeAppointmentDatetime,
 	)
 	return i, err
 }
@@ -334,7 +335,7 @@ func (q *Queries) DeleteRegistrationForm(ctx context.Context, id int64) error {
 }
 
 const getRegistrationForm = `-- name: GetRegistrationForm :one
-SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id FROM registration_form
+SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime FROM registration_form
 WHERE id = $1
 LIMIT 1
 `
@@ -410,12 +411,13 @@ func (q *Queries) GetRegistrationForm(ctx context.Context, id int64) (Registrati
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
+		&i.IntakeAppointmentDatetime,
 	)
 	return i, err
 }
 
 const listRegistrationForms = `-- name: ListRegistrationForms :many
-SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id FROM registration_form
+SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime FROM registration_form
 WHERE 
     -- Form status filtering
     ($3::VARCHAR IS NULL OR form_status = $3)
@@ -541,6 +543,7 @@ func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistratio
 			&i.SubmittedAt,
 			&i.ProcessedAt,
 			&i.ProcessedByEmployeeID,
+			&i.IntakeAppointmentDatetime,
 		); err != nil {
 			return nil, err
 		}
@@ -613,7 +616,7 @@ SET
     application_date = COALESCE($56, application_date),
     referrer_signature = COALESCE($57, referrer_signature)
 WHERE id = $58
-RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id
+RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime
 `
 
 type UpdateRegistrationFormParams struct {
@@ -807,6 +810,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
+		&i.IntakeAppointmentDatetime,
 	)
 	return i, err
 }
@@ -816,17 +820,25 @@ UPDATE registration_form
 SET
     form_status = $2,
     updated_at = NOW(),
-    processed_by_employee_id = $3
+    processed_by_employee_id = $3,
+    intake_appointment_datetime = $4
+
 WHERE id = $1
 `
 
 type UpdateRegistrationFormStatusParams struct {
-	ID                    int64  `json:"id"`
-	FormStatus            string `json:"form_status"`
-	ProcessedByEmployeeID *int64 `json:"processed_by_employee_id"`
+	ID                        int64              `json:"id"`
+	FormStatus                string             `json:"form_status"`
+	ProcessedByEmployeeID     *int64             `json:"processed_by_employee_id"`
+	IntakeAppointmentDatetime pgtype.Timestamptz `json:"intake_appointment_datetime"`
 }
 
 func (q *Queries) UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRegistrationFormStatusParams) error {
-	_, err := q.db.Exec(ctx, updateRegistrationFormStatus, arg.ID, arg.FormStatus, arg.ProcessedByEmployeeID)
+	_, err := q.db.Exec(ctx, updateRegistrationFormStatus,
+		arg.ID,
+		arg.FormStatus,
+		arg.ProcessedByEmployeeID,
+		arg.IntakeAppointmentDatetime,
+	)
 	return err
 }
