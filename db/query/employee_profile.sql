@@ -149,6 +149,18 @@ WHERE id = (
 RETURNING *;
 
 
+-- name: AddEmployeeContractDetails :one
+UPDATE employee_profile
+SET
+    fixed_contract_hours = COALESCE(sqlc.narg('fixed_contract_hours'), fixed_contract_hours),
+    variable_contract_hours = COALESCE(sqlc.narg('variable_contract_hours'), variable_contract_hours),
+    contract_start_date = COALESCE(sqlc.narg('contract_start_date'), contract_start_date),
+    contract_end_date = COALESCE(sqlc.narg('contract_end_date'), contract_end_date),
+    contract_type = COALESCE(sqlc.narg('contract_type'), contract_type)
+WHERE id = $1
+RETURNING *;
+
+
 -- name: AddEducationToEmployeeProfile :one
 INSERT INTO employee_education (
     employee_id,

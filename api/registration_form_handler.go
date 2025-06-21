@@ -386,6 +386,7 @@ type ListRegistrationFormsResponse struct {
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
 	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+	IntakeAppointmentDate         time.Time  `json:"intake_appointment_date,omitempty"`
 }
 
 // calculateRiskCount counts the number of true risk factors for a registration form
@@ -574,6 +575,7 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 			ProcessedAt:                   rf.ProcessedAt.Time,
 			ProcessedByEmployeeID:         rf.ProcessedByEmployeeID,
 			RiskCount:                     calculateRiskCount(rf),
+			IntakeAppointmentDate:         rf.IntakeAppointmentDatetime.Time,
 		}
 	}
 
@@ -650,6 +652,7 @@ type GetRegistrationFormResponse struct {
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
 	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+	IntakeAppointmentDate         time.Time  `json:"intake_appointment_date,omitempty"`
 }
 
 // @Summary Get Registration Form
@@ -747,6 +750,7 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 		SubmittedAt:                   registrationForm.SubmittedAt.Time,
 		ProcessedAt:                   registrationForm.ProcessedAt.Time,
 		ProcessedByEmployeeID:         registrationForm.ProcessedByEmployeeID,
+		IntakeAppointmentDate:         registrationForm.IntakeAppointmentDatetime.Time,
 	}
 	res := SuccessResponse(response, "Registration form retrieved successfully")
 	ctx.JSON(http.StatusOK, res)

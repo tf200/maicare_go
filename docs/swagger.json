@@ -5451,6 +5451,77 @@
                 }
             }
         },
+        "/employees/{id}/contract_details": {
+            "put": {
+                "description": "Add contract details to employee profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Add contract details to employee profile",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Contract details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.AddEmployeeContractDetailsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_AddEmployeeContractDetailsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/{id}/education": {
             "get": {
                 "description": "Get a list of education for employee profile",
@@ -8195,6 +8266,49 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "api.AddEmployeeContractDetailsRequest": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "fixed_contract_hours": {
+                    "type": "number"
+                },
+                "variable_contract_hours": {
+                    "type": "number"
+                }
+            }
+        },
+        "api.AddEmployeeContractDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "fixed_contract_hours": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "variable_contract_hours": {
+                    "type": "number"
                 }
             }
         },
@@ -14840,6 +14954,20 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.AddEmployeeCertificationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_AddEmployeeContractDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.AddEmployeeContractDetailsResponse"
                 },
                 "message": {
                     "type": "string"

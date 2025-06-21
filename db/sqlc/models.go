@@ -516,6 +516,7 @@ type EmployeeProfile struct {
 	VariableContractHours     *float64           `json:"variable_contract_hours"`
 	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
+	ContractType              *string            `json:"contract_type"`
 }
 
 type Expense struct {

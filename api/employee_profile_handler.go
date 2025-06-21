@@ -656,6 +656,71 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 
 }
 
+// I will impement contract here
+type AddEmployeeContractDetailsRequest struct {
+	FixedContractHours    *float64    `json:"fixed_contract_hours"`
+	VariableContractHours *float64    `json:"variable_contract_hours"`
+	ContractStartDate     time.Time `json:"contract_start_date"`
+	ContractEndDate       time.Time `json:"contract_end_date"`
+	ContractType          *string     `json:"contract_type"`
+}
+// AddEmployeeContractDetailsResponse represents the response for AddEmployeeContractDetailsApi
+type AddEmployeeContractDetailsResponse struct {
+	ID                    int64     `json:"id"`
+	FixedContractHours    *float64  `json:"fixed_contract_hours"`
+	VariableContractHours *float64  `json:"variable_contract_hours"`
+	ContractStartDate     time.Time `json:"contract_start_date"`
+	ContractEndDate       time.Time `json:"contract_end_date"`
+	ContractType          *string   `json:"contract_type"`
+}
+
+// @Summary Add contract details to employee profile
+// @Description Add contract details to employee profile
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param request body AddEmployeeContractDetailsRequest true "Contract details"
+// @Success 201 {object} Response[AddEmployeeContractDetailsResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/contract_details [put]
+func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req AddEmployeeContractDetailsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.AddEmployeeContractDetailsParams{
+		ID:            employeeID,
+		FixedContractHours:    req.FixedContractHours,
+		VariableContractHours: req.VariableContractHours,
+		ContractStartDate:     pgtype.Date{Time: req.ContractStartDate, Valid: true},
+		ContractEndDate:       pgtype.Date{Time: req.ContractEndDate, Valid: true},
+		ContractType:          req.ContractType,
+	}
+	contractDetails, err := server.store.AddEmployeeContractDetails(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(AddEmployeeContractDetailsResponse{
+		ID:                    contractDetails.ID,
+		FixedContractHours:    contractDetails.FixedContractHours,
+		VariableContractHours: contractDetails.VariableContractHours,
+		ContractStartDate:     contractDetails.ContractStartDate.Time,
+		ContractEndDate:       contractDetails.ContractEndDate.Time,
+		ContractType:          contractDetails.ContractType,
+	}, "Contract details added to employee profile successfully")
+	ctx.JSON(http.StatusCreated, res)
+}
+
+
 // AddEducationToEmployeeProfileRequest represents the request for AddEducationToEmployeeProfileApi
 type AddEducationToEmployeeProfileRequest struct {
 	InstitutionName string `json:"institution_name" binding:"required"`
