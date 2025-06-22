@@ -7544,6 +7544,14 @@ const docTemplate = `{
                         "name": "status",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Intake Appointment Date",
+                        "name": "intake_appointment_date",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {

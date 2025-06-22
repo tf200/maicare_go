@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/util"
 	"net/http"
 	"strconv"
 	"time"
@@ -618,13 +619,13 @@ type GetRegistrationFormResponse struct {
 	EducationMentorPhone          string     `json:"education_mentor_phone"`
 	EducationMentorEmail          string     `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
-	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
+	EducationAdditionalNotes      string    `json:"education_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
 	CareAmbulatoryGuidance        *bool      `json:"care_ambulatory_guidance"`
-	ApplicationReason             *string    `json:"application_reason"`
-	ClientGoals                   *string    `json:"client_goals"`
+	ApplicationReason             string    `json:"application_reason"`
+	ClientGoals                   string    `json:"client_goals"`
 	RiskAggressiveBehavior        *bool      `json:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm          *bool      `json:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse            *bool      `json:"risk_substance_abuse"`
@@ -635,8 +636,8 @@ type GetRegistrationFormResponse struct {
 	RiskSexualBehavior            *bool      `json:"risk_sexual_behavior"`
 	RiskDayNightRhythm            *bool      `json:"risk_day_night_rhythm"`
 	RiskOther                     *bool      `json:"risk_other"`
-	RiskOtherDescription          *string    `json:"risk_other_description"`
-	RiskAdditionalNotes           *string    `json:"risk_additional_notes"`
+	RiskOtherDescription          string    `json:"risk_other_description"`
+	RiskAdditionalNotes           string    `json:"risk_additional_notes"`
 	DocumentReferral              *uuid.UUID `json:"document_referral"`
 	DocumentEducationReport       *uuid.UUID `json:"document_education_report"`
 	DocumentActionPlan            *uuid.UUID `json:"document_action_plan"`
@@ -716,13 +717,13 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorPhone:          registrationForm.EducationMentorPhone,
 		EducationMentorEmail:          registrationForm.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    registrationForm.EducationCurrentlyEnrolled,
-		EducationAdditionalNotes:      registrationForm.EducationAdditionalNotes,
+		EducationAdditionalNotes:      util.DerefString(registrationForm.EducationAdditionalNotes),
 		CareProtectedLiving:           registrationForm.CareProtectedLiving,
 		CareAssistedIndependentLiving: registrationForm.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        registrationForm.CareRoomTrainingCenter,
 		CareAmbulatoryGuidance:        registrationForm.CareAmbulatoryGuidance,
-		ApplicationReason:             registrationForm.ApplicationReason,
-		ClientGoals:                   registrationForm.ClientGoals,
+		ApplicationReason:             util.DerefString(registrationForm.ApplicationReason),
+		ClientGoals:                   util.DerefString(registrationForm.ClientGoals),
 		RiskAggressiveBehavior:        registrationForm.RiskAggressiveBehavior,
 		RiskSuicidalSelfharm:          registrationForm.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:            registrationForm.RiskSubstanceAbuse,
@@ -733,8 +734,8 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 		RiskSexualBehavior:            registrationForm.RiskSexualBehavior,
 		RiskDayNightRhythm:            registrationForm.RiskDayNightRhythm,
 		RiskOther:                     registrationForm.RiskOther,
-		RiskOtherDescription:          registrationForm.RiskOtherDescription,
-		RiskAdditionalNotes:           registrationForm.RiskAdditionalNotes,
+		RiskOtherDescription:          util.DerefString(registrationForm.RiskOtherDescription),
+		RiskAdditionalNotes:           util.DerefString(registrationForm.RiskAdditionalNotes),
 		DocumentReferral:              registrationForm.DocumentReferral,
 		DocumentEducationReport:       registrationForm.DocumentEducationReport,
 		DocumentActionPlan:            registrationForm.DocumentActionPlan,
@@ -1095,6 +1096,7 @@ type UpdateRegistrationFormStatusRequest struct {
 // @Produce json
 // @Param id path int true "Registration Form ID"
 // @Param status query string true "Status" Enums(approved, rejected)
+// @Param intake_appointment_date query string true "Intake Appointment Date" Format(date-time)
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]

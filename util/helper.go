@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -91,4 +92,32 @@ func MicrosecondsToTimeComponents(microseconds int64) (hour, min, sec, nanosec i
 	nanosec = int(remaining * 1000) // Convert remaining microseconds to nanoseconds
 
 	return hour, min, sec, nanosec
+}
+
+func DerefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func DerefBool(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+
+func DerefInt64(i *int64) int64 {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+func DerefUUID(u *uuid.UUID) string {
+	if u == nil {
+		return ""
+	}
+	return u.String()
 }

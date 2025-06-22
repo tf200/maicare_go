@@ -12492,6 +12492,12 @@ paths:
         name: status
         required: true
         type: string
+      - description: Intake Appointment Date
+        format: date-time
+        in: query
+        name: intake_appointment_date
+        required: true
+        type: string
       produces:
       - application/json
       responses:
