@@ -123,6 +123,7 @@ func (server *Server) setupRoutes() {
 	server.setupRegistrationFormRoutes(baseRouter)
 	server.setupScheduleRoutes(baseRouter)
 	server.setupShiftsRoutes(baseRouter)
+	server.setupWorkingHours(baseRouter)
 	// Add more route setups as needed
 
 	server.setupWebsocketRoutes(baseRouter)

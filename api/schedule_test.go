@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/token"
+	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -35,7 +36,7 @@ func createRandomSchedule(t *testing.T, employeeID int64) db.Schedule {
 func TestCreateScheduleApi(t *testing.T) {
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
-	shift := createRandomShift(t, location.ID)
+	// shift := createRandomShift(t, location.ID)
 
 	testCases := []struct {
 		name          string
@@ -83,12 +84,12 @@ func TestCreateScheduleApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now().Format("2006-01-02")
 				createScheduleReq := CreateScheduleRequest{
-					EmployeeID:      employee.ID,
-					LocationID:      location.ID,
+					EmployeeID:      2,
+					LocationID:      3,
 					IsCustom:        false,
 					StartDatetime:   nil,
 					EndDatetime:     nil,
-					LocationShiftID: &shift.ID,
+					LocationShiftID: util.IntPtr(1),
 					ShiftDate:       &now,
 				}
 				data, err := json.Marshal(createScheduleReq)

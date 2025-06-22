@@ -106,3 +106,19 @@ DELETE FROM schedules
 WHERE id = $1;
 
 
+
+-- name: GetEmployeeSchedules :many
+SELECT 
+    s.id,
+    s.start_datetime,
+    s.end_datetime,
+    s.location_id,
+    s.color,
+    l.name as location_name,
+    'shift'::text as type
+FROM schedules s
+JOIN location l ON s.location_id = l.id
+WHERE s.employee_id = @employee_id
+    AND s.start_datetime >= @period_start
+    AND s.start_datetime < @period_end
+ORDER BY s.start_datetime;

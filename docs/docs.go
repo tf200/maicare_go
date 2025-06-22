@@ -6131,6 +6131,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/{id}/working_hours": {
+            "get": {
+                "description": "List working hours for an employee in a given month and year",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Working Hours"
+                ],
+                "summary": "List working hours for an employee",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Year",
+                        "name": "year",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Month",
+                        "name": "month",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ListWorkingHoursResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/incidents": {
             "get": {
                 "description": "List all incidents with pagination and filtering options",
@@ -12835,6 +12893,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "intake_appointment_date": {
+                    "type": "string"
+                },
                 "processed_at": {
                     "type": "string"
                 },
@@ -14597,6 +14658,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "intake_appointment_date": {
+                    "type": "string"
+                },
                 "processed_at": {
                     "type": "string"
                 },
@@ -14778,6 +14842,26 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListWorkingHoursResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "period": {
+                    "$ref": "#/definitions/api.Period"
+                },
+                "summary": {
+                    "$ref": "#/definitions/api.Summary"
+                },
+                "working_hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.WorkingHourItem"
+                    }
+                }
+            }
+        },
         "api.LoginUserRequest": {
             "type": "object",
             "required": [
@@ -14875,6 +14959,34 @@ const docTemplate = `{
                 },
                 "last_name": {
                     "type": "string"
+                }
+            }
+        },
+        "api.Period": {
+            "type": "object",
+            "properties": {
+                "date_range": {
+                    "type": "object",
+                    "properties": {
+                        "end": {
+                            "type": "string"
+                        },
+                        "start": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "is_current_month": {
+                    "type": "boolean"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "month_name": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
@@ -15908,6 +16020,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_ListWorkingHoursResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ListWorkingHoursResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_LoginUserResponse": {
             "type": "object",
             "properties": {
@@ -16801,6 +16927,23 @@ const docTemplate = `{
                 },
                 "start_time": {
                     "type": "string"
+                }
+            }
+        },
+        "api.Summary": {
+            "type": "object",
+            "properties": {
+                "appointment_hours": {
+                    "type": "number"
+                },
+                "shift_hours": {
+                    "type": "number"
+                },
+                "total_days_worked": {
+                    "type": "integer"
+                },
+                "total_hours": {
+                    "type": "number"
                 }
             }
         },
@@ -18861,6 +19004,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "validation_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.WorkingHourItem": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_hours": {
+                    "type": "number"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }

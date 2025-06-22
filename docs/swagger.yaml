@@ -3156,6 +3156,8 @@ definitions:
         type: string
       id:
         type: integer
+      intake_appointment_date:
+        type: string
       processed_at:
         type: string
       processed_by_employee_id:
@@ -4323,6 +4325,8 @@ definitions:
         type: string
       id:
         type: integer
+      intake_appointment_date:
+        type: string
       processed_at:
         type: string
       processed_by_employee_id:
@@ -4442,6 +4446,19 @@ definitions:
       reason:
         type: string
     type: object
+  api.ListWorkingHoursResponse:
+    properties:
+      employee_id:
+        type: integer
+      period:
+        $ref: '#/definitions/api.Period'
+      summary:
+        $ref: '#/definitions/api.Summary'
+      working_hours:
+        items:
+          $ref: '#/definitions/api.WorkingHourItem'
+        type: array
+    type: object
   api.LoginUserRequest:
     properties:
       email:
@@ -4508,6 +4525,24 @@ definitions:
         type: string
       last_name:
         type: string
+    type: object
+  api.Period:
+    properties:
+      date_range:
+        properties:
+          end:
+            type: string
+          start:
+            type: string
+        type: object
+      is_current_month:
+        type: boolean
+      month:
+        type: integer
+      month_name:
+        type: string
+      year:
+        type: integer
     type: object
   api.Permission:
     properties:
@@ -5172,6 +5207,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_ListWorkingHoursResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListWorkingHoursResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_LoginUserResponse:
     properties:
       data:
@@ -5750,6 +5794,17 @@ definitions:
         type: string
       start_time:
         type: string
+    type: object
+  api.Summary:
+    properties:
+      appointment_hours:
+        type: number
+      shift_hours:
+        type: number
+      total_days_worked:
+        type: integer
+      total_hours:
+        type: number
     type: object
   api.TotalDischargeCountResponse:
     properties:
@@ -7116,6 +7171,29 @@ definitions:
     required:
     - temp_token
     - validation_code
+    type: object
+  api.WorkingHourItem:
+    properties:
+      color:
+        type: string
+      description:
+        type: string
+      duration_hours:
+        type: number
+      end_time:
+        type: string
+      id:
+        type: integer
+      location:
+        type: string
+      location_id:
+        type: integer
+      start_time:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
     type: object
   big.Int:
     type: object
@@ -11374,6 +11452,45 @@ paths:
       summary: Set employee profile picture by ID
       tags:
       - employees
+  /employees/{id}/working_hours:
+    get:
+      consumes:
+      - application/json
+      description: List working hours for an employee in a given month and year
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: Month
+        in: query
+        name: month
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListWorkingHoursResponse'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List working hours for an employee
+      tags:
+      - Working Hours
   /employees/counts:
     get:
       description: Get total counts of employees, subcontractors, archived, and out

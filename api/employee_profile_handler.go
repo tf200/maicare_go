@@ -139,8 +139,6 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	}
 
 	password := util.RandomString(6)
-	log.Printf("password is %v", password)
-
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -191,12 +189,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
-		Name:         req.FirstName + " " + req.LastName,
-		To:           req.Email,
-		UserEmail:    req.Email,
-		UserPassword: password,
-	}, ctx)
+
 	res := SuccessResponse(CreateEmployeeProfileResponse{
 		ID:                        employee.Employee.ID,
 		EmployeeNumber:            employee.Employee.EmployeeNumber,
@@ -658,12 +651,13 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 
 // I will impement contract here
 type AddEmployeeContractDetailsRequest struct {
-	FixedContractHours    *float64    `json:"fixed_contract_hours"`
-	VariableContractHours *float64    `json:"variable_contract_hours"`
+	FixedContractHours    *float64  `json:"fixed_contract_hours"`
+	VariableContractHours *float64  `json:"variable_contract_hours"`
 	ContractStartDate     time.Time `json:"contract_start_date"`
 	ContractEndDate       time.Time `json:"contract_end_date"`
-	ContractType          *string     `json:"contract_type"`
+	ContractType          *string   `json:"contract_type"`
 }
+
 // AddEmployeeContractDetailsResponse represents the response for AddEmployeeContractDetailsApi
 type AddEmployeeContractDetailsResponse struct {
 	ID                    int64     `json:"id"`
@@ -697,7 +691,7 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		return
 	}
 	arg := db.AddEmployeeContractDetailsParams{
-		ID:            employeeID,
+		ID:                    employeeID,
 		FixedContractHours:    req.FixedContractHours,
 		VariableContractHours: req.VariableContractHours,
 		ContractStartDate:     pgtype.Date{Time: req.ContractStartDate, Valid: true},
@@ -709,6 +703,36 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	user, err := server.store.GetUserByID(ctx, contractDetails.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	password := util.RandomString(8)
+	hashedPassword, err := util.HashPassword(password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.store.UpdatePassword(ctx, db.UpdatePasswordParams{
+		ID:       user.ID,
+		Password: hashedPassword,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
+		Name:         contractDetails.FirstName + " " + contractDetails.LastName,
+		To:           contractDetails.Email,
+		UserEmail:    user.Email,
+		UserPassword: password,
+	}, ctx)
 	res := SuccessResponse(AddEmployeeContractDetailsResponse{
 		ID:                    contractDetails.ID,
 		FixedContractHours:    contractDetails.FixedContractHours,
@@ -719,7 +743,6 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 	}, "Contract details added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
 }
-
 
 // AddEducationToEmployeeProfileRequest represents the request for AddEducationToEmployeeProfileApi
 type AddEducationToEmployeeProfileRequest struct {

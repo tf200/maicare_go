@@ -164,6 +164,67 @@ func (q *Queries) GetDailySchedulesByLocation(ctx context.Context, arg GetDailyS
 	return items, nil
 }
 
+const getEmployeeSchedules = `-- name: GetEmployeeSchedules :many
+SELECT 
+    s.id,
+    s.start_datetime,
+    s.end_datetime,
+    s.location_id,
+    s.color,
+    l.name as location_name,
+    'shift'::text as type
+FROM schedules s
+JOIN location l ON s.location_id = l.id
+WHERE s.employee_id = $1
+    AND s.start_datetime >= $2
+    AND s.start_datetime < $3
+ORDER BY s.start_datetime
+`
+
+type GetEmployeeSchedulesParams struct {
+	EmployeeID  int64            `json:"employee_id"`
+	PeriodStart pgtype.Timestamp `json:"period_start"`
+	PeriodEnd   pgtype.Timestamp `json:"period_end"`
+}
+
+type GetEmployeeSchedulesRow struct {
+	ID            int64            `json:"id"`
+	StartDatetime pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
+	LocationID    int64            `json:"location_id"`
+	Color         *string          `json:"color"`
+	LocationName  string           `json:"location_name"`
+	Type          string           `json:"type"`
+}
+
+func (q *Queries) GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error) {
+	rows, err := q.db.Query(ctx, getEmployeeSchedules, arg.EmployeeID, arg.PeriodStart, arg.PeriodEnd)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEmployeeSchedulesRow
+	for rows.Next() {
+		var i GetEmployeeSchedulesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.StartDatetime,
+			&i.EndDatetime,
+			&i.LocationID,
+			&i.Color,
+			&i.LocationName,
+			&i.Type,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMonthlySchedulesByLocation = `-- name: GetMonthlySchedulesByLocation :many
 WITH target_month AS (
   SELECT make_date($1, $2, 1) AS start_date
