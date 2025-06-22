@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/util"
@@ -305,7 +306,7 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 // ListRegistrationFormsRequest represents the request body for listing registration forms
 type ListRegistrationFormsRequest struct {
 	pagination.Request
-	Status                 *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected"`
+	Status                 *string `form:"status" json:"status" binding:"oneof=pending approved rejected"`
 	RiskAggressiveBehavior *bool   `form:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm   *bool   `form:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse     *bool   `form:"risk_substance_abuse"`
@@ -619,13 +620,13 @@ type GetRegistrationFormResponse struct {
 	EducationMentorPhone          string     `json:"education_mentor_phone"`
 	EducationMentorEmail          string     `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
-	EducationAdditionalNotes      string    `json:"education_additional_notes"`
+	EducationAdditionalNotes      string     `json:"education_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
 	CareAmbulatoryGuidance        *bool      `json:"care_ambulatory_guidance"`
-	ApplicationReason             string    `json:"application_reason"`
-	ClientGoals                   string    `json:"client_goals"`
+	ApplicationReason             string     `json:"application_reason"`
+	ClientGoals                   string     `json:"client_goals"`
 	RiskAggressiveBehavior        *bool      `json:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm          *bool      `json:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse            *bool      `json:"risk_substance_abuse"`
@@ -636,8 +637,8 @@ type GetRegistrationFormResponse struct {
 	RiskSexualBehavior            *bool      `json:"risk_sexual_behavior"`
 	RiskDayNightRhythm            *bool      `json:"risk_day_night_rhythm"`
 	RiskOther                     *bool      `json:"risk_other"`
-	RiskOtherDescription          string    `json:"risk_other_description"`
-	RiskAdditionalNotes           string    `json:"risk_additional_notes"`
+	RiskOtherDescription          string     `json:"risk_other_description"`
+	RiskAdditionalNotes           string     `json:"risk_additional_notes"`
 	DocumentReferral              *uuid.UUID `json:"document_referral"`
 	DocumentEducationReport       *uuid.UUID `json:"document_education_report"`
 	DocumentActionPlan            *uuid.UUID `json:"document_action_plan"`
@@ -1087,7 +1088,7 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 // UpdateRegistrationFormStatusRequest represents the response body for updating a registration form status
 type UpdateRegistrationFormStatusRequest struct {
 	FormStatus            string    `form:"status" binding:"required,oneof=approved rejected"`
-	IntakeAppointmentDate time.Time `form:"intake_appointment_date" binding:"required"` // Required field for intake appointment date
+	IntakeAppointmentDate time.Time `form:"intake_appointment_date"` // Required field for intake appointment date
 }
 
 // @Summary Update Registration Form Status
@@ -1103,6 +1104,13 @@ type UpdateRegistrationFormStatusRequest struct {
 // @Failure 500 {object} Response[any]
 // @Router /registration_form/{id}/status [post]
 func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
+	var req UpdateRegistrationFormStatusRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -1119,21 +1127,21 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateRegistrationFormStatusRequest
-
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
 	arg := db.UpdateRegistrationFormStatusParams{
 		ID:                    rfId,
 		FormStatus:            req.FormStatus,
 		ProcessedByEmployeeID: &employeeID,
-		IntakeAppointmentDatetime: pgtype.Timestamptz{
+	}
+
+	if req.FormStatus == "approved" {
+		if req.IntakeAppointmentDate.IsZero() {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("intake appointment date is required")))
+			return
+		}
+		arg.IntakeAppointmentDatetime = pgtype.Timestamptz{
 			Time:  req.IntakeAppointmentDate,
 			Valid: true,
-		},
+		}
 	}
 
 	err = server.store.UpdateRegistrationFormStatus(ctx, arg)
