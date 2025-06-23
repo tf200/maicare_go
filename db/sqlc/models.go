@@ -39,20 +39,20 @@ type AppointmentCard struct {
 
 type AppointmentClient struct {
 	AppointmentClientID int64            `json:"appointment_client_id"`
-	AppointmentID       int64            `json:"appointment_id"`
+	AppointmentID       uuid.UUID        `json:"appointment_id"`
 	ClientID            int64            `json:"client_id"`
 	AddedAt             pgtype.Timestamp `json:"added_at"`
 }
 
 type AppointmentParticipant struct {
 	AppointmentParticipantID int64            `json:"appointment_participant_id"`
-	AppointmentID            int64            `json:"appointment_id"`
+	AppointmentID            uuid.UUID        `json:"appointment_id"`
 	EmployeeID               int64            `json:"employee_id"`
 	AddedAt                  pgtype.Timestamp `json:"added_at"`
 }
 
 type AppointmentTemplate struct {
-	ID                 int64            `json:"id"`
+	ID                 uuid.UUID        `json:"id"`
 	CreatorEmployeeID  int64            `json:"creator_employee_id"`
 	StartTime          pgtype.Timestamp `json:"start_time"`
 	EndTime            pgtype.Timestamp `json:"end_time"`
@@ -988,7 +988,7 @@ type RolePermission struct {
 }
 
 type Schedule struct {
-	ID              int64            `json:"id"`
+	ID              uuid.UUID        `json:"id"`
 	EmployeeID      int64            `json:"employee_id"`
 	Color           *string          `json:"color"`
 	LocationID      int64            `json:"location_id"`
@@ -1001,8 +1001,8 @@ type Schedule struct {
 }
 
 type ScheduledAppointment struct {
-	ID                     int64            `json:"id"`
-	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`
+	ID                     uuid.UUID        `json:"id"`
+	AppointmentTemplatesID *uuid.UUID       `json:"appointment_templates_id"`
 	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
 	StartTime              pgtype.Timestamp `json:"start_time"`
 	EndTime                pgtype.Timestamp `json:"end_time"`

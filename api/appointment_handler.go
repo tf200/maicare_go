@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -28,7 +29,7 @@ type CreateAppointmentRequest struct {
 
 // CreateAppointmentResponse represents the response payload for creating an appointment
 type CreateAppointmentResponse struct {
-	ID                int64     `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	CreatorEmployeeID int64     `json:"creator_employee_id"`
 	StartTime         time.Time `json:"start_time"`
 	EndTime           time.Time `json:"end_time"`
@@ -195,7 +196,7 @@ type AddParticipantToAppointmentRequest struct {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param appointment_id path int true "Appointment ID"
+// @Param id path string true "Appointment ID (UUID)"
 // @Param request body AddParticipantToAppointmentRequest true "Add participant request"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
@@ -205,7 +206,7 @@ type AddParticipantToAppointmentRequest struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{appointment_id}/participants [post]
 func (server *Server) AddParticipantToAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -241,7 +242,7 @@ type AddClientToAppointmentRequest struct {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param appointment_id path int true "Appointment ID"
+// @Param id path string true "Appointment ID (UUID)"
 // @Param request body AddClientToAppointmentRequest true "Add client request"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
@@ -251,7 +252,7 @@ type AddClientToAppointmentRequest struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{appointment_id}/clients [post]
 func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -284,7 +285,7 @@ type ListAppointmentsForEmployeeInRangeRequest struct {
 
 // ListAppointmentsForEmployeeInRangeResponse represents the response payload for listing appointments for an employee in a date range
 type ListAppointmentsForEmployeeInRangeResponse struct {
-	ID                  int64                 `json:"id"`
+	ID                  uuid.UUID             `json:"id"`
 	CreatorEmployeeID   *int64                `json:"creator_employee_id"`
 	StartTime           time.Time             `json:"start_time"`
 	EndTime             time.Time             `json:"end_time"`
@@ -398,7 +399,7 @@ type ListAppointmentsForClientRequest struct {
 
 // ListAppointmentsForClientResponse represents the response payload for listing appointments for a client in a date range
 type ListAppointmentsForClientResponse struct {
-	ID                    int64                 `json:"id"`
+	ID                    uuid.UUID             `json:"id"`
 	CreatorEmployeeID     *int64                `json:"creator_employee_id"`
 	StartTime             time.Time             `json:"start_time"`
 	EndTime               time.Time             `json:"end_time"`
@@ -527,7 +528,7 @@ type ClientsDetails struct {
 
 // GetAppointmentResponse represents the response payload for getting an appointment
 type GetAppointmentResponse struct {
-	ID                     int64                 `json:"id"`
+	ID                     uuid.UUID             `json:"id"`
 	AppointmentTemplatesID *int64                `json:"appointment_templates_id"`
 	CreatorEmployeeID      *int64                `json:"creator_employee_id"`
 	CreatorFirstName       *string               `json:"creator_first_name"`
@@ -555,7 +556,7 @@ type GetAppointmentResponse struct {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Appointment ID"
+// @Param id path string true "Appointment ID (UUID)"
 // @Success 200 {object} Response[GetAppointmentResponse]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
@@ -563,7 +564,7 @@ type GetAppointmentResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{id} [get]
 func (server *Server) GetAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -641,8 +642,8 @@ type UpdateAppointmentRequest struct {
 
 // UpdateAppointmentResponse represents the response payload for updating an appointment
 type UpdateAppointmentResponse struct {
-	ID                     int64            `json:"id"`
-	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`
+	ID                     uuid.UUID        `json:"id"`
+	AppointmentTemplatesID *uuid.UUID       `json:"appointment_templates_id"`
 	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
 	StartTime              pgtype.Timestamp `json:"start_time"`
 	EndTime                pgtype.Timestamp `json:"end_time"`
@@ -663,7 +664,7 @@ type UpdateAppointmentResponse struct {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Appointment ID"
+// @Param id path string true "Appointment ID (UUID)"
 // @Param request body UpdateAppointmentRequest true "Update appointment request"
 // @Success 200 {object} Response[UpdateAppointmentResponse]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
@@ -673,7 +674,7 @@ type UpdateAppointmentResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{id} [put]
 func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -782,7 +783,7 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 // @Description Delete an appointment
 // @Tags appointments
 // @Produce json
-// @Param id path int true "Appointment ID"
+// @Param id path string true "Appointment ID (UUID)"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
@@ -791,7 +792,7 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{id} [delete]
 func (server *Server) DeleteAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -812,7 +813,7 @@ func (server *Server) DeleteAppointmentApi(ctx *gin.Context) {
 // @Description Confirm an appointment
 // @Tags appointments
 // @Produce json
-// @Param id path int true "Appointment ID"
+// @Param id path string true "Appointment ID (UUID)"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
@@ -821,7 +822,7 @@ func (server *Server) DeleteAppointmentApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /appointments/{id}/confirm [post]
 func (server *Server) ConfirmAppointmentApi(ctx *gin.Context) {
-	appointmentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

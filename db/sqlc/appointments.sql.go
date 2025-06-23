@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -20,8 +21,8 @@ SELECT
 `
 
 type BulkAddAppointmentClientsParams struct {
-	AppointmentID int64   `json:"appointment_id"`
-	ClientIds     []int64 `json:"client_ids"`
+	AppointmentID uuid.UUID `json:"appointment_id"`
+	ClientIds     []int64   `json:"client_ids"`
 }
 
 // The array of employee_id
@@ -38,8 +39,8 @@ SELECT
 `
 
 type BulkAddAppointmentParticipantsParams struct {
-	AppointmentID int64   `json:"appointment_id"`
-	EmployeeIds   []int64 `json:"employee_ids"`
+	AppointmentID uuid.UUID `json:"appointment_id"`
+	EmployeeIds   []int64   `json:"employee_ids"`
 }
 
 func (q *Queries) BulkAddAppointmentParticipants(ctx context.Context, arg BulkAddAppointmentParticipantsParams) error {
@@ -58,8 +59,8 @@ WHERE id = $1
 `
 
 type ConfirmAppointmentParams struct {
-	ID         int64  `json:"id"`
-	EmployeeID *int64 `json:"employee_id"`
+	ID         uuid.UUID `json:"id"`
+	EmployeeID *int64    `json:"employee_id"`
 }
 
 func (q *Queries) ConfirmAppointment(ctx context.Context, arg ConfirmAppointmentParams) error {
@@ -181,7 +182,7 @@ DELETE FROM scheduled_appointments
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAppointment(ctx context.Context, id int64) error {
+func (q *Queries) DeleteAppointment(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteAppointment, id)
 	return err
 }
@@ -191,7 +192,7 @@ DELETE FROM appointment_clients
 WHERE appointment_id = $1
 `
 
-func (q *Queries) DeleteAppointmentClients(ctx context.Context, appointmentID int64) error {
+func (q *Queries) DeleteAppointmentClients(ctx context.Context, appointmentID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteAppointmentClients, appointmentID)
 	return err
 }
@@ -201,7 +202,7 @@ DELETE FROM appointment_participants
 WHERE appointment_id = $1
 `
 
-func (q *Queries) DeleteAppointmentParticipants(ctx context.Context, appointmentID int64) error {
+func (q *Queries) DeleteAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteAppointmentParticipants, appointmentID)
 	return err
 }
@@ -231,7 +232,7 @@ type GetAppointmentClientsRow struct {
 }
 
 // Optional ordering
-func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID int64) ([]GetAppointmentClientsRow, error) {
+func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentClientsRow, error) {
 	rows, err := q.db.Query(ctx, getAppointmentClients, appointmentID)
 	if err != nil {
 		return nil, err
@@ -272,7 +273,7 @@ type GetAppointmentParticipantsRow struct {
 	LastName   string `json:"last_name"`
 }
 
-func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentID int64) ([]GetAppointmentParticipantsRow, error) {
+func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentParticipantsRow, error) {
 	rows, err := q.db.Query(ctx, getAppointmentParticipants, appointmentID)
 	if err != nil {
 		return nil, err
@@ -303,7 +304,7 @@ LIMIT 1
 `
 
 // The array of client_ids
-func (q *Queries) GetAppointmentTemplate(ctx context.Context, id int64) (AppointmentTemplate, error) {
+func (q *Queries) GetAppointmentTemplate(ctx context.Context, id uuid.UUID) (AppointmentTemplate, error) {
 	row := q.db.QueryRow(ctx, getAppointmentTemplate, id)
 	var i AppointmentTemplate
 	err := row.Scan(
@@ -355,8 +356,8 @@ LIMIT 1
 `
 
 type GetScheduledAppointmentByIDRow struct {
-	ID                     int64            `json:"id"`
-	AppointmentTemplatesID *int64           `json:"appointment_templates_id"`
+	ID                     uuid.UUID        `json:"id"`
+	AppointmentTemplatesID *uuid.UUID       `json:"appointment_templates_id"`
 	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
 	CreatorFirstName       *string          `json:"creator_first_name"`
 	CreatorLastName        *string          `json:"creator_last_name"`
@@ -375,7 +376,7 @@ type GetScheduledAppointmentByIDRow struct {
 	UpdatedAt              pgtype.Timestamp `json:"updated_at"`
 }
 
-func (q *Queries) GetScheduledAppointmentByID(ctx context.Context, id int64) (GetScheduledAppointmentByIDRow, error) {
+func (q *Queries) GetScheduledAppointmentByID(ctx context.Context, id uuid.UUID) (GetScheduledAppointmentByIDRow, error) {
 	row := q.db.QueryRow(ctx, getScheduledAppointmentByID, id)
 	var i GetScheduledAppointmentByIDRow
 	err := row.Scan(
@@ -434,7 +435,7 @@ type ListClientAppointmentsInRangeParams struct {
 }
 
 type ListClientAppointmentsInRangeRow struct {
-	AppointmentID     int64            `json:"appointment_id"`
+	AppointmentID     uuid.UUID        `json:"appointment_id"`
 	StartTime         pgtype.Timestamp `json:"start_time"`
 	EndTime           pgtype.Timestamp `json:"end_time"`
 	Location          *string          `json:"location"`
@@ -536,7 +537,7 @@ type ListEmployeeAppointmentsInRangeParams struct {
 }
 
 type ListEmployeeAppointmentsInRangeRow struct {
-	AppointmentID     int64            `json:"appointment_id"`
+	AppointmentID     uuid.UUID        `json:"appointment_id"`
 	StartTime         pgtype.Timestamp `json:"start_time"`
 	EndTime           pgtype.Timestamp `json:"end_time"`
 	Location          *string          `json:"location"`
@@ -603,7 +604,7 @@ RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_tim
 `
 
 type UpdateAppointmentParams struct {
-	ID          int64            `json:"id"`
+	ID          uuid.UUID        `json:"id"`
 	StartTime   pgtype.Timestamp `json:"start_time"`
 	EndTime     pgtype.Timestamp `json:"end_time"`
 	Location    *string          `json:"location"`

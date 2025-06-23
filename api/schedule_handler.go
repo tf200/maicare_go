@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -30,7 +31,7 @@ type CreateScheduleRequest struct {
 
 // CreateScheduleResponse represents the response body after creating a schedule.
 type CreateScheduleResponse struct {
-	ID            int64     `json:"id"`
+	ID            uuid.UUID `json:"id"`
 	EmployeeID    int64     `json:"employee_id"`
 	LocationID    int64     `json:"location_id"`
 	StartDatetime time.Time `json:"start_datetime"`
@@ -185,7 +186,7 @@ type GetMonthlySchedulesByLocationRequest struct {
 
 // Shift represents a work shift for an employee.
 type Shift struct {
-	ShiftID           int64     `json:"shift_id"`
+	ShiftID           uuid.UUID `json:"shift_id"`
 	EmployeeID        int64     `json:"employee_id"`
 	EmployeeFirstName string    `json:"employee_first_name"`
 	EmployeeLastName  string    `json:"employee_last_name"`
@@ -375,7 +376,7 @@ func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
 
 // GetScheduleByIdResponse represents the response body for retrieving a schedule by ID.
 type GetScheduleByIdResponse struct {
-	ID                int64     `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	EmployeeID        int64     `json:"employee_id"`
 	EmployeeFirstName string    `json:"employee_first_name"`
 	EmployeeLastName  string    `json:"employee_last_name"`
@@ -395,15 +396,15 @@ type GetScheduleByIdResponse struct {
 // @Description Get a schedule by its ID
 // @Tags Schedule
 // @Produce json
-// @Param id path int true "Schedule ID"
+// @Param id path string true "Schedule ID"
 // @Success 200 {object} Response[GetScheduleByIdResponse] "Schedule retrieved successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules/{id} [get]
 func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
-	scheduleID, err := strconv.ParseInt(ctx.Param("id"), 10, 32)
+	scheduleID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid schedule ID format")))
 		return
 	}
 
@@ -451,7 +452,7 @@ type UpdateScheduleRequest struct {
 
 // UpdateScheduleResponse represents the response body after updating a schedule.
 type UpdateScheduleResponse struct {
-	ID            int64     `json:"id"`
+	ID            uuid.UUID `json:"id"`
 	EmployeeID    int64     `json:"employee_id"`
 	LocationID    int64     `json:"location_id"`
 	StartDatetime time.Time `json:"start_datetime"`
@@ -472,7 +473,7 @@ type UpdateScheduleResponse struct {
 // @Tags Schedule
 // @Accept json
 // @Produce json
-// @Param id path int64 true "Schedule ID"
+// @Param id path string true "Schedule ID"
 // @Param request body UpdateScheduleRequest true "Update Schedule Request"
 // @Success 200 {object} Response[UpdateScheduleResponse] "Schedule updated successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
@@ -480,15 +481,13 @@ type UpdateScheduleResponse struct {
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules/{id} [put]
 func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
-	// Get schedule ID from URL parameter
-	scheduleIDStr := ctx.Param("id")
-	scheduleID, err := strconv.ParseInt(scheduleIDStr, 10, 64)
+
+	scheduleID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid schedule ID")))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid schedule ID format")))
 		return
 	}
 
-	// Get existing schedule
 	existingSchedule, err := server.store.GetScheduleById(ctx, scheduleID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -683,13 +682,13 @@ func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
 // @Description Delete an existing schedule by its ID
 // @Tags Schedule
 // @Produce json
-// @Param id path int true "Schedule ID"
+// @Param id path string true "Schedule ID"
 // @Success 200 {object} Response[any] "Schedule deleted successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules/{id} [delete]
 func (server *Server) DeleteScheduleApi(ctx *gin.Context) {
-	scheduleID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	scheduleID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

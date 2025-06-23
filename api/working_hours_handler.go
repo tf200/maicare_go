@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // WorkingHourItem represents a single working hour item, which can be either a schedule or an appointment.
 type WorkingHourItem struct {
-	ID            int64     `json:"id"`
+	ID            uuid.UUID `json:"id"`
 	Type          string    `json:"type"`
 	StartTime     time.Time `json:"start_time"`
 	EndTime       time.Time `json:"end_time"`

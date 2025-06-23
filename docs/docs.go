@@ -136,9 +136,9 @@ const docTemplate = `{
                 "summary": "Add clients to an appointment",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Appointment ID",
-                        "name": "appointment_id",
+                        "type": "string",
+                        "description": "Appointment ID (UUID)",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -207,9 +207,9 @@ const docTemplate = `{
                 "summary": "Add participants to an appointment",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Appointment ID",
-                        "name": "appointment_id",
+                        "type": "string",
+                        "description": "Appointment ID (UUID)",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -278,8 +278,8 @@ const docTemplate = `{
                 "summary": "Get an appointment by ID",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Appointment ID",
+                        "type": "string",
+                        "description": "Appointment ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -332,8 +332,8 @@ const docTemplate = `{
                 "summary": "Update an appointment",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Appointment ID",
+                        "type": "string",
+                        "description": "Appointment ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -398,8 +398,8 @@ const docTemplate = `{
                 "summary": "Delete an appointment",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Appointment ID",
+                        "type": "string",
+                        "description": "Appointment ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -457,8 +457,8 @@ const docTemplate = `{
                 "summary": "Confirm an appointment",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Appointment ID",
+                        "type": "string",
+                        "description": "Appointment ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -7815,7 +7815,7 @@ const docTemplate = `{
                 "summary": "Get schedule by ID",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Schedule ID",
                         "name": "id",
                         "in": "path",
@@ -7857,7 +7857,7 @@ const docTemplate = `{
                 "summary": "Update an existing schedule",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Schedule ID",
                         "name": "id",
                         "in": "path",
@@ -7911,7 +7911,7 @@ const docTemplate = `{
                 "summary": "Delete a schedule",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Schedule ID",
                         "name": "id",
                         "in": "path",
@@ -8886,7 +8886,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -11006,7 +11006,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_id": {
                     "type": "integer"
@@ -11634,7 +11634,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_confirmed": {
                     "type": "boolean"
@@ -13009,7 +13009,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_custom": {
                     "description": "Indicates if this is a custom schedule",
@@ -13370,7 +13370,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -13440,7 +13440,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_confirmed": {
                     "type": "boolean"
@@ -16928,7 +16928,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "shift_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift_name": {
                     "type": "string"
@@ -17168,7 +17168,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "appointment_templates_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "color": {
                     "type": "string"
@@ -17192,7 +17192,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_confirmed": {
                     "type": "boolean"
@@ -18821,7 +18821,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_id": {
                     "type": "integer"
@@ -19032,7 +19032,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"

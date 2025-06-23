@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/hibiken/asynq"
@@ -159,7 +160,7 @@ func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task)
 		log.Printf("Failed to unmarshal appointment task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	if p.AppointmentTemplateID == 0 {
+	if p.AppointmentTemplateID == (uuid.UUID{}) {
 		return fmt.Errorf("invalid appointment payload: missing required fields: %w", asynq.SkipRetry)
 	}
 

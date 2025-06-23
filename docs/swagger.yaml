@@ -465,7 +465,7 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       location:
         type: string
       start_time:
@@ -1908,7 +1908,7 @@ definitions:
       end_datetime:
         type: string
       id:
-        type: integer
+        type: string
       location_id:
         type: integer
       location_shift_id:
@@ -2320,7 +2320,7 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       is_confirmed:
         type: boolean
       location:
@@ -3228,7 +3228,7 @@ definitions:
       end_datetime:
         type: string
       id:
-        type: integer
+        type: string
       is_custom:
         description: Indicates if this is a custom schedule
         type: boolean
@@ -3468,7 +3468,7 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       location:
         type: string
       participants_details:
@@ -3515,7 +3515,7 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       is_confirmed:
         type: boolean
       location:
@@ -5789,7 +5789,7 @@ definitions:
         description: Optional field for preset shift
         type: integer
       shift_id:
-        type: integer
+        type: string
       shift_name:
         type: string
       start_time:
@@ -5948,7 +5948,7 @@ definitions:
   api.UpdateAppointmentResponse:
     properties:
       appointment_templates_id:
-        type: integer
+        type: string
       color:
         type: string
       confirmed_at:
@@ -5964,7 +5964,7 @@ definitions:
       end_time:
         $ref: '#/definitions/pgtype.Timestamp'
       id:
-        type: integer
+        type: string
       is_confirmed:
         type: boolean
       location:
@@ -7043,7 +7043,7 @@ definitions:
       end_datetime:
         type: string
       id:
-        type: integer
+        type: string
       location_id:
         type: integer
       location_shift_id:
@@ -7183,7 +7183,7 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       location:
         type: string
       location_id:
@@ -7589,11 +7589,11 @@ paths:
       - application/json
       description: Add clients to an existing appointment
       parameters:
-      - description: Appointment ID
+      - description: Appointment ID (UUID)
         in: path
-        name: appointment_id
+        name: id
         required: true
-        type: integer
+        type: string
       - description: Add client request
         in: body
         name: request
@@ -7636,11 +7636,11 @@ paths:
       - application/json
       description: Add participants to an existing appointment
       parameters:
-      - description: Appointment ID
+      - description: Appointment ID (UUID)
         in: path
-        name: appointment_id
+        name: id
         required: true
-        type: integer
+        type: string
       - description: Add participant request
         in: body
         name: request
@@ -7681,11 +7681,11 @@ paths:
     delete:
       description: Delete an appointment
       parameters:
-      - description: Appointment ID
+      - description: Appointment ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -7721,11 +7721,11 @@ paths:
       - application/json
       description: Get an appointment by ID
       parameters:
-      - description: Appointment ID
+      - description: Appointment ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -7757,11 +7757,11 @@ paths:
       - application/json
       description: Update an appointment
       parameters:
-      - description: Appointment ID
+      - description: Appointment ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update appointment request
         in: body
         name: request
@@ -7802,11 +7802,11 @@ paths:
     post:
       description: Confirm an appointment
       parameters:
-      - description: Appointment ID
+      - description: Appointment ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -12676,7 +12676,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -12702,7 +12702,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -12733,7 +12733,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update Schedule Request
         in: body
         name: request

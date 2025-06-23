@@ -1778,7 +1778,7 @@ CREATE INDEX idx_notifications_user_id_read_at ON notifications (user_id, read_a
 
 
 CREATE TABLE appointment_templates (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
@@ -1794,10 +1794,10 @@ CREATE TABLE appointment_templates (
 
 
 CREATE TABLE scheduled_appointments (
-    id BIGSERIAL PRIMARY KEY,
-    appointment_templates_id BIGINT NULL REFERENCES appointment_templates(id) ON DELETE CASCADE, -- Link to template (NULL if non-recurring)
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    appointment_templates_id UUID NULL REFERENCES appointment_templates(id) ON DELETE CASCADE, -- Link to template (NULL if non-recurring)
     creator_employee_id BIGINT NULL REFERENCES employee_profile(id),
-    
+
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
 
@@ -1809,7 +1809,7 @@ CREATE TABLE scheduled_appointments (
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     confirmed_by_employee_id BIGINT REFERENCES employee_profile(id),
     confirmed_at TIMESTAMP NULL,
-    
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- When this occurrence record was created
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- When this occurrence record was last modified
 );
@@ -1822,7 +1822,7 @@ CREATE INDEX idx_scheduled_appointments_template_id ON scheduled_appointments (a
 
 CREATE TABLE appointment_participants (
     appointment_participant_id BIGSERIAL PRIMARY KEY,
-    appointment_id BIGINT NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
+    appointment_id UUID NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
     employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -1832,7 +1832,7 @@ CREATE TABLE appointment_participants (
 
 CREATE TABLE appointment_clients (
     appointment_client_id BIGSERIAL PRIMARY KEY,
-    appointment_id BIGINT NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
+    appointment_id UUID NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
     client_id BIGINT NOT NULL REFERENCES client_details(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
@@ -1948,7 +1948,7 @@ CREATE TABLE registration_form (
 
 
 CREATE TABLE schedules (
-  id BIGSERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
   color VARCHAR(20) DEFAULT '#0000FF', -- Default color for the schedule
   location_id BIGINT NOT NULL REFERENCES location(id),

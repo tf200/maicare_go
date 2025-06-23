@@ -1,6 +1,10 @@
 package async
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type IncidentPayload struct {
 	ID                      int64     `json:"id"`
@@ -64,7 +68,7 @@ type NotificationPayload struct {
 }
 
 type AppointmentPayload struct {
-	AppointmentTemplateID  int64   `json:"appointment_template_id"`
-	ParticipantEmployeeIDs []int64 `json:"participant_employee_ids"`
-	ClientIDs              []int64 `json:"client_ids"`
+	AppointmentTemplateID  uuid.UUID `json:"appointment_template_id"`
+	ParticipantEmployeeIDs []int64   `json:"participant_employee_ids"`
+	ClientIDs              []int64   `json:"client_ids"`
 }

@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -67,7 +68,7 @@ DELETE FROM schedules
 WHERE id = $1
 `
 
-func (q *Queries) DeleteSchedule(ctx context.Context, id int64) error {
+func (q *Queries) DeleteSchedule(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteSchedule, id)
 	return err
 }
@@ -112,7 +113,7 @@ type GetDailySchedulesByLocationParams struct {
 }
 
 type GetDailySchedulesByLocationRow struct {
-	ShiftID           int64            `json:"shift_id"`
+	ShiftID           uuid.UUID        `json:"shift_id"`
 	EmployeeID        int64            `json:"employee_id"`
 	LocationID        int64            `json:"location_id"`
 	Color             *string          `json:"color"`
@@ -188,7 +189,7 @@ type GetEmployeeSchedulesParams struct {
 }
 
 type GetEmployeeSchedulesRow struct {
-	ID            int64            `json:"id"`
+	ID            uuid.UUID        `json:"id"`
 	StartDatetime pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
 	LocationID    int64            `json:"location_id"`
@@ -260,7 +261,7 @@ type GetMonthlySchedulesByLocationParams struct {
 }
 
 type GetMonthlySchedulesByLocationRow struct {
-	ShiftID           int64            `json:"shift_id"`
+	ShiftID           uuid.UUID        `json:"shift_id"`
 	EmployeeID        int64            `json:"employee_id"`
 	LocationID        int64            `json:"location_id"`
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
@@ -323,7 +324,7 @@ LIMIT 1
 `
 
 type GetScheduleByIdRow struct {
-	ID                int64            `json:"id"`
+	ID                uuid.UUID        `json:"id"`
 	EmployeeID        int64            `json:"employee_id"`
 	Color             *string          `json:"color"`
 	LocationID        int64            `json:"location_id"`
@@ -340,7 +341,7 @@ type GetScheduleByIdRow struct {
 	LocationShiftID_2 *int64           `json:"location_shift_id_2"`
 }
 
-func (q *Queries) GetScheduleById(ctx context.Context, id int64) (GetScheduleByIdRow, error) {
+func (q *Queries) GetScheduleById(ctx context.Context, id uuid.UUID) (GetScheduleByIdRow, error) {
 	row := q.db.QueryRow(ctx, getScheduleById, id)
 	var i GetScheduleByIdRow
 	err := row.Scan(
@@ -377,7 +378,7 @@ RETURNING id, employee_id, color, location_id, location_shift_id, is_custom, sta
 `
 
 type UpdateScheduleParams struct {
-	ID              int64            `json:"id"`
+	ID              uuid.UUID        `json:"id"`
 	EmployeeID      int64            `json:"employee_id"`
 	LocationID      int64            `json:"location_id"`
 	LocationShiftID *int64           `json:"location_shift_id"`
