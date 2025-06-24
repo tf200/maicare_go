@@ -2676,6 +2676,19 @@ definitions:
           $ref: '#/definitions/api.Shift'
         type: array
     type: object
+  api.GetEmployeeContractDetailsResponse:
+    properties:
+      contract_end_date:
+        type: string
+      contract_start_date:
+        type: string
+      contract_type:
+        type: string
+      fixed_contract_hours:
+        type: number
+      variable_contract_hours:
+        type: number
+    type: object
   api.GetEmployeeCountsResponse:
     properties:
       total_archived:
@@ -5049,6 +5062,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetDailySchedulesByLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetEmployeeContractDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetEmployeeContractDetailsResponse'
       message:
         type: string
       success:
@@ -11005,6 +11027,44 @@ paths:
       tags:
       - employees
   /employees/{id}/contract_details:
+    get:
+      description: Get employee contract details by ID
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetEmployeeContractDetailsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get employee contract details by ID
+      tags:
+      - employees
     put:
       consumes:
       - application/json

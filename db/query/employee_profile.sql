@@ -160,6 +160,16 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: GetEmployeeContractDetails :one
+SELECT
+    fixed_contract_hours,
+    variable_contract_hours,
+    contract_start_date,
+    contract_end_date,
+    contract_type
+FROM employee_profile
+WHERE id = $1;
+
 
 -- name: AddEducationToEmployeeProfile :one
 INSERT INTO employee_education (

@@ -744,6 +744,45 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, res)
 }
 
+// GetEmployeeContractDetailsResponse represents the response for GetEmployeeContractDetailsApi
+type GetEmployeeContractDetailsResponse struct {
+	FixedContractHours    *float64  `json:"fixed_contract_hours"`
+	VariableContractHours *float64  `json:"variable_contract_hours"`
+	ContractStartDate     time.Time `json:"contract_start_date"`
+	ContractEndDate       time.Time `json:"contract_end_date"`
+	ContractType          *string   `json:"contract_type"`
+}
+
+// @Summary Get employee contract details by ID
+// @Description Get employee contract details by ID
+// @Tags employees
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Success 200 {object} Response[GetEmployeeContractDetailsResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/contract_details [get]
+func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	contractDetails, err := server.store.GetEmployeeContractDetails(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	res := SuccessResponse(GetEmployeeContractDetailsResponse{
+		FixedContractHours:    contractDetails.FixedContractHours,
+		VariableContractHours: contractDetails.VariableContractHours,
+		ContractStartDate:     contractDetails.ContractStartDate.Time,
+		ContractEndDate:       contractDetails.ContractEndDate.Time,
+		ContractType:          contractDetails.ContractType,
+	}, "Employee contract details retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // AddEducationToEmployeeProfileRequest represents the request for AddEducationToEmployeeProfileApi
 type AddEducationToEmployeeProfileRequest struct {
 	InstitutionName string `json:"institution_name" binding:"required"`

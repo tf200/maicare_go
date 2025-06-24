@@ -407,6 +407,38 @@ func (q *Queries) DeleteEmployeeExperience(ctx context.Context, id int64) (Emplo
 	return i, err
 }
 
+const getEmployeeContractDetails = `-- name: GetEmployeeContractDetails :one
+SELECT
+    fixed_contract_hours,
+    variable_contract_hours,
+    contract_start_date,
+    contract_end_date,
+    contract_type
+FROM employee_profile
+WHERE id = $1
+`
+
+type GetEmployeeContractDetailsRow struct {
+	FixedContractHours    *float64    `json:"fixed_contract_hours"`
+	VariableContractHours *float64    `json:"variable_contract_hours"`
+	ContractStartDate     pgtype.Date `json:"contract_start_date"`
+	ContractEndDate       pgtype.Date `json:"contract_end_date"`
+	ContractType          *string     `json:"contract_type"`
+}
+
+func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id int64) (GetEmployeeContractDetailsRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeContractDetails, id)
+	var i GetEmployeeContractDetailsRow
+	err := row.Scan(
+		&i.FixedContractHours,
+		&i.VariableContractHours,
+		&i.ContractStartDate,
+		&i.ContractEndDate,
+		&i.ContractType,
+	)
+	return i, err
+}
+
 const getEmployeeCounts = `-- name: GetEmployeeCounts :one
 SELECT
     COUNT(*) FILTER (WHERE is_subcontractor IS NOT TRUE) AS total_employees,

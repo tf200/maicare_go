@@ -84,8 +84,8 @@ func TestCreateScheduleApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now().Format("2006-01-02")
 				createScheduleReq := CreateScheduleRequest{
-					EmployeeID:      2,
-					LocationID:      3,
+					EmployeeID:      1,
+					LocationID:      1,
 					IsCustom:        false,
 					StartDatetime:   nil,
 					EndDatetime:     nil,
