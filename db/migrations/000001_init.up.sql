@@ -890,7 +890,8 @@ CREATE TABLE employee_profile (
     variable_contract_hours FLOAT NULL DEFAULT 0.0,
     contract_start_date DATE NULL,
     contract_end_date DATE NULL,
-    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type'
+
+
 );
 
 

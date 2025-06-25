@@ -15,7 +15,7 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 		employeeGroup.GET("/profile", server.GetEmployeeProfileApi)
 		employeeGroup.PUT("/:id/profile_picture", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.SetEmployeeProfilePictureApi)
 		employeeGroup.PUT("/:id/contract_details", RBACMiddleware(server.store, "EMPLOYEE.UPDATE"), server.AddEmployeeContractDetailsApi)
-
+		employeeGroup.GET("/:id/contract_details", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.GetEmployeeContractDetailsApi)
 
 		employeeGroup.POST("/:id/education", RBACMiddleware(server.store, "EMPLOYEE.CREATE"), server.AddEducationToEmployeeProfileApi)
 		employeeGroup.GET("/:id/education", RBACMiddleware(server.store, "EMPLOYEE.VIEW"), server.ListEmployeeEducationApi)
