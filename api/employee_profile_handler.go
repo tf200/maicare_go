@@ -773,6 +773,12 @@ func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	if contractDetails.FixedContractHours == nil && contractDetails.VariableContractHours == nil || contractDetails.FixedContractHours == util.Float64Ptr(0) && contractDetails.VariableContractHours == util.Float64Ptr(0) {
+		res := SuccessResponse[any](nil, "No contract details found for this employee")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
 	res := SuccessResponse(GetEmployeeContractDetailsResponse{
 		FixedContractHours:    contractDetails.FixedContractHours,
 		VariableContractHours: contractDetails.VariableContractHours,
