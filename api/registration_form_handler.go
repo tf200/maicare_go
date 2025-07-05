@@ -45,12 +45,19 @@ type CreateRegistrationFormRequest struct {
 	Guardian2Relationship         string     `json:"guardian2_relationship"`
 	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
 	Guardian2Email                string     `json:"guardian2_email"`
-	EducationInstitution          string     `json:"education_institution"`
-	EducationMentorName           string     `json:"education_mentor_name"`
-	EducationMentorPhone          string     `json:"education_mentor_phone"`
-	EducationMentorEmail          string     `json:"education_mentor_email"`
+	EducationInstitution          *string    `json:"education_institution"`
+	EducationMentorName           *string    `json:"education_mentor_name"`
+	EducationMentorPhone          *string    `json:"education_mentor_phone"`
+	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
+	WorkCurrentEmployer           *string    `json:"work_current_employer"`
+	WorkEmployerPhone             *string    `json:"work_employer_phone"`
+	WorkEmployerEmail             *string    `json:"work_employer_email"`
+	WorkCurrentPosition           *string    `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool       `json:"work_currently_employed"`
+	WorkStartDate                 *time.Time `json:"work_start_date"`
+	WorkAdditionalNotes           *string    `json:"work_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
@@ -107,12 +114,19 @@ type CreateRegistrationFormResponse struct {
 	Guardian2Relationship         string     `json:"guardian2_relationship"`
 	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
 	Guardian2Email                string     `json:"guardian2_email"`
-	EducationInstitution          string     `json:"education_institution"`
-	EducationMentorName           string     `json:"education_mentor_name"`
-	EducationMentorPhone          string     `json:"education_mentor_phone"`
-	EducationMentorEmail          string     `json:"education_mentor_email"`
+	EducationInstitution          *string    `json:"education_institution"`
+	EducationMentorName           *string    `json:"education_mentor_name"`
+	EducationMentorPhone          *string    `json:"education_mentor_phone"`
+	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
+	WorkCurrentEmployer           *string    `json:"work_current_employer"`
+	WorkEmployerPhone             *string    `json:"work_employer_phone"`
+	WorkEmployerEmail             *string    `json:"work_employer_email"`
+	WorkCurrentPosition           *string    `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool       `json:"work_currently_employed"`
+	WorkStartDate                 *time.Time `json:"work_start_date"`
+	WorkAdditionalNotes           *string    `json:"work_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
@@ -199,6 +213,12 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:          req.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    req.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      req.EducationAdditionalNotes,
+		WorkCurrentEmployer:           req.WorkCurrentEmployer,
+		WorkEmployerPhone:             req.WorkEmployerPhone,
+		WorkEmployerEmail:             req.WorkEmployerEmail,
+		WorkCurrentPosition:           req.WorkCurrentPosition,
+		WorkCurrentlyEmployed:         req.WorkCurrentlyEmployed,
+		WorkAdditionalNotes:           req.WorkAdditionalNotes,
 		CareProtectedLiving:           req.CareProtectedLiving,
 		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        req.CareRoomTrainingCenter,
@@ -224,6 +244,13 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 		ApplicationDate:               pgtype.Date{Time: req.ApplicationDate, Valid: true},
 		ReferrerSignature:             req.ReferrerSignature,
 	}
+
+	if req.WorkStartDate != nil {
+		arg.WorkStartDate = pgtype.Date{Time: *req.WorkStartDate, Valid: true}
+	} else {
+		arg.WorkStartDate = pgtype.Date{Valid: false}
+	}
+
 	createdForm, err := server.store.CreateRegistrationForm(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -265,6 +292,13 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:          createdForm.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    createdForm.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      createdForm.EducationAdditionalNotes,
+		WorkCurrentEmployer:           createdForm.WorkCurrentEmployer,
+		WorkEmployerPhone:             createdForm.WorkEmployerPhone,
+		WorkEmployerEmail:             createdForm.WorkEmployerEmail,
+		WorkCurrentPosition:           createdForm.WorkCurrentPosition,
+		WorkCurrentlyEmployed:         createdForm.WorkCurrentlyEmployed,
+		WorkStartDate:                 &createdForm.WorkStartDate.Time,
+		WorkAdditionalNotes:           createdForm.WorkAdditionalNotes,
 		CareProtectedLiving:           createdForm.CareProtectedLiving,
 		CareAssistedIndependentLiving: createdForm.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        createdForm.CareRoomTrainingCenter,
@@ -349,11 +383,18 @@ type ListRegistrationFormsResponse struct {
 	Guardian2Relationship         string     `json:"guardian2_relationship"`
 	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
 	Guardian2Email                string     `json:"guardian2_email"`
-	EducationInstitution          string     `json:"education_institution"`
-	EducationMentorName           string     `json:"education_mentor_name"`
-	EducationMentorPhone          string     `json:"education_mentor_phone"`
-	EducationMentorEmail          string     `json:"education_mentor_email"`
+	EducationInstitution          *string    `json:"education_institution"`
+	EducationMentorName           *string    `json:"education_mentor_name"`
+	EducationMentorPhone          *string    `json:"education_mentor_phone"`
+	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
+	WorkCurrentEmployer           *string    `json:"work_current_employer"`
+	WorkEmployerPhone             *string    `json:"work_employer_phone"`
+	WorkEmployerEmail             *string    `json:"work_employer_email"`
+	WorkCurrentPosition           *string    `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool       `json:"work_currently_employed"`
+	WorkStartDate                 *time.Time `json:"work_start_date"`
+	WorkAdditionalNotes           *string    `json:"work_additional_notes"`
 	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
@@ -545,6 +586,13 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 			EducationMentorEmail:          rf.EducationMentorEmail,
 			EducationCurrentlyEnrolled:    rf.EducationCurrentlyEnrolled,
 			EducationAdditionalNotes:      rf.EducationAdditionalNotes,
+			WorkCurrentEmployer:           rf.WorkCurrentEmployer,
+			WorkEmployerPhone:             rf.WorkEmployerPhone,
+			WorkEmployerEmail:             rf.WorkEmployerEmail,
+			WorkCurrentPosition:           rf.WorkCurrentPosition,
+			WorkCurrentlyEmployed:         rf.WorkCurrentlyEmployed,
+			WorkStartDate:                 &rf.WorkStartDate.Time,
+			WorkAdditionalNotes:           rf.WorkAdditionalNotes,
 			CareProtectedLiving:           rf.CareProtectedLiving,
 			CareAssistedIndependentLiving: rf.CareAssistedIndependentLiving,
 			CareRoomTrainingCenter:        rf.CareRoomTrainingCenter,
@@ -618,12 +666,19 @@ type GetRegistrationFormResponse struct {
 	Guardian2Relationship         string     `json:"guardian2_relationship"`
 	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
 	Guardian2Email                string     `json:"guardian2_email"`
-	EducationInstitution          string     `json:"education_institution"`
-	EducationMentorName           string     `json:"education_mentor_name"`
-	EducationMentorPhone          string     `json:"education_mentor_phone"`
-	EducationMentorEmail          string     `json:"education_mentor_email"`
+	EducationInstitution          *string    `json:"education_institution"`
+	EducationMentorName           *string    `json:"education_mentor_name"`
+	EducationMentorPhone          *string    `json:"education_mentor_phone"`
+	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      string     `json:"education_additional_notes"`
+	WorkCurrentEmployer           *string    `json:"work_current_employer"`
+	WorkEmployerPhone             *string    `json:"work_employer_phone"`
+	WorkEmployerEmail             *string    `json:"work_employer_email"`
+	WorkCurrentPosition           *string    `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool       `json:"work_currently_employed"`
+	WorkStartDate                 *time.Time `json:"work_start_date"`
+	WorkAdditionalNotes           string     `json:"work_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
@@ -723,6 +778,13 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:          registrationForm.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    registrationForm.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      util.DerefString(registrationForm.EducationAdditionalNotes),
+		WorkCurrentEmployer:           registrationForm.WorkCurrentEmployer,
+		WorkEmployerPhone:             registrationForm.WorkEmployerPhone,
+		WorkEmployerEmail:             registrationForm.WorkEmployerEmail,
+		WorkCurrentPosition:           registrationForm.WorkCurrentPosition,
+		WorkCurrentlyEmployed:         registrationForm.WorkCurrentlyEmployed,
+		WorkStartDate:                 &registrationForm.WorkStartDate.Time,
+		WorkAdditionalNotes:           util.DerefString(registrationForm.WorkAdditionalNotes),
 		CareProtectedLiving:           registrationForm.CareProtectedLiving,
 		CareAssistedIndependentLiving: registrationForm.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        registrationForm.CareRoomTrainingCenter,
@@ -798,6 +860,13 @@ type UpdateRegistrationFormRequest struct {
 	EducationMentorEmail          *string     `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    *bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string     `json:"education_additional_notes"`
+	WorkCurrentEmployer           *string     `json:"work_current_employer"`
+	WorkEmployerPhone             *string     `json:"work_employer_phone"`
+	WorkEmployerEmail             *string     `json:"work_employer_email"`
+	WorkCurrentPosition           *string     `json:"work_current_position"`
+	WorkCurrentlyEmployed         *bool       `json:"work_currently_employed"`
+	WorkStartDate                 *time.Time  `json:"work_start_date"`
+	WorkAdditionalNotes           *string     `json:"work_additional_notes"`
 	CareProtectedLiving           *bool       `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool       `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool       `json:"care_room_training_center"`
@@ -854,12 +923,19 @@ type UpdateRegistrationFormResponse struct {
 	Guardian2Relationship         string     `json:"guardian2_relationship"`
 	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
 	Guardian2Email                string     `json:"guardian2_email"`
-	EducationInstitution          string     `json:"education_institution"`
-	EducationMentorName           string     `json:"education_mentor_name"`
-	EducationMentorPhone          string     `json:"education_mentor_phone"`
-	EducationMentorEmail          string     `json:"education_mentor_email"`
+	EducationInstitution          *string    `json:"education_institution"`
+	EducationMentorName           *string    `json:"education_mentor_name"`
+	EducationMentorPhone          *string    `json:"education_mentor_phone"`
+	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
+	WorkCurrentEmployer           *string    `json:"work_current_employer"`
+	WorkEmployerPhone             *string    `json:"work_employer_phone"`
+	WorkEmployerEmail             *string    `json:"work_employer_email"`
+	WorkCurrentPosition           *string    `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool       `json:"work_currently_employed"`
+	WorkStartDate                 *time.Time `json:"work_start_date"`
+	WorkAdditionalNotes           *string    `json:"work_additional_notes"`
 	CareProtectedLiving           *bool      `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool      `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool      `json:"care_room_training_center"`
@@ -921,40 +997,46 @@ func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateRegistrationFormParams{
-		ID:                            rfId,
-		ClientFirstName:               req.ClientFirstName,
-		ClientLastName:                req.ClientLastName,
-		ClientBsnNumber:               req.ClientBsnNumber,
-		ClientGender:                  req.ClientGender,
-		ClientNationality:             req.ClientNationality,
-		ClientPhoneNumber:             req.ClientPhoneNumber,
-		ClientEmail:                   req.ClientEmail,
-		ClientStreet:                  req.ClientStreet,
-		ClientHouseNumber:             req.ClientHouseNumber,
-		ClientPostalCode:              req.ClientPostalCode,
-		ClientCity:                    req.ClientCity,
-		ReferrerFirstName:             req.ReferrerFirstName,
-		ReferrerLastName:              req.ReferrerLastName,
-		ReferrerOrganization:          req.ReferrerOrganization,
-		ReferrerJobTitle:              req.ReferrerJobTitle,
-		ReferrerPhoneNumber:           req.ReferrerPhoneNumber,
-		ReferrerEmail:                 req.ReferrerEmail,
-		Guardian1FirstName:            req.Guardian1FirstName,
-		Guardian1LastName:             req.Guardian1LastName,
-		Guardian1Relationship:         req.Guardian1Relationship,
-		Guardian1PhoneNumber:          req.Guardian1PhoneNumber,
-		Guardian1Email:                req.Guardian1Email,
-		Guardian2FirstName:            req.Guardian2FirstName,
-		Guardian2LastName:             req.Guardian2LastName,
-		Guardian2Relationship:         req.Guardian2Relationship,
-		Guardian2PhoneNumber:          req.Guardian2PhoneNumber,
-		Guardian2Email:                req.Guardian2Email,
-		EducationInstitution:          req.EducationInstitution,
-		EducationMentorName:           req.EducationMentorName,
-		EducationMentorPhone:          req.EducationMentorPhone,
-		EducationMentorEmail:          req.EducationMentorEmail,
-		EducationCurrentlyEnrolled:    req.EducationCurrentlyEnrolled,
-		EducationAdditionalNotes:      req.EducationAdditionalNotes,
+		ID:                         rfId,
+		ClientFirstName:            req.ClientFirstName,
+		ClientLastName:             req.ClientLastName,
+		ClientBsnNumber:            req.ClientBsnNumber,
+		ClientGender:               req.ClientGender,
+		ClientNationality:          req.ClientNationality,
+		ClientPhoneNumber:          req.ClientPhoneNumber,
+		ClientEmail:                req.ClientEmail,
+		ClientStreet:               req.ClientStreet,
+		ClientHouseNumber:          req.ClientHouseNumber,
+		ClientPostalCode:           req.ClientPostalCode,
+		ClientCity:                 req.ClientCity,
+		ReferrerFirstName:          req.ReferrerFirstName,
+		ReferrerLastName:           req.ReferrerLastName,
+		ReferrerOrganization:       req.ReferrerOrganization,
+		ReferrerJobTitle:           req.ReferrerJobTitle,
+		ReferrerPhoneNumber:        req.ReferrerPhoneNumber,
+		ReferrerEmail:              req.ReferrerEmail,
+		Guardian1FirstName:         req.Guardian1FirstName,
+		Guardian1LastName:          req.Guardian1LastName,
+		Guardian1Relationship:      req.Guardian1Relationship,
+		Guardian1PhoneNumber:       req.Guardian1PhoneNumber,
+		Guardian1Email:             req.Guardian1Email,
+		Guardian2FirstName:         req.Guardian2FirstName,
+		Guardian2LastName:          req.Guardian2LastName,
+		Guardian2Relationship:      req.Guardian2Relationship,
+		Guardian2PhoneNumber:       req.Guardian2PhoneNumber,
+		Guardian2Email:             req.Guardian2Email,
+		EducationInstitution:       req.EducationInstitution,
+		EducationMentorName:        req.EducationMentorName,
+		EducationMentorPhone:       req.EducationMentorPhone,
+		EducationMentorEmail:       req.EducationMentorEmail,
+		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
+		EducationAdditionalNotes:   req.EducationAdditionalNotes,
+		WorkCurrentEmployer:        req.WorkCurrentEmployer,
+		WorkEmployerPhone:          req.WorkEmployerPhone,
+		WorkEmployerEmail:          req.WorkEmployerEmail,
+		WorkCurrentPosition:        req.WorkCurrentPosition,
+		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+
 		CareProtectedLiving:           req.CareProtectedLiving,
 		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        req.CareRoomTrainingCenter,
@@ -1021,6 +1103,13 @@ func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:          registrationForm.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    registrationForm.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      registrationForm.EducationAdditionalNotes,
+		WorkCurrentEmployer:           registrationForm.WorkCurrentEmployer,
+		WorkEmployerPhone:             registrationForm.WorkEmployerPhone,
+		WorkEmployerEmail:             registrationForm.WorkEmployerEmail,
+		WorkCurrentPosition:           registrationForm.WorkCurrentPosition,
+		WorkCurrentlyEmployed:         registrationForm.WorkCurrentlyEmployed,
+		WorkStartDate:                 &registrationForm.WorkStartDate.Time,
+		WorkAdditionalNotes:           registrationForm.WorkAdditionalNotes,
 		CareProtectedLiving:           registrationForm.CareProtectedLiving,
 		CareAssistedIndependentLiving: registrationForm.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        registrationForm.CareRoomTrainingCenter,

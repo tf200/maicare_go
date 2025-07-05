@@ -892,12 +892,19 @@ type RegistrationForm struct {
 	Guardian2Relationship         string             `json:"guardian2_relationship"`
 	Guardian2PhoneNumber          string             `json:"guardian2_phone_number"`
 	Guardian2Email                string             `json:"guardian2_email"`
-	EducationInstitution          string             `json:"education_institution"`
-	EducationMentorName           string             `json:"education_mentor_name"`
-	EducationMentorPhone          string             `json:"education_mentor_phone"`
-	EducationMentorEmail          string             `json:"education_mentor_email"`
+	EducationInstitution          *string            `json:"education_institution"`
+	EducationMentorName           *string            `json:"education_mentor_name"`
+	EducationMentorPhone          *string            `json:"education_mentor_phone"`
+	EducationMentorEmail          *string            `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool               `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string            `json:"education_additional_notes"`
+	WorkCurrentEmployer           *string            `json:"work_current_employer"`
+	WorkEmployerPhone             *string            `json:"work_employer_phone"`
+	WorkEmployerEmail             *string            `json:"work_employer_email"`
+	WorkCurrentPosition           *string            `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool               `json:"work_currently_employed"`
+	WorkStartDate                 pgtype.Date        `json:"work_start_date"`
+	WorkAdditionalNotes           *string            `json:"work_additional_notes"`
 	CareProtectedLiving           *bool              `json:"care_protected_living"`
 	CareAssistedIndependentLiving *bool              `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool              `json:"care_room_training_center"`

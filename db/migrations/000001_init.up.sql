@@ -1906,15 +1906,26 @@ CREATE TABLE registration_form (
 
     -- 4. Education/Daily Activities (Onderwijs / Dagbesteding)
 
-    education_institution VARCHAR(255) NOT NULL,
-    education_mentor_name VARCHAR(255) NOT NULL,
-    education_mentor_phone VARCHAR(20) NOT NULL,
-    education_mentor_email VARCHAR(255) NOT NULL,
-    education_currently_enrolled BOOLEAN NOT NULL,
-    education_additional_notes TEXT,
+    education_institution VARCHAR(255)  NULL,
+    education_mentor_name VARCHAR(255)  NULL,
+    education_mentor_phone VARCHAR(20)  NULL,
+    education_mentor_email VARCHAR(255) NULL,
+    education_currently_enrolled BOOLEAN NOT NULL DEFAULT FALSE,
+    education_additional_notes TEXT NULL,
 
 
-    -- 5. Care Type (Gewenste zorgvorm)
+    -- Work and Employment (Werk en Werkgelegenheid)
+    work_current_employer VARCHAR(255) NULL,
+    work_employer_phone VARCHAR(20) NULL,
+    work_employer_email VARCHAR(255) NULL,
+    work_current_position VARCHAR(255) NULL,
+    work_currently_employed BOOLEAN NOT NULL DEFAULT FALSE,
+    work_start_date DATE NULL,
+    work_additional_notes TEXT NULL,
+
+
+
+    -- 6. Care Type (Gewenste zorgvorm)
 
     care_protected_living BOOLEAN DEFAULT FALSE,
     care_assisted_independent_living BOOLEAN DEFAULT FALSE,
@@ -1922,12 +1933,12 @@ CREATE TABLE registration_form (
     care_ambulatory_guidance BOOLEAN DEFAULT FALSE,
 
 
-    -- 6. Additional Information (Aanvullende informatie)
+    -- 7. Additional Information (Aanvullende informatie)
     application_reason TEXT,
     client_goals TEXT,
 
 
-    -- 7. Risks and Attention Points (Risico's en aandachtspunten)
+    -- 8. Risks and Attention Points (Risico's en aandachtspunten)
     risk_aggressive_behavior BOOLEAN DEFAULT FALSE,
     risk_suicidal_selfharm BOOLEAN DEFAULT FALSE,
     risk_substance_abuse BOOLEAN DEFAULT FALSE,
@@ -1941,7 +1952,7 @@ CREATE TABLE registration_form (
     risk_other_description TEXT,
     risk_additional_notes TEXT,
 
-    -- 8. Medical History (Medische geschiedenis)
+    -- 9. Medical History (Medische geschiedenis)
     document_referral UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
     document_education_report UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
     document_action_plan UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
@@ -1951,7 +1962,7 @@ CREATE TABLE registration_form (
     document_id_copy UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
 
 
-    -- 9. Date and Signature (Datum en ondertekening)
+    -- 10. Date and Signature (Datum en ondertekening)
     application_date DATE,
     referrer_signature BOOLEAN DEFAULT FALSE,
 
