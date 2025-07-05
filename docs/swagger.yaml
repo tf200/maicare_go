@@ -3081,6 +3081,9 @@ definitions:
     type: object
   api.GetRegistrationFormResponse:
     properties:
+      admission_type:
+        description: '"crisis_admission" or "regular_placement"'
+        type: string
       application_date:
         type: string
       application_reason:
@@ -3262,9 +3265,11 @@ definitions:
     type: object
   api.GetSenderByIdResponse:
     properties:
-      address:
+      BTWnumber:
         type: string
-      btwnumber:
+      KVKnumber:
+        type: string
+      address:
         type: string
       client_number:
         type: string
@@ -3280,8 +3285,6 @@ definitions:
         type: integer
       is_archived:
         type: boolean
-      kvknumber:
-        type: string
       land:
         type: string
       name:
@@ -4250,6 +4253,9 @@ definitions:
     type: object
   api.ListRegistrationFormsResponse:
     properties:
+      admission_type:
+        description: '"crisis_admission" or "regular_placement"'
+        type: string
       application_date:
         type: string
       application_reason:
@@ -7025,6 +7031,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.UpdateRegistrationFormStatusRequest:
+    properties:
+      admission_type:
+        enum:
+        - crisis_admission
+        - regular_placement
+        example: regular_placement
+        type: string
+      intake_appointment_date:
+        example: "2023-10-01T10:00:00Z"
+        type: string
+      intake_appointment_location:
+        example: Amsterdam Central Station
+        type: string
+      status:
+        enum:
+        - approved
+        - rejected
+        example: approved
+        type: string
+    required:
+    - status
+    type: object
   api.UpdateScheduleRequest:
     properties:
       color:
@@ -7080,9 +7109,11 @@ definitions:
     type: object
   api.UpdateSenderRequest:
     properties:
-      address:
+      BTWnumber:
         type: string
-      btwnumber:
+      KVKnumber:
+        type: string
+      address:
         type: string
       client_number:
         type: string
@@ -7094,8 +7125,6 @@ definitions:
         type: string
       is_archived:
         type: boolean
-      kvknumber:
-        type: string
       land:
         type: string
       name:
@@ -7116,9 +7145,11 @@ definitions:
     type: object
   api.UpdateSenderResponse:
     properties:
-      address:
+      BTWnumber:
         type: string
-      btwnumber:
+      KVKnumber:
+        type: string
+      address:
         type: string
       client_number:
         type: string
@@ -7134,8 +7165,6 @@ definitions:
         type: integer
       is_archived:
         type: boolean
-      kvknumber:
-        type: string
       land:
         type: string
       name:
@@ -12544,20 +12573,12 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Status
-        enum:
-        - approved
-        - rejected
-        in: query
-        name: status
+      - description: Update Registration Form Status Request
+        in: body
+        name: request
         required: true
-        type: string
-      - description: Intake Appointment Date
-        format: date-time
-        in: query
-        name: intake_appointment_date
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/api.UpdateRegistrationFormStatusRequest'
       produces:
       - application/json
       responses:
@@ -12900,6 +12921,38 @@ paths:
       tags:
       - senders
   /senders/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a sender
+      parameters:
+      - description: Sender ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete a sender
+      tags:
+      - senders
     get:
       description: Get a sender
       parameters:

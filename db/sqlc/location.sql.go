@@ -16,7 +16,7 @@ INSERT INTO location (
     capacity
 ) VALUES (
     $1, $2, $3
-) RETURNING id, name, address, capacity
+) RETURNING id, name, address, capacity, location_type
 `
 
 type CreateLocationParams struct {
@@ -33,6 +33,7 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
+		&i.LocationType,
 	)
 	return i, err
 }
@@ -40,7 +41,7 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 const deleteLocation = `-- name: DeleteLocation :one
 DELETE FROM location
 WHERE id = $1
-RETURNING id, name, address, capacity
+RETURNING id, name, address, capacity, location_type
 `
 
 func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error) {
@@ -51,12 +52,13 @@ func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
+		&i.LocationType,
 	)
 	return i, err
 }
 
 const getLocation = `-- name: GetLocation :one
-SELECT id, name, address, capacity FROM location
+SELECT id, name, address, capacity, location_type FROM location
 WHERE id = $1
 `
 
@@ -68,12 +70,13 @@ func (q *Queries) GetLocation(ctx context.Context, id int64) (Location, error) {
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
+		&i.LocationType,
 	)
 	return i, err
 }
 
 const listLocations = `-- name: ListLocations :many
-SELECT id, name, address, capacity FROM location
+SELECT id, name, address, capacity, location_type FROM location
 `
 
 func (q *Queries) ListLocations(ctx context.Context) ([]Location, error) {
@@ -90,6 +93,7 @@ func (q *Queries) ListLocations(ctx context.Context) ([]Location, error) {
 			&i.Name,
 			&i.Address,
 			&i.Capacity,
+			&i.LocationType,
 		); err != nil {
 			return nil, err
 		}
@@ -108,7 +112,7 @@ SET
     address = COALESCE($3, address),
     capacity = COALESCE($4, capacity)
 WHERE id = $1
-RETURNING id, name, address, capacity
+RETURNING id, name, address, capacity, location_type
 `
 
 type UpdateLocationParams struct {
@@ -131,6 +135,7 @@ func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) 
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
+		&i.LocationType,
 	)
 	return i, err
 }

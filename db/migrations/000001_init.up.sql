@@ -10,7 +10,22 @@ CREATE TABLE location (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100) NOT NULL,
-    capacity INTEGER NULL
+    capacity INTEGER NULL,
+    location_type VARCHAR(50) NOT NULL CHECK (location_type IN ('care_home', 'office', 'other')) DEFAULT 'other'
+);
+
+CREATE TABLE room (
+    id BIGSERIAL PRIMARY KEY,
+    location_id BIGINT NOT NULL,
+    room_number VARCHAR(20) NOT NULL,
+    room_name VARCHAR(100),
+    room_type VARCHAR(50), -- meeting_room, office, conference_room, etc.
+    capacity INTEGER,
+    is_occupied BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (location_id) REFERENCES location(id) ON DELETE CASCADE,
+    UNIQUE(location_id, room_number)
 );
 
 -- Alternative: Direct approach without shift_type table
@@ -79,7 +94,7 @@ CREATE TABLE "sessions" (
     "expires_at" timestamptz NOT NULL,
     "created_at" timestamptz NOT NULL,
     "user_id" BIGINT NOT NULL,
-    CONSTRAINT fk_user FOREIGN KEY ("user_id") REFERENCES custom_user("id")
+    CONSTRAINT fk_user FOREIGN KEY ("user_id") REFERENCES custom_user("id") ON DELETE CASCADE
 );
 
 -- Index on foreign key for faster joins
@@ -890,6 +905,7 @@ CREATE TABLE employee_profile (
     variable_contract_hours FLOAT NULL DEFAULT 0.0,
     contract_start_date DATE NULL,
     contract_end_date DATE NULL,
+    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type'
 
 
 );
@@ -1675,7 +1691,8 @@ VALUES
     }
 ]');
 
-CREATE TABLE client_maturity_matrix_assessment (
+CREATE TABLE client_maturity_matrix_assessment
+ (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     maturity_matrix_id BIGINT NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
@@ -1766,7 +1783,9 @@ CREATE TABLE notifications (
         'client_goal_update',
         'incident_report'
     )),
-
+    entity_id VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
     data JSONB NULL,
     read_at TIMESTAMPTZ  NULL DEFAULT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1944,7 +1963,9 @@ CREATE TABLE registration_form (
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
     processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    intake_appointment_datetime TIMESTAMPTZ NULL -- Date and time of the intake appointment
+    intake_appointment_datetime TIMESTAMPTZ NULL,
+    intake_appointment_location VARCHAR(255) NULL,
+    addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placemente'))
 );
 
 

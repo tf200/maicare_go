@@ -67,3 +67,10 @@ WHERE
 RETURNING *;
 
 
+-- name: DeleteSender :exec
+UPDATE sender
+SET
+    is_archived = true,
+    updated_at = NOW()
+WHERE 
+    id = sqlc.arg('id');

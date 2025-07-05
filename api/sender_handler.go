@@ -228,8 +228,8 @@ type GetSenderByIdResponse struct {
 	PostalCode   *string   `json:"postal_code"`
 	Place        *string   `json:"place"`
 	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"kvknumber"`
-	Btwnumber    *string   `json:"btwnumber"`
+	Kvknumber    *string   `json:"KVKnumber"`
+	Btwnumber    *string   `json:"BTWnumber"`
 	PhoneNumber  *string   `json:"phone_number"`
 	ClientNumber *string   `json:"client_number"`
 	EmailAddress *string   `json:"email_address"`
@@ -297,8 +297,8 @@ type UpdateSenderRequest struct {
 	PostalCode   *string   `json:"postal_code"`
 	Place        *string   `json:"place"`
 	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"kvknumber"`
-	Btwnumber    *string   `json:"btwnumber"`
+	Kvknumber    *string   `json:"KVKnumber"`
+	Btwnumber    *string   `json:"BTWnumber"`
 	PhoneNumber  *string   `json:"phone_number"`
 	ClientNumber *string   `json:"client_number"`
 	EmailAddress *string   `json:"email_address"`
@@ -316,8 +316,8 @@ type UpdateSenderResponse struct {
 	PostalCode   *string   `json:"postal_code"`
 	Place        *string   `json:"place"`
 	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"kvknumber"`
-	Btwnumber    *string   `json:"btwnumber"`
+	Kvknumber    *string   `json:"KVKnumber"`
+	Btwnumber    *string   `json:"BTWnumber"`
 	PhoneNumber  *string   `json:"phone_number"`
 	ClientNumber *string   `json:"client_number"`
 	EmailAddress *string   `json:"email_address"`
@@ -409,5 +409,32 @@ func (server *Server) UpdateSenderApi(ctx *gin.Context) {
 		UpdatedAt:    updatedSender.UpdatedAt.Time.Format(time.RFC3339),
 	}, "Sender updated successfully")
 
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Delete a sender
+// @Description Delete a sender
+// @Tags senders
+// @Accept json
+// @Produce json
+// @Param id path int true "Sender ID"
+// @Success 200 {object} Response[any]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /senders/{id} [delete]
+func (server *Server) DeleteSenderApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	senderID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteSender(ctx, senderID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Sender deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }

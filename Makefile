@@ -2,6 +2,10 @@
 migrateup:
 	migrate -path db/migrations -database "postgresql://maicaredb_user:HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4@167.86.75.250:5432/maicaredb?sslmode=disable" -verbose up
 
+migrateforce:
+	migrate -path db/migrations -database "postgresql://maicaredb_user:HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4@167.86.75.250:5432/maicaredb?sslmode=disable" force 1
+
+
 migratedown:
 	migrate -path db/migrations -database "postgresql://maicaredb_user:HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4@167.86.75.250:5432/maicaredb?sslmode=disable" -verbose down
 
@@ -29,4 +33,4 @@ admin:
 push:
 	sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back && git push 
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce

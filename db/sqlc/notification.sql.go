@@ -20,7 +20,7 @@ INSERT INTO notifications (
     $1,
     $2,
     $3
-) RETURNING id, user_id, type, data, read_at, created_at
+) RETURNING id, user_id, type, entity_id, message, is_read, data, read_at, created_at
 `
 
 type CreateNotificationParams struct {
@@ -36,6 +36,9 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		&i.ID,
 		&i.UserID,
 		&i.Type,
+		&i.EntityID,
+		&i.Message,
+		&i.IsRead,
 		&i.Data,
 		&i.ReadAt,
 		&i.CreatedAt,

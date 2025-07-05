@@ -17,10 +17,11 @@ const (
 	QueueLow      = "low"
 
 	// Task Type Names
-	TypeEmailDelivery     = "email:deliver"
-	TypeIncidentProcess   = "incident:process"   // Renamed for clarity
-	TypeNotificationSend  = "notification:send"  // Renamed for clarity
-	TypeAppointmentCreate = "appointment:create" // Renamed for clarity
+	TypeEmailDelivery        = "email:deliver"
+	TypeIncidentProcess      = "incident:process"      // Renamed for clarity
+	TypeNotificationSend     = "notification:send"     // Renamed for clarity
+	TypeAppointmentCreate    = "appointment:create"    // Renamed for clarity
+	TypeAcceptedRegistration = "accepted:registration" // Renamed for clarity
 )
 
 func (c *AsynqClient) EnqueueEmailDelivery(
@@ -105,5 +106,30 @@ func (c *AsynqClient) EnqueueAppointmentTask(
 	}
 
 	log.Printf("Appointment task enqueued: id=%s queue=%s", info.ID, info.Queue)
+	return nil
+}
+
+func (c *AsynqClient) EnqueueAcceptedRegistration(
+	ctx context.Context,
+	payload AcceptedRegistrationFormPayload,
+	opts ...asynq.Option) error {
+
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("EnqueueAcceptedRegistration: json.Marshal failed: %w", err)
+	}
+
+	// Default options if none are provided
+	if len(opts) == 0 {
+		opts = append(opts, asynq.Queue(QueueDefault), asynq.MaxRetry(5))
+	}
+
+	task := asynq.NewTask(TypeAcceptedRegistration, jsonPayload)
+	info, err := c.client.EnqueueContext(ctx, task, opts...)
+	if err != nil {
+		return fmt.Errorf("EnqueueAcceptedRegistration: client.EnqueueContext failed: %w", err)
+	}
+
+	log.Printf("Accepted Registration task enqueued: id=%s queue=%s", info.ID, info.Queue)
 	return nil
 }

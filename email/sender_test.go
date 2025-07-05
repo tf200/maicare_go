@@ -37,3 +37,15 @@ func TestSendIncident(t *testing.T) {
 	err := testBrevo.SendIncident(context.Background(), []string{"farjiataha@gmail.com"}, arg)
 	require.NoError(t, err)
 }
+
+func TestSendAcceptedRegistrationForm(t *testing.T) {
+	arg := AcceptedRegitrationForm{
+		ReferrerName:        "Jane Smith",
+		ChildName:           "Alice Doe",
+		ChildBSN:            "123456789",
+		AppointmentDate:     "2023-10-01 10:00:00Z",
+		AppointmentLocation: "Main Office - Room 101",
+	}
+	err := testBrevo.SendAcceptedRegistrationForm(context.Background(), []string{"farjiataha@gmail.com"}, arg)
+	require.NoError(t, err)
+}

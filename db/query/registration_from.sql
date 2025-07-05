@@ -74,7 +74,11 @@ INSERT INTO registration_form (
 SELECT * FROM registration_form
 WHERE 
     -- Form status filtering
-    (sqlc.narg('status')::VARCHAR IS NULL OR form_status = sqlc.narg('status'))
+    (
+        sqlc.narg('status')::VARCHAR IS NULL 
+        OR sqlc.narg('status') = 'all'
+        OR form_status = sqlc.narg('status')
+    )
     -- Risk filtering
     AND (sqlc.narg('risk_aggressive_behavior')::BOOLEAN IS NULL OR risk_aggressive_behavior = sqlc.narg('risk_aggressive_behavior'))
     AND (sqlc.narg('risk_suicidal_selfharm')::BOOLEAN IS NULL OR risk_suicidal_selfharm = sqlc.narg('risk_suicidal_selfharm'))
@@ -184,12 +188,15 @@ DELETE FROM registration_form
 WHERE id = $1;
 
 
--- name: UpdateRegistrationFormStatus :exec
+-- name: UpdateRegistrationFormStatus :one
 UPDATE registration_form
 SET
     form_status = $2,
     updated_at = NOW(),
     processed_by_employee_id = $3,
-    intake_appointment_datetime = $4
+    intake_appointment_datetime = $4,
+    intake_appointment_location = $5,
+    addmission_type = $6
 
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;

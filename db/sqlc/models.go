@@ -753,10 +753,11 @@ type LevelHistory struct {
 }
 
 type Location struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Address      string `json:"address"`
+	Capacity     *int32 `json:"capacity"`
+	LocationType string `json:"location_type"`
 }
 
 type LocationShift struct {
@@ -788,6 +789,9 @@ type Notification struct {
 	ID        int64              `json:"id"`
 	UserID    int64              `json:"user_id"`
 	Type      string             `json:"type"`
+	EntityID  string             `json:"entity_id"`
+	Message   string             `json:"message"`
+	IsRead    bool               `json:"is_read"`
 	Data      []byte             `json:"data"`
 	ReadAt    pgtype.Timestamptz `json:"read_at"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
@@ -928,6 +932,8 @@ type RegistrationForm struct {
 	ProcessedAt                   pgtype.Timestamptz `json:"processed_at"`
 	ProcessedByEmployeeID         *int64             `json:"processed_by_employee_id"`
 	IntakeAppointmentDatetime     pgtype.Timestamptz `json:"intake_appointment_datetime"`
+	IntakeAppointmentLocation     *string            `json:"intake_appointment_location"`
+	AddmissionType                *string            `json:"addmission_type"`
 }
 
 type RiskAssessment struct {
@@ -985,6 +991,18 @@ type Role struct {
 type RolePermission struct {
 	RoleID       int32 `json:"role_id"`
 	PermissionID int32 `json:"permission_id"`
+}
+
+type Room struct {
+	ID         int64            `json:"id"`
+	LocationID int64            `json:"location_id"`
+	RoomNumber string           `json:"room_number"`
+	RoomName   *string          `json:"room_name"`
+	RoomType   *string          `json:"room_type"`
+	Capacity   *int32           `json:"capacity"`
+	IsOccupied *bool            `json:"is_occupied"`
+	CreatedAt  pgtype.Timestamp `json:"created_at"`
+	UpdatedAt  pgtype.Timestamp `json:"updated_at"`
 }
 
 type Schedule struct {

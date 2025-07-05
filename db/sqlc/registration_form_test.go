@@ -150,6 +150,7 @@ func TestUpdateRegistrationFormStatus(t *testing.T) {
 		ProcessedByEmployeeID: &employee.ID,
 	}
 
-	err := testQueries.UpdateRegistrationFormStatus(context.Background(), arg)
+	form, err := testQueries.UpdateRegistrationFormStatus(context.Background(), arg)
+	require.NotEmpty(t, form)
 	require.NoError(t, err)
 }

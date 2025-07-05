@@ -51,6 +51,7 @@ func (a *AsynqServer) Start() error {
 	mux.HandleFunc(TypeIncidentProcess, a.ProcessIncidentTask)
 	mux.HandleFunc(TypeNotificationSend, a.ProcessNotificationTask)
 	mux.HandleFunc(TypeAppointmentCreate, a.ProcessAppointmentTask)
+	mux.HandleFunc(TypeAcceptedRegistration, a.ProcessRegistrationFormTask)
 
 	return a.server.Start(mux)
 }

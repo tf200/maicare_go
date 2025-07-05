@@ -269,3 +269,27 @@ func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task)
 	log.Printf("Finished generating appointments for template %d. Created %d occurrences", appointemntTemplate.ID, occurrenceCount)
 	return nil
 }
+
+func (processor *AsynqServer) ProcessRegistrationFormTask(ctx context.Context, t *asynq.Task) error {
+	var p AcceptedRegistrationFormPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		log.Printf("Failed to unmarshal incident task payload: %v", err)
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+
+	formData := email.AcceptedRegitrationForm{
+		ReferrerName:        p.ReferrerName,
+		ChildName:           p.ChildName,
+		ChildBSN:            p.ChildBSN,
+		AppointmentDate:     p.AppointmentDate,
+		AppointmentLocation: p.AppointmentLocation,
+	}
+
+	err := processor.brevoConf.SendAcceptedRegistrationForm(ctx, []string{p.To}, formData)
+	if err != nil {
+		log.Printf("Failed to send registration Form Email %s: %v", p.To, err)
+		return fmt.Errorf("failed to send incident email to %s: %v: %w", p.To, err, asynq.SkipRetry)
+	}
+
+	return nil
+}

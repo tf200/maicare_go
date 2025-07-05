@@ -61,6 +61,15 @@ type EmailDeliveryPayload struct {
 	UserPassword string `json:"user_password"`
 }
 
+type AcceptedRegistrationFormPayload struct {
+	ReferrerName        string `json:"referrer_name"`
+	ChildName           string `json:"child_name"`
+	ChildBSN            string `json:"child_bsn"`
+	AppointmentDate     string `json:"appointment_date"`
+	AppointmentLocation string `json:"appointment_location"`
+	To                  string `json:"to"`
+}
+
 type NotificationPayload struct {
 	RecipientUserIDs []int64 `json:"recipient_user_ids"`
 	Type             string  `json:"type"`

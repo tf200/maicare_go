@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/util"
@@ -306,7 +307,7 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 // ListRegistrationFormsRequest represents the request body for listing registration forms
 type ListRegistrationFormsRequest struct {
 	pagination.Request
-	Status                 *string `form:"status" json:"status" binding:"oneof=pending approved rejected"`
+	Status                 *string `form:"status" json:"status" binding:"oneof=pending approved rejected all"`
 	RiskAggressiveBehavior *bool   `form:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm   *bool   `form:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse     *bool   `form:"risk_substance_abuse"`
@@ -389,6 +390,7 @@ type ListRegistrationFormsResponse struct {
 	ProcessedAt                   time.Time  `json:"processed_at"`
 	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
 	IntakeAppointmentDate         time.Time  `json:"intake_appointment_date,omitempty"`
+	AddmissionType                *string    `json:"admission_type"` // "crisis_admission" or "regular_placement"
 }
 
 // calculateRiskCount counts the number of true risk factors for a registration form
@@ -578,6 +580,7 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 			ProcessedByEmployeeID:         rf.ProcessedByEmployeeID,
 			RiskCount:                     calculateRiskCount(rf),
 			IntakeAppointmentDate:         rf.IntakeAppointmentDatetime.Time,
+			AddmissionType:                rf.AddmissionType,
 		}
 	}
 
@@ -655,6 +658,7 @@ type GetRegistrationFormResponse struct {
 	ProcessedAt                   time.Time  `json:"processed_at"`
 	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
 	IntakeAppointmentDate         time.Time  `json:"intake_appointment_date,omitempty"`
+	AddmissionType                *string    `json:"admission_type"` // "crisis_admission" or "regular_placement"
 }
 
 // @Summary Get Registration Form
@@ -753,6 +757,7 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 		ProcessedAt:                   registrationForm.ProcessedAt.Time,
 		ProcessedByEmployeeID:         registrationForm.ProcessedByEmployeeID,
 		IntakeAppointmentDate:         registrationForm.IntakeAppointmentDatetime.Time,
+		AddmissionType:                registrationForm.AddmissionType,
 	}
 	res := SuccessResponse(response, "Registration form retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
@@ -1087,8 +1092,10 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 
 // UpdateRegistrationFormStatusRequest represents the response body for updating a registration form status
 type UpdateRegistrationFormStatusRequest struct {
-	FormStatus            string    `form:"status" binding:"required,oneof=approved rejected"`
-	IntakeAppointmentDate time.Time `form:"intake_appointment_date"` // Required field for intake appointment date
+	Status                    string    `json:"status" binding:"required,oneof=approved rejected" example:"approved"`
+	IntakeAppointmentDate     time.Time `json:"intake_appointment_date" binding:"required_if=Status approved" example:"2023-10-01T10:00:00Z"`
+	IntakeAppointmentLocation *string   `json:"intake_appointment_location" binding:"required_if=Status approved" example:"Amsterdam Central Station"`
+	AddmissionType            *string   `json:"admission_type" binding:"required_if=Status approved,oneof=crisis_admission regular_placement" example:"regular_placement"`
 }
 
 // @Summary Update Registration Form Status
@@ -1096,8 +1103,7 @@ type UpdateRegistrationFormStatusRequest struct {
 // @Tags Registration Form
 // @Produce json
 // @Param id path int true "Registration Form ID"
-// @Param status query string true "Status" Enums(approved, rejected)
-// @Param intake_appointment_date query string true "Intake Appointment Date" Format(date-time)
+// @Param request body UpdateRegistrationFormStatusRequest true "Update Registration Form Status Request"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
@@ -1106,7 +1112,7 @@ type UpdateRegistrationFormStatusRequest struct {
 func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	var req UpdateRegistrationFormStatusRequest
 
-	if err := ctx.ShouldBindQuery(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
@@ -1114,11 +1120,13 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
 	}
 
 	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, payload.UserId)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
 	}
 
 	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
@@ -1128,28 +1136,36 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateRegistrationFormStatusParams{
-		ID:                    rfId,
-		FormStatus:            req.FormStatus,
-		ProcessedByEmployeeID: &employeeID,
+		ID:                        rfId,
+		FormStatus:                req.Status,
+		ProcessedByEmployeeID:     &employeeID,
+		IntakeAppointmentLocation: req.IntakeAppointmentLocation,
+		AddmissionType:            req.AddmissionType,
 	}
 
-	if req.FormStatus == "approved" {
-		if req.IntakeAppointmentDate.IsZero() {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("intake appointment date is required")))
-			return
-		}
-		arg.IntakeAppointmentDatetime = pgtype.Timestamptz{
-			Time:  req.IntakeAppointmentDate,
-			Valid: true,
-		}
-	}
-
-	err = server.store.UpdateRegistrationFormStatus(ctx, arg)
+	registrationForm, err := server.store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
-	res := SuccessResponse[any](nil, "Registration Form Status updated")
-	ctx.JSON(http.StatusOK, res)
+	if req.Status == "approved" {
+		// Enqueue the task to create an intake appointment
+		err = server.asynqClient.EnqueueAcceptedRegistration(ctx, async.AcceptedRegistrationFormPayload{
+			ReferrerName:        registrationForm.ReferrerFirstName + " " + registrationForm.ReferrerLastName,
+			ChildName:           registrationForm.ClientFirstName + " " + registrationForm.ClientLastName,
+			ChildBSN:            registrationForm.ClientBsnNumber,
+			AppointmentDate:     registrationForm.IntakeAppointmentDatetime.Time.Format("2006-01-02 15:04:05"),
+			AppointmentLocation: *registrationForm.IntakeAppointmentLocation,
+			To:                  registrationForm.ReferrerEmail,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to enqueue intake appointment creation task: %w", err)))
+			return
+		}
 
+		res := SuccessResponse[any](nil, "Registration Form Status updated")
+		ctx.JSON(http.StatusOK, res)
+
+	}
 }

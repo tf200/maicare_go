@@ -7592,23 +7592,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            "approved",
-                            "rejected"
-                        ],
-                        "type": "string",
-                        "description": "Status",
-                        "name": "status",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Intake Appointment Date",
-                        "name": "intake_appointment_date",
-                        "in": "query",
-                        "required": true
+                        "description": "Update Registration Form Status Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateRegistrationFormStatusRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -8195,6 +8185,54 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_UpdateSenderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a sender",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "senders"
+                ],
+                "summary": "Delete a sender",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Sender ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "400": {
@@ -12846,6 +12884,10 @@ const docTemplate = `{
         "api.GetRegistrationFormResponse": {
             "type": "object",
             "properties": {
+                "admission_type": {
+                    "description": "\"crisis_admission\" or \"regular_placement\"",
+                    "type": "string"
+                },
                 "application_date": {
                     "type": "string"
                 },
@@ -13117,10 +13159,13 @@ const docTemplate = `{
         "api.GetSenderByIdResponse": {
             "type": "object",
             "properties": {
-                "address": {
+                "BTWnumber": {
                     "type": "string"
                 },
-                "btwnumber": {
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
                     "type": "string"
                 },
                 "client_number": {
@@ -13143,9 +13188,6 @@ const docTemplate = `{
                 },
                 "is_archived": {
                     "type": "boolean"
-                },
-                "kvknumber": {
-                    "type": "string"
                 },
                 "land": {
                     "type": "string"
@@ -14611,6 +14653,10 @@ const docTemplate = `{
         "api.ListRegistrationFormsResponse": {
             "type": "object",
             "properties": {
+                "admission_type": {
+                    "description": "\"crisis_admission\" or \"regular_placement\"",
+                    "type": "string"
+                },
                 "application_date": {
                     "type": "string"
                 },
@@ -18857,6 +18903,38 @@ const docTemplate = `{
                 }
             }
         },
+        "api.UpdateRegistrationFormStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "admission_type": {
+                    "type": "string",
+                    "enum": [
+                        "crisis_admission",
+                        "regular_placement"
+                    ],
+                    "example": "regular_placement"
+                },
+                "intake_appointment_date": {
+                    "type": "string",
+                    "example": "2023-10-01T10:00:00Z"
+                },
+                "intake_appointment_location": {
+                    "type": "string",
+                    "example": "Amsterdam Central Station"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "approved",
+                        "rejected"
+                    ],
+                    "example": "approved"
+                }
+            }
+        },
         "api.UpdateScheduleRequest": {
             "type": "object",
             "properties": {
@@ -18935,10 +19013,13 @@ const docTemplate = `{
         "api.UpdateSenderRequest": {
             "type": "object",
             "properties": {
-                "address": {
+                "BTWnumber": {
                     "type": "string"
                 },
-                "btwnumber": {
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
                     "type": "string"
                 },
                 "client_number": {
@@ -18955,9 +19036,6 @@ const docTemplate = `{
                 },
                 "is_archived": {
                     "type": "boolean"
-                },
-                "kvknumber": {
-                    "type": "string"
                 },
                 "land": {
                     "type": "string"
@@ -18988,10 +19066,13 @@ const docTemplate = `{
         "api.UpdateSenderResponse": {
             "type": "object",
             "properties": {
-                "address": {
+                "BTWnumber": {
                     "type": "string"
                 },
-                "btwnumber": {
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
                     "type": "string"
                 },
                 "client_number": {
@@ -19014,9 +19095,6 @@ const docTemplate = `{
                 },
                 "is_archived": {
                     "type": "boolean"
-                },
-                "kvknumber": {
-                    "type": "string"
                 },
                 "land": {
                     "type": "string"

@@ -99,6 +99,20 @@ func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sen
 	return i, err
 }
 
+const deleteSender = `-- name: DeleteSender :exec
+UPDATE sender
+SET
+    is_archived = true,
+    updated_at = NOW()
+WHERE 
+    id = $1
+`
+
+func (q *Queries) DeleteSender(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteSender, id)
+	return err
+}
+
 const getSenderById = `-- name: GetSenderById :one
 SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at FROM sender
 WHERE id = $1 LIMIT 1

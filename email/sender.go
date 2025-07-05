@@ -57,6 +57,15 @@ type Incident struct {
 	DocumentLink string
 }
 
+type AcceptedRegitrationForm struct {
+	ReferrerName        string
+    ChildName          string
+    ChildBSN           string
+    AppointmentDate    string
+    AppointmentLocation string
+}
+
+
 func NewSmtpConf(name, address, authentication, smtpHost string, smtpPort int) *SmtpConf {
 	return &SmtpConf{
 		Name:          name,
@@ -193,6 +202,69 @@ func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident
 		Sender:      &sender,
 		To:          recipients,
 		Subject:     "Incident Report",
+		HtmlContent: htmlContent,
+	}
+	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	if response.StatusCode != 201 {
+		return fmt.Errorf("failed to send email, status code: %d", response.StatusCode)
+	}
+	log.Printf("Email sent to %s", to)
+	log.Printf("Response: %s", result)
+	log.Printf("Response Status Code: %d", response.StatusCode)
+	log.Printf("Response Headers: %v", response.Header)
+	log.Printf("Response Body: %s", response.Body)
+
+	return nil
+}
+
+
+//go:embed templates/accepted_registration_form.html
+var acceptedRegistrationFormTemplateFS embed.FS
+
+
+
+func (b *BrevoConf) SendAcceptedRegistrationForm(ctx context.Context, to []string, data AcceptedRegitrationForm) error {
+
+	if len(to) == 0 {
+		return errors.New("no recipient addresses provided")
+	}
+	if b.SenderName == "" || b.Senderemail == "" {
+		return errors.New("invalid sender configuration")
+	}
+	if b.ApiKey == "" {
+		return errors.New("invalid API key")
+	}
+
+	tmpl, err := template.ParseFS(acceptedRegistrationFormTemplateFS, "templates/accepted_registration_form.html")
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML template: %w", err)
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	htmlContent := body.String()
+	sender := brevo.SendSmtpEmailSender{
+		Name:  b.SenderName,
+		Email: b.Senderemail,
+	}
+	recipients := make([]brevo.SendSmtpEmailTo, 0, len(to))
+	for _, recipient := range to {
+		recipients = append(recipients, brevo.SendSmtpEmailTo{
+			Email: recipient,
+			Name:  recipient,
+		})
+	}
+	emailContent := brevo.SendSmtpEmail{
+		Sender:      &sender,
+		To:          recipients,
+		Subject:     "Accepted Registration Form",
 		HtmlContent: htmlContent,
 	}
 	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
