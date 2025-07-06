@@ -8436,6 +8436,10 @@
                 "contract_end_date": {
                     "type": "string"
                 },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
+                },
                 "contract_start_date": {
                     "type": "string"
                 },
@@ -8455,6 +8459,10 @@
             "properties": {
                 "contract_end_date": {
                     "type": "string"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
                 },
                 "contract_start_date": {
                     "type": "string"
@@ -9436,10 +9444,13 @@
                 "care_type",
                 "financing_act",
                 "financing_option",
-                "hours_type",
-                "price_frequency"
+                "price_time_unit"
             ],
             "properties": {
+                "VAT": {
+                    "type": "integer",
+                    "example": 21
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -9482,22 +9493,17 @@
                     "example": "ZIN"
                 },
                 "hours": {
-                    "type": "integer",
+                    "type": "number",
                     "example": 40
                 },
                 "hours_type": {
-                    "type": "string",
-                    "enum": [
-                        "weekly",
-                        "all_period"
-                    ],
-                    "example": "weekly"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number",
                     "example": 100.5
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string",
                     "enum": [
                         "minute",
@@ -9521,10 +9527,6 @@
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
-                "tax": {
-                    "type": "integer",
-                    "example": 21
-                },
                 "type_id": {
                     "type": "integer",
                     "example": 1
@@ -9534,6 +9536,9 @@
         "api.CreateContractResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -9549,7 +9554,7 @@
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "departure_reason": {
@@ -9568,7 +9573,7 @@
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -9579,7 +9584,7 @@
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -9594,13 +9599,10 @@
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 }
             }
@@ -10834,6 +10836,27 @@
                 },
                 "risk_weapon_possession": {
                     "type": "boolean"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -11039,6 +11062,27 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -11887,6 +11931,9 @@
         "api.GetClientContractResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -11902,7 +11949,7 @@
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "departure_reason": {
@@ -11921,7 +11968,7 @@
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -11932,7 +11979,7 @@
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -11947,13 +11994,10 @@
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -12269,6 +12313,10 @@
             "properties": {
                 "contract_end_date": {
                     "type": "string"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
                 },
                 "contract_start_date": {
                     "type": "string"
@@ -13084,6 +13132,27 @@
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -13603,6 +13672,9 @@
         "api.ListClientContractsResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -13618,7 +13690,7 @@
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "departure_reason": {
@@ -13637,7 +13709,7 @@
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -13648,7 +13720,7 @@
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -13663,13 +13735,10 @@
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -14020,7 +14089,7 @@
                 "client_last_name": {
                     "type": "string"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "end_date": {
@@ -14038,7 +14107,7 @@
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "sender_id": {
@@ -14855,6 +14924,27 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -17785,6 +17875,9 @@
         "api.UpdateContractRequest": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -17798,7 +17891,7 @@
                     "type": "string"
                 },
                 "end_date": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "financing_act": {
                     "type": "string"
@@ -17807,15 +17900,15 @@
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
                 },
                 "price": {
-                    "$ref": "#/definitions/pgtype.Numeric"
+                    "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -17825,13 +17918,10 @@
                     "type": "integer"
                 },
                 "start_date": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
-                },
-                "tax": {
-                    "type": "integer"
                 },
                 "type_id": {
                     "type": "integer"
@@ -17841,6 +17931,9 @@
         "api.UpdateContractResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -17856,7 +17949,7 @@
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "departure_reason": {
@@ -17875,7 +17968,7 @@
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -17901,13 +17994,10 @@
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -18687,6 +18777,27 @@
                 },
                 "risk_weapon_possession": {
                     "type": "boolean"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -18892,6 +19003,27 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -19212,9 +19344,6 @@
                     "type": "string"
                 }
             }
-        },
-        "big.Int": {
-            "type": "object"
         },
         "pagination.Response-api_ListAllIncidentsResponse": {
             "type": "object",
@@ -19639,26 +19768,6 @@
                 "Finite",
                 "NegativeInfinity"
             ]
-        },
-        "pgtype.Numeric": {
-            "type": "object",
-            "properties": {
-                "exp": {
-                    "type": "integer"
-                },
-                "infinityModifier": {
-                    "$ref": "#/definitions/pgtype.InfinityModifier"
-                },
-                "int": {
-                    "$ref": "#/definitions/big.Int"
-                },
-                "naN": {
-                    "type": "boolean"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
         },
         "pgtype.Timestamp": {
             "type": "object",

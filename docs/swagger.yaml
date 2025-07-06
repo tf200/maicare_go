@@ -110,6 +110,9 @@ definitions:
     properties:
       contract_end_date:
         type: string
+      contract_rate:
+        description: Optional field for contract rate
+        type: number
       contract_start_date:
         type: string
       contract_type:
@@ -123,6 +126,9 @@ definitions:
     properties:
       contract_end_date:
         type: string
+      contract_rate:
+        description: Optional field for contract rate
+        type: number
       contract_start_date:
         type: string
       contract_type:
@@ -772,6 +778,9 @@ definitions:
     type: object
   api.CreateContractRequest:
     properties:
+      VAT:
+        example: 21
+        type: integer
       attachment_ids:
         items:
           type: string
@@ -805,17 +814,13 @@ definitions:
         type: string
       hours:
         example: 40
-        type: integer
+        type: number
       hours_type:
-        enum:
-        - weekly
-        - all_period
-        example: weekly
         type: string
       price:
         example: 100.5
         type: number
-      price_frequency:
+      price_time_unit:
         enum:
         - minute
         - hourly
@@ -834,9 +839,6 @@ definitions:
       start_date:
         example: "2023-01-01T00:00:00Z"
         type: string
-      tax:
-        example: 21
-        type: integer
       type_id:
         example: 1
         type: integer
@@ -844,11 +846,12 @@ definitions:
     - care_type
     - financing_act
     - financing_option
-    - hours_type
-    - price_frequency
+    - price_time_unit
     type: object
   api.CreateContractResponse:
     properties:
+      VAT:
+        type: integer
       attachment_ids:
         items:
           type: string
@@ -859,7 +862,7 @@ definitions:
         type: string
       client_id:
         type: integer
-      created:
+      created_at:
         $ref: '#/definitions/pgtype.Timestamptz'
       departure_reason:
         type: string
@@ -872,14 +875,14 @@ definitions:
       financing_option:
         type: string
       hours:
-        type: integer
+        type: number
       hours_type:
         type: string
       id:
         type: integer
       price:
         type: number
-      price_frequency:
+      price_time_unit:
         type: string
       reminder_period:
         type: integer
@@ -889,11 +892,9 @@ definitions:
         type: string
       status:
         type: string
-      tax:
-        type: integer
       type_id:
         type: integer
-      updated:
+      updated_at:
         $ref: '#/definitions/pgtype.Timestamptz'
     type: object
   api.CreateContractTypeRequest:
@@ -1733,6 +1734,20 @@ definitions:
         type: boolean
       risk_weapon_possession:
         type: boolean
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
     type: object
   api.CreateRegistrationFormResponse:
     properties:
@@ -1869,6 +1884,20 @@ definitions:
       submitted_at:
         type: string
       updated_at:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     type: object
   api.CreateScheduleRequest:
@@ -2428,6 +2457,8 @@ definitions:
     type: object
   api.GetClientContractResponse:
     properties:
+      VAT:
+        type: integer
       attachment_ids:
         items:
           type: string
@@ -2438,7 +2469,7 @@ definitions:
         type: string
       client_id:
         type: integer
-      created:
+      created_at:
         type: string
       departure_reason:
         type: string
@@ -2451,14 +2482,14 @@ definitions:
       financing_option:
         type: string
       hours:
-        type: integer
+        type: number
       hours_type:
         type: string
       id:
         type: integer
       price:
         type: number
-      price_frequency:
+      price_time_unit:
         type: string
       reminder_period:
         type: integer
@@ -2468,11 +2499,9 @@ definitions:
         type: string
       status:
         type: string
-      tax:
-        type: integer
       type_id:
         type: integer
-      updated:
+      updated_at:
         type: string
     type: object
   api.GetClientDiagnosisResponse:
@@ -2680,6 +2709,9 @@ definitions:
     properties:
       contract_end_date:
         type: string
+      contract_rate:
+        description: Optional field for contract rate
+        type: number
       contract_start_date:
         type: string
       contract_type:
@@ -3220,6 +3252,20 @@ definitions:
         type: string
       updated_at:
         type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
     type: object
   api.GetRoleByIDApiResponse:
     properties:
@@ -3564,6 +3610,8 @@ definitions:
     type: object
   api.ListClientContractsResponse:
     properties:
+      VAT:
+        type: integer
       attachment_ids:
         items:
           type: string
@@ -3574,7 +3622,7 @@ definitions:
         type: string
       client_id:
         type: integer
-      created:
+      created_at:
         type: string
       departure_reason:
         type: string
@@ -3587,14 +3635,14 @@ definitions:
       financing_option:
         type: string
       hours:
-        type: integer
+        type: number
       hours_type:
         type: string
       id:
         type: integer
       price:
         type: number
-      price_frequency:
+      price_time_unit:
         type: string
       reminder_period:
         type: integer
@@ -3604,11 +3652,9 @@ definitions:
         type: string
       status:
         type: string
-      tax:
-        type: integer
       type_id:
         type: integer
-      updated:
+      updated_at:
         type: string
     type: object
   api.ListClientDiagnosesResponse:
@@ -3839,7 +3885,7 @@ definitions:
         type: integer
       client_last_name:
         type: string
-      created:
+      created_at:
         type: string
       end_date:
         type: string
@@ -3851,7 +3897,7 @@ definitions:
         type: integer
       price:
         type: number
-      price_frequency:
+      price_time_unit:
         type: string
       sender_id:
         type: integer
@@ -4393,6 +4439,20 @@ definitions:
       submitted_at:
         type: string
       updated_at:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     type: object
   api.ListRolesApiResponse:
@@ -6296,6 +6356,8 @@ definitions:
     type: object
   api.UpdateContractRequest:
     properties:
+      VAT:
+        type: integer
       attachment_ids:
         items:
           type: string
@@ -6305,34 +6367,34 @@ definitions:
       care_type:
         type: string
       end_date:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       financing_act:
         type: string
       financing_option:
         type: string
       hours:
-        type: integer
+        type: number
       hours_type:
         type: string
       price:
-        $ref: '#/definitions/pgtype.Numeric'
-      price_frequency:
+        type: number
+      price_time_unit:
         type: string
       reminder_period:
         type: integer
       sender_id:
         type: integer
       start_date:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       status:
         type: string
-      tax:
-        type: integer
       type_id:
         type: integer
     type: object
   api.UpdateContractResponse:
     properties:
+      VAT:
+        type: integer
       attachment_ids:
         items:
           type: string
@@ -6343,7 +6405,7 @@ definitions:
         type: string
       client_id:
         type: integer
-      created:
+      created_at:
         type: string
       departure_reason:
         type: string
@@ -6356,7 +6418,7 @@ definitions:
       financing_option:
         type: string
       hours:
-        type: integer
+        type: number
       hours_type:
         type: string
       id:
@@ -6373,11 +6435,9 @@ definitions:
         type: string
       status:
         type: string
-      tax:
-        type: integer
       type_id:
         type: integer
-      updated:
+      updated_at:
         type: string
     type: object
   api.UpdateEmployeeCertificationRequest:
@@ -6893,6 +6953,20 @@ definitions:
         type: boolean
       risk_weapon_possession:
         type: boolean
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
     type: object
   api.UpdateRegistrationFormResponse:
     properties:
@@ -7029,6 +7103,20 @@ definitions:
       submitted_at:
         type: string
       updated_at:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     type: object
   api.UpdateRegistrationFormStatusRequest:
@@ -7245,8 +7333,6 @@ definitions:
         type: string
       type:
         type: string
-    type: object
-  big.Int:
     type: object
   pagination.Response-api_ListAllIncidentsResponse:
     properties:
@@ -7526,19 +7612,6 @@ definitions:
     - Infinity
     - Finite
     - NegativeInfinity
-  pgtype.Numeric:
-    properties:
-      exp:
-        type: integer
-      infinityModifier:
-        $ref: '#/definitions/pgtype.InfinityModifier'
-      int:
-        $ref: '#/definitions/big.Int'
-      naN:
-        type: boolean
-      valid:
-        type: boolean
-    type: object
   pgtype.Timestamp:
     properties:
       infinityModifier:

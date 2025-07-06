@@ -127,11 +127,11 @@ type CreateContractRequest struct {
 	StartDate       time.Time   `json:"start_date" example:"2023-01-01T00:00:00Z"`
 	EndDate         time.Time   `json:"end_date" example:"2023-12-31T00:00:00Z"`
 	ReminderPeriod  int32       `json:"reminder_period" example:"30"`
-	Tax             *int32      `json:"tax" example:"21"`
+	Vat             *int32      `json:"VAT" example:"21"`
 	Price           float64     `json:"price" example:"100.50"`
-	PriceFrequency  string      `json:"price_frequency" binding:"required,oneof=minute hourly daily weekly monthly yearly" example:"monthly" enum:"minute,hourly,daily,weekly,monthly,yearly"`
-	Hours           *int32      `json:"hours" example:"40"`
-	HoursType       string      `json:"hours_type" binding:"required,oneof=weekly all_period" example:"weekly" enum:"weekly,all_period"`
+	PriceTimeUnit   string      `json:"price_time_unit" binding:"required,oneof=minute hourly daily weekly monthly yearly" example:"monthly" enum:"minute,hourly,daily,weekly,monthly,yearly"`
+	Hours           *float64    `json:"hours" example:"40"`
+	HoursType       *string     `json:"hours_type" enum:"weekly,all_period"`
 	CareName        string      `json:"care_name" example:"Home Care"`
 	CareType        string      `json:"care_type" binding:"required,oneof=ambulante accommodation" example:"ambulante" enum:"ambulante,accommodation"`
 	SenderID        *int64      `json:"sender_id" example:"2"`
@@ -148,11 +148,11 @@ type CreateContractResponse struct {
 	StartDate       time.Time          `json:"start_date"`
 	EndDate         time.Time          `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
+	Vat             *int32             `json:"VAT"`
 	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
-	HoursType       string             `json:"hours_type"`
+	PriceTimeUnit   string             `json:"price_time_unit"`
+	Hours           *float64           `json:"hours"`
+	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        int64              `json:"client_id"`
@@ -162,8 +162,8 @@ type CreateContractResponse struct {
 	FinancingOption string             `json:"financing_option"`
 	DepartureReason *string            `json:"departure_reason"`
 	DepartureReport *string            `json:"departure_report"`
-	Updated         pgtype.Timestamptz `json:"updated"`
-	Created         pgtype.Timestamptz `json:"created"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 // CreateContractApi creates a new contract
@@ -194,9 +194,9 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 		StartDate:       pgtype.Timestamptz{Time: req.StartDate, Valid: true},
 		EndDate:         pgtype.Timestamptz{Time: req.EndDate, Valid: true},
 		ReminderPeriod:  req.ReminderPeriod,
-		Tax:             req.Tax,
+		Vat:             req.Vat,
 		Price:           req.Price,
-		PriceFrequency:  req.PriceFrequency,
+		PriceTimeUnit:   req.PriceTimeUnit,
 		Hours:           req.Hours,
 		HoursType:       req.HoursType,
 		CareName:        req.CareName,
@@ -219,9 +219,9 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
 		ReminderPeriod:  contract.ReminderPeriod,
-		Tax:             contract.Tax,
+		Vat:             contract.Vat,
 		Price:           contract.Price,
-		PriceFrequency:  contract.PriceFrequency,
+		PriceTimeUnit:   contract.PriceTimeUnit,
 		Hours:           contract.Hours,
 		HoursType:       contract.HoursType,
 		CareName:        contract.CareName,
@@ -233,8 +233,8 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 		FinancingOption: contract.FinancingOption,
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
-		Updated:         contract.Updated,
-		Created:         contract.Created,
+		UpdatedAt:       contract.UpdatedAt,
+		CreatedAt:       contract.CreatedAt,
 	}, "Contract created successfully")
 	ctx.JSON(http.StatusOK, res)
 
@@ -253,11 +253,11 @@ type ListClientContractsResponse struct {
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
 	ReminderPeriod  int32       `json:"reminder_period"`
-	Tax             *int32      `json:"tax"`
+	Vat             *int32      `json:"VAT"`
 	Price           float64     `json:"price"`
-	PriceFrequency  string      `json:"price_frequency"`
-	Hours           *int32      `json:"hours"`
-	HoursType       string      `json:"hours_type"`
+	PriceTimeUnit   string      `json:"price_time_unit"`
+	Hours           *float64    `json:"hours"`
+	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        int64       `json:"client_id"`
@@ -267,8 +267,8 @@ type ListClientContractsResponse struct {
 	FinancingOption string      `json:"financing_option"`
 	DepartureReason *string     `json:"departure_reason"`
 	DepartureReport *string     `json:"departure_report"`
-	Updated         time.Time   `json:"updated"`
-	Created         time.Time   `json:"created"`
+	UpdatedAt       time.Time   `json:"updated_at"`
+	CreatedAt       time.Time   `json:"created_at"`
 }
 
 // ListClientContractsApi returns a list of contracts for a client
@@ -324,9 +324,9 @@ func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 			StartDate:       contract.StartDate.Time,
 			EndDate:         contract.EndDate.Time,
 			ReminderPeriod:  contract.ReminderPeriod,
-			Tax:             contract.Tax,
+			Vat:             contract.Vat,
 			Price:           contract.Price,
-			PriceFrequency:  contract.PriceFrequency,
+			PriceTimeUnit:   contract.PriceTimeUnit,
 			Hours:           contract.Hours,
 			HoursType:       contract.HoursType,
 			CareName:        contract.CareName,
@@ -338,8 +338,8 @@ func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 			FinancingOption: contract.FinancingOption,
 			DepartureReason: contract.DepartureReason,
 			DepartureReport: contract.DepartureReport,
-			Updated:         contract.Updated.Time,
-			Created:         contract.Created.Time,
+			UpdatedAt:       contract.UpdatedAt.Time,
+			CreatedAt:       contract.CreatedAt.Time,
 		}
 	}
 
@@ -350,22 +350,22 @@ func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 
 // UpdateContractRequest defines the request for UpdateContract handler
 type UpdateContractRequest struct {
-	TypeID          *int64             `json:"type_id"`
-	StartDate       pgtype.Timestamptz `json:"start_date"`
-	EndDate         pgtype.Timestamptz `json:"end_date"`
-	ReminderPeriod  *int32             `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
-	Price           pgtype.Numeric     `json:"price"`
-	PriceFrequency  *string            `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
-	HoursType       *string            `json:"hours_type"`
-	CareName        *string            `json:"care_name"`
-	CareType        *string            `json:"care_type"`
-	SenderID        *int64             `json:"sender_id"`
-	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
-	FinancingAct    *string            `json:"financing_act"`
-	FinancingOption *string            `json:"financing_option"`
-	Status          *string            `json:"status"`
+	TypeID          *int64      `json:"type_id"`
+	StartDate       time.Time   `json:"start_date"`
+	EndDate         time.Time   `json:"end_date"`
+	ReminderPeriod  *int32      `json:"reminder_period"`
+	Vat             *int32      `json:"VAT"`
+	Price           *float64    `json:"price"`
+	PriceTimeUnit   *string     `json:"price_time_unit"`
+	Hours           *float64    `json:"hours"`
+	HoursType       *string     `json:"hours_type"`
+	CareName        *string     `json:"care_name"`
+	CareType        *string     `json:"care_type"`
+	SenderID        *int64      `json:"sender_id"`
+	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
+	FinancingAct    *string     `json:"financing_act"`
+	FinancingOption *string     `json:"financing_option"`
+	Status          *string     `json:"status"`
 }
 
 // UpdateContractResponse defines the response for UpdateContract handler
@@ -376,11 +376,11 @@ type UpdateContractResponse struct {
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
 	ReminderPeriod  int32       `json:"reminder_period"`
-	Tax             *int32      `json:"tax"`
+	Vat             *int32      `json:"VAT"`
 	Price           float64     `json:"price"`
 	PriceFrequency  string      `json:"price_frequency"`
-	Hours           *int32      `json:"hours"`
-	HoursType       string      `json:"hours_type"`
+	Hours           *float64    `json:"hours"`
+	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        int64       `json:"client_id"`
@@ -390,8 +390,8 @@ type UpdateContractResponse struct {
 	FinancingOption string      `json:"financing_option"`
 	DepartureReason *string     `json:"departure_reason"`
 	DepartureReport *string     `json:"departure_report"`
-	Updated         time.Time   `json:"updated"`
-	Created         time.Time   `json:"created"`
+	UpdatedAt       time.Time   `json:"updated_at"`
+	CreatedAt       time.Time   `json:"created_at"`
 }
 
 // UpdateContractApi updates a contract
@@ -420,12 +420,12 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 	contract, err := server.store.UpdateContract(ctx, db.UpdateContractParams{
 		ID:              contractID,
 		TypeID:          req.TypeID,
-		StartDate:       req.StartDate,
-		EndDate:         req.EndDate,
+		StartDate:       pgtype.Timestamptz{Time: req.StartDate, Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: req.EndDate, Valid: true},
 		ReminderPeriod:  req.ReminderPeriod,
-		Tax:             req.Tax,
+		VAT:             req.Vat,
 		Price:           req.Price,
-		PriceFrequency:  req.PriceFrequency,
+		PriceTimeUnit:   req.PriceTimeUnit,
 		Hours:           req.Hours,
 		HoursType:       req.HoursType,
 		CareName:        req.CareName,
@@ -448,9 +448,9 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
 		ReminderPeriod:  contract.ReminderPeriod,
-		Tax:             contract.Tax,
+		Vat:             contract.Vat,
 		Price:           contract.Price,
-		PriceFrequency:  contract.PriceFrequency,
+		PriceFrequency:  contract.PriceTimeUnit,
 		Hours:           contract.Hours,
 		HoursType:       contract.HoursType,
 		CareName:        contract.CareName,
@@ -462,8 +462,8 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 		FinancingOption: contract.FinancingOption,
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
-		Updated:         contract.Updated.Time,
-		Created:         contract.Created.Time,
+		UpdatedAt:       contract.UpdatedAt.Time,
+		CreatedAt:       contract.CreatedAt.Time,
 	}, "Contract updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -476,11 +476,11 @@ type GetClientContractResponse struct {
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
 	ReminderPeriod  int32       `json:"reminder_period"`
-	Tax             *int32      `json:"tax"`
+	Vat             *int32      `json:"VAT"`
 	Price           float64     `json:"price"`
-	PriceFrequency  string      `json:"price_frequency"`
-	Hours           *int32      `json:"hours"`
-	HoursType       string      `json:"hours_type"`
+	PriceTimeUnit   string      `json:"price_time_unit"`
+	Hours           *float64    `json:"hours"`
+	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        int64       `json:"client_id"`
@@ -490,8 +490,8 @@ type GetClientContractResponse struct {
 	FinancingOption string      `json:"financing_option"`
 	DepartureReason *string     `json:"departure_reason"`
 	DepartureReport *string     `json:"departure_report"`
-	Updated         time.Time   `json:"updated"`
-	Created         time.Time   `json:"created"`
+	UpdatedAt       time.Time   `json:"updated_at"`
+	CreatedAt       time.Time   `json:"created_at"`
 }
 
 // GetClientContractApi returns a contract by ID
@@ -523,9 +523,9 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
 		ReminderPeriod:  contract.ReminderPeriod,
-		Tax:             contract.Tax,
+		Vat:             contract.Vat,
 		Price:           contract.Price,
-		PriceFrequency:  contract.PriceFrequency,
+		PriceTimeUnit:   contract.PriceTimeUnit,
 		Hours:           contract.Hours,
 		HoursType:       contract.HoursType,
 		CareName:        contract.CareName,
@@ -537,8 +537,8 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 		FinancingOption: contract.FinancingOption,
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
-		Updated:         contract.Updated.Time,
-		Created:         contract.Created.Time,
+		UpdatedAt:       contract.UpdatedAt.Time,
+		CreatedAt:       contract.CreatedAt.Time,
 	}, "Contract retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -561,12 +561,12 @@ type ListContractsResponse struct {
 	StartDate       time.Time `json:"start_date"`
 	EndDate         time.Time `json:"end_date"`
 	Price           float64   `json:"price"`
-	PriceFrequency  string    `json:"price_frequency"`
+	PriceTimeUnit   string    `json:"price_time_unit"`
 	CareName        string    `json:"care_name"`
 	CareType        string    `json:"care_type"`
 	FinancingAct    string    `json:"financing_act"`
 	FinancingOption string    `json:"financing_option"`
-	Created         time.Time `json:"created"`
+	CreatedAt       time.Time `json:"created_at"`
 	SenderID        *int64    `json:"sender_id"`
 	SenderName      *string   `json:"sender_name"`
 	ClientFirstName string    `json:"client_first_name"`
@@ -627,7 +627,7 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 			StartDate:       contract.StartDate.Time,
 			EndDate:         contract.EndDate.Time,
 			Price:           contract.Price,
-			PriceFrequency:  contract.PriceFrequency,
+			PriceTimeUnit:   contract.PriceTimeUnit,
 			CareName:        contract.CareName,
 			CareType:        contract.CareType,
 			FinancingAct:    contract.FinancingAct,
@@ -636,7 +636,7 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 			SenderName:      contract.SenderName,
 			ClientFirstName: contract.ClientFirstName,
 			ClientLastName:  contract.ClientLastName,
-			Created:         contract.Created.Time,
+			CreatedAt:       contract.CreatedAt.Time,
 		}
 	}
 

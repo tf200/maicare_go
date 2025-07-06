@@ -71,9 +71,10 @@ type AcceptedRegistrationFormPayload struct {
 }
 
 type NotificationPayload struct {
-	RecipientUserIDs []int64 `json:"recipient_user_ids"`
-	Type             string  `json:"type"`
-	Data             []byte  `json:"data"`
+	RecipientUserIDs []int64   `json:"recipient_user_ids"`
+	Type             string    `json:"type"`
+	Data             []byte    `json:"data"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 
 type AppointmentPayload struct {

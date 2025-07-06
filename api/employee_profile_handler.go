@@ -656,6 +656,7 @@ type AddEmployeeContractDetailsRequest struct {
 	ContractStartDate     time.Time `json:"contract_start_date"`
 	ContractEndDate       time.Time `json:"contract_end_date"`
 	ContractType          *string   `json:"contract_type"`
+	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
 }
 
 // AddEmployeeContractDetailsResponse represents the response for AddEmployeeContractDetailsApi
@@ -666,6 +667,7 @@ type AddEmployeeContractDetailsResponse struct {
 	ContractStartDate     time.Time `json:"contract_start_date"`
 	ContractEndDate       time.Time `json:"contract_end_date"`
 	ContractType          *string   `json:"contract_type"`
+	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
 }
 
 // @Summary Add contract details to employee profile
@@ -697,6 +699,7 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		ContractStartDate:     pgtype.Date{Time: req.ContractStartDate, Valid: true},
 		ContractEndDate:       pgtype.Date{Time: req.ContractEndDate, Valid: true},
 		ContractType:          req.ContractType,
+		ContractRate:          req.ContractRate, // Optional field, can be set later if needed
 	}
 	contractDetails, err := server.store.AddEmployeeContractDetails(ctx, arg)
 	if err != nil {
@@ -751,6 +754,7 @@ type GetEmployeeContractDetailsResponse struct {
 	ContractStartDate     time.Time `json:"contract_start_date"`
 	ContractEndDate       time.Time `json:"contract_end_date"`
 	ContractType          *string   `json:"contract_type"`
+	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
 }
 
 // @Summary Get employee contract details by ID
@@ -785,6 +789,7 @@ func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 		ContractStartDate:     contractDetails.ContractStartDate.Time,
 		ContractEndDate:       contractDetails.ContractEndDate.Time,
 		ContractType:          contractDetails.ContractType,
+		ContractRate:          contractDetails.ContractRate, // Optional field for contract rate
 	}, "Employee contract details retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

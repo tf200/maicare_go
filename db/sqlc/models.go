@@ -370,11 +370,11 @@ type Contract struct {
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
+	Vat             *int32             `json:"vat"`
 	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
-	HoursType       string             `json:"hours_type"`
+	PriceTimeUnit   string             `json:"price_time_unit"`
+	Hours           *float64           `json:"hours"`
+	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        int64              `json:"client_id"`
@@ -384,8 +384,8 @@ type Contract struct {
 	FinancingOption string             `json:"financing_option"`
 	DepartureReason *string            `json:"departure_reason"`
 	DepartureReport *string            `json:"departure_report"`
-	Updated         pgtype.Timestamptz `json:"updated"`
-	Created         pgtype.Timestamptz `json:"created"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 type ContractAttachment struct {
@@ -517,6 +517,7 @@ type EmployeeProfile struct {
 	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 	ContractType              *string            `json:"contract_type"`
+	ContractRate              *float64           `json:"contract_rate"`
 }
 
 type Expense struct {

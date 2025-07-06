@@ -26,11 +26,18 @@ WITH inserted_assignment AS (
 )
 SELECT
     ia.id, ia.client_id, ia.employee_id, ia.start_date, ia.role, ia.created_at,  -- Select all columns from the inserted_assignment CTE
-    ep.user_id -- Select the user_id from the employee_profile table
+    ep.user_id, -- Select the user_id from the employee_profile table
+    cl.first_name AS client_first_name,
+    cl.last_name AS client_last_name,
+    l.name AS client_location_name
 FROM
     inserted_assignment ia
 JOIN
-    employee_profile ep ON ia.employee_id = ep.id
+    employee_profile ep ON ia.employee_id = ep.id -- Join based on employee_id
+JOIN
+    client_details cl ON ia.client_id = cl.id
+LEFT JOIN
+    location l ON cl.location_id = l.id
 `
 
 type AssignEmployeeParams struct {
@@ -41,13 +48,16 @@ type AssignEmployeeParams struct {
 }
 
 type AssignEmployeeRow struct {
-	ID         int64              `json:"id"`
-	ClientID   int64              `json:"client_id"`
-	EmployeeID int64              `json:"employee_id"`
-	StartDate  pgtype.Date        `json:"start_date"`
-	Role       string             `json:"role"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UserID     int64              `json:"user_id"`
+	ID                 int64              `json:"id"`
+	ClientID           int64              `json:"client_id"`
+	EmployeeID         int64              `json:"employee_id"`
+	StartDate          pgtype.Date        `json:"start_date"`
+	Role               string             `json:"role"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UserID             int64              `json:"user_id"`
+	ClientFirstName    string             `json:"client_first_name"`
+	ClientLastName     string             `json:"client_last_name"`
+	ClientLocationName *string            `json:"client_location_name"`
 }
 
 // Select the columns from the inserted row AND join to get the user_id
@@ -67,6 +77,9 @@ func (q *Queries) AssignEmployee(ctx context.Context, arg AssignEmployeeParams) 
 		&i.Role,
 		&i.CreatedAt,
 		&i.UserID,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientLocationName,
 	)
 	return i, err
 }
@@ -369,6 +382,8 @@ func (q *Queries) GetEmergencyContact(ctx context.Context, id int64) (ClientEmer
 const listAssignedEmployees = `-- name: ListAssignedEmployees :many
 
 
+
+
 SELECT 
     ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
     e.first_name AS employee_first_name,
@@ -399,7 +414,7 @@ type ListAssignedEmployeesRow struct {
 	TotalCount        int64              `json:"total_count"`
 }
 
-// Join based on employee_id
+// Join to get the client location name
 func (q *Queries) ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error) {
 	rows, err := q.db.Query(ctx, listAssignedEmployees, arg.ClientID, arg.Limit, arg.Offset)
 	if err != nil {

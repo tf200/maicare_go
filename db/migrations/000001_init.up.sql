@@ -507,12 +507,12 @@ CREATE TABLE contract (
     status VARCHAR(20) NOT NULL CHECK (status IN ('approved', 'draft', 'terminated', 'stopped')) DEFAULT 'draft',
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
-    reminder_period INTEGER NOT NULL DEFAULT 10,
-    tax INTEGER NULL DEFAULT -1,
+    reminder_period INTEGER NOT NULL DEFAULT 90, -- in days
+    VAT INTEGER NULL DEFAULT -1,
     price DECIMAL(10,2) NOT NULL,
-    price_frequency VARCHAR(20) NOT NULL CHECK (price_frequency IN ('minute', 'hourly', 'daily', 'weekly', 'monthly')) DEFAULT 'weekly',
-    hours INTEGER NULL DEFAULT 0,
-    hours_type VARCHAR(20) NOT NULL CHECK (hours_type IN ('weekly', 'all_period')) DEFAULT 'all_period',
+    price_time_unit VARCHAR(20) NOT NULL CHECK (price_time_unit IN ('minute', 'hourly', 'daily', 'weekly', 'monthly')) DEFAULT 'weekly',
+    hours DECIMAL(10,2) NULL DEFAULT 0, -- only when care_type is 'ambulante'
+    hours_type VARCHAR(20) NULL DEFAULT NULL CHECK (hours_type IN ('weekly', 'all_period') OR hours_type IS NULL), -- only when care_type is 'ambulante'
     care_name VARCHAR(255) NOT NULL,
     care_type VARCHAR(20) NOT NULL CHECK (care_type IN ('ambulante', 'accommodation')),
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE, 
@@ -522,8 +522,8 @@ CREATE TABLE contract (
     financing_option VARCHAR(50) NOT NULL CHECK (financing_option IN ('ZIN', 'PGB')) DEFAULT 'PGB',
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX contract_type_id_idx ON contract(type_id);
@@ -905,9 +905,8 @@ CREATE TABLE employee_profile (
     variable_contract_hours FLOAT NULL DEFAULT 0.0,
     contract_start_date DATE NULL,
     contract_end_date DATE NULL,
-    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type'
-
-
+    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type',
+    contract_rate DECIMAL(10,2) NULL DEFAULT 0.00
 );
 
 

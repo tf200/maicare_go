@@ -8443,6 +8443,10 @@ const docTemplate = `{
                 "contract_end_date": {
                     "type": "string"
                 },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
+                },
                 "contract_start_date": {
                     "type": "string"
                 },
@@ -8462,6 +8466,10 @@ const docTemplate = `{
             "properties": {
                 "contract_end_date": {
                     "type": "string"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
                 },
                 "contract_start_date": {
                     "type": "string"
@@ -9443,10 +9451,13 @@ const docTemplate = `{
                 "care_type",
                 "financing_act",
                 "financing_option",
-                "hours_type",
-                "price_frequency"
+                "price_time_unit"
             ],
             "properties": {
+                "VAT": {
+                    "type": "integer",
+                    "example": 21
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -9489,22 +9500,17 @@ const docTemplate = `{
                     "example": "ZIN"
                 },
                 "hours": {
-                    "type": "integer",
+                    "type": "number",
                     "example": 40
                 },
                 "hours_type": {
-                    "type": "string",
-                    "enum": [
-                        "weekly",
-                        "all_period"
-                    ],
-                    "example": "weekly"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number",
                     "example": 100.5
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string",
                     "enum": [
                         "minute",
@@ -9528,10 +9534,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
-                "tax": {
-                    "type": "integer",
-                    "example": 21
-                },
                 "type_id": {
                     "type": "integer",
                     "example": 1
@@ -9541,6 +9543,9 @@ const docTemplate = `{
         "api.CreateContractResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -9556,7 +9561,7 @@ const docTemplate = `{
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "departure_reason": {
@@ -9575,7 +9580,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -9586,7 +9591,7 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -9601,13 +9606,10 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 }
             }
@@ -10841,6 +10843,27 @@ const docTemplate = `{
                 },
                 "risk_weapon_possession": {
                     "type": "boolean"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -11046,6 +11069,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -11894,6 +11938,9 @@ const docTemplate = `{
         "api.GetClientContractResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -11909,7 +11956,7 @@ const docTemplate = `{
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "departure_reason": {
@@ -11928,7 +11975,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -11939,7 +11986,7 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -11954,13 +12001,10 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -12276,6 +12320,10 @@ const docTemplate = `{
             "properties": {
                 "contract_end_date": {
                     "type": "string"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
                 },
                 "contract_start_date": {
                     "type": "string"
@@ -13091,6 +13139,27 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -13610,6 +13679,9 @@ const docTemplate = `{
         "api.ListClientContractsResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -13625,7 +13697,7 @@ const docTemplate = `{
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "departure_reason": {
@@ -13644,7 +13716,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -13655,7 +13727,7 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -13670,13 +13742,10 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -14027,7 +14096,7 @@ const docTemplate = `{
                 "client_last_name": {
                     "type": "string"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "end_date": {
@@ -14045,7 +14114,7 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "sender_id": {
@@ -14862,6 +14931,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -17792,6 +17882,9 @@ const docTemplate = `{
         "api.UpdateContractRequest": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -17805,7 +17898,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "end_date": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "financing_act": {
                     "type": "string"
@@ -17814,15 +17907,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
                 },
                 "price": {
-                    "$ref": "#/definitions/pgtype.Numeric"
+                    "type": "number"
                 },
-                "price_frequency": {
+                "price_time_unit": {
                     "type": "string"
                 },
                 "reminder_period": {
@@ -17832,13 +17925,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "start_date": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
-                },
-                "tax": {
-                    "type": "integer"
                 },
                 "type_id": {
                     "type": "integer"
@@ -17848,6 +17938,9 @@ const docTemplate = `{
         "api.UpdateContractResponse": {
             "type": "object",
             "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
                 "attachment_ids": {
                     "type": "array",
                     "items": {
@@ -17863,7 +17956,7 @@ const docTemplate = `{
                 "client_id": {
                     "type": "integer"
                 },
-                "created": {
+                "created_at": {
                     "type": "string"
                 },
                 "departure_reason": {
@@ -17882,7 +17975,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "hours": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "hours_type": {
                     "type": "string"
@@ -17908,13 +18001,10 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "tax": {
-                    "type": "integer"
-                },
                 "type_id": {
                     "type": "integer"
                 },
-                "updated": {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -18694,6 +18784,27 @@ const docTemplate = `{
                 },
                 "risk_weapon_possession": {
                     "type": "boolean"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -18899,6 +19010,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -19219,9 +19351,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "big.Int": {
-            "type": "object"
         },
         "pagination.Response-api_ListAllIncidentsResponse": {
             "type": "object",
@@ -19646,26 +19775,6 @@ const docTemplate = `{
                 "Finite",
                 "NegativeInfinity"
             ]
-        },
-        "pgtype.Numeric": {
-            "type": "object",
-            "properties": {
-                "exp": {
-                    "type": "integer"
-                },
-                "infinityModifier": {
-                    "$ref": "#/definitions/pgtype.InfinityModifier"
-                },
-                "int": {
-                    "$ref": "#/definitions/big.Int"
-                },
-                "naN": {
-                    "type": "boolean"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
         },
         "pgtype.Timestamp": {
             "type": "object",

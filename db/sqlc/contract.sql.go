@@ -18,9 +18,9 @@ INSERT INTO contract (
     start_date,
     end_date,
     reminder_period,
-    tax,
+    VAT,
     price,
-    price_frequency,
+    price_time_unit,
     hours,
     hours_type,
     care_name,
@@ -33,7 +33,7 @@ INSERT INTO contract (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 )
-RETURNING id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created
+RETURNING id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type CreateContractParams struct {
@@ -41,11 +41,11 @@ type CreateContractParams struct {
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
+	Vat             *int32             `json:"vat"`
 	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
-	HoursType       string             `json:"hours_type"`
+	PriceTimeUnit   string             `json:"price_time_unit"`
+	Hours           *float64           `json:"hours"`
+	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        int64              `json:"client_id"`
@@ -61,9 +61,9 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 		arg.StartDate,
 		arg.EndDate,
 		arg.ReminderPeriod,
-		arg.Tax,
+		arg.Vat,
 		arg.Price,
-		arg.PriceFrequency,
+		arg.PriceTimeUnit,
 		arg.Hours,
 		arg.HoursType,
 		arg.CareName,
@@ -82,9 +82,9 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 		&i.StartDate,
 		&i.EndDate,
 		&i.ReminderPeriod,
-		&i.Tax,
+		&i.Vat,
 		&i.Price,
-		&i.PriceFrequency,
+		&i.PriceTimeUnit,
 		&i.Hours,
 		&i.HoursType,
 		&i.CareName,
@@ -96,8 +96,8 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 		&i.FinancingOption,
 		&i.DepartureReason,
 		&i.DepartureReport,
-		&i.Updated,
-		&i.Created,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -127,7 +127,7 @@ func (q *Queries) DeleteContractType(ctx context.Context, id int64) error {
 }
 
 const getClientContract = `-- name: GetClientContract :one
-SELECT id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created FROM contract
+SELECT id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
 WHERE id = $1
 limit 1
 `
@@ -142,9 +142,9 @@ func (q *Queries) GetClientContract(ctx context.Context, id int64) (Contract, er
 		&i.StartDate,
 		&i.EndDate,
 		&i.ReminderPeriod,
-		&i.Tax,
+		&i.Vat,
 		&i.Price,
-		&i.PriceFrequency,
+		&i.PriceTimeUnit,
 		&i.Hours,
 		&i.HoursType,
 		&i.CareName,
@@ -156,14 +156,14 @@ func (q *Queries) GetClientContract(ctx context.Context, id int64) (Contract, er
 		&i.FinancingOption,
 		&i.DepartureReason,
 		&i.DepartureReport,
-		&i.Updated,
-		&i.Created,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getSenderContracts = `-- name: GetSenderContracts :many
-SELECT id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created FROM contract
+SELECT id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
 WHERE sender_id = $1
 `
 
@@ -183,9 +183,9 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 			&i.StartDate,
 			&i.EndDate,
 			&i.ReminderPeriod,
-			&i.Tax,
+			&i.Vat,
 			&i.Price,
-			&i.PriceFrequency,
+			&i.PriceTimeUnit,
 			&i.Hours,
 			&i.HoursType,
 			&i.CareName,
@@ -197,8 +197,8 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 			&i.FinancingOption,
 			&i.DepartureReason,
 			&i.DepartureReport,
-			&i.Updated,
-			&i.Created,
+			&i.UpdatedAt,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -212,14 +212,14 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 
 const listClientContracts = `-- name: ListClientContracts :many
 WITH client_contracts AS (
-    SELECT id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created FROM contract
+    SELECT id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
     WHERE client_id = $1
 )
 SELECT
     (SELECT COUNT(*) FROM client_contracts) AS total_count,
-    id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created
+    id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 FROM client_contracts
-ORDER BY created DESC
+ORDER BY created_at DESC
 LIMIT $2
 OFFSET $3
 `
@@ -238,11 +238,11 @@ type ListClientContractsRow struct {
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
+	Vat             *int32             `json:"vat"`
 	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
-	HoursType       string             `json:"hours_type"`
+	PriceTimeUnit   string             `json:"price_time_unit"`
+	Hours           *float64           `json:"hours"`
+	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        int64              `json:"client_id"`
@@ -252,8 +252,8 @@ type ListClientContractsRow struct {
 	FinancingOption string             `json:"financing_option"`
 	DepartureReason *string            `json:"departure_reason"`
 	DepartureReport *string            `json:"departure_report"`
-	Updated         pgtype.Timestamptz `json:"updated"`
-	Created         pgtype.Timestamptz `json:"created"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContractsParams) ([]ListClientContractsRow, error) {
@@ -273,9 +273,9 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 			&i.StartDate,
 			&i.EndDate,
 			&i.ReminderPeriod,
-			&i.Tax,
+			&i.Vat,
 			&i.Price,
-			&i.PriceFrequency,
+			&i.PriceTimeUnit,
 			&i.Hours,
 			&i.HoursType,
 			&i.CareName,
@@ -287,8 +287,8 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 			&i.FinancingOption,
 			&i.DepartureReason,
 			&i.DepartureReport,
-			&i.Updated,
-			&i.Created,
+			&i.UpdatedAt,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -332,12 +332,12 @@ WITH filtered_contracts AS (
         c.start_date,
         c.end_date,
         c.price,
-        c.price_frequency,
+        c.price_time_unit,
         c.care_name,
         c.care_type,
         c.financing_act,
         c.financing_option,
-        c.created,
+        c.created_at,
         s.name AS sender_name,
         cd.id AS client_id,
         cd.sender_id AS sender_id,
@@ -365,11 +365,11 @@ WITH filtered_contracts AS (
 )
 SELECT
     (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
-    id, status, start_date, end_date, price, price_frequency, care_name, care_type, financing_act, financing_option, created, sender_name, client_id, sender_id, client_first_name, client_last_name
+    id, status, start_date, end_date, price, price_time_unit, care_name, care_type, financing_act, financing_option, created_at, sender_name, client_id, sender_id, client_first_name, client_last_name
 FROM
     filtered_contracts
 ORDER BY
-    created DESC
+    created_at DESC
 LIMIT $1
 OFFSET $2
 `
@@ -391,12 +391,12 @@ type ListContractsRow struct {
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	Price           float64            `json:"price"`
-	PriceFrequency  string             `json:"price_frequency"`
+	PriceTimeUnit   string             `json:"price_time_unit"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	FinancingAct    string             `json:"financing_act"`
 	FinancingOption string             `json:"financing_option"`
-	Created         pgtype.Timestamptz `json:"created"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	SenderName      *string            `json:"sender_name"`
 	ClientID        int64              `json:"client_id"`
 	SenderID        *int64             `json:"sender_id"`
@@ -428,12 +428,12 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 			&i.StartDate,
 			&i.EndDate,
 			&i.Price,
-			&i.PriceFrequency,
+			&i.PriceTimeUnit,
 			&i.CareName,
 			&i.CareType,
 			&i.FinancingAct,
 			&i.FinancingOption,
-			&i.Created,
+			&i.CreatedAt,
 			&i.SenderName,
 			&i.ClientID,
 			&i.SenderID,
@@ -457,9 +457,9 @@ SET
     start_date = COALESCE($3, start_date),
     end_date = COALESCE($4, end_date),
     reminder_period = COALESCE($5, reminder_period),
-    tax = COALESCE($6, tax),
+    VAT = COALESCE($6, VAT),
     price = COALESCE($7, price),
-    price_frequency = COALESCE($8, price_frequency),
+    price_time_unit = COALESCE($8, price_time_unit),
     hours = COALESCE($9, hours),
     hours_type = COALESCE($10, hours_type),
     care_name = COALESCE($11, care_name),
@@ -470,7 +470,7 @@ SET
     financing_option = COALESCE($16, financing_option),
     status = COALESCE($17, status)
 WHERE id = $1
-RETURNING id, type_id, status, start_date, end_date, reminder_period, tax, price, price_frequency, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated, created
+RETURNING id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type UpdateContractParams struct {
@@ -479,10 +479,10 @@ type UpdateContractParams struct {
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  *int32             `json:"reminder_period"`
-	Tax             *int32             `json:"tax"`
-	Price           pgtype.Numeric     `json:"price"`
-	PriceFrequency  *string            `json:"price_frequency"`
-	Hours           *int32             `json:"hours"`
+	VAT             *int32             `json:"VAT"`
+	Price           *float64           `json:"price"`
+	PriceTimeUnit   *string            `json:"price_time_unit"`
+	Hours           *float64           `json:"hours"`
 	HoursType       *string            `json:"hours_type"`
 	CareName        *string            `json:"care_name"`
 	CareType        *string            `json:"care_type"`
@@ -500,9 +500,9 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 		arg.StartDate,
 		arg.EndDate,
 		arg.ReminderPeriod,
-		arg.Tax,
+		arg.VAT,
 		arg.Price,
-		arg.PriceFrequency,
+		arg.PriceTimeUnit,
 		arg.Hours,
 		arg.HoursType,
 		arg.CareName,
@@ -521,9 +521,9 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 		&i.StartDate,
 		&i.EndDate,
 		&i.ReminderPeriod,
-		&i.Tax,
+		&i.Vat,
 		&i.Price,
-		&i.PriceFrequency,
+		&i.PriceTimeUnit,
 		&i.Hours,
 		&i.HoursType,
 		&i.CareName,
@@ -535,8 +535,8 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 		&i.FinancingOption,
 		&i.DepartureReason,
 		&i.DepartureReport,
-		&i.Updated,
-		&i.Created,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }

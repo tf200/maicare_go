@@ -19,9 +19,9 @@ INSERT INTO contract (
     start_date,
     end_date,
     reminder_period,
-    tax,
+    VAT,
     price,
-    price_frequency,
+    price_time_unit,
     hours,
     hours_type,
     care_name,
@@ -45,7 +45,7 @@ SELECT
     (SELECT COUNT(*) FROM client_contracts) AS total_count,
     *
 FROM client_contracts
-ORDER BY created DESC
+ORDER BY created_at DESC
 LIMIT $2
 OFFSET $3;
 
@@ -57,9 +57,9 @@ SET
     start_date = COALESCE(sqlc.narg('start_date'), start_date),
     end_date = COALESCE(sqlc.narg('end_date'), end_date),
     reminder_period = COALESCE(sqlc.narg('reminder_period'), reminder_period),
-    tax = COALESCE(sqlc.narg('tax'), tax),
+    VAT = COALESCE(sqlc.narg('VAT'), VAT),
     price = COALESCE(sqlc.narg('price'), price),
-    price_frequency = COALESCE(sqlc.narg('price_frequency'), price_frequency),
+    price_time_unit = COALESCE(sqlc.narg('price_time_unit'), price_time_unit),
     hours = COALESCE(sqlc.narg('hours'), hours),
     hours_type = COALESCE(sqlc.narg('hours_type'), hours_type),
     care_name = COALESCE(sqlc.narg('care_name'), care_name),
@@ -89,12 +89,12 @@ WITH filtered_contracts AS (
         c.start_date,
         c.end_date,
         c.price,
-        c.price_frequency,
+        c.price_time_unit,
         c.care_name,
         c.care_type,
         c.financing_act,
         c.financing_option,
-        c.created,
+        c.created_at,
         s.name AS sender_name,
         cd.id AS client_id,
         cd.sender_id AS sender_id,
@@ -126,6 +126,6 @@ SELECT
 FROM
     filtered_contracts
 ORDER BY
-    created DESC
+    created_at DESC
 LIMIT $1
 OFFSET $2;

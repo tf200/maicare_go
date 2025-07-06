@@ -40,9 +40,9 @@ func TestListContractType(t *testing.T) {
 }
 
 func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contract {
-	priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
+	// priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
 	hoursType := []string{"weekly", "all_period"}
-	careType := []string{"ambulante", "accommodation"}
+	// careType := []string{"ambulante", "accommodation"}
 	financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
 	financingOption := []string{"ZIN", "PGB"}
 
@@ -54,13 +54,13 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		EndDate:         pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
 		ReminderPeriod:  10,
-		Tax:             util.Int32Ptr(15),
+		Vat:             util.Int32Ptr(15),
 		Price:           5.58,
-		PriceFrequency:  util.RandomEnum(priceFrequency),
-		Hours:           util.Int32Ptr(100),
-		HoursType:       util.RandomEnum(hoursType),
+		PriceTimeUnit:   "minute", // util.RandomEnum(priceFrequency),
+		Hours:           util.Float64Ptr(100),
+		HoursType:       util.StringPtr(util.RandomEnum(hoursType)),
 		CareName:        "Test Care",
-		CareType:        util.RandomEnum(careType),
+		CareType:        "ambulante",
 		ClientID:        clientID,
 		SenderID:        senderID,
 		FinancingAct:    util.RandomEnum(financingAct),
@@ -73,9 +73,9 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 	require.NotEmpty(t, contract)
 	require.Equal(t, arg.TypeID, contract.TypeID)
 	require.Equal(t, arg.ReminderPeriod, contract.ReminderPeriod)
-	require.Equal(t, arg.Tax, contract.Tax)
+	require.Equal(t, arg.Vat, contract.Vat)
 	require.Equal(t, arg.Price, contract.Price)
-	require.Equal(t, arg.PriceFrequency, contract.PriceFrequency)
+	require.Equal(t, arg.PriceTimeUnit, contract.PriceTimeUnit)
 	require.Equal(t, arg.Hours, contract.Hours)
 	require.Equal(t, arg.HoursType, contract.HoursType)
 	require.Equal(t, arg.CareName, contract.CareName)
@@ -103,9 +103,9 @@ func TestUpdateContract(t *testing.T) {
 		StartDate:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		EndDate:        pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
 		ReminderPeriod: util.Int32Ptr(10),
-		Tax:            util.Int32Ptr(15),
-		PriceFrequency: util.StringPtr("monthly"),
-		Hours:          util.Int32Ptr(100),
+		VAT:            util.Int32Ptr(15),
+		PriceTimeUnit:  util.StringPtr("monthly"),
+		Hours:          util.Float64Ptr(100),
 		HoursType:      util.StringPtr("all_period"),
 		CareName:       util.StringPtr("Test Care"),
 		CareType:       util.StringPtr("accommodation"),
@@ -117,9 +117,9 @@ func TestUpdateContract(t *testing.T) {
 	require.NotEmpty(t, contract2)
 	require.Equal(t, arg.ID, contract2.ID)
 	require.Equal(t, arg.ReminderPeriod, contract2.ReminderPeriod)
-	require.Equal(t, arg.Tax, contract2.Tax)
+	require.Equal(t, arg.VAT, contract2.Vat)
 	require.Equal(t, arg.Price, contract2.Price)
-	require.Equal(t, arg.PriceFrequency, contract2.PriceFrequency)
+	require.Equal(t, arg.PriceTimeUnit, contract2.PriceTimeUnit)
 	require.Equal(t, arg.Hours, contract2.Hours)
 	require.Equal(t, arg.HoursType, contract2.HoursType)
 	require.Equal(t, arg.CareName, contract2.CareName)
@@ -138,9 +138,9 @@ func TestGetClientContract(t *testing.T) {
 	require.Equal(t, contract.ID, contract2.ID)
 	require.Equal(t, contract.TypeID, contract2.TypeID)
 	require.Equal(t, contract.ReminderPeriod, contract2.ReminderPeriod)
-	require.Equal(t, contract.Tax, contract2.Tax)
+	require.Equal(t, contract.Vat, contract2.Vat)
 	require.Equal(t, contract.Price, contract2.Price)
-	require.Equal(t, contract.PriceFrequency, contract2.PriceFrequency)
+	require.Equal(t, contract.PriceTimeUnit, contract2.PriceTimeUnit)
 	require.Equal(t, contract.Hours, contract2.Hours)
 	require.Equal(t, contract.HoursType, contract2.HoursType)
 	require.Equal(t, contract.CareName, contract2.CareName)

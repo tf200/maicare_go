@@ -86,11 +86,20 @@ WITH inserted_assignment AS (
 -- Select the columns from the inserted row AND join to get the user_id
 SELECT
     ia.*,  -- Select all columns from the inserted_assignment CTE
-    ep.user_id -- Select the user_id from the employee_profile table
+    ep.user_id, -- Select the user_id from the employee_profile table
+    cl.first_name AS client_first_name,
+    cl.last_name AS client_last_name,
+    l.name AS client_location_name
 FROM
     inserted_assignment ia
 JOIN
-    employee_profile ep ON ia.employee_id = ep.id; -- Join based on employee_id
+    employee_profile ep ON ia.employee_id = ep.id -- Join based on employee_id
+JOIN
+    client_details cl ON ia.client_id = cl.id
+LEFT JOIN
+    location l ON cl.location_id = l.id; -- Join to get the client location name
+
+
 
 
 -- name: ListAssignedEmployees :many

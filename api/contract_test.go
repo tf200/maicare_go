@@ -148,13 +148,13 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 		StartDate:       pgtype.Timestamptz{Time: time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC), Valid: true},
 		EndDate:         pgtype.Timestamptz{Time: time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC), Valid: true},
 		ReminderPeriod:  10,
-		Tax:             util.Int32Ptr(15),
+		Vat:             util.Int32Ptr(15),
 		Price:           5.58,
-		PriceFrequency:  util.RandomEnum(PriceFrequency),
-		Hours:           util.Int32Ptr(100),
-		HoursType:       util.RandomEnum(HoursType),
+		PriceTimeUnit:   util.RandomEnum(PriceFrequency),
+		Hours:           util.Float64Ptr(100),
+		HoursType:       util.StringPtr(util.RandomEnum(HoursType)),
 		CareName:        "Test Care",
-		CareType:        util.RandomEnum(CareType),
+		CareType:        "ambulante",
 		ClientID:        clientID,
 		SenderID:        senderID,
 		FinancingAct:    util.RandomEnum(FinancingAct),
@@ -167,9 +167,9 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 	require.NotEmpty(t, contract)
 	require.Equal(t, arg.TypeID, contract.TypeID)
 	require.Equal(t, arg.ReminderPeriod, contract.ReminderPeriod)
-	require.Equal(t, arg.Tax, contract.Tax)
+	require.Equal(t, arg.Vat, contract.Vat)
 	require.Equal(t, arg.Price, contract.Price)
-	require.Equal(t, arg.PriceFrequency, contract.PriceFrequency)
+	require.Equal(t, arg.PriceTimeUnit, contract.PriceTimeUnit)
 	require.Equal(t, arg.Hours, contract.Hours)
 	require.Equal(t, arg.HoursType, contract.HoursType)
 	require.Equal(t, arg.CareName, contract.CareName)
@@ -204,13 +204,13 @@ func TestCreateClientContractApi(t *testing.T) {
 					StartDate:       time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC),
 					EndDate:         time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC),
 					ReminderPeriod:  10,
-					Tax:             util.Int32Ptr(15),
+					Vat:             util.Int32Ptr(15),
 					Price:           5.58,
-					PriceFrequency:  util.RandomEnum(PriceFrequency),
-					Hours:           util.Int32Ptr(100),
-					HoursType:       util.RandomEnum(HoursType),
+					PriceTimeUnit:   util.RandomEnum(PriceFrequency),
+					Hours:           util.Float64Ptr(100),
+					HoursType:       util.StringPtr(util.RandomEnum(HoursType)),
 					CareName:        "Test Care",
-					CareType:        util.RandomEnum(CareType),
+					CareType:        "ambulante",
 					SenderID:        client.SenderID,
 					FinancingAct:    util.RandomEnum(FinancingAct),
 					FinancingOption: util.RandomEnum(FinancingOption),
@@ -231,11 +231,12 @@ func TestCreateClientContractApi(t *testing.T) {
 				require.NotEmpty(t, response.Data.ID)
 				require.Equal(t, &contractType.ID, response.Data.TypeID)
 				require.Equal(t, int32(10), response.Data.ReminderPeriod)
-				require.Equal(t, util.Int32Ptr(15), response.Data.Tax)
+				require.Equal(t, util.Int32Ptr(15), response.Data.Vat)
 				require.Equal(t, 5.58, response.Data.Price)
-				require.Contains(t, PriceFrequency, response.Data.PriceFrequency)
-				require.Equal(t, util.Int32Ptr(100), response.Data.Hours)
-				require.Contains(t, HoursType, response.Data.HoursType)
+				require.Contains(t, PriceFrequency, response.Data.PriceTimeUnit)
+				require.Equal(t, util.Float64Ptr(100), response.Data.Hours)
+				require.NotNil(t, response.Data.HoursType)
+				require.Contains(t, HoursType, *response.Data.HoursType)
 				require.Equal(t, "Test Care", response.Data.CareName)
 				require.Contains(t, CareType, response.Data.CareType)
 				require.Equal(t, client.ID, response.Data.ClientID)
@@ -337,11 +338,12 @@ func TestGetClientContract(t *testing.T) {
 				require.Equal(t, contract.ID, response.Data.ID)
 				require.Equal(t, contract.TypeID, response.Data.TypeID)
 				require.Equal(t, int32(10), response.Data.ReminderPeriod)
-				require.Equal(t, util.Int32Ptr(15), response.Data.Tax)
+				require.Equal(t, util.Int32Ptr(15), response.Data.Vat)
 				require.Equal(t, 5.58, response.Data.Price)
-				require.Contains(t, PriceFrequency, response.Data.PriceFrequency)
-				require.Equal(t, util.Int32Ptr(100), response.Data.Hours)
-				require.Contains(t, HoursType, response.Data.HoursType)
+				require.Contains(t, PriceFrequency, response.Data.PriceTimeUnit)
+				require.Equal(t, util.Float64Ptr(100), response.Data.Hours)
+				require.NotNil(t, response.Data.HoursType)
+				require.Contains(t, HoursType, *response.Data.HoursType)
 				require.Equal(t, "Test Care", response.Data.CareName)
 				require.Contains(t, CareType, response.Data.CareType)
 				require.Equal(t, contract.ClientID, response.Data.ClientID)
