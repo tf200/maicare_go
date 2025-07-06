@@ -92,6 +92,44 @@ func (q *Queries) Enable2Fa(ctx context.Context, arg Enable2FaParams) error {
 	return err
 }
 
+const getAllAdminUsers = `-- name: GetAllAdminUsers :many
+SELECT id, password, last_login, email, role_id, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes FROM custom_user
+WHERE role_id = (SELECT id FROM roles WHERE name = 'admin')
+`
+
+func (q *Queries) GetAllAdminUsers(ctx context.Context) ([]CustomUser, error) {
+	rows, err := q.db.Query(ctx, getAllAdminUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CustomUser
+	for rows.Next() {
+		var i CustomUser
+		if err := rows.Scan(
+			&i.ID,
+			&i.Password,
+			&i.LastLogin,
+			&i.Email,
+			&i.RoleID,
+			&i.IsActive,
+			&i.DateJoined,
+			&i.ProfilePicture,
+			&i.TwoFactorEnabled,
+			&i.TwoFactorSecret,
+			&i.TwoFactorSecretTemp,
+			&i.RecoveryCodes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTemp2FaSecret = `-- name: GetTemp2FaSecret :one
 SELECT two_factor_secret_temp FROM custom_user
 WHERE id = $1 LIMIT 1

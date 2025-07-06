@@ -102,6 +102,40 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 	return i, err
 }
 
+const createContractReminder = `-- name: CreateContractReminder :one
+INSERT INTO contract_reminder (
+    contract_id,
+    reminder_sent_at,
+    reminder_type
+) VALUES (
+    $1, $2,
+    CASE WHEN NOT EXISTS (
+        SELECT 1 FROM contract_reminder
+        WHERE contract_id = $1
+        AND reminder_sent_at IS NOT NULL
+    ) THEN 'initial' 
+    ELSE 'follow_up' END
+)
+RETURNING id, contract_id, reminder_sent_at, reminder_type
+`
+
+type CreateContractReminderParams struct {
+	ContractID     int64              `json:"contract_id"`
+	ReminderSentAt pgtype.Timestamptz `json:"reminder_sent_at"`
+}
+
+func (q *Queries) CreateContractReminder(ctx context.Context, arg CreateContractReminderParams) (ContractReminder, error) {
+	row := q.db.QueryRow(ctx, createContractReminder, arg.ContractID, arg.ReminderSentAt)
+	var i ContractReminder
+	err := row.Scan(
+		&i.ID,
+		&i.ContractID,
+		&i.ReminderSentAt,
+		&i.ReminderType,
+	)
+	return i, err
+}
+
 const createContractType = `-- name: CreateContractType :one
 INSERT INTO contract_type (name)
 VALUES
@@ -439,6 +473,89 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 			&i.SenderID,
 			&i.ClientFirstName,
 			&i.ClientLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listContractsTobeReminded = `-- name: ListContractsTobeReminded :many
+SELECT c.id,
+       c.care_name,
+       c.client_id,
+       c.start_date,
+       c.end_date,
+       c.reminder_period,
+       c.care_type,
+       cd.id AS client_id,
+         cd.first_name AS client_first_name,
+         cd.last_name AS client_last_name,
+
+       (c.end_date - INTERVAL '1 day' * c.reminder_period) AS reminder_date,
+
+       COALESCE(MAX(cr.reminder_sent_at), '1970-01-01'::TIMESTAMPTZ)::TIMESTAMPTZ AS last_reminder_date
+
+FROM contract c
+JOIN client_details cd ON c.client_id = cd.id
+LEFT JOIN contract_reminder cr ON c.id = cr.contract_id
+    AND cr.reminder_sent_at IS NOT NULL
+
+WHERE 
+    c.status = 'approved'
+
+
+    AND CURRENT_DATE >= (c.end_date - INTERVAL '1 day' * c.reminder_period)::date
+    AND c.end_date > CURRENT_TIMESTAMP
+
+GROUP BY c.id, c.care_name, c.client_id, c.end_date, c.reminder_period
+HAVING 
+    (MAX(cr.reminder_sent_at) IS NULL OR
+      MAX(cr.reminder_sent_at) < CURRENT_TIMESTAMP - INTERVAL '7 days')
+ORDER BY c.end_date ASC
+`
+
+type ListContractsTobeRemindedRow struct {
+	ID               int64              `json:"id"`
+	CareName         string             `json:"care_name"`
+	ClientID         int64              `json:"client_id"`
+	StartDate        pgtype.Timestamptz `json:"start_date"`
+	EndDate          pgtype.Timestamptz `json:"end_date"`
+	ReminderPeriod   int32              `json:"reminder_period"`
+	CareType         string             `json:"care_type"`
+	ClientID_2       int64              `json:"client_id_2"`
+	ClientFirstName  string             `json:"client_first_name"`
+	ClientLastName   string             `json:"client_last_name"`
+	ReminderDate     int32              `json:"reminder_date"`
+	LastReminderDate pgtype.Timestamptz `json:"last_reminder_date"`
+}
+
+func (q *Queries) ListContractsTobeReminded(ctx context.Context) ([]ListContractsTobeRemindedRow, error) {
+	rows, err := q.db.Query(ctx, listContractsTobeReminded)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListContractsTobeRemindedRow
+	for rows.Next() {
+		var i ListContractsTobeRemindedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CareName,
+			&i.ClientID,
+			&i.StartDate,
+			&i.EndDate,
+			&i.ReminderPeriod,
+			&i.CareType,
+			&i.ClientID_2,
+			&i.ClientFirstName,
+			&i.ClientLastName,
+			&i.ReminderDate,
+			&i.LastReminderDate,
 		); err != nil {
 			return nil, err
 		}

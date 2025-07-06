@@ -2,9 +2,14 @@ package async
 
 import (
 	"crypto/tls"
+	"log"
 	"time"
 
 	"github.com/hibiken/asynq"
+)
+
+const (
+	TypeContractReminder = "contract:reminder"
 )
 
 type Scheduler struct {
@@ -24,6 +29,19 @@ func NewScheduler(redisHost, redisUser, redisPassword string, tls *tls.Config) *
 		}, nil)
 	return &Scheduler{Scheduler: sch}
 
+}
+
+func (s *Scheduler) ScheduleContractReminder() error {
+	task := asynq.NewTask(TypeContractReminder, nil)
+
+	entryID, err := s.Scheduler.Register("0 0 * * *", task)
+	if err != nil {
+		return err
+	}
+	// Optional: log the entry ID for debugging
+	log.Printf("Scheduled contract reminder with entry ID: %s", entryID)
+
+	return nil
 }
 
 func (s *Scheduler) Start() error {

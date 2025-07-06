@@ -532,6 +532,14 @@ CREATE INDEX contract_sender_id_idx ON contract(sender_id);
 CREATE INDEX contract_status_idx ON contract(status);
 
 
+CREATE TABLE contract_reminder (
+    id BIGSERIAL PRIMARY KEY,
+    contract_id BIGINT NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
+    reminder_sent_at TIMESTAMPTZ NULL,
+    reminder_type VARCHAR(20) NOT NULL CHECK (reminder_type IN ('initial', 'follow_up', 'none')) DEFAULT 'none'
+);
+
+
 CREATE TABLE contract_working_hours (
     id BIGSERIAL PRIMARY KEY,
     contract_id BIGINT NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
@@ -1780,7 +1788,8 @@ CREATE TABLE notifications (
         'appointment_update',
         'new_client_assigned',
         'client_goal_update',
-        'incident_report'
+        'incident_report',
+        'client_contract_reminder'
     )),
     entity_id VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,

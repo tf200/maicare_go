@@ -43,3 +43,9 @@ SET two_factor_secret = $2,
     two_factor_enabled = true,
     recovery_codes = $3
 WHERE id = $1;
+
+
+-- name: GetAllAdminUsers :many
+SELECT * FROM custom_user
+WHERE role_id = (SELECT id FROM roles WHERE name = 'admin')
+;

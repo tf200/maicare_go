@@ -8,6 +8,7 @@ import (
 	"log"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
+	"maicare_go/notification"
 	"maicare_go/pdf"
 	"time"
 
@@ -292,4 +293,92 @@ func (processor *AsynqServer) ProcessRegistrationFormTask(ctx context.Context, t
 	}
 
 	return nil
+}
+
+func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.Task) error {
+	contractsToBeReminded, err := c.store.ListContractsTobeReminded(ctx)
+	if err != nil {
+		log.Printf("Failed to list contracts to be reminded: %v", err)
+		return fmt.Errorf("failed to list contracts to be reminded: %v: %w", err, asynq.SkipRetry)
+	}
+
+	if len(contractsToBeReminded) == 0 {
+		log.Println("No contracts to be reminded")
+		return nil
+	}
+
+	for _, contract := range contractsToBeReminded {
+		log.Printf("Processing reminder for contract ID: %d", contract.ID)
+
+		reminder, err := c.store.CreateContractReminder(ctx, db.CreateContractReminderParams{
+			ContractID:     contract.ID,
+			ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		},
+		)
+
+		if err != nil {
+			log.Printf("Failed to create contract reminder for contract ID %d: %v", contract.ID, err)
+			return fmt.Errorf("failed to create contract reminder for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)
+		}
+
+		log.Printf("Created contract reminder with ID: %d for contract ID: %d", reminder.ID, contract.ID)
+
+		notificationData := notification.ClientContractReminderData{
+			ClientID:           contract.ClientID,
+			ClientFirstName:    contract.ClientFirstName,
+			ClientLastName:     contract.ClientLastName,
+			ContractID:         contract.ID,
+			CareType:           contract.CareType,
+			ContractStart:      contract.StartDate.Time,
+			ContractEnd:        contract.EndDate.Time,
+			ReminderType:       reminder.ReminderType,
+			LastReminderSentAt: &reminder.ReminderSentAt.Time,
+		}
+
+		notificationDataBytes, err := json.Marshal(notificationData)
+		if err != nil {
+			log.Printf("Failed to marshal notification data for contract ID %d: %v", contract.ID, err)
+			return fmt.Errorf("failed to marshal notification data for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)
+		}
+
+		adminUsers, err := c.store.GetAllAdminUsers(ctx)
+		if err != nil {
+			log.Printf("Failed to get admin users: %v", err)
+			return fmt.Errorf("failed to get admin users: %v: %w", err, asynq.SkipRetry)
+		}
+
+		if len(adminUsers) == 0 {
+			log.Println("No admin users found to notify")
+			return nil // No admin users to notify, but we can still create the reminder
+		}
+
+		notificationPayload := notification.NotificationPayload{
+			RecipientUserIDs: make([]int64, len(adminUsers)),
+			Type:             notification.TypeClientContractReminder,
+			Data:             notificationDataBytes,
+			CreatedAt:        time.Now(),
+		}
+		for i, user := range adminUsers {
+			notificationPayload.RecipientUserIDs[i] = user.ID
+		}
+
+		notificationPayloadBytes, err := json.Marshal(notificationPayload)
+		if err != nil {
+			log.Printf("Failed to marshal notification payload for contract ID %d: %v", contract.ID, err)
+			return fmt.Errorf("failed to marshal notification payload for contract ID %d:%v: %w", contract.ID, err, asynq.SkipRetry)
+
+		}
+
+		err = c.notificationService.CreateAndDeliver(ctx, notificationPayloadBytes)
+		if err != nil {
+			log.Printf("Failed to deliver notification for contract ID %d: %v", contract.ID, err)
+			return fmt.Errorf("failed to deliver notification for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)
+		}
+		log.Printf("Notification for contract ID %d delivered successfully", contract.ID)
+
+	}
+
+	log.Println("All contract reminders processed successfully")
+	return nil
+
 }

@@ -396,6 +396,13 @@ type ContractAttachment struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type ContractReminder struct {
+	ID             int64              `json:"id"`
+	ContractID     int64              `json:"contract_id"`
+	ReminderSentAt pgtype.Timestamptz `json:"reminder_sent_at"`
+	ReminderType   string             `json:"reminder_type"`
+}
+
 type ContractType struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`

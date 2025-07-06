@@ -129,3 +129,59 @@ ORDER BY
     created_at DESC
 LIMIT $1
 OFFSET $2;
+
+
+
+
+-- name: ListContractsTobeReminded :many
+SELECT c.id,
+       c.care_name,
+       c.client_id,
+       c.start_date,
+       c.end_date,
+       c.reminder_period,
+       c.care_type,
+       cd.id AS client_id,
+         cd.first_name AS client_first_name,
+         cd.last_name AS client_last_name,
+
+       (c.end_date - INTERVAL '1 day' * c.reminder_period) AS reminder_date,
+
+       COALESCE(MAX(cr.reminder_sent_at), '1970-01-01'::TIMESTAMPTZ)::TIMESTAMPTZ AS last_reminder_date
+
+FROM contract c
+JOIN client_details cd ON c.client_id = cd.id
+LEFT JOIN contract_reminder cr ON c.id = cr.contract_id
+    AND cr.reminder_sent_at IS NOT NULL
+
+WHERE 
+    c.status = 'approved'
+
+
+    AND CURRENT_DATE >= (c.end_date - INTERVAL '1 day' * c.reminder_period)::date
+    AND c.end_date > CURRENT_TIMESTAMP
+
+GROUP BY c.id, c.care_name, c.client_id, c.end_date, c.reminder_period
+HAVING 
+    (MAX(cr.reminder_sent_at) IS NULL OR
+      MAX(cr.reminder_sent_at) < CURRENT_TIMESTAMP - INTERVAL '7 days')
+ORDER BY c.end_date ASC;
+    
+
+
+
+-- name: CreateContractReminder :one
+INSERT INTO contract_reminder (
+    contract_id,
+    reminder_sent_at,
+    reminder_type
+) VALUES (
+    $1, $2,
+    CASE WHEN NOT EXISTS (
+        SELECT 1 FROM contract_reminder
+        WHERE contract_id = $1
+        AND reminder_sent_at IS NOT NULL
+    ) THEN 'initial' 
+    ELSE 'follow_up' END
+)
+RETURNING *;
