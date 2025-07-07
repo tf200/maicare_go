@@ -522,8 +522,8 @@ CREATE TABLE contract (
     financing_option VARCHAR(50) NOT NULL CHECK (financing_option IN ('ZIN', 'PGB')) DEFAULT 'PGB',
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX contract_type_id_idx ON contract(type_id);
