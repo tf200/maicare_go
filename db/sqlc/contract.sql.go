@@ -161,14 +161,51 @@ func (q *Queries) DeleteContractType(ctx context.Context, id int64) error {
 }
 
 const getClientContract = `-- name: GetClientContract :one
-SELECT id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
-WHERE id = $1
+SELECT c.id, c.type_id, c.status, c.start_date, c.end_date, c.reminder_period, c.vat, c.price, c.price_time_unit, c.hours, c.hours_type, c.care_name, c.care_type, c.client_id, c.sender_id, c.attachment_ids, c.financing_act, c.financing_option, c.departure_reason, c.departure_report, c.updated_at, c.created_at,
+        ct.name AS contract_type_name,
+        cd.first_name AS client_first_name,
+        cd.last_name AS client_last_name,
+        s.name AS sender_name
+FROM contract c
+JOIN contract_type ct ON c.type_id = ct.id
+JOIN client_details cd ON c.client_id = cd.id
+LEFT JOIN sender s ON c.sender_id = s.id
+WHERE c.id = $1
 limit 1
 `
 
-func (q *Queries) GetClientContract(ctx context.Context, id int64) (Contract, error) {
+type GetClientContractRow struct {
+	ID               int64              `json:"id"`
+	TypeID           *int64             `json:"type_id"`
+	Status           string             `json:"status"`
+	StartDate        pgtype.Timestamptz `json:"start_date"`
+	EndDate          pgtype.Timestamptz `json:"end_date"`
+	ReminderPeriod   int32              `json:"reminder_period"`
+	Vat              *int32             `json:"vat"`
+	Price            float64            `json:"price"`
+	PriceTimeUnit    string             `json:"price_time_unit"`
+	Hours            *float64           `json:"hours"`
+	HoursType        *string            `json:"hours_type"`
+	CareName         string             `json:"care_name"`
+	CareType         string             `json:"care_type"`
+	ClientID         int64              `json:"client_id"`
+	SenderID         *int64             `json:"sender_id"`
+	AttachmentIds    []uuid.UUID        `json:"attachment_ids"`
+	FinancingAct     string             `json:"financing_act"`
+	FinancingOption  string             `json:"financing_option"`
+	DepartureReason  *string            `json:"departure_reason"`
+	DepartureReport  *string            `json:"departure_report"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	ContractTypeName string             `json:"contract_type_name"`
+	ClientFirstName  string             `json:"client_first_name"`
+	ClientLastName   string             `json:"client_last_name"`
+	SenderName       *string            `json:"sender_name"`
+}
+
+func (q *Queries) GetClientContract(ctx context.Context, id int64) (GetClientContractRow, error) {
 	row := q.db.QueryRow(ctx, getClientContract, id)
-	var i Contract
+	var i GetClientContractRow
 	err := row.Scan(
 		&i.ID,
 		&i.TypeID,
@@ -192,6 +229,10 @@ func (q *Queries) GetClientContract(ctx context.Context, id int64) (Contract, er
 		&i.DepartureReport,
 		&i.UpdatedAt,
 		&i.CreatedAt,
+		&i.ContractTypeName,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.SenderName,
 	)
 	return i, err
 }

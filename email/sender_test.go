@@ -3,6 +3,7 @@ package email
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -47,5 +48,24 @@ func TestSendAcceptedRegistrationForm(t *testing.T) {
 		AppointmentLocation: "Main Office - Room 101",
 	}
 	err := testBrevo.SendAcceptedRegistrationForm(context.Background(), []string{"farjiataha@gmail.com"}, arg)
+	require.NoError(t, err)
+}
+
+func TestSendClientContractReminder(t *testing.T) {
+	arg := ClientContractReminder{
+		ClientID:           1,
+		ClientFirstName:    "Alice",
+		ClientLastName:     "Doe",
+		ContractID:         12345,
+		CareType:           "ambulante",
+		ContractStartDate:  time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC),
+		ContractEndDate:    time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+		ContractStatus:     "active",
+		ReminderType:       "initial",
+		LastReminderSentAt: nil,
+		CurrentDate:        time.Now(),
+		CurrentYear:        time.Now().Year(),
+	}
+	err := testBrevo.SendClientContractReminder(context.Background(), []string{"farjiataha@gmail.com"}, arg)
 	require.NoError(t, err)
 }

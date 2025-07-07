@@ -472,6 +472,7 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 type GetClientContractResponse struct {
 	ID              int64       `json:"id"`
 	TypeID          *int64      `json:"type_id"`
+	TypeName        string      `json:"type_name"`
 	Status          string      `json:"status"`
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
@@ -484,7 +485,10 @@ type GetClientContractResponse struct {
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        int64       `json:"client_id"`
+	ClientFirstName string      `json:"client_first_name"`
+	ClientLastName  string      `json:"client_last_name"`
 	SenderID        *int64      `json:"sender_id"`
+	SenderName      *string     `json:"sender_name"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    string      `json:"financing_act"`
 	FinancingOption string      `json:"financing_option"`
@@ -519,6 +523,7 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 	res := SuccessResponse(GetClientContractResponse{
 		ID:              contract.ID,
 		TypeID:          contract.TypeID,
+		TypeName:        contract.ContractTypeName,
 		Status:          contract.Status,
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
@@ -531,7 +536,10 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 		CareName:        contract.CareName,
 		CareType:        contract.CareType,
 		ClientID:        contract.ClientID,
+		ClientFirstName: contract.ClientFirstName,
+		ClientLastName:  contract.ClientLastName,
 		SenderID:        contract.SenderID,
+		SenderName:      contract.SenderName,
 		AttachmentIds:   contract.AttachmentIds,
 		FinancingAct:    contract.FinancingAct,
 		FinancingOption: contract.FinancingOption,

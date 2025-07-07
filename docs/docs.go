@@ -11953,8 +11953,14 @@ const docTemplate = `{
                 "care_type": {
                     "type": "string"
                 },
+                "client_first_name": {
+                    "type": "string"
+                },
                 "client_id": {
                     "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -11995,6 +12001,9 @@ const docTemplate = `{
                 "sender_id": {
                     "type": "integer"
                 },
+                "sender_name": {
+                    "type": "string"
+                },
                 "start_date": {
                     "type": "string"
                 },
@@ -12003,6 +12012,9 @@ const docTemplate = `{
                 },
                 "type_id": {
                     "type": "integer"
+                },
+                "type_name": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

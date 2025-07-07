@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"time"
 
 	brevo "github.com/getbrevo/brevo-go/lib"
 
@@ -59,12 +60,26 @@ type Incident struct {
 
 type AcceptedRegitrationForm struct {
 	ReferrerName        string
-    ChildName          string
-    ChildBSN           string
-    AppointmentDate    string
-    AppointmentLocation string
+	ChildName           string
+	ChildBSN            string
+	AppointmentDate     string
+	AppointmentLocation string
 }
 
+type ClientContractReminder struct {
+	ClientID           int64
+	ClientFirstName    string
+	ClientLastName     string
+	ContractID         int64
+	CareType           string
+	ContractStartDate  time.Time
+	ContractEndDate    time.Time
+	ContractStatus     string
+	ReminderType       string
+	LastReminderSentAt *time.Time
+	CurrentDate        time.Time
+	CurrentYear        int
+}
 
 func NewSmtpConf(name, address, authentication, smtpHost string, smtpPort int) *SmtpConf {
 	return &SmtpConf{
@@ -221,11 +236,8 @@ func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident
 	return nil
 }
 
-
 //go:embed templates/accepted_registration_form.html
 var acceptedRegistrationFormTemplateFS embed.FS
-
-
 
 func (b *BrevoConf) SendAcceptedRegistrationForm(ctx context.Context, to []string, data AcceptedRegitrationForm) error {
 
@@ -265,6 +277,65 @@ func (b *BrevoConf) SendAcceptedRegistrationForm(ctx context.Context, to []strin
 		Sender:      &sender,
 		To:          recipients,
 		Subject:     "Accepted Registration Form",
+		HtmlContent: htmlContent,
+	}
+	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	if response.StatusCode != 201 {
+		return fmt.Errorf("failed to send email, status code: %d", response.StatusCode)
+	}
+	log.Printf("Email sent to %s", to)
+	log.Printf("Response: %s", result)
+	log.Printf("Response Status Code: %d", response.StatusCode)
+	log.Printf("Response Headers: %v", response.Header)
+	log.Printf("Response Body: %s", response.Body)
+
+	return nil
+}
+
+//go:embed templates/client_contract_reminder.html
+var clientContractReminderTemplateFS embed.FS
+
+func (b *BrevoConf) SendClientContractReminder(ctx context.Context, to []string, data ClientContractReminder) error {
+	if len(to) == 0 {
+		return errors.New("no recipient addresses provided")
+	}
+	if b.SenderName == "" || b.Senderemail == "" {
+		return errors.New("invalid sender configuration")
+	}
+	if b.ApiKey == "" {
+		return errors.New("invalid API key")
+	}
+
+	tmpl, err := template.ParseFS(clientContractReminderTemplateFS, "templates/client_contract_reminder.html")
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML template: %w", err)
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	htmlContent := body.String()
+	sender := brevo.SendSmtpEmailSender{
+		Name:  b.SenderName,
+		Email: b.Senderemail,
+	}
+	recipients := make([]brevo.SendSmtpEmailTo, 0, len(to))
+	for _, recipient := range to {
+		recipients = append(recipients, brevo.SendSmtpEmailTo{
+			Email: recipient,
+			Name:  recipient,
+		})
+	}
+	emailContent := brevo.SendSmtpEmail{
+		Sender:      &sender,
+		To:          recipients,
+		Subject:     "Client Contract Reminder",
 		HtmlContent: htmlContent,
 	}
 	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
