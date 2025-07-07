@@ -71,9 +71,12 @@ SELECT
     i.*,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
-    l.name AS location_name
+    l.name AS location_name,
+    c.first_name AS client_first_name,
+    c.last_name AS client_last_name
 FROM incident i
 JOIN employee_profile e ON i.employee_id = e.id
+JOIN client_details c ON i.client_id = c.id
 JOIN location l ON i.location_id = l.id
 WHERE i.id = $1 LIMIT 1;
 

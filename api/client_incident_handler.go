@@ -4,6 +4,7 @@ import (
 	"errors"
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
+	"maicare_go/notification"
 	"maicare_go/pagination"
 	"maicare_go/pdf"
 	"net/http"
@@ -1212,6 +1213,43 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 		return
 	}
 
+	notificationData := notification.NewIncidentReportData{
+		ID:                 incident.ID,
+		EmployeeID:         incident.EmployeeID,
+		EmployeeFirstName:  incident.EmployeeFirstName,
+		EmployeeLastName:   incident.EmployeeLastName,
+		LocationID:         incident.LocationID,
+		LocationName:       incident.LocationName,
+		ClientID:           incident.ClientID,
+		ClientFirstName:    incident.ClientFirstName,
+		ClientLastName:     incident.ClientLastName,
+		SeverityOfIncident: incident.SeverityOfIncident,
+	}
+
+	notificationDataBytes, err := json.Marshal(notificationData)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	receipients, err := server.store.GetAllAdminUsers(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var recipientUserIDs []int64
+	for _, user := range receipients {
+		recipientUserIDs = append(recipientUserIDs, user.ID)
+	}
+
+	server.asynqClient.EnqueueNotificationTask(ctx, async.NotificationPayload{
+		RecipientUserIDs: recipientUserIDs,
+		Type:             notification.TypeNewClientAssignment,
+		Data:             notificationDataBytes,
+		CreatedAt:        time.Now(),
+	})
+
 	incidentData := pdf.IncidentReportData{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
@@ -1256,6 +1294,8 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 		AdditionalAppointments:  incident.AdditionalAppointments,
 		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 		ClientID:                incident.ClientID,
+		ClientFirstName:         incident.ClientFirstName,
+		ClientLastName:          incident.ClientLastName,
 		LocationName:            incident.LocationName,
 	}
 

@@ -528,7 +528,7 @@ func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 
 	server.asynqClient.EnqueueNotificationTask(ctx, async.NotificationPayload{
 		RecipientUserIDs: []int64{assign.UserID},
-		Type:             "employee_assigned",
+		Type:             notification.TypeNewClientAssignment,
 		Data:             notificationDataBytes,
 		CreatedAt:        time.Now(),
 	})

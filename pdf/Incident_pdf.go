@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io"
 	"maicare_go/bucket"
+	"strings"
 	"time"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
@@ -60,13 +61,23 @@ type IncidentReportData struct {
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
 	ClientID                int64     `json:"client_id"`
+	ClientFirstName         string    `json:"client_firstname"`
+	ClientLastName          string    `json:"client_lastname"`
 	LocationName            string    `json:"location_name"`
 }
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
 func GenerateIncidentPDF(incidentData IncidentReportData) ([]byte, error) {
+
+	funcMap := template.FuncMap{
+		"lower": strings.ToLower,
+		"now": func() time.Time { // You might also need a 'now' function if it's not predefined
+			return time.Now().In(time.FixedZone("GMT+1", 1*60*60)) // Set to Tangier's timezone
+		},
+	}
+
 	// Parse and execute HTML template
-	templ, err := template.ParseFS(incidentTemplateFS, "templates/incident.html")
+	templ, err := template.New("incident.html").Funcs(funcMap).ParseFS(incidentTemplateFS, "templates/incident.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}

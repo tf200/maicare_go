@@ -87,7 +87,9 @@ func TestGenerateIncidentPDF(t *testing.T) {
 		EmployeeAbsenteeism:    "1_week",
 
 		// References
-		ClientID: 300,
+		ClientID:        300,
+		ClientFirstName: "Jane",
+		ClientLastName:  "Smith",
 	}
 
 	pdfBytes, err := GenerateAndUploadIncidentPDF(context.Background(), mockIncident, testb2Client)

@@ -1,332 +1,746 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 
 <head>
     <meta charset="UTF-8">
-    <title>Incident Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incidentrapport</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-            color: #333;
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        h1,
-        h2,
-        h3 {
-            color: #00539C;
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 30px;
+        }
+
+        .report-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Company header */
+        .company-header {
+            padding: 30px 40px;
+            background: #fff;
+            border-bottom: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-info h1 {
+            font-size: 22px;
+            color: #2c3e50;
             margin-bottom: 5px;
         }
 
+        .company-info p {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 3px;
+        }
+
+        .logo-placeholder {
+            width: 120px;
+            height: 80px;
+            background: #f8f9fa;
+            border: 1px dashed #d1d8e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #95a5a6;
+            font-size: 13px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Report header */
+        .report-header {
+            padding: 25px 40px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+
+        .report-header h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .report-id {
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Summary section */
+        .summary {
+            padding: 25px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-item p {
+            font-size: 15px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        /* Main content */
+        .content {
+            padding: 30px 40px;
+        }
+
         .section {
-            margin-bottom: 25px;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #eaeaea;
         }
 
-        .section p {
-            margin: 5px 0;
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        .section-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3498db;
         }
 
-        th,
-        td {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            vertical-align: top;
+        .section-header h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            font-weight: 500;
         }
 
-        .label {
-            font-weight: bold;
-            width: 35%;
+        /* Incident types - Improved contrast */
+        .incident-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
 
-        .value {
-            width: 65%;
+        .type-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        .inline-list span {
+        .type-card.active {
+            background: #e8f5e8;
+            border-color: #27ae60;
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.15);
+        }
+
+        .type-card.inactive {
+            background: #f8f9fa;
+            border-color: #ddd;
+            opacity: 0.7;
+        }
+
+        .type-card h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .type-card.active h4 {
+            color: #27ae60;
+        }
+
+        .type-card p {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .type-card.active p {
+            color: #27ae60;
+        }
+
+        /* Status indicator */
+        .status-indicator {
             display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
             margin-right: 8px;
-            padding: 2px 6px;
-            background-color: #eaeaea;
-            border-radius: 3px;
+            background: #e74c3c;
+        }
+
+        .status-indicator.active {
+            background: #27ae60;
+        }
+
+        /* Details */
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+
+        .detail-label {
+            flex: 0 0 220px;
+            font-weight: 500;
+            color: #2c3e50;
+            padding-top: 2px;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #34495e;
+        }
+
+        /* List styling for array fields */
+        .list-items {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .list-items li {
+            background: #f8f9fa;
+            padding: 6px 12px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+            font-size: 14px;
+        }
+
+        .list-items li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Empty state */
+        .empty-state {
+            color: #95a5a6;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        /* Severity indicator */
+        .severity-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 500;
+            background: #e74c3c;
+            color: white;
+            font-size: 14px;
+        }
+
+        .severity-indicator.high {
+            background: #e74c3c;
+        }
+
+        .severity-indicator.medium {
+            background: #f39c12;
+        }
+
+        .severity-indicator.low {
+            background: #27ae60;
+        }
+
+        /* Boolean field styling */
+        .boolean-value {
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .boolean-value.true {
+            color: #27ae60;
+        }
+
+        .boolean-value.false {
+            color: #e74c3c;
+        }
+
+        .boolean-value::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: currentColor;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 20px 40px;
+            background: #f8f9fa;
+            color: #7f8c8d;
+            font-size: 13px;
+            border-top: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-area {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #bdc3c7;
+        }
+
+        .signature-line {
+            width: 250px;
+            margin-bottom: 30px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #95a5a6;
+        }
+
+        .signature-label {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        /* Print adjustments */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .report-container {
+                box-shadow: none;
+                margin: 0;
+            }
+
+            .type-card {
+                box-shadow: none;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="report-container">
+        <div class="company-header">
+            <div class="company-info">
+                <h1>Maicare</h1>
+                <p>123 Corporate Boulevard, Suite 500</p>
+                <p>New York, NY 10001, Verenigde Staten</p>
+                <p>Telefoon: (555) 123-4567 | E-mail: info@company.com</p>
+                <p>Website: www.company.com</p>
+            </div>
+            <img src="https://www.maicare.online/images/logo/logo.ico" alt="Bedrijfslogo" class="logo-placeholder"
+                style="object-fit:contain; background:none; border:none; width:120px; height:80px;" />
+        </div>
 
-    <h1>Incidentrapport</h1>
-    <p><strong>Rapport ID:</strong> {{.ID}}</p>
-    <p><strong>Datum van Incident:</strong> {{.IncidentDate}}</p>
+        <div class="report-header">
+            <h2>INCIDENTRAPPORT</h2>
+            <div class="report-id">Rapport ID: {{.ID}}</div>
+        </div>
 
-    <!-- Employee Information -->
-    <div class="section">
-        <h2>Medewerker Informatie</h2>
-        <table>
-            <tr>
-                <td class="label">Medewerker ID</td>
-                <td class="value">{{.EmployeeID}}</td>
-            </tr>
-            <tr>
-                <td class="label">Naam Medewerker</td>
-                <td class="value">{{.EmployeeFirstName}} {{.EmployeeLastName}}</td>
-            </tr>
-            <tr>
-                <td class="label">Locatie</td>
-                <td class="value">{{.LocationID}} - {{.LocationName}}</td>
-            </tr>
-        </table>
-    </div>
+        <div class="summary">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h3>Datum van Incident</h3>
+                    <p>{{.IncidentDate.Format "2 januari 2006 15:04"}}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Gerapporteerd Door</h3>
+                    <p>{{.EmployeeFirstName}} {{.EmployeeLastName}}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Locatie</h3>
+                    <p>{{.LocationName}} (ID: {{.LocationID}})</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Ernst</h3>
+                    <p><span class="severity-indicator {{.SeverityOfIncident | lower}}">{{.SeverityOfIncident}}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
 
-    <!-- Incident Details -->
-    <div class="section">
-        <h2>Incident Details</h2>
-        <table>
-            <tr>
-                <td class="label">Betrokkenheid Melder</td>
-                <td class="value">{{.ReporterInvolvement}}</td>
-            </tr>
-            <tr>
-                <td class="label">Geïnformeerde Partijen</td>
-                <td class="value">
-                    {{if .InformWho}}
-                    <div class="inline-list">
-                        {{range .InformWho}}
-                        <span>{{.}}</span>
+        <div class="content">
+            <div class="section">
+                <div class="section-header">
+                    <h3>1. Betrokken Partijen</h3>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Medewerker</div>
+                    <div class="detail-value">
+                        {{.EmployeeFirstName}} {{.EmployeeLastName}} (ID: {{.EmployeeID}})
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Cliënt</div>
+                    <div class="detail-value">
+                        {{if .ClientID}}
+                        {{.ClientFirstName}} {{.ClientLastName}} (ID: {{.ClientID}})
+                        {{else}}
+                        <span class="empty-state">Niet van toepassing</span>
                         {{end}}
                     </div>
-                    {{else}}
-                    N.v.t.
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">Looptijd Incident</td>
-                <td class="value">{{.RuntimeIncident}}</td>
-            </tr>
-            <tr>
-                <td class="label">Type Incident</td>
-                <td class="value">{{.IncidentType}}</td>
-            </tr>
-            <tr>
-                <td class="label">Ernst van het Incident</td>
-                <td class="value">{{.SeverityOfIncident}}</td>
-            </tr>
-            <tr>
-                <td class="label">Toelichting</td>
-                <td class="value">{{if .IncidentExplanation}}{{.IncidentExplanation}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Herhalingsrisico</td>
-                <td class="value">{{.RecurrenceRisk}}</td>
-            </tr>
-            <tr>
-                <td class="label">Preventieve Maatregelen</td>
-                <td class="value">{{if .IncidentPreventSteps}}{{.IncidentPreventSteps}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Genomen Maatregelen</td>
-                <td class="value">{{if .IncidentTakenMeasures}}{{.IncidentTakenMeasures}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-        </table>
-    </div>
+                </div>
 
-    <!-- Incident Causes -->
-    <div class="section">
-        <h2>Oorzaken Incident</h2>
-        <table>
-            <tr>
-                <td class="label">Technisch</td>
-                <td class="value">
-                    {{if .Technical}}
-                    <div class="inline-list">
-                        {{range .Technical}}
-                        <span>{{.}}</span>
+                <div class="detail-row">
+                    <div class="detail-label">Betrokkenheid Melder</div>
+                    <div class="detail-value">{{.ReporterInvolvement}}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Geïnformeerde Partijen</div>
+                    <div class="detail-value">
+                        {{if .InformWho}}
+                        <ul class="list-items">
+                            {{range .InformWho}}
+                            <li>{{.}}</li>
+                            {{end}}
+                        </ul>
+                        {{else}}
+                        <span class="empty-state">Geen partijen geïnformeerd</span>
                         {{end}}
                     </div>
-                    {{else}}
-                    N.v.t.
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">Organisatorisch</td>
-                <td class="value">
-                    {{if .Organizational}}
-                    <div class="inline-list">
-                        {{range .Organizational}}
-                        <span>{{.}}</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h3>2. Incidentdetails</h3>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Incidenttype</div>
+                    <div class="detail-value">{{.IncidentType}}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Incident Tijdens Dienst</div>
+                    <div class="detail-value">{{.RuntimeIncident}}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Toelichting Incident</div>
+                    <div class="detail-value">
+                        {{if .IncidentExplanation}}
+                        {{.IncidentExplanation}}
+                        {{else}}
+                        <span class="empty-state">Geen toelichting gegeven</span>
                         {{end}}
                     </div>
-                    {{else}}
-                    N.v.t.
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">Menselijk Handelen</td>
-                <td class="value">
-                    {{if .MeseWorker}}
-                    <div class="inline-list">
-                        {{range .MeseWorker}}
-                        <span>{{.}}</span>
+                </div>
+
+                <div class="section-header" style="margin-top: 25px; border-bottom-color: #95a5a6;">
+                    <h4>Incidentcategorieën</h4>
+                </div>
+                <div class="incident-types">
+                    <div class="type-card {{if .PassingAway}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .PassingAway}}active{{end}}"></span>Overlijden</h4>
+                        <p>{{if .PassingAway}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .SelfHarm}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .SelfHarm}}active{{end}}"></span>Zelfbeschadiging</h4>
+                        <p>{{if .SelfHarm}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .Violence}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .Violence}}active{{end}}"></span>Geweld</h4>
+                        <p>{{if .Violence}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .FireWaterDamage}}active{{else}}inactive{{end}}">
+                        <h4><span
+                                class="status-indicator {{if .FireWaterDamage}}active{{end}}"></span>Brand-/Waterschade
+                        </h4>
+                        <p>{{if .FireWaterDamage}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .Accident}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .Accident}}active{{end}}"></span>Ongeval</h4>
+                        <p>{{if .Accident}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .ClientAbsence}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .ClientAbsence}}active{{end}}"></span>Afwezigheid Cliënt
+                        </h4>
+                        <p>{{if .ClientAbsence}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .Medicines}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .Medicines}}active{{end}}"></span>Medicijnen</h4>
+                        <p>{{if .Medicines}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .Organization}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .Organization}}active{{end}}"></span>Organisatie</h4>
+                        <p>{{if .Organization}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .UseProhibitedSubstances}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .UseProhibitedSubstances}}active{{end}}"></span>Verboden
+                            Substanties</h4>
+                        <p>{{if .UseProhibitedSubstances}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                    <div class="type-card {{if .OtherNotifications}}active{{else}}inactive{{end}}">
+                        <h4><span class="status-indicator {{if .OtherNotifications}}active{{end}}"></span>Overige
+                            Meldingen</h4>
+                        <p>{{if .OtherNotifications}}Gerapporteerd{{else}}Niet gerapporteerd{{end}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h3>3. Oorzaken & Gevolgen</h3>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Technische Oorzaken</div>
+                    <div class="detail-value">
+                        {{if .Technical}}
+                        <ul class="list-items">
+                            {{range .Technical}}
+                            <li>{{.}}</li>
+                            {{end}}
+                        </ul>
+                        {{else}}
+                        <span class="empty-state">Geen technische oorzaken geïdentificeerd</span>
                         {{end}}
                     </div>
-                    {{else}}
-                    N.v.t.
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">Cliënt Opties</td>
-                <td class="value">
-                    {{if .ClientOptions}}
-                    <div class="inline-list">
-                        {{range .ClientOptions}}
-                        <span>{{.}}</span>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Organisatorische Oorzaken</div>
+                    <div class="detail-value">
+                        {{if .Organizational}}
+                        <ul class="list-items">
+                            {{range .Organizational}}
+                            <li>{{.}}</li>
+                            {{end}}
+                        </ul>
+                        {{else}}
+                        <span class="empty-state">Geen organisatorische oorzaken geïdentificeerd</span>
                         {{end}}
                     </div>
-                    {{else}}
-                    N.v.t.
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">Andere Oorzaak</td>
-                <td class="value">{{if .OtherCause}}{{.OtherCause}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Toelichting Oorzaak</td>
-                <td class="value">{{if .CauseExplanation}}{{.CauseExplanation}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-        </table>
-    </div>
+                </div>
 
-    <!-- Injuries and Damages -->
-    <div class="section">
-        <h2>Verwondingen en Schade</h2>
-        <table>
-            <tr>
-                <td class="label">Lichamelijk Letsel</td>
-                <td class="value">{{.PhysicalInjury}} {{if .PhysicalInjuryDesc}}- {{.PhysicalInjuryDesc}}{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Psychologische Schade</td>
-                <td class="value">{{.PsychologicalDamage}} {{if .PsychologicalDamageDesc}}- 
-                    {{.PsychologicalDamageDesc}}{{end}}</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Additional Incident Flags -->
-    <div class="section">
-        <h2>Aanvullende Incident Details</h2>
-        <table>
-            <tr>
-                <td class="label">Overlijden</td>
-                <td class="value">{{if .PassingAway}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Zelfbeschadiging</td>
-                <td class="value">{{if .SelfHarm}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Geweld</td>
-                <td class="value">{{if .Violence}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Brand/Waterschade</td>
-                <td class="value">{{if .FireWaterDamage}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Ongeval</td>
-                <td class="value">{{if .Accident}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Afwezigheid Cliënt</td>
-                <td class="value">{{if .ClientAbsence}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Medicijnen Betrokken</td>
-                <td class="value">{{if .Medicines}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Organisatorische Factoren</td>
-                <td class="value">{{if .Organization}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Gebruik van Verboden Middelen</td>
-                <td class="value">{{if .UseProhibitedSubstances}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Overige Meldingen</td>
-                <td class="value">{{if .OtherNotifications}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Succession & Other Details -->
-    <div class="section">
-        <h2>Vervolgacties & Aanvullende Details</h2>
-        <table>
-            <tr>
-                <td class="label">Vervolgacties</td>
-                <td class="value">
-                    {{if .Succession}}
-                    <div class="inline-list">
-                        {{range .Succession}}
-                        <span>{{.}}</span>
+                <div class="detail-row">
+                    <div class="detail-label">MESE Werknemer Oorzaken</div>
+                    <div class="detail-value">
+                        {{if .MeseWorker}}
+                        <ul class="list-items">
+                            {{range .MeseWorker}}
+                            <li>{{.}}</li>
+                            {{end}}
+                        </ul>
+                        {{else}}
+                        <span class="empty-state">Geen MESE werknemer oorzaken geïdentificeerd</span>
                         {{end}}
                     </div>
-                    {{else}}
-                    N.v.t.
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">Toelichting Vervolgacties</td>
-                <td class="value">{{if .SuccessionDesc}}{{.SuccessionDesc}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Overig</td>
-                <td class="value">{{if .Other}}Ja{{else}}Nee{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Overige Toelichting</td>
-                <td class="value">{{if .OtherDesc}}{{.OtherDesc}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Aanvullende Afspraken</td>
-                <td class="value">{{if .AdditionalAppointments}}{{.AdditionalAppointments}}{{else}}N.v.t.{{end}}</td>
-            </tr>
-            <tr>
-                <td class="label">Verzuim Medewerker</td>
-                <td class="value">{{.EmployeeAbsenteeism}}</td>
-            </tr>
-        </table>
-    </div>
+                </div>
 
-    <!-- Client and Consultation Information -->
-    <div class="section">
-        <h2>Cliënt & Consultatie Informatie</h2>
-        <table>
-            <tr>
-                <td class="label">Cliënt ID</td>
-                <td class="value">{{.ClientID}}</td>
-            </tr>
-            <tr>
-                <td class="label">Benodigde Consultatie</td>
-                <td class="value">{{.NeededConsultation}}</td>
-            </tr>
-        </table>
-    </div>
+                <div class="detail-row">
+                    <div class="detail-label">Cliëntgerelateerde Oorzaken</div>
+                    <div class="detail-value">
+                        {{if .ClientOptions}}
+                        <ul class="list-items">
+                            {{range .ClientOptions}}
+                            <li>{{.}}</li>
+                            {{end}}
+                        </ul>
+                        {{else}}
+                        <span class="empty-state">Geen cliëntgerelateerde oorzaken geïdentificeerd</span>
+                        {{end}}
+                    </div>
+                </div>
 
+                <div class="detail-row">
+                    <div class="detail-label">Overige Oorzaken</div>
+                    <div class="detail-value">
+                        {{if .OtherCause}}
+                        {{.OtherCause}}
+                        {{else}}
+                        <span class="empty-state">Geen overige oorzaken geïdentificeerd</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Toelichting Oorzaak</div>
+                    <div class="detail-value">
+                        {{if .CauseExplanation}}
+                        {{.CauseExplanation}}
+                        {{else}}
+                        <span class="empty-state">Geen toelichting gegeven</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Lichamelijk Letsel</div>
+                    <div class="detail-value">
+                        <span class="boolean-value {{if eq .PhysicalInjury " Yes"}}true{{else}}false{{end}}">
+                            {{.PhysicalInjury}}
+                        </span>
+                        {{if .PhysicalInjuryDesc}}
+                        <div
+                            style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 14px;">
+                            {{.PhysicalInjuryDesc}}
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Psychologische Schade</div>
+                    <div class="detail-value">
+                        <span class="boolean-value {{if eq .PsychologicalDamage " Yes"}}true{{else}}false{{end}}">
+                            {{.PsychologicalDamage}}
+                        </span>
+                        {{if .PsychologicalDamageDesc}}
+                        <div
+                            style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 14px;">
+                            {{.PsychologicalDamageDesc}}
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h3>4. Reactie & Preventie</h3>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Onmiddellijk Genomen Maatregelen</div>
+                    <div class="detail-value">
+                        {{if .IncidentTakenMeasures}}
+                        {{.IncidentTakenMeasures}}
+                        {{else}}
+                        <span class="empty-state">Geen onmiddellijke maatregelen gedocumenteerd</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Herhalingsrisico</div>
+                    <div class="detail-value">{{.RecurrenceRisk}}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Preventieve Maatregelen</div>
+                    <div class="detail-value">
+                        {{if .IncidentPreventSteps}}
+                        {{.IncidentPreventSteps}}
+                        {{else}}
+                        <span class="empty-state">Geen preventieve maatregelen gedocumenteerd</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Consultatie Nodig</div>
+                    <div class="detail-value">{{.NeededConsultation}}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Opvolgingsplan</div>
+                    <div class="detail-value">
+                        {{if .Succession}}
+                        <ul class="list-items">
+                            {{range .Succession}}
+                            <li>{{.}}</li>
+                            {{end}}
+                        </ul>
+                        {{if .SuccessionDesc}}
+                        <div
+                            style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 14px;">
+                            {{.SuccessionDesc}}
+                        </div>
+                        {{end}}
+                        {{else}}
+                        <span class="empty-state">Geen opvolgingsplan gedocumenteerd</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Aanvullende Afspraken</div>
+                    <div class="detail-value">
+                        {{if .AdditionalAppointments}}
+                        {{.AdditionalAppointments}}
+                        {{else}}
+                        <span class="empty-state">Geen aanvullende afspraken gepland</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Afwezigheid Werknemer</div>
+                    <div class="detail-value">{{.EmployeeAbsenteeism}}</div>
+                </div>
+
+                {{if .Other}}
+                <div class="detail-row">
+                    <div class="detail-label">Overige Informatie</div>
+                    <div class="detail-value">
+                        {{if .OtherDesc}}
+                        {{.OtherDesc}}
+                        {{else}}
+                        <span class="empty-state">Geen aanvullende informatie gegeven</span>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="signature-area">
+                <div class="detail-row">
+                    <div class="detail-label">Opgesteld door:</div>
+                    <div class="detail-value">
+                        <div class="signature-line"></div>
+                        <div class="signature-label">Handtekening en Datum</div>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Beoordeeld door:</div>
+                    <div class="detail-value">
+                        <div class="signature-line"></div>
+                        <div class="signature-label">Handtekening en Datum</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>Rapport gegenereerd op {{now.Format "2 januari 2006"}}</div>
+            <div>Pagina 1 van 1</div>
+        </div>
+    </div>
 </body>
 
 </html>

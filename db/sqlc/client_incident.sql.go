@@ -238,9 +238,12 @@ SELECT
     i.id, i.employee_id, i.location_id, i.reporter_involvement, i.inform_who, i.incident_date, i.runtime_incident, i.incident_type, i.passing_away, i.self_harm, i.violence, i.fire_water_damage, i.accident, i.client_absence, i.medicines, i.organization, i.use_prohibited_substances, i.other_notifications, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.technical, i.organizational, i.mese_worker, i.client_options, i.other_cause, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.succession, i.succession_desc, i.other, i.other_desc, i.additional_appointments, i.employee_absenteeism, i.client_id, i.soft_delete, i.updated_at, i.created_at, i.is_confirmed, i.file_url, i.emails,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
-    l.name AS location_name
+    l.name AS location_name,
+    c.first_name AS client_first_name,
+    c.last_name AS client_last_name
 FROM incident i
 JOIN employee_profile e ON i.employee_id = e.id
+JOIN client_details c ON i.client_id = c.id
 JOIN location l ON i.location_id = l.id
 WHERE i.id = $1 LIMIT 1
 `
@@ -296,6 +299,8 @@ type GetIncidentRow struct {
 	EmployeeFirstName       string             `json:"employee_first_name"`
 	EmployeeLastName        string             `json:"employee_last_name"`
 	LocationName            string             `json:"location_name"`
+	ClientFirstName         string             `json:"client_first_name"`
+	ClientLastName          string             `json:"client_last_name"`
 }
 
 func (q *Queries) GetIncident(ctx context.Context, id int64) (GetIncidentRow, error) {
@@ -352,6 +357,8 @@ func (q *Queries) GetIncident(ctx context.Context, id int64) (GetIncidentRow, er
 		&i.EmployeeFirstName,
 		&i.EmployeeLastName,
 		&i.LocationName,
+		&i.ClientFirstName,
+		&i.ClientLastName,
 	)
 	return i, err
 }
