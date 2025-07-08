@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zorgcontract</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .contract-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2c5aa0;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .logo-placeholder {
+            width: 120px;
+            height: 60px;
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .company-details {
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .contract-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .contract-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .info-group {
+            flex: 1;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            background: white;
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            min-height: 20px;
+        }
+
+        .parties-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .party {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .party:last-child {
+            margin-right: 0;
+        }
+
+        .party-title {
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .party-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2c5aa0;
+        }
+
+        .care-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+
+        .care-title {
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .care-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .care-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .care-item:last-child {
+            border-bottom: none;
+        }
+
+        .care-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .care-value {
+            color: #333;
+            font-weight: normal;
+        }
+
+        .financial-section {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border: 1px solid #2c5aa0;
+        }
+
+        .financial-title {
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .financial-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .contract-terms {
+            margin-bottom: 30px;
+        }
+
+        .terms-title {
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .terms-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .terms-content p {
+            margin-bottom: 10px;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+
+        .signature-block {
+            flex: 1;
+            text-align: center;
+            margin: 0 20px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-terminated {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-stopped {
+            background: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+
+        .ambulante-hours {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .page-break-before {
+            page-break-before: always;
+        }
+
+        .page-break-after {
+            page-break-after: always;
+        }
+
+        .page-break-avoid {
+            page-break-inside: avoid;
+        }
+
+        .page-break-avoid-before {
+            page-break-before: avoid;
+        }
+
+        .page-break-avoid-after {
+            page-break-after: avoid;
+        }
+
+        /* Keep sections together */
+        .care-details,
+        .financial-section,
+        .contract-terms,
+        .signatures {
+            page-break-inside: avoid;
+        }
+
+        /* Ensure signatures stay together */
+        .signatures {
+            page-break-before: avoid;
+            margin-top: 30px;
+        }
+
+        @media print {
+            .contract-container {
+                box-shadow: none;
+                padding: 15mm;
+            }
+
+            /* Additional print-specific page break rules */
+            .header {
+                page-break-after: avoid;
+            }
+
+            .parties-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="contract-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-info">
+                <img src="https://f003.backblazeb2.com/file/maicare/logo.ico" alt="Bedrijfslogo"
+                    class="logo-placeholder"
+                    style="object-fit: contain; width: 120px; height: 60px; background: #f5f5f5; border: 2px dashed #ccc;" />
+                <div class="company-details">
+                    <strong>Maicare</strong><br>
+                    [ADRES]<br>
+                    [POSTCODE] [STAD]<br>
+                    Tel: [TELEFOONNUMMER]<br>
+                    Email: [EMAIL]<br>
+                    KvK: [KVK NUMMER]
+                </div>
+            </div>
+            <div class="contract-info">
+                <div class="info-group">
+                    <div class="info-label">Contract Nr:</div>
+                    <div class="info-value">{{ .ID }}</div>
+                </div>
+                <div class="info-group" style="margin-left: 20px;">
+                    <div class="info-label">Status:</div>
+                    <div class="info-value">
+                        <span class="status-badge status-{{ .Status }}">{{ .Status }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h1 class="contract-title">Zorgovereenkomst</h1>
+
+        <!-- Contract Periods -->
+        <div class="contract-info">
+            <div class="info-group">
+                <div class="info-label">Startdatum:</div>
+                <div class="info-value">{{ .StartDate }}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Einddatum:</div>
+                <div class="info-value">{{ .EndDate }}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Herinneringsperiode:</div>
+                <div class="info-value">{{ .ReminderPeriod }} dagen</div>
+            </div>
+        </div>
+
+        <!-- Parties -->
+        <div class="parties-section">
+            <div class="party">
+                <div class="party-title">Opdrachtgever</div>
+                <div class="party-details">
+                    <strong>{{ .SenderName }}</strong><br>
+                    {{ .SenderAddress }}<br>
+                    {{ .SenderContactInfo }}
+                </div>
+            </div>
+            <div class="party">
+                <div class="party-title">Cliënt</div>
+                <div class="party-details">
+                    <strong>{{ .ClientFirstName }} {{ .ClientLastName }}</strong><br>
+                    {{ .ClientAddress }}<br>
+                    {{ .ClientContactInfo }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Care Details -->
+        <div class="care-details">
+            <div class="care-title">Zorgspecificaties</div>
+            <div class="care-grid">
+                <div class="care-item">
+                    <span class="care-label">Type zorg:</span>
+                    <span class="care-value">{{ .CareType }}</span>
+                </div>
+                <div class="care-item">
+                    <span class="care-label">Zorgnaam:</span>
+                    <span class="care-value">{{ .CareName }}</span>
+                </div>
+                <div class="care-item">
+                    <span class="care-label">Financieringswet:</span>
+                    <span class="care-value">{{ .FinancingAct }}</span>
+                </div>
+                <div class="care-item">
+                    <span class="care-label">Financieringsoptie:</span>
+                    <span class="care-value">{{ .FinancingOption }}</span>
+                </div>
+            </div>
+
+            <!-- Ambulante Care Hours (conditional display) -->
+            <div class="ambulante-hours" style="display: {{ .AmbulanteDisplay }};">
+                <div class="care-grid">
+                    <div class="care-item">
+                        <span class="care-label">Aantal uren:</span>
+                        <span class="care-value">{{ .Hours }} uur</span>
+                    </div>
+                    <div class="care-item">
+                        <span class="care-label">Uren type:</span>
+                        <span class="care-value">{{ .HoursType }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Details -->
+        <div class="financial-section">
+            <div class="financial-title">Financiële Voorwaarden</div>
+            <div class="financial-grid">
+                <div class="care-item">
+                    <span class="care-label">Prijs:</span>
+                    <span class="care-value">€ {{ .Price }}</span>
+                </div>
+                <div class="care-item">
+                    <span class="care-label">Prijseenheid:</span>
+                    <span class="care-value">{{ .PriceTimeUnit }}</span>
+                </div>
+                <div class="care-item">
+                    <span class="care-label">BTW:</span>
+                    <span class="care-value">{{ .Vat }}%</span>
+                </div>
+                <div class="care-item">
+                    <span class="care-label">Contract type:</span>
+                    <span class="care-value">{{ .TypeName }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Terms -->
+        <div class="contract-terms">
+            <div class="terms-title">Algemene Voorwaarden</div>
+            <div class="terms-content">
+                <p><strong>Artikel 1 - Definitie en reikwijdte</strong><br>
+                    Deze overeenkomst betreft de levering van zorg zoals gespecificeerd in bovenstaande
+                    zorgspecificaties.</p>
+
+                <p><strong>Artikel 2 - Verplichtingen opdrachtgever</strong><br>
+                    De opdrachtgever verplicht zich tot het leveren van kwalitatief goede zorg conform de afgesproken
+                    specificaties en binnen de gestelde termijnen.</p>
+
+                <p><strong>Artikel 3 - Verplichtingen cliënt</strong><br>
+                    De cliënt verplicht zich tot tijdige betaling van de verschuldigde bedragen en het verstrekken van
+                    alle noodzakelijke informatie voor de zorgverlening.</p>
+
+                <p><strong>Artikel 4 - Financiële bepalingen</strong><br>
+                    De vergoeding voor de geleverde zorg bedraagt het in de financiële voorwaarden genoemde bedrag.
+                    Betaling dient te geschieden binnen 30 dagen na factuurdatum.</p>
+
+                <p><strong>Artikel 5 - Looptijd en beëindiging</strong><br>
+                    Deze overeenkomst is geldig vanaf {{ .StartDate }} tot {{ .EndDate }}. De overeenkomst kan door
+                    beide
+                    partijen worden beëindigd met inachtneming van een opzegtermijn van 30 dagen.</p>
+
+                <p><strong>Artikel 6 - Geschillen</strong><br>
+                    Op deze overeenkomst is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de
+                    bevoegde rechter in Nederland.</p>
+            </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signatures">
+            <div class="signature-block">
+                <div class="signature-line">
+                    <strong>Opdrachtgever</strong><br>
+                    {{ .SenderName }}<br>
+                    Datum: ___________
+                </div>
+            </div>
+            <div class="signature-block">
+                <div class="signature-line">
+                    <strong>Cliënt</strong><br>
+                    {{ .ClientFirstName }} {{ .ClientLastName }}<br>
+                    Datum: ___________
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #666;">
+            Dit contract is elektronisch gegenereerd op {{ .GenerationDate }}
+        </div>
+    </div>
+</body>
+
+</html>

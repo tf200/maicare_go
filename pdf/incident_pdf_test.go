@@ -90,6 +90,7 @@ func TestGenerateIncidentPDF(t *testing.T) {
 		ClientID:        300,
 		ClientFirstName: "Jane",
 		ClientLastName:  "Smith",
+		
 	}
 
 	pdfBytes, err := GenerateAndUploadIncidentPDF(context.Background(), mockIncident, testb2Client)

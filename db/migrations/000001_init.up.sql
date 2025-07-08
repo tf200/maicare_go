@@ -329,7 +329,8 @@ CREATE TABLE client_details (
     date_of_birth DATE NULL,
     "identity" BOOLEAN NOT NULL DEFAULT FALSE,
     "status" VARCHAR(20) NULL CHECK (status IN ('In Care', 'On Waiting List', 'Out Of Care')) DEFAULT 'On Waiting List',
-    bsn VARCHAR(50) NULL,        -- Reduced length assuming it's a social security number
+    bsn VARCHAR(50) NULL,
+    bsn_verified_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,        
     source VARCHAR(100) NULL,
     birthplace VARCHAR(100) NULL,
     email VARCHAR(100) NOT NULL,
