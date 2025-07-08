@@ -14,7 +14,7 @@ func (server *Server) setupIntakeFormRoutes(baseRouter *gin.RouterGroup) {
 		intakeFormGroup.GET("/:id", server.GetIntakeFormApi)
 
 		intakeFormGroup.POST("/:id/urgency_score", server.AddUrgencyScoreApi)
-		intakeFormGroup.POST("/:id/move_to_waiting_list", server.MoveToWaitingList)
+		// intakeFormGroup.POST("/:id/move_to_waiting_list", server.MoveToWaitingList)
 
 	}
 }

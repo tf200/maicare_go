@@ -859,56 +859,55 @@ type MoveToWaitingListResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /intake_form/{id}/move_to_waiting_list [post]
-func (server *Server) MoveToWaitingList(ctx *gin.Context) {
-	id := ctx.Param("id")
-	formID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+// func (server *Server) MoveToWaitingList(ctx *gin.Context) {
+// 	id := ctx.Param("id")
+// 	formID, err := strconv.ParseInt(id, 10, 64)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
 
-	form, err := server.store.MoveToWaitingList(ctx, formID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	form, err := server.store.MoveToWaitingList(ctx, formID)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	address := []Address{
-		{
-			Address: &form.Address,
-			City:    &form.City,
-			ZipCode: &form.PostalCode,
-		},
-	}
+// 	address := []Address{
+// 		{
+// 			Address: &form.Address,
+// 			City:    &form.City,
+// 			ZipCode: &form.PostalCode,
+// 		},
+// 	}
 
-	AddressesJSON, err := json.Marshal(address)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	AddressesJSON, err := json.Marshal(address)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	arg := db.CreateClientDetailsParams{
-		IntakeFormID:          &form.ID,
-		FirstName:             form.FirstName,
-		LastName:              form.LastName,
-		DateOfBirth:           form.DateOfBirth,
-		Bsn:                   &form.Bsn,
-		Birthplace:            &form.Nationality,
-		Email:                 form.Email,
-		PhoneNumber:           &form.PhoneNumber,
-		Gender:                form.Gender,
-		Addresses:             AddressesJSON,
-		IdentityAttachmentIds: []byte("[]"),
-	}
-	client, err := server.store.CreateClientDetails(ctx, arg)
+// 	arg := db.CreateClientDetailsParams{
+// 		IntakeFormID:          &form.ID,
+// 		FirstName:             form.FirstName,
+// 		LastName:              form.LastName,
+// 		DateOfBirth:           form.DateOfBirth,
+// 		Bsn:                   &form.Bsn,
+// 		Birthplace:            &form.Nationality,
+// 		Email:                 form.Email,
+// 		PhoneNumber:           &form.PhoneNumber,
+// 		Gender:                form.Gender,
+// 		Addresses:             AddressesJSON,
+// 	}
+// 	client, err := server.store.CreateClientDetails(ctx, arg)
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	res := SuccessResponse(MoveToWaitingListResponse{
-		ClientID: client.ID,
-	}, "Client moved to waiting list successfully")
-	ctx.JSON(http.StatusOK, res)
-}
+// 	res := SuccessResponse(MoveToWaitingListResponse{
+// 		ClientID: client.ID,
+// 	}, "Client moved to waiting list successfully")
+// 	ctx.JSON(http.StatusOK, res)
+// }

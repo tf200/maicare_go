@@ -318,7 +318,44 @@ CREATE TABLE intake_forms (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+CREATE TABLE employee_profile (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    position VARCHAR(100) NULL,
+    department VARCHAR(100) NULL,
+    employee_number VARCHAR(50) NULL,
+    employment_number VARCHAR(50) NULL,
+    private_email_address VARCHAR(254) NULL,
+    email VARCHAR(254) NOT NULL,
+    authentication_phone_number VARCHAR(100) NULL,
+    private_phone_number VARCHAR(100) NULL,
+    work_phone_number VARCHAR(100) NULL,
+    date_of_birth DATE NULL,
+    home_telephone_number VARCHAR(100) NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_subcontractor BOOLEAN NULL,
+    gender VARCHAR(20) NULL CHECK (gender IN ('male', 'female', 'not_specified')),
+    location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
+    out_of_service BOOLEAN NULL DEFAULT FALSE,
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
 
+    fixed_contract_hours FLOAT NULL DEFAULT 0.0,
+    variable_contract_hours FLOAT NULL DEFAULT 0.0,
+    contract_start_date DATE NULL,
+    contract_end_date DATE NULL,
+    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type',
+    contract_rate DECIMAL(10,2) NULL DEFAULT 0.00
+);
+
+
+CREATE INDEX employee_profile_user_id_idx ON employee_profile(user_id);
+CREATE INDEX employee_profile_location_id_idx ON employee_profile(location_id);
+CREATE INDEX employee_profile_id_desc_idx ON employee_profile(id DESC);
+CREATE INDEX idx_employee_profile_is_archived ON employee_profile(is_archived);
+CREATE INDEX idx_employee_profile_out_of_service ON employee_profile(out_of_service);
 
 
 CREATE TABLE client_details (
@@ -344,7 +381,6 @@ CREATE TABLE client_details (
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
-    identity_attachment_ids JSONB NULL DEFAULT '[]',
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
     gps_position JSONB NOT NULL DEFAULT '[]',
@@ -886,44 +922,7 @@ CREATE TABLE data_sharing_statement (
 );
 
 
-CREATE TABLE employee_profile (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    position VARCHAR(100) NULL,
-    department VARCHAR(100) NULL,
-    employee_number VARCHAR(50) NULL,
-    employment_number VARCHAR(50) NULL,
-    private_email_address VARCHAR(254) NULL,
-    email VARCHAR(254) NOT NULL,
-    authentication_phone_number VARCHAR(100) NULL,
-    private_phone_number VARCHAR(100) NULL,
-    work_phone_number VARCHAR(100) NULL,
-    date_of_birth DATE NULL,
-    home_telephone_number VARCHAR(100) NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_subcontractor BOOLEAN NULL,
-    gender VARCHAR(20) NULL CHECK (gender IN ('male', 'female', 'not_specified')),
-    location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
-    has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
-    out_of_service BOOLEAN NULL DEFAULT FALSE,
-    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
 
-    fixed_contract_hours FLOAT NULL DEFAULT 0.0,
-    variable_contract_hours FLOAT NULL DEFAULT 0.0,
-    contract_start_date DATE NULL,
-    contract_end_date DATE NULL,
-    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type',
-    contract_rate DECIMAL(10,2) NULL DEFAULT 0.00
-);
-
-
-CREATE INDEX employee_profile_user_id_idx ON employee_profile(user_id);
-CREATE INDEX employee_profile_location_id_idx ON employee_profile(location_id);
-CREATE INDEX employee_profile_id_desc_idx ON employee_profile(id DESC);
-CREATE INDEX idx_employee_profile_is_archived ON employee_profile(is_archived);
-CREATE INDEX idx_employee_profile_out_of_service ON employee_profile(out_of_service);
 
 
 -- Table: EmployeeEducation

@@ -177,6 +177,7 @@ type ClientDetail struct {
 	Identity              bool               `json:"identity"`
 	Status                *string            `json:"status"`
 	Bsn                   *string            `json:"bsn"`
+	BsnVerifiedBy         *int64             `json:"bsn_verified_by"`
 	Source                *string            `json:"source"`
 	Birthplace            *string            `json:"birthplace"`
 	Email                 string             `json:"email"`
@@ -190,7 +191,6 @@ type ClientDetail struct {
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 	SenderID              *int64             `json:"sender_id"`
 	LocationID            *int64             `json:"location_id"`
-	IdentityAttachmentIds []byte             `json:"identity_attachment_ids"`
 	DepartureReason       *string            `json:"departure_reason"`
 	DepartureReport       *string            `json:"departure_report"`
 	GpsPosition           []byte             `json:"gps_position"`

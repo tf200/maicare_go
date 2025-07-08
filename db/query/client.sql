@@ -6,6 +6,7 @@ INSERT INTO client_details (
     date_of_birth,
     "identity",
     bsn,
+    bsn_verified_by,
     source,
     birthplace,
     email,
@@ -18,7 +19,6 @@ INSERT INTO client_details (
     infix,
     sender_id,
     location_id,
-    identity_attachment_ids,
     departure_reason,
     departure_report,
     addresses,
@@ -58,8 +58,12 @@ FROM client_details;
 
 
 -- name: GetClientDetails :one
-SELECT * FROM client_details
-WHERE id = $1 LIMIT 1;
+SELECT c.*,
+       ep.first_name AS bsn_verified_by_first_name,
+       ep.last_name AS bsn_verified_by_last_name
+FROM client_details c
+LEFT JOIN employee_profile ep ON c.bsn_verified_by = ep.id
+WHERE c.id = $1 LIMIT 1;
 
 -- name: GetClientAddresses :one
 SELECT addresses
@@ -75,6 +79,7 @@ SET
     date_of_birth = COALESCE (sqlc.narg('date_of_birth'), date_of_birth),
     "identity" = COALESCE (sqlc.narg('identity'), "identity"),
     bsn = COALESCE (sqlc.narg('bsn'), bsn),
+    bsn_verified_by = COALESCE (sqlc.narg('bsn_verified_by'), bsn_verified_by),
     source = COALESCE (sqlc.narg('source'), source),
     birthplace = COALESCE (sqlc.narg('birthplace'), birthplace),
     email = COALESCE (sqlc.narg('email'), email),

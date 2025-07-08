@@ -17,24 +17,24 @@ import (
 
 // CreateClientDetailsRequest represents a request to create a new client
 type CreateClientDetailsRequest struct {
-	FirstName             string      `json:"first_name" binding:"required"`
-	LastName              string      `json:"last_name" binding:"required"`
-	Email                 string      `json:"email" binding:"required,email"`
-	Organisation          *string     `json:"organisation" binding:"required"`
-	LocationID            *int64      `json:"location_id" binding:"required"`
-	LegalMeasure          *string     `json:"legal_measure"`
-	Birthplace            *string     `json:"birthplace" binding:"required"`
-	Departement           *string     `json:"departement" binding:"required"`
-	Gender                string      `json:"gender" binding:"required"`
-	Filenumber            string      `json:"filenumber" binding:"required"`
-	DateOfBirth           string      `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
-	PhoneNumber           *string     `json:"phone_number" binding:"required"`
-	SenderID              *int64      `json:"sender_id" binding:"required"`
-	Infix                 *string     `json:"infix"`
-	Source                *string     `json:"source" binding:"required"`
-	Bsn                   *string     `json:"bsn"`
-	Addresses             []Address   `json:"addresses"`
-	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
+	FirstName     string    `json:"first_name" binding:"required"`
+	LastName      string    `json:"last_name" binding:"required"`
+	Email         string    `json:"email" binding:"required,email"`
+	Organisation  *string   `json:"organisation" binding:"required"`
+	LocationID    *int64    `json:"location_id" binding:"required"`
+	LegalMeasure  *string   `json:"legal_measure"`
+	Birthplace    *string   `json:"birthplace" binding:"required"`
+	Departement   *string   `json:"departement" binding:"required"`
+	Gender        string    `json:"gender" binding:"required"`
+	Filenumber    string    `json:"filenumber" binding:"required"`
+	DateOfBirth   string    `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
+	PhoneNumber   *string   `json:"phone_number" binding:"required"`
+	SenderID      *int64    `json:"sender_id" binding:"required"`
+	Infix         *string   `json:"infix"`
+	Source        *string   `json:"source" binding:"required"`
+	Bsn           *string   `json:"bsn"`
+	BsnVerifiedBy *int64    `json:"bsn_verified_by"` // needs to be checked
+	Addresses     []Address `json:"addresses"`
 }
 
 // Address represents a client address
@@ -48,32 +48,32 @@ type Address struct {
 
 // CreateClientDetailsResponse represents a response to a create client request
 type CreateClientDetailsResponse struct {
-	ID                    int64       `json:"id"`
-	FirstName             string      `json:"first_name"`
-	LastName              string      `json:"last_name"`
-	DateOfBirth           time.Time   `json:"date_of_birth"`
-	Identity              bool        `json:"identity"`
-	Status                *string     `json:"status"`
-	Bsn                   *string     `json:"bsn"`
-	Source                *string     `json:"source"`
-	Birthplace            *string     `json:"birthplace"`
-	Email                 string      `json:"email"`
-	PhoneNumber           *string     `json:"phone_number"`
-	Organisation          *string     `json:"organisation"`
-	Departement           *string     `json:"departement"`
-	Gender                string      `json:"gender"`
-	Filenumber            string      `json:"filenumber"`
-	ProfilePicture        *string     `json:"profile_picture"`
-	Infix                 *string     `json:"infix"`
-	Created               time.Time   `json:"created"`
-	SenderID              *int64      `json:"sender_id"`
-	LocationID            *int64      `json:"location_id"`
-	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
-	DepartureReason       *string     `json:"departure_reason"`
-	DepartureReport       *string     `json:"departure_report"`
-	Addresses             []Address   `json:"addresses"`
-	LegalMeasure          *string     `json:"legal_measure"`
-	HasUntakenMedications bool        `json:"has_untaken_medications"`
+	ID                    int64     `json:"id"`
+	FirstName             string    `json:"first_name"`
+	LastName              string    `json:"last_name"`
+	DateOfBirth           time.Time `json:"date_of_birth"`
+	Identity              bool      `json:"identity"`
+	Status                *string   `json:"status"`
+	Bsn                   *string   `json:"bsn"`
+	BsnVerifiedBy         *int64    `json:"bsn_verified_by"` // needs to be checked
+	Source                *string   `json:"source"`
+	Birthplace            *string   `json:"birthplace"`
+	Email                 string    `json:"email"`
+	PhoneNumber           *string   `json:"phone_number"`
+	Organisation          *string   `json:"organisation"`
+	Departement           *string   `json:"departement"`
+	Gender                string    `json:"gender"`
+	Filenumber            string    `json:"filenumber"`
+	ProfilePicture        *string   `json:"profile_picture"`
+	Infix                 *string   `json:"infix"`
+	Created               time.Time `json:"created"`
+	SenderID              *int64    `json:"sender_id"`
+	LocationID            *int64    `json:"location_id"`
+	DepartureReason       *string   `json:"departure_reason"`
+	DepartureReport       *string   `json:"departure_report"`
+	Addresses             []Address `json:"addresses"`
+	LegalMeasure          *string   `json:"legal_measure"`
+	HasUntakenMedications bool      `json:"has_untaken_medications"`
 }
 
 // CreateClientApi creates a new client
@@ -97,93 +97,77 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		return
 	}
 
-	identityAttachmentIdsJSON, err := json.Marshal(req.IdentityAttachmentIds)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	AddressesJSON, err := json.Marshal(req.Addresses)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	client, err := server.store.CreateClientDetailsTx(ctx, db.CreateClientDetailsTxParams{
-		CreateClientParams: db.CreateClientDetailsParams{
-			FirstName:   req.FirstName,
-			LastName:    req.LastName,
-			DateOfBirth: pgtype.Date{Time: parsedDateOfBirth, Valid: true},
-			Identity:    true, // needs to be checked
-			//Status:                nil,  // needs to be checked
-			Bsn:          req.Bsn,
-			Source:       req.Source,
-			Birthplace:   req.Birthplace,
-			Email:        req.Email,
-			PhoneNumber:  req.PhoneNumber,
-			Organisation: req.Organisation,
-			Departement:  req.Departement,
-			Infix:        req.Infix,
-			Gender:       req.Gender,
-			Filenumber:   req.Filenumber,
-			//ProfilePicture:        nil, // needs to be checked
-			SenderID:              req.SenderID, // needs to be checked
-			LocationID:            req.LocationID,
-			IdentityAttachmentIds: identityAttachmentIdsJSON,
-			//DepartureReason:       nil, // needs to be checked
-			//DepartureReport:       nil, // needs to be checked
-			//GpsPosition:           nil,  needs to be checked
-			//MaturityDomains:       nil, // needs to be checked
-			Addresses:    AddressesJSON,
-			LegalMeasure: req.LegalMeasure,
-			//HasUntakenMedications: false, // needs to be checked
-		},
-		IdentityAttachments: req.IdentityAttachmentIds,
-	})
+	client, err := server.store.CreateClientDetails(ctx, db.CreateClientDetailsParams{
+		FirstName:     req.FirstName,
+		LastName:      req.LastName,
+		DateOfBirth:   pgtype.Date{Time: parsedDateOfBirth, Valid: true},
+		Identity:      true,
+		Bsn:           req.Bsn,
+		BsnVerifiedBy: req.BsnVerifiedBy,
+		Source:        req.Source,
+		Birthplace:    req.Birthplace,
+		Email:         req.Email,
+		PhoneNumber:   req.PhoneNumber,
+		Organisation:  req.Organisation,
+		Departement:   req.Departement,
+		Infix:         req.Infix,
+		Gender:        req.Gender,
+		Filenumber:    req.Filenumber,
+		//ProfilePicture:        nil, // needs to be checked
+		SenderID:   req.SenderID, // needs to be checked
+		LocationID: req.LocationID,
+		//DepartureReason:       nil, // needs to be checked
+		//DepartureReport:       nil, // needs to be checked
+		//GpsPosition:           nil,  needs to be checked
+		//MaturityDomains:       nil, // needs to be checked
+		Addresses:    AddressesJSON,
+		LegalMeasure: req.LegalMeasure,
+		//HasUntakenMedications: false, // needs to be checked
+	},
+	)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	var addresses []Address
-	err = json.Unmarshal(client.Client.Addresses, &addresses)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	var identityAttachmentIds []uuid.UUID
-	err = json.Unmarshal(client.Client.IdentityAttachmentIds, &identityAttachmentIds)
+	err = json.Unmarshal(client.Addresses, &addresses)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	res := SuccessResponse(CreateClientDetailsResponse{
-		ID:                    client.Client.ID,
-		FirstName:             client.Client.FirstName,
-		LastName:              client.Client.LastName,
-		DateOfBirth:           client.Client.DateOfBirth.Time,
-		Identity:              client.Client.Identity,
-		Status:                client.Client.Status,
-		Bsn:                   client.Client.Bsn,
-		Source:                client.Client.Source,
-		Birthplace:            client.Client.Birthplace,
-		Email:                 client.Client.Email,
-		PhoneNumber:           client.Client.PhoneNumber,
-		Organisation:          client.Client.Organisation,
-		Departement:           client.Client.Departement,
-		Gender:                client.Client.Gender,
-		Filenumber:            client.Client.Filenumber,
-		ProfilePicture:        client.Client.ProfilePicture,
-		Infix:                 client.Client.Infix,
-		Created:               client.Client.CreatedAt.Time,
-		SenderID:              client.Client.SenderID,
-		LocationID:            client.Client.LocationID,
-		IdentityAttachmentIds: identityAttachmentIds,
-		DepartureReason:       client.Client.DepartureReason,
-		DepartureReport:       client.Client.DepartureReport,
+		ID:                    client.ID,
+		FirstName:             client.FirstName,
+		LastName:              client.LastName,
+		DateOfBirth:           client.DateOfBirth.Time,
+		Identity:              client.Identity,
+		Status:                client.Status,
+		Bsn:                   client.Bsn,
+		Source:                client.Source,
+		Birthplace:            client.Birthplace,
+		Email:                 client.Email,
+		PhoneNumber:           client.PhoneNumber,
+		Organisation:          client.Organisation,
+		Departement:           client.Departement,
+		Gender:                client.Gender,
+		Filenumber:            client.Filenumber,
+		ProfilePicture:        client.ProfilePicture,
+		Infix:                 client.Infix,
+		Created:               client.CreatedAt.Time,
+		SenderID:              client.SenderID,
+		LocationID:            client.LocationID,
+		DepartureReason:       client.DepartureReason,
+		DepartureReport:       client.DepartureReport,
 		Addresses:             addresses,
-		LegalMeasure:          client.Client.LegalMeasure,
-		HasUntakenMedications: client.Client.HasUntakenMedications,
+		LegalMeasure:          client.LegalMeasure,
+		HasUntakenMedications: client.HasUntakenMedications,
 	}, "Client created successfully")
 	ctx.JSON(http.StatusCreated, res)
 
@@ -343,31 +327,33 @@ func (server *Server) GetClientsCountApi(ctx *gin.Context) {
 
 // GetClientApiResponse represents a response to a get client request
 type GetClientApiResponse struct {
-	ID                    int64       `json:"id"`
-	FirstName             string      `json:"first_name"`
-	LastName              string      `json:"last_name"`
-	DateOfBirth           time.Time   `json:"date_of_birth"`
-	Identity              bool        `json:"identity"`
-	Status                *string     `json:"status"`
-	Bsn                   *string     `json:"bsn"`
-	Source                *string     `json:"source"`
-	Birthplace            *string     `json:"birthplace"`
-	Email                 string      `json:"email"`
-	PhoneNumber           *string     `json:"phone_number"`
-	Organisation          *string     `json:"organisation"`
-	Departement           *string     `json:"departement"`
-	Gender                string      `json:"gender"`
-	Filenumber            string      `json:"filenumber"`
-	ProfilePicture        *string     `json:"profile_picture"`
-	Infix                 *string     `json:"infix"`
-	CreatedAt             time.Time   `json:"created_at"`
-	SenderID              *int64      `json:"sender_id"`
-	LocationID            *int64      `json:"location_id"`
-	DepartureReason       *string     `json:"departure_reason"`
-	DepartureReport       *string     `json:"departure_report"`
-	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
-	LegalMeasure          *string     `json:"legal_measure"`
-	HasUntakenMedications bool        `json:"has_untaken_medications"`
+	ID                     int64     `json:"id"`
+	FirstName              string    `json:"first_name"`
+	LastName               string    `json:"last_name"`
+	DateOfBirth            time.Time `json:"date_of_birth"`
+	Identity               bool      `json:"identity"`
+	Status                 *string   `json:"status"`
+	Bsn                    *string   `json:"bsn"`
+	BsnVerifiedBy          *int64    `json:"bsn_verified_by"`
+	BsnVerifiedByFirstName *string   `json:"bsn_verified_by_first_name"`
+	BsnVerifiedByLastName  *string   `json:"bsn_verified_by_last_name"`
+	Source                 *string   `json:"source"`
+	Birthplace             *string   `json:"birthplace"`
+	Email                  string    `json:"email"`
+	PhoneNumber            *string   `json:"phone_number"`
+	Organisation           *string   `json:"organisation"`
+	Departement            *string   `json:"departement"`
+	Gender                 string    `json:"gender"`
+	Filenumber             string    `json:"filenumber"`
+	ProfilePicture         *string   `json:"profile_picture"`
+	Infix                  *string   `json:"infix"`
+	CreatedAt              time.Time `json:"created_at"`
+	SenderID               *int64    `json:"sender_id"`
+	LocationID             *int64    `json:"location_id"`
+	DepartureReason        *string   `json:"departure_reason"`
+	DepartureReport        *string   `json:"departure_report"`
+	LegalMeasure           *string   `json:"legal_measure"`
+	HasUntakenMedications  bool      `json:"has_untaken_medications"`
 }
 
 // GetClientApi gets a client
@@ -399,39 +385,34 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 		return
 	}
 
-	var identityAttachmentIds []uuid.UUID
-	err = json.Unmarshal(client.IdentityAttachmentIds, &identityAttachmentIds)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	res := SuccessResponse(GetClientApiResponse{
-		ID:                    client.ID,
-		FirstName:             client.FirstName,
-		LastName:              client.LastName,
-		DateOfBirth:           client.DateOfBirth.Time,
-		Identity:              client.Identity,
-		Status:                client.Status,
-		Bsn:                   client.Bsn,
-		Source:                client.Source,
-		Birthplace:            client.Birthplace,
-		Email:                 client.Email,
-		PhoneNumber:           client.PhoneNumber,
-		Organisation:          client.Organisation,
-		Departement:           client.Departement,
-		Gender:                client.Gender,
-		Filenumber:            client.Filenumber,
-		ProfilePicture:        client.ProfilePicture,
-		Infix:                 client.Infix,
-		CreatedAt:             client.CreatedAt.Time,
-		SenderID:              client.SenderID,
-		LocationID:            client.LocationID,
-		DepartureReason:       client.DepartureReason,
-		DepartureReport:       client.DepartureReport,
-		IdentityAttachmentIds: identityAttachmentIds,
-		LegalMeasure:          client.LegalMeasure,
-		HasUntakenMedications: client.HasUntakenMedications,
+		ID:                     client.ID,
+		FirstName:              client.FirstName,
+		LastName:               client.LastName,
+		DateOfBirth:            client.DateOfBirth.Time,
+		Identity:               client.Identity,
+		Status:                 client.Status,
+		Bsn:                    client.Bsn,
+		BsnVerifiedBy:          client.BsnVerifiedBy,
+		BsnVerifiedByFirstName: client.BsnVerifiedByFirstName,
+		BsnVerifiedByLastName:  client.BsnVerifiedByLastName,
+		Source:                 client.Source,
+		Birthplace:             client.Birthplace,
+		Email:                  client.Email,
+		PhoneNumber:            client.PhoneNumber,
+		Organisation:           client.Organisation,
+		Departement:            client.Departement,
+		Gender:                 client.Gender,
+		Filenumber:             client.Filenumber,
+		ProfilePicture:         client.ProfilePicture,
+		Infix:                  client.Infix,
+		CreatedAt:              client.CreatedAt.Time,
+		SenderID:               client.SenderID,
+		LocationID:             client.LocationID,
+		DepartureReason:        client.DepartureReason,
+		DepartureReport:        client.DepartureReport,
+		LegalMeasure:           client.LegalMeasure,
+		HasUntakenMedications:  client.HasUntakenMedications,
 	}, "Client fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -483,6 +464,7 @@ type UpdateClientDetailsRequest struct {
 	DateOfBirth     time.Time `json:"date_of_birth"`
 	Identity        *bool     `json:"identity"`
 	Bsn             *string   `json:"bsn"`
+	BsnVerifiedBy   *int64    `json:"bsn_verified_by"`
 	Source          *string   `json:"source"`
 	Birthplace      *string   `json:"birthplace"`
 	Email           *string   `json:"email"`
@@ -502,32 +484,32 @@ type UpdateClientDetailsRequest struct {
 
 // UpdateClientDetailsResponse represents a response to an update client request
 type UpdateClientDetailsResponse struct {
-	ID                    int64       `json:"id"`
-	FirstName             string      `json:"first_name"`
-	LastName              string      `json:"last_name"`
-	DateOfBirth           time.Time   `json:"date_of_birth"`
-	Identity              bool        `json:"identity"`
-	Status                *string     `json:"status"`
-	Bsn                   *string     `json:"bsn"`
-	Source                *string     `json:"source"`
-	Birthplace            *string     `json:"birthplace"`
-	Email                 string      `json:"email"`
-	PhoneNumber           *string     `json:"phone_number"`
-	Organisation          *string     `json:"organisation"`
-	Departement           *string     `json:"departement"`
-	Gender                string      `json:"gender"`
-	Filenumber            string      `json:"filenumber"`
-	ProfilePicture        *string     `json:"profile_picture"`
-	Infix                 *string     `json:"infix"`
-	Created               time.Time   `json:"created"`
-	SenderID              *int64      `json:"sender_id"`
-	LocationID            *int64      `json:"location_id"`
-	IdentityAttachmentIds []uuid.UUID `json:"identity_attachment_ids"`
-	DepartureReason       *string     `json:"departure_reason"`
-	DepartureReport       *string     `json:"departure_report"`
-	Addresses             []Address   `json:"addresses"`
-	LegalMeasure          *string     `json:"legal_measure"`
-	HasUntakenMedications bool        `json:"has_untaken_medications"`
+	ID                    int64     `json:"id"`
+	FirstName             string    `json:"first_name"`
+	LastName              string    `json:"last_name"`
+	DateOfBirth           time.Time `json:"date_of_birth"`
+	Identity              bool      `json:"identity"`
+	Status                *string   `json:"status"`
+	Bsn                   *string   `json:"bsn"`
+	BsnVerifiedBy         *int64    `json:"bsn_verified_by"`
+	Source                *string   `json:"source"`
+	Birthplace            *string   `json:"birthplace"`
+	Email                 string    `json:"email"`
+	PhoneNumber           *string   `json:"phone_number"`
+	Organisation          *string   `json:"organisation"`
+	Departement           *string   `json:"departement"`
+	Gender                string    `json:"gender"`
+	Filenumber            string    `json:"filenumber"`
+	ProfilePicture        *string   `json:"profile_picture"`
+	Infix                 *string   `json:"infix"`
+	Created               time.Time `json:"created"`
+	SenderID              *int64    `json:"sender_id"`
+	LocationID            *int64    `json:"location_id"`
+	DepartureReason       *string   `json:"departure_reason"`
+	DepartureReport       *string   `json:"departure_report"`
+	Addresses             []Address `json:"addresses"`
+	LegalMeasure          *string   `json:"legal_measure"`
+	HasUntakenMedications bool      `json:"has_untaken_medications"`
 }
 
 // UpdateClientApi updates a client
@@ -560,6 +542,7 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 		DateOfBirth:     pgtype.Date{Time: req.DateOfBirth, Valid: true},
 		Identity:        req.Identity,
 		Bsn:             req.Bsn,
+		BsnVerifiedBy:   req.BsnVerifiedBy,
 		Source:          req.Source,
 		Birthplace:      req.Birthplace,
 		Email:           req.Email,
@@ -589,13 +572,6 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 		return
 	}
 
-	var identityAttachmentIds []uuid.UUID
-	err = json.Unmarshal(client.IdentityAttachmentIds, &identityAttachmentIds)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	res := SuccessResponse(UpdateClientDetailsResponse{
 		ID:                    client.ID,
 		FirstName:             client.FirstName,
@@ -604,6 +580,7 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 		Identity:              client.Identity,
 		Status:                client.Status,
 		Bsn:                   client.Bsn,
+		BsnVerifiedBy:         client.BsnVerifiedBy,
 		Source:                client.Source,
 		Birthplace:            client.Birthplace,
 		Email:                 client.Email,
@@ -616,7 +593,6 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 		Infix:                 client.Infix,
 		SenderID:              client.SenderID,
 		LocationID:            client.LocationID,
-		IdentityAttachmentIds: identityAttachmentIds,
 		DepartureReason:       client.DepartureReason,
 		DepartureReport:       client.DepartureReport,
 		Addresses:             addresses,
