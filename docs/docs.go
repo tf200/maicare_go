@@ -6565,50 +6565,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/intake_form/{id}/move_to_waiting_list": {
-            "post": {
-                "description": "Move an intake form to waiting list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "Move an intake form to waiting list",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Intake form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_MoveToWaitingListResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/intake_form/{id}/urgency_score": {
             "post": {
                 "description": "Add urgency score to an intake form",
@@ -9029,6 +8985,10 @@ const docTemplate = `{
                 "bsn": {
                     "type": "string"
                 },
+                "bsn_verified_by": {
+                    "description": "needs to be checked",
+                    "type": "integer"
+                },
                 "date_of_birth": {
                     "type": "string"
                 },
@@ -9046,12 +9006,6 @@ const docTemplate = `{
                 },
                 "gender": {
                     "type": "string"
-                },
-                "identity_attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "infix": {
                     "type": "string"
@@ -9094,6 +9048,10 @@ const docTemplate = `{
                 "bsn": {
                     "type": "string"
                 },
+                "bsn_verified_by": {
+                    "description": "needs to be checked",
+                    "type": "integer"
+                },
                 "created": {
                     "type": "string"
                 },
@@ -9129,12 +9087,6 @@ const docTemplate = `{
                 },
                 "identity": {
                     "type": "boolean"
-                },
-                "identity_attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "infix": {
                     "type": "string"
@@ -11861,6 +11813,15 @@ const docTemplate = `{
                 "bsn": {
                     "type": "string"
                 },
+                "bsn_verified_by": {
+                    "type": "integer"
+                },
+                "bsn_verified_by_first_name": {
+                    "type": "string"
+                },
+                "bsn_verified_by_last_name": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -11896,12 +11857,6 @@ const docTemplate = `{
                 },
                 "identity": {
                     "type": "boolean"
-                },
-                "identity_attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "infix": {
                     "type": "string"
@@ -15162,14 +15117,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MoveToWaitingListResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                }
-            }
-        },
         "api.NotificationResponse": {
             "type": "object",
             "properties": {
@@ -16300,20 +16247,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.LogoutResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_MoveToWaitingListResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.MoveToWaitingListResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17496,6 +17429,9 @@ const docTemplate = `{
                 "bsn": {
                     "type": "string"
                 },
+                "bsn_verified_by": {
+                    "type": "integer"
+                },
                 "date_of_birth": {
                     "type": "string"
                 },
@@ -17567,6 +17503,9 @@ const docTemplate = `{
                 "bsn": {
                     "type": "string"
                 },
+                "bsn_verified_by": {
+                    "type": "integer"
+                },
                 "created": {
                     "type": "string"
                 },
@@ -17602,12 +17541,6 @@ const docTemplate = `{
                 },
                 "identity": {
                     "type": "boolean"
-                },
-                "identity_attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "infix": {
                     "type": "string"
