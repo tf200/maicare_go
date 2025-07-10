@@ -20,6 +20,25 @@
       border-radius: 6px;
       padding: 40px;
     }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 20px;
+    }
+    .logo-container {
+      margin-right: 20px;
+      flex-shrink: 0;
+    }
+    .logo {
+      max-width: 60px;
+      height: auto;
+      display: block;
+    }
+    .header-text {
+      flex-grow: 1;
+    }
     h1 {
       color: #1f2937;
       font-size: 22px;
@@ -30,7 +49,7 @@
       font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 30px;
+      margin-bottom: 0;
     }
     .section {
       margin-bottom: 30px;
@@ -92,13 +111,33 @@
       .email-container {
         padding: 20px;
       }
+      .header {
+        flex-direction: column;
+        text-align: center;
+      }
+      .logo-container {
+        margin-right: 0;
+        margin-bottom: 15px;
+      }
+      .logo {
+        max-width: 50px;
+        margin: 0 auto;
+      }
     }
   </style>
 </head>
 <body>
   <div class="email-container">
-    <h1>Jeugdopvangdienst</h1>
-    <div class="subtitle">Rijswijk, Nederland</div>
+    <div class="header">
+      <div class="logo-container">
+        <!-- Replace src with your actual logo URL -->
+        <img src="https://f003.backblazeb2.com/file/maicare/logo.ico" alt="MaiCare Logo" class="logo" />
+      </div>
+      <div class="header-text">
+        <h1>MaiCare</h1>
+        <div class="subtitle">Rijswijk, Nederland</div>
+      </div>
+    </div>
 
     <div class="section">
       <div class="highlight-box">

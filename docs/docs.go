@@ -8407,7 +8407,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "contract_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "loondienst",
+                        "ZZP"
+                    ]
                 },
                 "fixed_contract_hours": {
                     "type": "number"
@@ -15145,6 +15149,9 @@ const docTemplate = `{
         "api.Period": {
             "type": "object",
             "properties": {
+                "Week": {
+                    "type": "integer"
+                },
                 "date_range": {
                     "type": "object",
                     "properties": {
@@ -15156,11 +15163,8 @@ const docTemplate = `{
                         }
                     }
                 },
-                "is_current_month": {
+                "is_current_week": {
                     "type": "boolean"
-                },
-                "month": {
-                    "type": "integer"
                 },
                 "month_name": {
                     "type": "string"
@@ -17114,6 +17118,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "appointment_hours": {
+                    "type": "number"
+                },
+                "over_time": {
+                    "description": "Optional field for overtime hours",
                     "type": "number"
                 },
                 "shift_hours": {

@@ -521,8 +521,8 @@ type EmployeeProfile struct {
 	IsArchived                bool               `json:"is_archived"`
 	FixedContractHours        *float64           `json:"fixed_contract_hours"`
 	VariableContractHours     *float64           `json:"variable_contract_hours"`
-	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
+	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractType              *string            `json:"contract_type"`
 	ContractRate              *float64           `json:"contract_rate"`
 }

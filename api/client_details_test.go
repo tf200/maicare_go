@@ -16,7 +16,6 @@ import (
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -96,11 +95,6 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 }
 
 func TestCreateClientApi(t *testing.T) {
-	var filesUuids [10]uuid.UUID
-	for i := 0; i < 10; i++ {
-		filesUuids[i] = createRandomAttachmentFile(t).Uuid
-
-	}
 
 	sender := createRandomSender(t)
 	location := createRandomLocation(t)

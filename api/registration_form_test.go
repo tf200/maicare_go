@@ -137,6 +137,13 @@ func TestCreateRegistrationFormApi(t *testing.T) {
 					EducationMentorEmail:          util.StringPtr(faker.Email()),
 					EducationCurrentlyEnrolled:    true,
 					EducationAdditionalNotes:      util.StringPtr("Additional notes"),
+					WorkCurrentEmployer:           util.StringPtr("Current Employer"),
+					WorkEmployerPhone:             util.StringPtr(faker.PhoneNumber),
+					WorkEmployerEmail:             util.StringPtr(faker.Email()),
+					WorkCurrentPosition:           util.StringPtr("Current Position"),
+					WorkCurrentlyEmployed:         true,
+					WorkStartDate:                 util.TimePtr(time.Now().AddDate(2, 0, 0)),
+					WorkAdditionalNotes:           util.StringPtr("Work additional notes"),
 					CareProtectedLiving:           util.BoolPtr(true),
 					CareAssistedIndependentLiving: util.BoolPtr(false),
 					CareRoomTrainingCenter:        util.BoolPtr(true),
@@ -399,9 +406,16 @@ func TestUpdateRegistrationFormStatusApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				intakeDate := time.Now().AddDate(0, 0, 14).Format("2006-01-02T15:04:05Z")
-				url := fmt.Sprintf("/registration_form/%d/status?status=approved&intake_appointment_date=%s", registrationForm.ID, intakeDate)
-				req, err := http.NewRequest(http.MethodPost, url, nil)
+				reqBody := UpdateRegistrationFormStatusRequest{
+					Status:                    "approved",
+					IntakeAppointmentDate:     time.Now().AddDate(0, 0, 7),
+					IntakeAppointmentLocation: util.StringPtr("Intake Location"),
+					AddmissionType:            util.StringPtr("regular_placement"),
+				}
+				data, err := json.Marshal(reqBody)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/registration_form/%d/status", registrationForm.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil

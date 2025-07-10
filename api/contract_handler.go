@@ -652,3 +652,25 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 	res := SuccessResponse(pag, "Contracts retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// func (server *Server) GenerateContractPdfApi(ctx *gin.Context) {
+// 	id := ctx.Param("id")
+// 	contractID, err := strconv.ParseInt(id, 10, 64)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
+
+// 	contract, err := server.store.GetClientContract(ctx, contractID)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
+
+//     documentData := pdf.ContractData{
+// 		ID:              contract.ID,
+// 		Status: 		contract.Status,
+
+// 	}
+// 	pdf, err := pdf.GenerateAndUploadContractPDF(ctx)
+// }

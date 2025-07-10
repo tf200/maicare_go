@@ -2,6 +2,7 @@ package api
 
 import (
 	db "maicare_go/db/sqlc"
+	"maicare_go/util"
 	"net/http"
 	"strconv"
 	"time"
@@ -31,15 +32,16 @@ type Summary struct {
 	AppointmentHours float64 `json:"appointment_hours"`
 	ShiftHours       float64 `json:"shift_hours"`
 	TotalDaysWorked  int     `json:"total_days_worked"`
+	OverTime         float64 `json:"over_time,omitempty"` // Optional field for overtime hours
 }
 
 // Period information
 type Period struct {
-	Year           int32  `json:"year"`
-	Month          int32  `json:"month"`
-	MonthName      string `json:"month_name"`
-	IsCurrentMonth bool   `json:"is_current_month"`
-	DateRange      struct {
+	Year          int32  `json:"year"`
+	Week          int32  `json:"Week"`
+	MonthName     string `json:"month_name"`
+	IsCurrentWeek bool   `json:"is_current_week"`
+	DateRange     struct {
 		Start string `json:"start"`
 		End   string `json:"end"`
 	} `json:"date_range"`
@@ -47,8 +49,8 @@ type Period struct {
 
 // ListWorkingHoursRequest represents the request parameters for listing working hours.
 type ListWorkingHoursRequest struct {
-	Year  int32 `form:"year" binding:"required"`
-	Month int32 `form:"month" binding:"required"`
+	Year int32 `form:"year" binding:"required"`
+	Week int32 `form:"week" binding:"required"`
 }
 
 // ListWorkingHoursResponse represents the response structure for listing working hours.
@@ -84,14 +86,10 @@ func (server *Server) ListWorkingHours(ctx *gin.Context) {
 		return
 	}
 
-	periodStart := time.Date(int(req.Year), time.Month(req.Month), 1, 0, 0, 0, 0, time.UTC)
-
-	var periodEnd time.Time
-
-	if req.Year == int32(time.Now().Year()) && req.Month == int32(time.Now().Month()) {
-		periodEnd = time.Now().AddDate(0, 0, 1)
-	} else {
-		periodEnd = periodStart.AddDate(0, 1, 0)
+	periodStart, periodEnd, err := util.GetStartAndEndOfISOWeek(int(req.Year), int(req.Week))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
 	}
 
 	employeeAppointments, err := server.store.ListEmployeeAppointmentsInRange(ctx,
@@ -174,19 +172,45 @@ func (server *Server) ListWorkingHours(ctx *gin.Context) {
 	}
 
 	totalHours := appointmentHours + shiftHours
+	var standardHours float64
+	var overTime float64 = 0.0
+
+	// Calculate overtime if applicable
+	contractDetails, err := server.store.GetEmployeeContractDetails(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if contractDetails.ContractType != nil {
+		// Determine the correct standard hours based on contract type
+		if *contractDetails.ContractType == "loondienst" && contractDetails.FixedContractHours != nil {
+			standardHours = *contractDetails.FixedContractHours
+		} else if *contractDetails.ContractType == "ZZP" && contractDetails.VariableContractHours != nil {
+			standardHours = *contractDetails.VariableContractHours
+		}
+
+		// Perform the overtime calculation if standard hours have been set
+		if standardHours > 0 && totalHours > standardHours {
+			overTime = totalHours - standardHours
+		}
+	}
 
 	summary := Summary{
 		TotalHours:       totalHours,
 		AppointmentHours: appointmentHours,
 		ShiftHours:       shiftHours,
 		TotalDaysWorked:  len(uniqueDays),
+		OverTime:         overTime,
 	}
 
+	currentYear, currentWeek := time.Now().ISOWeek()
+
 	period := Period{
-		Year:           req.Year,
-		Month:          req.Month,
-		MonthName:      periodStart.Month().String(),
-		IsCurrentMonth: req.Year == int32(time.Now().Year()) && req.Month == int32(time.Now().Month()),
+		Year:          req.Year,
+		Week:          req.Week,
+		MonthName:     periodStart.Month().String(),
+		IsCurrentWeek: req.Year == int32(currentYear) && req.Week == int32(currentWeek),
 		DateRange: struct {
 			Start string `json:"start"`
 			End   string `json:"end"`

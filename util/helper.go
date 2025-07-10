@@ -29,6 +29,10 @@ func Float64Ptr(f float64) *float64 {
 
 }
 
+func TimePtr(t time.Time) *time.Time {
+	return &t
+}
+
 // Helper function to convert string to pgtype.Time
 func StringToPgTime(timeStr string) (pgtype.Time, error) {
 	// Parse the time string (expects format like "10:00:00" or "10:00")
@@ -120,4 +124,26 @@ func DerefUUID(u *uuid.UUID) string {
 		return ""
 	}
 	return u.String()
+}
+
+func GetStartAndEndOfISOWeek(year int, week int) (time.Time, time.Time, error) {
+	// Use ISO week start: Monday
+	// Go's time.Date uses Weekday starting from Sunday=0
+	// So we will find the first Thursday of the year to anchor ISO weeks
+	// Then back up to Monday
+
+	// ISO 8601: week 1 is the week with the first Thursday of the year
+	jan4 := time.Date(year, 1, 4, 0, 0, 0, 0, time.UTC)
+
+	// Find Monday of week 1
+	isoWeekStart := jan4
+	for isoWeekStart.Weekday() != time.Monday {
+		isoWeekStart = isoWeekStart.AddDate(0, 0, -1)
+	}
+
+	// Now add (week-1)*7 days
+	weekStart := isoWeekStart.AddDate(0, 0, (week-1)*7)
+	weekEnd := weekStart.AddDate(0, 0, 6) // Sunday
+
+	return weekStart, weekEnd, nil
 }

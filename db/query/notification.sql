@@ -3,7 +3,6 @@
 -- name: CreateNotification :one
 INSERT INTO notifications (
     user_id,
-
     type,
     data
 

@@ -655,7 +655,7 @@ type AddEmployeeContractDetailsRequest struct {
 	VariableContractHours *float64  `json:"variable_contract_hours"`
 	ContractStartDate     time.Time `json:"contract_start_date"`
 	ContractEndDate       time.Time `json:"contract_end_date"`
-	ContractType          *string   `json:"contract_type"`
+	ContractType          *string   `json:"contract_type" binding:"oneof= loondienst ZZP"`
 	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
 }
 

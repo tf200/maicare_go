@@ -116,6 +116,9 @@ definitions:
       contract_start_date:
         type: string
       contract_type:
+        enum:
+        - loondienst
+        - ZZP
         type: string
       fixed_contract_hours:
         type: number
@@ -4610,6 +4613,8 @@ definitions:
     type: object
   api.Period:
     properties:
+      Week:
+        type: integer
       date_range:
         properties:
           end:
@@ -4617,10 +4622,8 @@ definitions:
           start:
             type: string
         type: object
-      is_current_month:
+      is_current_week:
         type: boolean
-      month:
-        type: integer
       month_name:
         type: string
       year:
@@ -5880,6 +5883,9 @@ definitions:
   api.Summary:
     properties:
       appointment_hours:
+        type: number
+      over_time:
+        description: Optional field for overtime hours
         type: number
       shift_hours:
         type: number

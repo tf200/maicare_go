@@ -344,9 +344,9 @@ CREATE TABLE employee_profile (
 
     fixed_contract_hours FLOAT NULL DEFAULT 0.0,
     variable_contract_hours FLOAT NULL DEFAULT 0.0,
-    contract_start_date DATE NULL,
     contract_end_date DATE NULL,
-    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('full_time', 'part_time', 'temporary', 'subcontractor', 'no_type')) DEFAULT 'no_type',
+    contract_start_date DATE NULL,
+    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('loondienst', 'ZZP', 'none')) DEFAULT 'none',
     contract_rate DECIMAL(10,2) NULL DEFAULT 0.00
 );
 
@@ -1984,11 +1984,12 @@ CREATE TABLE registration_form (
     processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     intake_appointment_datetime TIMESTAMPTZ NULL,
     intake_appointment_location VARCHAR(255) NULL,
-    addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placemente'))
+    addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement'))
 );
 
 
 CREATE TABLE schedules (
+    
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
   color VARCHAR(20) DEFAULT '#0000FF', -- Default color for the schedule

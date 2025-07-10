@@ -18,7 +18,7 @@
             background-color: #f8f9fa;
             color: #333;
             line-height: 1.6;
-            padding: 30px;
+            padding: 20px;
         }
 
         .report-container {
@@ -28,7 +28,7 @@
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
         }
 
-        /* Company header */
+        /* Company header - Keep together */
         .company-header {
             padding: 30px 40px;
             background: #fff;
@@ -36,6 +36,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            page-break-inside: avoid;
         }
 
         .company-info {
@@ -68,12 +69,13 @@
             padding: 10px;
         }
 
-        /* Report header */
+        /* Report header - Keep together */
         .report-header {
             padding: 25px 40px;
             background: #2c3e50;
             color: white;
             text-align: center;
+            page-break-inside: avoid;
         }
 
         .report-header h2 {
@@ -87,11 +89,12 @@
             letter-spacing: 0.5px;
         }
 
-        /* Summary section */
+        /* Summary section - Keep together */
         .summary {
             padding: 25px 40px;
             background: #f8f9fa;
             border-bottom: 1px solid #eaeaea;
+            page-break-inside: avoid;
         }
 
         .summary-grid {
@@ -119,10 +122,14 @@
             padding: 30px 40px;
         }
 
+        /* Section styling with page break controls */
         .section {
-            margin-bottom: 35px;
-            padding-bottom: 25px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
             border-bottom: 1px solid #eaeaea;
+            page-break-inside: avoid;
+            orphans: 3;
+            widows: 3;
         }
 
         .section:last-child {
@@ -131,10 +138,21 @@
             padding-bottom: 0;
         }
 
+        /* Allow page breaks before sections if needed */
+        .section.allow-page-break {
+            page-break-inside: auto;
+        }
+
+        /* Prevent page breaks in critical sections */
+        .section.no-page-break {
+            page-break-inside: avoid;
+        }
+
         .section-header {
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid #3498db;
+            page-break-after: avoid;
         }
 
         .section-header h3 {
@@ -143,12 +161,20 @@
             font-weight: 500;
         }
 
-        /* Incident types - Improved contrast */
+        .section-header h4 {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        /* Incident types - Improved for PDF */
         .incident-types {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-top: 15px;
+            page-break-inside: avoid;
         }
 
         .type-card {
@@ -158,6 +184,7 @@
             background: #ffffff;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            page-break-inside: avoid;
         }
 
         .type-card.active {
@@ -207,11 +234,12 @@
             background: #27ae60;
         }
 
-        /* Details */
+        /* Details - Improved for PDF */
         .detail-row {
             display: flex;
             margin-bottom: 15px;
             align-items: flex-start;
+            page-break-inside: avoid;
         }
 
         .detail-label {
@@ -231,6 +259,7 @@
             margin: 0;
             padding: 0;
             list-style: none;
+            page-break-inside: avoid;
         }
 
         .list-items li {
@@ -240,6 +269,7 @@
             border-radius: 4px;
             border-left: 3px solid #3498db;
             font-size: 14px;
+            page-break-inside: avoid;
         }
 
         .list-items li:last-child {
@@ -300,21 +330,12 @@
             background: currentColor;
         }
 
-        /* Footer */
-        .footer {
-            padding: 20px 40px;
-            background: #f8f9fa;
-            color: #7f8c8d;
-            font-size: 13px;
-            border-top: 1px solid #eaeaea;
-            display: flex;
-            justify-content: space-between;
-        }
-
+        /* Signature area - Keep together */
         .signature-area {
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px dashed #bdc3c7;
+            page-break-inside: avoid;
         }
 
         .signature-line {
@@ -329,20 +350,79 @@
             color: #7f8c8d;
         }
 
-        /* Print adjustments */
+        /* Footer - Keep at bottom */
+        .footer {
+            padding: 20px 40px;
+            background: #f8f9fa;
+            color: #7f8c8d;
+            font-size: 13px;
+            border-top: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }
+
+        /* PDF-specific adjustments */
         @media print {
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
             }
 
             .report-container {
                 box-shadow: none;
                 margin: 0;
+                max-width: none;
             }
 
             .type-card {
                 box-shadow: none;
+            }
+
+            /* Ensure good page breaks */
+            .section {
+                page-break-inside: avoid;
+            }
+
+            /* Large sections that might need to break */
+            .section.allow-page-break {
+                page-break-inside: auto;
+            }
+
+            /* Force page break before certain sections if needed */
+            .section.page-break-before {
+                page-break-before: always;
+            }
+
+            /* Prevent orphans and widows */
+            p, li {
+                orphans: 3;
+                widows: 3;
+            }
+        }
+
+        /* Utility classes for manual page break control */
+        .page-break-before {
+            page-break-before: always;
+        }
+
+        .page-break-after {
+            page-break-after: always;
+        }
+
+        .no-page-break {
+            page-break-inside: avoid;
+        }
+
+        .allow-page-break {
+            page-break-inside: auto;
+        }
+
+        /* Responsive grid for incident types in PDF */
+        @media print {
+            .incident-types {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -390,7 +470,7 @@
         </div>
 
         <div class="content">
-            <div class="section">
+            <div class="section no-page-break">
                 <div class="section-header">
                     <h3>1. Betrokken Partijen</h3>
                 </div>
@@ -434,7 +514,7 @@
                 </div>
             </div>
 
-            <div class="section">
+            <div class="section allow-page-break">
                 <div class="section-header">
                     <h3>2. Incidentdetails</h3>
                 </div>
@@ -512,7 +592,7 @@
                 </div>
             </div>
 
-            <div class="section">
+            <div class="section allow-page-break">
                 <div class="section-header">
                     <h3>3. Oorzaken & Gevolgen</h3>
                 </div>
@@ -630,7 +710,7 @@
                 </div>
             </div>
 
-            <div class="section">
+            <div class="section allow-page-break">
                 <div class="section-header">
                     <h3>4. Reactie & Preventie</h3>
                 </div>
