@@ -67,7 +67,8 @@ SET
     sender_id = COALESCE(sqlc.narg('sender_id'), sender_id),
     attachment_ids = COALESCE(sqlc.narg('attachment_ids'), attachment_ids),
     financing_act = COALESCE(sqlc.narg('financing_act'), financing_act),
-    financing_option = COALESCE(sqlc.narg('financing_option'), financing_option)
+    financing_option = COALESCE(sqlc.narg('financing_option'), financing_option),
+    updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 

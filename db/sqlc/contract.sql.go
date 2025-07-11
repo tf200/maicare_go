@@ -696,7 +696,8 @@ SET
     sender_id = COALESCE($13, sender_id),
     attachment_ids = COALESCE($14, attachment_ids),
     financing_act = COALESCE($15, financing_act),
-    financing_option = COALESCE($16, financing_option)
+    financing_option = COALESCE($16, financing_option),
+    updated_at = NOW()
 WHERE id = $1
 RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
