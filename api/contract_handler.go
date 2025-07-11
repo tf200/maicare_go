@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -434,7 +435,6 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 		AttachmentIds:   req.AttachmentIds,
 		FinancingAct:    req.FinancingAct,
 		FinancingOption: req.FinancingOption,
-		Status:          req.Status,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -465,6 +465,68 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 		UpdatedAt:       contract.UpdatedAt.Time,
 		CreatedAt:       contract.CreatedAt.Time,
 	}, "Contract updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+type UpdateContractStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=approved draft terminated stopped expired" example:"approved" enum:"approved,draft,terminated,stopped,expired"`
+}
+
+// UpdateContractStatusResponse defines the response for UpdateContractStatus handler
+type UpdateContractStatusResponse struct {
+	ID     int64  `json:"id"`
+	Status string `json:"status"`
+}
+
+// UpdateContractStatusApi updates the status of a contract
+// @Summary Update the status of a contract
+// @Tags contracts
+// @Accept json
+// @Produce json
+// @Param id path string true "Contract ID"
+// @Param request body UpdateContractStatusRequest true "Update Contract Status Request"
+// @Success 200 {object} UpdateContractStatusResponse
+// @Router /contracts/{id}/status [put]
+func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	contractID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req UpdateContractStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Fetch the current contract to validate status change
+	contract, err := server.store.GetClientContract(ctx, contractID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if req.Status == "approved" && contract.EndDate.Time.Before(time.Now()) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("cannot approve that has alredy ended")))
+		return
+	}
+
+	// Validate status change
+
+	updatedContract, err := server.store.UpdateContractStatus(ctx, db.UpdateContractStatusParams{
+		ID:     contractID,
+		Status: req.Status,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(UpdateContractStatusResponse{
+		ID:     updatedContract.ID,
+		Status: updatedContract.Status,
+	}, "Contract status updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

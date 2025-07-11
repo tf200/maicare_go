@@ -541,7 +541,8 @@ CREATE TABLE contract_type (
 CREATE TABLE contract (
     id BIGSERIAL PRIMARY KEY,
     type_id BIGINT NULL REFERENCES contract_type(id) ON DELETE SET NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('approved', 'draft', 'terminated', 'stopped')) DEFAULT 'draft',
+    status VARCHAR(20) NOT NULL CHECK (status IN ('approved', 'draft', 'terminated', 'stopped', 'expired')) DEFAULT 'draft',
+    approved_at TIMESTAMPTZ NULL,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
     reminder_period INTEGER NOT NULL DEFAULT 90, -- in days
@@ -567,6 +568,78 @@ CREATE INDEX contract_type_id_idx ON contract(type_id);
 CREATE INDEX contract_client_id_idx ON contract(client_id);
 CREATE INDEX contract_sender_id_idx ON contract(sender_id);
 CREATE INDEX contract_status_idx ON contract(status);
+
+-- Create audit table
+CREATE TABLE contract_audit (
+    audit_id BIGSERIAL PRIMARY KEY,
+    contract_id BIGINT NOT NULL,
+    operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+    changed_by BIGINT NULL, -- user ID who made the change
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_values JSONB NULL,
+    new_values JSONB NULL,
+    changed_fields TEXT[] NULL -- array of field names that changed
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_contract_audit_contract_id ON contract_audit(contract_id);
+CREATE INDEX idx_contract_audit_changed_at ON contract_audit(changed_at);
+CREATE INDEX idx_contract_audit_operation ON contract_audit(operation);
+
+
+-- Create trigger function to capture changes
+CREATE OR REPLACE FUNCTION contract_audit_trigger_func()
+RETURNS TRIGGER AS $$
+DECLARE
+    old_row JSONB;
+    new_row JSONB;
+    changed_fields TEXT[] := '{}';
+    field_name TEXT;
+BEGIN
+    -- Handle different operations
+    IF TG_OP = 'DELETE' THEN
+        old_row := to_jsonb(OLD);
+        INSERT INTO contract_audit (contract_id, operation, old_values, changed_at)
+        VALUES (OLD.id, 'DELETE', old_row, CURRENT_TIMESTAMP);
+        RETURN OLD;
+    ELSIF TG_OP = 'INSERT' THEN
+        new_row := to_jsonb(NEW);
+        INSERT INTO contract_audit (contract_id, operation, new_values, changed_at)
+        VALUES (NEW.id, 'INSERT', new_row, CURRENT_TIMESTAMP);
+        RETURN NEW;
+    ELSIF TG_OP = 'UPDATE' THEN
+        old_row := to_jsonb(OLD);
+        new_row := to_jsonb(NEW);
+        
+        -- Identify changed fields
+        FOR field_name IN SELECT jsonb_object_keys(new_row) LOOP
+            IF old_row->>field_name IS DISTINCT FROM new_row->>field_name THEN
+                changed_fields := array_append(changed_fields, field_name);
+            END IF;
+        END LOOP;
+        
+        -- Only log if there are actual changes (excluding updated_at)
+        IF array_length(changed_fields, 1) > 0 AND NOT (array_length(changed_fields, 1) = 1 AND 'updated_at' = ANY(changed_fields)) THEN
+            INSERT INTO contract_audit (contract_id, operation, old_values, new_values, changed_fields, changed_at)
+            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields, CURRENT_TIMESTAMP);
+        END IF;
+        
+        RETURN NEW;
+    END IF;
+    
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Create the trigger
+CREATE TRIGGER contract_audit_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON contract
+    FOR EACH ROW EXECUTE FUNCTION contract_audit_trigger_func();
+
+
+
+
 
 
 CREATE TABLE contract_reminder (

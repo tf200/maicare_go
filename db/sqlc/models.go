@@ -367,6 +367,7 @@ type Contract struct {
 	ID              int64              `json:"id"`
 	TypeID          *int64             `json:"type_id"`
 	Status          string             `json:"status"`
+	ApprovedAt      pgtype.Timestamptz `json:"approved_at"`
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
@@ -394,6 +395,17 @@ type ContractAttachment struct {
 	Name       string             `json:"name"`
 	Attachment string             `json:"attachment"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type ContractAudit struct {
+	AuditID       int64              `json:"audit_id"`
+	ContractID    int64              `json:"contract_id"`
+	Operation     string             `json:"operation"`
+	ChangedBy     *int64             `json:"changed_by"`
+	ChangedAt     pgtype.Timestamptz `json:"changed_at"`
+	OldValues     []byte             `json:"old_values"`
+	NewValues     []byte             `json:"new_values"`
+	ChangedFields []string           `json:"changed_fields"`
 }
 
 type ContractReminder struct {

@@ -67,8 +67,15 @@ SET
     sender_id = COALESCE(sqlc.narg('sender_id'), sender_id),
     attachment_ids = COALESCE(sqlc.narg('attachment_ids'), attachment_ids),
     financing_act = COALESCE(sqlc.narg('financing_act'), financing_act),
-    financing_option = COALESCE(sqlc.narg('financing_option'), financing_option),
-    status = COALESCE(sqlc.narg('status'), status)
+    financing_option = COALESCE(sqlc.narg('financing_option'), financing_option)
+WHERE id = $1
+RETURNING *;
+
+-- name: UpdateContractStatus :one
+UPDATE contract
+SET
+    status = $2,
+    approved_at = CASE WHEN $2 = 'approved' THEN NOW() ELSE approved_at END
 WHERE id = $1
 RETURNING *;
 
@@ -193,3 +200,38 @@ INSERT INTO contract_reminder (
     ELSE 'follow_up' END
 )
 RETURNING *;
+
+
+
+-- name: GetBillablePeriodsForContract :many
+WITH status_history AS (
+  SELECT
+    new_values->>'status' AS status,
+    changed_at AS effective_date
+  FROM contract_audit
+  WHERE contract_id = sqlc.arg(contract_id)
+  
+  UNION ALL
+  
+  SELECT
+    status,
+    updated_at
+  FROM contract
+  WHERE id = sqlc.arg(contract_id)
+  ORDER BY effective_date
+),
+
+approved_periods AS (
+  SELECT
+    effective_date AS period_start,
+    LEAD(effective_date, 1) OVER (ORDER BY effective_date) AS period_end
+  FROM status_history
+  WHERE status = 'approved'
+)
+
+SELECT
+  GREATEST(period_start, sqlc.arg(invoice_start_date))::TIMESTAMPTZ AS billable_start,
+  LEAST(COALESCE(period_end, sqlc.arg(invoice_end_date)), sqlc.arg(invoice_end_date))::TIMESTAMPTZ AS billable_end
+FROM approved_periods
+WHERE period_start < sqlc.arg(invoice_end_date)
+  AND COALESCE(period_end, 'infinity'::TIMESTAMPTZ) > sqlc.arg(invoice_start_date);

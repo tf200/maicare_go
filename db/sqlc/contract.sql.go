@@ -33,7 +33,7 @@ INSERT INTO contract (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 )
-RETURNING id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
+RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type CreateContractParams struct {
@@ -79,6 +79,7 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 		&i.ID,
 		&i.TypeID,
 		&i.Status,
+		&i.ApprovedAt,
 		&i.StartDate,
 		&i.EndDate,
 		&i.ReminderPeriod,
@@ -160,8 +161,73 @@ func (q *Queries) DeleteContractType(ctx context.Context, id int64) error {
 	return err
 }
 
+const getBillablePeriodsForContract = `-- name: GetBillablePeriodsForContract :many
+WITH status_history AS (
+  SELECT
+    new_values->>'status' AS status,
+    changed_at AS effective_date
+  FROM contract_audit
+  WHERE contract_id = $3
+  
+  UNION ALL
+  
+  SELECT
+    status,
+    updated_at
+  FROM contract
+  WHERE id = $3
+  ORDER BY effective_date
+),
+
+approved_periods AS (
+  SELECT
+    effective_date AS period_start,
+    LEAD(effective_date, 1) OVER (ORDER BY effective_date) AS period_end
+  FROM status_history
+  WHERE status = 'approved'
+)
+
+SELECT
+  GREATEST(period_start, $1)::TIMESTAMPTZ AS billable_start,
+  LEAST(COALESCE(period_end, $2), $2)::TIMESTAMPTZ AS billable_end
+FROM approved_periods
+WHERE period_start < $2
+  AND COALESCE(period_end, 'infinity'::TIMESTAMPTZ) > $1
+`
+
+type GetBillablePeriodsForContractParams struct {
+	InvoiceStartDate pgtype.Timestamptz `json:"invoice_start_date"`
+	InvoiceEndDate   pgtype.Timestamptz `json:"invoice_end_date"`
+	ContractID       int64              `json:"contract_id"`
+}
+
+type GetBillablePeriodsForContractRow struct {
+	BillableStart pgtype.Timestamptz `json:"billable_start"`
+	BillableEnd   pgtype.Timestamptz `json:"billable_end"`
+}
+
+func (q *Queries) GetBillablePeriodsForContract(ctx context.Context, arg GetBillablePeriodsForContractParams) ([]GetBillablePeriodsForContractRow, error) {
+	rows, err := q.db.Query(ctx, getBillablePeriodsForContract, arg.InvoiceStartDate, arg.InvoiceEndDate, arg.ContractID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBillablePeriodsForContractRow
+	for rows.Next() {
+		var i GetBillablePeriodsForContractRow
+		if err := rows.Scan(&i.BillableStart, &i.BillableEnd); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getClientContract = `-- name: GetClientContract :one
-SELECT c.id, c.type_id, c.status, c.start_date, c.end_date, c.reminder_period, c.vat, c.price, c.price_time_unit, c.hours, c.hours_type, c.care_name, c.care_type, c.client_id, c.sender_id, c.attachment_ids, c.financing_act, c.financing_option, c.departure_reason, c.departure_report, c.updated_at, c.created_at,
+SELECT c.id, c.type_id, c.status, c.approved_at, c.start_date, c.end_date, c.reminder_period, c.vat, c.price, c.price_time_unit, c.hours, c.hours_type, c.care_name, c.care_type, c.client_id, c.sender_id, c.attachment_ids, c.financing_act, c.financing_option, c.departure_reason, c.departure_report, c.updated_at, c.created_at,
         ct.name AS contract_type_name,
         cd.first_name AS client_first_name,
         cd.last_name AS client_last_name,
@@ -178,6 +244,7 @@ type GetClientContractRow struct {
 	ID               int64              `json:"id"`
 	TypeID           *int64             `json:"type_id"`
 	Status           string             `json:"status"`
+	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
 	StartDate        pgtype.Timestamptz `json:"start_date"`
 	EndDate          pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod   int32              `json:"reminder_period"`
@@ -210,6 +277,7 @@ func (q *Queries) GetClientContract(ctx context.Context, id int64) (GetClientCon
 		&i.ID,
 		&i.TypeID,
 		&i.Status,
+		&i.ApprovedAt,
 		&i.StartDate,
 		&i.EndDate,
 		&i.ReminderPeriod,
@@ -238,7 +306,7 @@ func (q *Queries) GetClientContract(ctx context.Context, id int64) (GetClientCon
 }
 
 const getSenderContracts = `-- name: GetSenderContracts :many
-SELECT id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
+SELECT id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
 WHERE sender_id = $1
 `
 
@@ -255,6 +323,7 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 			&i.ID,
 			&i.TypeID,
 			&i.Status,
+			&i.ApprovedAt,
 			&i.StartDate,
 			&i.EndDate,
 			&i.ReminderPeriod,
@@ -287,12 +356,12 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 
 const listClientContracts = `-- name: ListClientContracts :many
 WITH client_contracts AS (
-    SELECT id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
+    SELECT id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
     WHERE client_id = $1
 )
 SELECT
     (SELECT COUNT(*) FROM client_contracts) AS total_count,
-    id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
+    id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 FROM client_contracts
 ORDER BY created_at DESC
 LIMIT $2
@@ -310,6 +379,7 @@ type ListClientContractsRow struct {
 	ID              int64              `json:"id"`
 	TypeID          *int64             `json:"type_id"`
 	Status          string             `json:"status"`
+	ApprovedAt      pgtype.Timestamptz `json:"approved_at"`
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
@@ -345,6 +415,7 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 			&i.ID,
 			&i.TypeID,
 			&i.Status,
+			&i.ApprovedAt,
 			&i.StartDate,
 			&i.EndDate,
 			&i.ReminderPeriod,
@@ -625,10 +696,9 @@ SET
     sender_id = COALESCE($13, sender_id),
     attachment_ids = COALESCE($14, attachment_ids),
     financing_act = COALESCE($15, financing_act),
-    financing_option = COALESCE($16, financing_option),
-    status = COALESCE($17, status)
+    financing_option = COALESCE($16, financing_option)
 WHERE id = $1
-RETURNING id, type_id, status, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
+RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type UpdateContractParams struct {
@@ -648,7 +718,6 @@ type UpdateContractParams struct {
 	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct    *string            `json:"financing_act"`
 	FinancingOption *string            `json:"financing_option"`
-	Status          *string            `json:"status"`
 }
 
 func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error) {
@@ -669,13 +738,58 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 		arg.AttachmentIds,
 		arg.FinancingAct,
 		arg.FinancingOption,
-		arg.Status,
 	)
 	var i Contract
 	err := row.Scan(
 		&i.ID,
 		&i.TypeID,
 		&i.Status,
+		&i.ApprovedAt,
+		&i.StartDate,
+		&i.EndDate,
+		&i.ReminderPeriod,
+		&i.Vat,
+		&i.Price,
+		&i.PriceTimeUnit,
+		&i.Hours,
+		&i.HoursType,
+		&i.CareName,
+		&i.CareType,
+		&i.ClientID,
+		&i.SenderID,
+		&i.AttachmentIds,
+		&i.FinancingAct,
+		&i.FinancingOption,
+		&i.DepartureReason,
+		&i.DepartureReport,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateContractStatus = `-- name: UpdateContractStatus :one
+UPDATE contract
+SET
+    status = $2,
+    approved_at = CASE WHEN $2 = 'approved' THEN NOW() ELSE approved_at END
+WHERE id = $1
+RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
+`
+
+type UpdateContractStatusParams struct {
+	ID     int64  `json:"id"`
+	Status string `json:"status"`
+}
+
+func (q *Queries) UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error) {
+	row := q.db.QueryRow(ctx, updateContractStatus, arg.ID, arg.Status)
+	var i Contract
+	err := row.Scan(
+		&i.ID,
+		&i.TypeID,
+		&i.Status,
+		&i.ApprovedAt,
 		&i.StartDate,
 		&i.EndDate,
 		&i.ReminderPeriod,

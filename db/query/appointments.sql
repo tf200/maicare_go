@@ -244,3 +244,34 @@ SET
     confirmed_by_employee_id = sqlc.arg(employee_id),
     confirmed_at = NOW()
 WHERE id = $1;
+
+
+
+-- name: ListClientAppointmentsStartingInRange :many
+-- Define the parameters for the query
+-- client_id: The ID of the client whose appointments are being queried.
+-- start_date: The beginning of the time range to search within (inclusive).
+-- end_date: The end of the time range to search within (exclusive).
+SELECT
+    sa.id AS appointment_id,
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.color,
+    sa.status,
+    sa.creator_employee_id, -- Include creator info if needed
+    sa.created_at
+FROM
+    scheduled_appointments sa
+JOIN
+    appointment_clients ac ON sa.id = ac.appointment_id
+WHERE
+    ac.client_id = sqlc.arg(client_id)
+    -- Only include appointments that START within the specified range
+    AND sa.start_time >= sqlc.arg(start_date)
+    AND sa.start_time < sqlc.arg(end_date)
+
+-- Order the results by start time
+ORDER BY
+    sa.start_time;

@@ -481,6 +481,84 @@ func (q *Queries) ListClientAppointmentsInRange(ctx context.Context, arg ListCli
 	return items, nil
 }
 
+const listClientAppointmentsStartingInRange = `-- name: ListClientAppointmentsStartingInRange :many
+SELECT
+    sa.id AS appointment_id,
+    sa.start_time,
+    sa.end_time,
+    sa.location,
+    sa.description,
+    sa.color,
+    sa.status,
+    sa.creator_employee_id, -- Include creator info if needed
+    sa.created_at
+FROM
+    scheduled_appointments sa
+JOIN
+    appointment_clients ac ON sa.id = ac.appointment_id
+WHERE
+    ac.client_id = $1
+    -- Only include appointments that START within the specified range
+    AND sa.start_time >= $2
+    AND sa.start_time < $3
+
+ORDER BY
+    sa.start_time
+`
+
+type ListClientAppointmentsStartingInRangeParams struct {
+	ClientID  int64            `json:"client_id"`
+	StartDate pgtype.Timestamp `json:"start_date"`
+	EndDate   pgtype.Timestamp `json:"end_date"`
+}
+
+type ListClientAppointmentsStartingInRangeRow struct {
+	AppointmentID     uuid.UUID        `json:"appointment_id"`
+	StartTime         pgtype.Timestamp `json:"start_time"`
+	EndTime           pgtype.Timestamp `json:"end_time"`
+	Location          *string          `json:"location"`
+	Description       *string          `json:"description"`
+	Color             *string          `json:"color"`
+	Status            string           `json:"status"`
+	CreatorEmployeeID *int64           `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
+}
+
+// Define the parameters for the query
+// client_id: The ID of the client whose appointments are being queried.
+// start_date: The beginning of the time range to search within (inclusive).
+// end_date: The end of the time range to search within (exclusive).
+// Order the results by start time
+func (q *Queries) ListClientAppointmentsStartingInRange(ctx context.Context, arg ListClientAppointmentsStartingInRangeParams) ([]ListClientAppointmentsStartingInRangeRow, error) {
+	rows, err := q.db.Query(ctx, listClientAppointmentsStartingInRange, arg.ClientID, arg.StartDate, arg.EndDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClientAppointmentsStartingInRangeRow
+	for rows.Next() {
+		var i ListClientAppointmentsStartingInRangeRow
+		if err := rows.Scan(
+			&i.AppointmentID,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Location,
+			&i.Description,
+			&i.Color,
+			&i.Status,
+			&i.CreatorEmployeeID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEmployeeAppointmentsInRange = `-- name: ListEmployeeAppointmentsInRange :many
 SELECT
     sa.id AS appointment_id,
