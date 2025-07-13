@@ -16,6 +16,7 @@ WHERE id = $1;
 -- name: CreateContract :one
 INSERT INTO contract (
     type_id,
+    status,
     start_date,
     end_date,
     reminder_period,
@@ -32,7 +33,7 @@ INSERT INTO contract (
     financing_act,
     financing_option
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
 )
 RETURNING *;
 
@@ -75,9 +76,9 @@ RETURNING *;
 -- name: UpdateContractStatus :one
 UPDATE contract
 SET
-    status = $2,
-    approved_at = CASE WHEN $2 = 'approved' THEN NOW() ELSE approved_at END
-WHERE id = $1
+    status = @status::text,
+    approved_at = CASE WHEN @status::text = 'approved' THEN NOW() ELSE approved_at END
+WHERE id = @contract_id::BIGINT
 RETURNING *;
 
 -- name: GetClientContract :one

@@ -323,7 +323,7 @@ func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID int64) ([
 
 const getClientSender = `-- name: GetClientSender :one
 SELECT s.id, s.types, s.name, s.address, s.postal_code, s.place, s.land, s.kvknumber, s.btwnumber, s.phone_number, s.client_number, s.email_address, s.contacts, s.is_archived, s.created_at, s.updated_at FROM sender s
-JOIN client_details cd ON s.id = cd.sender_id
+LEFT JOIN client_details cd ON s.id = cd.sender_id
 WHERE cd.id = $1
 LIMIT 1
 `

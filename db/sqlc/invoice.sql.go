@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -15,32 +16,41 @@ const createInvoice = `-- name: CreateInvoice :one
 INSERT INTO invoice (
     invoice_number,
     due_date,
+    issue_date,
     invoice_details,
     total_amount,
     extra_content,
-    client_id
+    client_id,
+    sender_id,
+    warning_count
     ) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, updated, created
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
+) RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
 `
 
 type CreateInvoiceParams struct {
 	InvoiceNumber  string      `json:"invoice_number"`
 	DueDate        pgtype.Date `json:"due_date"`
+	IssueDate      pgtype.Date `json:"issue_date"`
 	InvoiceDetails []byte      `json:"invoice_details"`
 	TotalAmount    float64     `json:"total_amount"`
 	ExtraContent   *string     `json:"extra_content"`
 	ClientID       int64       `json:"client_id"`
+	SenderID       *int64      `json:"sender_id"`
+	WarningCount   int32       `json:"warning_count"`
 }
 
 func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error) {
 	row := q.db.QueryRow(ctx, createInvoice,
 		arg.InvoiceNumber,
 		arg.DueDate,
+		arg.IssueDate,
 		arg.InvoiceDetails,
 		arg.TotalAmount,
 		arg.ExtraContent,
 		arg.ClientID,
+		arg.SenderID,
+		arg.WarningCount,
 	)
 	var i Invoice
 	err := row.Scan(
@@ -54,8 +64,256 @@ func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (I
 		&i.PdfAttachmentID,
 		&i.ExtraContent,
 		&i.ClientID,
-		&i.Updated,
-		&i.Created,
+		&i.SenderID,
+		&i.WarningCount,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const deleteInvoice = `-- name: DeleteInvoice :exec
+DELETE FROM invoice
+WHERE id = $1
+`
+
+func (q *Queries) DeleteInvoice(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteInvoice, id)
+	return err
+}
+
+const getInvoice = `-- name: GetInvoice :one
+SELECT
+    i.id, i.invoice_number, i.issue_date, i.due_date, i.status, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
+    s.name AS sender_name,
+    cd.first_name AS client_first_name,
+    cd.last_name AS client_last_name
+FROM
+    invoice i
+JOIN
+    client_details cd ON i.client_id = cd.id
+LEFT JOIN
+    sender s ON i.sender_id = s.id
+WHERE
+    i.id = $1
+LIMIT 1
+`
+
+type GetInvoiceRow struct {
+	ID              int64              `json:"id"`
+	InvoiceNumber   string             `json:"invoice_number"`
+	IssueDate       pgtype.Date        `json:"issue_date"`
+	DueDate         pgtype.Date        `json:"due_date"`
+	Status          string             `json:"status"`
+	InvoiceDetails  []byte             `json:"invoice_details"`
+	TotalAmount     float64            `json:"total_amount"`
+	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent    *string            `json:"extra_content"`
+	ClientID        int64              `json:"client_id"`
+	SenderID        *int64             `json:"sender_id"`
+	WarningCount    int32              `json:"warning_count"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	SenderName      *string            `json:"sender_name"`
+	ClientFirstName string             `json:"client_first_name"`
+	ClientLastName  string             `json:"client_last_name"`
+}
+
+func (q *Queries) GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error) {
+	row := q.db.QueryRow(ctx, getInvoice, id)
+	var i GetInvoiceRow
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceNumber,
+		&i.IssueDate,
+		&i.DueDate,
+		&i.Status,
+		&i.InvoiceDetails,
+		&i.TotalAmount,
+		&i.PdfAttachmentID,
+		&i.ExtraContent,
+		&i.ClientID,
+		&i.SenderID,
+		&i.WarningCount,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+		&i.SenderName,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+	)
+	return i, err
+}
+
+const listInvoices = `-- name: ListInvoices :many
+SELECT
+    i.id, i.invoice_number, i.issue_date, i.due_date, i.status, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
+    COUNT(*) OVER() AS total_count,
+    s.name AS sender_name,
+    cd.first_name AS client_first_name,
+    cd.last_name AS client_last_name
+FROM
+    invoice i
+JOIN
+    client_details cd ON i.client_id = cd.id
+LEFT JOIN
+    sender s ON i.sender_id = s.id
+WHERE
+    -- Optional filter for client_id.
+    -- The filter is applied only if the @client_id parameter is not NULL.
+    (i.client_id = $1 OR $1 IS NULL)
+    
+    -- Optional filter for sender_id.
+    -- The filter is applied only if the @sender_id parameter is not NULL.
+    AND (i.sender_id = $2 OR $2 IS NULL)
+    
+    -- Optional filter for status.
+    -- The filter is applied only if the @status parameter is not NULL.
+    AND (i.status = $3 OR $3 IS NULL)
+    
+    -- Optional filter for the start of the issue_date range.
+    -- The filter is applied only if the @start_date parameter is not NULL.
+    AND (i.issue_date >= $4 OR $4 IS NULL)
+    
+    -- Optional filter for the end of the issue_date range.
+    -- The filter is applied only if the @end_date parameter is not NULL.
+    AND (i.issue_date <= $5 OR $5 IS NULL)
+ORDER BY
+    i.updated_at DESC
+LIMIT $7
+OFFSET $6
+`
+
+type ListInvoicesParams struct {
+	ClientID  *int64      `json:"client_id"`
+	SenderID  *int64      `json:"sender_id"`
+	Status    *string     `json:"status"`
+	StartDate pgtype.Date `json:"start_date"`
+	EndDate   pgtype.Date `json:"end_date"`
+	Offset    int32       `json:"offset"`
+	Limit     int32       `json:"limit"`
+}
+
+type ListInvoicesRow struct {
+	ID              int64              `json:"id"`
+	InvoiceNumber   string             `json:"invoice_number"`
+	IssueDate       pgtype.Date        `json:"issue_date"`
+	DueDate         pgtype.Date        `json:"due_date"`
+	Status          string             `json:"status"`
+	InvoiceDetails  []byte             `json:"invoice_details"`
+	TotalAmount     float64            `json:"total_amount"`
+	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent    *string            `json:"extra_content"`
+	ClientID        int64              `json:"client_id"`
+	SenderID        *int64             `json:"sender_id"`
+	WarningCount    int32              `json:"warning_count"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	TotalCount      int64              `json:"total_count"`
+	SenderName      *string            `json:"sender_name"`
+	ClientFirstName string             `json:"client_first_name"`
+	ClientLastName  string             `json:"client_last_name"`
+}
+
+func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error) {
+	rows, err := q.db.Query(ctx, listInvoices,
+		arg.ClientID,
+		arg.SenderID,
+		arg.Status,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListInvoicesRow
+	for rows.Next() {
+		var i ListInvoicesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.InvoiceNumber,
+			&i.IssueDate,
+			&i.DueDate,
+			&i.Status,
+			&i.InvoiceDetails,
+			&i.TotalAmount,
+			&i.PdfAttachmentID,
+			&i.ExtraContent,
+			&i.ClientID,
+			&i.SenderID,
+			&i.WarningCount,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+			&i.TotalCount,
+			&i.SenderName,
+			&i.ClientFirstName,
+			&i.ClientLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateInvoice = `-- name: UpdateInvoice :one
+UPDATE invoice
+SET
+    issue_date = COALESCE($2, issue_date),
+    due_date = COALESCE($3, due_date),
+    invoice_details = COALESCE($4, invoice_details),
+    total_amount = COALESCE($5, total_amount),
+    extra_content = COALESCE($6, extra_content),
+    status = COALESCE($7, status),
+    warning_count = COALESCE($8, warning_count)
+WHERE
+    id = $1
+RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
+`
+
+type UpdateInvoiceParams struct {
+	ID             int64       `json:"id"`
+	IssueDate      pgtype.Date `json:"issue_date"`
+	DueDate        pgtype.Date `json:"due_date"`
+	InvoiceDetails []byte      `json:"invoice_details"`
+	TotalAmount    float64     `json:"total_amount"`
+	ExtraContent   *string     `json:"extra_content"`
+	Status         string      `json:"status"`
+	WarningCount   int32       `json:"warning_count"`
+}
+
+func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error) {
+	row := q.db.QueryRow(ctx, updateInvoice,
+		arg.ID,
+		arg.IssueDate,
+		arg.DueDate,
+		arg.InvoiceDetails,
+		arg.TotalAmount,
+		arg.ExtraContent,
+		arg.Status,
+		arg.WarningCount,
+	)
+	var i Invoice
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceNumber,
+		&i.IssueDate,
+		&i.DueDate,
+		&i.Status,
+		&i.InvoiceDetails,
+		&i.TotalAmount,
+		&i.PdfAttachmentID,
+		&i.ExtraContent,
+		&i.ClientID,
+		&i.SenderID,
+		&i.WarningCount,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }

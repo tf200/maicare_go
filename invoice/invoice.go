@@ -24,6 +24,7 @@ type InvoiceData struct {
 	InvoiceDetails []InvoiceDetails `json:"invoice_details"`
 }
 
+// InvoiceDetails contains details for each contract in the invoice
 type InvoiceDetails struct {
 	ContractID    int64           `json:"contract_id"`
 	Periods       []InvoicePeriod `json:"periods"` // Optional periods for the contract
@@ -47,35 +48,51 @@ func GenerateInvoiceNumber(clientID int64, now time.Time) string {
 	return fmt.Sprintf("INV-%s-%d", datePart, clientID)
 }
 
-func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Context) (*InvoiceData, error) {
+func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Context) (*InvoiceData, int64, error) {
 	// Validate invoice data
+	var warningCount int64
 	if invoiceData.ClientID <= 0 {
-		return nil, fmt.Errorf("invalid client ID: %d", invoiceData.ClientID)
+		return nil, warningCount, fmt.Errorf("invalid client ID: %d", invoiceData.ClientID)
 	}
 	if invoiceData.StartDate.IsZero() || invoiceData.EndDate.IsZero() {
-		return nil, fmt.Errorf("start date and end date must be specified")
+		return nil, warningCount, fmt.Errorf("start date and end date must be specified")
 	}
 	if invoiceData.EndDate.Before(invoiceData.StartDate) {
-		return nil, fmt.Errorf("end date cannot be before start date")
+		return nil, warningCount, fmt.Errorf("end date cannot be before start date")
 	}
 
-	// set the invoice date to now
-
-	// get all client contracts
+	// Get all client contracts
 	contracts, err := store.ListClientContracts(ctx, db.ListClientContractsParams{
-		ClientID: invoiceData.ClientID})
+		ClientID: invoiceData.ClientID,
+		Limit:    1000,
+		Offset:   0,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get client contracts for client %d: %w", invoiceData.ClientID, err)
+		return nil, warningCount, fmt.Errorf("failed to get client contracts for client %d: %w", invoiceData.ClientID, err)
 	}
 	if len(contracts) == 0 {
-		return nil, fmt.Errorf("no contracts found for client %d", invoiceData.ClientID)
+		return nil, warningCount, fmt.Errorf("no contracts found for client %d", invoiceData.ClientID)
 	}
 
 	var totalAmount float64
-
 	var invoice []InvoiceDetails = make([]InvoiceDetails, len(contracts))
-	// Iterate through each contract and
+
 	for i, contract := range contracts {
+		billablePeriods, err := store.GetBillablePeriodsForContract(ctx, db.GetBillablePeriodsForContractParams{
+			ContractID:       contract.ID,
+			InvoiceStartDate: pgtype.Timestamptz{Time: invoiceData.StartDate, Valid: true},
+			InvoiceEndDate:   pgtype.Timestamptz{Time: invoiceData.EndDate, Valid: true},
+		})
+		if err != nil {
+			invoice[i].Warnings = append(invoice[i].Warnings,
+				fmt.Sprintf("failed to get billable periods for contract %d: %v", contract.ID, err))
+			warningCount++
+			continue
+		}
+		if len(billablePeriods) == 0 {
+			continue
+		}
+
 		invoice[i] = InvoiceDetails{
 			ContractID:    contract.ID,
 			Price:         contract.Price,
@@ -83,26 +100,20 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 			Vat:           float64(*contract.Vat),
 		}
 
-		billablePeriod, err := store.GetBillablePeriodsForContract(ctx, db.GetBillablePeriodsForContractParams{
-			ContractID:       contract.ID,
-			InvoiceStartDate: pgtype.Timestamptz{Time: invoiceData.StartDate, Valid: true},
-			InvoiceEndDate:   pgtype.Timestamptz{Time: invoiceData.EndDate, Valid: true},
-		})
-		if err != nil {
-			invoice[i].Warnings = append(invoice[i].Warnings, fmt.Sprintf("failed to get billable periods for contract %d: %v", contract.ID, err))
-			continue // Skip this contract if billable periods cannot be retrieved
-		}
-		if len(billablePeriod) == 0 {
-			continue
+		if len(billablePeriods) > 1 {
+			invoice[i].Warnings = append(invoice[i].Warnings,
+				fmt.Sprintf("multiple billable periods found for contract %d, make sure to verify contract details", contract.ID))
+			warningCount++
 		}
 
-		// itterate through the billable periods of the contract
-		for _, period := range billablePeriod {
+		for _, period := range billablePeriods {
 			var periodItem InvoicePeriod
 			periodItem.StartDate = period.BillableStart.Time
 			periodItem.EndDate = period.BillableEnd.Time
+			invoice[i].Periods = append(invoice[i].Periods, periodItem)
+
 			if contract.CareType == "accommodation" {
-				accomodationTotals, err := CalculateAccomodationInvoiceTotal(AccommodationInvoiceParams{
+				totals, err := CalculateAccomodationInvoiceTotal(AccommodationInvoiceParams{
 					Price:               contract.Price,
 					PriceTimeUnit:       contract.PriceTimeUnit,
 					VAT:                 float64(*contract.Vat),
@@ -110,54 +121,71 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 					BillablePeriodEnd:   period.BillableEnd.Time,
 				})
 				if err != nil {
-					invoice[i].Warnings = append(invoice[i].Warnings, fmt.Sprintf("failed to calculate accommodation invoice total for contract %d: %v", contract.ID, err))
-					continue // Skip this contract if calculation fails
+					invoice[i].Warnings = append(invoice[i].Warnings,
+						fmt.Sprintf("failed to calculate accommodation invoice total for contract %d: %v", contract.ID, err))
+					warningCount++
+					continue
 				}
-				invoice[i].PreVatTotal += accomodationTotals.PreVatTotal
-				invoice[i].Total += accomodationTotals.Total
-				periodItem.AcommodationTimeFrame = &accomodationTotals.TimeFrame
-				totalAmount += accomodationTotals.Total
+
+				invoice[i].PreVatTotal += totals.PreVatTotal
+				invoice[i].Total += totals.Total
+				periodItem.AcommodationTimeFrame = &totals.TimeFrame
+				totalAmount += totals.Total
 
 			} else if contract.CareType == "ambulante" {
 				appointments, err := store.ListClientAppointmentsStartingInRange(ctx, db.ListClientAppointmentsStartingInRangeParams{
-					ClientID:  contract.ClientID,
-					StartDate: pgtype.Timestamp{Time: period.BillableStart.Time, Valid: true},
-					EndDate:   pgtype.Timestamp{Time: period.BillableEnd.Time, Valid: true},
+					ClientID: contract.ClientID,
+					StartDate: pgtype.Timestamp{
+						Time:  period.BillableStart.Time,
+						Valid: true,
+					},
+					EndDate: pgtype.Timestamp{
+						Time:  period.BillableEnd.Time,
+						Valid: true,
+					},
 				})
 				if err != nil {
-					invoice[i].Warnings = append(invoice[i].Warnings, fmt.Sprintf("failed to get appointments for contract %d: %v", contract.ID, err))
-					continue // Skip this contract if appointments cannot be retrieved
+					invoice[i].Warnings = append(invoice[i].Warnings,
+						fmt.Sprintf("failed to get appointments for contract %d: %v", contract.ID, err))
+					warningCount++
+					continue
 				}
 				if len(appointments) == 0 {
-					continue // Skip this contract if no appointments are found
+					continue
 				}
-				// Calculate total minutes from appointments
+
 				totalMinutes := 0.0
 				for _, appointment := range appointments {
 					duration := appointment.EndTime.Time.Sub(appointment.StartTime.Time)
 					totalMinutes += duration.Minutes()
 				}
-				ambulanteTotals, err := CalculateAmbulanteInvoiceTotal(AmbulanteInvoiceParams{
+
+				totals, err := CalculateAmbulanteInvoiceTotal(AmbulanteInvoiceParams{
 					Price:         contract.Price,
 					PriceTimeUnit: contract.PriceTimeUnit,
 					VAT:           float64(*contract.Vat),
 					TotalMinutes:  totalMinutes,
 				})
 				if err != nil {
-					invoice[i].Warnings = append(invoice[i].Warnings, fmt.Sprintf("failed to calculate ambulante invoice total for contract %d: %v", contract.ID, err))
-					continue // Skip this contract if calculation fails
+					invoice[i].Warnings = append(invoice[i].Warnings,
+						fmt.Sprintf("failed to calculate ambulante invoice total for contract %d: %v", contract.ID, err))
+					warningCount++
+					continue
 				}
-				invoice[i].PreVatTotal += ambulanteTotals.PreVatTotal
-				invoice[i].Total += ambulanteTotals.Total
-				periodItem.AmbulanteTotalMinutes = &ambulanteTotals.TotalMinutes
-				totalAmount += ambulanteTotals.Total
 
+				invoice[i].PreVatTotal += totals.PreVatTotal
+				invoice[i].Total += totals.Total
+				periodItem.AmbulanteTotalMinutes = &totals.TotalMinutes
+				totalAmount += totals.Total
 			}
+
 			invoice[i].Periods = append(invoice[i].Periods, periodItem)
 		}
 	}
+
 	invoiceDate := time.Now()
 	invoiceNumber := GenerateInvoiceNumber(invoiceData.ClientID, invoiceDate)
+
 	finalInvoice := InvoiceData{
 		ClientID:       invoiceData.ClientID,
 		SenderID:       *contracts[0].SenderID,
@@ -166,5 +194,14 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 		InvoiceDetails: invoice,
 		TotalAmount:    totalAmount,
 	}
-	return &finalInvoice, nil
+
+	return &finalInvoice, warningCount, nil
+}
+
+func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) bool {
+	var calculatedTotal float64
+	for _, detail := range invoiceDetails {
+		calculatedTotal += detail.Total
+	}
+	return calculatedTotal == totalAmount
 }

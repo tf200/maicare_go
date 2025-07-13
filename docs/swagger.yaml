@@ -2253,6 +2253,50 @@ definitions:
       incident_id:
         type: integer
     type: object
+  api.GenerateInvoiceRequest:
+    properties:
+      client_id:
+        type: integer
+      end_date:
+        type: string
+      start_date:
+        type: string
+    required:
+    - client_id
+    - end_date
+    - start_date
+    type: object
+  api.GenerateInvoiceResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      due_date:
+        $ref: '#/definitions/pgtype.Date'
+      extra_content:
+        type: string
+      id:
+        type: integer
+      invoice_details:
+        items:
+          type: object
+        type: array
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      pdf_attachment_id:
+        type: string
+      sender_id:
+        type: integer
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+    type: object
   api.GenerateObjectivesResponse:
     properties:
       goal_id:
@@ -3056,6 +3100,43 @@ definitions:
         type: string
       uses_medication:
         type: boolean
+    type: object
+  api.GetInvoiceByIDResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      due_date:
+        type: string
+      extra_content:
+        type: string
+      id:
+        type: integer
+      invoice_details:
+        items:
+          $ref: '#/definitions/invoice.InvoiceDetails'
+        type: array
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      pdf_attachment_id:
+        type: string
+      sender_id:
+        type: integer
+      sender_name:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
     type: object
   api.GetLocationResponse:
     properties:
@@ -4263,6 +4344,45 @@ definitions:
       uses_medication:
         type: boolean
     type: object
+  api.ListInvoicesResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      due_date:
+        type: string
+      extra_content:
+        type: string
+      id:
+        type: integer
+      invoice_details:
+        items:
+          $ref: '#/definitions/invoice.InvoiceDetails'
+        type: array
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      pdf_attachment_id:
+        type: string
+      sender_id:
+        type: integer
+      sender_name:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+      warning_count:
+        type: integer
+    type: object
   api.ListLocationsResponse:
     properties:
       address:
@@ -4995,6 +5115,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GenerateInvoiceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GenerateInvoiceResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GenerateObjectivesResponse:
     properties:
       data:
@@ -5188,6 +5317,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetIntakeFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetInvoiceByIDResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetInvoiceByIDResponse'
       message:
         type: string
       success:
@@ -5481,6 +5619,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateInvoiceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateInvoiceResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateLocationResponse:
     properties:
       data:
@@ -5759,6 +5906,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListIntakeFormsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_ListInvoicesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_ListInvoicesResponse'
       message:
         type: string
       success:
@@ -6440,6 +6596,27 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.UpdateContractStatusRequest:
+    properties:
+      status:
+        enum:
+        - approved
+        - draft
+        - terminated
+        - stopped
+        - expired
+        example: approved
+        type: string
+    required:
+    - status
+    type: object
+  api.UpdateContractStatusResponse:
+    properties:
+      id:
+        type: integer
+      status:
+        type: string
+    type: object
   api.UpdateEmployeeCertificationRequest:
     properties:
       date_issued:
@@ -6778,6 +6955,56 @@ definitions:
         type: boolean
       violence:
         type: boolean
+    type: object
+  api.UpdateInvoiceRequest:
+    properties:
+      due_date:
+        type: string
+      extra_content:
+        type: string
+      invoice_details:
+        items:
+          type: integer
+        type: array
+      issue_date:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+      warning_count:
+        type: integer
+    type: object
+  api.UpdateInvoiceResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      due_date:
+        $ref: '#/definitions/pgtype.Date'
+      extra_content:
+        type: string
+      id:
+        type: integer
+      invoice_details:
+        items:
+          $ref: '#/definitions/invoice.InvoiceDetails'
+        type: array
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      pdf_attachment_id:
+        type: string
+      sender_id:
+        type: integer
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
     type: object
   api.UpdateLocationRequest:
     properties:
@@ -7334,6 +7561,42 @@ definitions:
       type:
         type: string
     type: object
+  invoice.InvoiceDetails:
+    properties:
+      contract_id:
+        type: integer
+      periods:
+        description: Optional periods for the contract
+        items:
+          $ref: '#/definitions/invoice.InvoicePeriod'
+        type: array
+      pre_vat_total_price:
+        type: number
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      total_price:
+        type: number
+      vat:
+        type: number
+      warnings:
+        description: Optional message for errors
+        items:
+          type: string
+        type: array
+    type: object
+  invoice.InvoicePeriod:
+    properties:
+      accommodation_time_frame:
+        type: string
+      ambulante_total_minutes:
+        type: number
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
   pagination.Response-api_ListAllIncidentsResponse:
     properties:
       count:
@@ -7527,6 +7790,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListIntakeFormsResponse'
+        type: array
+    type: object
+  pagination.Response-api_ListInvoicesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.ListInvoicesResponse'
         type: array
     type: object
   pagination.Response-api_ListRegistrationFormsResponse:
@@ -10681,6 +10959,32 @@ paths:
       summary: Update a contract
       tags:
       - contracts
+  /contracts/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Contract Status Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateContractStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UpdateContractStatusResponse'
+      summary: Update the status of a contract
+      tags:
+      - contracts
   /ecr/discharge_overview:
     get:
       parameters:
@@ -12001,6 +12305,219 @@ paths:
       summary: Upload a file for intake form
       tags:
       - intake_form
+  /invoices:
+    get:
+      description: List invoices based on optional filters like client ID, sender
+        ID, status, and date range.
+      parameters:
+      - description: Client ID
+        in: query
+        name: client_id
+        type: integer
+      - description: Sender ID
+        in: query
+        name: sender_id
+        type: integer
+      - description: Invoice status (outstanding, partially_paid, paid, expired, overpaid,
+          imported, concept)
+        in: query
+        name: status
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with paginated invoices
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListInvoicesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List Invoices
+      tags:
+      - Invoice
+  /invoices/{id}:
+    delete:
+      description: Delete an invoice by its ID.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response indicating deletion
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete Invoice
+      tags:
+      - Invoice
+    get:
+      description: Get an invoice by its ID.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with invoice details
+          schema:
+            $ref: '#/definitions/api.Response-api_GetInvoiceByIDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Invoice by ID
+      tags:
+      - Invoice
+    put:
+      consumes:
+      - application/json
+      description: Update an existing invoice by its ID.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Invoice Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with updated invoice details
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Invoice
+      tags:
+      - Invoice
+  /invoices/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate an invoice based on the provided client ID and date range.
+      parameters:
+      - description: Generate Invoice Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GenerateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with invoice details
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Generate Invoice
+      tags:
+      - Invoice
   /locations:
     get:
       description: Get a list of all locations

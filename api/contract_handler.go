@@ -494,14 +494,38 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 	var req UpdateContractStatusRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	// Fetch the current contract to validate status change
-	contract, err := server.store.GetClientContract(ctx, contractID)
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := server.store.WithTx(tx)
+
+	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	contract, err := qtx.GetClientContract(ctx, contractID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -515,8 +539,8 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 	// Validate status change
 
 	updatedContract, err := server.store.UpdateContractStatus(ctx, db.UpdateContractStatusParams{
-		ID:     contractID,
-		Status: req.Status,
+		ContractID: contractID,
+		Status:     req.Status,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

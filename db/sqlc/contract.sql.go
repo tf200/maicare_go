@@ -15,6 +15,7 @@ import (
 const createContract = `-- name: CreateContract :one
 INSERT INTO contract (
     type_id,
+    status,
     start_date,
     end_date,
     reminder_period,
@@ -31,13 +32,14 @@ INSERT INTO contract (
     financing_act,
     financing_option
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
 )
 RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type CreateContractParams struct {
 	TypeID          *int64             `json:"type_id"`
+	Status          string             `json:"status"`
 	StartDate       pgtype.Timestamptz `json:"start_date"`
 	EndDate         pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod  int32              `json:"reminder_period"`
@@ -58,6 +60,7 @@ type CreateContractParams struct {
 func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
 	row := q.db.QueryRow(ctx, createContract,
 		arg.TypeID,
+		arg.Status,
 		arg.StartDate,
 		arg.EndDate,
 		arg.ReminderPeriod,
@@ -772,19 +775,19 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 const updateContractStatus = `-- name: UpdateContractStatus :one
 UPDATE contract
 SET
-    status = $2,
-    approved_at = CASE WHEN $2 = 'approved' THEN NOW() ELSE approved_at END
-WHERE id = $1
+    status = $1::text,
+    approved_at = CASE WHEN $1::text = 'approved' THEN NOW() ELSE approved_at END
+WHERE id = $2::BIGINT
 RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type UpdateContractStatusParams struct {
-	ID     int64  `json:"id"`
-	Status string `json:"status"`
+	Status     string `json:"status"`
+	ContractID int64  `json:"contract_id"`
 }
 
 func (q *Queries) UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error) {
-	row := q.db.QueryRow(ctx, updateContractStatus, arg.ID, arg.Status)
+	row := q.db.QueryRow(ctx, updateContractStatus, arg.Status, arg.ContractID)
 	var i Contract
 	err := row.Scan(
 		&i.ID,

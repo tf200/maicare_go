@@ -55,7 +55,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 		EndDate:         pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(15),
-		Price:           5.58,
+		Price:           558,
 		PriceTimeUnit:   "minute", // util.RandomEnum(priceFrequency),
 		Hours:           util.Float64Ptr(100),
 		HoursType:       util.StringPtr(util.RandomEnum(hoursType)),

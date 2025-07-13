@@ -738,8 +738,21 @@ type Invoice struct {
 	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent    *string            `json:"extra_content"`
 	ClientID        int64              `json:"client_id"`
-	Updated         pgtype.Timestamptz `json:"updated"`
-	Created         pgtype.Timestamptz `json:"created"`
+	SenderID        *int64             `json:"sender_id"`
+	WarningCount    int32              `json:"warning_count"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+}
+
+type InvoiceAudit struct {
+	AuditID       int64              `json:"audit_id"`
+	InvoiceID     int64              `json:"invoice_id"`
+	Operation     string             `json:"operation"`
+	ChangedBy     *int64             `json:"changed_by"`
+	ChangedAt     pgtype.Timestamptz `json:"changed_at"`
+	OldValues     []byte             `json:"old_values"`
+	NewValues     []byte             `json:"new_values"`
+	ChangedFields []string           `json:"changed_fields"`
 }
 
 type InvoiceContract struct {
@@ -754,7 +767,7 @@ type InvoiceContract struct {
 	Created     pgtype.Timestamptz `json:"created"`
 }
 
-type InvoiceHistory struct {
+type InvoicePaymentHistory struct {
 	ID            int64              `json:"id"`
 	PaymentMethod *string            `json:"payment_method"`
 	Amount        float64            `json:"amount"`
