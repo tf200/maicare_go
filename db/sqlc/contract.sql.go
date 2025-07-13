@@ -308,6 +308,60 @@ func (q *Queries) GetClientContract(ctx context.Context, id int64) (GetClientCon
 	return i, err
 }
 
+const getContractAudit = `-- name: GetContractAudit :many
+SELECT ca.audit_id, ca.contract_id, ca.operation, ca.changed_by, ca.changed_at, ca.old_values, ca.new_values, ca.changed_fields,
+         e.first_name AS changed_by_first_name,
+         e.last_name AS changed_by_last_name
+FROM contract_audit ca
+LEFT JOIN employee_profile e ON ca.changed_by = e.id
+WHERE ca.contract_id = $1
+ORDER BY ca.changed_at DESC
+`
+
+type GetContractAuditRow struct {
+	AuditID            int64              `json:"audit_id"`
+	ContractID         int64              `json:"contract_id"`
+	Operation          string             `json:"operation"`
+	ChangedBy          *int64             `json:"changed_by"`
+	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
+	OldValues          []byte             `json:"old_values"`
+	NewValues          []byte             `json:"new_values"`
+	ChangedFields      []string           `json:"changed_fields"`
+	ChangedByFirstName *string            `json:"changed_by_first_name"`
+	ChangedByLastName  *string            `json:"changed_by_last_name"`
+}
+
+func (q *Queries) GetContractAudit(ctx context.Context, contractID int64) ([]GetContractAuditRow, error) {
+	rows, err := q.db.Query(ctx, getContractAudit, contractID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetContractAuditRow
+	for rows.Next() {
+		var i GetContractAuditRow
+		if err := rows.Scan(
+			&i.AuditID,
+			&i.ContractID,
+			&i.Operation,
+			&i.ChangedBy,
+			&i.ChangedAt,
+			&i.OldValues,
+			&i.NewValues,
+			&i.ChangedFields,
+			&i.ChangedByFirstName,
+			&i.ChangedByLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSenderContracts = `-- name: GetSenderContracts :many
 SELECT id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
 WHERE sender_id = $1

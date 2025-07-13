@@ -91,5 +91,62 @@ RETURNING *;
 DELETE FROM invoice
 WHERE id = $1;
 
-    
 
+
+-- name: GetInvoiceAuditLogs :many
+SELECT
+    ia.*,
+    e.first_name AS changed_by_first_name,
+    e.last_name AS changed_by_last_name
+FROM
+    invoice_audit ia
+LEFT JOIN
+    employee_profile e ON ia.changed_by = e.id
+WHERE
+    ia.invoice_id = $1
+ORDER BY
+    ia.changed_at DESC;
+
+
+
+
+
+-- ////////////////////// Payments //////////////////////
+
+-- name: CreatePayment :one
+INSERT INTO invoice_payment_history (
+    invoice_id,
+    payment_method,
+    payment_status,
+    amount,
+    payment_date,
+    payment_reference,
+    notes,
+    recorded_by
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING *;
+
+
+
+-- name: GetTotalPaidAmountByInvoice :one
+SELECT 
+    COALESCE(SUM(amount), 0)::FLOAT AS total_paid
+FROM invoice_payment_history 
+WHERE invoice_id = $1 
+  AND payment_status = 'completed';
+
+
+-- name: ListPayments :many
+SELECT
+    iph.*,
+    e.first_name AS recorded_by_first_name,
+    e.last_name AS recorded_by_last_name
+FROM
+    invoice_payment_history iph
+LEFT JOIN
+    employee_profile e ON iph.recorded_by = e.id
+WHERE
+    iph.invoice_id = $1
+ORDER BY
+    iph.payment_date DESC;

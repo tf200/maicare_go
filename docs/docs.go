@@ -4625,6 +4625,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/contracts/{id}/audit": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contracts"
+                ],
+                "summary": "Get audit logs for a contract",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contract ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.GetContractAuditLogResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/contracts/{id}/status": {
             "put": {
                 "consumes": [
@@ -11982,7 +12016,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "type": "object"
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -12694,6 +12728,44 @@ const docTemplate = `{
                 },
                 "total_clients": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.GetContractAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "audit_id": {
+                    "type": "integer"
+                },
+                "changed_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "changed_by": {
+                    "type": "integer"
+                },
+                "changed_by_first_name": {
+                    "type": "string"
+                },
+                "changed_by_last_name": {
+                    "type": "string"
+                },
+                "changed_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "contract_id": {
+                    "type": "integer"
+                },
+                "new_values": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "old_values": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "operation": {
+                    "type": "string"
                 }
             }
         },
@@ -20536,6 +20608,10 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        },
+        "util.JSONObject": {
+            "type": "object",
+            "additionalProperties": true
         }
     },
     "securityDefinitions": {

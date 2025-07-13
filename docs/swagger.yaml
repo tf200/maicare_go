@@ -2280,7 +2280,7 @@ definitions:
         type: integer
       invoice_details:
         items:
-          type: object
+          $ref: '#/definitions/invoice.InvoiceDetails'
         type: array
       invoice_number:
         type: string
@@ -2750,6 +2750,31 @@ definitions:
         type: integer
       total_clients:
         type: integer
+    type: object
+  api.GetContractAuditLogResponse:
+    properties:
+      audit_id:
+        type: integer
+      changed_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      changed_by:
+        type: integer
+      changed_by_first_name:
+        type: string
+      changed_by_last_name:
+        type: string
+      changed_fields:
+        items:
+          type: string
+        type: array
+      contract_id:
+        type: integer
+      new_values:
+        $ref: '#/definitions/util.JSONObject'
+      old_values:
+        $ref: '#/definitions/util.JSONObject'
+      operation:
+        type: string
     type: object
   api.GetDailySchedulesByLocationResponse:
     properties:
@@ -7909,6 +7934,9 @@ definitions:
       valid:
         type: boolean
     type: object
+  util.JSONObject:
+    additionalProperties: true
+    type: object
 info:
   contact:
     email: your-email@domain.com
@@ -10957,6 +10985,28 @@ paths:
           schema:
             $ref: '#/definitions/api.UpdateContractResponse'
       summary: Update a contract
+      tags:
+      - contracts
+  /contracts/{id}/audit:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.GetContractAuditLogResponse'
+            type: array
+      summary: Get audit logs for a contract
       tags:
       - contracts
   /contracts/{id}/status:

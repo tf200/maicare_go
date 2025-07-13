@@ -768,12 +768,17 @@ type InvoiceContract struct {
 }
 
 type InvoicePaymentHistory struct {
-	ID            int64              `json:"id"`
-	PaymentMethod *string            `json:"payment_method"`
-	Amount        float64            `json:"amount"`
-	Updated       pgtype.Timestamptz `json:"updated"`
-	Created       pgtype.Timestamptz `json:"created"`
-	InvoiceID     int64              `json:"invoice_id"`
+	ID               int64              `json:"id"`
+	InvoiceID        int64              `json:"invoice_id"`
+	PaymentMethod    *string            `json:"payment_method"`
+	PaymentStatus    string             `json:"payment_status"`
+	Amount           float64            `json:"amount"`
+	PaymentDate      pgtype.Date        `json:"payment_date"`
+	PaymentReference *string            `json:"payment_reference"`
+	Notes            *string            `json:"notes"`
+	RecordedBy       *int64             `json:"recorded_by"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
 type LevelHistory struct {

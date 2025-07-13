@@ -237,3 +237,16 @@ SELECT
 FROM approved_periods
 WHERE period_start < sqlc.arg(invoice_end_date)
   AND COALESCE(period_end, 'infinity'::TIMESTAMPTZ) > sqlc.arg(invoice_start_date);
+
+
+
+
+-- name: GetContractAudit :many
+SELECT ca.*,
+         e.first_name AS changed_by_first_name,
+         e.last_name AS changed_by_last_name
+FROM contract_audit ca
+LEFT JOIN employee_profile e ON ca.changed_by = e.id
+WHERE ca.contract_id = $1
+ORDER BY ca.changed_at DESC;
+

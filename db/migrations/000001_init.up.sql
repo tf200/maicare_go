@@ -700,7 +700,7 @@ CREATE TABLE invoice_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     invoice_id BIGINT NOT NULL,
     operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
-    changed_by BIGINT NULL, -- Assumes application will set a user ID
+    changed_by BIGINT REFERENCES employee_profile(id) ON DELETE SET NULL, -- Assumes application will set a user ID
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values JSONB NULL,
     new_values JSONB NULL,
@@ -720,20 +720,27 @@ DECLARE
     new_row JSONB;
     changed_fields_arr TEXT[] := '{}';
     field_name TEXT;
+    current_employee_id BIGINT; -- This will hold the current user ID, if available
     -- You can set the user ID from the application like this:
     -- changed_by_user_id BIGINT := current_setting('app.user_id', true)::BIGINT;
 BEGIN
+    BEGIN
+        current_employee_id := current_setting('myapp.current_employee_id')::BIGINT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            current_employee_id := NULL; -- Fallback if the setting is not available
+    END;
     -- Handle different operations
     IF TG_OP = 'DELETE' THEN
         old_row := to_jsonb(OLD);
-        INSERT INTO invoice_audit (invoice_id, operation, old_values, changed_at)
+        INSERT INTO invoice_audit (invoice_id, operation, old_values,)
         VALUES (OLD.id, 'DELETE', old_row, CURRENT_TIMESTAMP);
         RETURN OLD;
 
     ELSIF TG_OP = 'INSERT' THEN
         new_row := to_jsonb(NEW);
-        INSERT INTO invoice_audit (invoice_id, operation, new_values, changed_at)
-        VALUES (NEW.id, 'INSERT', new_row, CURRENT_TIMESTAMP);
+        INSERT INTO invoice_audit (invoice_id, operation, new_values, changed_by, changed_at)
+        VALUES (NEW.id, 'INSERT', new_row, current_employee_id, CURRENT_TIMESTAMP);
         RETURN NEW;
 
     ELSIF TG_OP = 'UPDATE' THEN
@@ -750,8 +757,8 @@ BEGIN
         
         -- Only log the change if there are actual changes, and it's not just the 'updated_at' field.
         IF array_length(changed_fields_arr, 1) > 0 AND NOT (array_length(changed_fields_arr, 1) = 1 AND 'updated_at' = ANY(changed_fields_arr)) THEN
-            INSERT INTO invoice_audit (invoice_id, operation, old_values, new_values, changed_fields, changed_at)
-            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields_arr, CURRENT_TIMESTAMP);
+            INSERT INTO invoice_audit (invoice_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
+            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields_arr, current_employee_id, CURRENT_TIMESTAMP);
         END IF;
         
         RETURN NEW;
@@ -772,16 +779,30 @@ FOR EACH ROW EXECUTE FUNCTION invoice_audit_trigger_func();
 
 CREATE TABLE invoice_payment_history (
     id BIGSERIAL PRIMARY KEY,
+    invoice_id BIGINT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
     payment_method VARCHAR(20) NULL CHECK (payment_method IN (
         'bank_transfer', 'credit_card', 'check', 'cash', 'other'
     )),
+    payment_status VARCHAR(20) NOT NULL CHECK (payment_status IN (
+        'completed', 'pending', 'failed', 'reversed', 'refunded'
+    )) DEFAULT 'completed',
     amount DECIMAL(20,2) NOT NULL DEFAULT 0,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    invoice_id BIGINT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE
+    payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    payment_reference VARCHAR(100) NULL,
+    notes TEXT NULL,
+    recorded_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX invoice_payment_history_invoice_id_idx ON invoice_payment_history(invoice_id);
+-- Index for faster lookups by invoice
+CREATE INDEX idx_invoice_payment_history_invoice_id ON invoice_payment_history(invoice_id);
+
+-- Index for payment date queries
+CREATE INDEX idx_invoice_payment_history_payment_date ON invoice_payment_history(payment_date);
+
+-- Index for payment status queries
+CREATE INDEX idx_invoice_payment_history_payment_status ON invoice_payment_history(payment_status);
 
 
 
