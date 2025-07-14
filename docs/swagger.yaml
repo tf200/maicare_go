@@ -1562,6 +1562,48 @@ definitions:
       name:
         type: string
     type: object
+  api.CreatePaymentRequest:
+    properties:
+      amount:
+        type: number
+      notes:
+        type: string
+      payment_date:
+        $ref: '#/definitions/pgtype.Date'
+      payment_method:
+        type: string
+      payment_reference:
+        type: string
+      payment_status:
+        type: string
+      recorded_by:
+        type: integer
+    type: object
+  api.CreatePaymentResponse:
+    properties:
+      amount:
+        type: number
+      current_invoice_status:
+        type: string
+      invoice_id:
+        type: integer
+      invoice_status_changed:
+        type: boolean
+      notes:
+        type: string
+      payment_date:
+        $ref: '#/definitions/pgtype.Date'
+      payment_id:
+        type: integer
+      payment_method:
+        type: string
+      payment_reference:
+        type: string
+      payment_status:
+        type: string
+      recorded_by:
+        type: integer
+    type: object
   api.CreateProgressReportRequest:
     properties:
       date:
@@ -2153,6 +2195,23 @@ definitions:
     properties:
       id:
         type: integer
+    type: object
+  api.DeletePaymentResponse:
+    properties:
+      current_invoice_status:
+        type: string
+      deleted_amount:
+        type: number
+      deleted_payment_id:
+        type: integer
+      deleted_payment_status:
+        type: string
+      invoice_id:
+        type: integer
+      invoice_status_changed:
+        type: boolean
+      previous_invoice_status:
+        type: string
     type: object
   api.DiagnosisMedicationCreate:
     properties:
@@ -4426,6 +4485,35 @@ definitions:
       topic_name:
         type: string
     type: object
+  api.ListPaymentsResponse:
+    properties:
+      amount:
+        type: number
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      invoice_id:
+        type: integer
+      notes:
+        type: string
+      payment_date:
+        $ref: '#/definitions/pgtype.Date'
+      payment_id:
+        type: integer
+      payment_method:
+        type: string
+      payment_reference:
+        type: string
+      payment_status:
+        type: string
+      recorded_by:
+        type: integer
+      recorded_by_first_name:
+        type: string
+      recorded_by_last_name:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
   api.ListProgressReportsResponse:
     properties:
       client_id:
@@ -5014,6 +5102,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreatePaymentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreatePaymentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateProgressReportResponse:
     properties:
       data:
@@ -5117,6 +5214,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeletePaymentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeletePaymentResponse'
       message:
         type: string
       success:
@@ -5662,6 +5768,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdatePaymentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdatePaymentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateProgressReportResponse:
     properties:
       data:
@@ -5798,6 +5913,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.ListMaturityMatrixResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListPaymentsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListPaymentsResponse'
         type: array
       message:
         type: string
@@ -7050,6 +7176,50 @@ definitions:
         type: integer
       name:
         type: string
+    type: object
+  api.UpdatePaymentRequest:
+    properties:
+      amount:
+        type: number
+      notes:
+        type: string
+      payment_date:
+        type: string
+      payment_method:
+        type: string
+      payment_reference:
+        type: string
+      payment_status:
+        type: string
+      recorded_by:
+        type: integer
+    type: object
+  api.UpdatePaymentResponse:
+    properties:
+      amount:
+        type: number
+      current_invoice_status:
+        type: string
+      invoice_id:
+        type: integer
+      invoice_status_changed:
+        type: boolean
+      notes:
+        type: string
+      payment_date:
+        $ref: '#/definitions/pgtype.Date'
+      payment_id:
+        type: integer
+      payment_method:
+        type: string
+      payment_reference:
+        type: string
+      payment_status:
+        type: string
+      previous_invoice_status:
+        type: string
+      recorded_by:
+        type: integer
     type: object
   api.UpdateProgressReportRequest:
     properties:
@@ -12524,6 +12694,172 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update Invoice
+      tags:
+      - Invoice
+  /invoices/{id}/payments:
+    get:
+      description: List all payments for a specific invoice.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListPaymentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List Payments
+      tags:
+      - Invoice
+    post:
+      consumes:
+      - application/json
+      description: Create a payment for an invoice.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Create Payment Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with payment
+          schema:
+            $ref: '#/definitions/api.Response-api_CreatePaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create Payment
+      tags:
+      - Invoice
+  /invoices/{invoice_id}/payments/{payment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a payment from an invoice.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: integer
+      - description: Payment ID
+        in: path
+        name: payment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with deletion details
+          schema:
+            $ref: '#/definitions/api.Response-api_DeletePaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete Payment
+      tags:
+      - Invoice
+    put:
+      consumes:
+      - application/json
+      description: Update a payment for an invoice.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: integer
+      - description: Payment ID
+        in: path
+        name: payment_id
+        required: true
+        type: integer
+      - description: Update Payment Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with updated payment
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdatePaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Payment
       tags:
       - Invoice
   /invoices/generate:

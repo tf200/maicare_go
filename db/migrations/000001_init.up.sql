@@ -733,7 +733,7 @@ BEGIN
     -- Handle different operations
     IF TG_OP = 'DELETE' THEN
         old_row := to_jsonb(OLD);
-        INSERT INTO invoice_audit (invoice_id, operation, old_values,)
+        INSERT INTO invoice_audit (invoice_id, operation, old_values,changed_by, changed_at)
         VALUES (OLD.id, 'DELETE', old_row, CURRENT_TIMESTAMP);
         RETURN OLD;
 

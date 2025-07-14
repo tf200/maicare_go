@@ -27,7 +27,8 @@ type InvoiceData struct {
 // InvoiceDetails contains details for each contract in the invoice
 type InvoiceDetails struct {
 	ContractID    int64           `json:"contract_id"`
-	Periods       []InvoicePeriod `json:"periods"` // Optional periods for the contract
+	ContractType  string          `json:"contract_name"`
+	Periods       []InvoicePeriod `json:"periods"`
 	PreVatTotal   float64         `json:"pre_vat_total_price"`
 	Total         float64         `json:"total_price"`
 	Vat           float64         `json:"vat"`
@@ -96,6 +97,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 		invoice[i] = InvoiceDetails{
 			ContractID:    contract.ID,
 			Price:         contract.Price,
+			ContractType:  contract.CareType,
 			PriceTimeUnit: contract.PriceTimeUnit,
 			Vat:           float64(*contract.Vat),
 		}

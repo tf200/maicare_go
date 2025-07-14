@@ -7011,6 +7011,255 @@ const docTemplate = `{
                 }
             }
         },
+        "/invoices/{id}/payments": {
+            "get": {
+                "description": "List all payments for a specific invoice.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "List Payments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_ListPaymentsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a payment for an invoice.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Create Payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create Payment Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreatePaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with payment",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreatePaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoices/{invoice_id}/payments/{payment_id}": {
+            "put": {
+                "description": "Update a payment for an invoice.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Update Payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Payment ID",
+                        "name": "payment_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Payment Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdatePaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with updated payment",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdatePaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a payment from an invoice.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Delete Payment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Payment ID",
+                        "name": "payment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with deletion details",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_DeletePaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/locations": {
             "get": {
                 "description": "Get a list of all locations",
@@ -10940,6 +11189,70 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreatePaymentRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.CreatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "current_invoice_status": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_status_changed": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.CreateProgressReportRequest": {
             "type": "object",
             "required": [
@@ -11821,6 +12134,32 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.DeletePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "current_invoice_status": {
+                    "type": "string"
+                },
+                "deleted_amount": {
+                    "type": "number"
+                },
+                "deleted_payment_id": {
+                    "type": "integer"
+                },
+                "deleted_payment_status": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_status_changed": {
+                    "type": "boolean"
+                },
+                "previous_invoice_status": {
+                    "type": "string"
                 }
             }
         },
@@ -15261,6 +15600,50 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListPaymentsResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "integer"
+                },
+                "recorded_by_first_name": {
+                    "type": "string"
+                },
+                "recorded_by_last_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
         "api.ListProgressReportsResponse": {
             "type": "object",
             "properties": {
@@ -16158,6 +16541,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_CreatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreatePaymentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_CreateProgressReportResponse": {
             "type": "object",
             "properties": {
@@ -16317,6 +16714,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.DeleteLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_DeletePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.DeletePaymentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17166,6 +17577,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_UpdatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UpdatePaymentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_UpdateProgressReportResponse": {
             "type": "object",
             "properties": {
@@ -17376,6 +17801,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListMaturityMatrixResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListPaymentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListPaymentsResponse"
                     }
                 },
                 "message": {
@@ -19277,6 +19719,73 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "api.UpdatePaymentRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.UpdatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "current_invoice_status": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_status_changed": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "previous_invoice_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "integer"
                 }
             }
         },

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/invoice"
@@ -693,4 +694,390 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse(payments, "Payments retrieved successfully"))
+}
+
+type GetPaymentByIDResponse struct {
+	PaymentID           int64              `json:"payment_id"`
+	InvoiceID           int64              `json:"invoice_id"`
+	PaymentMethod       *string            `json:"payment_method"`
+	PaymentStatus       string             `json:"payment_status"`
+	Amount              float64            `json:"amount"`
+	PaymentDate         pgtype.Date        `json:"payment_date"`
+	PaymentReference    *string            `json:"payment_reference"`
+	Notes               *string            `json:"notes"`
+	RecordedBy          *int64             `json:"recorded_by"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	RecordedByFirstName *string            `json:"recorded_by_first_name"`
+	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+}
+
+func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
+	paymentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", ctx.Param("id"))))
+		return
+	}
+
+	payment, err := server.store.GetPayment(ctx.Request.Context(), paymentID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	response := GetPaymentByIDResponse{
+		PaymentID:           payment.ID,
+		InvoiceID:           payment.InvoiceID,
+		PaymentMethod:       payment.PaymentMethod,
+		PaymentStatus:       payment.PaymentStatus,
+		Amount:              payment.Amount,
+		PaymentDate:         payment.PaymentDate,
+		PaymentReference:    payment.PaymentReference,
+		Notes:               payment.Notes,
+		RecordedBy:          payment.RecordedBy,
+		CreatedAt:           payment.CreatedAt,
+		UpdatedAt:           payment.UpdatedAt,
+		RecordedByFirstName: payment.RecordedByFirstName,
+		RecordedByLastName:  payment.RecordedByLastName,
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment retrieved successfully"))
+
+}
+
+// UpdatePaymentRequest represents the request body for updating a payment.
+type UpdatePaymentRequest struct {
+	PaymentMethod    *string    `json:"payment_method"`
+	PaymentStatus    *string    `json:"payment_status"`
+	Amount           *float64   `json:"amount"`
+	PaymentDate      *time.Time `json:"payment_date"`
+	PaymentReference *string    `json:"payment_reference"`
+	Notes            *string    `json:"notes"`
+	RecordedBy       *int64     `json:"recorded_by"`
+}
+
+// UpdatePaymentResponse represents the response body for updating a payment.
+type UpdatePaymentResponse struct {
+	PaymentID             int64       `json:"payment_id"`
+	InvoiceID             int64       `json:"invoice_id"`
+	PaymentMethod         *string     `json:"payment_method"`
+	PaymentStatus         string      `json:"payment_status"`
+	Amount                float64     `json:"amount"`
+	PaymentDate           pgtype.Date `json:"payment_date"`
+	PaymentReference      *string     `json:"payment_reference"`
+	Notes                 *string     `json:"notes"`
+	RecordedBy            *int64      `json:"recorded_by"`
+	InvoiceStatusChanged  bool        `json:"invoice_status_changed"`
+	CurrentInvoiceStatus  string      `json:"current_invoice_status"`
+	PreviousInvoiceStatus string      `json:"previous_invoice_status"`
+}
+
+// @Summary Update Payment
+// @Description Update a payment for an invoice.
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Param invoice_id path int64 true "Invoice ID"
+// @Param payment_id path int64 true "Payment ID"
+// @Param request body UpdatePaymentRequest true "Update Payment Request"
+// @Success 200 {object} Response[UpdatePaymentResponse] "Successful response with updated payment"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{invoice_id}/payments/{payment_id} [put]
+func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
+	invoiceIDStr := ctx.Param("invoice_id")
+	paymentIDStr := ctx.Param("payment_id")
+
+	invoiceID, err := strconv.ParseInt(invoiceIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", invoiceIDStr)))
+		return
+	}
+
+	paymentID, err := strconv.ParseInt(paymentIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", paymentIDStr)))
+		return
+	}
+
+	var req UpdatePaymentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
+	qtx := server.store.WithTx(tx)
+
+	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Get the current payment with invoice info to validate and track changes
+	currentPayment, err := qtx.GetPaymentWithInvoice(ctx.Request.Context(), paymentID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("payment not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Validate that payment belongs to the specified invoice
+	if currentPayment.InvoiceID != invoiceID {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("payment does not belong to specified invoice")))
+		return
+	}
+
+	// Store original invoice status for comparison
+	originalInvoiceStatus := currentPayment.InvoiceStatus
+
+	arg := db.UpdatePaymentParams{
+		ID:               paymentID,
+		PaymentMethod:    req.PaymentMethod,
+		PaymentStatus:    req.PaymentStatus,
+		Amount:           req.Amount,
+		PaymentReference: req.PaymentReference,
+		Notes:            req.Notes,
+		RecordedBy:       req.RecordedBy,
+	}
+
+	if req.PaymentDate != nil {
+		arg.PaymentDate = pgtype.Date{Time: *req.PaymentDate, Valid: true}
+	}
+
+	// Update the payment
+	updatedPayment, err := qtx.UpdatePayment(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var newInvoiceStatus string
+	var statusChanged bool = false
+
+	// Recalculate invoice status if payment status is completed
+	// This handles cases where:
+	// 1. Payment status changed to completed
+	// 2. Payment amount changed
+	// 3. Payment status changed from completed to something else
+	if updatedPayment.PaymentStatus == string(invoice.PaymentStatusCompleted) ||
+		currentPayment.PaymentStatus == string(invoice.PaymentStatusCompleted) {
+
+		// Get fresh total paid amount after the update
+		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx.Request.Context(), invoiceID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		newStatus, err := invoice.DetermineInvoiceStatus(currentPayment.InvoiceTotalAmount, totalPaid)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		if string(newStatus) != originalInvoiceStatus {
+			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
+				ID:     invoiceID,
+				Status: string(newStatus),
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+			newInvoiceStatus = updatedInvoice.Status
+			statusChanged = true
+		} else {
+			newInvoiceStatus = originalInvoiceStatus
+		}
+	} else {
+		newInvoiceStatus = originalInvoiceStatus
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := UpdatePaymentResponse{
+		PaymentID:             updatedPayment.ID,
+		InvoiceID:             updatedPayment.InvoiceID,
+		PaymentMethod:         updatedPayment.PaymentMethod,
+		PaymentStatus:         updatedPayment.PaymentStatus,
+		Amount:                updatedPayment.Amount,
+		PaymentDate:           updatedPayment.PaymentDate,
+		PaymentReference:      updatedPayment.PaymentReference,
+		Notes:                 updatedPayment.Notes,
+		RecordedBy:            updatedPayment.RecordedBy,
+		InvoiceStatusChanged:  statusChanged,
+		CurrentInvoiceStatus:  newInvoiceStatus,
+		PreviousInvoiceStatus: originalInvoiceStatus,
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment updated successfully"))
+}
+
+// DeletePaymentResponse represents the response body for deleting a payment.
+type DeletePaymentResponse struct {
+	DeletedPaymentID      int64   `json:"deleted_payment_id"`
+	InvoiceID             int64   `json:"invoice_id"`
+	DeletedAmount         float64 `json:"deleted_amount"`
+	DeletedPaymentStatus  string  `json:"deleted_payment_status"`
+	InvoiceStatusChanged  bool    `json:"invoice_status_changed"`
+	CurrentInvoiceStatus  string  `json:"current_invoice_status"`
+	PreviousInvoiceStatus string  `json:"previous_invoice_status"`
+}
+
+// @Summary Delete Payment
+// @Description Delete a payment from an invoice.
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Param invoice_id path int64 true "Invoice ID"
+// @Param payment_id path int64 true "Payment ID"
+// @Success 200 {object} Response[DeletePaymentResponse] "Successful response with deletion details"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{invoice_id}/payments/{payment_id} [delete]
+func (server *Server) DeletePaymentApi(ctx *gin.Context) {
+	invoiceIDStr := ctx.Param("invoice_id")
+	paymentIDStr := ctx.Param("payment_id")
+
+	invoiceID, err := strconv.ParseInt(invoiceIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", invoiceIDStr)))
+		return
+	}
+
+	paymentID, err := strconv.ParseInt(paymentIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", paymentIDStr)))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
+	qtx := server.store.WithTx(tx)
+
+	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Get the payment with invoice info before deletion to validate and track changes
+	paymentToDelete, err := qtx.GetPaymentWithInvoice(ctx.Request.Context(), paymentID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("payment not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Validate that payment belongs to the specified invoice
+	if paymentToDelete.InvoiceID != invoiceID {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("payment does not belong to specified invoice")))
+		return
+	}
+
+	// Store original invoice status for comparison
+	originalInvoiceStatus := paymentToDelete.InvoiceStatus
+
+	// Delete the payment
+	deletedPayment, err := qtx.DeletePayment(ctx.Request.Context(), paymentID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var newInvoiceStatus string
+	var statusChanged bool = false
+
+	// Recalculate invoice status only if the deleted payment was completed
+	// This ensures we only recalculate when the deletion actually affects the paid amount
+	if deletedPayment.PaymentStatus == string(invoice.PaymentStatusCompleted) {
+		// Get fresh total paid amount after the deletion
+		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx.Request.Context(), invoiceID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		newStatus, err := invoice.DetermineInvoiceStatus(paymentToDelete.InvoiceTotalAmount, totalPaid)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		if string(newStatus) != originalInvoiceStatus {
+			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
+				ID:     invoiceID,
+				Status: string(newStatus),
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+			newInvoiceStatus = updatedInvoice.Status
+			statusChanged = true
+		} else {
+			newInvoiceStatus = originalInvoiceStatus
+		}
+	} else {
+		// If deleted payment wasn't completed, invoice status shouldn't change
+		newInvoiceStatus = originalInvoiceStatus
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := DeletePaymentResponse{
+		DeletedPaymentID:      deletedPayment.ID,
+		InvoiceID:             deletedPayment.InvoiceID,
+		DeletedAmount:         deletedPayment.Amount,
+		DeletedPaymentStatus:  deletedPayment.PaymentStatus,
+		InvoiceStatusChanged:  statusChanged,
+		CurrentInvoiceStatus:  newInvoiceStatus,
+		PreviousInvoiceStatus: originalInvoiceStatus,
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment deleted successfully"))
+
 }

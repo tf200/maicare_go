@@ -150,3 +150,48 @@ WHERE
     iph.invoice_id = $1
 ORDER BY
     iph.payment_date DESC;
+
+
+-- name: GetPayment :one
+SELECT
+    iph.*,
+    e.first_name AS recorded_by_first_name,
+    e.last_name AS recorded_by_last_name
+FROM
+    invoice_payment_history iph
+LEFT JOIN
+    employee_profile e ON iph.recorded_by = e.id
+WHERE
+    iph.id = $1
+LIMIT 1;
+
+
+-- name: UpdatePayment :one
+UPDATE invoice_payment_history 
+SET 
+    payment_method = COALESCE(sqlc.narg('payment_method'), payment_method),
+    payment_status = COALESCE(sqlc.narg('payment_status'), payment_status),
+    amount = COALESCE(sqlc.narg('amount'), amount),
+    payment_date = COALESCE(sqlc.narg('payment_date'), payment_date),
+    payment_reference = COALESCE(sqlc.narg('payment_reference'), payment_reference),
+    notes = COALESCE(sqlc.narg('notes'), notes),
+    recorded_by = COALESCE(sqlc.narg('recorded_by'), recorded_by),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = sqlc.arg('id')
+RETURNING *;
+ 
+
+-- name: GetPaymentWithInvoice :one
+SELECT 
+    p.*,
+    i.total_amount as invoice_total_amount,
+    i.status as invoice_status
+FROM invoice_payment_history p
+JOIN invoice i ON p.invoice_id = i.id
+WHERE p.id = $1;
+
+
+-- name: DeletePayment :one
+DELETE FROM invoice_payment_history
+WHERE id = $1
+RETURNING *;

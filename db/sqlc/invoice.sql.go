@@ -138,6 +138,31 @@ func (q *Queries) DeleteInvoice(ctx context.Context, id int64) error {
 	return err
 }
 
+const deletePayment = `-- name: DeletePayment :one
+DELETE FROM invoice_payment_history
+WHERE id = $1
+RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+`
+
+func (q *Queries) DeletePayment(ctx context.Context, id int64) (InvoicePaymentHistory, error) {
+	row := q.db.QueryRow(ctx, deletePayment, id)
+	var i InvoicePaymentHistory
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getInvoice = `-- name: GetInvoice :one
 SELECT
     i.id, i.invoice_number, i.issue_date, i.due_date, i.status, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
@@ -257,6 +282,104 @@ func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]G
 		return nil, err
 	}
 	return items, nil
+}
+
+const getPayment = `-- name: GetPayment :one
+SELECT
+    iph.id, iph.invoice_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
+    e.first_name AS recorded_by_first_name,
+    e.last_name AS recorded_by_last_name
+FROM
+    invoice_payment_history iph
+LEFT JOIN
+    employee_profile e ON iph.recorded_by = e.id
+WHERE
+    iph.id = $1
+LIMIT 1
+`
+
+type GetPaymentRow struct {
+	ID                  int64              `json:"id"`
+	InvoiceID           int64              `json:"invoice_id"`
+	PaymentMethod       *string            `json:"payment_method"`
+	PaymentStatus       string             `json:"payment_status"`
+	Amount              float64            `json:"amount"`
+	PaymentDate         pgtype.Date        `json:"payment_date"`
+	PaymentReference    *string            `json:"payment_reference"`
+	Notes               *string            `json:"notes"`
+	RecordedBy          *int64             `json:"recorded_by"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	RecordedByFirstName *string            `json:"recorded_by_first_name"`
+	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+}
+
+func (q *Queries) GetPayment(ctx context.Context, id int64) (GetPaymentRow, error) {
+	row := q.db.QueryRow(ctx, getPayment, id)
+	var i GetPaymentRow
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RecordedByFirstName,
+		&i.RecordedByLastName,
+	)
+	return i, err
+}
+
+const getPaymentWithInvoice = `-- name: GetPaymentWithInvoice :one
+SELECT 
+    p.id, p.invoice_id, p.payment_method, p.payment_status, p.amount, p.payment_date, p.payment_reference, p.notes, p.recorded_by, p.created_at, p.updated_at,
+    i.total_amount as invoice_total_amount,
+    i.status as invoice_status
+FROM invoice_payment_history p
+JOIN invoice i ON p.invoice_id = i.id
+WHERE p.id = $1
+`
+
+type GetPaymentWithInvoiceRow struct {
+	ID                 int64              `json:"id"`
+	InvoiceID          int64              `json:"invoice_id"`
+	PaymentMethod      *string            `json:"payment_method"`
+	PaymentStatus      string             `json:"payment_status"`
+	Amount             float64            `json:"amount"`
+	PaymentDate        pgtype.Date        `json:"payment_date"`
+	PaymentReference   *string            `json:"payment_reference"`
+	Notes              *string            `json:"notes"`
+	RecordedBy         *int64             `json:"recorded_by"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	InvoiceTotalAmount float64            `json:"invoice_total_amount"`
+	InvoiceStatus      string             `json:"invoice_status"`
+}
+
+func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id int64) (GetPaymentWithInvoiceRow, error) {
+	row := q.db.QueryRow(ctx, getPaymentWithInvoice, id)
+	var i GetPaymentWithInvoiceRow
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.InvoiceTotalAmount,
+		&i.InvoiceStatus,
+	)
+	return i, err
 }
 
 const getTotalPaidAmountByInvoice = `-- name: GetTotalPaidAmountByInvoice :one
@@ -509,6 +632,60 @@ func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (I
 		&i.WarningCount,
 		&i.UpdatedAt,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updatePayment = `-- name: UpdatePayment :one
+UPDATE invoice_payment_history 
+SET 
+    payment_method = COALESCE($1, payment_method),
+    payment_status = COALESCE($2, payment_status),
+    amount = COALESCE($3, amount),
+    payment_date = COALESCE($4, payment_date),
+    payment_reference = COALESCE($5, payment_reference),
+    notes = COALESCE($6, notes),
+    recorded_by = COALESCE($7, recorded_by),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $8
+RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+`
+
+type UpdatePaymentParams struct {
+	PaymentMethod    *string     `json:"payment_method"`
+	PaymentStatus    *string     `json:"payment_status"`
+	Amount           *float64    `json:"amount"`
+	PaymentDate      pgtype.Date `json:"payment_date"`
+	PaymentReference *string     `json:"payment_reference"`
+	Notes            *string     `json:"notes"`
+	RecordedBy       *int64      `json:"recorded_by"`
+	ID               int64       `json:"id"`
+}
+
+func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (InvoicePaymentHistory, error) {
+	row := q.db.QueryRow(ctx, updatePayment,
+		arg.PaymentMethod,
+		arg.PaymentStatus,
+		arg.Amount,
+		arg.PaymentDate,
+		arg.PaymentReference,
+		arg.Notes,
+		arg.RecordedBy,
+		arg.ID,
+	)
+	var i InvoicePaymentHistory
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
