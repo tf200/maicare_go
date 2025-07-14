@@ -20,8 +20,8 @@ import (
 func createRandomAppointment(t *testing.T, employeeID int64) db.ScheduledAppointment {
 	arg := db.CreateAppointmentParams{
 		CreatorEmployeeID: &employeeID,
-		StartTime:         pgtype.Timestamp{Time: time.Now(), Valid: true},
-		EndTime:           pgtype.Timestamp{Time: time.Now().Add(1 * time.Hour), Valid: true},
+		StartTime:         pgtype.Timestamp{Time: time.Date(time.Now().Year(), time.August, 25, 12, 0, 0, 0, time.UTC), Valid: true},
+		EndTime:           pgtype.Timestamp{Time: time.Date(time.Now().Year(), time.August, 25, 18, 0, 0, 0, time.UTC), Valid: true},
 		Location:          util.StringPtr("Test Location"),
 		Description:       util.StringPtr("Test Description"),
 	}

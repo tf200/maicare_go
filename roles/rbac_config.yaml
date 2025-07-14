@@ -98,6 +98,18 @@ permissions:
   - name: SHIFT.DELETE
     resource: /shifts
     method: [DELETE]
+  - name: INVOICE.CREATE
+    resource: /invoices
+    method: [POST]
+  - name: INVOICE.VIEW
+    resource: /invoices
+    method: [GET]
+  - name: INVOICE.UPDATE
+    resource: /invoices
+    method: [PUT]
+  - name: INVOICE.DELETE
+    resource: /invoices
+    method: [DELETE]
 
   
   
@@ -135,6 +147,10 @@ roles:
       - SHIFT.VIEW
       - SHIFT.UPDATE
       - SHIFT.DELETE
+      - INVOICE.CREATE
+      - INVOICE.VIEW
+      - INVOICE.UPDATE
+      - INVOICE.DELETE
 
   - name: Worker
     id: 2

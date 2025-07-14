@@ -97,7 +97,7 @@ func CalculateAmbulanteInvoiceTotal(params AmbulanteInvoiceParams) (*AmbulanteIn
 		return nil, fmt.Errorf("total minutes must be greater than zero")
 	}
 
-	if params.PriceTimeUnit == "per_minute" {
+	if params.PriceTimeUnit == "minute" {
 		preVatTotal := params.Price * params.TotalMinutes
 		vat := preVatTotal * (params.VAT / 100)
 		total := preVatTotal + vat
@@ -109,7 +109,7 @@ func CalculateAmbulanteInvoiceTotal(params AmbulanteInvoiceParams) (*AmbulanteIn
 			TotalMinutes: params.TotalMinutes,
 		}, nil
 	}
-	if params.PriceTimeUnit == "per_hour" {
+	if params.PriceTimeUnit == "hourly" {
 		hours := params.TotalMinutes / 60
 		preVatTotal := params.Price * hours
 		vat := preVatTotal * (params.VAT / 100)

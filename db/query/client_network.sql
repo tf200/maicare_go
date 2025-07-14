@@ -1,7 +1,7 @@
 
 -- name: GetClientSender :one
 SELECT s.* FROM sender s
-JOIN client_details cd ON s.id = cd.sender_id
+LEFT JOIN client_details cd ON s.id = cd.sender_id
 WHERE cd.id = $1
 LIMIT 1;
 

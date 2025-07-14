@@ -182,6 +182,3 @@ SELECT al.label::text AS missing_label
 FROM all_labels al
 LEFT JOIN client_labels cl ON al.label = cl.label
 WHERE cl.label IS NULL;
-
-
-

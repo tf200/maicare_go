@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -146,4 +147,21 @@ func GetStartAndEndOfISOWeek(year int, week int) (time.Time, time.Time, error) {
 	weekEnd := weekStart.AddDate(0, 0, 6) // Sunday
 
 	return weekStart, weekEnd, nil
+}
+
+// JSONObject is a type alias for a map[string]interface{} to represent JSON objects
+type JSONObject map[string]interface{}
+
+// Helper function to parse JSON bytes into JSONObject
+func ParseJSONToObject(data []byte) JSONObject {
+	if len(data) == 0 {
+		return nil
+	}
+
+	var result JSONObject
+	if err := json.Unmarshal(data, &result); err != nil {
+		// If parsing fails, return a empty JSONObject
+		return JSONObject{}
+	}
+	return result
 }

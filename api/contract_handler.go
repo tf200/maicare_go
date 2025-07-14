@@ -4,6 +4,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/util"
 	"net/http"
 	"strconv"
 	"time"
@@ -418,7 +419,34 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 		return
 	}
 
-	contract, err := server.store.UpdateContract(ctx, db.UpdateContractParams{
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	defer tx.Rollback(ctx)
+
+	qtx := server.store.WithTx(tx)
+
+	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	contract, err := qtx.UpdateContract(ctx, db.UpdateContractParams{
 		ID:              contractID,
 		TypeID:          req.TypeID,
 		StartDate:       pgtype.Timestamptz{Time: req.StartDate, Valid: true},
@@ -437,6 +465,11 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 		FinancingOption: req.FinancingOption,
 	})
 	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if err := tx.Commit(ctx); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -494,14 +527,38 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 	var req UpdateContractStatusRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	// Fetch the current contract to validate status change
-	contract, err := server.store.GetClientContract(ctx, contractID)
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := server.store.WithTx(tx)
+
+	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	contract, err := qtx.GetClientContract(ctx, contractID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -514,11 +571,15 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 
 	// Validate status change
 
-	updatedContract, err := server.store.UpdateContractStatus(ctx, db.UpdateContractStatusParams{
-		ID:     contractID,
-		Status: req.Status,
+	updatedContract, err := qtx.UpdateContractStatus(ctx, db.UpdateContractStatusParams{
+		ContractID: contractID,
+		Status:     req.Status,
 	})
 	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if err := tx.Commit(ctx); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -733,6 +794,67 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 // 		ID:              contract.ID,
 // 		Status: 		contract.Status,
 
-// 	}
-// 	pdf, err := pdf.GenerateAndUploadContractPDF(ctx)
-// }
+//		}
+//		pdf, err := pdf.GenerateAndUploadContractPDF(ctx)
+//	}
+//
+
+// GetContractAuditLogResponse defines the response for GetContractAuditLog handler
+type GetContractAuditLogResponse struct {
+	AuditID            int64              `json:"audit_id"`
+	ContractID         int64              `json:"contract_id"`
+	Operation          string             `json:"operation"`
+	ChangedBy          *int64             `json:"changed_by"`
+	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
+	OldValues          util.JSONObject    `json:"old_values"`
+	NewValues          util.JSONObject    `json:"new_values"`
+	ChangedFields      []string           `json:"changed_fields"`
+	ChangedByFirstName *string            `json:"changed_by_first_name"`
+	ChangedByLastName  *string            `json:"changed_by_last_name"`
+}
+
+// GetContractAuditLogApi returns the audit logs for a contract
+// @Summary Get audit logs for a contract
+// @Tags contracts
+// @Accept json
+// @Produce json
+// @Param id path string true "Contract ID"
+// @Success 200 {array} GetContractAuditLogResponse
+// @Router /contracts/{id}/audit [get]
+func (server *Server) GetContractAuditLogApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	contractID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	auditLogs, err := server.store.GetContractAudit(ctx, contractID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(auditLogs) == 0 {
+		res := SuccessResponse([]GetContractAuditLogResponse{}, "No audit logs found for this contract")
+		ctx.JSON(http.StatusOK, res)
+		return
+	}
+	auditLogsRes := make([]GetContractAuditLogResponse, len(auditLogs))
+	for i, log := range auditLogs {
+		auditLogsRes[i] = GetContractAuditLogResponse{
+			AuditID:            log.AuditID,
+			ContractID:         log.ContractID,
+			Operation:          log.Operation,
+			ChangedBy:          log.ChangedBy,
+			ChangedAt:          log.ChangedAt,
+			OldValues:          util.ParseJSONToObject(log.OldValues),
+			NewValues:          util.ParseJSONToObject(log.NewValues),
+			ChangedFields:      log.ChangedFields,
+			ChangedByFirstName: log.ChangedByFirstName,
+			ChangedByLastName:  log.ChangedByLastName,
+		}
+	}
+	res := SuccessResponse(auditLogsRes, "Audit logs retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}

@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -15,32 +16,41 @@ const createInvoice = `-- name: CreateInvoice :one
 INSERT INTO invoice (
     invoice_number,
     due_date,
+    issue_date,
     invoice_details,
     total_amount,
     extra_content,
-    client_id
+    client_id,
+    sender_id,
+    warning_count
     ) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, updated, created
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
+) RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
 `
 
 type CreateInvoiceParams struct {
 	InvoiceNumber  string      `json:"invoice_number"`
 	DueDate        pgtype.Date `json:"due_date"`
+	IssueDate      pgtype.Date `json:"issue_date"`
 	InvoiceDetails []byte      `json:"invoice_details"`
 	TotalAmount    float64     `json:"total_amount"`
 	ExtraContent   *string     `json:"extra_content"`
 	ClientID       int64       `json:"client_id"`
+	SenderID       *int64      `json:"sender_id"`
+	WarningCount   int32       `json:"warning_count"`
 }
 
 func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error) {
 	row := q.db.QueryRow(ctx, createInvoice,
 		arg.InvoiceNumber,
 		arg.DueDate,
+		arg.IssueDate,
 		arg.InvoiceDetails,
 		arg.TotalAmount,
 		arg.ExtraContent,
 		arg.ClientID,
+		arg.SenderID,
+		arg.WarningCount,
 	)
 	var i Invoice
 	err := row.Scan(
@@ -54,8 +64,628 @@ func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (I
 		&i.PdfAttachmentID,
 		&i.ExtraContent,
 		&i.ClientID,
-		&i.Updated,
-		&i.Created,
+		&i.SenderID,
+		&i.WarningCount,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createPayment = `-- name: CreatePayment :one
+
+INSERT INTO invoice_payment_history (
+    invoice_id,
+    payment_method,
+    payment_status,
+    amount,
+    payment_date,
+    payment_reference,
+    notes,
+    recorded_by
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+`
+
+type CreatePaymentParams struct {
+	InvoiceID        int64       `json:"invoice_id"`
+	PaymentMethod    *string     `json:"payment_method"`
+	PaymentStatus    string      `json:"payment_status"`
+	Amount           float64     `json:"amount"`
+	PaymentDate      pgtype.Date `json:"payment_date"`
+	PaymentReference *string     `json:"payment_reference"`
+	Notes            *string     `json:"notes"`
+	RecordedBy       *int64      `json:"recorded_by"`
+}
+
+// ////////////////////// Payments //////////////////////
+func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (InvoicePaymentHistory, error) {
+	row := q.db.QueryRow(ctx, createPayment,
+		arg.InvoiceID,
+		arg.PaymentMethod,
+		arg.PaymentStatus,
+		arg.Amount,
+		arg.PaymentDate,
+		arg.PaymentReference,
+		arg.Notes,
+		arg.RecordedBy,
+	)
+	var i InvoicePaymentHistory
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteInvoice = `-- name: DeleteInvoice :exec
+DELETE FROM invoice
+WHERE id = $1
+`
+
+func (q *Queries) DeleteInvoice(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteInvoice, id)
+	return err
+}
+
+const deletePayment = `-- name: DeletePayment :one
+DELETE FROM invoice_payment_history
+WHERE id = $1
+RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+`
+
+func (q *Queries) DeletePayment(ctx context.Context, id int64) (InvoicePaymentHistory, error) {
+	row := q.db.QueryRow(ctx, deletePayment, id)
+	var i InvoicePaymentHistory
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getInvoice = `-- name: GetInvoice :one
+SELECT
+    i.id, i.invoice_number, i.issue_date, i.due_date, i.status, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
+    s.name AS sender_name,
+    cd.first_name AS client_first_name,
+    cd.last_name AS client_last_name
+FROM
+    invoice i
+JOIN
+    client_details cd ON i.client_id = cd.id
+LEFT JOIN
+    sender s ON i.sender_id = s.id
+WHERE
+    i.id = $1
+LIMIT 1
+`
+
+type GetInvoiceRow struct {
+	ID              int64              `json:"id"`
+	InvoiceNumber   string             `json:"invoice_number"`
+	IssueDate       pgtype.Date        `json:"issue_date"`
+	DueDate         pgtype.Date        `json:"due_date"`
+	Status          string             `json:"status"`
+	InvoiceDetails  []byte             `json:"invoice_details"`
+	TotalAmount     float64            `json:"total_amount"`
+	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent    *string            `json:"extra_content"`
+	ClientID        int64              `json:"client_id"`
+	SenderID        *int64             `json:"sender_id"`
+	WarningCount    int32              `json:"warning_count"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	SenderName      *string            `json:"sender_name"`
+	ClientFirstName string             `json:"client_first_name"`
+	ClientLastName  string             `json:"client_last_name"`
+}
+
+func (q *Queries) GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error) {
+	row := q.db.QueryRow(ctx, getInvoice, id)
+	var i GetInvoiceRow
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceNumber,
+		&i.IssueDate,
+		&i.DueDate,
+		&i.Status,
+		&i.InvoiceDetails,
+		&i.TotalAmount,
+		&i.PdfAttachmentID,
+		&i.ExtraContent,
+		&i.ClientID,
+		&i.SenderID,
+		&i.WarningCount,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+		&i.SenderName,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+	)
+	return i, err
+}
+
+const getInvoiceAuditLogs = `-- name: GetInvoiceAuditLogs :many
+SELECT
+    ia.audit_id, ia.invoice_id, ia.operation, ia.changed_by, ia.changed_at, ia.old_values, ia.new_values, ia.changed_fields,
+    e.first_name AS changed_by_first_name,
+    e.last_name AS changed_by_last_name
+FROM
+    invoice_audit ia
+LEFT JOIN
+    employee_profile e ON ia.changed_by = e.id
+WHERE
+    ia.invoice_id = $1
+ORDER BY
+    ia.changed_at DESC
+`
+
+type GetInvoiceAuditLogsRow struct {
+	AuditID            int64              `json:"audit_id"`
+	InvoiceID          int64              `json:"invoice_id"`
+	Operation          string             `json:"operation"`
+	ChangedBy          *int64             `json:"changed_by"`
+	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
+	OldValues          []byte             `json:"old_values"`
+	NewValues          []byte             `json:"new_values"`
+	ChangedFields      []string           `json:"changed_fields"`
+	ChangedByFirstName *string            `json:"changed_by_first_name"`
+	ChangedByLastName  *string            `json:"changed_by_last_name"`
+}
+
+func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]GetInvoiceAuditLogsRow, error) {
+	rows, err := q.db.Query(ctx, getInvoiceAuditLogs, invoiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetInvoiceAuditLogsRow
+	for rows.Next() {
+		var i GetInvoiceAuditLogsRow
+		if err := rows.Scan(
+			&i.AuditID,
+			&i.InvoiceID,
+			&i.Operation,
+			&i.ChangedBy,
+			&i.ChangedAt,
+			&i.OldValues,
+			&i.NewValues,
+			&i.ChangedFields,
+			&i.ChangedByFirstName,
+			&i.ChangedByLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPayment = `-- name: GetPayment :one
+SELECT
+    iph.id, iph.invoice_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
+    e.first_name AS recorded_by_first_name,
+    e.last_name AS recorded_by_last_name
+FROM
+    invoice_payment_history iph
+LEFT JOIN
+    employee_profile e ON iph.recorded_by = e.id
+WHERE
+    iph.id = $1
+LIMIT 1
+`
+
+type GetPaymentRow struct {
+	ID                  int64              `json:"id"`
+	InvoiceID           int64              `json:"invoice_id"`
+	PaymentMethod       *string            `json:"payment_method"`
+	PaymentStatus       string             `json:"payment_status"`
+	Amount              float64            `json:"amount"`
+	PaymentDate         pgtype.Date        `json:"payment_date"`
+	PaymentReference    *string            `json:"payment_reference"`
+	Notes               *string            `json:"notes"`
+	RecordedBy          *int64             `json:"recorded_by"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	RecordedByFirstName *string            `json:"recorded_by_first_name"`
+	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+}
+
+func (q *Queries) GetPayment(ctx context.Context, id int64) (GetPaymentRow, error) {
+	row := q.db.QueryRow(ctx, getPayment, id)
+	var i GetPaymentRow
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.RecordedByFirstName,
+		&i.RecordedByLastName,
+	)
+	return i, err
+}
+
+const getPaymentWithInvoice = `-- name: GetPaymentWithInvoice :one
+SELECT 
+    p.id, p.invoice_id, p.payment_method, p.payment_status, p.amount, p.payment_date, p.payment_reference, p.notes, p.recorded_by, p.created_at, p.updated_at,
+    i.total_amount as invoice_total_amount,
+    i.status as invoice_status
+FROM invoice_payment_history p
+JOIN invoice i ON p.invoice_id = i.id
+WHERE p.id = $1
+`
+
+type GetPaymentWithInvoiceRow struct {
+	ID                 int64              `json:"id"`
+	InvoiceID          int64              `json:"invoice_id"`
+	PaymentMethod      *string            `json:"payment_method"`
+	PaymentStatus      string             `json:"payment_status"`
+	Amount             float64            `json:"amount"`
+	PaymentDate        pgtype.Date        `json:"payment_date"`
+	PaymentReference   *string            `json:"payment_reference"`
+	Notes              *string            `json:"notes"`
+	RecordedBy         *int64             `json:"recorded_by"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	InvoiceTotalAmount float64            `json:"invoice_total_amount"`
+	InvoiceStatus      string             `json:"invoice_status"`
+}
+
+func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id int64) (GetPaymentWithInvoiceRow, error) {
+	row := q.db.QueryRow(ctx, getPaymentWithInvoice, id)
+	var i GetPaymentWithInvoiceRow
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.InvoiceTotalAmount,
+		&i.InvoiceStatus,
+	)
+	return i, err
+}
+
+const getTotalPaidAmountByInvoice = `-- name: GetTotalPaidAmountByInvoice :one
+SELECT 
+    COALESCE(SUM(amount), 0)::FLOAT AS total_paid
+FROM invoice_payment_history 
+WHERE invoice_id = $1 
+  AND payment_status = 'completed'
+`
+
+func (q *Queries) GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID int64) (float64, error) {
+	row := q.db.QueryRow(ctx, getTotalPaidAmountByInvoice, invoiceID)
+	var total_paid float64
+	err := row.Scan(&total_paid)
+	return total_paid, err
+}
+
+const listInvoices = `-- name: ListInvoices :many
+SELECT
+    i.id, i.invoice_number, i.issue_date, i.due_date, i.status, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
+    COUNT(*) OVER() AS total_count,
+    s.name AS sender_name,
+    cd.first_name AS client_first_name,
+    cd.last_name AS client_last_name
+FROM
+    invoice i
+JOIN
+    client_details cd ON i.client_id = cd.id
+LEFT JOIN
+    sender s ON i.sender_id = s.id
+WHERE
+    -- Optional filter for client_id.
+    -- The filter is applied only if the @client_id parameter is not NULL.
+    (i.client_id = $1 OR $1 IS NULL)
+    
+    -- Optional filter for sender_id.
+    -- The filter is applied only if the @sender_id parameter is not NULL.
+    AND (i.sender_id = $2 OR $2 IS NULL)
+    
+    -- Optional filter for status.
+    -- The filter is applied only if the @status parameter is not NULL.
+    AND (i.status = $3 OR $3 IS NULL)
+    
+    -- Optional filter for the start of the issue_date range.
+    -- The filter is applied only if the @start_date parameter is not NULL.
+    AND (i.issue_date >= $4 OR $4 IS NULL)
+    
+    -- Optional filter for the end of the issue_date range.
+    -- The filter is applied only if the @end_date parameter is not NULL.
+    AND (i.issue_date <= $5 OR $5 IS NULL)
+ORDER BY
+    i.updated_at DESC
+LIMIT $7
+OFFSET $6
+`
+
+type ListInvoicesParams struct {
+	ClientID  *int64      `json:"client_id"`
+	SenderID  *int64      `json:"sender_id"`
+	Status    *string     `json:"status"`
+	StartDate pgtype.Date `json:"start_date"`
+	EndDate   pgtype.Date `json:"end_date"`
+	Offset    int32       `json:"offset"`
+	Limit     int32       `json:"limit"`
+}
+
+type ListInvoicesRow struct {
+	ID              int64              `json:"id"`
+	InvoiceNumber   string             `json:"invoice_number"`
+	IssueDate       pgtype.Date        `json:"issue_date"`
+	DueDate         pgtype.Date        `json:"due_date"`
+	Status          string             `json:"status"`
+	InvoiceDetails  []byte             `json:"invoice_details"`
+	TotalAmount     float64            `json:"total_amount"`
+	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent    *string            `json:"extra_content"`
+	ClientID        int64              `json:"client_id"`
+	SenderID        *int64             `json:"sender_id"`
+	WarningCount    int32              `json:"warning_count"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	TotalCount      int64              `json:"total_count"`
+	SenderName      *string            `json:"sender_name"`
+	ClientFirstName string             `json:"client_first_name"`
+	ClientLastName  string             `json:"client_last_name"`
+}
+
+func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error) {
+	rows, err := q.db.Query(ctx, listInvoices,
+		arg.ClientID,
+		arg.SenderID,
+		arg.Status,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListInvoicesRow
+	for rows.Next() {
+		var i ListInvoicesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.InvoiceNumber,
+			&i.IssueDate,
+			&i.DueDate,
+			&i.Status,
+			&i.InvoiceDetails,
+			&i.TotalAmount,
+			&i.PdfAttachmentID,
+			&i.ExtraContent,
+			&i.ClientID,
+			&i.SenderID,
+			&i.WarningCount,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+			&i.TotalCount,
+			&i.SenderName,
+			&i.ClientFirstName,
+			&i.ClientLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPayments = `-- name: ListPayments :many
+SELECT
+    iph.id, iph.invoice_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
+    e.first_name AS recorded_by_first_name,
+    e.last_name AS recorded_by_last_name
+FROM
+    invoice_payment_history iph
+LEFT JOIN
+    employee_profile e ON iph.recorded_by = e.id
+WHERE
+    iph.invoice_id = $1
+ORDER BY
+    iph.payment_date DESC
+`
+
+type ListPaymentsRow struct {
+	ID                  int64              `json:"id"`
+	InvoiceID           int64              `json:"invoice_id"`
+	PaymentMethod       *string            `json:"payment_method"`
+	PaymentStatus       string             `json:"payment_status"`
+	Amount              float64            `json:"amount"`
+	PaymentDate         pgtype.Date        `json:"payment_date"`
+	PaymentReference    *string            `json:"payment_reference"`
+	Notes               *string            `json:"notes"`
+	RecordedBy          *int64             `json:"recorded_by"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	RecordedByFirstName *string            `json:"recorded_by_first_name"`
+	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+}
+
+func (q *Queries) ListPayments(ctx context.Context, invoiceID int64) ([]ListPaymentsRow, error) {
+	rows, err := q.db.Query(ctx, listPayments, invoiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPaymentsRow
+	for rows.Next() {
+		var i ListPaymentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.InvoiceID,
+			&i.PaymentMethod,
+			&i.PaymentStatus,
+			&i.Amount,
+			&i.PaymentDate,
+			&i.PaymentReference,
+			&i.Notes,
+			&i.RecordedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.RecordedByFirstName,
+			&i.RecordedByLastName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateInvoice = `-- name: UpdateInvoice :one
+UPDATE invoice
+SET
+    issue_date = COALESCE($2, issue_date),
+    due_date = COALESCE($3, due_date),
+    invoice_details = COALESCE($4, invoice_details),
+    total_amount = COALESCE($5, total_amount),
+    extra_content = COALESCE($6, extra_content),
+    status = COALESCE($7, status),
+    warning_count = COALESCE($8, warning_count)
+WHERE
+    id = $1
+RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
+`
+
+type UpdateInvoiceParams struct {
+	ID             int64       `json:"id"`
+	IssueDate      pgtype.Date `json:"issue_date"`
+	DueDate        pgtype.Date `json:"due_date"`
+	InvoiceDetails []byte      `json:"invoice_details"`
+	TotalAmount    float64     `json:"total_amount"`
+	ExtraContent   *string     `json:"extra_content"`
+	Status         string      `json:"status"`
+	WarningCount   int32       `json:"warning_count"`
+}
+
+func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error) {
+	row := q.db.QueryRow(ctx, updateInvoice,
+		arg.ID,
+		arg.IssueDate,
+		arg.DueDate,
+		arg.InvoiceDetails,
+		arg.TotalAmount,
+		arg.ExtraContent,
+		arg.Status,
+		arg.WarningCount,
+	)
+	var i Invoice
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceNumber,
+		&i.IssueDate,
+		&i.DueDate,
+		&i.Status,
+		&i.InvoiceDetails,
+		&i.TotalAmount,
+		&i.PdfAttachmentID,
+		&i.ExtraContent,
+		&i.ClientID,
+		&i.SenderID,
+		&i.WarningCount,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updatePayment = `-- name: UpdatePayment :one
+UPDATE invoice_payment_history 
+SET 
+    payment_method = COALESCE($1, payment_method),
+    payment_status = COALESCE($2, payment_status),
+    amount = COALESCE($3, amount),
+    payment_date = COALESCE($4, payment_date),
+    payment_reference = COALESCE($5, payment_reference),
+    notes = COALESCE($6, notes),
+    recorded_by = COALESCE($7, recorded_by),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $8
+RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+`
+
+type UpdatePaymentParams struct {
+	PaymentMethod    *string     `json:"payment_method"`
+	PaymentStatus    *string     `json:"payment_status"`
+	Amount           *float64    `json:"amount"`
+	PaymentDate      pgtype.Date `json:"payment_date"`
+	PaymentReference *string     `json:"payment_reference"`
+	Notes            *string     `json:"notes"`
+	RecordedBy       *int64      `json:"recorded_by"`
+	ID               int64       `json:"id"`
+}
+
+func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (InvoicePaymentHistory, error) {
+	row := q.db.QueryRow(ctx, updatePayment,
+		arg.PaymentMethod,
+		arg.PaymentStatus,
+		arg.Amount,
+		arg.PaymentDate,
+		arg.PaymentReference,
+		arg.Notes,
+		arg.RecordedBy,
+		arg.ID,
+	)
+	var i InvoicePaymentHistory
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.Amount,
+		&i.PaymentDate,
+		&i.PaymentReference,
+		&i.Notes,
+		&i.RecordedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

@@ -574,7 +574,7 @@ CREATE TABLE contract_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     contract_id BIGINT NOT NULL,
     operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
-    changed_by BIGINT NULL, -- user ID who made the change
+    changed_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL, -- Assumes application will set a employee ID
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values JSONB NULL,
     new_values JSONB NULL,
@@ -588,25 +588,36 @@ CREATE INDEX idx_contract_audit_operation ON contract_audit(operation);
 
 
 -- Create trigger function to capture changes
-CREATE OR REPLACE FUNCTION contract_audit_trigger_func()
-RETURNS TRIGGER AS $$
-DECLARE
+CREATE OR REPLACE FUNCTION contract_audit_trigger_func() 
+RETURNS TRIGGER AS $$ 
+DECLARE 
     old_row JSONB;
     new_row JSONB;
     changed_fields TEXT[] := '{}';
     field_name TEXT;
+    current_user_id BIGINT;
 BEGIN
+    -- Get the current user ID from session variable
+    BEGIN
+        current_user_id := current_setting('myapp.current_employee_id')::BIGINT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            current_user_id := NULL;
+    END;
+
     -- Handle different operations
     IF TG_OP = 'DELETE' THEN
         old_row := to_jsonb(OLD);
-        INSERT INTO contract_audit (contract_id, operation, old_values, changed_at)
-        VALUES (OLD.id, 'DELETE', old_row, CURRENT_TIMESTAMP);
+        INSERT INTO contract_audit (contract_id, operation, old_values, changed_by, changed_at)
+        VALUES (OLD.id, 'DELETE', old_row, current_user_id, CURRENT_TIMESTAMP);
         RETURN OLD;
+        
     ELSIF TG_OP = 'INSERT' THEN
         new_row := to_jsonb(NEW);
-        INSERT INTO contract_audit (contract_id, operation, new_values, changed_at)
-        VALUES (NEW.id, 'INSERT', new_row, CURRENT_TIMESTAMP);
+        INSERT INTO contract_audit (contract_id, operation, new_values, changed_by, changed_at)
+        VALUES (NEW.id, 'INSERT', new_row, current_user_id, CURRENT_TIMESTAMP);
         RETURN NEW;
+        
     ELSIF TG_OP = 'UPDATE' THEN
         old_row := to_jsonb(OLD);
         new_row := to_jsonb(NEW);
@@ -619,11 +630,11 @@ BEGIN
         END LOOP;
         
         -- Only log if there are actual changes (excluding updated_at)
-        IF array_length(changed_fields, 1) > 0 AND NOT (array_length(changed_fields, 1) = 1 AND 'updated_at' = ANY(changed_fields)) THEN
-            INSERT INTO contract_audit (contract_id, operation, old_values, new_values, changed_fields, changed_at)
-            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields, CURRENT_TIMESTAMP);
+        IF array_length(changed_fields, 1) > 0 AND 
+           NOT (array_length(changed_fields, 1) = 1 AND 'updated_at' = ANY(changed_fields)) THEN
+            INSERT INTO contract_audit (contract_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
+            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields, current_user_id, CURRENT_TIMESTAMP);
         END IF;
-        
         RETURN NEW;
     END IF;
     
@@ -660,7 +671,7 @@ CREATE TABLE contract_working_hours (
 
 CREATE TABLE invoice (
     id BIGSERIAL PRIMARY KEY,
-    invoice_number VARCHAR(10) NOT NULL UNIQUE,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
     issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
     due_date DATE NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN (
@@ -672,8 +683,10 @@ CREATE TABLE invoice (
     pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     extra_content TEXT NULL DEFAULT '',
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL,
+    warning_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX contract_working_hours_contract_id_idx ON contract_working_hours(contract_id);
@@ -682,20 +695,114 @@ CREATE INDEX invoice_invoice_number_idx ON invoice(invoice_number);
 CREATE INDEX invoice_client_id_idx ON invoice(client_id);
 CREATE INDEX invoice_status_idx ON invoice(status);
 
+-- Create the invoice_audit table, similar to the contract_audit example
+CREATE TABLE invoice_audit (
+    audit_id BIGSERIAL PRIMARY KEY,
+    invoice_id BIGINT NOT NULL,
+    operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+    changed_by BIGINT REFERENCES employee_profile(id) ON DELETE SET NULL, -- Assumes application will set a user ID
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_values JSONB NULL,
+    new_values JSONB NULL,
+    changed_fields TEXT[] NULL -- array of field names that changed
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_invoice_audit_invoice_id ON invoice_audit(invoice_id);
+CREATE INDEX idx_invoice_audit_changed_at ON invoice_audit(changed_at);
+CREATE INDEX idx_invoice_audit_operation ON invoice_audit(operation);
+
+-- Create trigger function to capture changes, mirroring the contract_audit_trigger_func logic
+CREATE OR REPLACE FUNCTION invoice_audit_trigger_func()
+RETURNS TRIGGER AS $$
+DECLARE
+    old_row JSONB;
+    new_row JSONB;
+    changed_fields_arr TEXT[] := '{}';
+    field_name TEXT;
+    current_employee_id BIGINT; -- This will hold the current user ID, if available
+    -- You can set the user ID from the application like this:
+    -- changed_by_user_id BIGINT := current_setting('app.user_id', true)::BIGINT;
+BEGIN
+    BEGIN
+        current_employee_id := current_setting('myapp.current_employee_id')::BIGINT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            current_employee_id := NULL; -- Fallback if the setting is not available
+    END;
+    -- Handle different operations
+    IF TG_OP = 'DELETE' THEN
+        old_row := to_jsonb(OLD);
+        INSERT INTO invoice_audit (invoice_id, operation, old_values,changed_by, changed_at)
+        VALUES (OLD.id, 'DELETE', old_row, CURRENT_TIMESTAMP);
+        RETURN OLD;
+
+    ELSIF TG_OP = 'INSERT' THEN
+        new_row := to_jsonb(NEW);
+        INSERT INTO invoice_audit (invoice_id, operation, new_values, changed_by, changed_at)
+        VALUES (NEW.id, 'INSERT', new_row, current_employee_id, CURRENT_TIMESTAMP);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        old_row := to_jsonb(OLD);
+        new_row := to_jsonb(NEW);
+        
+        -- Identify changed fields by comparing old and new values
+        FOR field_name IN SELECT jsonb_object_keys(new_row) LOOP
+            -- Use the ->> operator to compare values as text; IS DISTINCT FROM handles NULLs correctly.
+            IF old_row->>field_name IS DISTINCT FROM new_row->>field_name THEN
+                changed_fields_arr := array_append(changed_fields_arr, field_name);
+            END IF;
+        END LOOP;
+        
+        -- Only log the change if there are actual changes, and it's not just the 'updated_at' field.
+        IF array_length(changed_fields_arr, 1) > 0 AND NOT (array_length(changed_fields_arr, 1) = 1 AND 'updated_at' = ANY(changed_fields_arr)) THEN
+            INSERT INTO invoice_audit (invoice_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
+            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields_arr, current_employee_id, CURRENT_TIMESTAMP);
+        END IF;
+        
+        RETURN NEW;
+    END IF;
+    
+    RETURN NULL; -- Fallback for unhandled events
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the trigger to execute the function after changes on the invoice table
+CREATE TRIGGER invoice_audit_trigger
+AFTER INSERT OR UPDATE OR DELETE ON invoice
+FOR EACH ROW EXECUTE FUNCTION invoice_audit_trigger_func();
 
 
-CREATE TABLE invoice_history (
+
+
+
+CREATE TABLE invoice_payment_history (
     id BIGSERIAL PRIMARY KEY,
+    invoice_id BIGINT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
     payment_method VARCHAR(20) NULL CHECK (payment_method IN (
         'bank_transfer', 'credit_card', 'check', 'cash', 'other'
     )),
+    payment_status VARCHAR(20) NOT NULL CHECK (payment_status IN (
+        'completed', 'pending', 'failed', 'reversed', 'refunded'
+    )) DEFAULT 'completed',
     amount DECIMAL(20,2) NOT NULL DEFAULT 0,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    invoice_id BIGINT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE
+    payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    payment_reference VARCHAR(100) NULL,
+    notes TEXT NULL,
+    recorded_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX invoice_history_invoice_id_idx ON invoice_history(invoice_id);
+-- Index for faster lookups by invoice
+CREATE INDEX idx_invoice_payment_history_invoice_id ON invoice_payment_history(invoice_id);
+
+-- Index for payment date queries
+CREATE INDEX idx_invoice_payment_history_payment_date ON invoice_payment_history(payment_date);
+
+-- Index for payment status queries
+CREATE INDEX idx_invoice_payment_history_payment_status ON invoice_payment_history(payment_status);
 
 
 
