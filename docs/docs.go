@@ -11199,7 +11199,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "payment_method": {
                     "type": "string"
@@ -11234,7 +11234,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "payment_id": {
                     "type": "integer"
@@ -12344,7 +12344,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "due_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "extra_content": {
                     "type": "string"
@@ -19654,7 +19654,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "due_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "extra_content": {
                     "type": "string"
@@ -19767,7 +19767,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "payment_id": {
                     "type": "integer"
@@ -20594,8 +20594,10 @@ const docTemplate = `{
                 "contract_id": {
                     "type": "integer"
                 },
+                "contract_name": {
+                    "type": "string"
+                },
                 "periods": {
-                    "description": "Optional periods for the contract",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/invoice.InvoicePeriod"

@@ -29,7 +29,7 @@ type GenerateInvoiceResponse struct {
 	ID              int64                    `json:"id"`
 	InvoiceNumber   string                   `json:"invoice_number"`
 	IssueDate       time.Time                `json:"issue_date"`
-	DueDate         pgtype.Date              `json:"due_date"`
+	DueDate         time.Time                `json:"due_date"`
 	Status          string                   `json:"status"`
 	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
@@ -101,7 +101,7 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		ID:              invoice.ID,
 		InvoiceNumber:   invoice.InvoiceNumber,
 		IssueDate:       invoice.IssueDate.Time,
-		DueDate:         invoice.DueDate,
+		DueDate:         invoice.DueDate.Time,
 		Status:          invoice.Status,
 		InvoiceDetails:  invoiceResult.InvoiceDetails,
 		TotalAmount:     invoice.TotalAmount,
@@ -308,7 +308,7 @@ type UpdateInvoiceResponse struct {
 	ID              int64                    `json:"id"`
 	InvoiceNumber   string                   `json:"invoice_number"`
 	IssueDate       time.Time                `json:"issue_date"`
-	DueDate         pgtype.Date              `json:"due_date"`
+	DueDate         time.Time                `json:"due_date"`
 	Status          string                   `json:"status"`
 	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
@@ -411,7 +411,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		ID:              updatedInvoice.ID,
 		InvoiceNumber:   updatedInvoice.InvoiceNumber,
 		IssueDate:       updatedInvoice.IssueDate.Time,
-		DueDate:         updatedInvoice.DueDate,
+		DueDate:         updatedInvoice.DueDate.Time,
 		Status:          updatedInvoice.Status,
 		InvoiceDetails:  invoiceDetails,
 		TotalAmount:     updatedInvoice.TotalAmount,
@@ -453,16 +453,16 @@ func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
 }
 
 type GetInvoiceAuditLogResponse struct {
-	AuditID            int64              `json:"audit_id"`
-	InvoiceID          int64              `json:"invoice_id"`
-	Operation          string             `json:"operation"`
-	ChangedBy          *int64             `json:"changed_by"`
-	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
-	OldValues          util.JSONObject    `json:"old_values"`
-	NewValues          util.JSONObject    `json:"new_values"`
-	ChangedFields      []string           `json:"changed_fields"`
-	ChangedByFirstName *string            `json:"changed_by_first_name"`
-	ChangedByLastName  *string            `json:"changed_by_last_name"`
+	AuditID            int64           `json:"audit_id"`
+	InvoiceID          int64           `json:"invoice_id"`
+	Operation          string          `json:"operation"`
+	ChangedBy          *int64          `json:"changed_by"`
+	ChangedAt          time.Time       `json:"changed_at"`
+	OldValues          util.JSONObject `json:"old_values"`
+	NewValues          util.JSONObject `json:"new_values"`
+	ChangedFields      []string        `json:"changed_fields"`
+	ChangedByFirstName *string         `json:"changed_by_first_name"`
+	ChangedByLastName  *string         `json:"changed_by_last_name"`
 }
 
 func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
@@ -489,7 +489,7 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 			InvoiceID:          log.InvoiceID,
 			Operation:          log.Operation,
 			ChangedBy:          log.ChangedBy,
-			ChangedAt:          log.ChangedAt,
+			ChangedAt:          log.ChangedAt.Time,
 			OldValues:          util.ParseJSONToObject(log.OldValues),
 			NewValues:          util.ParseJSONToObject(log.NewValues),
 			ChangedFields:      log.ChangedFields,
@@ -505,28 +505,28 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 
 // CreatePaymentRequest represents the request body for creating a payment.
 type CreatePaymentRequest struct {
-	PaymentMethod    *string     `json:"payment_method"`
-	PaymentStatus    string      `json:"payment_status"`
-	Amount           float64     `json:"amount"`
-	PaymentDate      pgtype.Date `json:"payment_date"`
-	PaymentReference *string     `json:"payment_reference"`
-	Notes            *string     `json:"notes"`
-	RecordedBy       *int64      `json:"recorded_by"`
+	PaymentMethod    *string   `json:"payment_method"`
+	PaymentStatus    string    `json:"payment_status"`
+	Amount           float64   `json:"amount"`
+	PaymentDate      time.Time `json:"payment_date"`
+	PaymentReference *string   `json:"payment_reference"`
+	Notes            *string   `json:"notes"`
+	RecordedBy       *int64    `json:"recorded_by"`
 }
 
 // CreatePaymentResponse represents the response body for creating a payment.
 type CreatePaymentResponse struct {
-	PaymentID            int64       `json:"payment_id"`
-	InvoiceID            int64       `json:"invoice_id"`
-	PaymentMethod        *string     `json:"payment_method"`
-	PaymentStatus        string      `json:"payment_status"`
-	Amount               float64     `json:"amount"`
-	PaymentDate          pgtype.Date `json:"payment_date"`
-	PaymentReference     *string     `json:"payment_reference"`
-	Notes                *string     `json:"notes"`
-	RecordedBy           *int64      `json:"recorded_by"`
-	InvoiceStatusChanged bool        `json:"invoice_status_changed"`
-	CurrentInvoiceStatus string      `json:"current_invoice_status"`
+	PaymentID            int64     `json:"payment_id"`
+	InvoiceID            int64     `json:"invoice_id"`
+	PaymentMethod        *string   `json:"payment_method"`
+	PaymentStatus        string    `json:"payment_status"`
+	Amount               float64   `json:"amount"`
+	PaymentDate          time.Time `json:"payment_date"`
+	PaymentReference     *string   `json:"payment_reference"`
+	Notes                *string   `json:"notes"`
+	RecordedBy           *int64    `json:"recorded_by"`
+	InvoiceStatusChanged bool      `json:"invoice_status_changed"`
+	CurrentInvoiceStatus string    `json:"current_invoice_status"`
 }
 
 // @Summary Create Payment
@@ -589,7 +589,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		PaymentMethod:    req.PaymentMethod,
 		PaymentStatus:    req.PaymentStatus,
 		Amount:           req.Amount,
-		PaymentDate:      req.PaymentDate,
+		PaymentDate:      pgtype.Date{Time: req.PaymentDate, Valid: true},
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,
 		RecordedBy:       req.RecordedBy,
@@ -640,7 +640,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		PaymentMethod:        payment.PaymentMethod,
 		PaymentStatus:        payment.PaymentStatus,
 		Amount:               payment.Amount,
-		PaymentDate:          payment.PaymentDate,
+		PaymentDate:          payment.PaymentDate.Time,
 		PaymentReference:     payment.PaymentReference,
 		Notes:                payment.Notes,
 		RecordedBy:           payment.RecordedBy,
@@ -697,19 +697,19 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 }
 
 type GetPaymentByIDResponse struct {
-	PaymentID           int64              `json:"payment_id"`
-	InvoiceID           int64              `json:"invoice_id"`
-	PaymentMethod       *string            `json:"payment_method"`
-	PaymentStatus       string             `json:"payment_status"`
-	Amount              float64            `json:"amount"`
-	PaymentDate         pgtype.Date        `json:"payment_date"`
-	PaymentReference    *string            `json:"payment_reference"`
-	Notes               *string            `json:"notes"`
-	RecordedBy          *int64             `json:"recorded_by"`
-	CreatedAt           pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
-	RecordedByFirstName *string            `json:"recorded_by_first_name"`
-	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+	PaymentID           int64     `json:"payment_id"`
+	InvoiceID           int64     `json:"invoice_id"`
+	PaymentMethod       *string   `json:"payment_method"`
+	PaymentStatus       string    `json:"payment_status"`
+	Amount              float64   `json:"amount"`
+	PaymentDate         time.Time `json:"payment_date"`
+	PaymentReference    *string   `json:"payment_reference"`
+	Notes               *string   `json:"notes"`
+	RecordedBy          *int64    `json:"recorded_by"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	RecordedByFirstName *string   `json:"recorded_by_first_name"`
+	RecordedByLastName  *string   `json:"recorded_by_last_name"`
 }
 
 func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
@@ -730,12 +730,12 @@ func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
 		PaymentMethod:       payment.PaymentMethod,
 		PaymentStatus:       payment.PaymentStatus,
 		Amount:              payment.Amount,
-		PaymentDate:         payment.PaymentDate,
+		PaymentDate:         payment.PaymentDate.Time,
 		PaymentReference:    payment.PaymentReference,
 		Notes:               payment.Notes,
 		RecordedBy:          payment.RecordedBy,
-		CreatedAt:           payment.CreatedAt,
-		UpdatedAt:           payment.UpdatedAt,
+		CreatedAt:           payment.CreatedAt.Time,
+		UpdatedAt:           payment.UpdatedAt.Time,
 		RecordedByFirstName: payment.RecordedByFirstName,
 		RecordedByLastName:  payment.RecordedByLastName,
 	}
@@ -756,18 +756,18 @@ type UpdatePaymentRequest struct {
 
 // UpdatePaymentResponse represents the response body for updating a payment.
 type UpdatePaymentResponse struct {
-	PaymentID             int64       `json:"payment_id"`
-	InvoiceID             int64       `json:"invoice_id"`
-	PaymentMethod         *string     `json:"payment_method"`
-	PaymentStatus         string      `json:"payment_status"`
-	Amount                float64     `json:"amount"`
-	PaymentDate           pgtype.Date `json:"payment_date"`
-	PaymentReference      *string     `json:"payment_reference"`
-	Notes                 *string     `json:"notes"`
-	RecordedBy            *int64      `json:"recorded_by"`
-	InvoiceStatusChanged  bool        `json:"invoice_status_changed"`
-	CurrentInvoiceStatus  string      `json:"current_invoice_status"`
-	PreviousInvoiceStatus string      `json:"previous_invoice_status"`
+	PaymentID             int64     `json:"payment_id"`
+	InvoiceID             int64     `json:"invoice_id"`
+	PaymentMethod         *string   `json:"payment_method"`
+	PaymentStatus         string    `json:"payment_status"`
+	Amount                float64   `json:"amount"`
+	PaymentDate           time.Time `json:"payment_date"`
+	PaymentReference      *string   `json:"payment_reference"`
+	Notes                 *string   `json:"notes"`
+	RecordedBy            *int64    `json:"recorded_by"`
+	InvoiceStatusChanged  bool      `json:"invoice_status_changed"`
+	CurrentInvoiceStatus  string    `json:"current_invoice_status"`
+	PreviousInvoiceStatus string    `json:"previous_invoice_status"`
 }
 
 // @Summary Update Payment
@@ -923,7 +923,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 		PaymentMethod:         updatedPayment.PaymentMethod,
 		PaymentStatus:         updatedPayment.PaymentStatus,
 		Amount:                updatedPayment.Amount,
-		PaymentDate:           updatedPayment.PaymentDate,
+		PaymentDate:           updatedPayment.PaymentDate.Time,
 		PaymentReference:      updatedPayment.PaymentReference,
 		Notes:                 updatedPayment.Notes,
 		RecordedBy:            updatedPayment.RecordedBy,
