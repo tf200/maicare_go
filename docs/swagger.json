@@ -11192,7 +11192,7 @@
                     "type": "string"
                 },
                 "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "payment_method": {
                     "type": "string"
@@ -11227,7 +11227,7 @@
                     "type": "string"
                 },
                 "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "payment_id": {
                     "type": "integer"
@@ -12337,7 +12337,7 @@
                     "type": "string"
                 },
                 "due_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "extra_content": {
                     "type": "string"
@@ -19647,7 +19647,7 @@
                     "type": "string"
                 },
                 "due_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "extra_content": {
                     "type": "string"
@@ -19760,7 +19760,7 @@
                     "type": "string"
                 },
                 "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
                 },
                 "payment_id": {
                     "type": "integer"
@@ -20587,8 +20587,10 @@
                 "contract_id": {
                     "type": "integer"
                 },
+                "contract_name": {
+                    "type": "string"
+                },
                 "periods": {
-                    "description": "Optional periods for the contract",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/invoice.InvoicePeriod"

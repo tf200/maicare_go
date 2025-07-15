@@ -1569,7 +1569,7 @@ definitions:
       notes:
         type: string
       payment_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       payment_method:
         type: string
       payment_reference:
@@ -1592,7 +1592,7 @@ definitions:
       notes:
         type: string
       payment_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       payment_id:
         type: integer
       payment_method:
@@ -2332,7 +2332,7 @@ definitions:
       created_at:
         type: string
       due_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       extra_content:
         type: string
       id:
@@ -7133,7 +7133,7 @@ definitions:
       created_at:
         type: string
       due_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       extra_content:
         type: string
       id:
@@ -7207,7 +7207,7 @@ definitions:
       notes:
         type: string
       payment_date:
-        $ref: '#/definitions/pgtype.Date'
+        type: string
       payment_id:
         type: integer
       payment_method:
@@ -7760,8 +7760,9 @@ definitions:
     properties:
       contract_id:
         type: integer
+      contract_name:
+        type: string
       periods:
-        description: Optional periods for the contract
         items:
           $ref: '#/definitions/invoice.InvoicePeriod'
         type: array
