@@ -289,7 +289,8 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 		ClientFirstName: invoiceItem.ClientFirstName,
 		ClientLastName:  invoiceItem.ClientLastName,
 	}
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Invoice retrieved successfully"))
+
 }
 
 // UpdateInvoiceRequest represents the request body for updating an invoice.
@@ -422,7 +423,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		UpdatedAt:       updatedInvoice.UpdatedAt.Time,
 		CreatedAt:       updatedInvoice.CreatedAt.Time,
 	}
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Invoice updated successfully"))
 
 }
 
