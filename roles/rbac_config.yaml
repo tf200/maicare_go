@@ -110,6 +110,18 @@ permissions:
   - name: INVOICE.DELETE
     resource: /invoices
     method: [DELETE]
+  - name: INVOICE.PAYMENT.CREATE
+    resource: /invoices/payments
+    method: [POST]
+  - name: INVOICE.PAYMENT.VIEW
+    resource: /invoices/payments
+    method: [GET]
+  - name: INVOICE.PAYMENT.UPDATE
+    resource: /invoices/payments
+    method: [PUT]
+  - name: INVOICE.PAYMENT.DELETE
+    resource: /invoices/payments
+    method: [DELETE]
 
   
   
@@ -151,6 +163,10 @@ roles:
       - INVOICE.VIEW
       - INVOICE.UPDATE
       - INVOICE.DELETE
+      - INVOICE.PAYMENT.CREATE
+      - INVOICE.PAYMENT.VIEW
+      - INVOICE.PAYMENT.UPDATE
+      - INVOICE.PAYMENT.DELETE
 
   - name: Worker
     id: 2

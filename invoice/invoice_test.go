@@ -337,3 +337,9 @@ func TestGenerateInvoice(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, insertedInvoice)
 }
+
+// To do other methods
+
+func TestCreatePaymentApi(t *testing.T) {
+
+}
