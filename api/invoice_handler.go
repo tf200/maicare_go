@@ -714,19 +714,19 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 
 // ListPaymentsResponse represents the response body for listing payments.
 type ListPaymentsResponse struct {
-	PaymentID           int64              `json:"payment_id"`
-	InvoiceID           int64              `json:"invoice_id"`
-	PaymentMethod       *string            `json:"payment_method"`
-	PaymentStatus       string             `json:"payment_status"`
-	Amount              float64            `json:"amount"`
-	PaymentDate         pgtype.Date        `json:"payment_date"`
-	PaymentReference    *string            `json:"payment_reference"`
-	Notes               *string            `json:"notes"`
-	RecordedBy          *int64             `json:"recorded_by"`
-	CreatedAt           pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
-	RecordedByFirstName *string            `json:"recorded_by_first_name"`
-	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+	PaymentID           int64       `json:"payment_id"`
+	InvoiceID           int64       `json:"invoice_id"`
+	PaymentMethod       *string     `json:"payment_method"`
+	PaymentStatus       string      `json:"payment_status"`
+	Amount              float64     `json:"amount"`
+	PaymentDate         pgtype.Date `json:"payment_date"`
+	PaymentReference    *string     `json:"payment_reference"`
+	Notes               *string     `json:"notes"`
+	RecordedBy          *int64      `json:"recorded_by"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
+	RecordedByFirstName *string     `json:"recorded_by_first_name"`
+	RecordedByLastName  *string     `json:"recorded_by_last_name"`
 }
 
 // @Summary List Payments
@@ -755,7 +755,25 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, SuccessResponse(payments, "Payments retrieved successfully"))
+	response := make([]ListPaymentsResponse, len(payments))
+	for i, payment := range payments {
+		response[i] = ListPaymentsResponse{
+			PaymentID:           payment.ID,
+			InvoiceID:           payment.InvoiceID,
+			PaymentMethod:       payment.PaymentMethod,
+			PaymentStatus:       payment.PaymentStatus,
+			Amount:              payment.Amount,
+			PaymentDate:         payment.PaymentDate,
+			PaymentReference:    payment.PaymentReference,
+			Notes:               payment.Notes,
+			RecordedBy:          payment.RecordedBy,
+			CreatedAt:           payment.CreatedAt.Time,
+			UpdatedAt:           payment.UpdatedAt.Time,
+			RecordedByFirstName: payment.RecordedByFirstName,
+			RecordedByLastName:  payment.RecordedByLastName,
+		}
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payments retrieved successfully"))
 }
 
 type GetPaymentByIDResponse struct {
