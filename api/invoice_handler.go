@@ -502,6 +502,68 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 
 }
 
+// ================== Invoice Logs ==================
+
+// GetInvoiceAuditLogsResponse represents the response body for getting invoice audit logs.
+type GetInvoiceAuditLogsResponse struct {
+	AuditID            int64           `json:"audit_id"`
+	InvoiceID          int64           `json:"invoice_id"`
+	Operation          string          `json:"operation"`
+	ChangedBy          *int64          `json:"changed_by"`
+	ChangedAt          time.Time       `json:"changed_at"`
+	OldValues          util.JSONObject `json:"old_values"`
+	NewValues          util.JSONObject `json:"new_values"`
+	ChangedFields      []string        `json:"changed_fields"`
+	ChangedByFirstName *string         `json:"changed_by_first_name"`
+	ChangedByLastName  *string         `json:"changed_by_last_name"`
+}
+
+// GetInvoiceAuditLogsApi handles the retrieval of audit logs for a specific invoice.
+// @Summary Get Invoice Audit Logs
+// @Description Retrieve audit logs for a specific invoice by its ID.
+// @Tags Invoice
+// @Produce json
+// @Param id path int64 true "Invoice ID"
+// @Success 200 {object} Response[[]GetInvoiceAuditLogsResponse] "Successful
+// response with audit logs"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{id}/audit [get]
+func (server *Server) GetInvoiceAuditLogsApi(ctx *gin.Context) {
+	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	logs, err := server.store.GetInvoiceAuditLogs(ctx.Request.Context(), invoiceID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if len(logs) == 0 {
+		ctx.JSON(http.StatusNotFound, SuccessResponse[any](nil, "No audit logs found for this invoice"))
+		return
+	}
+
+	response := make([]GetInvoiceAuditLogsResponse, len(logs))
+	for i, log := range logs {
+		response[i] = GetInvoiceAuditLogsResponse{
+			AuditID:            log.AuditID,
+			InvoiceID:          log.InvoiceID,
+			Operation:          log.Operation,
+			ChangedBy:          log.ChangedBy,
+			ChangedAt:          log.ChangedAt.Time,
+			OldValues:          util.ParseJSONToObject(log.OldValues),
+			NewValues:          util.ParseJSONToObject(log.NewValues),
+			ChangedFields:      log.ChangedFields,
+			ChangedByFirstName: log.ChangedByFirstName,
+			ChangedByLastName:  log.ChangedByLastName,
+		}
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Audit logs retrieved successfully"))
+
+}
+
 // ================== Payment Api ==================
 
 // CreatePaymentRequest represents the request body for creating a payment.
