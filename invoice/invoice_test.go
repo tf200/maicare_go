@@ -247,7 +247,7 @@ func TestGenerateInvoice(t *testing.T) {
 	client := createRandomClientDetails(t)
 	employee, _ := createRandomEmployee(t)
 
-	// priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
+	// priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"
 	// careType := []string{"ambulante", "accommodation"}
 	financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
 	financingOption := []string{"ZIN", "PGB"}
@@ -261,7 +261,7 @@ func TestGenerateInvoice(t *testing.T) {
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(20),
 		Status:          "approved",
-		Price:           0,
+		Price:           89,
 		PriceTimeUnit:   "daily", // util.RandomEnum(priceFrequency),
 		Hours:           nil,
 		HoursType:       nil,
@@ -285,7 +285,7 @@ func TestGenerateInvoice(t *testing.T) {
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(20),
 		Status:          "approved",
-		Price:           558,
+		Price:           58,
 		PriceTimeUnit:   "hourly", // util.RandomEnum(priceFrequency),
 		Hours:           util.Float64Ptr(40),
 		HoursType:       util.StringPtr("weekly"),
@@ -328,6 +328,7 @@ func TestGenerateInvoice(t *testing.T) {
 		ClientID:       invoiceData.ClientID,
 		DueDate:        pgtype.Date{Time: time.Now().AddDate(0, 0, 30), Valid: true},
 		TotalAmount:    invoice.TotalAmount,
+		IssueDate:      pgtype.Date{Time: time.Now(), Valid: true},
 		ExtraContent:   nil, // Assuming no extra content for simplicity
 		InvoiceDetails: invoiceDetailsBytes,
 		SenderID:       client.SenderID,
