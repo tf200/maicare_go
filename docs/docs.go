@@ -7011,6 +7011,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/invoices/{id}/audit": {
+            "get": {
+                "description": "Retrieve audit logs for a specific invoice by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get Invoice Audit Logs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_GetInvoiceAuditLogsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/invoices/{id}/payments": {
             "get": {
                 "description": "List all payments for a specific invoice.",
@@ -13654,6 +13707,44 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetInvoiceAuditLogsResponse": {
+            "type": "object",
+            "properties": {
+                "audit_id": {
+                    "type": "integer"
+                },
+                "changed_at": {
+                    "type": "string"
+                },
+                "changed_by": {
+                    "type": "integer"
+                },
+                "changed_by_first_name": {
+                    "type": "string"
+                },
+                "changed_by_last_name": {
+                    "type": "string"
+                },
+                "changed_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "new_values": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "old_values": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "operation": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetInvoiceByIDResponse": {
             "type": "object",
             "properties": {
@@ -17700,6 +17791,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.CreateGoalObjectiveResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_GetInvoiceAuditLogsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GetInvoiceAuditLogsResponse"
                     }
                 },
                 "message": {

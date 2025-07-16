@@ -20,6 +20,6 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	baseRouter.GET("/contracts", server.ListContractsApi)
 	baseRouter.PUT("/contracts/:id", server.UpdateContractApi)
 
-	baseRouter.GET("/contracts/:id/audit_logs", server.GetContractAuditLogApi)
+	baseRouter.GET("/contracts/:id/audit", server.GetContractAuditLogApi)
 
 }

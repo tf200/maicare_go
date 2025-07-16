@@ -3201,6 +3201,31 @@ definitions:
       uses_medication:
         type: boolean
     type: object
+  api.GetInvoiceAuditLogsResponse:
+    properties:
+      audit_id:
+        type: integer
+      changed_at:
+        type: string
+      changed_by:
+        type: integer
+      changed_by_first_name:
+        type: string
+      changed_by_last_name:
+        type: string
+      changed_fields:
+        items:
+          type: string
+        type: array
+      invoice_id:
+        type: integer
+      new_values:
+        $ref: '#/definitions/util.JSONObject'
+      old_values:
+        $ref: '#/definitions/util.JSONObject'
+      operation:
+        type: string
+    type: object
   api.GetInvoiceByIDResponse:
     properties:
       client_first_name:
@@ -5852,6 +5877,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.CreateGoalObjectiveResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetInvoiceAuditLogsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetInvoiceAuditLogsResponse'
         type: array
       message:
         type: string
@@ -12711,6 +12747,41 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update Invoice
+      tags:
+      - Invoice
+  /invoices/{id}/audit:
+    get:
+      description: Retrieve audit logs for a specific invoice by its ID.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetInvoiceAuditLogsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Invoice Audit Logs
       tags:
       - Invoice
   /invoices/{id}/payments:

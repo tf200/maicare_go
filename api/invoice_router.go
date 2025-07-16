@@ -18,5 +18,6 @@ func (server *Server) setupInvoiceRoutes(baseRouter *gin.RouterGroup) {
 		invoiceGroup.PUT("/:id/payments/:payment_id", RBACMiddleware(server.store, "INVOICE.PAYMENT.UPDATE"), server.UpdatePaymentApi)
 		invoiceGroup.DELETE("/:id/payments/:payment_id", RBACMiddleware(server.store, "INVOICE.PAYMENT.DELETE"), server.DeletePaymentApi)
 
+		invoiceGroup.GET("/:id/audit", RBACMiddleware(server.store, "INVOICE.VIEW"), server.GetInvoiceAuditLogApi)
 	}
 }
