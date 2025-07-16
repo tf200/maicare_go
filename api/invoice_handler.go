@@ -755,7 +755,25 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, SuccessResponse(payments, "Payments retrieved successfully"))
+	response := make([]ListPaymentsResponse, len(payments))
+	for i, payment := range payments {
+		response[i] = ListPaymentsResponse{
+			PaymentID:           payment.ID,
+			InvoiceID:           payment.InvoiceID,
+			PaymentMethod:       payment.PaymentMethod,
+			PaymentStatus:       payment.PaymentStatus,
+			Amount:              payment.Amount,
+			PaymentDate:         payment.PaymentDate,
+			PaymentReference:    payment.PaymentReference,
+			Notes:               payment.Notes,
+			RecordedBy:          payment.RecordedBy,
+			CreatedAt:           payment.CreatedAt.Time,
+			UpdatedAt:           payment.UpdatedAt.Time,
+			RecordedByFirstName: payment.RecordedByFirstName,
+			RecordedByLastName:  payment.RecordedByLastName,
+		}
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payments retrieved successfully"))
 }
 
 type GetPaymentByIDResponse struct {
