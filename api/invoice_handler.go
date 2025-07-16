@@ -714,19 +714,19 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 
 // ListPaymentsResponse represents the response body for listing payments.
 type ListPaymentsResponse struct {
-	PaymentID           int64              `json:"payment_id"`
-	InvoiceID           int64              `json:"invoice_id"`
-	PaymentMethod       *string            `json:"payment_method"`
-	PaymentStatus       string             `json:"payment_status"`
-	Amount              float64            `json:"amount"`
-	PaymentDate         pgtype.Date        `json:"payment_date"`
-	PaymentReference    *string            `json:"payment_reference"`
-	Notes               *string            `json:"notes"`
-	RecordedBy          *int64             `json:"recorded_by"`
-	CreatedAt           pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
-	RecordedByFirstName *string            `json:"recorded_by_first_name"`
-	RecordedByLastName  *string            `json:"recorded_by_last_name"`
+	PaymentID           int64       `json:"payment_id"`
+	InvoiceID           int64       `json:"invoice_id"`
+	PaymentMethod       *string     `json:"payment_method"`
+	PaymentStatus       string      `json:"payment_status"`
+	Amount              float64     `json:"amount"`
+	PaymentDate         pgtype.Date `json:"payment_date"`
+	PaymentReference    *string     `json:"payment_reference"`
+	Notes               *string     `json:"notes"`
+	RecordedBy          *int64      `json:"recorded_by"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
+	RecordedByFirstName *string     `json:"recorded_by_first_name"`
+	RecordedByLastName  *string     `json:"recorded_by_last_name"`
 }
 
 // @Summary List Payments
