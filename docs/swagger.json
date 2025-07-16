@@ -11184,27 +11184,45 @@
         },
         "api.CreatePaymentRequest": {
             "type": "object",
+            "required": [
+                "amount",
+                "payment_date",
+                "payment_status"
+            ],
             "properties": {
                 "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0
                 },
                 "notes": {
                     "type": "string"
                 },
                 "payment_date": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2023-10-01T00:00:00Z"
                 },
                 "payment_method": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "credit_card",
+                        "bank_transfer",
+                        "cash",
+                        "check",
+                        "other"
+                    ]
                 },
                 "payment_reference": {
                     "type": "string"
                 },
                 "payment_status": {
-                    "type": "string"
-                },
-                "recorded_by": {
-                    "type": "integer"
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "completed",
+                        "failed",
+                        "refunded",
+                        "reversed"
+                    ]
                 }
             }
         },

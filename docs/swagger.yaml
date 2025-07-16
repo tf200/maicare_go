@@ -1565,19 +1565,35 @@ definitions:
   api.CreatePaymentRequest:
     properties:
       amount:
+        minimum: 0
         type: number
       notes:
         type: string
       payment_date:
+        example: "2023-10-01T00:00:00Z"
         type: string
       payment_method:
+        enum:
+        - credit_card
+        - bank_transfer
+        - cash
+        - check
+        - other
         type: string
       payment_reference:
         type: string
       payment_status:
+        enum:
+        - pending
+        - completed
+        - failed
+        - refunded
+        - reversed
         type: string
-      recorded_by:
-        type: integer
+    required:
+    - amount
+    - payment_date
+    - payment_status
     type: object
   api.CreatePaymentResponse:
     properties:

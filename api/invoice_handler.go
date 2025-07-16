@@ -376,7 +376,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -506,13 +506,12 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 
 // CreatePaymentRequest represents the request body for creating a payment.
 type CreatePaymentRequest struct {
-	PaymentMethod    *string   `json:"payment_method"`
-	PaymentStatus    string    `json:"payment_status"`
-	Amount           float64   `json:"amount"`
-	PaymentDate      time.Time `json:"payment_date"`
+	PaymentMethod    *string   `json:"payment_method" binding:"oneof=credit_card bank_transfer cash check other"`
+	PaymentStatus    string    `json:"payment_status" binding:"required,oneof=pending completed failed refunded reversed"`
+	Amount           float64   `json:"amount" binding:"required,min=0"`
+	PaymentDate      time.Time `json:"payment_date" binding:"required" example:"2023-10-01T00:00:00Z"`
 	PaymentReference *string   `json:"payment_reference"`
 	Notes            *string   `json:"notes"`
-	RecordedBy       *int64    `json:"recorded_by"`
 }
 
 // CreatePaymentResponse represents the response body for creating a payment.
@@ -525,9 +524,9 @@ type CreatePaymentResponse struct {
 	PaymentDate          time.Time `json:"payment_date"`
 	PaymentReference     *string   `json:"payment_reference"`
 	Notes                *string   `json:"notes"`
-	RecordedBy           *int64    `json:"recorded_by"`
 	InvoiceStatusChanged bool      `json:"invoice_status_changed"`
 	CurrentInvoiceStatus string    `json:"current_invoice_status"`
+	RecordedBy           *int64    `json:"recorded_by"`
 }
 
 // @Summary Create Payment
@@ -573,7 +572,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -593,7 +592,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		PaymentDate:      pgtype.Date{Time: req.PaymentDate, Valid: true},
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,
-		RecordedBy:       req.RecordedBy,
+		RecordedBy:       &employeeID,
 	})
 
 	if err != nil {
