@@ -2183,3 +2183,20 @@ CREATE TABLE schedules (
   -- Ensure end time is after start time
   CONSTRAINT valid_timeframe CHECK (end_datetime > start_datetime)
 );
+
+
+
+
+CREATE TABLE template_items (
+    id BIGINT PRIMARY KEY,
+    item_tag VARCHAR(255) NOT NULL,
+    description TEXT NULL DEFAULT '',
+    source_table VARCHAR(64) NOT NULL,
+    source_column VARCHAR(64) NOT NULL,
+);
+
+
+INSERT INTO template_items (item_tag, description, source_table, source_column) VALUES
+('client.date_of_birth', 'Date of birth of the client', 'client_details', 'date_of_birth'),
+('contract.financing_act', 'Financing act of the contract', 'contract', 'financing_act'),
+('contract.financing_option', 'Financing option of the contract', 'contract', 'financing_option');

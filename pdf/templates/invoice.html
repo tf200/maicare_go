@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Template</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #4CAF50, #2E7D32);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .company-details {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .client-info {
+            flex: 1;
+        }
+
+        .invoice-info {
+            flex: 1;
+            text-align: right;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .info-line {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+
+        .invoice-table th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .invoice-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .invoice-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .totals-box {
+            min-width: 300px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .total-line.final {
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 2px solid #4CAF50;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .payment-info {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #e8f5e8;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">YC</div>
+                <div>
+                    <h1 class="company-name">Your Company</h1>
+                    <div style="font-size: 14px; color: #666;">Professional Services</div>
+                </div>
+            </div>
+            <div class="company-details">
+                <div><strong>Begeleid Wonen Zuid-Holland B.V.</strong></div>
+                <div>Lange Kleiweg</div>
+                <div>2288GK Rijswijk</div>
+                <div style="margin-top: 10px;">
+                    <div>KVK-nummer: 78012775</div>
+                    <div>Tel: +31 (0) 6 363 83968</div>
+                    <div>E-mail: financien@diversitaszorg.nl</div>
+                    <div>Website: www.diversitaszorg.nl</div>
+                    <div>IBAN: NL94 INGB 0009 5124 76</div>
+                    <div>BIC: INGBNL2A</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="invoice-details">
+            <div class="client-info">
+                <div class="section-title">Invoice To:</div>
+                <div class="info-line">{{.SenderName}}</div>
+                <div class="info-line">T.a.v. {{.SenderContactPerson}}</div>
+                <div class="info-line">{{.SenderAddressLine1}}</div>
+                <div class="info-line">{{.SenderPostalCodeCity}}</div>
+            </div>
+            <div class="invoice-info">
+                <div class="info-line"><strong>Factuurnummer: {{.InvoiceNumber}}</strong></div>
+                <div class="info-line">Factuurdatum: {{.InvoiceDate.Format "02/01/2006"}}</div>
+                <div class="info-line">Vervaldatum: {{.DueDate.Format "02/01/2006"}}</div>
+            </div>
+        </div>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Aantal</th>
+                    <th>Beschrijving</th>
+                    <th>Bedrag excl. btw</th>
+                    <th>Bedrag incl. btw</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .InvoiceDetails}}
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <div><strong>{{.CareType}}</strong></div>
+                        <div>Periodes: 
+                            {{range $i, $p := .Periods}}{{if $i}}, {{end}}{{.Label}}{{end}}
+                        </div>
+                        <div>Tarief: €{{printf "%.2f" .Price}} per {{.PriceTimeUnit}}</div>
+                    </td>
+                    <td>€{{printf "%.2f" .PreVatTotal}}</td>
+                    <td>€{{printf "%.2f" .Total}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+
+        <div class="totals-section">
+            <div class="totals-box">
+                <div class="total-line">
+                    <span>Subtotal excl. btw</span>
+                    <span>€{{printf "%.2f" (sumPreVat .InvoiceDetails)}}</span>
+                </div>
+                <div class="total-line">
+                    <span>BTW (21%)</span>
+                    <span>€{{printf "%.2f" (sumVat .InvoiceDetails)}}</span>
+                </div>
+                <div class="total-line final">
+                    <span>Total incl. btw</span>
+                    <span>€{{printf "%.2f" .TotalAmount}}</span>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="footer">
+            <div><strong>YOUR COMPANY B.V.</strong></div>
+            <div>Street Address 123 | 1234AB Your City</div>
+            <div>Tel: 123-456789 | info@yourcompany.nl | www.yourcompany.nl</div>
+            <div>KVK: 12345678 | AGB Code: 12345678</div>
+        </div>
+    </div>
+</body>
+</html>
