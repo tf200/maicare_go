@@ -17,22 +17,22 @@ import (
 
 // GetClientSenderResponse defines the request for getting a client sender
 type GetClientSenderResponse struct {
-	ID           int64     `json:"id"`
-	Types        string    `json:"types"`
-	Name         string    `json:"name"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"kvknumber"`
-	Btwnumber    *string   `json:"btwnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	EmailAddress *string   `json:"email_address"`
-	Contacts     []Contact `json:"contacts"`
-	IsArchived   bool      `json:"is_archived"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           int64           `json:"id"`
+	Types        string          `json:"types"`
+	Name         string          `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	Kvknumber    *string         `json:"kvknumber"`
+	Btwnumber    *string         `json:"btwnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	EmailAddress *string         `json:"email_address"`
+	Contacts     []SenderContact `json:"contacts"`
+	IsArchived   bool            `json:"is_archived"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
 }
 
 // GetClientSenderApi gets a client sender
@@ -57,7 +57,7 @@ func (server *Server) GetClientSenderApi(ctx *gin.Context) {
 		return
 	}
 
-	var contactsResp []Contact
+	var contactsResp []SenderContact
 	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

@@ -16,12 +16,13 @@ type InvoiceParams struct {
 }
 
 type InvoiceData struct {
-	ClientID       int64            `json:"client_id"`
-	SenderID       int64            `json:"sender_id"`
-	InvoiceDate    time.Time        `json:"invoice_date"`
-	InvoiceNumber  string           `json:"invoice_number"` // Generated invoice number
-	TotalAmount    float64          `json:"total_amount"`   // Total amount for the invoice
-	InvoiceDetails []InvoiceDetails `json:"invoice_details"`
+	ClientID          int64            `json:"client_id"`
+	SenderID          int64            `json:"sender_id"`
+	InvoiceDate       time.Time        `json:"invoice_date"`
+	InvoiceNumber     string           `json:"invoice_number"`
+	PreVatTotalAmount float64          `json:"pre_vat_total"` // Total before VAT
+	TotalAmount       float64          `json:"total_amount"`  // Total amount for the invoice
+	InvoiceDetails    []InvoiceDetails `json:"invoice_details"`
 }
 
 // InvoiceDetails contains details for each contract in the invoice
@@ -76,6 +77,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 	}
 
 	var totalAmount float64
+	var totalPreVat float64
 	var invoice []InvoiceDetails = make([]InvoiceDetails, len(contracts))
 
 	for i, contract := range contracts {
@@ -133,6 +135,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 				invoice[i].Total += totals.Total
 				periodItem.AcommodationTimeFrame = &totals.TimeFrame
 				totalAmount += totals.Total
+				totalPreVat += totals.PreVatTotal
 
 			} else if contract.CareType == "ambulante" {
 				appointments, err := store.ListClientAppointmentsStartingInRange(ctx, db.ListClientAppointmentsStartingInRangeParams{
@@ -179,6 +182,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 				invoice[i].Total += totals.Total
 				periodItem.AmbulanteTotalMinutes = &totals.TotalMinutes
 				totalAmount += totals.Total
+				totalPreVat += totals.PreVatTotal
 			}
 
 			invoice[i].Periods = append(invoice[i].Periods, periodItem)
@@ -189,12 +193,13 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 	invoiceNumber := GenerateInvoiceNumber(invoiceData.ClientID, invoiceDate)
 
 	finalInvoice := InvoiceData{
-		ClientID:       invoiceData.ClientID,
-		SenderID:       *contracts[0].SenderID,
-		InvoiceNumber:  invoiceNumber,
-		InvoiceDate:    invoiceDate,
-		InvoiceDetails: invoice,
-		TotalAmount:    totalAmount,
+		ClientID:          invoiceData.ClientID,
+		SenderID:          *contracts[0].SenderID,
+		InvoiceNumber:     invoiceNumber,
+		InvoiceDate:       invoiceDate,
+		InvoiceDetails:    invoice,
+		TotalAmount:       totalAmount,
+		PreVatTotalAmount: totalPreVat,
 	}
 
 	return &finalInvoice, warningCount, nil

@@ -59,6 +59,9 @@ OFFSET sqlc.arg('offset');
 SELECT
     i.*,
     s.name AS sender_name,
+    s.contacts As sender_contacts,
+    s.postal_code AS sender_postal_code,
+    s.address AS sender_address,
     cd.first_name AS client_first_name,
     cd.last_name AS client_last_name
 FROM
@@ -82,9 +85,20 @@ SET
     extra_content = COALESCE($6, extra_content),
     status = COALESCE($7, status),
     warning_count = COALESCE($8, warning_count)
+WHERE id = $1
+RETURNING *;
+
+
+-- name: InsertIncoicePdfUrl :one 
+UPDATE invoice 
+SET 
+    pdf_attachment_id = $2  
 WHERE
     id = $1
-RETURNING *;
+RETURNING invoice.pdf_attachment_id;
+
+
+
 
 
 -- name: DeleteInvoice :exec

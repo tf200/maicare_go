@@ -6,6 +6,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/invoice"
 	"maicare_go/pagination"
+	"maicare_go/pdf"
 	"maicare_go/util"
 	"net/http"
 	"strconv"
@@ -502,6 +503,108 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 
 }
 
+// GenerateInvoicePDFResponse represents the response body for generating an invoice PDF.
+type GenerateInvoicePDFResponse struct {
+	FileUrl string `json:"file_url"`
+}
+
+// GenerateInvoicePdfApi handles generation of invoice in pdf format
+// @Summary Generate InvoicePdf
+// @Description Generate an invoice in PDF format by its ID.
+// @Tags Invoice
+// @Produce json
+// @Param id path int64 true "Invoice ID"
+// @Success 201 {object} Response[GenerateInvoicePDFResponse] "Successful response indicating generation"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{id}/generate_pdf [get]
+func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	invoiceID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", id)))
+		return
+	}
+
+	invoiceData, err := server.store.GetInvoice(ctx.Request.Context(), invoiceID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var invoiceDetails []invoice.InvoiceDetails
+	if err := json.Unmarshal(invoiceData.InvoiceDetails, &invoiceDetails); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var senderContacts []SenderContact
+
+	err = json.Unmarshal(invoiceData.SenderContacts, &senderContacts)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var pdfInvoiceDetails []pdf.InvoiceDetail
+
+	for _, value := range invoiceDetails {
+		var pdfInvoicePeriods []pdf.InvoicePeriod
+		for _, period := range value.Periods {
+			pdfInvoicePeriods = append(pdfInvoicePeriods, pdf.InvoicePeriod{
+				StartDate:             period.StartDate,
+				EndDate:               period.EndDate,
+				AcommodationTimeFrame: util.DerefString(period.AcommodationTimeFrame),
+				AmbulanteTotalMinutes: util.DerefFloat64(period.AmbulanteTotalMinutes),
+			})
+
+		}
+		pdfInvoiceDetails = append(pdfInvoiceDetails, pdf.InvoiceDetail{
+			CareType:      value.ContractType,
+			Price:         value.Price,
+			PriceTimeUnit: value.PriceTimeUnit,
+			PreVatTotal:   value.PreVatTotal,
+			Total:         value.Total,
+			Periods:       pdfInvoicePeriods,
+		})
+	}
+
+	arg := pdf.InvoicePDFData{
+		ID:                   invoiceData.ID,
+		SenderName:           util.DerefString(invoiceData.SenderName),
+		SenderContactPerson:  util.DerefString(senderContacts[0].Name),
+		SenderAddressLine1:   util.DerefString(invoiceData.SenderAddress),
+		SenderPostalCodeCity: util.DerefString(invoiceData.SenderPostalCode),
+		InvoiceNumber:        invoiceData.InvoiceNumber,
+		InvoiceDate:          invoiceData.IssueDate.Time,
+		DueDate:              invoiceData.DueDate.Time,
+		InvoiceDetails:       pdfInvoiceDetails,
+	}
+
+	fileUrl, filename, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate invoice PDF: %w", err)))
+		return
+	}
+
+	fileArgs := db.CreateAttachmentParams{
+		Name: filename,
+		File: fileUrl,
+		Size: int32(filesize),
+		Tag:  util.StringPtr(""),
+	}
+	attachment, err := server.store.CreateAttachment(ctx, fileArgs)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(GenerateInvoicePDFResponse{
+		FileUrl: attachment.File,
+	}, "Invoice Pdf generated")
+	ctx.JSON(http.StatusCreated, res)
+
+}
+
 // ================== Invoice Logs ==================
 
 // GetInvoiceAuditLogsResponse represents the response body for getting invoice audit logs.
@@ -776,6 +879,7 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payments retrieved successfully"))
 }
 
+// GetPaymentByIDResponse represents the response body for getting a payment by ID.
 type GetPaymentByIDResponse struct {
 	PaymentID           int64     `json:"payment_id"`
 	InvoiceID           int64     `json:"invoice_id"`
@@ -792,8 +896,16 @@ type GetPaymentByIDResponse struct {
 	RecordedByLastName  *string   `json:"recorded_by_last_name"`
 }
 
+// @Summary Get Payment by ID
+// @Description Get a payment by its ID.
+// @Tags Invoice
+// @Produce json
+// @Param id path int64 true "Payment ID"
+// @Success 200 {object} Response[GetPaymentByIDResponse] "Successful response
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{id}/payments/{payment_id} [get]
 func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
-	paymentID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	paymentID, err := strconv.ParseInt(ctx.Param("payment_id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", ctx.Param("id"))))
 		return
@@ -831,7 +943,6 @@ type UpdatePaymentRequest struct {
 	PaymentDate      *time.Time `json:"payment_date"`
 	PaymentReference *string    `json:"payment_reference"`
 	Notes            *string    `json:"notes"`
-	RecordedBy       *int64     `json:"recorded_by"`
 }
 
 // UpdatePaymentResponse represents the response body for updating a payment.
@@ -862,7 +973,7 @@ type UpdatePaymentResponse struct {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{invoice_id}/payments/{payment_id} [put]
 func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
-	invoiceIDStr := ctx.Param("invoice_id")
+	invoiceIDStr := ctx.Param("id")
 	paymentIDStr := ctx.Param("payment_id")
 
 	invoiceID, err := strconv.ParseInt(invoiceIDStr, 10, 64)
@@ -903,7 +1014,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -936,7 +1047,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 		Amount:           req.Amount,
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,
-		RecordedBy:       req.RecordedBy,
+		RecordedBy:       &employeeID,
 	}
 
 	if req.PaymentDate != nil {

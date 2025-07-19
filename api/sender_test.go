@@ -24,7 +24,7 @@ import (
 
 func createRandomSender(t *testing.T) db.Sender {
 	// Define a slice of Contact structs
-	contacts := []Contact{
+	contacts := []SenderContact{
 		{
 			Name:        util.StringPtr(faker.Name()),
 			Email:       util.StringPtr(faker.Email()),
@@ -71,11 +71,11 @@ func createRandomSender(t *testing.T) db.Sender {
 	require.Equal(t, arg.EmailAddress, sender.EmailAddress)
 
 	// Unmarshal the expected and actual Contacts fields for comparison
-	var expectedContacts []Contact
+	var expectedContacts []SenderContact
 	err = json.Unmarshal(arg.Contacts, &expectedContacts)
 	require.NoError(t, err)
 
-	var actualContacts []Contact
+	var actualContacts []SenderContact
 	err = json.Unmarshal(sender.Contacts, &actualContacts)
 	require.NoError(t, err)
 
@@ -109,7 +109,7 @@ func TestCreateSenderApi(t *testing.T) {
 					BTWNumber:    util.StringPtr("NL123456789B01"),
 					PhoneNumber:  util.StringPtr("+31612345678"),
 					ClientNumber: util.StringPtr("CLI123"),
-					Contacts: []Contact{
+					Contacts: []SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("john@example.com"),
@@ -147,7 +147,7 @@ func TestCreateSenderApi(t *testing.T) {
 				createSenderReq := CreateSenderRequest{
 					Types: "invalid_type",
 					Name:  "Test Company",
-					Contacts: []Contact{
+					Contacts: []SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("john@example.com"),
@@ -189,7 +189,7 @@ func TestCreateSenderApi(t *testing.T) {
 					BTWNumber:    util.StringPtr("NL123456789B01"),
 					PhoneNumber:  util.StringPtr("+31612345678"),
 					ClientNumber: util.StringPtr("CLI123"),
-					Contacts: []Contact{
+					Contacts: []SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("invalid-email"),
@@ -223,7 +223,7 @@ func TestCreateSenderApi(t *testing.T) {
 				createSenderReq := CreateSenderRequest{
 					Types: "main_provider",
 					Name:  "", // Required field is empty
-					Contacts: []Contact{
+					Contacts: []SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("john@example.com"),
@@ -392,7 +392,7 @@ func TestListSendersAPI(t *testing.T) {
 
 func TestUpdateSenderApi(t *testing.T) {
 	sender := createRandomSender(t)
-	contacts := make([]Contact, 0)
+	contacts := make([]SenderContact, 0)
 	err := json.Unmarshal(sender.Contacts, &contacts)
 	require.NoError(t, err)
 
@@ -447,7 +447,7 @@ func TestUpdateSenderApi(t *testing.T) {
 
 func TestGetSenderByIdAPI(t *testing.T) {
 	sender := createRandomSender(t)
-	contacts := make([]Contact, 0)
+	contacts := make([]SenderContact, 0)
 	err := json.Unmarshal(sender.Contacts, &contacts)
 	require.NoError(t, err)
 	testCases := []struct {

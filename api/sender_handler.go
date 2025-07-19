@@ -15,7 +15,7 @@ import (
 )
 
 // Contact represents a contact information.
-type Contact struct {
+type SenderContact struct {
 	Name        *string `json:"name"`
 	Email       *string `json:"email" binding:"email"`
 	PhoneNumber *string `json:"phone_number"`
@@ -23,35 +23,35 @@ type Contact struct {
 
 // CreateSenderRequest represents a request to create a new sender.
 type CreateSenderRequest struct {
-	Types        string    `json:"types" binding:"required,oneof=main_provider local_authority particular_party healthcare_institution"`
-	Name         string    `json:"name" binding:"required"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	KVKNumber    *string   `json:"KVKnumber"`
-	BTWNumber    *string   `json:"BTWnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	Contacts     []Contact `json:"contacts" binding:"dive"`
+	Types        string          `json:"types" binding:"required,oneof=main_provider local_authority particular_party healthcare_institution"`
+	Name         string          `json:"name" binding:"required"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	KVKNumber    *string         `json:"KVKnumber"`
+	BTWNumber    *string         `json:"BTWnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	Contacts     []SenderContact `json:"contacts" binding:"dive"`
 }
 
 // CreateSenderResponse represents a response to a request to create a new sender.
 type CreateSenderResponse struct {
-	ID           int64     `json:"id"`
-	Types        string    `json:"types"`
-	Name         string    `json:"name"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	KVKNumber    *string   `json:"KVKnumber"`
-	BTWNumber    *string   `json:"BTWnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	Contacts     []Contact `json:"contacts"`
-	CreatedAt    string    `json:"created_at"`
-	UpdatedAt    string    `json:"updated_at"`
+	ID           int64           `json:"id"`
+	Types        string          `json:"types"`
+	Name         string          `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	KVKNumber    *string         `json:"KVKnumber"`
+	BTWNumber    *string         `json:"BTWnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	Contacts     []SenderContact `json:"contacts"`
+	CreatedAt    string          `json:"created_at"`
+	UpdatedAt    string          `json:"updated_at"`
 }
 
 // CreateSenderApi creates a new sender.
@@ -94,7 +94,7 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 		return
 	}
 
-	contactsResp := make([]Contact, 0)
+	contactsResp := make([]SenderContact, 0)
 	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -129,20 +129,20 @@ type ListSendersRequest struct {
 
 // GetSenderResponse represents a response to a request to get a sender by ID.
 type ListSendersResponse struct {
-	ID           int64     `json:"id"`
-	Types        string    `json:"types"`
-	Name         string    `json:"name"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	KVKNumber    *string   `json:"KVKnumber"`
-	BTWNumber    *string   `json:"BTWnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	Contacts     []Contact `json:"contacts"`
-	CreatedAt    string    `json:"created_at"`
-	UpdatedAt    string    `json:"updated_at"`
+	ID           int64           `json:"id"`
+	Types        string          `json:"types"`
+	Name         string          `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	KVKNumber    *string         `json:"KVKnumber"`
+	BTWNumber    *string         `json:"BTWnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	Contacts     []SenderContact `json:"contacts"`
+	CreatedAt    string          `json:"created_at"`
+	UpdatedAt    string          `json:"updated_at"`
 }
 
 // ListSendersAPI returns a list of senders.
@@ -184,7 +184,7 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 
 	responseSenders := make([]ListSendersResponse, len(senders))
 	for i, sender := range senders {
-		contacts := make([]Contact, 0)
+		contacts := make([]SenderContact, 0)
 		if err := json.Unmarshal(sender.Contacts, &contacts); err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
@@ -221,22 +221,22 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 
 // GetSenderByIdResponse represents a response to a request to get a sender by ID.
 type GetSenderByIdResponse struct {
-	ID           int64     `json:"id"`
-	Types        string    `json:"types"`
-	Name         string    `json:"name"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"KVKnumber"`
-	Btwnumber    *string   `json:"BTWnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	EmailAddress *string   `json:"email_address"`
-	Contacts     []Contact `json:"contacts"`
-	IsArchived   bool      `json:"is_archived"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           int64           `json:"id"`
+	Types        string          `json:"types"`
+	Name         string          `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	Kvknumber    *string         `json:"KVKnumber"`
+	Btwnumber    *string         `json:"BTWnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	EmailAddress *string         `json:"email_address"`
+	Contacts     []SenderContact `json:"contacts"`
+	IsArchived   bool            `json:"is_archived"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
 }
 
 // GetSenderAPI returns a sender by ID.
@@ -262,7 +262,7 @@ func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
 		return
 	}
 
-	var contactsResp []Contact
+	var contactsResp []SenderContact
 	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -292,39 +292,39 @@ func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
 
 // UpdateSenderRequest represents a request to update a sender.
 type UpdateSenderRequest struct {
-	Name         *string   `json:"name"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"KVKnumber"`
-	Btwnumber    *string   `json:"BTWnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	EmailAddress *string   `json:"email_address"`
-	Contacts     []Contact `json:"contacts"`
-	IsArchived   *bool     `json:"is_archived"`
-	Types        *string   `json:"types" binding:"omitempty,oneof=main_provider local_authority particular_party healthcare_institution"`
+	Name         *string         `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	Kvknumber    *string         `json:"KVKnumber"`
+	Btwnumber    *string         `json:"BTWnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	EmailAddress *string         `json:"email_address"`
+	Contacts     []SenderContact `json:"contacts"`
+	IsArchived   *bool           `json:"is_archived"`
+	Types        *string         `json:"types" binding:"omitempty,oneof=main_provider local_authority particular_party healthcare_institution"`
 }
 
 // UpdateSenderResponse represents a response to a request to update a sender.
 type UpdateSenderResponse struct {
-	ID           int64     `json:"id"`
-	Types        string    `json:"types"`
-	Name         string    `json:"name"`
-	Address      *string   `json:"address"`
-	PostalCode   *string   `json:"postal_code"`
-	Place        *string   `json:"place"`
-	Land         *string   `json:"land"`
-	Kvknumber    *string   `json:"KVKnumber"`
-	Btwnumber    *string   `json:"BTWnumber"`
-	PhoneNumber  *string   `json:"phone_number"`
-	ClientNumber *string   `json:"client_number"`
-	EmailAddress *string   `json:"email_address"`
-	Contacts     []Contact `json:"contacts"`
-	IsArchived   bool      `json:"is_archived"`
-	CreatedAt    string    `json:"created_at"`
-	UpdatedAt    string    `json:"updated_at"`
+	ID           int64           `json:"id"`
+	Types        string          `json:"types"`
+	Name         string          `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	Kvknumber    *string         `json:"KVKnumber"`
+	Btwnumber    *string         `json:"BTWnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	EmailAddress *string         `json:"email_address"`
+	Contacts     []SenderContact `json:"contacts"`
+	IsArchived   bool            `json:"is_archived"`
+	CreatedAt    string          `json:"created_at"`
+	UpdatedAt    string          `json:"updated_at"`
 }
 
 // @Summary Update a sender
@@ -384,7 +384,7 @@ func (server *Server) UpdateSenderApi(ctx *gin.Context) {
 		return
 	}
 
-	var contactsResp []Contact
+	var contactsResp []SenderContact
 	if err := json.Unmarshal(updatedSender.Contacts, &contactsResp); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

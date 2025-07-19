@@ -1134,6 +1134,14 @@ type Session struct {
 	UserID       int64              `json:"user_id"`
 }
 
+type TemplateItem struct {
+	ID           int64   `json:"id"`
+	ItemTag      string  `json:"item_tag"`
+	Description  *string `json:"description"`
+	SourceTable  string  `json:"source_table"`
+	SourceColumn string  `json:"source_column"`
+}
+
 type TemporaryFile struct {
 	ID         uuid.UUID          `json:"id"`
 	File       string             `json:"file"`

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Template</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: white;
+            padding: 15mm;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .invoice-container {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            background-color: white;
+            padding: 0;
+            box-shadow: none;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            flex: 1;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #4CAF50, #2E7D32);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #4CAF50;
+            letter-spacing: -0.5px;
+        }
+
+        .company-details {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            gap: 30px;
+        }
+
+        .client-info {
+            flex: 1;
+        }
+
+        .invoice-info {
+            flex: 1;
+            text-align: right;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .info-line {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 14px;
+        }
+
+        .invoice-table th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .invoice-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+            font-weight: 400;
+        }
+
+        .invoice-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .totals-box {
+            min-width: 300px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .total-line.final {
+            font-weight: 700;
+            font-size: 16px;
+            border-top: 2px solid #4CAF50;
+            padding-top: 15px;
+            margin-top: 15px;
+            color: #2E7D32;
+        }
+
+        .extra-info-section {
+            margin: 30px 0;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .extra-info-section .section-title {
+            color: #4CAF50;
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .extra-info-section .info-line {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .extra-info-section .info-line strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* PDF-specific styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 15mm;
+                background-color: white;
+                min-height: 100vh;
+            }
+            
+            .invoice-container {
+                min-height: auto;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .content-wrapper {
+                flex: 1;
+            }
+            
+            .footer {
+                margin-top: auto;
+            }
+            
+            .invoice-table tr:hover {
+                background-color: transparent;
+            }
+        }
+
+        /* Ensure full page usage and footer positioning */
+        @page {
+            margin: 15mm;
+            size: A4;
+        }
+
+        /* Typography improvements */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        /* Better spacing for lists */
+        ul {
+            margin-left: 16px;
+            color: #555;
+        }
+
+        ul li {
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="content-wrapper">
+            <div class="header">
+                <div class="logo-section">
+                    <div class="logo">YC</div>
+                    <div>
+                        <h1 class="company-name">Your Company</h1>
+                        <div style="font-size: 14px; color: #666; font-weight: 400;">Professional Services</div>
+                    </div>
+                </div>
+                <div class="company-details">
+                    <div><strong>Begeleid Wonen Zuid-Holland B.V.</strong></div>
+                    <div>Lange Kleiweg</div>
+                    <div>2288GK Rijswijk</div>
+                    <div style="margin-top: 10px;">
+                        <div>KVK-nummer: 78012775</div>
+                        <div>Tel: +31 (0) 6 363 83968</div>
+                        <div>E-mail: financien@diversitaszorg.nl</div>
+                        <div>Website: www.diversitaszorg.nl</div>
+                        <div>IBAN: NL94 INGB 0009 5124 76</div>
+                        <div>BIC: INGBNL2A</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="invoice-details">
+                <div class="client-info">
+                    <div class="section-title">Invoice To:</div>
+                    <div class="info-line">{{.SenderName}}</div>
+                    <div class="info-line">T.a.v. {{.SenderContactPerson}}</div>
+                    <div class="info-line">{{.SenderAddressLine1}}</div>
+                    <div class="info-line">{{.SenderPostalCodeCity}}</div>
+                </div>
+                <div class="invoice-info">
+                    <div class="info-line"><strong>Factuurnummer: {{.InvoiceNumber}}</strong></div>
+                    <div class="info-line">Factuurdatum: {{.InvoiceDate.Format "02/01/2006"}}</div>
+                    <div class="info-line">Vervaldatum: {{.DueDate.Format "02/01/2006"}}</div>
+                </div>
+            </div>
+
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>Aantal</th>
+                        <th>Beschrijving</th>
+                        <th>Bedrag excl. btw</th>
+                        <th>Bedrag incl. btw</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .InvoiceDetails}}
+                    <tr>
+                        <td>1</td>
+                        <td>
+                            <div><strong>{{.CareType}}</strong></div>
+                            <div>Periodes:</div>
+                            <ul style="margin-left: 16px; color: #555;">
+                                {{range .Periods}}
+                                    <li>
+                                        {{.StartDate.Format "02-01-2006"}} t/m {{.EndDate.Format "02-01-2006"}} —
+                                        {{if .AcommodationTimeFrame}}
+                                            Verblijf: {{.AcommodationTimeFrame}}
+                                        {{else if .AmbulanteTotalMinutes}}
+                                            Ambulant: {{printf "%.0f" .AmbulanteTotalMinutes}} min
+                                        {{end}}
+                                    </li>
+                                {{end}}
+                            </ul>
+                            <div>Tarief: €{{printf "%.2f" .Price}} per {{.PriceTimeUnit}}</div>
+                        </td>
+                        <td>€{{printf "%.2f" .PreVatTotal}}</td>
+                        <td>€{{printf "%.2f" .Total}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+
+            {{if .ExtraItems}}
+            <div class="extra-info-section">
+                <div class="section-title">Extra Informatie</div>
+                {{range .ExtraItems}}
+                    <div class="info-line">
+                        <strong>{{.Label}}:</strong> {{.Value}}
+                    </div>
+                {{end}}
+            </div>
+            {{end}}
+
+            <div class="totals-section">
+                <div class="totals-box">
+                    <div class="total-line">
+                        <span>Subtotal excl. btw</span>
+                        <span>€{{printf "%.2f" (sumPreVat .InvoiceDetails)}}</span>
+                    </div>
+                    <div class="total-line">
+                        <span>BTW (21%)</span>
+                        <span>€{{printf "%.2f" (sumVat .InvoiceDetails)}}</span>
+                    </div>
+                    <div class="total-line final">
+                        <span>Total incl. btw</span>
+                        <span>€{{printf "%.2f" .TotalAmount}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div><strong>YOUR COMPANY B.V.</strong></div>
+            <div>Street Address 123 | 1234AB Your City</div>
+            <div>Tel: 123-456789 | info@yourcompany.nl | www.yourcompany.nl</div>
+            <div>KVK: 12345678 | AGB Code: 12345678</div>
+        </div>
+    </div>
+</body>
+</html>

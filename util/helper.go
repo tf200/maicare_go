@@ -105,6 +105,13 @@ func DerefString(s *string) string {
 	}
 	return *s
 }
+func DerefFloat64(f *float64) float64 {
+	if f == nil {
+		return 0
+	} else {
+		return *f
+	}
+}
 
 func DerefBool(b *bool) bool {
 	if b == nil {
