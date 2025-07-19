@@ -12724,7 +12724,7 @@ paths:
       tags:
       - Invoice
     get:
-      description: Generate an invoice in PDF format by its ID.
+      description: Get an invoice by its ID.
       parameters:
       - description: Invoice ID
         in: path
@@ -12734,10 +12734,10 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Successful response indicating generation
+        "200":
+          description: Successful response with invoice details
           schema:
-            $ref: '#/definitions/api.Response-api_GenerateInvoicePDFResponse'
+            $ref: '#/definitions/api.Response-api_GetInvoiceByIDResponse'
         "400":
           description: Bad Request
           schema:
@@ -12754,7 +12754,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Generate InvoicePdf
+      summary: Get Invoice by ID
       tags:
       - Invoice
     put:
@@ -12832,6 +12832,41 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get Invoice Audit Logs
+      tags:
+      - Invoice
+  /invoices/{id}/generate_pdf:
+    get:
+      description: Generate an invoice in PDF format by its ID.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successful response indicating generation
+          schema:
+            $ref: '#/definitions/api.Response-api_GenerateInvoicePDFResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Generate InvoicePdf
       tags:
       - Invoice
   /invoices/{id}/payments:

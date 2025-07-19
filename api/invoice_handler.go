@@ -516,7 +516,7 @@ type GenerateInvoicePDFResponse struct {
 // @Param id path int64 true "Invoice ID"
 // @Success 201 {object} Response[GenerateInvoicePDFResponse] "Successful response indicating generation"
 // @Failure 400,401,404,500 {object} Response[any]
-// @Router /invoices/{id} [get]
+// @Router /invoices/{id}/generate_pdf [get]
 func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	invoiceID, err := strconv.ParseInt(id, 10, 64)

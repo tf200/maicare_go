@@ -6846,14 +6846,14 @@ const docTemplate = `{
         },
         "/invoices/{id}": {
             "get": {
-                "description": "Generate an invoice in PDF format by its ID.",
+                "description": "Get an invoice by its ID.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Invoice"
                 ],
-                "summary": "Generate InvoicePdf",
+                "summary": "Get Invoice by ID",
                 "parameters": [
                     {
                         "type": "integer",
@@ -6864,10 +6864,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Successful response indicating generation",
+                    "200": {
+                        "description": "Successful response with invoice details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GenerateInvoicePDFResponse"
+                            "$ref": "#/definitions/api.Response-api_GetInvoiceByIDResponse"
                         }
                     },
                     "400": {
@@ -7035,6 +7035,59 @@ const docTemplate = `{
                         "description": "Successful",
                         "schema": {
                             "$ref": "#/definitions/api.Response-array_api_GetInvoiceAuditLogsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoices/{id}/generate_pdf": {
+            "get": {
+                "description": "Generate an invoice in PDF format by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Generate InvoicePdf",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful response indicating generation",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GenerateInvoicePDFResponse"
                         }
                     },
                     "400": {
