@@ -6846,14 +6846,14 @@ const docTemplate = `{
         },
         "/invoices/{id}": {
             "get": {
-                "description": "Get an invoice by its ID.",
+                "description": "Generate an invoice in PDF format by its ID.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Invoice"
                 ],
-                "summary": "Get Invoice by ID",
+                "summary": "Generate InvoicePdf",
                 "parameters": [
                     {
                         "type": "integer",
@@ -6864,10 +6864,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Successful response with invoice details",
+                    "201": {
+                        "description": "Successful response indicating generation",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetInvoiceByIDResponse"
+                            "$ref": "#/definitions/api.Response-api_GenerateInvoicePDFResponse"
                         }
                     },
                     "400": {
@@ -7151,6 +7151,59 @@ const docTemplate = `{
                         "description": "Successful response with payment",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_CreatePaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoices/{id}/payments/{payment_id}": {
+            "get": {
+                "description": "Get a payment by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get Payment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetPaymentByIDResponse"
                         }
                     },
                     "400": {
@@ -9385,20 +9438,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.Contact": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
                     "type": "string"
                 }
             }
@@ -11920,7 +11959,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "land": {
@@ -11967,7 +12006,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "created_at": {
@@ -12383,6 +12422,14 @@ const docTemplate = `{
                 },
                 "incident_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.GenerateInvoicePDFResponse": {
+            "type": "object",
+            "properties": {
+                "file_url": {
+                    "type": "string"
                 }
             }
         },
@@ -13083,7 +13130,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "created_at": {
@@ -13843,6 +13890,50 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetPaymentByIDResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "integer"
+                },
+                "recorded_by_first_name": {
+                    "type": "string"
+                },
+                "recorded_by_last_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetPermissionsByRoleIDApiResponse": {
             "type": "object",
             "properties": {
@@ -14215,7 +14306,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "created_at": {
@@ -15716,7 +15807,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "invoice_id": {
                     "type": "integer"
@@ -15749,7 +15840,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 }
             }
         },
@@ -16060,7 +16151,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "created_at": {
@@ -16874,6 +16965,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_GenerateInvoicePDFResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GenerateInvoicePDFResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_GenerateInvoiceResponse": {
             "type": "object",
             "properties": {
@@ -17229,6 +17334,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetMissingClientDocumentsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetPaymentByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetPaymentByIDResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18242,6 +18361,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.SenderContact": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
                     "type": "string"
                 }
             }
@@ -19868,9 +20001,6 @@ const docTemplate = `{
                 },
                 "payment_status": {
                     "type": "string"
-                },
-                "recorded_by": {
-                    "type": "integer"
                 }
             }
         },
@@ -20522,7 +20652,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "email_address": {
@@ -20575,7 +20705,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.Contact"
+                        "$ref": "#/definitions/api.SenderContact"
                     }
                 },
                 "created_at": {

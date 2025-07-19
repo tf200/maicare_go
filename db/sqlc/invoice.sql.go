@@ -167,6 +167,9 @@ const getInvoice = `-- name: GetInvoice :one
 SELECT
     i.id, i.invoice_number, i.issue_date, i.due_date, i.status, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
     s.name AS sender_name,
+    s.contacts As sender_contacts,
+    s.postal_code AS sender_postal_code,
+    s.address AS sender_address,
     cd.first_name AS client_first_name,
     cd.last_name AS client_last_name
 FROM
@@ -181,23 +184,26 @@ LIMIT 1
 `
 
 type GetInvoiceRow struct {
-	ID              int64              `json:"id"`
-	InvoiceNumber   string             `json:"invoice_number"`
-	IssueDate       pgtype.Date        `json:"issue_date"`
-	DueDate         pgtype.Date        `json:"due_date"`
-	Status          string             `json:"status"`
-	InvoiceDetails  []byte             `json:"invoice_details"`
-	TotalAmount     float64            `json:"total_amount"`
-	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
-	ExtraContent    *string            `json:"extra_content"`
-	ClientID        int64              `json:"client_id"`
-	SenderID        *int64             `json:"sender_id"`
-	WarningCount    int32              `json:"warning_count"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	SenderName      *string            `json:"sender_name"`
-	ClientFirstName string             `json:"client_first_name"`
-	ClientLastName  string             `json:"client_last_name"`
+	ID               int64              `json:"id"`
+	InvoiceNumber    string             `json:"invoice_number"`
+	IssueDate        pgtype.Date        `json:"issue_date"`
+	DueDate          pgtype.Date        `json:"due_date"`
+	Status           string             `json:"status"`
+	InvoiceDetails   []byte             `json:"invoice_details"`
+	TotalAmount      float64            `json:"total_amount"`
+	PdfAttachmentID  *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent     *string            `json:"extra_content"`
+	ClientID         int64              `json:"client_id"`
+	SenderID         *int64             `json:"sender_id"`
+	WarningCount     int32              `json:"warning_count"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	SenderName       *string            `json:"sender_name"`
+	SenderContacts   []byte             `json:"sender_contacts"`
+	SenderPostalCode *string            `json:"sender_postal_code"`
+	SenderAddress    *string            `json:"sender_address"`
+	ClientFirstName  string             `json:"client_first_name"`
+	ClientLastName   string             `json:"client_last_name"`
 }
 
 func (q *Queries) GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error) {
@@ -219,6 +225,9 @@ func (q *Queries) GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, erro
 		&i.UpdatedAt,
 		&i.CreatedAt,
 		&i.SenderName,
+		&i.SenderContacts,
+		&i.SenderPostalCode,
+		&i.SenderAddress,
 		&i.ClientFirstName,
 		&i.ClientLastName,
 	)
@@ -395,6 +404,27 @@ func (q *Queries) GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID int
 	var total_paid float64
 	err := row.Scan(&total_paid)
 	return total_paid, err
+}
+
+const insertIncoicePdfUrl = `-- name: InsertIncoicePdfUrl :one
+UPDATE invoice 
+SET 
+    pdf_attachment_id = $2  
+WHERE
+    id = $1
+RETURNING invoice.pdf_attachment_id
+`
+
+type InsertIncoicePdfUrlParams struct {
+	ID              int64      `json:"id"`
+	PdfAttachmentID *uuid.UUID `json:"pdf_attachment_id"`
+}
+
+func (q *Queries) InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, insertIncoicePdfUrl, arg.ID, arg.PdfAttachmentID)
+	var pdf_attachment_id *uuid.UUID
+	err := row.Scan(&pdf_attachment_id)
+	return pdf_attachment_id, err
 }
 
 const listInvoices = `-- name: ListInvoices :many
@@ -589,8 +619,7 @@ SET
     extra_content = COALESCE($6, extra_content),
     status = COALESCE($7, status),
     warning_count = COALESCE($8, warning_count)
-WHERE
-    id = $1
+WHERE id = $1
 RETURNING id, invoice_number, issue_date, due_date, status, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
 `
 

@@ -2192,7 +2192,7 @@ CREATE TABLE template_items (
     item_tag VARCHAR(255) NOT NULL,
     description TEXT NULL DEFAULT '',
     source_table VARCHAR(64) NOT NULL,
-    source_column VARCHAR(64) NOT NULL,
+    source_column VARCHAR(64) NOT NULL
 );
 
 

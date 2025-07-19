@@ -304,15 +304,6 @@ definitions:
       start_date:
         type: string
     type: object
-  api.Contact:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      phone_number:
-        type: string
-    type: object
   api.CorrectSpellingRequest:
     properties:
       initial_text:
@@ -2021,7 +2012,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       land:
         type: string
@@ -2056,7 +2047,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       created_at:
         type: string
@@ -2327,6 +2318,11 @@ definitions:
         type: string
       incident_id:
         type: integer
+    type: object
+  api.GenerateInvoicePDFResponse:
+    properties:
+      file_url:
+        type: string
     type: object
   api.GenerateInvoiceRequest:
     properties:
@@ -2788,7 +2784,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       created_at:
         type: string
@@ -3290,6 +3286,35 @@ definitions:
           $ref: '#/definitions/api.Shift'
         type: array
     type: object
+  api.GetPaymentByIDResponse:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      invoice_id:
+        type: integer
+      notes:
+        type: string
+      payment_date:
+        type: string
+      payment_id:
+        type: integer
+      payment_method:
+        type: string
+      payment_reference:
+        type: string
+      payment_status:
+        type: string
+      recorded_by:
+        type: integer
+      recorded_by_first_name:
+        type: string
+      recorded_by_last_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.GetPermissionsByRoleIDApiResponse:
     properties:
       id:
@@ -3538,7 +3563,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       created_at:
         type: string
@@ -4531,7 +4556,7 @@ definitions:
       amount:
         type: number
       created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       invoice_id:
         type: integer
       notes:
@@ -4553,7 +4578,7 @@ definitions:
       recorded_by_last_name:
         type: string
       updated_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
     type: object
   api.ListProgressReportsResponse:
     properties:
@@ -4759,7 +4784,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       created_at:
         type: string
@@ -5287,6 +5312,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GenerateInvoicePDFResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GenerateInvoicePDFResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GenerateInvoiceResponse:
     properties:
       data:
@@ -5516,6 +5550,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetMissingClientDocumentsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetPaymentByIDResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetPaymentByIDResponse'
       message:
         type: string
       success:
@@ -6168,6 +6211,15 @@ definitions:
       id:
         type: integer
       last_name:
+        type: string
+    type: object
+  api.SenderContact:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
         type: string
     type: object
   api.SetClientProfilePictureRequest:
@@ -7243,8 +7295,6 @@ definitions:
         type: string
       payment_status:
         type: string
-      recorded_by:
-        type: integer
     type: object
   api.UpdatePaymentResponse:
     properties:
@@ -7681,7 +7731,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       email_address:
         type: string
@@ -7717,7 +7767,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/api.Contact'
+          $ref: '#/definitions/api.SenderContact'
         type: array
       created_at:
         type: string
@@ -12674,7 +12724,7 @@ paths:
       tags:
       - Invoice
     get:
-      description: Get an invoice by its ID.
+      description: Generate an invoice in PDF format by its ID.
       parameters:
       - description: Invoice ID
         in: path
@@ -12684,10 +12734,10 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: Successful response with invoice details
+        "201":
+          description: Successful response indicating generation
           schema:
-            $ref: '#/definitions/api.Response-api_GetInvoiceByIDResponse'
+            $ref: '#/definitions/api.Response-api_GenerateInvoicePDFResponse'
         "400":
           description: Bad Request
           schema:
@@ -12704,7 +12754,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Get Invoice by ID
+      summary: Generate InvoicePdf
       tags:
       - Invoice
     put:
@@ -12859,6 +12909,41 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create Payment
+      tags:
+      - Invoice
+  /invoices/{id}/payments/{payment_id}:
+    get:
+      description: Get a payment by its ID.
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/api.Response-api_GetPaymentByIDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Payment by ID
       tags:
       - Invoice
   /invoices/{invoice_id}/payments/{payment_id}:
