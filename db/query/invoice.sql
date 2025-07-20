@@ -78,13 +78,13 @@ LIMIT 1;
 -- name: UpdateInvoice :one
 UPDATE invoice
 SET
-    issue_date = COALESCE($2, issue_date),
-    due_date = COALESCE($3, due_date),
-    invoice_details = COALESCE($4, invoice_details),
-    total_amount = COALESCE($5, total_amount),
-    extra_content = COALESCE($6, extra_content),
-    status = COALESCE($7, status),
-    warning_count = COALESCE($8, warning_count)
+    issue_date = COALESCE(sqlc.narg('issue_date'), issue_date),
+    due_date = COALESCE(sqlc.narg('due_date'), due_date),
+    invoice_details = COALESCE(sqlc.narg('invoice_details'), invoice_details),
+    total_amount = COALESCE(sqlc.narg('total_amount'), total_amount),
+    extra_content = COALESCE(sqlc.narg('extra_content'), extra_content),
+    status = COALESCE(sqlc.narg('status'), status),
+    warning_count = COALESCE(sqlc.narg('warning_count'), warning_count)
 WHERE id = $1
 RETURNING *;
 
