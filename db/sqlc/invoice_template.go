@@ -1,62 +1,107 @@
 package db
 
-type Table struct {
+import (
+	"context"
+)
+
+type Table[T any] struct {
 	Name    string
-	Columns [2]string
+	Columns T
+}
+
+type ClientDetailsColumns struct {
+	DateOfBirth string
+	Filenumber  string
+}
+type ContractColumns struct {
+	FinancingAct    string
+	FinancingOption string
 }
 
 var (
-	TablelientDetails = Table{
-		Name:    "client_details",
-		Columns: [2]string{"date_of_birth", "uuid_456"},
+	TableClientDetails = Table[ClientDetailsColumns]{
+		Name: "client_details",
+		Columns: ClientDetailsColumns{
+			DateOfBirth: "date_of_birth",
+			Filenumber:  "filenumber",
+		},
+	}
+	TableContract = Table[ContractColumns]{
+		Name: "contract",
+		Columns: ContractColumns{
+			FinancingAct:    "financing_act",
+			FinancingOption: "financing_option",
+		},
 	}
 )
 
-// func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, ids []int64) {
-// 	var extraContent map[string]string
-// 	templItems, err := store.Queries.GetInvoiceTemplateItems(ctx, ids)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+type FetchQueryData struct {
+	ClientID   int64
+	ContractID int64
+	SenderID   int64
+}
 
-// 	for _, item := range templItems {
-// 		if item.SourceTable == string(TablelientDetails.Name) {
-// 			// get all columns from client tablle by client id will be passed in later
-// 			clientDt, err := store.Queries.GetClientDetails(ctx, clientID)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			// keep only the all the columns  that matches the item source column
-// 			val := reflect.ValueOf(clientDt)
-// 			// get the filed by json tag
-// 			found := false
-// 			for i := 0; i < val.NumField(); i++ {
-// 				field := val.Type().Field(i)
-// 				fieldValue := val.Field(i)
-// 				jsonTag := field.Tag.Get("json")
-// 				jsonFieldName := strings.Split(jsonTag, ",")[0]
-// 				if jsonFieldName != "" && jsonFieldName == item.SourceColumn {
-// 					if fieldValue.Type() == reflect.TypeOf(pgtype.Date{}) {
-// 						pgDate := fieldValue.Interface().(pgtype.Date)
-// 						if pgDate.Valid {
-// 							extraContent[item.Description] = pgDate.Time.Format("2006-01-02")
-// 						} else {
-// 							extraContent[item.Description] = ""
-// 						}
-// 					} else if fieldValue.CanInterface() {
-// 						extraContent[item.Description] = fmt.Sprintf("%v", fieldValue.Interface())
-// 					}
-// 					found = true
-// 					break
+func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQueryData) (map[string]string, error) {
+	extraContent := make(map[string]string)
+	templItemsIds, err := store.Queries.GetSenderInvoiceTemplate(ctx, data.SenderID)
 
-// 				}
+	if err != nil {
+		return nil, err
+	}
 
-// 			}
-// 			if !found {
-// 				extraContent[item.Description] = ""
-// 			}
+	if len(templItemsIds) == 0 {
+		return nil, nil
+	}
 
-// 		}
-// 	}
+	templItems, err := store.Queries.GetTemplateItemsBySourceTable(ctx, templItemsIds)
+	if err != nil {
+		return nil, err
+	}
+	if len(templItems) == 0 {
+		return nil, nil
+	}
+	// group items by source table
+	groupedItems := make(map[string][]TemplateItem)
+	for _, item := range templItems {
+		groupedItems[item.SourceTable] = append(groupedItems[item.SourceTable], item)
+	}
 
-// }
+	for table, items := range groupedItems {
+		switch table {
+		case TableClientDetails.Name:
+			clientDetails, err := store.Queries.GetClientDetails(ctx, data.ClientID)
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range items {
+				switch item.SourceColumn {
+				case TableClientDetails.Columns.DateOfBirth:
+					extraContent[item.Description] = clientDetails.DateOfBirth.Time.Format("02-01-2006")
+				case TableClientDetails.Columns.Filenumber:
+					extraContent[item.Description] = clientDetails.Filenumber
+				}
+			}
+		case TableContract.Name:
+			contract, err := store.Queries.GetClientContract(ctx, data.ContractID)
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range items {
+				switch item.SourceColumn {
+				case TableContract.Columns.FinancingAct:
+					extraContent[item.Description] = contract.FinancingAct
+				case TableContract.Columns.FinancingOption:
+					extraContent[item.Description] = contract.FinancingOption
+				}
+			}
+		}
+
+	}
+
+	// If there are no items for the given template items, return nil
+	if len(extraContent) == 0 {
+		return nil, nil
+	}
+
+	return extraContent, nil
+}

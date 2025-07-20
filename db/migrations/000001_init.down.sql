@@ -101,3 +101,6 @@ DROP TABLE IF EXISTS "public"."location_shift" CASCADE;
 DROP TABLE IF EXISTS "public"."room" CASCADE;
 DROP TABLE IF EXISTS "public"."contract_reminder" CASCADE;
 DROP TABLE IF EXISTS "public"."contract_audit" CASCADE;
+DROP TABLE IF EXISTS "public"."invoice_audit" CASCADE;
+DROP TABLE IF EXISTS "public"."invoice_payment_history" CASCADE;
+DROP TABLE IF EXISTS "public"."template_items" CASCADE;

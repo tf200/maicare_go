@@ -63,6 +63,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contrac
 		CareType:        "ambulante",
 		ClientID:        clientID,
 		SenderID:        senderID,
+		Status:          "approved",
 		FinancingAct:    util.RandomEnum(financingAct),
 		FinancingOption: util.RandomEnum(financingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},

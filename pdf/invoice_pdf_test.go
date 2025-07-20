@@ -50,12 +50,10 @@ func TestGenerateInvoicePDF(t *testing.T) {
 			},
 		},
 		TotalAmount: 326.70,
-		ExtraItems: []struct {
-			Label string
-			Value string
-		}{
-			{Label: "Client Birth Date", Value: "01-01-1990"},
-			{Label: "Financing Option", Value: "WMO"},
+		ExtraItems: map[string]string{
+			"Client Geboortedatum": "01-01-1990",
+			"Financieringsoptie":   "PGB",
+			"Opmerkingen":          "Geen bijzonderheden.",
 		},
 	}
 

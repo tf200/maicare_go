@@ -84,3 +84,9 @@ SET
     invoice_template = COALESCE(sqlc.narg('invoice_template'), invoice_template)
 WHERE id = sqlc.arg('id')
 RETURNING invoice_template;
+
+-- name: GetSenderInvoiceTemplate :one
+SELECT invoice_template
+FROM sender
+WHERE id = $1
+LIMIT 1;

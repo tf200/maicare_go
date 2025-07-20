@@ -9,15 +9,41 @@ import (
 	"context"
 )
 
-const getInvoiceTemplateItems = `-- name: GetInvoiceTemplateItems :many
-SELECT id, item_tag, description, source_table, source_column 
+const getTemplateItemsByIds = `-- name: GetTemplateItemsByIds :many
+SELECT id
 FROM template_items
-WHERE id IN ($1)
-GROUP BY source_table
+WHERE id = ANY($1::bigint[])
 `
 
-func (q *Queries) GetInvoiceTemplateItems(ctx context.Context, ids []int64) ([]TemplateItem, error) {
-	rows, err := q.db.Query(ctx, getInvoiceTemplateItems, ids)
+func (q *Queries) GetTemplateItemsByIds(ctx context.Context, dollar_1 []int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, getTemplateItemsByIds, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTemplateItemsBySourceTable = `-- name: GetTemplateItemsBySourceTable :many
+SELECT id, item_tag, description, source_table, source_column
+FROM template_items
+WHERE id = ANY($1::bigint[])
+ORDER BY source_table
+`
+
+func (q *Queries) GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []int64) ([]TemplateItem, error) {
+	rows, err := q.db.Query(ctx, getTemplateItemsBySourceTable, dollar_1)
 	if err != nil {
 		return nil, err
 	}
@@ -35,33 +61,6 @@ func (q *Queries) GetInvoiceTemplateItems(ctx context.Context, ids []int64) ([]T
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTemplateItemsByIds = `-- name: GetTemplateItemsByIds :many
-SELECT id
-FROM template_items
-WHERE id IN ($1)
-`
-
-// GetTemplateItemsByIds retrieves a list of template item IDs that match the given input IDs.
-func (q *Queries) GetTemplateItemsByIds(ctx context.Context, ids []int64) ([]int64, error) {
-	rows, err := q.db.Query(ctx, getTemplateItemsByIds, ids)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []int64
-	for rows.Next() {
-		var id int64
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

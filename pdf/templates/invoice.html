@@ -342,11 +342,11 @@
             {{if .ExtraItems}}
             <div class="extra-info-section">
                 <div class="section-title">Extra Informatie</div>
-                {{range .ExtraItems}}
-                    <div class="info-line">
-                        <strong>{{.Label}}:</strong> {{.Value}}
-                    </div>
-                {{end}}
+                    {{range $key, $value := .ExtraItems}}
+                        <div class="info-line">
+                            <strong>{{$key}}:</strong> {{$value}}
+                        </div>
+                    {{end}}
             </div>
             {{end}}
 
