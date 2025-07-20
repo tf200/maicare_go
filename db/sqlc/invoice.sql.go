@@ -628,10 +628,10 @@ type UpdateInvoiceParams struct {
 	IssueDate      pgtype.Date `json:"issue_date"`
 	DueDate        pgtype.Date `json:"due_date"`
 	InvoiceDetails []byte      `json:"invoice_details"`
-	TotalAmount    float64     `json:"total_amount"`
+	TotalAmount    *float64    `json:"total_amount"`
 	ExtraContent   []byte      `json:"extra_content"`
-	Status         string      `json:"status"`
-	WarningCount   int32       `json:"warning_count"`
+	Status         *string     `json:"status"`
+	WarningCount   *int32      `json:"warning_count"`
 }
 
 func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error) {

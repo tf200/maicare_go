@@ -412,10 +412,10 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		IssueDate:      pgtype.Date{Time: req.IssueDate},
 		DueDate:        pgtype.Date{Time: req.DueDate},
 		InvoiceDetails: invoiceDetailsBytes,
-		TotalAmount:    req.TotalAmount,
+		TotalAmount:    &req.TotalAmount,
 		ExtraContent:   util.ParseObjectToJSON(req.ExtraContent),
-		Status:         req.Status,
-		WarningCount:   req.WarningCount,
+		Status:         &req.Status,
+		WarningCount:   &req.WarningCount,
 	})
 
 	if err != nil {
@@ -820,7 +820,8 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		if string(newStatus) != getInvoice.Status {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: string(newStatus)})
+				Status: util.StringPtr(string(newStatus)),
+			})
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 				return
@@ -848,6 +849,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		InvoiceStatusChanged: statusChanged,
 		CurrentInvoiceStatus: newInvoiceStatus,
 	}
+	fmt.Printf("Payment created successfully for invoice ID %d with status %s\n", invoiceID, newInvoiceStatus)
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment created successfully"))
 }
 
@@ -1124,7 +1126,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 		if string(newStatus) != originalInvoiceStatus {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: string(newStatus),
+				Status: util.StringPtr(string(newStatus)),
 			})
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -1274,7 +1276,7 @@ func (server *Server) DeletePaymentApi(ctx *gin.Context) {
 		if string(newStatus) != originalInvoiceStatus {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: string(newStatus),
+				Status: util.StringPtr(string(newStatus)),
 			})
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
