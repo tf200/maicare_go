@@ -28,6 +28,14 @@ func createRandomSenders(t *testing.T) Sender {
 
 	sender, err := testQueries.CreateSender(context.Background(), arg)
 	require.NoError(t, err)
+	templItems, err := testQueries.CreateSenderInvoiceTemplate(context.Background(), CreateSenderInvoiceTemplateParams{
+		ID:              sender.ID,
+		InvoiceTemplate: []int64{1, 2, 3},
+	})
+
+	require.NoError(t, err)
+	require.NotEmpty(t, templItems)
+
 	require.NotEmpty(t, sender)
 	require.Equal(t, arg.Types, sender.Types)
 	require.Equal(t, arg.Name, sender.Name)

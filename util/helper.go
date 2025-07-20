@@ -172,3 +172,14 @@ func ParseJSONToObject(data []byte) JSONObject {
 	}
 	return result
 }
+
+func ParseObjectToJSON(obj JSONObject) []byte {
+	if obj == nil {
+		return nil
+	}
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return nil
+	}
+	return data
+}

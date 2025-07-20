@@ -35,7 +35,7 @@ type GenerateInvoiceResponse struct {
 	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    *string                  `json:"extra_content"`
+	ExtraContent    util.JSONObject          `json:"extra_content"`
 	ClientID        int64                    `json:"client_id"`
 	SenderID        *int64                   `json:"sender_id"`
 	UpdatedAt       time.Time                `json:"updated_at"`
@@ -82,6 +82,31 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	extraContent, err := server.store.FetchInvoiceTemplateItems(ctx.Request.Context(), db.FetchQueryData{
+		ClientID:   invoiceData.ClientID,
+		ContractID: invoiceResult.InvoiceDetails[0].ContractID,
+		SenderID:   clientSender.ID,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var extraContentBytes []byte
+
+	if len(extraContent) == 0 {
+		extraContent = nil // Set to nil if no extra content is found
+	} else {
+		// marshal extra content to JSON
+		extraContentBytes, err = json.Marshal(extraContent)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
 	invoice, err := server.store.CreateInvoice(ctx.Request.Context(), db.CreateInvoiceParams{
 		ClientID:       invoiceResult.ClientID,
 		SenderID:       &clientSender.ID,
@@ -89,7 +114,7 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		TotalAmount:    invoiceResult.TotalAmount,
 		InvoiceDetails: invoiceDetailsBytes,
 		InvoiceNumber:  invoice.GenerateInvoiceNumber(invoiceResult.ClientID, time.Now()),
-		ExtraContent:   nil, // Assuming no extra content for simplicity
+		ExtraContent:   extraContentBytes,
 		WarningCount:   int32(warningCount),
 		IssueDate:      pgtype.Date{Time: invoiceResult.InvoiceDate, Valid: true},
 	})
@@ -107,7 +132,7 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		InvoiceDetails:  invoiceResult.InvoiceDetails,
 		TotalAmount:     invoice.TotalAmount,
 		PdfAttachmentID: invoice.PdfAttachmentID,
-		ExtraContent:    invoice.ExtraContent,
+		ExtraContent:    util.ParseJSONToObject(invoice.ExtraContent),
 		ClientID:        invoice.ClientID,
 		SenderID:        invoice.SenderID,
 		UpdatedAt:       invoice.UpdatedAt.Time,
@@ -138,7 +163,7 @@ type ListInvoicesResponse struct {
 	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    *string                  `json:"extra_content"`
+	ExtraContent    util.JSONObject          `json:"extra_content"`
 	ClientID        int64                    `json:"client_id"`
 	SenderID        *int64                   `json:"sender_id"`
 	UpdatedAt       time.Time                `json:"updated_at"`
@@ -208,7 +233,7 @@ func (server *Server) ListInvoicesApi(ctx *gin.Context) {
 			InvoiceDetails:  invoiceDetails,
 			TotalAmount:     items.TotalAmount,
 			PdfAttachmentID: items.PdfAttachmentID,
-			ExtraContent:    items.ExtraContent,
+			ExtraContent:    util.ParseJSONToObject(items.ExtraContent),
 			ClientID:        items.ClientID,
 			SenderID:        items.SenderID,
 			UpdatedAt:       items.UpdatedAt.Time,
@@ -235,7 +260,7 @@ type GetInvoiceByIDResponse struct {
 	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    *string                  `json:"extra_content"`
+	ExtraContent    util.JSONObject          `json:"extra_content"`
 	ClientID        int64                    `json:"client_id"`
 	SenderID        *int64                   `json:"sender_id"`
 	UpdatedAt       time.Time                `json:"updated_at"`
@@ -281,7 +306,7 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 		InvoiceDetails:  invoiceDetails,
 		TotalAmount:     invoiceItem.TotalAmount,
 		PdfAttachmentID: invoiceItem.PdfAttachmentID,
-		ExtraContent:    invoiceItem.ExtraContent,
+		ExtraContent:    util.ParseJSONToObject(invoiceItem.ExtraContent),
 		ClientID:        invoiceItem.ClientID,
 		SenderID:        invoiceItem.SenderID,
 		UpdatedAt:       invoiceItem.UpdatedAt.Time,
@@ -300,7 +325,7 @@ type UpdateInvoiceRequest struct {
 	DueDate        time.Time                `json:"due_date"`
 	InvoiceDetails []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount    float64                  `json:"total_amount"`
-	ExtraContent   *string                  `json:"extra_content"`
+	ExtraContent   util.JSONObject          `json:"extra_content"`
 	Status         string                   `json:"status"`
 	WarningCount   int32                    `json:"warning_count"`
 }
@@ -315,7 +340,7 @@ type UpdateInvoiceResponse struct {
 	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    *string                  `json:"extra_content"`
+	ExtraContent    util.JSONObject          `json:"extra_content"`
 	ClientID        int64                    `json:"client_id"`
 	SenderID        *int64                   `json:"sender_id"`
 	UpdatedAt       time.Time                `json:"updated_at"`
@@ -388,7 +413,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		DueDate:        pgtype.Date{Time: req.DueDate},
 		InvoiceDetails: invoiceDetailsBytes,
 		TotalAmount:    req.TotalAmount,
-		ExtraContent:   req.ExtraContent,
+		ExtraContent:   util.ParseObjectToJSON(req.ExtraContent),
 		Status:         req.Status,
 		WarningCount:   req.WarningCount,
 	})
@@ -420,7 +445,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		InvoiceDetails:  invoiceDetailsResp,
 		TotalAmount:     updatedInvoice.TotalAmount,
 		PdfAttachmentID: updatedInvoice.PdfAttachmentID,
-		ExtraContent:    updatedInvoice.ExtraContent,
+		ExtraContent:    util.ParseJSONToObject(updatedInvoice.ExtraContent),
 		ClientID:        updatedInvoice.ClientID,
 		SenderID:        updatedInvoice.SenderID,
 		UpdatedAt:       updatedInvoice.UpdatedAt.Time,
@@ -570,6 +595,14 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		})
 	}
 
+	var extraItems map[string]string
+	if invoiceData.ExtraContent != nil {
+		if err := json.Unmarshal(invoiceData.ExtraContent, &extraItems); err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
 	arg := pdf.InvoicePDFData{
 		ID:                   invoiceData.ID,
 		SenderName:           util.DerefString(invoiceData.SenderName),
@@ -580,6 +613,7 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		InvoiceDate:          invoiceData.IssueDate.Time,
 		DueDate:              invoiceData.DueDate.Time,
 		InvoiceDetails:       pdfInvoiceDetails,
+		ExtraItems:           extraItems,
 	}
 
 	fileUrl, filename, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)

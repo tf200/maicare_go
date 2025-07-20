@@ -24,10 +24,7 @@ type InvoicePDFData struct {
 	DueDate              time.Time
 	InvoiceDetails       []InvoiceDetail
 	TotalAmount          float64
-	ExtraItems           []struct {
-		Label string
-		Value string
-	}
+	ExtraItems           map[string]string
 }
 
 type InvoiceDetail struct {

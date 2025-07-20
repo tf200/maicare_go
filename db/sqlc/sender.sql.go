@@ -164,6 +164,20 @@ func (q *Queries) GetSenderById(ctx context.Context, id int64) (Sender, error) {
 	return i, err
 }
 
+const getSenderInvoiceTemplate = `-- name: GetSenderInvoiceTemplate :one
+SELECT invoice_template
+FROM sender
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetSenderInvoiceTemplate(ctx context.Context, id int64) ([]int64, error) {
+	row := q.db.QueryRow(ctx, getSenderInvoiceTemplate, id)
+	var invoice_template []int64
+	err := row.Scan(&invoice_template)
+	return invoice_template, err
+}
+
 const listSenders = `-- name: ListSenders :many
 SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
 WHERE 

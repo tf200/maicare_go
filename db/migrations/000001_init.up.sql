@@ -682,7 +682,7 @@ CREATE TABLE invoice (
     invoice_details JSONB NULL DEFAULT '[]',
     total_amount DECIMAL(20,2) NOT NULL DEFAULT 0,
     pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
-    extra_content TEXT NULL DEFAULT '',
+    extra_content JSONB NULL DEFAULT '{}',
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL,
     warning_count INTEGER NOT NULL DEFAULT 0,
@@ -2052,7 +2052,7 @@ CREATE TABLE appointment_clients (
 
 
 CREATE TABLE registration_form (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY ,
     client_first_name VARCHAR(255) NOT NULL,
     client_last_name VARCHAR(255) NOT NULL,
     client_bsn_number VARCHAR(50) NOT NULL,
@@ -2189,7 +2189,7 @@ CREATE TABLE schedules (
 
 
 CREATE TABLE template_items (
-    id BIGINT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     item_tag VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     source_table VARCHAR(64) NOT NULL,
@@ -2199,5 +2199,6 @@ CREATE TABLE template_items (
 
 INSERT INTO template_items (item_tag, description, source_table, source_column) VALUES
 ('client.date_of_birth', 'Date of birth', 'client_details', 'date_of_birth'),
+('client.filenumber', 'File number', 'client_details', 'filenumber'),
 ('contract.financing_act', 'Financing act', 'contract', 'financing_act'),
 ('contract.financing_option', 'Financing option', 'contract', 'financing_option')

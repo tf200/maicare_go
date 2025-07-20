@@ -736,7 +736,7 @@ type Invoice struct {
 	InvoiceDetails  []byte             `json:"invoice_details"`
 	TotalAmount     float64            `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
-	ExtraContent    *string            `json:"extra_content"`
+	ExtraContent    []byte             `json:"extra_content"`
 	ClientID        int64              `json:"client_id"`
 	SenderID        *int64             `json:"sender_id"`
 	WarningCount    int32              `json:"warning_count"`

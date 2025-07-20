@@ -35,7 +35,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(20),
 		Status:          "approved",
-		Price:           0,
+		Price:           76,
 		PriceTimeUnit:   "daily", // util.RandomEnum(priceFrequency),
 		Hours:           nil,
 		HoursType:       nil,

@@ -1,8 +1,7 @@
 -- name: GetTemplateItemsByIds :many
--- GetTemplateItemsByIds retrieves a list of template item IDs that match the given input IDs.
 SELECT id
 FROM template_items
-WHERE id IN (sqlc.slice('ids'));
+WHERE id = ANY($1::bigint[]);
 
 
 
@@ -10,9 +9,9 @@ WHERE id IN (sqlc.slice('ids'));
 
 
 
-
--- name: GetInvoiceTemplateItems :many 
-SELECT * 
+-- name: GetTemplateItemsBySourceTable :many
+SELECT *
 FROM template_items
-WHERE id IN (sqlc.slice('ids'))
-GROUP BY source_table;
+WHERE id = ANY($1::bigint[])
+ORDER BY source_table;
+

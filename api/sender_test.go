@@ -57,6 +57,13 @@ func createRandomSender(t *testing.T) db.Sender {
 	require.NoError(t, err)
 	require.NotEmpty(t, sender)
 
+	templateItems, err := testStore.CreateSenderInvoiceTemplate(context.Background(), db.CreateSenderInvoiceTemplateParams{
+		ID:              sender.ID,
+		InvoiceTemplate: []int64{1, 2, 3},
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, templateItems)
+
 	// Verify the fields
 	require.Equal(t, arg.Types, sender.Types)
 	require.Equal(t, arg.Name, sender.Name)
