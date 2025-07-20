@@ -296,13 +296,13 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 
 // UpdateInvoiceRequest represents the request body for updating an invoice.
 type UpdateInvoiceRequest struct {
-	IssueDate      time.Time `json:"issue_date"`
-	DueDate        time.Time `json:"due_date"`
-	InvoiceDetails []byte    `json:"invoice_details"`
-	TotalAmount    float64   `json:"total_amount"`
-	ExtraContent   *string   `json:"extra_content"`
-	Status         string    `json:"status"`
-	WarningCount   int32     `json:"warning_count"`
+	IssueDate      time.Time                `json:"issue_date"`
+	DueDate        time.Time                `json:"due_date"`
+	InvoiceDetails []invoice.InvoiceDetails `json:"invoice_details"`
+	TotalAmount    float64                  `json:"total_amount"`
+	ExtraContent   *string                  `json:"extra_content"`
+	Status         string                   `json:"status"`
+	WarningCount   int32                    `json:"warning_count"`
 }
 
 // UpdateInvoiceResponse represents the response body for updating an invoice.
@@ -351,14 +351,9 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	var invoiceDetails []invoice.InvoiceDetails
-	if err := json.Unmarshal(req.InvoiceDetails, &invoiceDetails); err != nil {
+	_, err = invoice.VerifyTotalAmount(req.InvoiceDetails, req.TotalAmount)
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if invoice.VerifyTotalAmount(invoiceDetails, req.TotalAmount) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("total amount does not match the sum of invoice details")))
 		return
 	}
 
@@ -382,11 +377,16 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	invoiceDetailsBytes, err := json.Marshal(req.InvoiceDetails)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 	updatedInvoice, err := qtx.UpdateInvoice(ctx.Request.Context(), db.UpdateInvoiceParams{
 		ID:             invoiceID,
 		IssueDate:      pgtype.Date{Time: req.IssueDate},
 		DueDate:        pgtype.Date{Time: req.DueDate},
-		InvoiceDetails: req.InvoiceDetails,
+		InvoiceDetails: invoiceDetailsBytes,
 		TotalAmount:    req.TotalAmount,
 		ExtraContent:   req.ExtraContent,
 		Status:         req.Status,
@@ -403,7 +403,9 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	err = json.Unmarshal(updatedInvoice.InvoiceDetails, &invoiceDetails)
+	var invoiceDetailsResp []invoice.InvoiceDetails
+
+	err = json.Unmarshal(updatedInvoice.InvoiceDetails, &invoiceDetailsResp)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -415,7 +417,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		IssueDate:       updatedInvoice.IssueDate.Time,
 		DueDate:         updatedInvoice.DueDate.Time,
 		Status:          updatedInvoice.Status,
-		InvoiceDetails:  invoiceDetails,
+		InvoiceDetails:  invoiceDetailsResp,
 		TotalAmount:     updatedInvoice.TotalAmount,
 		PdfAttachmentID: updatedInvoice.PdfAttachmentID,
 		ExtraContent:    updatedInvoice.ExtraContent,

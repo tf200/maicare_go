@@ -438,3 +438,41 @@ func (server *Server) DeleteSenderApi(ctx *gin.Context) {
 	res := SuccessResponse[any](nil, "Sender deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+type CreateSenderInvoiceTemplateRequest struct {
+	InvoiceTemplateIDs []int64 `json:"invoice_template" binding:"required"`
+}
+
+func (server *Server) CreateSenderInvoiceTemplateApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	senderID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req CreateSenderInvoiceTemplateRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// verify that the ids exist in the template table
+	tmplids, err := server.store.GetTemplateItemsByIds(ctx, req.InvoiceTemplateIDs)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	invtemp, err := server.store.CreateSenderInvoiceTemplate(ctx, db.CreateSenderInvoiceTemplateParams{
+		ID:              senderID,
+		InvoiceTemplate: tmplids,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(invtemp, "Sender invoice template created successfully")
+	ctx.JSON(http.StatusOK, res)
+}

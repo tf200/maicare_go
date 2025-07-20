@@ -1090,22 +1090,23 @@ type ScheduledStatusChange struct {
 }
 
 type Sender struct {
-	ID           int64              `json:"id"`
-	Types        string             `json:"types"`
-	Name         string             `json:"name"`
-	Address      *string            `json:"address"`
-	PostalCode   *string            `json:"postal_code"`
-	Place        *string            `json:"place"`
-	Land         *string            `json:"land"`
-	Kvknumber    *string            `json:"kvknumber"`
-	Btwnumber    *string            `json:"btwnumber"`
-	PhoneNumber  *string            `json:"phone_number"`
-	ClientNumber *string            `json:"client_number"`
-	EmailAddress *string            `json:"email_address"`
-	Contacts     []byte             `json:"contacts"`
-	IsArchived   bool               `json:"is_archived"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID              int64              `json:"id"`
+	Types           string             `json:"types"`
+	Name            string             `json:"name"`
+	Address         *string            `json:"address"`
+	PostalCode      *string            `json:"postal_code"`
+	Place           *string            `json:"place"`
+	Land            *string            `json:"land"`
+	Kvknumber       *string            `json:"kvknumber"`
+	Btwnumber       *string            `json:"btwnumber"`
+	PhoneNumber     *string            `json:"phone_number"`
+	ClientNumber    *string            `json:"client_number"`
+	EmailAddress    *string            `json:"email_address"`
+	Contacts        []byte             `json:"contacts"`
+	InvoiceTemplate []int64            `json:"invoice_template"`
+	IsArchived      bool               `json:"is_archived"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
 type SenderAudit struct {
@@ -1135,11 +1136,11 @@ type Session struct {
 }
 
 type TemplateItem struct {
-	ID           int64   `json:"id"`
-	ItemTag      string  `json:"item_tag"`
-	Description  *string `json:"description"`
-	SourceTable  string  `json:"source_table"`
-	SourceColumn string  `json:"source_column"`
+	ID           int64  `json:"id"`
+	ItemTag      string `json:"item_tag"`
+	Description  string `json:"description"`
+	SourceTable  string `json:"source_table"`
+	SourceColumn string `json:"source_column"`
 }
 
 type TemporaryFile struct {

@@ -74,3 +74,13 @@ SET
     updated_at = NOW()
 WHERE 
     id = sqlc.arg('id');
+
+
+
+
+-- name: CreateSenderInvoiceTemplate :one
+UPDATE sender
+SET
+    invoice_template = COALESCE(sqlc.narg('invoice_template'), invoice_template)
+WHERE id = sqlc.arg('id')
+RETURNING invoice_template;

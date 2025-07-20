@@ -44,7 +44,7 @@ INSERT INTO sender (
     contacts
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-) RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at
+) RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at
 `
 
 type CreateSenderParams struct {
@@ -92,11 +92,32 @@ func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sen
 		&i.ClientNumber,
 		&i.EmailAddress,
 		&i.Contacts,
+		&i.InvoiceTemplate,
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const createSenderInvoiceTemplate = `-- name: CreateSenderInvoiceTemplate :one
+UPDATE sender
+SET
+    invoice_template = COALESCE($1, invoice_template)
+WHERE id = $2
+RETURNING invoice_template
+`
+
+type CreateSenderInvoiceTemplateParams struct {
+	InvoiceTemplate []int64 `json:"invoice_template"`
+	ID              int64   `json:"id"`
+}
+
+func (q *Queries) CreateSenderInvoiceTemplate(ctx context.Context, arg CreateSenderInvoiceTemplateParams) ([]int64, error) {
+	row := q.db.QueryRow(ctx, createSenderInvoiceTemplate, arg.InvoiceTemplate, arg.ID)
+	var invoice_template []int64
+	err := row.Scan(&invoice_template)
+	return invoice_template, err
 }
 
 const deleteSender = `-- name: DeleteSender :exec
@@ -114,7 +135,7 @@ func (q *Queries) DeleteSender(ctx context.Context, id int64) error {
 }
 
 const getSenderById = `-- name: GetSenderById :one
-SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at FROM sender
+SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
 WHERE id = $1 LIMIT 1
 `
 
@@ -135,6 +156,7 @@ func (q *Queries) GetSenderById(ctx context.Context, id int64) (Sender, error) {
 		&i.ClientNumber,
 		&i.EmailAddress,
 		&i.Contacts,
+		&i.InvoiceTemplate,
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -143,7 +165,7 @@ func (q *Queries) GetSenderById(ctx context.Context, id int64) (Sender, error) {
 }
 
 const listSenders = `-- name: ListSenders :many
-SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at FROM sender
+SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
 WHERE 
    (CASE WHEN $3::boolean THEN true ELSE NOT is_archived END)
    AND ($4::TEXT IS NULL OR name ILIKE '%' || $4 || '%')
@@ -186,6 +208,7 @@ func (q *Queries) ListSenders(ctx context.Context, arg ListSendersParams) ([]Sen
 			&i.ClientNumber,
 			&i.EmailAddress,
 			&i.Contacts,
+			&i.InvoiceTemplate,
 			&i.IsArchived,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -219,7 +242,7 @@ SET
     types = COALESCE($13, types)
 WHERE 
     id = $14
-RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, is_archived, created_at, updated_at
+RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at
 `
 
 type UpdateSenderParams struct {
@@ -271,6 +294,7 @@ func (q *Queries) UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sen
 		&i.ClientNumber,
 		&i.EmailAddress,
 		&i.Contacts,
+		&i.InvoiceTemplate,
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,

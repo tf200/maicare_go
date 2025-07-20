@@ -35,7 +35,7 @@ type InvoiceDetails struct {
 	Vat           float64         `json:"vat"`
 	Price         float64         `json:"price"`
 	PriceTimeUnit string          `json:"price_time_unit"`
-	Warnings      []string        `json:"warnings"` // Optional message for errors
+	Warnings      []string        `json:"warnings"`
 }
 
 type InvoicePeriod struct {
@@ -102,6 +102,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 			ContractType:  contract.CareType,
 			PriceTimeUnit: contract.PriceTimeUnit,
 			Vat:           float64(*contract.Vat),
+			Warnings:      []string{},
 		}
 
 		if len(billablePeriods) > 1 {
@@ -114,7 +115,6 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 			var periodItem InvoicePeriod
 			periodItem.StartDate = period.BillableStart.Time
 			periodItem.EndDate = period.BillableEnd.Time
-			invoice[i].Periods = append(invoice[i].Periods, periodItem)
 
 			if contract.CareType == "accommodation" {
 				totals, err := CalculateAccomodationInvoiceTotal(AccommodationInvoiceParams{
@@ -205,10 +205,16 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 	return &finalInvoice, warningCount, nil
 }
 
-func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) bool {
+func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) (bool, error) {
 	var calculatedTotal float64
+
 	for _, detail := range invoiceDetails {
 		calculatedTotal += detail.Total
 	}
-	return calculatedTotal == totalAmount
+
+	if calculatedTotal != totalAmount {
+		return false, fmt.Errorf("total amount does not match the sum of invoice details: expected %.2f, got %.2f", totalAmount, calculatedTotal)
+	}
+	return true, nil
+
 }

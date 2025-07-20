@@ -207,11 +207,12 @@ CREATE TABLE sender (
     place VARCHAR(20) NULL,
     land VARCHAR(20) NULL,
     kvknumber VARCHAR(20) NULL,
-    btwnumber VARCHAR(20) NULL,
+    btwnumber VARCHAR(20) NULL, 
     phone_number VARCHAR(20) NULL,
     client_number VARCHAR(20) NULL,
     email_address VARCHAR(20) NULL,
     contacts JSONB NOT NULL DEFAULT '[]',
+    invoice_template BIGINT[] NULL,
     is_archived BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -2190,13 +2191,13 @@ CREATE TABLE schedules (
 CREATE TABLE template_items (
     id BIGINT PRIMARY KEY,
     item_tag VARCHAR(255) NOT NULL,
-    description TEXT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
     source_table VARCHAR(64) NOT NULL,
     source_column VARCHAR(64) NOT NULL
 );
 
 
 INSERT INTO template_items (item_tag, description, source_table, source_column) VALUES
-('client.date_of_birth', 'Date of birth of the client', 'client_details', 'date_of_birth'),
-('contract.financing_act', 'Financing act of the contract', 'contract', 'financing_act'),
-('contract.financing_option', 'Financing option of the contract', 'contract', 'financing_option');
+('client.date_of_birth', 'Date of birth', 'client_details', 'date_of_birth'),
+('contract.financing_act', 'Financing act', 'contract', 'financing_act'),
+('contract.financing_option', 'Financing option', 'contract', 'financing_option')
