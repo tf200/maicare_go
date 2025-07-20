@@ -205,10 +205,16 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 	return &finalInvoice, warningCount, nil
 }
 
-func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) bool {
+func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) (bool, error) {
 	var calculatedTotal float64
+
 	for _, detail := range invoiceDetails {
 		calculatedTotal += detail.Total
 	}
-	return calculatedTotal == totalAmount
+
+	if calculatedTotal != totalAmount {
+		return false, fmt.Errorf("total amount does not match the sum of invoice details: expected %.2f, got %.2f", totalAmount, calculatedTotal)
+	}
+	return true, nil
+
 }

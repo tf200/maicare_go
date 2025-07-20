@@ -19939,7 +19939,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
                     }
                 },
                 "issue_date": {
@@ -20928,7 +20928,6 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "warnings": {
-                    "description": "Optional message for errors",
                     "type": "array",
                     "items": {
                         "type": "string"

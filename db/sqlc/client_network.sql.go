@@ -322,7 +322,7 @@ func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID int64) ([
 }
 
 const getClientSender = `-- name: GetClientSender :one
-SELECT s.id, s.types, s.name, s.address, s.postal_code, s.place, s.land, s.kvknumber, s.btwnumber, s.phone_number, s.client_number, s.email_address, s.contacts, s.is_archived, s.created_at, s.updated_at FROM sender s
+SELECT s.id, s.types, s.name, s.address, s.postal_code, s.place, s.land, s.kvknumber, s.btwnumber, s.phone_number, s.client_number, s.email_address, s.contacts, s.invoice_template, s.is_archived, s.created_at, s.updated_at FROM sender s
 LEFT JOIN client_details cd ON s.id = cd.sender_id
 WHERE cd.id = $1
 LIMIT 1
@@ -345,6 +345,7 @@ func (q *Queries) GetClientSender(ctx context.Context, id int64) (Sender, error)
 		&i.ClientNumber,
 		&i.EmailAddress,
 		&i.Contacts,
+		&i.InvoiceTemplate,
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,

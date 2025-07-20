@@ -7219,7 +7219,7 @@ definitions:
         type: string
       invoice_details:
         items:
-          type: integer
+          $ref: '#/definitions/invoice.InvoiceDetails'
         type: array
       issue_date:
         type: string
@@ -7879,7 +7879,6 @@ definitions:
       vat:
         type: number
       warnings:
-        description: Optional message for errors
         items:
           type: string
         type: array
