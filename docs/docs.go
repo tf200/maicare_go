@@ -6292,8 +6292,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Month",
-                        "name": "month",
+                        "description": "Week",
+                        "name": "week",
                         "in": "query",
                         "required": true
                     }
@@ -12518,7 +12518,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"
@@ -13864,7 +13864,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"
@@ -15785,7 +15785,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"
@@ -19934,7 +19934,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -19969,7 +19969,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"

@@ -32,7 +32,7 @@ type Summary struct {
 	AppointmentHours float64 `json:"appointment_hours"`
 	ShiftHours       float64 `json:"shift_hours"`
 	TotalDaysWorked  int     `json:"total_days_worked"`
-	OverTime         float64 `json:"over_time,omitempty"` // Optional field for overtime hours
+	OverTime         float64 `json:"over_time"` // Optional field for overtime hours
 }
 
 // Period information
@@ -68,7 +68,7 @@ type ListWorkingHoursResponse struct {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param year query int true "Year"
-// @Param month query int true "Month"
+// @Param week query int true "Week"
 // @Success 200 {object} Response[ListWorkingHoursResponse] "
 // @Failure 400 {object} Response[any] "Invalid request parameters"
 // @Failure 500 {object} Response[any] "Internal server error"
