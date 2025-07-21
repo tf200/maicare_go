@@ -6285,8 +6285,8 @@
                     },
                     {
                         "type": "integer",
-                        "description": "Month",
-                        "name": "month",
+                        "description": "Week",
+                        "name": "week",
                         "in": "query",
                         "required": true
                     }
@@ -12511,7 +12511,7 @@
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"
@@ -13857,7 +13857,7 @@
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"
@@ -15778,7 +15778,7 @@
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"
@@ -19927,7 +19927,7 @@
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -19962,7 +19962,7 @@
                     "type": "string"
                 },
                 "extra_content": {
-                    "type": "string"
+                    "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
                     "type": "integer"

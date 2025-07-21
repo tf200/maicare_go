@@ -2346,7 +2346,7 @@ definitions:
       due_date:
         type: string
       extra_content:
-        type: string
+        $ref: '#/definitions/util.JSONObject'
       id:
         type: integer
       invoice_details:
@@ -3235,7 +3235,7 @@ definitions:
       due_date:
         type: string
       extra_content:
-        type: string
+        $ref: '#/definitions/util.JSONObject'
       id:
         type: integer
       invoice_details:
@@ -4507,7 +4507,7 @@ definitions:
       due_date:
         type: string
       extra_content:
-        type: string
+        $ref: '#/definitions/util.JSONObject'
       id:
         type: integer
       invoice_details:
@@ -7216,7 +7216,7 @@ definitions:
       due_date:
         type: string
       extra_content:
-        type: string
+        $ref: '#/definitions/util.JSONObject'
       invoice_details:
         items:
           $ref: '#/definitions/invoice.InvoiceDetails'
@@ -7239,7 +7239,7 @@ definitions:
       due_date:
         type: string
       extra_content:
-        type: string
+        $ref: '#/definitions/util.JSONObject'
       id:
         type: integer
       invoice_details:
@@ -12256,9 +12256,9 @@ paths:
         name: year
         required: true
         type: integer
-      - description: Month
+      - description: Week
         in: query
-        name: month
+        name: week
         required: true
         type: integer
       produces:
