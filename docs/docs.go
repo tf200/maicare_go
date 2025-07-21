@@ -6844,6 +6844,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/invoices/template_items": {
+            "get": {
+                "description": "Retrieve all invoice template items.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get Invoice Template Items",
+                "responses": {
+                    "200": {
+                        "description": "Successful",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_GetInvoiceTemplateItemsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/invoices/{id}": {
             "get": {
                 "description": "Get an invoice by its ID.",
@@ -8760,14 +8804,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Limit",
-                        "name": "limit",
+                        "description": "Page number",
+                        "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Offset",
-                        "name": "offset",
+                        "description": "Page size",
+                        "name": "page_size",
                         "in": "query"
                     },
                     {
@@ -8988,6 +9032,65 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/senders/{id}/invoice_template": {
+            "post": {
+                "description": "Create a new sender invoice template",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "senders"
+                ],
+                "summary": "Create a new sender invoice template",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Sender ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Invoice template IDs",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateSenderInvoiceTemplateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -11990,6 +12093,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateSenderInvoiceTemplateRequest": {
+            "type": "object",
+            "required": [
+                "invoice_template"
+            ],
+            "properties": {
+                "invoice_template": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "api.CreateSenderRequest": {
             "type": "object",
             "required": [
@@ -13884,8 +14001,14 @@ const docTemplate = `{
                 "pdf_attachment_id": {
                     "type": "string"
                 },
+                "sender_btwnumber": {
+                    "type": "string"
+                },
                 "sender_id": {
                     "type": "integer"
+                },
+                "sender_kvknumber": {
+                    "type": "string"
                 },
                 "sender_name": {
                     "type": "string"
@@ -13897,6 +14020,26 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.GetInvoiceTemplateItemsResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_tag": {
+                    "type": "string"
+                },
+                "source_column": {
+                    "type": "string"
+                },
+                "source_table": {
                     "type": "string"
                 }
             }
@@ -14370,6 +14513,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "invoice_template_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.TemplateItem"
+                    }
                 },
                 "is_archived": {
                     "type": "boolean"
@@ -17990,6 +18139,23 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_api_GetInvoiceTemplateItemsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GetInvoiceTemplateItemsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-array_api_GetMonthlySchedulesByLocationResponse": {
             "type": "object",
             "properties": {
@@ -18554,6 +18720,26 @@ const docTemplate = `{
                 },
                 "total_hours": {
                     "type": "number"
+                }
+            }
+        },
+        "api.TemplateItem": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_tag": {
+                    "type": "string"
+                },
+                "source_column": {
+                    "type": "string"
+                },
+                "source_table": {
+                    "type": "string"
                 }
             }
         },

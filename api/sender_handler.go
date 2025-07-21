@@ -151,8 +151,8 @@ type ListSendersResponse struct {
 // @Tags senders
 // @Accept json
 // @Produce json
-// @Param limit query int false "Limit"
-// @Param offset query int false "Offset"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
 // @Param search query string false "Search"
 // @Param include_archived query bool false "Include archived"
 // @Success 200 {object} Response[pagination.Response[ListSendersResponse]]
@@ -219,24 +219,33 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type TemplateItem struct {
+	ID           int64  `json:"id"`
+	ItemTag      string `json:"item_tag"`
+	Description  string `json:"description"`
+	SourceTable  string `json:"source_table"`
+	SourceColumn string `json:"source_column"`
+}
+
 // GetSenderByIdResponse represents a response to a request to get a sender by ID.
 type GetSenderByIdResponse struct {
-	ID           int64           `json:"id"`
-	Types        string          `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	Kvknumber    *string         `json:"KVKnumber"`
-	Btwnumber    *string         `json:"BTWnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	EmailAddress *string         `json:"email_address"`
-	Contacts     []SenderContact `json:"contacts"`
-	IsArchived   bool            `json:"is_archived"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
+	ID                   int64           `json:"id"`
+	Types                string          `json:"types"`
+	Name                 string          `json:"name"`
+	Address              *string         `json:"address"`
+	PostalCode           *string         `json:"postal_code"`
+	Place                *string         `json:"place"`
+	Land                 *string         `json:"land"`
+	Kvknumber            *string         `json:"KVKnumber"`
+	Btwnumber            *string         `json:"BTWnumber"`
+	PhoneNumber          *string         `json:"phone_number"`
+	ClientNumber         *string         `json:"client_number"`
+	EmailAddress         *string         `json:"email_address"`
+	Contacts             []SenderContact `json:"contacts"`
+	InvoiceTemplateItems []TemplateItem  `json:"invoice_template_items"`
+	IsArchived           bool            `json:"is_archived"`
+	CreatedAt            time.Time       `json:"created_at"`
+	UpdatedAt            time.Time       `json:"updated_at"`
 }
 
 // GetSenderAPI returns a sender by ID.
@@ -267,24 +276,42 @@ func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	tmplids, err := server.store.GetTemplateItemsBySourceTable(ctx, sender.InvoiceTemplate)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	var invoiceTemplateItems []TemplateItem
+	if len(tmplids) != 0 {
+		for _, tmpl := range tmplids {
+			invoiceTemplateItems = append(invoiceTemplateItems, TemplateItem{
+				ID:           tmpl.ID,
+				ItemTag:      tmpl.ItemTag,
+				Description:  tmpl.Description,
+				SourceTable:  tmpl.SourceTable,
+				SourceColumn: tmpl.SourceColumn,
+			})
+		}
+	}
 
 	res := SuccessResponse(GetSenderByIdResponse{
-		ID:           sender.ID,
-		Types:        sender.Types,
-		Name:         sender.Name,
-		Address:      sender.Address,
-		PostalCode:   sender.PostalCode,
-		Place:        sender.Place,
-		Land:         sender.Land,
-		Kvknumber:    sender.Kvknumber,
-		Btwnumber:    sender.Btwnumber,
-		PhoneNumber:  sender.PhoneNumber,
-		ClientNumber: sender.ClientNumber,
-		EmailAddress: sender.EmailAddress,
-		Contacts:     contactsResp,
-		IsArchived:   sender.IsArchived,
-		CreatedAt:    sender.CreatedAt.Time,
-		UpdatedAt:    sender.UpdatedAt.Time,
+		ID:                   sender.ID,
+		Types:                sender.Types,
+		Name:                 sender.Name,
+		Address:              sender.Address,
+		PostalCode:           sender.PostalCode,
+		Place:                sender.Place,
+		Land:                 sender.Land,
+		Kvknumber:            sender.Kvknumber,
+		Btwnumber:            sender.Btwnumber,
+		PhoneNumber:          sender.PhoneNumber,
+		ClientNumber:         sender.ClientNumber,
+		EmailAddress:         sender.EmailAddress,
+		Contacts:             contactsResp,
+		IsArchived:           sender.IsArchived,
+		InvoiceTemplateItems: invoiceTemplateItems,
+		CreatedAt:            sender.CreatedAt.Time,
+		UpdatedAt:            sender.UpdatedAt.Time,
 	}, "Sender retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
@@ -439,10 +466,22 @@ func (server *Server) DeleteSenderApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// CreateSenderInvoiceTemplateRequest represents a request to create a new sender invoice template.
 type CreateSenderInvoiceTemplateRequest struct {
 	InvoiceTemplateIDs []int64 `json:"invoice_template" binding:"required"`
 }
 
+// CreateSenderInvoiceTemplateApi handles the creation of a new sender invoice template.
+// @Summary Create a new sender invoice template
+// @Description Create a new sender invoice template
+// @Tags senders
+// @Accept json
+// @Produce json
+// @Param id path int true "Sender ID"
+// @Param request body CreateSenderInvoiceTemplateRequest true "Invoice template IDs"
+// @Success 201 {object} Response[any]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /senders/{id}/invoice_template [post]
 func (server *Server) CreateSenderInvoiceTemplateApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	senderID, err := strconv.ParseInt(id, 10, 64)
@@ -464,7 +503,7 @@ func (server *Server) CreateSenderInvoiceTemplateApi(ctx *gin.Context) {
 		return
 	}
 
-	invtemp, err := server.store.CreateSenderInvoiceTemplate(ctx, db.CreateSenderInvoiceTemplateParams{
+	_, err = server.store.CreateSenderInvoiceTemplate(ctx, db.CreateSenderInvoiceTemplateParams{
 		ID:              senderID,
 		InvoiceTemplate: tmplids,
 	})
@@ -473,6 +512,6 @@ func (server *Server) CreateSenderInvoiceTemplateApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(invtemp, "Sender invoice template created successfully")
+	res := SuccessResponse[any](nil, "Sender invoice template created successfully")
 	ctx.JSON(http.StatusOK, res)
 }

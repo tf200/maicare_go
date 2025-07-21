@@ -169,6 +169,8 @@ SELECT
     s.name AS sender_name,
     s.contacts As sender_contacts,
     s.postal_code AS sender_postal_code,
+    s.kvknumber AS sender_kvknumber,
+    s.btwnumber AS sender_btwnumber,
     s.address AS sender_address,
     cd.first_name AS client_first_name,
     cd.last_name AS client_last_name
@@ -201,6 +203,8 @@ type GetInvoiceRow struct {
 	SenderName       *string            `json:"sender_name"`
 	SenderContacts   []byte             `json:"sender_contacts"`
 	SenderPostalCode *string            `json:"sender_postal_code"`
+	SenderKvknumber  *string            `json:"sender_kvknumber"`
+	SenderBtwnumber  *string            `json:"sender_btwnumber"`
 	SenderAddress    *string            `json:"sender_address"`
 	ClientFirstName  string             `json:"client_first_name"`
 	ClientLastName   string             `json:"client_last_name"`
@@ -227,6 +231,8 @@ func (q *Queries) GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, erro
 		&i.SenderName,
 		&i.SenderContacts,
 		&i.SenderPostalCode,
+		&i.SenderKvknumber,
+		&i.SenderBtwnumber,
 		&i.SenderAddress,
 		&i.ClientFirstName,
 		&i.ClientLastName,

@@ -9,6 +9,38 @@ import (
 	"context"
 )
 
+const getAllTemplateItems = `-- name: GetAllTemplateItems :many
+SELECT id, item_tag, description, source_table, source_column
+FROM template_items
+ORDER BY source_table
+`
+
+func (q *Queries) GetAllTemplateItems(ctx context.Context) ([]TemplateItem, error) {
+	rows, err := q.db.Query(ctx, getAllTemplateItems)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TemplateItem
+	for rows.Next() {
+		var i TemplateItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.ItemTag,
+			&i.Description,
+			&i.SourceTable,
+			&i.SourceColumn,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTemplateItemsByIds = `-- name: GetTemplateItemsByIds :many
 SELECT id
 FROM template_items

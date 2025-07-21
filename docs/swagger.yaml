@@ -2000,6 +2000,15 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.CreateSenderInvoiceTemplateRequest:
+    properties:
+      invoice_template:
+        items:
+          type: integer
+        type: array
+    required:
+    - invoice_template
+    type: object
   api.CreateSenderRequest:
     properties:
       BTWnumber:
@@ -3248,8 +3257,12 @@ definitions:
         type: string
       pdf_attachment_id:
         type: string
+      sender_btwnumber:
+        type: string
       sender_id:
         type: integer
+      sender_kvknumber:
+        type: string
       sender_name:
         type: string
       status:
@@ -3257,6 +3270,19 @@ definitions:
       total_amount:
         type: number
       updated_at:
+        type: string
+    type: object
+  api.GetInvoiceTemplateItemsResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      item_tag:
+        type: string
+      source_column:
+        type: string
+      source_table:
         type: string
     type: object
   api.GetLocationResponse:
@@ -3571,6 +3597,10 @@ definitions:
         type: string
       id:
         type: integer
+      invoice_template_items:
+        items:
+          $ref: '#/definitions/api.TemplateItem'
+        type: array
       is_archived:
         type: boolean
       land:
@@ -5937,6 +5967,17 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_GetInvoiceTemplateItemsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetInvoiceTemplateItemsResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_GetMonthlySchedulesByLocationResponse:
     properties:
       data:
@@ -6304,6 +6345,19 @@ definitions:
         type: integer
       total_hours:
         type: number
+    type: object
+  api.TemplateItem:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      item_tag:
+        type: string
+      source_column:
+        type: string
+      source_table:
+        type: string
     type: object
   api.TotalDischargeCountResponse:
     properties:
@@ -13111,6 +13165,35 @@ paths:
       summary: Generate Invoice
       tags:
       - Invoice
+  /invoices/template_items:
+    get:
+      description: Retrieve all invoice template items.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetInvoiceTemplateItemsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Invoice Template Items
+      tags:
+      - Invoice
   /locations:
     get:
       description: Get a list of all locations
@@ -14003,13 +14086,13 @@ paths:
       - application/json
       description: List senders
       parameters:
-      - description: Limit
+      - description: Page number
         in: query
-        name: limit
+        name: page
         type: integer
-      - description: Offset
+      - description: Page size
         in: query
-        name: offset
+        name: page_size
         type: integer
       - description: Search
         in: query
@@ -14173,6 +14256,45 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update a sender
+      tags:
+      - senders
+  /senders/{id}/invoice_template:
+    post:
+      consumes:
+      - application/json
+      description: Create a new sender invoice template
+      parameters:
+      - description: Sender ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Invoice template IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateSenderInvoiceTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new sender invoice template
       tags:
       - senders
   /test/notification:
