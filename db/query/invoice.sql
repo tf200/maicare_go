@@ -61,6 +61,8 @@ SELECT
     s.name AS sender_name,
     s.contacts As sender_contacts,
     s.postal_code AS sender_postal_code,
+    s.kvknumber AS sender_kvknumber,
+    s.btwnumber AS sender_btwnumber,
     s.address AS sender_address,
     cd.first_name AS client_first_name,
     cd.last_name AS client_last_name

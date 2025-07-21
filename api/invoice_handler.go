@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	db "maicare_go/db/sqlc"
 	"maicare_go/invoice"
 	"maicare_go/pagination"
@@ -266,6 +267,8 @@ type GetInvoiceByIDResponse struct {
 	UpdatedAt       time.Time                `json:"updated_at"`
 	CreatedAt       time.Time                `json:"created_at"`
 	SenderName      *string                  `json:"sender_name"`
+	SenderKvknumber *string                  `json:"sender_kvknumber"`
+	SenderBtwnumber *string                  `json:"sender_btwnumber"`
 	ClientFirstName string                   `json:"client_first_name"`
 	ClientLastName  string                   `json:"client_last_name"`
 }
@@ -312,6 +315,8 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 		UpdatedAt:       invoiceItem.UpdatedAt.Time,
 		CreatedAt:       invoiceItem.CreatedAt.Time,
 		SenderName:      invoiceItem.SenderName,
+		SenderKvknumber: invoiceItem.SenderKvknumber,
+		SenderBtwnumber: invoiceItem.SenderBtwnumber,
 		ClientFirstName: invoiceItem.ClientFirstName,
 		ClientLastName:  invoiceItem.ClientLastName,
 	}
@@ -638,6 +643,49 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		FileUrl: attachment.File,
 	}, "Invoice Pdf generated")
 	ctx.JSON(http.StatusCreated, res)
+
+}
+
+// GetInvoiceTemplateItemsResponse represents the response body for getting invoice template items.
+type GetInvoiceTemplateItemsResponse struct {
+	ID           int64  `json:"id"`
+	ItemTag      string `json:"item_tag"`
+	Description  string `json:"description"`
+	SourceTable  string `json:"source_table"`
+	SourceColumn string `json:"source_column"`
+}
+
+// GetInvoiceTemplateItemsApi handles the retrieval of all invoice template items.
+// @Summary Get Invoice Template Items
+// @Description Retrieve all invoice template items.
+// @Tags Invoice
+// @Produce json
+// @Success 200 {object} Response[[]GetInvoiceTemplateItemsResponse] "Successful
+// response with template items"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/template_items [get]
+func (server *Server) GetInvoiceTemplateItemsApi(ctx *gin.Context) {
+	log.Output(2, "GetInvoiceTemplateItemsApi called")
+	templateItems, err := server.store.GetAllTemplateItems(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if len(templateItems) == 0 {
+		ctx.JSON(http.StatusNotFound, SuccessResponse[any](nil, "No template items found"))
+		return
+	}
+	response := make([]GetInvoiceTemplateItemsResponse, len(templateItems))
+	for i, item := range templateItems {
+		response[i] = GetInvoiceTemplateItemsResponse{
+			ID:           item.ID,
+			ItemTag:      item.ItemTag,
+			Description:  item.Description,
+			SourceTable:  item.SourceTable,
+			SourceColumn: item.SourceColumn,
+		}
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Template items retrieved successfully"))
 
 }
 

@@ -14,6 +14,7 @@ func (server *Server) setupSenderRoutes(baseRouter *gin.RouterGroup) {
 		// Future endpoints:
 		// senders.GET("/:id", server.GetSenderAPI)    // GET /senders/:id
 		// senders.PUT("/:id", server.UpdateSenderAPI) // PUT /senders/:id
-		senders.DELETE("/:id", RBACMiddleware(server.store, "SENDER.VIEW"), server.DeleteSenderApi) // DELETE /senders/:id
+		senders.DELETE("/:id", RBACMiddleware(server.store, "SENDER.VIEW"), server.DeleteSenderApi)                                 // DELETE /senders/:id
+		senders.POST("/:id/invoice_template", RBACMiddleware(server.store, "SENDER.CREATE"), server.CreateSenderInvoiceTemplateApi) // POST /senders/:id/invoice_template
 	}
 }

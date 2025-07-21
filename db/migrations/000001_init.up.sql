@@ -40,6 +40,45 @@ CREATE TABLE location_shift (
     UNIQUE(location_id, shift_name)
 );
 
+CREATE OR REPLACE FUNCTION insert_default_shifts()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert Ochtenddienst
+    INSERT INTO location_shift (location_id, shift_name, start_time, end_time)
+    VALUES (
+        NEW.id,
+        'Ochtenddienst',
+        TIME '07:30:00',
+        TIME '15:30:00'
+    );
+
+    -- Insert Avonddienst
+    INSERT INTO location_shift (location_id, shift_name, start_time, end_time)
+    VALUES (
+        NEW.id,
+        'Avonddienst',
+        TIME '15:00:00',
+        TIME '23:00:00'
+    );
+
+    -- Insert Slaapdienst of Waakdienst
+    INSERT INTO location_shift (location_id, shift_name, start_time, end_time)
+    VALUES (
+        NEW.id,
+        'Slaapdienst of Waakdienst',
+        TIME '23:00:00',
+        TIME '07:30:00'
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_insert_default_shifts
+AFTER INSERT ON location
+FOR EACH ROW
+EXECUTE FUNCTION insert_default_shifts();
+
 
 
 
