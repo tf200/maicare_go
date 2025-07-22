@@ -56,7 +56,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 		TypeID:          &contractType.ID,
 		StartDate:       pgtype.Timestamptz{Time: time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: true},
 		EndDate:         pgtype.Timestamptz{Time: time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC), Valid: true},
-		ReminderPeriod:  10,
+		ReminderPeriod:  17,
 		Vat:             util.Int32Ptr(20),
 		Status:          "approved",
 		Price:           558,
