@@ -20,6 +20,7 @@ type InvoiceData struct {
 	SenderID          int64            `json:"sender_id"`
 	InvoiceDate       time.Time        `json:"invoice_date"`
 	InvoiceNumber     string           `json:"invoice_number"`
+	InvoiceSequence   int64            `json:"invoice_sequence"`
 	PreVatTotalAmount float64          `json:"pre_vat_total"` // Total before VAT
 	TotalAmount       float64          `json:"total_amount"`  // Total amount for the invoice
 	InvoiceDetails    []InvoiceDetails `json:"invoice_details"`
@@ -45,9 +46,19 @@ type InvoicePeriod struct {
 	AmbulanteTotalMinutes *float64  `json:"ambulante_total_minutes,omitempty"`
 }
 
-func GenerateInvoiceNumber(clientID int64, now time.Time) string {
+func GenerateInvoiceNumber(ctx context.Context, now time.Time, s *db.Store) (string, int64, error) {
 	datePart := now.Format("20060102") // YYYYMMDD
-	return fmt.Sprintf("INV-%s-%d", datePart, clientID)
+
+	// Get the maximum sequence number for today
+	maxSeq, err := s.GetMaxInvoiceSequenceForDate(ctx, now)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to get max sequence: %w", err)
+	}
+
+	nextSeq := maxSeq + 1
+	invoiceNumber := fmt.Sprintf("INV-%s-%04d", datePart, nextSeq)
+
+	return invoiceNumber, nextSeq, nil
 }
 
 func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Context) (*InvoiceData, int64, error) {
@@ -190,12 +201,16 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 	}
 
 	invoiceDate := time.Now()
-	invoiceNumber := GenerateInvoiceNumber(invoiceData.ClientID, invoiceDate)
+	invoiceNumber, invoiceSequence, err := GenerateInvoiceNumber(ctx, invoiceDate, store)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to generate invoice number: %w", err)
+	}
 
 	finalInvoice := InvoiceData{
 		ClientID:          invoiceData.ClientID,
 		SenderID:          *contracts[0].SenderID,
 		InvoiceNumber:     invoiceNumber,
+		InvoiceSequence:   invoiceSequence,
 		InvoiceDate:       invoiceDate,
 		InvoiceDetails:    invoice,
 		TotalAmount:       totalAmount,

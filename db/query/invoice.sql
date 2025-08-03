@@ -1,6 +1,7 @@
 -- name: CreateInvoice :one
 INSERT INTO invoice (
     invoice_number,
+    invoice_sequence,
     due_date,
     issue_date,
     invoice_details,
@@ -8,9 +9,10 @@ INSERT INTO invoice (
     extra_content,
     client_id,
     sender_id,
-    warning_count
+    warning_count,
+    invoice_type
     ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 ) RETURNING *;
 
 
@@ -76,6 +78,12 @@ WHERE
     i.id = $1
 LIMIT 1;
 
+-- name: GetMaxInvoiceSequenceForDate :one
+SELECT COALESCE(MAX(invoice_sequence), 0)::BIGINT as max_sequence
+FROM invoice
+WHERE DATE(created_at) = DATE($1);
+
+
 
 -- name: UpdateInvoice :one
 UPDATE invoice
@@ -87,6 +95,15 @@ SET
     extra_content = COALESCE(sqlc.narg('extra_content'), extra_content),
     status = COALESCE(sqlc.narg('status'), status),
     warning_count = COALESCE(sqlc.narg('warning_count'), warning_count)
+WHERE id = $1
+RETURNING *;
+
+
+-- name: UpdateInvoiceStatus :one
+UPDATE invoice
+SET
+    status = $2,
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING *;
 

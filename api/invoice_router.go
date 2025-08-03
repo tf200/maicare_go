@@ -6,6 +6,7 @@ func (server *Server) setupInvoiceRoutes(baseRouter *gin.RouterGroup) {
 	invoiceGroup := baseRouter.Group("/invoices")
 	invoiceGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
+		invoiceGroup.POST("", RBACMiddleware(server.store, "INVOICE.CREATE"), server.CreateInvoiceApi)
 		invoiceGroup.POST("/generate", RBACMiddleware(server.store, "INVOICE.CREATE"), server.GenerateInvoiceApi)
 		invoiceGroup.GET("", RBACMiddleware(server.store, "INVOICE.VIEW"), server.ListInvoicesApi)
 		invoiceGroup.GET("/:id", RBACMiddleware(server.store, "INVOICE.VIEW"), server.GetInvoiceByIDApi)

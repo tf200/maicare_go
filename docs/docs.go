@@ -6778,6 +6778,62 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Create a new invoice with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Create Invoice",
+                "parameters": [
+                    {
+                        "description": "Create Invoice Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with invoice details",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateInvoiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
             }
         },
         "/invoices/generate": {
@@ -11402,6 +11458,111 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "client_id",
+                "due_date",
+                "extra_content",
+                "invoice_details",
+                "invoice_type",
+                "issue_date",
+                "status",
+                "total_amount"
+            ],
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_type": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "credit_note"
+                    ]
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "outstanding",
+                        "partially_paid",
+                        "paid",
+                        "expired",
+                        "overpaid",
+                        "imported",
+                        "concept"
+                    ]
+                },
+                "total_amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "api.CreateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateLocationRequest": {
             "type": "object",
             "required": [
@@ -13995,8 +14156,14 @@ const docTemplate = `{
                 "invoice_number": {
                     "type": "string"
                 },
+                "invoice_type": {
+                    "type": "string"
+                },
                 "issue_date": {
                     "type": "string"
+                },
+                "original_invoice_id": {
+                    "type": "integer"
                 },
                 "pdf_attachment_id": {
                     "type": "string"
@@ -15948,8 +16115,14 @@ const docTemplate = `{
                 "invoice_number": {
                     "type": "string"
                 },
+                "invoice_type": {
+                    "type": "string"
+                },
                 "issue_date": {
                     "type": "string"
+                },
+                "original_invoice_id": {
+                    "type": "integer"
                 },
                 "pdf_attachment_id": {
                     "type": "string"
@@ -16920,6 +17093,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateIntakeFormResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateInvoiceResponse"
                 },
                 "message": {
                     "type": "string"
