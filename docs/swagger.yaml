@@ -1530,6 +1530,80 @@ definitions:
       uses_medication:
         type: boolean
     type: object
+  api.CreateInvoiceRequest:
+    properties:
+      client_id:
+        type: integer
+      due_date:
+        type: string
+      extra_content:
+        $ref: '#/definitions/util.JSONObject'
+      invoice_details:
+        items:
+          $ref: '#/definitions/invoice.InvoiceDetails'
+        type: array
+      invoice_type:
+        enum:
+        - standard
+        - credit_note
+        type: string
+      issue_date:
+        type: string
+      status:
+        enum:
+        - outstanding
+        - partially_paid
+        - paid
+        - expired
+        - overpaid
+        - imported
+        - concept
+        type: string
+      total_amount:
+        type: number
+    required:
+    - client_id
+    - due_date
+    - extra_content
+    - invoice_details
+    - invoice_type
+    - issue_date
+    - status
+    - total_amount
+    type: object
+  api.CreateInvoiceResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      due_date:
+        type: string
+      extra_content:
+        $ref: '#/definitions/util.JSONObject'
+      id:
+        type: integer
+      invoice_details:
+        items:
+          $ref: '#/definitions/invoice.InvoiceDetails'
+        type: array
+      invoice_number:
+        type: string
+      invoice_type:
+        type: string
+      issue_date:
+        type: string
+      pdf_attachment_id:
+        type: string
+      sender_id:
+        type: integer
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+    type: object
   api.CreateLocationRequest:
     properties:
       address:
@@ -3253,8 +3327,12 @@ definitions:
         type: array
       invoice_number:
         type: string
+      invoice_type:
+        type: string
       issue_date:
         type: string
+      original_invoice_id:
+        type: integer
       pdf_attachment_id:
         type: string
       sender_btwnumber:
@@ -4546,8 +4624,12 @@ definitions:
         type: array
       invoice_number:
         type: string
+      invoice_type:
+        type: string
       issue_date:
         type: string
+      original_invoice_id:
+        type: integer
       pdf_attachment_id:
         type: string
       sender_id:
@@ -5184,6 +5266,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateIntakeFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateInvoiceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateInvoiceResponse'
       message:
         type: string
       success:
@@ -12739,6 +12830,43 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: List Invoices
+      tags:
+      - Invoice
+    post:
+      consumes:
+      - application/json
+      description: Create a new invoice with the provided details.
+      parameters:
+      - description: Create Invoice Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with invoice details
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create Invoice
       tags:
       - Invoice
   /invoices/{id}:

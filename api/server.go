@@ -31,6 +31,10 @@ import (
 	"maicare_go/token"
 	"maicare_go/util"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -47,6 +51,7 @@ type Server struct {
 	httpServer  *http.Server
 	aiHandler   *ai.AiHandler
 	hub         *hub.Hub
+	logger      *zap.Logger
 }
 
 func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub) (*Server, error) {
@@ -62,6 +67,11 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 
 	aiHandler := ai.NewAiHandler(apiKey)
 
+	logger, err := setupLogger(config.Environment)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create logger %v", err)
+	}
+
 	server := &Server{
 		store:       store,
 		config:      config,
@@ -70,6 +80,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 		asynqClient: asyqClient,
 		aiHandler:   aiHandler,
 		hub:         hubInstance,
+		logger:      logger,
 	}
 
 	// Initialize swagger docs
@@ -85,7 +96,13 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 }
 
 func (server *Server) setupRoutes() {
-	router := gin.Default()
+	gin.SetMode(func() string {
+		if server.config.Environment == "production" {
+			return gin.ReleaseMode
+		}
+		return gin.DebugMode
+	}())
+	router := gin.New()
 
 	corsConf := cors.DefaultConfig()
 	corsConf.AllowOrigins = []string{"*"}
@@ -94,6 +111,8 @@ func (server *Server) setupRoutes() {
 	corsConf.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 
 	router.Use(cors.New(corsConf))
+	router.Use(server.requestLogger())
+	router.Use(gin.Recovery())
 	// Add swagger endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -194,4 +213,53 @@ func (server *Server) Shutdown(ctx context.Context) error {
 		// Return any error encountered during HTTP shutdown
 		return httpErr
 	}
+}
+
+func setupLogger(environment string) (*zap.Logger, error) {
+	var config zap.Config
+
+	if environment == "production" {
+		config = zap.NewProductionConfig()
+
+		config.DisableCaller = true
+		config.DisableStacktrace = true
+
+		config.OutputPaths = []string{
+			"stdout",
+			"/var/log/maicare/app.log",
+		}
+	} else {
+		config = zap.NewDevelopmentConfig()
+		config.OutputPaths = []string{
+			"stdout",
+		}
+	}
+
+	logger, err := config.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create logger: %v", err)
+	}
+
+	if environment == "production" {
+		fileWritter := &lumberjack.Logger{
+			Filename:   "/var/log/maicare/app.log",
+			MaxSize:    100, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28,   // days
+			Compress:   true, // compress log files
+		}
+
+		core := zapcore.NewTee(
+			zapcore.NewCore(
+				zapcore.NewJSONEncoder(config.EncoderConfig),
+				zapcore.AddSync(fileWritter),
+				zap.InfoLevel,
+			),
+			logger.Core(),
+		)
+		logger = zap.New(core)
+	}
+
+	return logger, nil
+
 }

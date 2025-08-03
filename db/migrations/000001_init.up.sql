@@ -712,12 +712,15 @@ CREATE TABLE contract_working_hours (
 CREATE TABLE invoice (
     id BIGSERIAL PRIMARY KEY,
     invoice_number VARCHAR(50) NOT NULL UNIQUE,
+    invoice_sequence BIGINT NOT NULL DEFAULT 1,
     issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
     due_date DATE NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN (
         'outstanding', 'partially_paid', 'paid', 'expired',
-        'overpaid', 'imported', 'concept'
+        'overpaid', 'imported', 'concept', 'canceled'
     )) DEFAULT 'concept',
+    invoice_type VARCHAR(20) NOT NULL CHECK (invoice_type IN ('standard', 'credit_note')) DEFAULT 'standard',
+    original_invoice_id BIGINT NULL REFERENCES invoice(id) ON DELETE SET NULL,
     invoice_details JSONB NULL DEFAULT '[]',
     total_amount DECIMAL(20,2) NOT NULL DEFAULT 0,
     pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,

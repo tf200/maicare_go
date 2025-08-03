@@ -62,6 +62,30 @@ permissions:
   - name: CLIENT.DELETE
     resource: /clients
     method: [DELETE]
+  - name: APPOINTMENT_CARD.CREATE
+    resource: /appointment_cards
+    method: [POST]
+  - name: APPOINTMENT_CARD.VIEW
+    resource: /appointment_cards
+    method: [GET]
+  - name: APPOINTMENT_CARD.UPDATE
+    resource: /appointment_cards
+    method: [PUT]
+  - name: APPOINTMENT_CARD.DELETE
+    resource: /appointment_cards
+    method: [DELETE]
+  - name: APPOINTMENT.CREATE
+    resource: /appointments
+    method: [POST]
+  - name: APPOINTMENT.VIEW
+    resource: /appointments
+    method: [GET]
+  - name: APPOINTMENT.UPDATE
+    resource: /appointments
+    method: [PUT]
+  - name: APPOINTMENT.DELETE
+    resource: /appointments
+    method: [DELETE]
   - name: FINANCE.VIEW
     resource: /finance
     method: [GET]
@@ -149,6 +173,16 @@ roles:
       - CLIENT.VIEW
       - CLIENT.UPDATE
       - CLIENT.DELETE
+      - APPOINTMENT_CARD.CREATE
+      - APPOINTMENT_CARD.VIEW
+      - APPOINTMENT_CARD.UPDATE
+      - APPOINTMENT_CARD.DELETE
+      - APPOINTMENT.CREATE
+      - APPOINTMENT.VIEW
+      - APPOINTMENT.UPDATE
+      - APPOINTMENT.DELETE
+      - FINANCE.VIEW
+      - SETTINGS.VIEW
       - PROFILE.VIEW
       - SCHEDULE.CREATE
       - SCHEDULE.VIEW
@@ -167,6 +201,7 @@ roles:
       - INVOICE.PAYMENT.VIEW
       - INVOICE.PAYMENT.UPDATE
       - INVOICE.PAYMENT.DELETE
+
 
   - name: Worker
     id: 2

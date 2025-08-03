@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // CorrectSpellingRequest is the request format for the spelling check API
@@ -30,7 +31,7 @@ type CorrectSpellingResponse struct {
 func (server *Server) SpellingCheckApi(ctx *gin.Context) {
 	var request CorrectSpellingRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		log.Printf("Error binding JSON: %v", err)
+		server.logBusinessEvent(LogLevelWarn, "SpellingCheckApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
@@ -39,19 +40,17 @@ func (server *Server) SpellingCheckApi(ctx *gin.Context) {
 
 	correctedText, err := server.aiHandler.SpellingCheck(request.InitialText, "anthropic/claude-3.5-haiku-20241022:beta")
 	if err != nil {
-		log.Printf("Error in SpellingCheck: %v", err)
+		server.logBusinessEvent(LogLevelError, "SpellingCheckApi", "Failed to correct spelling", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	log.Printf("Corrected text: %+v", correctedText)
 
 	res := SuccessResponse(CorrectSpellingResponse{
 		CorrectedText: correctedText.CorrectedText,
 		InitialText:   request.InitialText,
 	}, "Spelling check successful")
 
-	log.Printf("Response: %+v", res)
+	server.logBusinessEvent(LogLevelInfo, "SpellingCheckApi", "Spelling check completed successfully", zap.String("corrected_text", correctedText.CorrectedText))
 
 	ctx.JSON(http.StatusOK, res)
 }

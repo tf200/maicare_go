@@ -150,7 +150,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(15),
 		Price:           5.58,
-		PriceTimeUnit:   util.RandomEnum(PriceFrequency),
+		PriceTimeUnit:   "minute",
 		Hours:           util.Float64Ptr(100),
 		HoursType:       util.StringPtr(util.RandomEnum(HoursType)),
 		CareName:        "Test Care",
@@ -160,6 +160,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 		FinancingAct:    util.RandomEnum(FinancingAct),
 		FinancingOption: util.RandomEnum(FinancingOption),
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
+		Status:          "approved",
 	}
 
 	contract, err := testStore.CreateContract(context.Background(), arg)

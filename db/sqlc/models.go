@@ -728,20 +728,23 @@ type IntakeForm struct {
 }
 
 type Invoice struct {
-	ID              int64              `json:"id"`
-	InvoiceNumber   string             `json:"invoice_number"`
-	IssueDate       pgtype.Date        `json:"issue_date"`
-	DueDate         pgtype.Date        `json:"due_date"`
-	Status          string             `json:"status"`
-	InvoiceDetails  []byte             `json:"invoice_details"`
-	TotalAmount     float64            `json:"total_amount"`
-	PdfAttachmentID *uuid.UUID         `json:"pdf_attachment_id"`
-	ExtraContent    []byte             `json:"extra_content"`
-	ClientID        int64              `json:"client_id"`
-	SenderID        *int64             `json:"sender_id"`
-	WarningCount    int32              `json:"warning_count"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	ID                int64              `json:"id"`
+	InvoiceNumber     string             `json:"invoice_number"`
+	InvoiceSequence   int64              `json:"invoice_sequence"`
+	IssueDate         pgtype.Date        `json:"issue_date"`
+	DueDate           pgtype.Date        `json:"due_date"`
+	Status            string             `json:"status"`
+	InvoiceType       string             `json:"invoice_type"`
+	OriginalInvoiceID *int64             `json:"original_invoice_id"`
+	InvoiceDetails    []byte             `json:"invoice_details"`
+	TotalAmount       float64            `json:"total_amount"`
+	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent      []byte             `json:"extra_content"`
+	ClientID          int64              `json:"client_id"`
+	SenderID          *int64             `json:"sender_id"`
+	WarningCount      int32              `json:"warning_count"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 }
 
 type InvoiceAudit struct {
