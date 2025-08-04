@@ -40,7 +40,7 @@ INSERT INTO client_details (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
     $17, $18, $19, $20, $21, $22, $23
-) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type CreateClientDetailsParams struct {
@@ -116,6 +116,8 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
+		&i.LivingSituation,
+		&i.EducationLevel,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,
@@ -293,7 +295,7 @@ func (q *Queries) GetClientCounts(ctx context.Context) (GetClientCountsRow, erro
 }
 
 const getClientDetails = `-- name: GetClientDetails :one
-SELECT c.id, c.intake_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.source, c.birthplace, c.email, c.phone_number, c.organisation, c.departement, c.gender, c.filenumber, c.profile_picture, c.infix, c.created_at, c.sender_id, c.location_id, c.departure_reason, c.departure_report, c.gps_position, c.maturity_domains, c.addresses, c.legal_measure, c.has_untaken_medications,
+SELECT c.id, c.intake_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.source, c.birthplace, c.email, c.phone_number, c.organisation, c.departement, c.gender, c.filenumber, c.profile_picture, c.infix, c.living_situation, c.education_level, c.created_at, c.sender_id, c.location_id, c.departure_reason, c.departure_report, c.gps_position, c.maturity_domains, c.addresses, c.legal_measure, c.has_untaken_medications,
        ep.first_name AS bsn_verified_by_first_name,
        ep.last_name AS bsn_verified_by_last_name
 FROM client_details c
@@ -321,6 +323,8 @@ type GetClientDetailsRow struct {
 	Filenumber             string             `json:"filenumber"`
 	ProfilePicture         *string            `json:"profile_picture"`
 	Infix                  *string            `json:"infix"`
+	LivingSituation        *string            `json:"living_situation"`
+	EducationLevel         *string            `json:"education_level"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
 	SenderID               *int64             `json:"sender_id"`
 	LocationID             *int64             `json:"location_id"`
@@ -358,6 +362,8 @@ func (q *Queries) GetClientDetails(ctx context.Context, id int64) (GetClientDeta
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
+		&i.LivingSituation,
+		&i.EducationLevel,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,
@@ -415,7 +421,7 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID int64)
 
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT 
-    id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, 
+    id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, 
     COUNT(*) OVER() AS total_count
 FROM client_details
 WHERE
@@ -459,6 +465,8 @@ type ListClientDetailsRow struct {
 	Filenumber            string             `json:"filenumber"`
 	ProfilePicture        *string            `json:"profile_picture"`
 	Infix                 *string            `json:"infix"`
+	LivingSituation       *string            `json:"living_situation"`
+	EducationLevel        *string            `json:"education_level"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 	SenderID              *int64             `json:"sender_id"`
 	LocationID            *int64             `json:"location_id"`
@@ -507,6 +515,8 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.Filenumber,
 			&i.ProfilePicture,
 			&i.Infix,
+			&i.LivingSituation,
+			&i.EducationLevel,
 			&i.CreatedAt,
 			&i.SenderID,
 			&i.LocationID,
@@ -641,7 +651,7 @@ const setClientProfilePicture = `-- name: SetClientProfilePicture :one
 UPDATE client_details
 SET profile_picture = $2
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type SetClientProfilePictureParams struct {
@@ -672,6 +682,8 @@ func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProf
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
+		&i.LivingSituation,
+		&i.EducationLevel,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,
@@ -711,7 +723,7 @@ SET
     departure_report = COALESCE ($21, departure_report),
     legal_measure = COALESCE ($22, legal_measure)
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type UpdateClientDetailsParams struct {
@@ -785,6 +797,8 @@ func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetai
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
+		&i.LivingSituation,
+		&i.EducationLevel,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,
@@ -803,7 +817,7 @@ const updateClientStatus = `-- name: UpdateClientStatus :one
 UPDATE client_details
 SET status = $2
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type UpdateClientStatusParams struct {
@@ -834,6 +848,8 @@ func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatus
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
+		&i.LivingSituation,
+		&i.EducationLevel,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,

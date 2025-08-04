@@ -418,6 +418,8 @@ CREATE TABLE client_details (
     filenumber VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(600) NULL,
     infix VARCHAR(100) NULL,
+    living_situation VARCHAR(100) NULL CHECK (living_situation IN ('Home','Youth care institution', 'Other')),
+    education_level VARCHAR(100) NULL CHECK (education_level IN ('Primary', 'Secondary', 'Higher', 'Other')),
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
@@ -928,37 +930,6 @@ CREATE INDEX invoice_contract_invoice_id_idx ON invoice_contract(invoice_id);
 CREATE INDEX invoice_contract_contract_id_idx ON invoice_contract(contract_id);
 CREATE INDEX invoice_contract_updated_idx ON invoice_contract(updated);
 CREATE INDEX invoice_contract_created_idx ON invoice_contract(created);
-
-
-
-CREATE TABLE care_plan (
-    id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NULL REFERENCES client_details(id) ON DELETE SET NULL,
-    description TEXT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    status VARCHAR(100) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE care_plan_domains (
-    care_plan_id BIGINT NOT NULL REFERENCES care_plan(id) ON DELETE CASCADE,
-    assessment_domain_id BIGINT NOT NULL REFERENCES assessment_domain(id) ON DELETE CASCADE,
-    PRIMARY KEY (care_plan_id, assessment_domain_id)
-);
-
-CREATE TABLE careplan_atachements (
-    id BIGSERIAL PRIMARY KEY,
-    careplan_id BIGINT NULL REFERENCES care_plan(id) ON DELETE SET NULL,
-    attachement VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name VARCHAR(100) NULL
-);
-
-CREATE INDEX care_plan_client_id_idx ON care_plan(client_id);
-CREATE INDEX careplan_atachements_careplan_id_idx ON careplan_atachements(careplan_id);
-
-
 
 
 
@@ -1929,10 +1900,63 @@ CREATE TABLE client_maturity_matrix_assessment
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     initial_level INT NOT NULL CHECK (initial_level BETWEEN 1 AND 5),
+    target_level INT NOT NULL CHECK (target_level BETWEEN 1 AND 5),
     current_level INT NOT NULL CHECK (current_level BETWEEN 1 AND 5),
+    care_plan_generated_at TIMESTAMPTZ NULL DEFAULT NULL,
+    care_plan_status VARCHAR(20) NOT NULL CHECK (care_plan_status IN ('pending', 'generated', 'approved', 'active', 'completed', 'discontinued')) DEFAULT 'pending',
     is_active  BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE(client_id, maturity_matrix_id)
 );
+
+
+
+CREATE TABLE care_plans (
+    id BIGSERIAL PRIMARY KEY,
+    assessment_id BIGINT NOT NULL REFERENCES client_maturity_matrix_assessment(id) ON DELETE CASCADE,
+    generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    generated_by_user_id BIGINT REFERENCES users(id), -- Who requested the generation
+    approved_by_user_id BIGINT REFERENCES users(id), -- Who approved the plan
+    approved_at TIMESTAMP,
+    status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending_approval', 'approved', 'active', 'completed', 'discontinued')),
+    assessment_summary TEXT NOT NULL,
+    
+    -- Store the raw JSON response for backup/audit
+    raw_llm_response JSONB,
+    
+    -- Metadata
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version INT NOT NULL DEFAULT 1
+);
+
+
+CREATE TABLE care_plan_objectives (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    timeframe VARCHAR(20) NOT NULL CHECK (timeframe IN ('short_term', 'medium_term', 'long_term')),
+    goal_title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    target_date DATE,
+    status VARCHAR(20) NOT NULL DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'completed', 'discontinued')),
+    completion_date DATE,
+    completion_notes TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Specific actions for each objective
+CREATE TABLE care_plan_actions (
+    id BIGSERIAL PRIMARY KEY,
+    objective_id BIGINT NOT NULL REFERENCES care_plan_objectives(id) ON DELETE CASCADE,
+    action_description TEXT NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    completed_at TIMESTAMP,
+    completed_by_user_id BIGINT REFERENCES users(id),
+    notes TEXT,
+    sort_order INT NOT NULL DEFAULT 0
+);
+
+
 
 CREATE TABLE level_history (
     id BIGSERIAL PRIMARY KEY,

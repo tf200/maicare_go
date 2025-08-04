@@ -88,7 +88,7 @@ const assignSender = `-- name: AssignSender :one
 UPDATE client_details
 SET sender_id = $1
 WHERE id = $2
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
 type AssignSenderParams struct {
@@ -119,6 +119,8 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.Filenumber,
 		&i.ProfilePicture,
 		&i.Infix,
+		&i.LivingSituation,
+		&i.EducationLevel,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,

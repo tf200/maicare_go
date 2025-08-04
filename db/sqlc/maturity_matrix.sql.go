@@ -73,10 +73,10 @@ WITH inserted AS (
     ) VALUES (
         $1, $2, $3, $4, $5, $6
     )
-    RETURNING id, client_id, maturity_matrix_id, start_date, end_date, initial_level, current_level, is_active
+    RETURNING id, client_id, maturity_matrix_id, start_date, end_date, initial_level, target_level, current_level, care_plan_generated_at, care_plan_status, is_active
 )
 SELECT 
-    inserted.id, inserted.client_id, inserted.maturity_matrix_id, inserted.start_date, inserted.end_date, inserted.initial_level, inserted.current_level, inserted.is_active,
+    inserted.id, inserted.client_id, inserted.maturity_matrix_id, inserted.start_date, inserted.end_date, inserted.initial_level, inserted.target_level, inserted.current_level, inserted.care_plan_generated_at, inserted.care_plan_status, inserted.is_active,
     mm.topic_name AS topic_name
 FROM inserted
 JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id
@@ -92,15 +92,18 @@ type CreateClientMaturityMatrixAssessmentParams struct {
 }
 
 type CreateClientMaturityMatrixAssessmentRow struct {
-	ID               int64       `json:"id"`
-	ClientID         int64       `json:"client_id"`
-	MaturityMatrixID int64       `json:"maturity_matrix_id"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	InitialLevel     int32       `json:"initial_level"`
-	CurrentLevel     int32       `json:"current_level"`
-	IsActive         bool        `json:"is_active"`
-	TopicName        string      `json:"topic_name"`
+	ID                  int64              `json:"id"`
+	ClientID            int64              `json:"client_id"`
+	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	StartDate           pgtype.Date        `json:"start_date"`
+	EndDate             pgtype.Date        `json:"end_date"`
+	InitialLevel        int32              `json:"initial_level"`
+	TargetLevel         int32              `json:"target_level"`
+	CurrentLevel        int32              `json:"current_level"`
+	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
+	CarePlanStatus      string             `json:"care_plan_status"`
+	IsActive            bool               `json:"is_active"`
+	TopicName           string             `json:"topic_name"`
 }
 
 func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg CreateClientMaturityMatrixAssessmentParams) (CreateClientMaturityMatrixAssessmentRow, error) {
@@ -120,7 +123,10 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 		&i.StartDate,
 		&i.EndDate,
 		&i.InitialLevel,
+		&i.TargetLevel,
 		&i.CurrentLevel,
+		&i.CarePlanGeneratedAt,
+		&i.CarePlanStatus,
 		&i.IsActive,
 		&i.TopicName,
 	)
@@ -193,7 +199,7 @@ func (q *Queries) GetClientGoal(ctx context.Context, id int64) (ClientGoal, erro
 
 const getClientMaturityMatrixAssessment = `-- name: GetClientMaturityMatrixAssessment :one
 SELECT
-    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.current_level, cma.is_active,
+    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
     mm.topic_name AS topic_name
 FROM client_maturity_matrix_assessment cma
 JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
@@ -201,15 +207,18 @@ WHERE cma.id = $1
 `
 
 type GetClientMaturityMatrixAssessmentRow struct {
-	ID               int64       `json:"id"`
-	ClientID         int64       `json:"client_id"`
-	MaturityMatrixID int64       `json:"maturity_matrix_id"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	InitialLevel     int32       `json:"initial_level"`
-	CurrentLevel     int32       `json:"current_level"`
-	IsActive         bool        `json:"is_active"`
-	TopicName        string      `json:"topic_name"`
+	ID                  int64              `json:"id"`
+	ClientID            int64              `json:"client_id"`
+	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	StartDate           pgtype.Date        `json:"start_date"`
+	EndDate             pgtype.Date        `json:"end_date"`
+	InitialLevel        int32              `json:"initial_level"`
+	TargetLevel         int32              `json:"target_level"`
+	CurrentLevel        int32              `json:"current_level"`
+	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
+	CarePlanStatus      string             `json:"care_plan_status"`
+	IsActive            bool               `json:"is_active"`
+	TopicName           string             `json:"topic_name"`
 }
 
 func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id int64) (GetClientMaturityMatrixAssessmentRow, error) {
@@ -222,7 +231,10 @@ func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id int6
 		&i.StartDate,
 		&i.EndDate,
 		&i.InitialLevel,
+		&i.TargetLevel,
 		&i.CurrentLevel,
+		&i.CarePlanGeneratedAt,
+		&i.CarePlanStatus,
 		&i.IsActive,
 		&i.TopicName,
 	)
@@ -230,7 +242,9 @@ func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id int6
 }
 
 const getLevelDescription = `-- name: GetLevelDescription :one
-SELECT jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', $2::text)::jsonpath) as level_description 
+SELECT 
+    topic_name, 
+    (jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', $2::text)::jsonpath))::text as level_description 
 FROM maturity_matrix 
 WHERE id = $1
 `
@@ -240,11 +254,27 @@ type GetLevelDescriptionParams struct {
 	Level string `json:"level"`
 }
 
-func (q *Queries) GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) ([]byte, error) {
+type GetLevelDescriptionRow struct {
+	TopicName        string `json:"topic_name"`
+	LevelDescription string `json:"level_description"`
+}
+
+func (q *Queries) GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) (GetLevelDescriptionRow, error) {
 	row := q.db.QueryRow(ctx, getLevelDescription, arg.ID, arg.Level)
-	var level_description []byte
-	err := row.Scan(&level_description)
-	return level_description, err
+	var i GetLevelDescriptionRow
+	err := row.Scan(&i.TopicName, &i.LevelDescription)
+	return i, err
+}
+
+const getMaturityMatrix = `-- name: GetMaturityMatrix :one
+SELECT id, topic_name, level_description FROM maturity_matrix WHERE id = $1
+`
+
+func (q *Queries) GetMaturityMatrix(ctx context.Context, id int64) (MaturityMatrix, error) {
+	row := q.db.QueryRow(ctx, getMaturityMatrix, id)
+	var i MaturityMatrix
+	err := row.Scan(&i.ID, &i.TopicName, &i.LevelDescription)
+	return i, err
 }
 
 const listClientGoals = `-- name: ListClientGoals :many
@@ -309,7 +339,7 @@ func (q *Queries) ListClientGoals(ctx context.Context, arg ListClientGoalsParams
 
 const listClientMaturityMatrixAssessments = `-- name: ListClientMaturityMatrixAssessments :many
 SELECT
-    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.current_level, cma.is_active,
+    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
     mm.topic_name AS topic_name,
     COUNT(*) OVER() AS total_count
 FROM client_maturity_matrix_assessment cma
@@ -326,16 +356,19 @@ type ListClientMaturityMatrixAssessmentsParams struct {
 }
 
 type ListClientMaturityMatrixAssessmentsRow struct {
-	ID               int64       `json:"id"`
-	ClientID         int64       `json:"client_id"`
-	MaturityMatrixID int64       `json:"maturity_matrix_id"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	InitialLevel     int32       `json:"initial_level"`
-	CurrentLevel     int32       `json:"current_level"`
-	IsActive         bool        `json:"is_active"`
-	TopicName        string      `json:"topic_name"`
-	TotalCount       int64       `json:"total_count"`
+	ID                  int64              `json:"id"`
+	ClientID            int64              `json:"client_id"`
+	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	StartDate           pgtype.Date        `json:"start_date"`
+	EndDate             pgtype.Date        `json:"end_date"`
+	InitialLevel        int32              `json:"initial_level"`
+	TargetLevel         int32              `json:"target_level"`
+	CurrentLevel        int32              `json:"current_level"`
+	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
+	CarePlanStatus      string             `json:"care_plan_status"`
+	IsActive            bool               `json:"is_active"`
+	TopicName           string             `json:"topic_name"`
+	TotalCount          int64              `json:"total_count"`
 }
 
 func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg ListClientMaturityMatrixAssessmentsParams) ([]ListClientMaturityMatrixAssessmentsRow, error) {
@@ -354,7 +387,10 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 			&i.StartDate,
 			&i.EndDate,
 			&i.InitialLevel,
+			&i.TargetLevel,
 			&i.CurrentLevel,
+			&i.CarePlanGeneratedAt,
+			&i.CarePlanStatus,
 			&i.IsActive,
 			&i.TopicName,
 			&i.TotalCount,

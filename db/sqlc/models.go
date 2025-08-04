@@ -111,26 +111,42 @@ type AttachmentFile struct {
 }
 
 type CarePlan struct {
-	ID          int64              `json:"id"`
-	ClientID    *int64             `json:"client_id"`
-	Description string             `json:"description"`
-	StartDate   pgtype.Date        `json:"start_date"`
-	EndDate     pgtype.Date        `json:"end_date"`
-	Status      string             `json:"status"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	ID                int64            `json:"id"`
+	AssessmentID      int64            `json:"assessment_id"`
+	GeneratedAt       pgtype.Timestamp `json:"generated_at"`
+	GeneratedByUserID *int64           `json:"generated_by_user_id"`
+	ApprovedByUserID  *int64           `json:"approved_by_user_id"`
+	ApprovedAt        pgtype.Timestamp `json:"approved_at"`
+	Status            string           `json:"status"`
+	AssessmentSummary string           `json:"assessment_summary"`
+	RawLlmResponse    []byte           `json:"raw_llm_response"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
+	UpdatedAt         pgtype.Timestamp `json:"updated_at"`
+	Version           int32            `json:"version"`
 }
 
-type CarePlanDomain struct {
-	CarePlanID         int64 `json:"care_plan_id"`
-	AssessmentDomainID int64 `json:"assessment_domain_id"`
+type CarePlanAction struct {
+	ID                int64            `json:"id"`
+	ObjectiveID       int64            `json:"objective_id"`
+	ActionDescription string           `json:"action_description"`
+	IsCompleted       bool             `json:"is_completed"`
+	CompletedAt       pgtype.Timestamp `json:"completed_at"`
+	CompletedByUserID *int64           `json:"completed_by_user_id"`
+	Notes             *string          `json:"notes"`
+	SortOrder         int32            `json:"sort_order"`
 }
 
-type CareplanAtachement struct {
-	ID          int64              `json:"id"`
-	CareplanID  *int64             `json:"careplan_id"`
-	Attachement string             `json:"attachement"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	Name        *string            `json:"name"`
+type CarePlanObjective struct {
+	ID              int64            `json:"id"`
+	CarePlanID      int64            `json:"care_plan_id"`
+	Timeframe       string           `json:"timeframe"`
+	GoalTitle       string           `json:"goal_title"`
+	Description     string           `json:"description"`
+	TargetDate      pgtype.Date      `json:"target_date"`
+	Status          string           `json:"status"`
+	CompletionDate  pgtype.Date      `json:"completion_date"`
+	CompletionNotes *string          `json:"completion_notes"`
+	CreatedAt       pgtype.Timestamp `json:"created_at"`
 }
 
 type Certification struct {
@@ -188,6 +204,8 @@ type ClientDetail struct {
 	Filenumber            string             `json:"filenumber"`
 	ProfilePicture        *string            `json:"profile_picture"`
 	Infix                 *string            `json:"infix"`
+	LivingSituation       *string            `json:"living_situation"`
+	EducationLevel        *string            `json:"education_level"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 	SenderID              *int64             `json:"sender_id"`
 	LocationID            *int64             `json:"location_id"`
@@ -250,14 +268,17 @@ type ClientGoal struct {
 }
 
 type ClientMaturityMatrixAssessment struct {
-	ID               int64       `json:"id"`
-	ClientID         int64       `json:"client_id"`
-	MaturityMatrixID int64       `json:"maturity_matrix_id"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	InitialLevel     int32       `json:"initial_level"`
-	CurrentLevel     int32       `json:"current_level"`
-	IsActive         bool        `json:"is_active"`
+	ID                  int64              `json:"id"`
+	ClientID            int64              `json:"client_id"`
+	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	StartDate           pgtype.Date        `json:"start_date"`
+	EndDate             pgtype.Date        `json:"end_date"`
+	InitialLevel        int32              `json:"initial_level"`
+	TargetLevel         int32              `json:"target_level"`
+	CurrentLevel        int32              `json:"current_level"`
+	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
+	CarePlanStatus      string             `json:"care_plan_status"`
+	IsActive            bool               `json:"is_active"`
 }
 
 type ClientMedication struct {
