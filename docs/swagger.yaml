@@ -725,21 +725,31 @@ definitions:
     type: object
   api.CreateClientMaturityMatrixAssessmentRequest:
     properties:
-      assessment:
-        items:
-          $ref: '#/definitions/api.MatrixAssessment'
-        type: array
-    required:
-    - assessment
+      end_date:
+        type: string
+      id:
+        type: integer
+      initial_level:
+        type: integer
+      maturity_matrix_id:
+        type: integer
+      start_date:
+        type: string
     type: object
   api.CreateClientMaturityMatrixAssessmentResponse:
     properties:
-      assessment:
-        items:
-          $ref: '#/definitions/api.MatrixAssessment'
-        type: array
       client_id:
         type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      initial_level:
+        type: integer
+      maturity_matrix_id:
+        type: integer
+      start_date:
+        type: string
     type: object
   api.CreateClientMedicationResponse:
     properties:
@@ -2191,6 +2201,11 @@ definitions:
         type: boolean
       start_date:
         type: string
+    type: object
+  api.CreditInvoiceResponse:
+    properties:
+      id:
+        type: integer
     type: object
   api.DeleteAssignedEmployeeResponse:
     properties:
@@ -4993,19 +5008,6 @@ definitions:
         example: logout successful
         type: string
     type: object
-  api.MatrixAssessment:
-    properties:
-      end_date:
-        type: string
-      id:
-        type: integer
-      initial_level:
-        type: integer
-      maturity_matrix_id:
-        type: integer
-      start_date:
-        type: string
-    type: object
   api.NotificationResponse:
     properties:
       echo:
@@ -5329,6 +5331,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateShiftApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreditInvoiceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreditInvoiceResponse'
       message:
         type: string
       success:
@@ -13013,6 +13024,41 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get Invoice Audit Logs
+      tags:
+      - Invoice
+  /invoices/{id}/credit:
+    post:
+      description: Create a credit note for an existing invoice.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with credit note details
+          schema:
+            $ref: '#/definitions/api.Response-api_CreditInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Credit Invoice
       tags:
       - Invoice
   /invoices/{id}/generate_pdf:

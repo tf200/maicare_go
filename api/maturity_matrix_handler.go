@@ -47,8 +47,14 @@ func (server *Server) ListMaturityMatrixApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// MatrixAssessment represents a matrix assessment
-type MatrixAssessment struct {
+type Level struct {
+	Level       int32  `json:"level"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
+type CreateClientMaturityMatrixAssessmentRequest struct {
 	ID               int64     `json:"id"`
 	MaturityMatrixID int64     `json:"maturity_matrix_id"`
 	InitialLevel     int32     `json:"initial_level"`
@@ -56,15 +62,14 @@ type MatrixAssessment struct {
 	EndDate          time.Time `json:"end_date"`
 }
 
-// CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
-type CreateClientMaturityMatrixAssessmentRequest struct {
-	Assessments []MatrixAssessment `json:"assessment" binding:"required"`
-}
-
 // CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
 type CreateClientMaturityMatrixAssessmentResponse struct {
-	ClientID    int64              `json:"client_id"`
-	Assessments []MatrixAssessment `json:"assessment"`
+	ClientID         int64     `json:"client_id"`
+	ID               int64     `json:"id"`
+	MaturityMatrixID int64     `json:"maturity_matrix_id"`
+	InitialLevel     int32     `json:"initial_level"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
 }
 
 // @Summary Create client maturity matrix assessment
@@ -80,66 +85,102 @@ type CreateClientMaturityMatrixAssessmentResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /clients/{id}/maturity_matrix_assessment [post]
 func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+	// id := ctx.Param("id")
+	// clientID, err := strconv.ParseInt(id, 10, 64)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	// 	return
+	// }
 
-	var req CreateClientMaturityMatrixAssessmentRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+	// var req CreateClientMaturityMatrixAssessmentRequest
+	// if err := ctx.ShouldBindJSON(&req); err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	// 	return
+	// }
 
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
+	// tx, err := server.store.ConnPool.Begin(ctx)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
+	// defer tx.Rollback(ctx)
 
-	qtx := server.store.WithTx(tx)
+	// qtx := server.store.WithTx(tx)
 
-	assessmentRes := make([]MatrixAssessment, len(req.Assessments))
+	// arg := db.CreateClientMaturityMatrixAssessmentParams{
+	// 	ClientID:         clientID,
+	// 	MaturityMatrixID: req.MaturityMatrixID,
+	// 	StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
+	// 	EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+	// 	InitialLevel:     req.InitialLevel,
+	// 	CurrentLevel:     req.InitialLevel,
+	// }
 
-	for i, assessment := range req.Assessments {
-		arg := db.CreateClientMaturityMatrixAssessmentParams{
-			ClientID:         clientID,
-			MaturityMatrixID: assessment.MaturityMatrixID,
-			StartDate:        pgtype.Date{Time: assessment.StartDate, Valid: true},
-			EndDate:          pgtype.Date{Time: assessment.EndDate, Valid: true},
-			InitialLevel:     assessment.InitialLevel,
-			CurrentLevel:     assessment.InitialLevel,
-		}
+	// clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
-		clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
+	// topicDescription, err := qtx.GetMaturityMatrix(ctx, req.MaturityMatrixID)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
+	// var levelDescription []Level
 
-		assessmentRes[i] = MatrixAssessment{
-			ID:               clientAssessments.ID,
-			MaturityMatrixID: clientAssessments.MaturityMatrixID,
-			InitialLevel:     clientAssessments.InitialLevel,
-			StartDate:        clientAssessments.StartDate.Time,
-			EndDate:          clientAssessments.EndDate.Time,
-		}
-	}
+	// err = json.Unmarshal(topicDescription.LevelDescription, &levelDescription)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
-	err = tx.Commit(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+	// clientDetails, err := qtx.GetClientDetails(ctx, clientID)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
 
-	res := SuccessResponse(CreateClientMaturityMatrixAssessmentResponse{
-		ClientID:    clientID,
-		Assessments: assessmentRes,
-	}, "Client maturity matrix assessment created successfully")
-	ctx.JSON(http.StatusCreated, res)
+	// }
+
+	// // generatedCarePlan, err := server.grpClient.GenerateCarePlan(ctx, &grpclient.PersonalizedCarePlanRequest{
+	// // 	ClientData: &grpclient.ClientData{
+	// // 		Age:              int32(time.Since(clientDetails.DateOfBirth.Time).Hours() / 24 / 365), // Calculate age from DateOfBirth
+	// // 		LivingSituation:  *clientDetails.LivingSituation,
+	// // 		EducationLevel:   *clientDetails.EducationLevel,
+	// // 		DomainName:       clientAssessments.TopicName,
+	// // 		CurrentLevel:     clientAssessments.InitialLevel,                       // Example current level, replace with actual data
+	// // 		LevelDescription: levelDescription[req.MaturityMatrixID-1].Description, // Use the description from the level
+	// // 	},
+	// // 	DomainDefinitions: map[string]*grpclient.DomainLevels{
+	// // 		topicDescription.TopicName: {
+	// // 			Levels: map[int32]string{
+	// // 				levelDescription[0].Level: levelDescription[0].Description,
+	// // 				levelDescription[1].Level: levelDescription[1].Description,
+	// // 				levelDescription[2].Level: levelDescription[2].Description,
+	// // 				levelDescription[3].Level: levelDescription[3].Description,
+	// // 				levelDescription[4].Level: levelDescription[4].Description,
+	// // 			},
+	// // 		},
+	// // 	},
+	// // })
+
+	// // insert Objectives
+
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
+	// err = tx.Commit(ctx)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
+
+	// res := SuccessResponse(CreateClientMaturityMatrixAssessmentResponse{
+	// 	ClientID:    clientID,
+	// 	Assessments: assessmentRes,
+	// }, "Client maturity matrix assessment created successfully")
+	// ctx.JSON(http.StatusCreated, res)
 }
 
 // ListClientMaturityMatrixAssessmentsRequest represents a request to list client maturity matrix assessments
@@ -636,45 +677,45 @@ type GenerateObjectivesResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives/generate [post]
 func (server *Server) GenerateObjectivesApi(ctx *gin.Context) {
-	goalID := ctx.Param("goal_id")
-	clientGoalID, err := strconv.ParseInt(goalID, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+	// goalID := ctx.Param("goal_id")
+	// clientGoalID, err := strconv.ParseInt(goalID, 10, 64)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	// 	return
+	// }
 
-	clientGoal, err := server.store.GetClientGoal(ctx, clientGoalID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+	// clientGoal, err := server.store.GetClientGoal(ctx, clientGoalID)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
-	mma, err := server.store.GetClientMaturityMatrixAssessment(ctx, clientGoal.ClientMaturityMatrixAssessmentID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+	// mma, err := server.store.GetClientMaturityMatrixAssessment(ctx, clientGoal.ClientMaturityMatrixAssessmentID)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
-	levelDescrption, err := server.store.GetLevelDescription(ctx, db.GetLevelDescriptionParams{
-		ID:    mma.MaturityMatrixID,
-		Level: strconv.Itoa(int(clientGoal.TargetLevel)),
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+	// levelDescrption, err := server.store.GetLevelDescription(ctx, db.GetLevelDescriptionParams{
+	// 	ID:    mma.MaturityMatrixID,
+	// 	Level: strconv.Itoa(int(clientGoal.TargetLevel)),
+	// })
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
-	generatedObjectives, err := server.aiHandler.GenerateObjectives(string(levelDescrption), "", clientGoal.Description, mma.StartDate.Time.Format("2006-01-02"), mma.EndDate.Time.Format("2006-01-02"), "google/gemini-2.0-flash-001")
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+	// generatedObjectives, err := server.aiHandler.GenerateObjectives(string(levelDescrption), "", clientGoal.Description, mma.StartDate.Time.Format("2006-01-02"), mma.EndDate.Time.Format("2006-01-02"), "google/gemini-2.0-flash-001")
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
-	res := SuccessResponse(GenerateObjectivesResponse{
-		GoalID:     clientGoalID,
-		Objectives: generatedObjectives.GeneratedObjectives,
-	}, "Objectives generated successfully")
+	// res := SuccessResponse(GenerateObjectivesResponse{
+	// 	GoalID:     clientGoalID,
+	// 	Objectives: generatedObjectives.GeneratedObjectives,
+	// }, "Objectives generated successfully")
 
-	ctx.JSON(http.StatusOK, res)
+	// ctx.JSON(http.StatusOK, res)
 
 }

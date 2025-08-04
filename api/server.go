@@ -27,6 +27,7 @@ import (
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
+	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/token"
 	"maicare_go/util"
@@ -52,6 +53,7 @@ type Server struct {
 	aiHandler   *ai.AiHandler
 	hub         *hub.Hub
 	logger      *zap.Logger
+	grpClient   *grpclient.GrpcClient
 }
 
 func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub) (*Server, error) {
@@ -72,6 +74,11 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 		return nil, fmt.Errorf("cannot create logger %v", err)
 	}
 
+	grpcClient, err := grpclient.NewGrpcClient()
+	if err != nil {
+		return nil, fmt.Errorf("cannot create gRPC client %v", err)
+	}
+
 	server := &Server{
 		store:       store,
 		config:      config,
@@ -81,6 +88,7 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 		aiHandler:   aiHandler,
 		hub:         hubInstance,
 		logger:      logger,
+		grpClient:   grpcClient,
 	}
 
 	// Initialize swagger docs
@@ -189,7 +197,14 @@ func (server *Server) Shutdown(ctx context.Context) error {
 	// This happens quickly; the actual cleanup runs in the Hub's goroutine.
 	server.hub.Shutdown()
 	log.Println("Hub shutdown signaled.")
-
+	if server.grpClient != nil {
+		log.Println("Closing gRPC connection...")
+		if err := server.grpClient.Close(); err != nil {
+			log.Printf("gRPC connection shutdown error: %v", err)
+		} else {
+			log.Println("gRPC connection closed successfully.")
+		}
+	}
 	// Shutdown HTTP server concurrently
 	go func() {
 		log.Println("Shutting down HTTP server...")

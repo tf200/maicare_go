@@ -284,10 +284,19 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 
 }
 
+// CreditInvoiceResponse represents the response body for crediting an invoice.
 type CreditInvoiceResponse struct {
 	ID int64 `json:"id"`
 }
 
+// @Summary Credit Invoice
+// @Description Create a credit note for an existing invoice.
+// @Tags Invoice
+// @Produce json
+// @Param id path int64 true "Invoice ID"
+// @Success 200 {object} Response[CreditInvoiceResponse] "Successful response with credit note details"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{id}/credit [post]
 func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {

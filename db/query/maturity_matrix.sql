@@ -2,8 +2,16 @@
 SELECT * FROM maturity_matrix;
 
 
+
+
+-- name: GetMaturityMatrix :one
+SELECT * FROM maturity_matrix WHERE id = $1;
+
+
 -- name: GetLevelDescription :one
-SELECT jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', sqlc.arg('level')::text)::jsonpath) as level_description 
+SELECT 
+    topic_name, 
+    (jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', sqlc.arg('level')::text)::jsonpath))::text as level_description 
 FROM maturity_matrix 
 WHERE id = $1;
 

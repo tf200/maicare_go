@@ -7164,6 +7164,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/invoices/{id}/credit": {
+            "post": {
+                "description": "Create a credit note for an existing invoice.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Credit Invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response with credit note details",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreditInvoiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/invoices/{id}/generate_pdf": {
             "get": {
                 "description": "Generate an invoice in PDF format by its ID.",
@@ -10280,29 +10333,44 @@ const docTemplate = `{
         },
         "api.CreateClientMaturityMatrixAssessmentRequest": {
             "type": "object",
-            "required": [
-                "assessment"
-            ],
             "properties": {
-                "assessment": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.MatrixAssessment"
-                    }
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "initial_level": {
+                    "type": "integer"
+                },
+                "maturity_matrix_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },
         "api.CreateClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
-                "assessment": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.MatrixAssessment"
-                    }
-                },
                 "client_id": {
                     "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "initial_level": {
+                    "type": "integer"
+                },
+                "maturity_matrix_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -12429,6 +12497,14 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                }
+            }
+        },
+        "api.CreditInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
                 }
             }
         },
@@ -16671,26 +16747,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MatrixAssessment": {
-            "type": "object",
-            "properties": {
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "initial_level": {
-                    "type": "integer"
-                },
-                "maturity_matrix_id": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "api.NotificationResponse": {
             "type": "object",
             "properties": {
@@ -17191,6 +17247,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateShiftApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreditInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreditInvoiceResponse"
                 },
                 "message": {
                     "type": "string"
