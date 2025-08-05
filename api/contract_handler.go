@@ -205,6 +205,7 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 		CareType:        req.CareType,
 		ClientID:        clientID,
 		SenderID:        req.SenderID,
+		Status:          "draft",
 		AttachmentIds:   req.AttachmentIds,
 		FinancingAct:    req.FinancingAct,
 		FinancingOption: req.FinancingOption,

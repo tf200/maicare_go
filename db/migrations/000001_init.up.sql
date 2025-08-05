@@ -1914,8 +1914,8 @@ CREATE TABLE care_plans (
     id BIGSERIAL PRIMARY KEY,
     assessment_id BIGINT NOT NULL REFERENCES client_maturity_matrix_assessment(id) ON DELETE CASCADE,
     generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    generated_by_user_id BIGINT REFERENCES users(id), -- Who requested the generation
-    approved_by_user_id BIGINT REFERENCES users(id), -- Who approved the plan
+    generated_by_employee_id BIGINT REFERENCES employee_profile(id), -- Who requested the generation
+    approved_by_employee_id BIGINT REFERENCES employee_profile(id), -- Who approved the plan
     approved_at TIMESTAMP,
     status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending_approval', 'approved', 'active', 'completed', 'discontinued')),
     assessment_summary TEXT NOT NULL,
@@ -1951,9 +1951,85 @@ CREATE TABLE care_plan_actions (
     action_description TEXT NOT NULL,
     is_completed BOOLEAN NOT NULL DEFAULT FALSE,
     completed_at TIMESTAMP,
-    completed_by_user_id BIGINT REFERENCES users(id),
+    completed_by_employee_id BIGINT REFERENCES employee_profile(id),
     notes TEXT,
     sort_order INT NOT NULL DEFAULT 0
+);
+
+
+
+-- Daily, weekly, monthly interventions
+CREATE TABLE care_plan_interventions (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'weekly', 'monthly')),
+    intervention_description TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_completed_date DATE,
+    total_completions INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Success metrics and tracking
+CREATE TABLE care_plan_metrics (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    metric_name VARCHAR(255) NOT NULL,
+    target_value VARCHAR(255) NOT NULL,
+    measurement_method TEXT NOT NULL,
+    current_value VARCHAR(255),
+    last_measured_date DATE,
+    is_achieved BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Risk factors and mitigation strategies
+CREATE TABLE care_plan_risks (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    risk_description TEXT NOT NULL,
+    mitigation_strategy TEXT NOT NULL,
+    risk_level VARCHAR(20) CHECK (risk_level IN ('low', 'medium', 'high')),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Support network roles
+CREATE TABLE care_plan_support_network (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    role_title VARCHAR(255) NOT NULL,
+    responsibility_description TEXT NOT NULL,
+    contact_person VARCHAR(255), -- Optional: specific person assigned
+    contact_details TEXT, -- Phone, email, etc.
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Resources required for the care plan
+CREATE TABLE care_plan_resources (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    resource_description TEXT NOT NULL,
+    resource_type VARCHAR(50), -- 'material', 'service', 'training', etc.
+    is_obtained BOOLEAN NOT NULL DEFAULT FALSE,
+    obtained_date DATE,
+    cost_estimate DECIMAL(10,2),
+    notes TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Progress tracking and notes
+CREATE TABLE care_plan_reports (
+    id BIGSERIAL PRIMARY KEY,
+    care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
+    report_type VARCHAR(50) NOT NULL, -- 'progress_update', 'concern', 'achievement', 'modification'
+    report_content TEXT NOT NULL,
+    created_by_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+    is_critical BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
