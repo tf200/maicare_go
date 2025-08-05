@@ -3693,67 +3693,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives/generate": {
-            "post": {
-                "description": "Generate objectives for a client goal",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "maturity_matrix"
-                ],
-                "summary": "Generate objectives",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client goal ID",
-                        "name": "goal_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Client maturity matrix assessment ID",
-                        "name": "assessment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GenerateObjectivesResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/clients/{id}/maturity_matrix_assessment/{mma_id}": {
             "get": {
                 "description": "Get a client maturity matrix assessment",
@@ -9245,17 +9184,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "ai.Objectives": {
-            "type": "object",
-            "properties": {
-                "due_date": {
-                    "type": "string"
-                },
-                "objective_description": {
-                    "type": "string"
-                }
-            }
-        },
         "api.AddClientDocumentApiRequest": {
             "type": "object",
             "properties": {
@@ -10348,29 +10276,20 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                },
+                "target_level": {
+                    "type": "integer"
                 }
             }
         },
         "api.CreateClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
                 "client_id": {
                     "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "initial_level": {
-                    "type": "integer"
-                },
-                "maturity_matrix_id": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
                 }
             }
         },
@@ -12906,20 +12825,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GenerateObjectivesResponse": {
-            "type": "object",
-            "properties": {
-                "goal_id": {
-                    "type": "integer"
-                },
-                "objectives": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ai.Objectives"
-                    }
-                }
-            }
-        },
         "api.GetAppointmentCardResponse": {
             "type": "object",
             "properties": {
@@ -15202,8 +15107,14 @@ const docTemplate = `{
                 "care_type": {
                     "type": "string"
                 },
+                "client_first_name": {
+                    "type": "string"
+                },
                 "client_id": {
                     "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -15243,6 +15154,9 @@ const docTemplate = `{
                 },
                 "sender_id": {
                     "type": "integer"
+                },
+                "sender_name": {
+                    "type": "string"
                 },
                 "start_date": {
                     "type": "string"
@@ -17443,20 +17357,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GenerateInvoiceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GenerateObjectivesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GenerateObjectivesResponse"
                 },
                 "message": {
                     "type": "string"

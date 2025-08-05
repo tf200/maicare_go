@@ -89,6 +89,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 func TestCreateInvoiceApi(t *testing.T) {
 	sender := createRandomSender(t)
 	clientID := createRandomBillableHours(t)
+
 	contract := createRandomContract(t, clientID, &sender.ID)
 
 	testCases := []struct {

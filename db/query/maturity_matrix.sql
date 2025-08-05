@@ -204,3 +204,85 @@ INSERT INTO care_plan_resources (
     $1, $2
 )
 RETURNING *;
+
+
+-- -- name: GetCarePlan :one
+-- SELECT 
+--     cp.*,
+--     cma.client_id,
+--     cma.current_level,
+--     cma.target_level,
+--     mm.domain_name,
+--     cd.first_name,
+--     cd.last_name
+-- FROM care_plans cp
+-- JOIN client_maturity_matrix_assessment cma ON cp.assessment_id = cma.id
+-- JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+-- JOIN client_details cd ON cma.client_id = cd.id
+-- WHERE cp.id = $1;
+
+
+-- -- name: GetObjectivesWithActions :many
+-- SELECT 
+--     o.id,
+--     o.care_plan_id,
+--     o.description,
+--     o.timeframe,
+--     o.created_at,
+--     o.updated_at,
+--     -- Add any other objective columns you need
+--     json_agg(
+--         json_build_object(
+--             'id', a.id,
+--             'description', a.action_description,
+--             'is_completed', a.is_completed,
+--             'completed_at', a.completed_at,
+--             'sort_order', a.sort_order
+--         ) ORDER BY a.sort_order
+--     ) as actions
+-- FROM care_plan_objectives o
+-- LEFT JOIN care_plan_actions a ON o.id = a.objective_id
+-- WHERE o.care_plan_id = $1
+-- GROUP BY o.id, o.care_plan_id, o.description, o.timeframe, o.created_at, o.updated_at
+-- ORDER BY 
+--     CASE o.timeframe 
+--         WHEN 'short_term' THEN 1 
+--         WHEN 'medium_term' THEN 2 
+--         WHEN 'long_term' THEN 3 
+--     END;
+
+
+--     -- name: GetInterventions :many
+-- SELECT * FROM care_plan_interventions 
+-- WHERE care_plan_id = $1 AND is_active = true 
+-- ORDER BY 
+--     CASE frequency 
+--         WHEN 'daily' THEN 1 
+--         WHEN 'weekly' THEN 2 
+--         WHEN 'monthly' THEN 3 
+--     END;
+
+-- -- name: GetMetrics :many
+-- SELECT * FROM care_plan_metrics 
+-- WHERE care_plan_id = $1 
+-- ORDER BY created_at;
+
+-- -- name: GetRisks :many
+-- SELECT * FROM care_plan_risks 
+-- WHERE care_plan_id = $1 AND is_active = true 
+-- ORDER BY 
+--     CASE risk_level 
+--         WHEN 'high' THEN 1 
+--         WHEN 'medium' THEN 2 
+--         WHEN 'low' THEN 3 
+--     END;
+
+-- -- name: GetSupportNetwork :many
+-- SELECT * FROM care_plan_support_network 
+-- WHERE care_plan_id = $1 AND is_active = true 
+-- ORDER BY created_at;
+
+-- -- name: GetResources :many
+-- SELECT * FROM care_plan_resources 
+-- WHERE care_plan_id = $1 
+-- ORDER BY is_obtained, created_at;

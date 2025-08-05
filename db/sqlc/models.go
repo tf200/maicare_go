@@ -170,6 +170,7 @@ type CarePlanObjective struct {
 	CompletionDate  pgtype.Date      `json:"completion_date"`
 	CompletionNotes *string          `json:"completion_notes"`
 	CreatedAt       pgtype.Timestamp `json:"created_at"`
+	UpdatedAt       pgtype.Timestamp `json:"updated_at"`
 }
 
 type CarePlanReport struct {

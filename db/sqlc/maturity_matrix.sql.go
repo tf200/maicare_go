@@ -400,7 +400,7 @@ INSERT INTO care_plan_objectives (
 ) VALUES (
     $1, $2, $3, $4, $5
 )
-RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at
+RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at, updated_at
 `
 
 type CreateObjectiveParams struct {
@@ -431,6 +431,7 @@ func (q *Queries) CreateObjective(ctx context.Context, arg CreateObjectiveParams
 		&i.CompletionDate,
 		&i.CompletionNotes,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
