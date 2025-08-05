@@ -32,6 +32,7 @@ type Config struct {
 	BrevoSenderEmail      string        `mapstructure:"BREVO_SENDER_EMAIL"`
 	BrevoApiKey           string        `mapstructure:"BREVO_API_KEY"`
 	Environment           string        `mapstructure:"ENVIRONMENT"`
+	GrpcUrl               string        `mapstructure:"GRPC_URL"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

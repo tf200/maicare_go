@@ -1,14 +1,15 @@
 package api
 
 import (
-	"maicare_go/ai"
 	db "maicare_go/db/sqlc"
+	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/pagination"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -58,18 +59,15 @@ type CreateClientMaturityMatrixAssessmentRequest struct {
 	ID               int64     `json:"id"`
 	MaturityMatrixID int64     `json:"maturity_matrix_id"`
 	InitialLevel     int32     `json:"initial_level"`
+	TargetLevel      int32     `json:"target_level"`
 	StartDate        time.Time `json:"start_date"`
 	EndDate          time.Time `json:"end_date"`
 }
 
 // CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
 type CreateClientMaturityMatrixAssessmentResponse struct {
-	ClientID         int64     `json:"client_id"`
-	ID               int64     `json:"id"`
-	MaturityMatrixID int64     `json:"maturity_matrix_id"`
-	InitialLevel     int32     `json:"initial_level"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
+	ClientID   int64 `json:"client_id"`
+	CarePlanID int64 `json:"care_plan_id"`
 }
 
 // @Summary Create client maturity matrix assessment
@@ -85,102 +83,256 @@ type CreateClientMaturityMatrixAssessmentResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /clients/{id}/maturity_matrix_assessment [post]
 func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) {
-	// id := ctx.Param("id")
-	// clientID, err := strconv.ParseInt(id, 10, 64)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
-	// 	return
-	// }
+	id := ctx.Param("id")
+	clientID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 
-	// var req CreateClientMaturityMatrixAssessmentRequest
-	// if err := ctx.ShouldBindJSON(&req); err != nil {
-	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
-	// 	return
-	// }
+	var req CreateClientMaturityMatrixAssessmentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
 
-	// tx, err := server.store.ConnPool.Begin(ctx)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-	// defer tx.Rollback(ctx)
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer tx.Rollback(ctx)
 
-	// qtx := server.store.WithTx(tx)
+	qtx := server.store.WithTx(tx)
 
-	// arg := db.CreateClientMaturityMatrixAssessmentParams{
-	// 	ClientID:         clientID,
-	// 	MaturityMatrixID: req.MaturityMatrixID,
-	// 	StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
-	// 	EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
-	// 	InitialLevel:     req.InitialLevel,
-	// 	CurrentLevel:     req.InitialLevel,
-	// }
+	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-	// clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
+	arg := db.CreateClientMaturityMatrixAssessmentParams{
+		ClientID:         clientID,
+		MaturityMatrixID: req.MaturityMatrixID,
+		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
+		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+		InitialLevel:     req.InitialLevel,
+		TargetLevel:      req.TargetLevel,
+		CurrentLevel:     req.InitialLevel,
+	}
 
-	// topicDescription, err := qtx.GetMaturityMatrix(ctx, req.MaturityMatrixID)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-	// var levelDescription []Level
+	clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-	// err = json.Unmarshal(topicDescription.LevelDescription, &levelDescription)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
+	topicDescription, err := qtx.GetMaturityMatrix(ctx, req.MaturityMatrixID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	var levelDescription []Level
 
-	// clientDetails, err := qtx.GetClientDetails(ctx, clientID)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
+	err = json.Unmarshal(topicDescription.LevelDescription, &levelDescription)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-	// }
+	clientDetails, err := qtx.GetClientDetails(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 
-	// // generatedCarePlan, err := server.grpClient.GenerateCarePlan(ctx, &grpclient.PersonalizedCarePlanRequest{
-	// // 	ClientData: &grpclient.ClientData{
-	// // 		Age:              int32(time.Since(clientDetails.DateOfBirth.Time).Hours() / 24 / 365), // Calculate age from DateOfBirth
-	// // 		LivingSituation:  *clientDetails.LivingSituation,
-	// // 		EducationLevel:   *clientDetails.EducationLevel,
-	// // 		DomainName:       clientAssessments.TopicName,
-	// // 		CurrentLevel:     clientAssessments.InitialLevel,                       // Example current level, replace with actual data
-	// // 		LevelDescription: levelDescription[req.MaturityMatrixID-1].Description, // Use the description from the level
-	// // 	},
-	// // 	DomainDefinitions: map[string]*grpclient.DomainLevels{
-	// // 		topicDescription.TopicName: {
-	// // 			Levels: map[int32]string{
-	// // 				levelDescription[0].Level: levelDescription[0].Description,
-	// // 				levelDescription[1].Level: levelDescription[1].Description,
-	// // 				levelDescription[2].Level: levelDescription[2].Description,
-	// // 				levelDescription[3].Level: levelDescription[3].Description,
-	// // 				levelDescription[4].Level: levelDescription[4].Description,
-	// // 			},
-	// // 		},
-	// // 	},
-	// // })
+	}
 
-	// // insert Objectives
+	generatedCarePlan, err := server.grpClient.GenerateCarePlan(ctx, &grpclient.PersonalizedCarePlanRequest{
+		ClientData: &grpclient.ClientData{
+			Age:              int32(time.Since(clientDetails.DateOfBirth.Time).Hours() / 24 / 365), // Calculate age from DateOfBirth
+			LivingSituation:  *clientDetails.LivingSituation,
+			EducationLevel:   *clientDetails.EducationLevel,
+			DomainName:       clientAssessments.TopicName,
+			CurrentLevel:     clientAssessments.InitialLevel,                       // Example current level, replace with actual data
+			LevelDescription: levelDescription[req.MaturityMatrixID-1].Description, // Use the description from the level
+		},
+		DomainDefinitions: map[string]*grpclient.DomainLevels{
+			topicDescription.TopicName: {
+				Levels: map[int32]string{
+					levelDescription[0].Level: levelDescription[0].Description,
+					levelDescription[1].Level: levelDescription[1].Description,
+					levelDescription[2].Level: levelDescription[2].Description,
+					levelDescription[3].Level: levelDescription[3].Description,
+					levelDescription[4].Level: levelDescription[4].Description,
+				},
+			},
+		},
+	})
 
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-	// err = tx.Commit(ctx)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	// insert the care plan into the database
+	rawllmResp, err := json.Marshal(generatedCarePlan)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-	// res := SuccessResponse(CreateClientMaturityMatrixAssessmentResponse{
-	// 	ClientID:    clientID,
-	// 	Assessments: assessmentRes,
-	// }, "Client maturity matrix assessment created successfully")
-	// ctx.JSON(http.StatusCreated, res)
+	carePlan, err := qtx.CreateCarePlan(ctx, db.CreateCarePlanParams{
+		AssessmentID:          clientAssessments.ID,
+		GeneratedByEmployeeID: &employeeID,
+		AssessmentSummary:     generatedCarePlan.AssessmentSummary,
+		RawLlmResponse:        rawllmResp,
+		Status:                "draft",
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// insert Objectives into the database
+	// starting with short term goals
+
+	for _, objective := range generatedCarePlan.CarePlanObjectives.ShortTermGoals {
+		createdObj, err := qtx.CreateObjective(ctx, db.CreateObjectiveParams{
+			CarePlanID:  carePlan.ID,
+			Description: objective.Description,
+			Timeframe:   "short_term",
+			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		for i, action := range objective.SpecificActions {
+
+			_, err := qtx.CreateGoalAction(ctx, db.CreateGoalActionParams{
+				ObjectiveID:       createdObj.ID,
+				ActionDescription: action,
+				SortOrder:         int32(i + 1), // Use index + 1 as sort order
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+
+		}
+	}
+
+	for _, objective := range generatedCarePlan.CarePlanObjectives.MediumTermGoals {
+		createdObj, err := qtx.CreateObjective(ctx, db.CreateObjectiveParams{
+			CarePlanID:  carePlan.ID,
+			Description: objective.Description,
+			Timeframe:   "medium_term",
+			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		for i, action := range objective.SpecificActions {
+			_, err := qtx.CreateGoalAction(ctx, db.CreateGoalActionParams{
+				ObjectiveID:       createdObj.ID,
+				ActionDescription: action,
+				SortOrder:         int32(i + 1), // Use index + 1 as sort order
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+	}
+
+	for _, objective := range generatedCarePlan.CarePlanObjectives.LongTermGoals {
+		createdObj, err := qtx.CreateObjective(ctx, db.CreateObjectiveParams{
+			CarePlanID:  carePlan.ID,
+			Description: objective.Description,
+			Timeframe:   "long_term",
+			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		for i, action := range objective.SpecificActions {
+			_, err := qtx.CreateGoalAction(ctx, db.CreateGoalActionParams{
+				ObjectiveID:       createdObj.ID,
+				ActionDescription: action,
+				SortOrder:         int32(i + 1), // Use index + 1 as sort order
+			})
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		}
+	}
+	// insert interventions into the database
+
+	for _, intervention := range generatedCarePlan.Interventions.DailyActivities {
+		_, err := qtx.CreateIntervention(ctx, db.CreateInterventionParams{
+			CarePlanID:              carePlan.ID,
+			Frequency:               "daily",
+			InterventionDescription: intervention,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+	for _, intervention := range generatedCarePlan.Interventions.WeeklyActivities {
+		_, err := qtx.CreateIntervention(ctx, db.CreateInterventionParams{
+			CarePlanID:              carePlan.ID,
+			Frequency:               "weekly",
+			InterventionDescription: intervention,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	for _, successMetric := range generatedCarePlan.SuccessMetrics {
+		_, err := qtx.CreateSuccessMetric(ctx, db.CreateSuccessMetricParams{
+			CarePlanID:        carePlan.ID,
+			MetricName:        successMetric.Metric,
+			TargetValue:       successMetric.Target,
+			MeasurementMethod: successMetric.MeasurementMethod,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	for _, risk := range generatedCarePlan.RiskFactors {
+		_, err := qtx.CreateCarePlanRisks(ctx, db.CreateCarePlanRisksParams{
+			CarePlanID:         carePlan.ID,
+			RiskDescription:    risk.Risk,
+			MitigationStrategy: risk.Mitigation,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(CreateClientMaturityMatrixAssessmentResponse{
+		ClientID:   clientID,
+		CarePlanID: carePlan.ID,
+	}, "Client maturity matrix assessment created successfully")
+	ctx.JSON(http.StatusCreated, res)
 }
 
 // ListClientMaturityMatrixAssessmentsRequest represents a request to list client maturity matrix assessments
@@ -657,65 +809,4 @@ func (server *Server) CreateGoalObjectiveApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, SuccessResponse(responses, "Goal objectives created successfully"))
-}
-
-type GenerateObjectivesResponse struct {
-	GoalID     int64           `json:"goal_id"`
-	Objectives []ai.Objectives `json:"objectives"`
-}
-
-// @Summary Generate objectives
-// @Description Generate objectives for a client goal
-// @Tags maturity_matrix
-// @Produce json
-// @Param goal_id path int true "Client goal ID"
-// @Param id path int true "Client ID"
-// @Param assessment_id path int true "Client maturity matrix assessment ID"
-// @Success 200 {object} Response[GenerateObjectivesResponse]
-// @Failure 400 {object} Response[any] "Bad request"
-// @Failure 401 {object} Response[any] "Unauthorized"
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals/{goal_id}/objectives/generate [post]
-func (server *Server) GenerateObjectivesApi(ctx *gin.Context) {
-	// goalID := ctx.Param("goal_id")
-	// clientGoalID, err := strconv.ParseInt(goalID, 10, 64)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
-	// 	return
-	// }
-
-	// clientGoal, err := server.store.GetClientGoal(ctx, clientGoalID)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-
-	// mma, err := server.store.GetClientMaturityMatrixAssessment(ctx, clientGoal.ClientMaturityMatrixAssessmentID)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-
-	// levelDescrption, err := server.store.GetLevelDescription(ctx, db.GetLevelDescriptionParams{
-	// 	ID:    mma.MaturityMatrixID,
-	// 	Level: strconv.Itoa(int(clientGoal.TargetLevel)),
-	// })
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-
-	// generatedObjectives, err := server.aiHandler.GenerateObjectives(string(levelDescrption), "", clientGoal.Description, mma.StartDate.Time.Format("2006-01-02"), mma.EndDate.Time.Format("2006-01-02"), "google/gemini-2.0-flash-001")
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-
-	// res := SuccessResponse(GenerateObjectivesResponse{
-	// 	GoalID:     clientGoalID,
-	// 	Objectives: generatedObjectives.GeneratedObjectives,
-	// }, "Objectives generated successfully")
-
-	// ctx.JSON(http.StatusOK, res)
-
 }

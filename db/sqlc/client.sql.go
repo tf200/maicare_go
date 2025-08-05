@@ -36,10 +36,12 @@ INSERT INTO client_details (
     departure_reason,
     departure_report,
     addresses,
-    legal_measure
+    legal_measure,
+    living_situation,
+    education_level
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23
+    $17, $18, $19, $20, $21, $22, $23, $24, $25
 ) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, living_situation, education_level, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications
 `
 
@@ -67,6 +69,8 @@ type CreateClientDetailsParams struct {
 	DepartureReport *string     `json:"departure_report"`
 	Addresses       []byte      `json:"addresses"`
 	LegalMeasure    *string     `json:"legal_measure"`
+	LivingSituation *string     `json:"living_situation"`
+	EducationLevel  *string     `json:"education_level"`
 }
 
 func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error) {
@@ -94,6 +98,8 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		arg.DepartureReport,
 		arg.Addresses,
 		arg.LegalMeasure,
+		arg.LivingSituation,
+		arg.EducationLevel,
 	)
 	var i ClientDetail
 	err := row.Scan(

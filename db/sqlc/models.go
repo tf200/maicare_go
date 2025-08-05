@@ -111,29 +111,52 @@ type AttachmentFile struct {
 }
 
 type CarePlan struct {
-	ID                int64            `json:"id"`
-	AssessmentID      int64            `json:"assessment_id"`
-	GeneratedAt       pgtype.Timestamp `json:"generated_at"`
-	GeneratedByUserID *int64           `json:"generated_by_user_id"`
-	ApprovedByUserID  *int64           `json:"approved_by_user_id"`
-	ApprovedAt        pgtype.Timestamp `json:"approved_at"`
-	Status            string           `json:"status"`
-	AssessmentSummary string           `json:"assessment_summary"`
-	RawLlmResponse    []byte           `json:"raw_llm_response"`
-	CreatedAt         pgtype.Timestamp `json:"created_at"`
-	UpdatedAt         pgtype.Timestamp `json:"updated_at"`
-	Version           int32            `json:"version"`
+	ID                    int64            `json:"id"`
+	AssessmentID          int64            `json:"assessment_id"`
+	GeneratedAt           pgtype.Timestamp `json:"generated_at"`
+	GeneratedByEmployeeID *int64           `json:"generated_by_employee_id"`
+	ApprovedByEmployeeID  *int64           `json:"approved_by_employee_id"`
+	ApprovedAt            pgtype.Timestamp `json:"approved_at"`
+	Status                string           `json:"status"`
+	AssessmentSummary     string           `json:"assessment_summary"`
+	RawLlmResponse        []byte           `json:"raw_llm_response"`
+	CreatedAt             pgtype.Timestamp `json:"created_at"`
+	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
+	Version               int32            `json:"version"`
 }
 
 type CarePlanAction struct {
+	ID                    int64            `json:"id"`
+	ObjectiveID           int64            `json:"objective_id"`
+	ActionDescription     string           `json:"action_description"`
+	IsCompleted           bool             `json:"is_completed"`
+	CompletedAt           pgtype.Timestamp `json:"completed_at"`
+	CompletedByEmployeeID *int64           `json:"completed_by_employee_id"`
+	Notes                 *string          `json:"notes"`
+	SortOrder             int32            `json:"sort_order"`
+}
+
+type CarePlanIntervention struct {
+	ID                      int64            `json:"id"`
+	CarePlanID              int64            `json:"care_plan_id"`
+	Frequency               string           `json:"frequency"`
+	InterventionDescription string           `json:"intervention_description"`
+	IsActive                bool             `json:"is_active"`
+	LastCompletedDate       pgtype.Date      `json:"last_completed_date"`
+	TotalCompletions        int32            `json:"total_completions"`
+	CreatedAt               pgtype.Timestamp `json:"created_at"`
+}
+
+type CarePlanMetric struct {
 	ID                int64            `json:"id"`
-	ObjectiveID       int64            `json:"objective_id"`
-	ActionDescription string           `json:"action_description"`
-	IsCompleted       bool             `json:"is_completed"`
-	CompletedAt       pgtype.Timestamp `json:"completed_at"`
-	CompletedByUserID *int64           `json:"completed_by_user_id"`
-	Notes             *string          `json:"notes"`
-	SortOrder         int32            `json:"sort_order"`
+	CarePlanID        int64            `json:"care_plan_id"`
+	MetricName        string           `json:"metric_name"`
+	TargetValue       string           `json:"target_value"`
+	MeasurementMethod string           `json:"measurement_method"`
+	CurrentValue      *string          `json:"current_value"`
+	LastMeasuredDate  pgtype.Date      `json:"last_measured_date"`
+	IsAchieved        bool             `json:"is_achieved"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
 }
 
 type CarePlanObjective struct {
@@ -147,6 +170,49 @@ type CarePlanObjective struct {
 	CompletionDate  pgtype.Date      `json:"completion_date"`
 	CompletionNotes *string          `json:"completion_notes"`
 	CreatedAt       pgtype.Timestamp `json:"created_at"`
+}
+
+type CarePlanReport struct {
+	ID                  int64            `json:"id"`
+	CarePlanID          int64            `json:"care_plan_id"`
+	ReportType          string           `json:"report_type"`
+	ReportContent       string           `json:"report_content"`
+	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	IsCritical          bool             `json:"is_critical"`
+	CreatedAt           pgtype.Timestamp `json:"created_at"`
+}
+
+type CarePlanResource struct {
+	ID                  int64            `json:"id"`
+	CarePlanID          int64            `json:"care_plan_id"`
+	ResourceDescription string           `json:"resource_description"`
+	ResourceType        *string          `json:"resource_type"`
+	IsObtained          bool             `json:"is_obtained"`
+	ObtainedDate        pgtype.Date      `json:"obtained_date"`
+	CostEstimate        *float64         `json:"cost_estimate"`
+	Notes               *string          `json:"notes"`
+	CreatedAt           pgtype.Timestamp `json:"created_at"`
+}
+
+type CarePlanRisk struct {
+	ID                 int64            `json:"id"`
+	CarePlanID         int64            `json:"care_plan_id"`
+	RiskDescription    string           `json:"risk_description"`
+	MitigationStrategy string           `json:"mitigation_strategy"`
+	RiskLevel          *string          `json:"risk_level"`
+	IsActive           bool             `json:"is_active"`
+	CreatedAt          pgtype.Timestamp `json:"created_at"`
+}
+
+type CarePlanSupportNetwork struct {
+	ID                        int64            `json:"id"`
+	CarePlanID                int64            `json:"care_plan_id"`
+	RoleTitle                 string           `json:"role_title"`
+	ResponsibilityDescription string           `json:"responsibility_description"`
+	ContactPerson             *string          `json:"contact_person"`
+	ContactDetails            *string          `json:"contact_details"`
+	IsActive                  bool             `json:"is_active"`
+	CreatedAt                 pgtype.Timestamp `json:"created_at"`
 }
 
 type Certification struct {

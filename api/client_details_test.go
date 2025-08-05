@@ -72,6 +72,8 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		DepartureReport: util.StringPtr("test report"),
 		Addresses:       []byte("[]"),
 		LegalMeasure:    util.StringPtr("test measure"),
+		LivingSituation: util.StringPtr("Home"),
+		EducationLevel:  util.StringPtr("Secondary"),
 	}
 
 	client, err := testStore.CreateClientDetails(context.Background(), arg)
