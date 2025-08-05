@@ -374,7 +374,7 @@ func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = server.store.CreateInvoice(ctx.Request.Context(), db.CreateInvoiceParams{
+	creditNoteInvoice, err := server.store.CreateInvoice(ctx.Request.Context(), db.CreateInvoiceParams{
 		ClientID:        originalInvoice.ClientID,
 		SenderID:        &originalInvoice.ID,
 		DueDate:         pgtype.Date{Time: time.Now().Add(30 * 24 * time.Hour), Valid: true},
@@ -405,7 +405,7 @@ func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "Credit note invoice created successfully"))
+	ctx.JSON(http.StatusOK, SuccessResponse(CreditInvoiceResponse{ID: creditNoteInvoice.ID}, "Credit note created successfully"))
 }
 
 // ListInvoicesRequest represents the request parameters for listing invoices.
