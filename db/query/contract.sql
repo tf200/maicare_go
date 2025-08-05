@@ -39,7 +39,15 @@ RETURNING *;
 
 -- name: ListClientContracts :many
 WITH client_contracts AS (
-    SELECT * FROM contract
+    SELECT c.*, 
+            ct.name AS contract_type_name,
+            cd.first_name AS client_first_name,
+            cd.last_name AS client_last_name,
+            s.name AS sender_name
+    FROM contract c
+    JOIN contract_type ct ON c.type_id = ct.id
+    JOIN client_details cd ON c.client_id = cd.id
+    LEFT JOIN sender s ON c.sender_id = s.id
     WHERE client_id = $1
 )
 SELECT
