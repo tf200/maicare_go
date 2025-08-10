@@ -492,6 +492,180 @@ definitions:
       start_time:
         type: string
     type: object
+  api.CreateCarePlanActionsRequest:
+    properties:
+      action_description:
+        type: string
+    required:
+    - action_description
+    type: object
+  api.CreateCarePlanActionsResponse:
+    properties:
+      action_description:
+        type: string
+      action_id:
+        type: integer
+      objective_id:
+        type: integer
+    type: object
+  api.CreateCarePlanInterventionRequest:
+    properties:
+      frequency:
+        enum:
+        - daily
+        - weekly
+        - monthly
+        type: string
+      intervention_description:
+        type: string
+    required:
+    - frequency
+    - intervention_description
+    type: object
+  api.CreateCarePlanInterventionResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      frequency:
+        type: string
+      intervention_description:
+        type: string
+      intervention_id:
+        type: integer
+    type: object
+  api.CreateCarePlanObjectiveRequest:
+    properties:
+      description:
+        type: string
+      goal_title:
+        type: string
+      timeframe:
+        enum:
+        - short_term
+        - medium_term
+        - long_term
+        type: string
+    required:
+    - description
+    - goal_title
+    - timeframe
+    type: object
+  api.CreateCarePlanObjectiveResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      completion_date:
+        type: string
+      completion_notes:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      goal_title:
+        type: string
+      id:
+        type: integer
+      status:
+        type: string
+      target_date:
+        type: string
+      timeframe:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.CreateCarePlanResourcesRequest:
+    properties:
+      resource_description:
+        type: string
+    required:
+    - resource_description
+    type: object
+  api.CreateCarePlanResourcesResponse:
+    properties:
+      id:
+        type: integer
+      resource_description:
+        type: string
+      resource_type:
+        type: string
+    type: object
+  api.CreateCarePlanRisksRequest:
+    properties:
+      mitigation_strategy:
+        type: string
+      risk_description:
+        type: string
+      risk_level:
+        type: string
+    required:
+    - mitigation_strategy
+    - risk_description
+    type: object
+  api.CreateCarePlanRisksResponse:
+    properties:
+      id:
+        type: integer
+      mitigation_strategy:
+        type: string
+      risk_description:
+        type: string
+      risk_level:
+        type: string
+    type: object
+  api.CreateCarePlanSuccessMetricsRequest:
+    properties:
+      measurement_method:
+        type: string
+      metric_name:
+        type: string
+      target_value:
+        type: string
+    required:
+    - measurement_method
+    - metric_name
+    - target_value
+    type: object
+  api.CreateCarePlanSuccessMetricsResponse:
+    properties:
+      current_value:
+        type: string
+      measurement_method:
+        type: string
+      metric_id:
+        type: integer
+      metric_name:
+        type: string
+      target_value:
+        type: string
+    type: object
+  api.CreateCareplanSupportNetworkRequest:
+    properties:
+      contact_details:
+        type: string
+      contact_person:
+        type: string
+      responsibility_description:
+        type: string
+      role_title:
+        type: string
+    required:
+    - role_title
+    type: object
+  api.CreateCareplanSupportNetworkResponse:
+    properties:
+      contact_details:
+        type: string
+      contact_person:
+        type: string
+      id:
+        type: integer
+      responsibility_description:
+        type: string
+      role_title:
+        type: string
+    type: object
   api.CreateClientDetailsRequest:
     properties:
       addresses:
@@ -2613,6 +2787,21 @@ definitions:
       size:
         type: integer
     type: object
+  api.GetCarePlanInterventionsResponse:
+    properties:
+      daily_activities:
+        items:
+          type: string
+        type: array
+      monthly_activities:
+        items:
+          type: string
+        type: array
+      weekly_activities:
+        items:
+          type: string
+        type: array
+    type: object
   api.GetCarePlanObjectivesResponse:
     properties:
       long_term_goals:
@@ -2660,14 +2849,25 @@ definitions:
       type:
         type: string
     type: object
+  api.GetCarePlanRisksResponse:
+    properties:
+      id:
+        type: integer
+      mitigation_strategy:
+        type: string
+      risk_description:
+        type: string
+      risk_level:
+        type: string
+    type: object
   api.GetCarePlanSuccessMetricsResponse:
     properties:
       current_value:
         type: string
-      id:
-        type: integer
       measurement_method:
         type: string
+      metric_id:
+        type: integer
       metric_name:
         type: string
       target_value:
@@ -5264,6 +5464,69 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateCarePlanActionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanActionsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateCarePlanInterventionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanInterventionResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateCarePlanObjectiveResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanObjectiveResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateCarePlanResourcesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanResourcesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateCarePlanRisksResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanRisksResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateCarePlanSuccessMetricsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanSuccessMetricsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateCareplanSupportNetworkResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCareplanSupportNetworkResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateClientDetailsResponse:
     properties:
       data:
@@ -5565,6 +5828,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetAttachmentByIdResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetCarePlanInterventionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetCarePlanInterventionsResponse'
       message:
         type: string
       success:
@@ -5957,6 +6229,78 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateCarePlanActionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanActionsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanInterventionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanInterventionResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanObjectiveResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanObjectiveResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanOverviewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanOverviewResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanResourcesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanResourcesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanRisksResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanRisksResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanSuccessMetricsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanSuccessMetricsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_UpdateCarePlanSupportNetworkResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanSupportNetworkResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateClientDetailsResponse:
     properties:
       data:
@@ -6144,6 +6488,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.GetCarePlanResourcesResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetCarePlanRisksResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetCarePlanRisksResponse'
         type: array
       message:
         type: string
@@ -6756,6 +7111,173 @@ definitions:
       role:
         type: string
       start_date:
+        type: string
+    type: object
+  api.UpdateCarePlanActionsRequest:
+    properties:
+      action_description:
+        type: string
+    type: object
+  api.UpdateCarePlanActionsResponse:
+    properties:
+      action_description:
+        type: string
+      action_id:
+        type: integer
+      objective_id:
+        type: integer
+    type: object
+  api.UpdateCarePlanInterventionRequest:
+    properties:
+      frequency:
+        enum:
+        - daily
+        - weekly
+        - monthly
+        type: string
+      intervention_description:
+        type: string
+    type: object
+  api.UpdateCarePlanInterventionResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      frequency:
+        type: string
+      intervention_description:
+        type: string
+      intervention_id:
+        type: integer
+    type: object
+  api.UpdateCarePlanObjectiveRequest:
+    properties:
+      description:
+        type: string
+      goal_title:
+        type: string
+      status:
+        enum:
+        - not_started
+        - in_progress
+        - completed
+        - discontinued
+        type: string
+      timeframe:
+        enum:
+        - short_term
+        - medium_term
+        - long_term
+        type: string
+    type: object
+  api.UpdateCarePlanObjectiveResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      goal_id:
+        type: integer
+    type: object
+  api.UpdateCarePlanOverviewRequest:
+    properties:
+      assessment_summary:
+        type: string
+    type: object
+  api.UpdateCarePlanOverviewResponse:
+    properties:
+      assessment_id:
+        type: integer
+      assessment_summary:
+        type: string
+      care_plan_id:
+        type: integer
+    type: object
+  api.UpdateCarePlanResourcesRequest:
+    properties:
+      is_obtained:
+        type: boolean
+      obtained_date:
+        type: string
+      resource_description:
+        type: string
+      resource_type:
+        type: string
+    type: object
+  api.UpdateCarePlanResourcesResponse:
+    properties:
+      id:
+        type: integer
+      is_obtained:
+        type: boolean
+      obtained_date:
+        type: string
+      resource_description:
+        type: string
+      resource_type:
+        type: string
+    type: object
+  api.UpdateCarePlanRisksRequest:
+    properties:
+      mitigation_strategy:
+        type: string
+      risk_description:
+        type: string
+      risk_level:
+        type: string
+    type: object
+  api.UpdateCarePlanRisksResponse:
+    properties:
+      id:
+        type: integer
+      mitigation_strategy:
+        type: string
+      risk_description:
+        type: string
+      risk_level:
+        type: string
+    type: object
+  api.UpdateCarePlanSuccessMetricsRequest:
+    properties:
+      measurement_method:
+        type: string
+      metric_name:
+        type: string
+      target_value:
+        type: string
+    type: object
+  api.UpdateCarePlanSuccessMetricsResponse:
+    properties:
+      current_value:
+        type: string
+      measurement_method:
+        type: string
+      metric_id:
+        type: integer
+      metric_name:
+        type: string
+      target_value:
+        type: string
+    type: object
+  api.UpdateCarePlanSupportNetworkRequest:
+    properties:
+      contact_details:
+        type: string
+      contact_person:
+        type: string
+      responsibility_description:
+        type: string
+      role_title:
+        type: string
+    type: object
+  api.UpdateCarePlanSupportNetworkResponse:
+    properties:
+      contact_details:
+        type: string
+      contact_person:
+        type: string
+      id:
+        type: integer
+      responsibility_description:
+        type: string
+      role_title:
         type: string
     type: object
   api.UpdateClientDetailsRequest:
@@ -8480,6 +9002,75 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
+  /actions/{action_id}:
+    delete:
+      description: Delete a care plan action by its ID
+      parameters:
+      - description: Action ID
+        in: path
+        name: action_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan action
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan action by its ID
+      parameters:
+      - description: Action ID
+        in: path
+        name: action_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanActionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanActionsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan action
+      tags:
+      - care_plan
   /ai/spelling_check:
     post:
       consumes:
@@ -9162,40 +9753,9 @@ paths:
       summary: Verify 2FA code
       tags:
       - authentication
-  /care_plan/{assessment_id}:
-    get:
-      description: Get the care plan overview for a given assessment ID
-      parameters:
-      - description: Assessment ID
-        in: path
-        name: assessment_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_GetCarePlanOverviewResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan overview
-      tags:
-      - care_plan
-  /care_plan/{care_plan_id}/objectives:
-    get:
-      description: Get the care plan objectives for a given care plan ID
+  /care_plan/{care_plan_id}:
+    delete:
+      description: Delete a care plan by its ID
       parameters:
       - description: Care Plan ID
         in: path
@@ -9208,7 +9768,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetCarePlanObjectivesResponse'
+            $ref: '#/definitions/api.Response-any'
         "400":
           description: Bad request
           schema:
@@ -9221,7 +9781,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Get care plan objectives
+      summary: Delete care plan
       tags:
       - care_plan
   /care_plan/{care_plan_id}/resources:
@@ -9255,7 +9815,468 @@ paths:
       summary: Get care plan resources
       tags:
       - care_plan
-  /care_plan/{care_plan_id}/success_metrics:
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan resource
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanResourcesRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanResourcesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan resource
+      tags:
+      - care_plan
+  /care_plan/{care_plan_id}/risks:
+    get:
+      description: Get the risks associated with a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetCarePlanRisksResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan risks
+      tags:
+      - care_plan
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan risk
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanRisksRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanRisksResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan risk
+      tags:
+      - care_plan
+  /care_plan/{care_plan_id}/support_network:
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan support network
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCareplanSupportNetworkRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCareplanSupportNetworkResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan support network
+      tags:
+      - care_plan
+  /care_plan/resources/{resource_id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan resource by its ID
+      parameters:
+      - description: Resource ID
+        in: path
+        name: resource_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanResourcesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanResourcesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan resource
+      tags:
+      - care_plan
+  /care_plan/support_network/{support_network_id}:
+    delete:
+      description: Delete a care plan support network by its ID
+      parameters:
+      - description: Support Network ID
+        in: path
+        name: support_network_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan support network
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan support network by its ID
+      parameters:
+      - description: Support Network ID
+        in: path
+        name: support_network_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanSupportNetworkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanSupportNetworkResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan support network
+      tags:
+      - care_plan
+  /care_plans/{care_plan_id}:
+    get:
+      description: Get the care plan overview for a given assessment ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetCarePlanOverviewResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan overview
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update the care plan overview for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanOverviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanOverviewResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan overview
+      tags:
+      - care_plan
+  /care_plans/{care_plan_id}/interventions:
+    get:
+      description: Get the care plan interventions for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetCarePlanInterventionsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan interventions
+      tags:
+      - care_plan
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan intervention
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanInterventionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanInterventionResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan intervention
+      tags:
+      - care_plan
+  /care_plans/{care_plan_id}/objectives:
+    get:
+      description: Get the care plan objectives for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetCarePlanObjectivesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan objectives
+      tags:
+      - care_plan
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan objective
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanObjectiveRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanObjectiveResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan objective
+      tags:
+      - care_plan
+  /care_plans/{care_plan_id}/success_metrics:
     get:
       description: Get the success metrics for a given care plan ID
       parameters:
@@ -9284,6 +10305,44 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get care plan success metrics
+      tags:
+      - care_plan
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan success metric
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanSuccessMetricsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanSuccessMetricsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan success metric
       tags:
       - care_plan
   /clients:
@@ -9687,6 +10746,83 @@ paths:
       summary: List appointments for a client in a date range
       tags:
       - appointments
+  /clients/{id}/assessment:
+    get:
+      description: Get a list of client maturity matrix assessments
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List client maturity matrix assessments
+      tags:
+      - maturity_matrix
+    post:
+      consumes:
+      - application/json
+      description: Create a client maturity matrix assessment
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateClientMaturityMatrixAssessmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateClientMaturityMatrixAssessmentResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create client maturity matrix assessment
+      tags:
+      - maturity_matrix
   /clients/{id}/contracts:
     get:
       parameters:
@@ -10745,83 +11881,6 @@ paths:
       summary: Update an assigned employee
       tags:
       - client_network
-  /clients/{id}/maturity_matrix_assessment:
-    get:
-      description: Get a list of client maturity matrix assessments
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List client maturity matrix assessments
-      tags:
-      - maturity_matrix
-    post:
-      consumes:
-      - application/json
-      description: Create a client maturity matrix assessment
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateClientMaturityMatrixAssessmentRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateClientMaturityMatrixAssessmentResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create client maturity matrix assessment
-      tags:
-      - maturity_matrix
   /clients/{id}/maturity_matrix_assessment/{assessment_id}/goals:
     get:
       description: Get a list of client goals
@@ -12969,6 +14028,75 @@ paths:
       summary: Upload a file for intake form
       tags:
       - intake_form
+  /interventions/{intervention_id}:
+    delete:
+      description: Delete a care plan intervention by its ID
+      parameters:
+      - description: Intervention ID
+        in: path
+        name: intervention_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan intervention
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan intervention by its ID
+      parameters:
+      - description: Intervention ID
+        in: path
+        name: intervention_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanInterventionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanInterventionResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan intervention
+      tags:
+      - care_plan
   /invoices:
     get:
       description: List invoices based on optional filters like client ID, sender
@@ -13959,6 +15087,114 @@ paths:
       summary: List all maturity matrix
       tags:
       - maturity_matrix
+  /objectives/{objective_id}:
+    delete:
+      description: Delete a care plan objective by its ID
+      parameters:
+      - description: Objective ID
+        in: path
+        name: objective_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan objective
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan objective by its ID
+      parameters:
+      - description: Objective ID
+        in: path
+        name: objective_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanObjectiveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanObjectiveResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan objective
+      tags:
+      - care_plan
+  /objectives/{objective_id}/actions:
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan action
+      parameters:
+      - description: Objective ID
+        in: path
+        name: objective_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanActionsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanActionsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan action
+      tags:
+      - care_plan
   /registration_form:
     get:
       description: List all registration forms
@@ -14198,6 +15434,75 @@ paths:
       summary: Update Registration Form Status
       tags:
       - Registration Form
+  /risks/{risk_id}:
+    delete:
+      description: Delete a care plan risk by its ID
+      parameters:
+      - description: Risk ID
+        in: path
+        name: risk_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan risk
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan risk by its ID
+      parameters:
+      - description: Risk ID
+        in: path
+        name: risk_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanRisksRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanRisksResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan risk
+      tags:
+      - care_plan
   /roles:
     get:
       description: List all roles
@@ -14657,6 +15962,75 @@ paths:
       summary: Create a new sender invoice template
       tags:
       - senders
+  /success_metrics/{metric_id}:
+    delete:
+      description: Delete a care plan success metric by its ID
+      parameters:
+      - description: Metric ID
+        in: path
+        name: metric_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan success metric
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan success metric by its ID
+      parameters:
+      - description: Metric ID
+        in: path
+        name: metric_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanSuccessMetricsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanSuccessMetricsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan success metric
+      tags:
+      - care_plan
   /test/notification:
     get:
       responses:
