@@ -7,6 +7,7 @@ import (
 	"maicare_go/async"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
+	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 
 	"maicare_go/util"
@@ -22,6 +23,7 @@ var testStore *db.Store
 var testServer *Server
 var testb2Client *bucket.B2Client
 var testasynqClient *async.AsynqClient
+var testGrpcClient grpclient.GrpcClientInterface
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
@@ -44,7 +46,9 @@ func TestMain(m *testing.M) {
 	testasynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, &tls.Config{})
 	hubInstance := hub.NewHub()
 
-	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance)
+	testGrpcClient := CreateMockGrpcClient()
+
+	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance, testGrpcClient)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

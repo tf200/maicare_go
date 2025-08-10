@@ -1,9 +1,16 @@
 package grpclient
 
 import (
+	context "context"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+type GrpcClientInterface interface {
+	GenerateCarePlan(ctx context.Context, req *PersonalizedCarePlanRequest) (*PersonalizedCarePlanResponse, error)
+	Close() error
+}
 
 type GrpcClient struct {
 	// Add any necessary fields here, such as connection or client instances
@@ -11,7 +18,7 @@ type GrpcClient struct {
 	client CarePlannerClient
 }
 
-func NewGrpcClient() (*GrpcClient, error) {
+func NewGrpcClient() (GrpcClientInterface, error) {
 	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err

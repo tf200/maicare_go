@@ -9,6 +9,7 @@ import (
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
+	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/notification"
 	"maicare_go/util"
@@ -131,6 +132,11 @@ func main() {
 		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService)
 	}
 
+	grpcClient, err := grpclient.NewGrpcClient()
+	if err != nil {
+		log.Fatalf("Could not create gRPC client: %v", err)
+	}
+
 	// Create error channel to catch server errors
 	errChan := make(chan error, 1)
 
@@ -147,7 +153,7 @@ func main() {
 	log.Println("Asynq server started successfully in background")
 
 	// Start your main server
-	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey, hubInstance)
+	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey, hubInstance, grpcClient)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

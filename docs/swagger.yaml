@@ -243,6 +243,34 @@ definitions:
       role_id:
         type: integer
     type: object
+  api.CarePlanActions:
+    properties:
+      action_description:
+        type: string
+      id:
+        type: integer
+      is_completed:
+        type: boolean
+      notes:
+        type: string
+      sort_order:
+        type: integer
+    type: object
+  api.CarePlanObjectives:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/api.CarePlanActions'
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      timeframe:
+        type: string
+      title:
+        type: string
+    type: object
   api.ChangePasswordRequest:
     properties:
       new_password:
@@ -2584,6 +2612,66 @@ definitions:
         type: string
       size:
         type: integer
+    type: object
+  api.GetCarePlanObjectivesResponse:
+    properties:
+      long_term_goals:
+        items:
+          $ref: '#/definitions/api.CarePlanObjectives'
+        type: array
+      medium_term_goals:
+        items:
+          $ref: '#/definitions/api.CarePlanObjectives'
+        type: array
+      short_term_goals:
+        items:
+          $ref: '#/definitions/api.CarePlanObjectives'
+        type: array
+    type: object
+  api.GetCarePlanOverviewResponse:
+    properties:
+      assessment_summary:
+        type: string
+      current_level:
+        type: integer
+      domain:
+        type: string
+      generated_at:
+        type: string
+      id:
+        type: integer
+      raw_llm_response:
+        type: string
+      status:
+        type: string
+      target_level:
+        type: integer
+    type: object
+  api.GetCarePlanResourcesResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_obtained:
+        type: boolean
+      obtained_date:
+        type: string
+      type:
+        type: string
+    type: object
+  api.GetCarePlanSuccessMetricsResponse:
+    properties:
+      current_value:
+        type: string
+      id:
+        type: integer
+      measurement_method:
+        type: string
+      metric_name:
+        type: string
+      target_value:
+        type: string
     type: object
   api.GetClientAddressesApiResponse:
     properties:
@@ -5482,6 +5570,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetCarePlanObjectivesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetCarePlanObjectivesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetCarePlanOverviewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetCarePlanOverviewResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetClientAddressesApiResponse:
     properties:
       data:
@@ -6027,6 +6133,28 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.CreateGoalObjectiveResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetCarePlanResourcesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetCarePlanResourcesResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetCarePlanSuccessMetricsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetCarePlanSuccessMetricsResponse'
         type: array
       message:
         type: string
@@ -9034,6 +9162,130 @@ paths:
       summary: Verify 2FA code
       tags:
       - authentication
+  /care_plan/{assessment_id}:
+    get:
+      description: Get the care plan overview for a given assessment ID
+      parameters:
+      - description: Assessment ID
+        in: path
+        name: assessment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetCarePlanOverviewResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan overview
+      tags:
+      - care_plan
+  /care_plan/{care_plan_id}/objectives:
+    get:
+      description: Get the care plan objectives for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetCarePlanObjectivesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan objectives
+      tags:
+      - care_plan
+  /care_plan/{care_plan_id}/resources:
+    get:
+      description: Get the resources for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetCarePlanResourcesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan resources
+      tags:
+      - care_plan
+  /care_plan/{care_plan_id}/success_metrics:
+    get:
+      description: Get the success metrics for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetCarePlanSuccessMetricsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan success metrics
+      tags:
+      - care_plan
   /clients:
     get:
       parameters:

@@ -59,7 +59,124 @@ func (q *Queries) CreateCarePlan(ctx context.Context, arg CreateCarePlanParams) 
 	return i, err
 }
 
+const createCarePlanAction = `-- name: CreateCarePlanAction :one
+INSERT INTO care_plan_actions (
+    objective_id,
+    action_description,
+    sort_order
+) VALUES (
+    $1, $2, $3
+)
+RETURNING id, objective_id, action_description, is_completed, completed_at, completed_by_employee_id, notes, sort_order
+`
+
+type CreateCarePlanActionParams struct {
+	ObjectiveID       int64  `json:"objective_id"`
+	ActionDescription string `json:"action_description"`
+	SortOrder         int32  `json:"sort_order"`
+}
+
+func (q *Queries) CreateCarePlanAction(ctx context.Context, arg CreateCarePlanActionParams) (CarePlanAction, error) {
+	row := q.db.QueryRow(ctx, createCarePlanAction, arg.ObjectiveID, arg.ActionDescription, arg.SortOrder)
+	var i CarePlanAction
+	err := row.Scan(
+		&i.ID,
+		&i.ObjectiveID,
+		&i.ActionDescription,
+		&i.IsCompleted,
+		&i.CompletedAt,
+		&i.CompletedByEmployeeID,
+		&i.Notes,
+		&i.SortOrder,
+	)
+	return i, err
+}
+
+const createCarePlanIntervention = `-- name: CreateCarePlanIntervention :one
+INSERT INTO care_plan_interventions (
+    care_plan_id,
+    frequency,
+    intervention_description
+) VALUES (
+    $1, $2, $3
+)
+RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at
+`
+
+type CreateCarePlanInterventionParams struct {
+	CarePlanID              int64  `json:"care_plan_id"`
+	Frequency               string `json:"frequency"`
+	InterventionDescription string `json:"intervention_description"`
+}
+
+// ==================== care plan interventions ====================
+func (q *Queries) CreateCarePlanIntervention(ctx context.Context, arg CreateCarePlanInterventionParams) (CarePlanIntervention, error) {
+	row := q.db.QueryRow(ctx, createCarePlanIntervention, arg.CarePlanID, arg.Frequency, arg.InterventionDescription)
+	var i CarePlanIntervention
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.Frequency,
+		&i.InterventionDescription,
+		&i.IsActive,
+		&i.LastCompletedDate,
+		&i.TotalCompletions,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createCarePlanObjective = `-- name: CreateCarePlanObjective :one
+
+
+INSERT INTO care_plan_objectives (
+    care_plan_id,
+    timeframe,
+    goal_title,
+    description,
+    target_date
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at, updated_at
+`
+
+type CreateCarePlanObjectiveParams struct {
+	CarePlanID  int64       `json:"care_plan_id"`
+	Timeframe   string      `json:"timeframe"`
+	GoalTitle   string      `json:"goal_title"`
+	Description string      `json:"description"`
+	TargetDate  pgtype.Date `json:"target_date"`
+}
+
+// ==================== care plan objectives and actions ====================
+func (q *Queries) CreateCarePlanObjective(ctx context.Context, arg CreateCarePlanObjectiveParams) (CarePlanObjective, error) {
+	row := q.db.QueryRow(ctx, createCarePlanObjective,
+		arg.CarePlanID,
+		arg.Timeframe,
+		arg.GoalTitle,
+		arg.Description,
+		arg.TargetDate,
+	)
+	var i CarePlanObjective
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.Timeframe,
+		&i.GoalTitle,
+		&i.Description,
+		&i.TargetDate,
+		&i.Status,
+		&i.CompletionDate,
+		&i.CompletionNotes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createCarePlanResources = `-- name: CreateCarePlanResources :one
+
 INSERT INTO care_plan_resources (
     care_plan_id,
     resource_description
@@ -74,6 +191,7 @@ type CreateCarePlanResourcesParams struct {
 	ResourceDescription string `json:"resource_description"`
 }
 
+// ==================== care plan resources ====================
 func (q *Queries) CreateCarePlanResources(ctx context.Context, arg CreateCarePlanResourcesParams) (CarePlanResource, error) {
 	row := q.db.QueryRow(ctx, createCarePlanResources, arg.CarePlanID, arg.ResourceDescription)
 	var i CarePlanResource
@@ -91,25 +209,34 @@ func (q *Queries) CreateCarePlanResources(ctx context.Context, arg CreateCarePla
 	return i, err
 }
 
-const createCarePlanRisks = `-- name: CreateCarePlanRisks :one
+const createCarePlanRisk = `-- name: CreateCarePlanRisk :one
+
 INSERT INTO care_plan_risks (
     care_plan_id,
     risk_description,
-    mitigation_strategy
+    mitigation_strategy,
+    risk_level
 ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4
 )
 RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at
 `
 
-type CreateCarePlanRisksParams struct {
-	CarePlanID         int64  `json:"care_plan_id"`
-	RiskDescription    string `json:"risk_description"`
-	MitigationStrategy string `json:"mitigation_strategy"`
+type CreateCarePlanRiskParams struct {
+	CarePlanID         int64   `json:"care_plan_id"`
+	RiskDescription    string  `json:"risk_description"`
+	MitigationStrategy string  `json:"mitigation_strategy"`
+	RiskLevel          *string `json:"risk_level"`
 }
 
-func (q *Queries) CreateCarePlanRisks(ctx context.Context, arg CreateCarePlanRisksParams) (CarePlanRisk, error) {
-	row := q.db.QueryRow(ctx, createCarePlanRisks, arg.CarePlanID, arg.RiskDescription, arg.MitigationStrategy)
+// ==================== care plan risks ====================
+func (q *Queries) CreateCarePlanRisk(ctx context.Context, arg CreateCarePlanRiskParams) (CarePlanRisk, error) {
+	row := q.db.QueryRow(ctx, createCarePlanRisk,
+		arg.CarePlanID,
+		arg.RiskDescription,
+		arg.MitigationStrategy,
+		arg.RiskLevel,
+	)
 	var i CarePlanRisk
 	err := row.Scan(
 		&i.ID,
@@ -123,25 +250,80 @@ func (q *Queries) CreateCarePlanRisks(ctx context.Context, arg CreateCarePlanRis
 	return i, err
 }
 
+const createCarePlanSuccessMetric = `-- name: CreateCarePlanSuccessMetric :one
+
+INSERT INTO care_plan_metrics (
+    care_plan_id,
+    metric_name,
+    target_value,
+    measurement_method
+) VALUES (
+    $1, $2, $3, $4
+)
+RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at
+`
+
+type CreateCarePlanSuccessMetricParams struct {
+	CarePlanID        int64  `json:"care_plan_id"`
+	MetricName        string `json:"metric_name"`
+	TargetValue       string `json:"target_value"`
+	MeasurementMethod string `json:"measurement_method"`
+}
+
+// ==================== care plan success metrics ====================
+func (q *Queries) CreateCarePlanSuccessMetric(ctx context.Context, arg CreateCarePlanSuccessMetricParams) (CarePlanMetric, error) {
+	row := q.db.QueryRow(ctx, createCarePlanSuccessMetric,
+		arg.CarePlanID,
+		arg.MetricName,
+		arg.TargetValue,
+		arg.MeasurementMethod,
+	)
+	var i CarePlanMetric
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.MetricName,
+		&i.TargetValue,
+		&i.MeasurementMethod,
+		&i.CurrentValue,
+		&i.LastMeasuredDate,
+		&i.IsAchieved,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createCarePlanSupportNetwork = `-- name: CreateCarePlanSupportNetwork :one
+
 INSERT INTO care_plan_support_network (
     care_plan_id,
     role_title,
-    responsibility_description
+    responsibility_description,
+    contact_person,
+    contact_details
 ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4, $5
 )
 RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at
 `
 
 type CreateCarePlanSupportNetworkParams struct {
-	CarePlanID                int64  `json:"care_plan_id"`
-	RoleTitle                 string `json:"role_title"`
-	ResponsibilityDescription string `json:"responsibility_description"`
+	CarePlanID                int64   `json:"care_plan_id"`
+	RoleTitle                 string  `json:"role_title"`
+	ResponsibilityDescription string  `json:"responsibility_description"`
+	ContactPerson             *string `json:"contact_person"`
+	ContactDetails            *string `json:"contact_details"`
 }
 
+// ===================== care plan support network ====================
 func (q *Queries) CreateCarePlanSupportNetwork(ctx context.Context, arg CreateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error) {
-	row := q.db.QueryRow(ctx, createCarePlanSupportNetwork, arg.CarePlanID, arg.RoleTitle, arg.ResponsibilityDescription)
+	row := q.db.QueryRow(ctx, createCarePlanSupportNetwork,
+		arg.CarePlanID,
+		arg.RoleTitle,
+		arg.ResponsibilityDescription,
+		arg.ContactPerson,
+		arg.ContactDetails,
+	)
 	var i CarePlanSupportNetwork
 	err := row.Scan(
 		&i.ID,
@@ -281,39 +463,6 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 	return i, err
 }
 
-const createGoalAction = `-- name: CreateGoalAction :one
-INSERT INTO care_plan_actions (
-    objective_id,
-    action_description,
-    sort_order
-) VALUES (
-    $1, $2, $3
-)
-RETURNING id, objective_id, action_description, is_completed, completed_at, completed_by_employee_id, notes, sort_order
-`
-
-type CreateGoalActionParams struct {
-	ObjectiveID       int64  `json:"objective_id"`
-	ActionDescription string `json:"action_description"`
-	SortOrder         int32  `json:"sort_order"`
-}
-
-func (q *Queries) CreateGoalAction(ctx context.Context, arg CreateGoalActionParams) (CarePlanAction, error) {
-	row := q.db.QueryRow(ctx, createGoalAction, arg.ObjectiveID, arg.ActionDescription, arg.SortOrder)
-	var i CarePlanAction
-	err := row.Scan(
-		&i.ID,
-		&i.ObjectiveID,
-		&i.ActionDescription,
-		&i.IsCompleted,
-		&i.CompletedAt,
-		&i.CompletedByEmployeeID,
-		&i.Notes,
-		&i.SortOrder,
-	)
-	return i, err
-}
-
 const createGoalObjective = `-- name: CreateGoalObjective :one
 INSERT INTO goal_objectives (
     goal_id,
@@ -357,124 +506,411 @@ func (q *Queries) CreateGoalObjective(ctx context.Context, arg CreateGoalObjecti
 	return i, err
 }
 
-const createIntervention = `-- name: CreateIntervention :one
-INSERT INTO care_plan_interventions (
-    care_plan_id,
-    frequency,
-    intervention_description
-) VALUES (
-    $1, $2, $3
-)
-RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at
+const deleteCarePlan = `-- name: DeleteCarePlan :exec
+DELETE FROM care_plans
+WHERE id = $1
 `
 
-type CreateInterventionParams struct {
-	CarePlanID              int64  `json:"care_plan_id"`
-	Frequency               string `json:"frequency"`
-	InterventionDescription string `json:"intervention_description"`
+func (q *Queries) DeleteCarePlan(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlan, id)
+	return err
 }
 
-func (q *Queries) CreateIntervention(ctx context.Context, arg CreateInterventionParams) (CarePlanIntervention, error) {
-	row := q.db.QueryRow(ctx, createIntervention, arg.CarePlanID, arg.Frequency, arg.InterventionDescription)
-	var i CarePlanIntervention
-	err := row.Scan(
-		&i.ID,
-		&i.CarePlanID,
-		&i.Frequency,
-		&i.InterventionDescription,
-		&i.IsActive,
-		&i.LastCompletedDate,
-		&i.TotalCompletions,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const createObjective = `-- name: CreateObjective :one
-INSERT INTO care_plan_objectives (
-    care_plan_id,
-    timeframe,
-    goal_title,
-    description,
-    target_date
-) VALUES (
-    $1, $2, $3, $4, $5
-)
-RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at, updated_at
+const deleteCarePlanAction = `-- name: DeleteCarePlanAction :exec
+DELETE FROM care_plan_actions
+WHERE id = $1
 `
 
-type CreateObjectiveParams struct {
-	CarePlanID  int64       `json:"care_plan_id"`
-	Timeframe   string      `json:"timeframe"`
-	GoalTitle   string      `json:"goal_title"`
-	Description string      `json:"description"`
-	TargetDate  pgtype.Date `json:"target_date"`
+func (q *Queries) DeleteCarePlanAction(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanAction, id)
+	return err
 }
 
-func (q *Queries) CreateObjective(ctx context.Context, arg CreateObjectiveParams) (CarePlanObjective, error) {
-	row := q.db.QueryRow(ctx, createObjective,
-		arg.CarePlanID,
-		arg.Timeframe,
-		arg.GoalTitle,
-		arg.Description,
-		arg.TargetDate,
-	)
-	var i CarePlanObjective
+const deleteCarePlanIntervention = `-- name: DeleteCarePlanIntervention :exec
+DELETE FROM care_plan_interventions
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanIntervention(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanIntervention, id)
+	return err
+}
+
+const deleteCarePlanObjective = `-- name: DeleteCarePlanObjective :exec
+DELETE FROM care_plan_objectives
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanObjective(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanObjective, id)
+	return err
+}
+
+const deleteCarePlanResource = `-- name: DeleteCarePlanResource :exec
+DELETE FROM care_plan_resources
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanResource(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanResource, id)
+	return err
+}
+
+const deleteCarePlanRisk = `-- name: DeleteCarePlanRisk :exec
+DELETE FROM care_plan_risks
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanRisk(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanRisk, id)
+	return err
+}
+
+const deleteCarePlanSuccessMetric = `-- name: DeleteCarePlanSuccessMetric :exec
+DELETE FROM care_plan_metrics
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanSuccessMetric(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanSuccessMetric, id)
+	return err
+}
+
+const deleteCarePlanSupportNetwork = `-- name: DeleteCarePlanSupportNetwork :exec
+DELETE FROM care_plan_support_network
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanSupportNetwork(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanSupportNetwork, id)
+	return err
+}
+
+const getCarePlanActionsMaxSortOrder = `-- name: GetCarePlanActionsMaxSortOrder :one
+SELECT COALESCE(MAX(sort_order), 0)::INT AS max_sort_order
+FROM care_plan_actions
+WHERE objective_id = $1
+`
+
+func (q *Queries) GetCarePlanActionsMaxSortOrder(ctx context.Context, objectiveID int64) (int32, error) {
+	row := q.db.QueryRow(ctx, getCarePlanActionsMaxSortOrder, objectiveID)
+	var max_sort_order int32
+	err := row.Scan(&max_sort_order)
+	return max_sort_order, err
+}
+
+const getCarePlanInterventions = `-- name: GetCarePlanInterventions :many
+SELECT id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at FROM care_plan_interventions 
+WHERE care_plan_id = $1 AND is_active = true 
+ORDER BY 
+    CASE frequency 
+        WHEN 'daily' THEN 1 
+        WHEN 'weekly' THEN 2 
+        WHEN 'monthly' THEN 3 
+    END
+`
+
+func (q *Queries) GetCarePlanInterventions(ctx context.Context, carePlanID int64) ([]CarePlanIntervention, error) {
+	rows, err := q.db.Query(ctx, getCarePlanInterventions, carePlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CarePlanIntervention
+	for rows.Next() {
+		var i CarePlanIntervention
+		if err := rows.Scan(
+			&i.ID,
+			&i.CarePlanID,
+			&i.Frequency,
+			&i.InterventionDescription,
+			&i.IsActive,
+			&i.LastCompletedDate,
+			&i.TotalCompletions,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCarePlanObjectivesWithActions = `-- name: GetCarePlanObjectivesWithActions :many
+SELECT 
+    -- Objective fields
+    o.id as objective_id,
+    o.goal_title as objective_title,
+    o.description as objective_description,
+    o.timeframe as objective_timeframe,
+    
+    -- Action fields (will be NULL if no actions exist)
+    a.id as action_id,
+    a.action_description,
+    a.is_completed,
+    a.notes as action_notes,
+    a.sort_order
+FROM care_plan_objectives o
+LEFT JOIN care_plan_actions a ON o.id = a.objective_id
+WHERE o.care_plan_id = $1
+ORDER BY 
+    o.timeframe,
+    o.id,
+    a.sort_order
+`
+
+type GetCarePlanObjectivesWithActionsRow struct {
+	ObjectiveID          int64   `json:"objective_id"`
+	ObjectiveTitle       string  `json:"objective_title"`
+	ObjectiveDescription string  `json:"objective_description"`
+	ObjectiveTimeframe   string  `json:"objective_timeframe"`
+	ActionID             *int64  `json:"action_id"`
+	ActionDescription    *string `json:"action_description"`
+	IsCompleted          *bool   `json:"is_completed"`
+	ActionNotes          *string `json:"action_notes"`
+	SortOrder            *int32  `json:"sort_order"`
+}
+
+func (q *Queries) GetCarePlanObjectivesWithActions(ctx context.Context, carePlanID int64) ([]GetCarePlanObjectivesWithActionsRow, error) {
+	rows, err := q.db.Query(ctx, getCarePlanObjectivesWithActions, carePlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCarePlanObjectivesWithActionsRow
+	for rows.Next() {
+		var i GetCarePlanObjectivesWithActionsRow
+		if err := rows.Scan(
+			&i.ObjectiveID,
+			&i.ObjectiveTitle,
+			&i.ObjectiveDescription,
+			&i.ObjectiveTimeframe,
+			&i.ActionID,
+			&i.ActionDescription,
+			&i.IsCompleted,
+			&i.ActionNotes,
+			&i.SortOrder,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCarePlanOverview = `-- name: GetCarePlanOverview :one
+SELECT 
+    cp.id, cp.assessment_id, cp.generated_at, cp.generated_by_employee_id, cp.approved_by_employee_id, cp.approved_at, cp.status, cp.assessment_summary, cp.raw_llm_response, cp.created_at, cp.updated_at, cp.version,
+    cma.client_id,
+    cma.current_level,
+    cma.target_level,
+    mm.topic_name,
+    cd.first_name,
+    cd.last_name
+FROM care_plans cp
+JOIN client_maturity_matrix_assessment cma ON cp.assessment_id = cma.id
+JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+JOIN client_details cd ON cma.client_id = cd.id
+WHERE cp.id = $1
+`
+
+type GetCarePlanOverviewRow struct {
+	ID                    int64            `json:"id"`
+	AssessmentID          int64            `json:"assessment_id"`
+	GeneratedAt           pgtype.Timestamp `json:"generated_at"`
+	GeneratedByEmployeeID *int64           `json:"generated_by_employee_id"`
+	ApprovedByEmployeeID  *int64           `json:"approved_by_employee_id"`
+	ApprovedAt            pgtype.Timestamp `json:"approved_at"`
+	Status                string           `json:"status"`
+	AssessmentSummary     string           `json:"assessment_summary"`
+	RawLlmResponse        []byte           `json:"raw_llm_response"`
+	CreatedAt             pgtype.Timestamp `json:"created_at"`
+	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
+	Version               int32            `json:"version"`
+	ClientID              int64            `json:"client_id"`
+	CurrentLevel          int32            `json:"current_level"`
+	TargetLevel           int32            `json:"target_level"`
+	TopicName             string           `json:"topic_name"`
+	FirstName             string           `json:"first_name"`
+	LastName              string           `json:"last_name"`
+}
+
+func (q *Queries) GetCarePlanOverview(ctx context.Context, id int64) (GetCarePlanOverviewRow, error) {
+	row := q.db.QueryRow(ctx, getCarePlanOverview, id)
+	var i GetCarePlanOverviewRow
 	err := row.Scan(
 		&i.ID,
-		&i.CarePlanID,
-		&i.Timeframe,
-		&i.GoalTitle,
-		&i.Description,
-		&i.TargetDate,
+		&i.AssessmentID,
+		&i.GeneratedAt,
+		&i.GeneratedByEmployeeID,
+		&i.ApprovedByEmployeeID,
+		&i.ApprovedAt,
 		&i.Status,
-		&i.CompletionDate,
-		&i.CompletionNotes,
+		&i.AssessmentSummary,
+		&i.RawLlmResponse,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Version,
+		&i.ClientID,
+		&i.CurrentLevel,
+		&i.TargetLevel,
+		&i.TopicName,
+		&i.FirstName,
+		&i.LastName,
 	)
 	return i, err
 }
 
-const createSuccessMetric = `-- name: CreateSuccessMetric :one
-INSERT INTO care_plan_metrics (
-    care_plan_id,
-    metric_name,
-    target_value,
-    measurement_method
-) VALUES (
-    $1, $2, $3, $4
-)
-RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at
+const getCarePlanResources = `-- name: GetCarePlanResources :many
+SELECT id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at FROM care_plan_resources 
+WHERE care_plan_id = $1 
+ORDER BY is_obtained, created_at
 `
 
-type CreateSuccessMetricParams struct {
-	CarePlanID        int64  `json:"care_plan_id"`
-	MetricName        string `json:"metric_name"`
-	TargetValue       string `json:"target_value"`
-	MeasurementMethod string `json:"measurement_method"`
+func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID int64) ([]CarePlanResource, error) {
+	rows, err := q.db.Query(ctx, getCarePlanResources, carePlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CarePlanResource
+	for rows.Next() {
+		var i CarePlanResource
+		if err := rows.Scan(
+			&i.ID,
+			&i.CarePlanID,
+			&i.ResourceDescription,
+			&i.ResourceType,
+			&i.IsObtained,
+			&i.ObtainedDate,
+			&i.CostEstimate,
+			&i.Notes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-func (q *Queries) CreateSuccessMetric(ctx context.Context, arg CreateSuccessMetricParams) (CarePlanMetric, error) {
-	row := q.db.QueryRow(ctx, createSuccessMetric,
-		arg.CarePlanID,
-		arg.MetricName,
-		arg.TargetValue,
-		arg.MeasurementMethod,
-	)
-	var i CarePlanMetric
-	err := row.Scan(
-		&i.ID,
-		&i.CarePlanID,
-		&i.MetricName,
-		&i.TargetValue,
-		&i.MeasurementMethod,
-		&i.CurrentValue,
-		&i.LastMeasuredDate,
-		&i.IsAchieved,
-		&i.CreatedAt,
-	)
-	return i, err
+const getCarePlanRisks = `-- name: GetCarePlanRisks :many
+SELECT id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at FROM care_plan_risks 
+WHERE care_plan_id = $1 AND is_active = true 
+ORDER BY 
+    CASE risk_level 
+        WHEN 'high' THEN 1 
+        WHEN 'medium' THEN 2 
+        WHEN 'low' THEN 3 
+    END
+`
+
+func (q *Queries) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]CarePlanRisk, error) {
+	rows, err := q.db.Query(ctx, getCarePlanRisks, carePlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CarePlanRisk
+	for rows.Next() {
+		var i CarePlanRisk
+		if err := rows.Scan(
+			&i.ID,
+			&i.CarePlanID,
+			&i.RiskDescription,
+			&i.MitigationStrategy,
+			&i.RiskLevel,
+			&i.IsActive,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCarePlanSuccessMetrics = `-- name: GetCarePlanSuccessMetrics :many
+SELECT id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at FROM care_plan_metrics 
+WHERE care_plan_id = $1 
+ORDER BY created_at
+`
+
+func (q *Queries) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int64) ([]CarePlanMetric, error) {
+	rows, err := q.db.Query(ctx, getCarePlanSuccessMetrics, carePlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CarePlanMetric
+	for rows.Next() {
+		var i CarePlanMetric
+		if err := rows.Scan(
+			&i.ID,
+			&i.CarePlanID,
+			&i.MetricName,
+			&i.TargetValue,
+			&i.MeasurementMethod,
+			&i.CurrentValue,
+			&i.LastMeasuredDate,
+			&i.IsAchieved,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCarePlanSupportNetwork = `-- name: GetCarePlanSupportNetwork :many
+SELECT id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at FROM care_plan_support_network 
+WHERE care_plan_id = $1 AND is_active = true 
+ORDER BY created_at
+`
+
+func (q *Queries) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int64) ([]CarePlanSupportNetwork, error) {
+	rows, err := q.db.Query(ctx, getCarePlanSupportNetwork, carePlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CarePlanSupportNetwork
+	for rows.Next() {
+		var i CarePlanSupportNetwork
+		if err := rows.Scan(
+			&i.ID,
+			&i.CarePlanID,
+			&i.RoleTitle,
+			&i.ResponsibilityDescription,
+			&i.ContactPerson,
+			&i.ContactDetails,
+			&i.IsActive,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getClientGoal = `-- name: GetClientGoal :one
@@ -779,4 +1215,306 @@ func (q *Queries) ListMaturityMatrix(ctx context.Context) ([]MaturityMatrix, err
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateCarePlanAction = `-- name: UpdateCarePlanAction :one
+UPDATE care_plan_actions
+SET
+    action_description = COALESCE($2, action_description)
+WHERE id = $1
+RETURNING id, objective_id, action_description, is_completed, completed_at, completed_by_employee_id, notes, sort_order
+`
+
+type UpdateCarePlanActionParams struct {
+	ID                int64   `json:"id"`
+	ActionDescription *string `json:"action_description"`
+}
+
+func (q *Queries) UpdateCarePlanAction(ctx context.Context, arg UpdateCarePlanActionParams) (CarePlanAction, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanAction, arg.ID, arg.ActionDescription)
+	var i CarePlanAction
+	err := row.Scan(
+		&i.ID,
+		&i.ObjectiveID,
+		&i.ActionDescription,
+		&i.IsCompleted,
+		&i.CompletedAt,
+		&i.CompletedByEmployeeID,
+		&i.Notes,
+		&i.SortOrder,
+	)
+	return i, err
+}
+
+const updateCarePlanIntervention = `-- name: UpdateCarePlanIntervention :one
+UPDATE care_plan_interventions
+SET
+    frequency = COALESCE($2, frequency),
+    intervention_description = COALESCE($3, intervention_description),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at
+`
+
+type UpdateCarePlanInterventionParams struct {
+	ID                      int64   `json:"id"`
+	Frequency               *string `json:"frequency"`
+	InterventionDescription *string `json:"intervention_description"`
+}
+
+func (q *Queries) UpdateCarePlanIntervention(ctx context.Context, arg UpdateCarePlanInterventionParams) (CarePlanIntervention, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanIntervention, arg.ID, arg.Frequency, arg.InterventionDescription)
+	var i CarePlanIntervention
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.Frequency,
+		&i.InterventionDescription,
+		&i.IsActive,
+		&i.LastCompletedDate,
+		&i.TotalCompletions,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateCarePlanObjective = `-- name: UpdateCarePlanObjective :one
+UPDATE care_plan_objectives
+SET
+    timeframe = COALESCE($2, timeframe),
+    goal_title = COALESCE($3, goal_title),
+    description = COALESCE($4, description),
+    status = COALESCE($5, status), 
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at, updated_at
+`
+
+type UpdateCarePlanObjectiveParams struct {
+	ID          int64   `json:"id"`
+	Timeframe   *string `json:"timeframe"`
+	GoalTitle   *string `json:"goal_title"`
+	Description *string `json:"description"`
+	Status      *string `json:"status"`
+}
+
+func (q *Queries) UpdateCarePlanObjective(ctx context.Context, arg UpdateCarePlanObjectiveParams) (CarePlanObjective, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanObjective,
+		arg.ID,
+		arg.Timeframe,
+		arg.GoalTitle,
+		arg.Description,
+		arg.Status,
+	)
+	var i CarePlanObjective
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.Timeframe,
+		&i.GoalTitle,
+		&i.Description,
+		&i.TargetDate,
+		&i.Status,
+		&i.CompletionDate,
+		&i.CompletionNotes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateCarePlanOverview = `-- name: UpdateCarePlanOverview :one
+UPDATE care_plans
+SET
+    assessment_summary = COALESCE($2, assessment_summary)
+WHERE id = $1
+RETURNING id, assessment_id, generated_at, generated_by_employee_id, approved_by_employee_id, approved_at, status, assessment_summary, raw_llm_response, created_at, updated_at, version
+`
+
+type UpdateCarePlanOverviewParams struct {
+	ID                int64   `json:"id"`
+	AssessmentSummary *string `json:"assessment_summary"`
+}
+
+func (q *Queries) UpdateCarePlanOverview(ctx context.Context, arg UpdateCarePlanOverviewParams) (CarePlan, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanOverview, arg.ID, arg.AssessmentSummary)
+	var i CarePlan
+	err := row.Scan(
+		&i.ID,
+		&i.AssessmentID,
+		&i.GeneratedAt,
+		&i.GeneratedByEmployeeID,
+		&i.ApprovedByEmployeeID,
+		&i.ApprovedAt,
+		&i.Status,
+		&i.AssessmentSummary,
+		&i.RawLlmResponse,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
+const updateCarePlanResource = `-- name: UpdateCarePlanResource :one
+UPDATE care_plan_resources
+SET
+    resource_description = COALESCE($2, resource_description),
+    resource_type = COALESCE($3, resource_type),
+    is_obtained = COALESCE($4, is_obtained),
+    obtained_date = COALESCE($5, obtained_date),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at
+`
+
+type UpdateCarePlanResourceParams struct {
+	ID                  int64       `json:"id"`
+	ResourceDescription *string     `json:"resource_description"`
+	ResourceType        *string     `json:"resource_type"`
+	IsObtained          *bool       `json:"is_obtained"`
+	ObtainedDate        pgtype.Date `json:"obtained_date"`
+}
+
+func (q *Queries) UpdateCarePlanResource(ctx context.Context, arg UpdateCarePlanResourceParams) (CarePlanResource, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanResource,
+		arg.ID,
+		arg.ResourceDescription,
+		arg.ResourceType,
+		arg.IsObtained,
+		arg.ObtainedDate,
+	)
+	var i CarePlanResource
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.ResourceDescription,
+		&i.ResourceType,
+		&i.IsObtained,
+		&i.ObtainedDate,
+		&i.CostEstimate,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateCarePlanRisk = `-- name: UpdateCarePlanRisk :one
+UPDATE care_plan_risks
+SET
+    risk_description = COALESCE($2, risk_description),
+    mitigation_strategy = COALESCE($3, mitigation_strategy),
+    risk_level = COALESCE($4, risk_level),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at
+`
+
+type UpdateCarePlanRiskParams struct {
+	ID                 int64   `json:"id"`
+	RiskDescription    *string `json:"risk_description"`
+	MitigationStrategy *string `json:"mitigation_strategy"`
+	RiskLevel          *string `json:"risk_level"`
+}
+
+func (q *Queries) UpdateCarePlanRisk(ctx context.Context, arg UpdateCarePlanRiskParams) (CarePlanRisk, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanRisk,
+		arg.ID,
+		arg.RiskDescription,
+		arg.MitigationStrategy,
+		arg.RiskLevel,
+	)
+	var i CarePlanRisk
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.RiskDescription,
+		&i.MitigationStrategy,
+		&i.RiskLevel,
+		&i.IsActive,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateCarePlanSuccessMetric = `-- name: UpdateCarePlanSuccessMetric :one
+UPDATE care_plan_metrics
+SET
+    metric_name = COALESCE($2, metric_name),
+    target_value = COALESCE($3, target_value),
+    measurement_method = COALESCE($4, measurement_method),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at
+`
+
+type UpdateCarePlanSuccessMetricParams struct {
+	ID                int64   `json:"id"`
+	MetricName        *string `json:"metric_name"`
+	TargetValue       *string `json:"target_value"`
+	MeasurementMethod *string `json:"measurement_method"`
+}
+
+func (q *Queries) UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCarePlanSuccessMetricParams) (CarePlanMetric, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanSuccessMetric,
+		arg.ID,
+		arg.MetricName,
+		arg.TargetValue,
+		arg.MeasurementMethod,
+	)
+	var i CarePlanMetric
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.MetricName,
+		&i.TargetValue,
+		&i.MeasurementMethod,
+		&i.CurrentValue,
+		&i.LastMeasuredDate,
+		&i.IsAchieved,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateCarePlanSupportNetwork = `-- name: UpdateCarePlanSupportNetwork :one
+UPDATE care_plan_support_network
+SET
+    role_title = COALESCE($2, role_title),
+    responsibility_description = COALESCE($3, responsibility_description),
+    contact_person = COALESCE($4, contact_person),
+    contact_details = COALESCE($5, contact_details),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at
+`
+
+type UpdateCarePlanSupportNetworkParams struct {
+	ID                        int64   `json:"id"`
+	RoleTitle                 *string `json:"role_title"`
+	ResponsibilityDescription *string `json:"responsibility_description"`
+	ContactPerson             *string `json:"contact_person"`
+	ContactDetails            *string `json:"contact_details"`
+}
+
+func (q *Queries) UpdateCarePlanSupportNetwork(ctx context.Context, arg UpdateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanSupportNetwork,
+		arg.ID,
+		arg.RoleTitle,
+		arg.ResponsibilityDescription,
+		arg.ContactPerson,
+		arg.ContactDetails,
+	)
+	var i CarePlanSupportNetwork
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.RoleTitle,
+		&i.ResponsibilityDescription,
+		&i.ContactPerson,
+		&i.ContactDetails,
+		&i.IsActive,
+		&i.CreatedAt,
+	)
+	return i, err
 }

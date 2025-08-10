@@ -36,7 +36,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(20),
 		Status:          "approved",
-		Price:           0,
+		Price:           54,
 		PriceTimeUnit:   "daily", // util.RandomEnum(priceFrequency),
 		Hours:           nil,
 		HoursType:       nil,
@@ -196,6 +196,7 @@ func TestGenerateInvoiceApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[GenerateInvoiceResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)

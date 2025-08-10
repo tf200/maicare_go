@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 )
 
 type Table[T any] struct {
@@ -46,7 +48,10 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 	templItemsIds, err := store.Queries.GetSenderInvoiceTemplate(ctx, data.SenderID)
 
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no invoice template found for sender ID %d", data.SenderID)
+		}
+		return nil, fmt.Errorf("failed to get sender invoice template: %w", err)
 	}
 
 	if len(templItemsIds) == 0 {
@@ -55,7 +60,10 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 
 	templItems, err := store.Queries.GetTemplateItemsBySourceTable(ctx, templItemsIds)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no template items found for sender ID %d", data.SenderID)
+		}
+		return nil, fmt.Errorf("failed to get template items: %w", err)
 	}
 	if len(templItems) == 0 {
 		return nil, nil
@@ -71,7 +79,10 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 		case TableClientDetails.Name:
 			clientDetails, err := store.Queries.GetClientDetails(ctx, data.ClientID)
 			if err != nil {
-				return nil, err
+				if err == sql.ErrNoRows {
+					return nil, fmt.Errorf("no client details found for client ID %d", data.ClientID)
+				}
+				return nil, fmt.Errorf("failed to get client details: %w", err)
 			}
 			for _, item := range items {
 				switch item.SourceColumn {
@@ -84,7 +95,7 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 		case TableContract.Name:
 			contract, err := store.Queries.GetClientContract(ctx, data.ContractID)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to get contract for client ID %d: %w", data.ContractID, err)
 			}
 			for _, item := range items {
 				switch item.SourceColumn {

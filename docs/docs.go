@@ -1063,6 +1063,194 @@ const docTemplate = `{
                 }
             }
         },
+        "/care_plan/{assessment_id}": {
+            "get": {
+                "description": "Get the care plan overview for a given assessment ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Get care plan overview",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Assessment ID",
+                        "name": "assessment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetCarePlanOverviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/care_plan/{care_plan_id}/objectives": {
+            "get": {
+                "description": "Get the care plan objectives for a given care plan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Get care plan objectives",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetCarePlanObjectivesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/care_plan/{care_plan_id}/resources": {
+            "get": {
+                "description": "Get the resources for a given care plan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Get care plan resources",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanResourcesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/care_plan/{care_plan_id}/success_metrics": {
+            "get": {
+                "description": "Get the success metrics for a given care plan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Get care plan success metrics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanSuccessMetricsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients": {
             "get": {
                 "produces": [
@@ -9553,6 +9741,49 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CarePlanActions": {
+            "type": "object",
+            "properties": {
+                "action_description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_completed": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.CarePlanObjectives": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.CarePlanActions"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "timeframe": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -13022,6 +13253,98 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.GetCarePlanObjectivesResponse": {
+            "type": "object",
+            "properties": {
+                "long_term_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.CarePlanObjectives"
+                    }
+                },
+                "medium_term_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.CarePlanObjectives"
+                    }
+                },
+                "short_term_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.CarePlanObjectives"
+                    }
+                }
+            }
+        },
+        "api.GetCarePlanOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "assessment_summary": {
+                    "type": "string"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "raw_llm_response": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_level": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.GetCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.GetCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "current_value": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "measurement_method": {
+                    "type": "string"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "string"
                 }
             }
         },
@@ -17422,6 +17745,34 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_GetCarePlanObjectivesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetCarePlanObjectivesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetCarePlanOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetCarePlanOverviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_GetClientAddressesApiResponse": {
             "type": "object",
             "properties": {
@@ -18269,6 +18620,40 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.CreateGoalObjectiveResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_GetCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GetCarePlanResourcesResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_GetCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GetCarePlanSuccessMetricsResponse"
                     }
                 },
                 "message": {

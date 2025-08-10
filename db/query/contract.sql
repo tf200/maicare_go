@@ -213,13 +213,15 @@ RETURNING *;
 
 
 
+
 -- name: GetBillablePeriodsForContract :many
-WITH status_history AS (
+WITH raw_status_changes AS (
   SELECT
     new_values->>'status' AS status,
     changed_at AS effective_date
   FROM contract_audit
   WHERE contract_id = sqlc.arg(contract_id)
+    AND new_values->>'status' IS NOT NULL
   
   UNION ALL
   
@@ -228,7 +230,16 @@ WITH status_history AS (
     updated_at
   FROM contract
   WHERE id = sqlc.arg(contract_id)
-  ORDER BY effective_date
+),
+
+-- Deduplicate identical status within 1 second windows
+status_history AS (
+  SELECT
+    status,
+    MIN(effective_date) AS effective_date
+  FROM raw_status_changes
+  GROUP BY status, EXTRACT(EPOCH FROM effective_date)::INTEGER
+  ORDER BY MIN(effective_date)
 ),
 
 approved_periods AS (

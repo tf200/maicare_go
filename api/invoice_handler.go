@@ -17,6 +17,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 // CreateInvoiceRequest represents the request body for creating an invoice.
@@ -193,7 +194,8 @@ type GenerateInvoiceResponse struct {
 func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 	var req GenerateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 	invoiceData := invoice.InvoiceParams{
@@ -204,7 +206,13 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 
 	clientSender, err := server.store.GetClientSender(ctx.Request.Context(), invoiceData.ClientID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		if err == sql.ErrNoRows {
+			server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Client sender not found", zap.Error(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("client sender not found")))
+			return
+		}
+		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to get client sender", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get client sender")))
 		return
 	}
 
@@ -212,13 +220,15 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 
 	invoiceResult, warningCount, err := invoice.GenerateInvoice(server.store, invoiceData, ctx.Request.Context())
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to generate invoice", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate invoice")))
 		return
 	}
 
 	invoiceDetailsBytes, err := json.Marshal(invoiceResult.InvoiceDetails)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to marshal invoice details", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal invoice details")))
 		return
 	}
 
@@ -229,7 +239,8 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to fetch extra content", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to fetch extra content")))
 		return
 	}
 
@@ -241,7 +252,8 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		// marshal extra content to JSON
 		extraContentBytes, err = json.Marshal(extraContent)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to marshal extra content", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal extra content")))
 			return
 		}
 	}
@@ -260,7 +272,8 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		InvoiceSequence: invoiceResult.InvoiceSequence,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to create invoice in database", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create invoice in database")))
 		return
 	}
 
