@@ -58,12 +58,10 @@ type Level struct {
 
 // CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
 type CreateClientMaturityMatrixAssessmentRequest struct {
-	ID               int64     `json:"id"`
-	MaturityMatrixID int64     `json:"maturity_matrix_id"`
-	InitialLevel     int32     `json:"initial_level"`
-	TargetLevel      int32     `json:"target_level"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
+	ID               int64 `json:"id"`
+	MaturityMatrixID int64 `json:"maturity_matrix_id"`
+	InitialLevel     int32 `json:"initial_level"`
+	TargetLevel      int32 `json:"target_level"`
 }
 
 // CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
@@ -121,8 +119,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	arg := db.CreateClientMaturityMatrixAssessmentParams{
 		ClientID:         clientID,
 		MaturityMatrixID: req.MaturityMatrixID,
-		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
-		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+		StartDate:        pgtype.Date{Time: time.Now(), Valid: true},
+		EndDate:          pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
 		InitialLevel:     req.InitialLevel,
 		TargetLevel:      req.TargetLevel,
 		CurrentLevel:     req.InitialLevel,
@@ -1671,13 +1669,13 @@ func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
 ///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 
-// CreateCareplanSupportNetworkRequest represents the request body for creating a care plan support network
+// CreateCarePlanSupportNetworkRequest represents the request body for creating a care plan support network
 type CreateCarePlanSupportNetworkRequest struct {
 	RoleTitle                 string `json:"role_title" binding:"required"`
 	ResponsibilityDescription string `json:"responsibility_description"`
 }
 
-// CreateCareplanSupportNetworkResponse represents the response for the CreateCareplanSupportNetwork API
+// CreateCarePlanSupportNetworkResponse represents the response for the CreateCarePlanSupportNetwork API
 type CreateCarePlanSupportNetworkResponse struct {
 	SupportNetworkID          int64   `json:"support_network_id"`
 	RoleTitle                 string  `json:"role_title"`
@@ -1693,8 +1691,8 @@ type CreateCarePlanSupportNetworkResponse struct {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCareplanSupportNetworkRequest true "Request body"
-// @Success 201 {object} Response[CreateCareplanSupportNetworkResponse]
+// @Param request body CreateCarePlanSupportNetworkRequest true "Request body"
+// @Success 201 {object} Response[CreateCarePlanSupportNetworkResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"

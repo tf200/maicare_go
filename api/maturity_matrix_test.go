@@ -199,8 +199,6 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 					MaturityMatrixID: 1,
 					InitialLevel:     1,
 					TargetLevel:      3,
-					StartDate:        time.Now(),
-					EndDate:          time.Now().Add(time.Hour * 24 * 365), // 1 year
 				}
 				data, err := json.Marshal(assessmentReq)
 				require.NoError(t, err)
