@@ -58,12 +58,10 @@ type Level struct {
 
 // CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
 type CreateClientMaturityMatrixAssessmentRequest struct {
-	ID               int64     `json:"id"`
-	MaturityMatrixID int64     `json:"maturity_matrix_id"`
-	InitialLevel     int32     `json:"initial_level"`
-	TargetLevel      int32     `json:"target_level"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
+	ID               int64 `json:"id"`
+	MaturityMatrixID int64 `json:"maturity_matrix_id"`
+	InitialLevel     int32 `json:"initial_level"`
+	TargetLevel      int32 `json:"target_level"`
 }
 
 // CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
@@ -121,8 +119,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	arg := db.CreateClientMaturityMatrixAssessmentParams{
 		ClientID:         clientID,
 		MaturityMatrixID: req.MaturityMatrixID,
-		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
-		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+		StartDate:        pgtype.Date{Time: time.Now(), Valid: true},
+		EndDate:          pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
 		InitialLevel:     req.InitialLevel,
 		TargetLevel:      req.TargetLevel,
 		CurrentLevel:     req.InitialLevel,
@@ -325,6 +323,21 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			return
 		}
 	}
+
+	for _, supportNetwork := range generatedCarePlan.SupportNetwork {
+		_, err := qtx.CreateCarePlanSupportNetwork(ctx, db.CreateCarePlanSupportNetworkParams{
+			CarePlanID:                carePlan.ID,
+			RoleTitle:                 supportNetwork.Role,
+			ResponsibilityDescription: supportNetwork.Responsibility,
+			ContactPerson:             nil, // TODO: Add contact person if needed
+			ContactDetails:            nil, // TODO: Add contact details if needed
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -1442,7 +1455,7 @@ type CreateCarePlanRisksRequest struct {
 
 // CreateCarePlanRisksResponse represents the response for the CreateCarePlanRisks API
 type CreateCarePlanRisksResponse struct {
-	ID                 int64   `json:"id"`
+	RiskID             int64   `json:"risk_id"`
 	RiskDescription    string  `json:"risk_description"`
 	MitigationStrategy string  `json:"mitigation_strategy"`
 	RiskLevel          *string `json:"risk_level"`
@@ -1460,7 +1473,7 @@ type CreateCarePlanRisksResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/{care_plan_id}/risks [post]
+// @Router /care_plans/{care_plan_id}/risks [post]
 func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
@@ -1489,7 +1502,7 @@ func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(CreateCarePlanRisksResponse{
-		ID:                 risk.ID,
+		RiskID:             risk.ID,
 		RiskDescription:    risk.RiskDescription,
 		MitigationStrategy: risk.MitigationStrategy,
 		RiskLevel:          risk.RiskLevel,
@@ -1500,7 +1513,7 @@ func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
 
 // GetCarePlanRisksResponse represents the response for the GetCarePlanRisks API
 type GetCarePlanRisksResponse struct {
-	ID                 int64   `json:"id"`
+	RiskID             int64   `json:"risk_id"`
 	RiskDescription    string  `json:"risk_description"`
 	MitigationStrategy string  `json:"mitigation_strategy"`
 	RiskLevel          *string `json:"risk_level"`
@@ -1541,7 +1554,7 @@ func (server *Server) GetCarePlanRisksApi(ctx *gin.Context) {
 	response := make([]GetCarePlanRisksResponse, len(risks))
 	for i, risk := range risks {
 		response[i] = GetCarePlanRisksResponse{
-			ID:                 risk.ID,
+			RiskID:             risk.ID,
 			RiskDescription:    risk.RiskDescription,
 			MitigationStrategy: risk.MitigationStrategy,
 			RiskLevel:          risk.RiskLevel,
@@ -1561,7 +1574,7 @@ type UpdateCarePlanRisksRequest struct {
 
 // UpdateCarePlanRisksResponse represents the response for the UpdateCarePlanRisks API
 type UpdateCarePlanRisksResponse struct {
-	ID                 int64   `json:"id"`
+	RiskID             int64   `json:"risk_id"`
 	RiskDescription    string  `json:"risk_description"`
 	MitigationStrategy string  `json:"mitigation_strategy"`
 	RiskLevel          *string `json:"risk_level"`
@@ -1608,7 +1621,7 @@ func (server *Server) UpdateCarePlanRisksApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(UpdateCarePlanRisksResponse{
-		ID:                 risk.ID,
+		RiskID:             risk.ID,
 		RiskDescription:    risk.RiskDescription,
 		MitigationStrategy: risk.MitigationStrategy,
 		RiskLevel:          risk.RiskLevel,
@@ -1656,17 +1669,15 @@ func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
 ///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 
-// CreateCareplanSupportNetworkRequest represents the request body for creating a care plan support network
-type CreateCareplanSupportNetworkRequest struct {
-	RoleTitle                 string  `json:"role_title" binding:"required"`
-	ResponsibilityDescription string  `json:"responsibility_description"`
-	ContactPerson             *string `json:"contact_person"`
-	ContactDetails            *string `json:"contact_details"`
+// CreateCarePlanSupportNetworkRequest represents the request body for creating a care plan support network
+type CreateCarePlanSupportNetworkRequest struct {
+	RoleTitle                 string `json:"role_title" binding:"required"`
+	ResponsibilityDescription string `json:"responsibility_description"`
 }
 
-// CreateCareplanSupportNetworkResponse represents the response for the CreateCareplanSupportNetwork API
-type CreateCareplanSupportNetworkResponse struct {
-	ID                        int64   `json:"id"`
+// CreateCarePlanSupportNetworkResponse represents the response for the CreateCarePlanSupportNetwork API
+type CreateCarePlanSupportNetworkResponse struct {
+	SupportNetworkID          int64   `json:"support_network_id"`
 	RoleTitle                 string  `json:"role_title"`
 	ResponsibilityDescription string  `json:"responsibility_description"`
 	ContactPerson             *string `json:"contact_person"`
@@ -1680,12 +1691,12 @@ type CreateCareplanSupportNetworkResponse struct {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCareplanSupportNetworkRequest true "Request body"
-// @Success 201 {object} Response[CreateCareplanSupportNetworkResponse]
+// @Param request body CreateCarePlanSupportNetworkRequest true "Request body"
+// @Success 201 {object} Response[CreateCarePlanSupportNetworkResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/{care_plan_id}/support_network [post]
+// @Router /care_plans/{care_plan_id}/support_network [post]
 func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
@@ -1694,7 +1705,7 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateCareplanSupportNetworkRequest
+	var req CreateCarePlanSupportNetworkRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.logBusinessEvent(LogLevelError, "CreateCareplanSupportNetworkApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
@@ -1705,8 +1716,6 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 		CarePlanID:                carePlanID,
 		RoleTitle:                 req.RoleTitle,
 		ResponsibilityDescription: req.ResponsibilityDescription,
-		ContactPerson:             req.ContactPerson,
-		ContactDetails:            req.ContactDetails,
 	})
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "CreateCareplanSupportNetworkApi", "Failed to create care plan support network", zap.Error(err))
@@ -1714,8 +1723,8 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(CreateCareplanSupportNetworkResponse{
-		ID:                        supportNetwork.ID,
+	res := SuccessResponse(CreateCarePlanSupportNetworkResponse{
+		SupportNetworkID:          supportNetwork.ID,
 		RoleTitle:                 supportNetwork.RoleTitle,
 		ResponsibilityDescription: supportNetwork.ResponsibilityDescription,
 		ContactPerson:             supportNetwork.ContactPerson,
@@ -1735,17 +1744,17 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/{care_plan_id}/support_network [get]
-type GetCareplanSupportNetworkResponse struct {
-	ID                        int64   `json:"id"`
+// @Router /care_plans/{care_plan_id}/support_network [get]
+type GetCarePlanSupportNetworkResponse struct {
+	SupportNetworkID          int64   `json:"support_network_id"`
 	RoleTitle                 string  `json:"role_title"`
 	ResponsibilityDescription *string `json:"responsibility_description"`
 }
 
-func (server *Server) GetCareplanSupportNetworkApi(ctx *gin.Context) {
+func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCareplanSupportNetworkApi", "Invalid care plan ID", zap.Error(err))
+		server.logBusinessEvent(LogLevelError, "GetCarePlanSupportNetworkApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
@@ -1758,14 +1767,14 @@ func (server *Server) GetCareplanSupportNetworkApi(ctx *gin.Context) {
 	}
 
 	if len(supportNetwork) == 0 {
-		res := SuccessResponse([]GetCareplanSupportNetworkResponse{}, "No care plan support network found")
+		res := SuccessResponse([]GetCarePlanSupportNetworkResponse{}, "No care plan support network found")
 		ctx.JSON(http.StatusOK, res)
 		return
 	}
-	response := make([]GetCareplanSupportNetworkResponse, len(supportNetwork))
+	response := make([]GetCarePlanSupportNetworkResponse, len(supportNetwork))
 	for i, support := range supportNetwork {
-		response[i] = GetCareplanSupportNetworkResponse{
-			ID:                        support.ID,
+		response[i] = GetCarePlanSupportNetworkResponse{
+			SupportNetworkID:          support.ID,
 			RoleTitle:                 support.RoleTitle,
 			ResponsibilityDescription: &support.ResponsibilityDescription,
 		}
@@ -1785,7 +1794,7 @@ type UpdateCarePlanSupportNetworkRequest struct {
 
 // UpdateCarePlanSupportNetworkResponse represents the response for the UpdateCarePlanSupportNetwork API
 type UpdateCarePlanSupportNetworkResponse struct {
-	ID                        int64   `json:"id"`
+	SupportNetworkID          int64   `json:"support_network_id"`
 	RoleTitle                 string  `json:"role_title"`
 	ResponsibilityDescription string  `json:"responsibility_description"`
 	ContactPerson             *string `json:"contact_person"`
@@ -1834,7 +1843,7 @@ func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(UpdateCarePlanSupportNetworkResponse{
-		ID:                        supportNetwork.ID,
+		SupportNetworkID:          supportNetwork.ID,
 		RoleTitle:                 supportNetwork.RoleTitle,
 		ResponsibilityDescription: supportNetwork.ResponsibilityDescription,
 		ContactPerson:             supportNetwork.ContactPerson,

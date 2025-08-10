@@ -605,12 +605,12 @@ definitions:
     type: object
   api.CreateCarePlanRisksResponse:
     properties:
-      id:
-        type: integer
       mitigation_strategy:
         type: string
       risk_description:
         type: string
+      risk_id:
+        type: integer
       risk_level:
         type: string
     type: object
@@ -640,12 +640,8 @@ definitions:
       target_value:
         type: string
     type: object
-  api.CreateCareplanSupportNetworkRequest:
+  api.CreateCarePlanSupportNetworkRequest:
     properties:
-      contact_details:
-        type: string
-      contact_person:
-        type: string
       responsibility_description:
         type: string
       role_title:
@@ -653,18 +649,18 @@ definitions:
     required:
     - role_title
     type: object
-  api.CreateCareplanSupportNetworkResponse:
+  api.CreateCarePlanSupportNetworkResponse:
     properties:
       contact_details:
         type: string
       contact_person:
         type: string
-      id:
-        type: integer
       responsibility_description:
         type: string
       role_title:
         type: string
+      support_network_id:
+        type: integer
     type: object
   api.CreateClientDetailsRequest:
     properties:
@@ -920,16 +916,12 @@ definitions:
     type: object
   api.CreateClientMaturityMatrixAssessmentRequest:
     properties:
-      end_date:
-        type: string
       id:
         type: integer
       initial_level:
         type: integer
       maturity_matrix_id:
         type: integer
-      start_date:
-        type: string
       target_level:
         type: integer
     type: object
@@ -2851,12 +2843,12 @@ definitions:
     type: object
   api.GetCarePlanRisksResponse:
     properties:
-      id:
-        type: integer
       mitigation_strategy:
         type: string
       risk_description:
         type: string
+      risk_id:
+        type: integer
       risk_level:
         type: string
     type: object
@@ -5518,10 +5510,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateCareplanSupportNetworkResponse:
+  api.Response-api_CreateCarePlanSupportNetworkResponse:
     properties:
       data:
-        $ref: '#/definitions/api.CreateCareplanSupportNetworkResponse'
+        $ref: '#/definitions/api.CreateCarePlanSupportNetworkResponse'
       message:
         type: string
       success:
@@ -7225,12 +7217,12 @@ definitions:
     type: object
   api.UpdateCarePlanRisksResponse:
     properties:
-      id:
-        type: integer
       mitigation_strategy:
         type: string
       risk_description:
         type: string
+      risk_id:
+        type: integer
       risk_level:
         type: string
     type: object
@@ -7273,12 +7265,12 @@ definitions:
         type: string
       contact_person:
         type: string
-      id:
-        type: integer
       responsibility_description:
         type: string
       role_title:
         type: string
+      support_network_id:
+        type: integer
     type: object
   api.UpdateClientDetailsRequest:
     properties:
@@ -9884,83 +9876,6 @@ paths:
       summary: Get care plan risks
       tags:
       - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan risk
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateCarePlanRisksRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateCarePlanRisksResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan risk
-      tags:
-      - care_plan
-  /care_plan/{care_plan_id}/support_network:
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan support network
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateCareplanSupportNetworkRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateCareplanSupportNetworkResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan support network
-      tags:
-      - care_plan
   /care_plan/resources/{resource_id}:
     put:
       consumes:
@@ -10276,6 +10191,45 @@ paths:
       summary: Create care plan objective
       tags:
       - care_plan
+  /care_plans/{care_plan_id}/risks:
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan risk
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanRisksRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanRisksResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan risk
+      tags:
+      - care_plan
   /care_plans/{care_plan_id}/success_metrics:
     get:
       description: Get the success metrics for a given care plan ID
@@ -10343,6 +10297,45 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create care plan success metric
+      tags:
+      - care_plan
+  /care_plans/{care_plan_id}/support_network:
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan support network
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanSupportNetworkRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanSupportNetworkResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan support network
       tags:
       - care_plan
   /clients:

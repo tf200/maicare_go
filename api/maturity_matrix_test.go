@@ -18,11 +18,13 @@ import (
 )
 
 type RandomCarePlan struct {
-	CarePlanID      int64 `json:"care_plan_id"`
-	ObjectiveID     int64 `json:"objective_id"`
-	ActionID        int64 `json:"action_id"`
-	InterventionID  int64 `json:"intervention_id"`
-	SuccessMetricID int64 `json:"success_metric_id"`
+	CarePlanID       int64 `json:"care_plan_id"`
+	ObjectiveID      int64 `json:"objective_id"`
+	ActionID         int64 `json:"action_id"`
+	InterventionID   int64 `json:"intervention_id"`
+	SuccessMetricID  int64 `json:"success_metric_id"`
+	RiskID           int64 `json:"risk_id"`
+	SupportNetworkID int64 `json:"support_network_id"`
 }
 
 func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
@@ -141,22 +143,38 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 		require.NoError(t, err)
 	}
 
+	var randomRiskID int64
 	for _, risk := range mockLLmResp.RiskFactors {
-		_, err := testStore.CreateCarePlanRisk(context.Background(), db.CreateCarePlanRiskParams{
+		risk, err := testStore.CreateCarePlanRisk(context.Background(), db.CreateCarePlanRiskParams{
 			CarePlanID:         carePlan.ID,
 			RiskDescription:    risk.Risk,
 			MitigationStrategy: risk.Mitigation,
 			RiskLevel:          nil, // TODO: Add risk level if needed
 		})
+		randomRiskID = risk.ID
+		require.NoError(t, err)
+	}
+	var supportNetworkID int64
+	for _, supportNetwork := range mockLLmResp.SupportNetwork {
+		network, err := testStore.CreateCarePlanSupportNetwork(context.Background(), db.CreateCarePlanSupportNetworkParams{
+			CarePlanID:                carePlan.ID,
+			RoleTitle:                 supportNetwork.Role,
+			ResponsibilityDescription: supportNetwork.Responsibility,
+			ContactPerson:             nil, // TODO: Add contact person if needed
+			ContactDetails:            nil, // TODO: Add contact details if needed
+		})
+		supportNetworkID = network.ID
 		require.NoError(t, err)
 	}
 
 	rnd := RandomCarePlan{
-		CarePlanID:      carePlan.ID,
-		ObjectiveID:     randomObjectiveID,
-		ActionID:        randomActionID,
-		InterventionID:  interventionID,
-		SuccessMetricID: successMetricID,
+		CarePlanID:       carePlan.ID,
+		ObjectiveID:      randomObjectiveID,
+		ActionID:         randomActionID,
+		InterventionID:   interventionID,
+		SuccessMetricID:  successMetricID,
+		RiskID:           randomRiskID,
+		SupportNetworkID: supportNetworkID,
 	}
 
 	return rnd
@@ -181,8 +199,6 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 					MaturityMatrixID: 1,
 					InitialLevel:     1,
 					TargetLevel:      3,
-					StartDate:        time.Now(),
-					EndDate:          time.Now().Add(time.Hour * 24 * 365), // 1 year
 				}
 				data, err := json.Marshal(assessmentReq)
 				require.NoError(t, err)
@@ -1033,6 +1049,431 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
 				require.Equal(t, carePlan.SuccessMetricID, response.Data.MetricID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/success_metrics/%d", carePlan.SuccessMetricID)
+				req, err := http.NewRequest(http.MethodDelete, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestCreateCarePlanRisksApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				createReq := CreateCarePlanRisksRequest{
+					RiskDescription:    "High risk of falls",
+					RiskLevel:          util.StringPtr("high"),
+					MitigationStrategy: "Implement fall prevention measures",
+				}
+				data, err := json.Marshal(createReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/care_plans/%d/risks", carePlan.CarePlanID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusCreated, recorder.Code)
+				var response Response[CreateCarePlanRisksResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestGetCarePlanRisksApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/care_plans/%d/risks", carePlan.CarePlanID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[[]GetCarePlanRisksResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateCarePlanRiskApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				updateReq := UpdateCarePlanRisksRequest{
+					RiskDescription:    util.StringPtr("Updated risk description for care plan"),
+					RiskLevel:          util.StringPtr("medium"),
+					MitigationStrategy: util.StringPtr("Implement updated mitigation strategy"),
+				}
+				data, err := json.Marshal(updateReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/risks/%d", carePlan.RiskID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[UpdateCarePlanRisksResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.Equal(t, carePlan.RiskID, response.Data.RiskID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestDeleteCarePlanRiskApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/risks/%d", carePlan.RiskID)
+				req, err := http.NewRequest(http.MethodDelete, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				createReq := CreateCarePlanSupportNetworkRequest{
+					RoleTitle:                 "Caregiver",
+					ResponsibilityDescription: "Assist with daily activities and provide emotional support.",
+				}
+				data, err := json.Marshal(createReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/care_plans/%d/support_network", carePlan.CarePlanID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusCreated, recorder.Code)
+				var response Response[CreateCarePlanSupportNetworkResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestGetCarePlanSupportNetworkApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/care_plans/%d/support_network", carePlan.CarePlanID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[[]GetCarePlanSupportNetworkResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				updateReq := UpdateCarePlanSupportNetworkRequest{
+					RoleTitle:                 util.StringPtr("Updated Caregiver"),
+					ResponsibilityDescription: util.StringPtr("Updated responsibilities for caregiver."),
+				}
+				data, err := json.Marshal(updateReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/support_network/%d", carePlan.SupportNetworkID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[UpdateCarePlanSupportNetworkResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.Equal(t, carePlan.SupportNetworkID, response.Data.SupportNetworkID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/support_network/%d", carePlan.SupportNetworkID)
+				req, err := http.NewRequest(http.MethodDelete, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
 	}

@@ -1526,122 +1526,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "post": {
-                "description": "Create a new care plan risk",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "care_plan"
-                ],
-                "summary": "Create care plan risk",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Care Plan ID",
-                        "name": "care_plan_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanRisksRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanRisksResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/care_plan/{care_plan_id}/support_network": {
-            "post": {
-                "description": "Create a new care plan support network",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "care_plan"
-                ],
-                "summary": "Create care plan support network",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Care Plan ID",
-                        "name": "care_plan_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CreateCareplanSupportNetworkRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCareplanSupportNetworkResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
             }
         },
         "/care_plans/{care_plan_id}": {
@@ -1956,6 +1840,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/care_plans/{care_plan_id}/risks": {
+            "post": {
+                "description": "Create a new care plan risk",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Create care plan risk",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateCarePlanRisksRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateCarePlanRisksResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/care_plans/{care_plan_id}/success_metrics": {
             "get": {
                 "description": "Get the success metrics for a given care plan ID",
@@ -2037,6 +1980,65 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_CreateCarePlanSuccessMetricsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/care_plans/{care_plan_id}/support_network": {
+            "post": {
+                "description": "Create a new care plan support network",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Create care plan support network",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateCarePlanSupportNetworkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateCarePlanSupportNetworkResponse"
                         }
                     },
                     "400": {
@@ -11571,14 +11573,14 @@ const docTemplate = `{
         "api.CreateCarePlanRisksResponse": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
                 "mitigation_strategy": {
                     "type": "string"
                 },
                 "risk_description": {
                     "type": "string"
+                },
+                "risk_id": {
+                    "type": "integer"
                 },
                 "risk_level": {
                     "type": "string"
@@ -11624,18 +11626,12 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateCareplanSupportNetworkRequest": {
+        "api.CreateCarePlanSupportNetworkRequest": {
             "type": "object",
             "required": [
                 "role_title"
             ],
             "properties": {
-                "contact_details": {
-                    "type": "string"
-                },
-                "contact_person": {
-                    "type": "string"
-                },
                 "responsibility_description": {
                     "type": "string"
                 },
@@ -11644,7 +11640,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateCareplanSupportNetworkResponse": {
+        "api.CreateCarePlanSupportNetworkResponse": {
             "type": "object",
             "properties": {
                 "contact_details": {
@@ -11653,14 +11649,14 @@ const docTemplate = `{
                 "contact_person": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "responsibility_description": {
                     "type": "string"
                 },
                 "role_title": {
                     "type": "string"
+                },
+                "support_network_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -12040,9 +12036,6 @@ const docTemplate = `{
         "api.CreateClientMaturityMatrixAssessmentRequest": {
             "type": "object",
             "properties": {
-                "end_date": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -12051,9 +12044,6 @@ const docTemplate = `{
                 },
                 "maturity_matrix_id": {
                     "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
                 },
                 "target_level": {
                     "type": "integer"
@@ -14901,14 +14891,14 @@ const docTemplate = `{
         "api.GetCarePlanRisksResponse": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
                 "mitigation_strategy": {
                     "type": "string"
                 },
                 "risk_description": {
                     "type": "string"
+                },
+                "risk_id": {
+                    "type": "integer"
                 },
                 "risk_level": {
                     "type": "string"
@@ -18940,11 +18930,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateCareplanSupportNetworkResponse": {
+        "api.Response-api_CreateCarePlanSupportNetworkResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/api.CreateCareplanSupportNetworkResponse"
+                    "$ref": "#/definitions/api.CreateCarePlanSupportNetworkResponse"
                 },
                 "message": {
                     "type": "string"
@@ -21576,14 +21566,14 @@ const docTemplate = `{
         "api.UpdateCarePlanRisksResponse": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
                 "mitigation_strategy": {
                     "type": "string"
                 },
                 "risk_description": {
                     "type": "string"
+                },
+                "risk_id": {
+                    "type": "integer"
                 },
                 "risk_level": {
                     "type": "string"
@@ -21650,14 +21640,14 @@ const docTemplate = `{
                 "contact_person": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "responsibility_description": {
                     "type": "string"
                 },
                 "role_title": {
                     "type": "string"
+                },
+                "support_network_id": {
+                    "type": "integer"
                 }
             }
         },
