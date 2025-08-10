@@ -1983,7 +1983,8 @@ CREATE TABLE care_plan_metrics (
     current_value VARCHAR(255),
     last_measured_date DATE,
     is_achieved BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Risk factors and mitigation strategies
@@ -1994,7 +1995,8 @@ CREATE TABLE care_plan_risks (
     mitigation_strategy TEXT NOT NULL,
     risk_level VARCHAR(20) CHECK (risk_level IN ('low', 'medium', 'high')),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Support network roles
@@ -2006,7 +2008,8 @@ CREATE TABLE care_plan_support_network (
     contact_person VARCHAR(255), -- Optional: specific person assigned
     contact_details TEXT, -- Phone, email, etc.
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Resources required for the care plan
@@ -2019,7 +2022,8 @@ CREATE TABLE care_plan_resources (
     obtained_date DATE,
     cost_estimate DECIMAL(10,2),
     notes TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -2031,7 +2035,8 @@ CREATE TABLE care_plan_reports (
     report_content TEXT NOT NULL,
     created_by_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 

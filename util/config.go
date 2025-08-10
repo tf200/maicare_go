@@ -1,6 +1,8 @@
 package util
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -73,5 +75,50 @@ func LoadConfig(path string) (config Config, err error) {
 
 	// Unmarshal the configuration
 	err = viper.Unmarshal(&config)
+	if err != nil {
+		return config, fmt.Errorf("unable to decode into struct: %w", err)
+	}
+
+	// Validate the configuration
+	err = validateConfig(&config)
+	if err != nil {
+		return config, fmt.Errorf("invalid configuration: %w", err)
+	}
 	return config, err
+}
+
+func validateConfig(config *Config) error {
+	// Define crucial environment variables that must be present
+	crucialVars := map[string]string{
+		"DB_SOURCE":                config.DbSource,
+		"SERVER_ADDRESS":           config.ServerAddress,
+		"ACCESS_TOKEN_SECRET_KEY":  config.AccessTokenSecretKey,
+		"REFRESH_TOKEN_SECRET_KEY": config.RefreshTokenSecretKey,
+		"HOST":                     config.Host,
+		"ENVIRONMENT":              config.Environment,
+		"GRPC_URL":                 config.GrpcUrl,
+	}
+
+	var missingVars []string
+
+	// Check if crucial variables are empty
+	for varName, varValue := range crucialVars {
+		if strings.TrimSpace(varValue) == "" {
+			missingVars = append(missingVars, varName)
+		}
+	}
+
+	// Check duration fields (they should be greater than 0)
+	if config.AccessTokenDuration <= 0 {
+		missingVars = append(missingVars, "ACCESS_TOKEN_DURATION")
+	}
+	if config.RefreshTokenDuration <= 0 {
+		missingVars = append(missingVars, "REFRESH_TOKEN_DURATION")
+	}
+
+	if len(missingVars) > 0 {
+		return fmt.Errorf("missing or invalid crucial environment variables: %s", strings.Join(missingVars, ", "))
+	}
+
+	return nil
 }

@@ -32,19 +32,24 @@ func (server *Server) setupMaturityMatrixRoutes(baseRouter *gin.RouterGroup) {
 		mmGroup.PUT("/interventions/:intervention_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanInterventionApi)
 		mmGroup.DELETE("/interventions/:intervention_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanInterventionApi)
 
-		// Careplan Successes routes
+		// Careplan Success Metrics routes
 		mmGroup.POST("/care_plans/:care_plan_id/success_metrics", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateCarePlanSuccessMetricsApi)
 		mmGroup.GET("/care_plans/:care_plan_id/success_metrics", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSuccessMetricsApi)
 		mmGroup.PUT("/success_metrics/:metric_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanSuccessMetricsApi)
 		mmGroup.DELETE("/success_metrics/:metric_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanSuccessMetricApi)
 
-		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/careplan/successes", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSuccessMetricsApi)
-
 		// Careplan Risks routes
-		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/careplan/risks", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanRisksApi)
+		mmGroup.POST("/care_plans/:care_plan_id/risks", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateCarePlanRisksApi)
+		mmGroup.GET("/care_plans/:care_plan_id/risks", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanRisksApi)
+		mmGroup.PUT("/risks/:risk_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanRisksApi)
+		mmGroup.DELETE("/risks/:risk_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanRiskApi)
 
 		// Careplan Supportnetwork routes
-		// mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/careplan/supportnetwork", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSupportNetworkApi)
+		mmGroup.POST("/care_plans/:care_plan_id/support_network", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateCareplanSupportNetworkApi)
+		mmGroup.GET("/care_plans/:care_plan_id/support_network", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSupportNetworkApi)
+		mmGroup.PUT("/support_network/:support_network_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanSupportNetworkApi)
+		mmGroup.DELETE("/support_network/:support_network_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanSupportNetworkApi)
+		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/careplan/supportnetwork", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSupportNetworkApi)
 
 		// Careplan Resources routes
 		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/careplan/resources", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanResourcesApi)
