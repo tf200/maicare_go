@@ -93,6 +93,7 @@ jobs:
             BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}
             BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}
             BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
+            GRPC_URL=${{ secrets.GRPC_URL }}
             EOF
             
             # Set proper permissions for env file
