@@ -53,10 +53,10 @@ type Server struct {
 	aiHandler   *ai.AiHandler
 	hub         *hub.Hub
 	logger      *zap.Logger
-	grpClient   *grpclient.GrpcClient
+	grpClient   grpclient.GrpcClientInterface
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)
@@ -72,11 +72,6 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 	logger, err := setupLogger(config.Environment)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create logger %v", err)
-	}
-
-	grpcClient, err := grpclient.NewGrpcClient()
-	if err != nil {
-		return nil, fmt.Errorf("cannot create gRPC client %v", err)
 	}
 
 	server := &Server{

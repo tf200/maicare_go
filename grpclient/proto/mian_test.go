@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 			log.Fatalf("Could not close gRPC client: %v", err)
 		}
 	}()
-	testClient = client
+	testClient = client.(*GrpcClient)
 
 	os.Exit(m.Run())
 

@@ -98,8 +98,6 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 			InvoiceEndDate:   pgtype.Timestamptz{Time: invoiceData.EndDate, Valid: true},
 		})
 		if err != nil {
-			invoice[i].Warnings = append(invoice[i].Warnings,
-				fmt.Sprintf("failed to get billable periods for contract %d: %v", contract.ID, err))
 			warningCount++
 			continue
 		}

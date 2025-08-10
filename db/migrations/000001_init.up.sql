@@ -1968,7 +1968,8 @@ CREATE TABLE care_plan_interventions (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     last_completed_date DATE,
     total_completions INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 
