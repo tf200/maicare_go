@@ -55,7 +55,7 @@ func LoadConfig(path string) (config Config, err error) {
 		"HOST", "REDIS_HOST", "REDIS_PASSWORD", "REMOTE",
 		"OPEN_ROUTER_API_KEY", "SMTP_NAME", "SMTP_ADDRESS",
 		"SMTP_AUTH", "SMTP_HOST", "SMTP_PORT", "BREVO_SENDER_NAME",
-		"BREVO_SENDER_EMAIL", "BREVO_API_KEY",
+		"BREVO_SENDER_EMAIL", "BREVO_API_KEY", "ENVIRONMENT", "GRPC_URL",
 	}
 
 	for _, envVar := range envVars {
