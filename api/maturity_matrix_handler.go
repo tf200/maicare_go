@@ -5,6 +5,7 @@ import (
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/pagination"
+	"maicare_go/util"
 	"net/http"
 	"strconv"
 	"time"
@@ -726,10 +727,10 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 		if row.ActionID != nil {
 			action := CarePlanActions{
 				ID:                *row.ActionID,
-				SortOrder:         *row.SortOrder,
-				ActionDescription: *row.ActionDescription,
-				IsCompleted:       *row.IsCompleted,
-				Notes:             *row.ActionNotes,
+				SortOrder:         util.DerefInt32(row.SortOrder),
+				ActionDescription: util.DerefString(row.ActionDescription),
+				IsCompleted:       util.DerefBool(row.IsCompleted),
+				Notes:             util.DerefString(row.ActionNotes),
 			}
 			objective.Actions = append(objective.Actions, action)
 		}

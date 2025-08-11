@@ -126,6 +126,12 @@ func DerefInt64(i *int64) int64 {
 	}
 	return *i
 }
+func DerefInt32(i *int32) int32 {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
 
 func DerefUUID(u *uuid.UUID) string {
 	if u == nil {
