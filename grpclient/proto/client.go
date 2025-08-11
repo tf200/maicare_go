@@ -18,8 +18,8 @@ type GrpcClient struct {
 	client CarePlannerClient
 }
 
-func NewGrpcClient() (GrpcClientInterface, error) {
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
+	conn, err := grpc.NewClient(grpcHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
