@@ -80,7 +80,7 @@ type CreateClientMaturityMatrixAssessmentResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /clients/{id}/assessment [post]
+// @Router /clients/{id}/assessments [post]
 func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
@@ -379,7 +379,7 @@ type ListClientMaturityMatrixAssessmentsResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /clients/{id}/assessment [get]
+// @Router /clients/{id}/assessments [get]
 func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)

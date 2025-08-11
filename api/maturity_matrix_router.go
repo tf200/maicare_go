@@ -7,8 +7,8 @@ func (server *Server) setupMaturityMatrixRoutes(baseRouter *gin.RouterGroup) {
 	mmGroup := baseRouter.Group("")
 	mmGroup.Use(AuthMiddleware(server.tokenMaker))
 	{
-		mmGroup.POST("/clients/:id/maturity_matrix_assessment", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateClientMaturityMatrixAssessmentApi)
-		mmGroup.GET("/clients/:id/maturity_matrix_assessment", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientMaturityMatrixAssessmentsApi)
+		mmGroup.POST("/clients/:id/assessments", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateClientMaturityMatrixAssessmentApi)
+		mmGroup.GET("/clients/:id/assessments", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientMaturityMatrixAssessmentsApi)
 
 		// Careplan routes
 		mmGroup.GET("/care_plans/:care_plan_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanOverviewApi)
