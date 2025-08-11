@@ -1751,23 +1751,23 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, res)
 }
 
-// GetCareplanSupportNetworkResponse represents the response for the GetCareplanSupportNetwork API
-// @Summary Get care plan support network
-// @Description Get the support network for a given care plan ID
-// @Tags care_plan
-// @Produce json
-// @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[[]GetCareplanSupportNetworkResponse]
-// @Failure 400 {object} Response[any] "Bad request"
-// @Failure 401 {object} Response[any] "Unauthorized"
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plans/{care_plan_id}/support_network [get]
+// GetCarePlanSupportNetworkResponse represents the response for the GetCarePlanSupportNetwork API
 type GetCarePlanSupportNetworkResponse struct {
 	SupportNetworkID          int64   `json:"support_network_id"`
 	RoleTitle                 string  `json:"role_title"`
 	ResponsibilityDescription *string `json:"responsibility_description"`
 }
 
+// @Summary Get care plan support network
+// @Description Get the support network for a given care plan ID
+// @Tags care_plan
+// @Produce json
+// @Param care_plan_id path int true "Care Plan ID"
+// @Success 200 {object} Response[[]GetCarePlanSupportNetworkResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /care_plans/{care_plan_id}/support_network [get]
 func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {

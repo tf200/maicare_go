@@ -2865,6 +2865,15 @@ definitions:
       target_value:
         type: string
     type: object
+  api.GetCarePlanSupportNetworkResponse:
+    properties:
+      responsibility_description:
+        type: string
+      role_title:
+        type: string
+      support_network_id:
+        type: integer
+    type: object
   api.GetClientAddressesApiResponse:
     properties:
       addresses:
@@ -6502,6 +6511,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.GetCarePlanSuccessMetricsResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_GetCarePlanSupportNetworkResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.GetCarePlanSupportNetworkResponse'
         type: array
       message:
         type: string
@@ -10300,6 +10320,36 @@ paths:
       tags:
       - care_plan
   /care_plans/{care_plan_id}/support_network:
+    get:
+      description: Get the support network for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_GetCarePlanSupportNetworkResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get care plan support network
+      tags:
+      - care_plan
     post:
       consumes:
       - application/json
