@@ -662,6 +662,7 @@ type RiskFactor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Risk          string                 `protobuf:"bytes,1,opt,name=risk,proto3" json:"risk,omitempty"`
 	Mitigation    string                 `protobuf:"bytes,2,opt,name=mitigation,proto3" json:"mitigation,omitempty"`
+	RiskLevel     string                 `protobuf:"bytes,3,opt,name=risk_level,json=riskLevel,proto3" json:"risk_level,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -706,6 +707,13 @@ func (x *RiskFactor) GetRisk() string {
 func (x *RiskFactor) GetMitigation() string {
 	if x != nil {
 		return x.Mitigation
+	}
+	return ""
+}
+
+func (x *RiskFactor) GetRiskLevel() string {
+	if x != nil {
+		return x.RiskLevel
 	}
 	return ""
 }
@@ -945,13 +953,15 @@ const file_proto_service_proto_rawDesc = "" +
 	"\rSuccessMetric\x12\x16\n" +
 	"\x06metric\x18\x01 \x01(\tR\x06metric\x12\x16\n" +
 	"\x06target\x18\x02 \x01(\tR\x06target\x12-\n" +
-	"\x12measurement_method\x18\x03 \x01(\tR\x11measurementMethod\"@\n" +
+	"\x12measurement_method\x18\x03 \x01(\tR\x11measurementMethod\"_\n" +
 	"\n" +
 	"RiskFactor\x12\x12\n" +
 	"\x04risk\x18\x01 \x01(\tR\x04risk\x12\x1e\n" +
 	"\n" +
 	"mitigation\x18\x02 \x01(\tR\n" +
-	"mitigation\"I\n" +
+	"mitigation\x12\x1d\n" +
+	"\n" +
+	"risk_level\x18\x03 \x01(\tR\triskLevel\"I\n" +
 	"\vSupportRole\x12\x12\n" +
 	"\x04role\x18\x01 \x01(\tR\x04role\x12&\n" +
 	"\x0eresponsibility\x18\x02 \x01(\tR\x0eresponsibility\"v\n" +
