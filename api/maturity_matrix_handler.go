@@ -353,6 +353,20 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 		}
 	}
 
+	for _, resource := range generatedCarePlan.ResourcesRequired {
+		_, err := qtx.CreateCarePlanResources(ctx, db.CreateCarePlanResourcesParams{
+			CarePlanID:          carePlan.ID,
+			ResourceDescription: resource,
+			ResourceType:        nil,
+			IsObtained:          false,
+			ObtainedDate:        pgtype.Date{Time: time.Now(), Valid: false},
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -1900,15 +1914,6 @@ func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// GetCarePlanResourcesResponse represents the response for the GetCarePlanResources API
-type GetCarePlanResourcesResponse struct {
-	ID           int64      `json:"id"`
-	Description  string     `json:"description"`
-	Type         string     `json:"type"`
-	IsObtained   bool       `json:"is_obtained"`
-	ObtainedDate *time.Time `json:"obtained_date"`
-}
-
 /////////////////////////////////////////
 
 //////////////////////////////////////////
@@ -1920,7 +1925,10 @@ type GetCarePlanResourcesResponse struct {
 // /////////////////////////////////////////
 // CreateCarePlanResourcesRequest represents the request body for creating a care plan resource
 type CreateCarePlanResourcesRequest struct {
-	ResourceDescription string `json:"resource_description" binding:"required"`
+	ResourceDescription string     `json:"resource_description" binding:"required"`
+	ResourceType        *string    `json:"resource_type"`
+	IsObtained          *bool      `json:"is_obtained"`
+	ObtainedDate        *time.Time `json:"obtained_date"`
 }
 
 // CreateCarePlanResourcesResponse represents the response for the CreateCarePlanResources API
@@ -1977,6 +1985,15 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, res)
 }
 
+// GetCarePlanResourcesResponse represents the response for the GetCarePlanResources API
+type GetCarePlanResourcesResponse struct {
+	ID           int64      `json:"id"`
+	Description  string     `json:"description"`
+	Type         *string    `json:"type"`
+	IsObtained   bool       `json:"is_obtained"`
+	ObtainedDate *time.Time `json:"obtained_date"`
+}
+
 // GetCarePlanResourcesApi retrieves the resources for a given care plan ID
 // @Summary Get care plan resources
 // @Description Get the resources for a given care plan ID
@@ -2014,7 +2031,7 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 		response[i] = GetCarePlanResourcesResponse{
 			ID:           resource.ID,
 			Description:  resource.ResourceDescription,
-			Type:         *resource.ResourceType,
+			Type:         resource.ResourceType,
 			IsObtained:   resource.IsObtained,
 			ObtainedDate: &resource.ObtainedDate.Time,
 		}
@@ -2024,11 +2041,12 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// UpdateCarePlanResourcesRequest represents the request body for updating a care plan resource
 type UpdateCarePlanResourcesRequest struct {
-	RessourceDescription *string   `json:"resource_description"`
-	ResourceType         *string   `json:"resource_type"`
-	IsObtained           *bool     `json:"is_obtained"`
-	ObtainedDate         time.Time `json:"obtained_date"`
+	ResourceDescription *string   `json:"resource_description"`
+	ResourceType        *string   `json:"resource_type"`
+	IsObtained          *bool     `json:"is_obtained"`
+	ObtainedDate        time.Time `json:"obtained_date"`
 }
 
 // UpdateCarePlanResourcesResponse represents the response for the UpdateCarePlanResources API
@@ -2052,7 +2070,7 @@ type UpdateCarePlanResourcesResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/resources/{resource_id} [put]
+// @Router /care_plans/resources/{resource_id} [put]
 func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
 	if err != nil {
@@ -2070,7 +2088,7 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 
 	resource, err := server.store.UpdateCarePlanResource(ctx, db.UpdateCarePlanResourceParams{
 		ID:                  resourceID,
-		ResourceDescription: req.RessourceDescription,
+		ResourceDescription: req.ResourceDescription,
 		ResourceType:        req.ResourceType,
 		IsObtained:          req.IsObtained,
 		ObtainedDate:        pgtype.Date{Time: req.ObtainedDate, Valid: true},
@@ -2108,6 +2126,36 @@ func (server *Server) DeleteCarePlanResourceApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse[any](nil, "Care plan resource deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteCarePlanResourcesApi deletes all resources associated with a care plan
+// @Summary Delete care plan resources
+// @Description Delete all resources associated with a care plan
+// @Tags care_plan
+// @Produce json
+// @Param care_plan_id path int true "Care Plan ID"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /care_plans/{care_plan_id}/resources [delete]
+func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
+	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Invalid care plan ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
+		return
+	}
+
+	err = server.store.DeleteCarePlanResource(ctx, carePlanID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Failed to delete care plan resources", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan resources")))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Care plan resources deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

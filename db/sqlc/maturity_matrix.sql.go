@@ -180,21 +180,33 @@ const createCarePlanResources = `-- name: CreateCarePlanResources :one
 
 INSERT INTO care_plan_resources (
     care_plan_id,
-    resource_description
+    resource_description,
+    resource_type,
+    is_obtained,
+    obtained_date
 ) VALUES (
-    $1, $2
+    $1, $2, $3, $4, $5
 )
 RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
 `
 
 type CreateCarePlanResourcesParams struct {
-	CarePlanID          int64  `json:"care_plan_id"`
-	ResourceDescription string `json:"resource_description"`
+	CarePlanID          int64       `json:"care_plan_id"`
+	ResourceDescription string      `json:"resource_description"`
+	ResourceType        *string     `json:"resource_type"`
+	IsObtained          bool        `json:"is_obtained"`
+	ObtainedDate        pgtype.Date `json:"obtained_date"`
 }
 
 // ==================== care plan resources ====================
 func (q *Queries) CreateCarePlanResources(ctx context.Context, arg CreateCarePlanResourcesParams) (CarePlanResource, error) {
-	row := q.db.QueryRow(ctx, createCarePlanResources, arg.CarePlanID, arg.ResourceDescription)
+	row := q.db.QueryRow(ctx, createCarePlanResources,
+		arg.CarePlanID,
+		arg.ResourceDescription,
+		arg.ResourceType,
+		arg.IsObtained,
+		arg.ObtainedDate,
+	)
 	var i CarePlanResource
 	err := row.Scan(
 		&i.ID,
