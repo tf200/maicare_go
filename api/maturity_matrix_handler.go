@@ -58,7 +58,6 @@ type Level struct {
 
 // CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
 type CreateClientMaturityMatrixAssessmentRequest struct {
-	ID               int64 `json:"id"`
 	MaturityMatrixID int64 `json:"maturity_matrix_id"`
 	InitialLevel     int32 `json:"initial_level"`
 	TargetLevel      int32 `json:"target_level"`
