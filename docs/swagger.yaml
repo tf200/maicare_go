@@ -916,8 +916,6 @@ definitions:
     type: object
   api.CreateClientMaturityMatrixAssessmentRequest:
     properties:
-      id:
-        type: integer
       initial_level:
         type: integer
       maturity_matrix_id:
@@ -10739,7 +10737,7 @@ paths:
       summary: List appointments for a client in a date range
       tags:
       - appointments
-  /clients/{id}/assessment:
+  /clients/{id}/assessments:
     get:
       description: Get a list of client maturity matrix assessments
       parameters:

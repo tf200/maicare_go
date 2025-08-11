@@ -2709,7 +2709,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/assessment": {
+        "/clients/{id}/assessments": {
             "get": {
                 "description": "Get a list of client maturity matrix assessments",
                 "produces": [
@@ -12036,9 +12036,6 @@ const docTemplate = `{
         "api.CreateClientMaturityMatrixAssessmentRequest": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
                 "initial_level": {
                     "type": "integer"
                 },
