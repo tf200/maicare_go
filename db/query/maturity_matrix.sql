@@ -393,9 +393,12 @@ WHERE id = $1;
 -- name: CreateCarePlanResources :one
 INSERT INTO care_plan_resources (
     care_plan_id,
-    resource_description
+    resource_description,
+    resource_type,
+    is_obtained,
+    obtained_date
 ) VALUES (
-    $1, $2
+    $1, $2, $3, $4, $5
 )
 RETURNING *;
 
