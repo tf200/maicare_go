@@ -31,6 +31,15 @@ admin:
 
 
 push:
-	sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back && git push 
+	sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back && git push
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce
+update-proto:
+	git submodule update --remote --merge
+
+generate-grpc:
+	protoc \
+  --go_out=grpclient --go_opt=paths=source_relative \
+  --go-grpc_out=grpclient --go-grpc_opt=paths=source_relative \
+  proto/service.proto
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce update-proto generate-grpc

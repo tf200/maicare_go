@@ -331,7 +331,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			CarePlanID:         carePlan.ID,
 			RiskDescription:    risk.Risk,
 			MitigationStrategy: risk.Mitigation,
-			RiskLevel:          nil, // TODO: Add risk level if needed
+			RiskLevel:          &risk.RiskLevel, // Use pointer to allow NULL values
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
