@@ -2004,6 +2004,51 @@ const docTemplate = `{
             }
         },
         "/care_plans/{care_plan_id}/support_network": {
+            "get": {
+                "description": "Get the support network for a given care plan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Get care plan support network",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanSupportNetworkResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new care plan support network",
                 "consumes": [
@@ -14925,6 +14970,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "responsibility_description": {
+                    "type": "string"
+                },
+                "role_title": {
+                    "type": "string"
+                },
+                "support_network_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.GetClientAddressesApiResponse": {
             "type": "object",
             "properties": {
@@ -20472,6 +20531,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.GetCarePlanSuccessMetricsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_GetCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.GetCarePlanSupportNetworkResponse"
                     }
                 },
                 "message": {
