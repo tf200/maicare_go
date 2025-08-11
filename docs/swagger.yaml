@@ -579,7 +579,13 @@ definitions:
     type: object
   api.CreateCarePlanResourcesRequest:
     properties:
+      is_obtained:
+        type: boolean
+      obtained_date:
+        type: string
       resource_description:
+        type: string
+      resource_type:
         type: string
     required:
     - resource_description
@@ -9896,45 +9902,6 @@ paths:
       summary: Get care plan risks
       tags:
       - care_plan
-  /care_plan/resources/{resource_id}:
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan resource by its ID
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.UpdateCarePlanResourcesRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_UpdateCarePlanResourcesResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan resource
-      tags:
-      - care_plan
   /care_plan/support_network/{support_network_id}:
     delete:
       description: Delete a care plan support network by its ID
@@ -10211,6 +10178,37 @@ paths:
       summary: Create care plan objective
       tags:
       - care_plan
+  /care_plans/{care_plan_id}/resources:
+    delete:
+      description: Delete all resources associated with a care plan
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan resources
+      tags:
+      - care_plan
   /care_plans/{care_plan_id}/risks:
     post:
       consumes:
@@ -10386,6 +10384,45 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create care plan support network
+      tags:
+      - care_plan
+  /care_plans/resources/{resource_id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan resource by its ID
+      parameters:
+      - description: Resource ID
+        in: path
+        name: resource_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanResourcesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanResourcesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan resource
       tags:
       - care_plan
   /clients:
