@@ -180,7 +180,8 @@ SELECT
     o.goal_title as objective_title,
     o.description as objective_description,
     o.timeframe as objective_timeframe,
-    
+    o.status as objective_status,
+
     -- Action fields (will be NULL if no actions exist)
     a.id as action_id,
     a.action_description,

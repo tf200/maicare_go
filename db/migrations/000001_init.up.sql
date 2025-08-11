@@ -1937,7 +1937,7 @@ CREATE TABLE care_plan_objectives (
     goal_title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     target_date DATE,
-    status VARCHAR(20) NOT NULL DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'completed', 'discontinued')),
+    status VARCHAR(20) NOT NULL DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'completed', 'discontinued', 'draft')),
     completion_date DATE,
     completion_notes TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

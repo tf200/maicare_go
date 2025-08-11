@@ -434,8 +434,8 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestGetCarePlanObjectivesApi(t *testing.T) {
-	// client := createRandomClientDetails(t)
-	// carePlanID := createRandomCarePlan(t, client.ID)
+	client := createRandomClientDetails(t)
+	carePlanID := createRandomCarePlan(t, client.ID)
 
 	testCases := []struct {
 		name          string
@@ -449,8 +449,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				// url := fmt.Sprintf("/care_plans/%d/objectives", carePlanID)
-				url := fmt.Sprintf("/care_plans/%d/objectives", 18)
+				url := fmt.Sprintf("/care_plans/%d/objectives", carePlanID)
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return req, nil
@@ -460,6 +459,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[GetCarePlanObjectivesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
 				require.NotEmpty(t, response.Data.ShortTermGoals)

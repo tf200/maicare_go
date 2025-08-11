@@ -675,6 +675,7 @@ type CarePlanObjectives struct {
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
 	TimeFrame   string            `json:"timeframe"`
+	Status      string            `json:"status"`
 	Actions     []CarePlanActions `json:"actions"`
 }
 
@@ -720,6 +721,7 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 				Title:       row.ObjectiveTitle,
 				Description: row.ObjectiveDescription,
 				TimeFrame:   row.ObjectiveTimeframe,
+				Status:      row.ObjectiveStatus,
 				Actions:     []CarePlanActions{},
 			}
 			objectiveMap[row.ObjectiveID] = objective
