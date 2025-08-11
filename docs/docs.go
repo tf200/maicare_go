@@ -11062,6 +11062,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "status": {
+                    "type": "string"
+                },
                 "timeframe": {
                     "type": "string"
                 },

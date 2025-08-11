@@ -145,6 +145,7 @@ type CarePlanIntervention struct {
 	LastCompletedDate       pgtype.Date      `json:"last_completed_date"`
 	TotalCompletions        int32            `json:"total_completions"`
 	CreatedAt               pgtype.Timestamp `json:"created_at"`
+	UpdatedAt               pgtype.Timestamp `json:"updated_at"`
 }
 
 type CarePlanMetric struct {
@@ -157,6 +158,7 @@ type CarePlanMetric struct {
 	LastMeasuredDate  pgtype.Date      `json:"last_measured_date"`
 	IsAchieved        bool             `json:"is_achieved"`
 	CreatedAt         pgtype.Timestamp `json:"created_at"`
+	UpdatedAt         pgtype.Timestamp `json:"updated_at"`
 }
 
 type CarePlanObjective struct {
@@ -174,13 +176,14 @@ type CarePlanObjective struct {
 }
 
 type CarePlanReport struct {
-	ID                  int64            `json:"id"`
-	CarePlanID          int64            `json:"care_plan_id"`
-	ReportType          string           `json:"report_type"`
-	ReportContent       string           `json:"report_content"`
-	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
-	IsCritical          bool             `json:"is_critical"`
-	CreatedAt           pgtype.Timestamp `json:"created_at"`
+	ID                  int64              `json:"id"`
+	CarePlanID          int64              `json:"care_plan_id"`
+	ReportType          string             `json:"report_type"`
+	ReportContent       string             `json:"report_content"`
+	CreatedByEmployeeID int64              `json:"created_by_employee_id"`
+	IsCritical          bool               `json:"is_critical"`
+	CreatedAt           pgtype.Timestamp   `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 }
 
 type CarePlanResource struct {
@@ -193,6 +196,7 @@ type CarePlanResource struct {
 	CostEstimate        *float64         `json:"cost_estimate"`
 	Notes               *string          `json:"notes"`
 	CreatedAt           pgtype.Timestamp `json:"created_at"`
+	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
 }
 
 type CarePlanRisk struct {
@@ -203,6 +207,7 @@ type CarePlanRisk struct {
 	RiskLevel          *string          `json:"risk_level"`
 	IsActive           bool             `json:"is_active"`
 	CreatedAt          pgtype.Timestamp `json:"created_at"`
+	UpdatedAt          pgtype.Timestamp `json:"updated_at"`
 }
 
 type CarePlanSupportNetwork struct {
@@ -214,6 +219,7 @@ type CarePlanSupportNetwork struct {
 	ContactDetails            *string          `json:"contact_details"`
 	IsActive                  bool             `json:"is_active"`
 	CreatedAt                 pgtype.Timestamp `json:"created_at"`
+	UpdatedAt                 pgtype.Timestamp `json:"updated_at"`
 }
 
 type Certification struct {

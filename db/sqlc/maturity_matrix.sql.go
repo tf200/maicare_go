@@ -100,7 +100,7 @@ INSERT INTO care_plan_interventions (
 ) VALUES (
     $1, $2, $3
 )
-RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at
+RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at, updated_at
 `
 
 type CreateCarePlanInterventionParams struct {
@@ -122,6 +122,7 @@ func (q *Queries) CreateCarePlanIntervention(ctx context.Context, arg CreateCare
 		&i.LastCompletedDate,
 		&i.TotalCompletions,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -183,7 +184,7 @@ INSERT INTO care_plan_resources (
 ) VALUES (
     $1, $2
 )
-RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at
+RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
 `
 
 type CreateCarePlanResourcesParams struct {
@@ -205,6 +206,7 @@ func (q *Queries) CreateCarePlanResources(ctx context.Context, arg CreateCarePla
 		&i.CostEstimate,
 		&i.Notes,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -219,7 +221,7 @@ INSERT INTO care_plan_risks (
 ) VALUES (
     $1, $2, $3, $4
 )
-RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at
+RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at, updated_at
 `
 
 type CreateCarePlanRiskParams struct {
@@ -246,6 +248,7 @@ func (q *Queries) CreateCarePlanRisk(ctx context.Context, arg CreateCarePlanRisk
 		&i.RiskLevel,
 		&i.IsActive,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -260,7 +263,7 @@ INSERT INTO care_plan_metrics (
 ) VALUES (
     $1, $2, $3, $4
 )
-RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at
+RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at, updated_at
 `
 
 type CreateCarePlanSuccessMetricParams struct {
@@ -289,6 +292,7 @@ func (q *Queries) CreateCarePlanSuccessMetric(ctx context.Context, arg CreateCar
 		&i.LastMeasuredDate,
 		&i.IsAchieved,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -304,7 +308,7 @@ INSERT INTO care_plan_support_network (
 ) VALUES (
     $1, $2, $3, $4, $5
 )
-RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at
+RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at, updated_at
 `
 
 type CreateCarePlanSupportNetworkParams struct {
@@ -334,6 +338,7 @@ func (q *Queries) CreateCarePlanSupportNetwork(ctx context.Context, arg CreateCa
 		&i.ContactDetails,
 		&i.IsActive,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -600,7 +605,7 @@ func (q *Queries) GetCarePlanActionsMaxSortOrder(ctx context.Context, objectiveI
 }
 
 const getCarePlanInterventions = `-- name: GetCarePlanInterventions :many
-SELECT id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at FROM care_plan_interventions 
+SELECT id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at, updated_at FROM care_plan_interventions 
 WHERE care_plan_id = $1 AND is_active = true 
 ORDER BY 
     CASE frequency 
@@ -628,6 +633,7 @@ func (q *Queries) GetCarePlanInterventions(ctx context.Context, carePlanID int64
 			&i.LastCompletedDate,
 			&i.TotalCompletions,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -646,7 +652,8 @@ SELECT
     o.goal_title as objective_title,
     o.description as objective_description,
     o.timeframe as objective_timeframe,
-    
+    o.status as objective_status,
+
     -- Action fields (will be NULL if no actions exist)
     a.id as action_id,
     a.action_description,
@@ -667,6 +674,7 @@ type GetCarePlanObjectivesWithActionsRow struct {
 	ObjectiveTitle       string  `json:"objective_title"`
 	ObjectiveDescription string  `json:"objective_description"`
 	ObjectiveTimeframe   string  `json:"objective_timeframe"`
+	ObjectiveStatus      string  `json:"objective_status"`
 	ActionID             *int64  `json:"action_id"`
 	ActionDescription    *string `json:"action_description"`
 	IsCompleted          *bool   `json:"is_completed"`
@@ -688,6 +696,7 @@ func (q *Queries) GetCarePlanObjectivesWithActions(ctx context.Context, carePlan
 			&i.ObjectiveTitle,
 			&i.ObjectiveDescription,
 			&i.ObjectiveTimeframe,
+			&i.ObjectiveStatus,
 			&i.ActionID,
 			&i.ActionDescription,
 			&i.IsCompleted,
@@ -768,7 +777,7 @@ func (q *Queries) GetCarePlanOverview(ctx context.Context, id int64) (GetCarePla
 }
 
 const getCarePlanResources = `-- name: GetCarePlanResources :many
-SELECT id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at FROM care_plan_resources 
+SELECT id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at FROM care_plan_resources 
 WHERE care_plan_id = $1 
 ORDER BY is_obtained, created_at
 `
@@ -792,6 +801,7 @@ func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID int64) ([
 			&i.CostEstimate,
 			&i.Notes,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -804,7 +814,7 @@ func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID int64) ([
 }
 
 const getCarePlanRisks = `-- name: GetCarePlanRisks :many
-SELECT id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at FROM care_plan_risks 
+SELECT id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at, updated_at FROM care_plan_risks 
 WHERE care_plan_id = $1 AND is_active = true 
 ORDER BY 
     CASE risk_level 
@@ -831,6 +841,7 @@ func (q *Queries) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]Car
 			&i.RiskLevel,
 			&i.IsActive,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -843,7 +854,7 @@ func (q *Queries) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]Car
 }
 
 const getCarePlanSuccessMetrics = `-- name: GetCarePlanSuccessMetrics :many
-SELECT id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at FROM care_plan_metrics 
+SELECT id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at, updated_at FROM care_plan_metrics 
 WHERE care_plan_id = $1 
 ORDER BY created_at
 `
@@ -867,6 +878,7 @@ func (q *Queries) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int6
 			&i.LastMeasuredDate,
 			&i.IsAchieved,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -879,7 +891,7 @@ func (q *Queries) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int6
 }
 
 const getCarePlanSupportNetwork = `-- name: GetCarePlanSupportNetwork :many
-SELECT id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at FROM care_plan_support_network 
+SELECT id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at, updated_at FROM care_plan_support_network 
 WHERE care_plan_id = $1 AND is_active = true 
 ORDER BY created_at
 `
@@ -902,6 +914,7 @@ func (q *Queries) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int6
 			&i.ContactDetails,
 			&i.IsActive,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -1253,7 +1266,7 @@ SET
     intervention_description = COALESCE($3, intervention_description),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at
+RETURNING id, care_plan_id, frequency, intervention_description, is_active, last_completed_date, total_completions, created_at, updated_at
 `
 
 type UpdateCarePlanInterventionParams struct {
@@ -1274,6 +1287,7 @@ func (q *Queries) UpdateCarePlanIntervention(ctx context.Context, arg UpdateCare
 		&i.LastCompletedDate,
 		&i.TotalCompletions,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1365,7 +1379,7 @@ SET
     obtained_date = COALESCE($5, obtained_date),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at
+RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
 `
 
 type UpdateCarePlanResourceParams struct {
@@ -1395,6 +1409,7 @@ func (q *Queries) UpdateCarePlanResource(ctx context.Context, arg UpdateCarePlan
 		&i.CostEstimate,
 		&i.Notes,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1407,7 +1422,7 @@ SET
     risk_level = COALESCE($4, risk_level),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at
+RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, is_active, created_at, updated_at
 `
 
 type UpdateCarePlanRiskParams struct {
@@ -1433,6 +1448,7 @@ func (q *Queries) UpdateCarePlanRisk(ctx context.Context, arg UpdateCarePlanRisk
 		&i.RiskLevel,
 		&i.IsActive,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1445,7 +1461,7 @@ SET
     measurement_method = COALESCE($4, measurement_method),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at
+RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at, updated_at
 `
 
 type UpdateCarePlanSuccessMetricParams struct {
@@ -1473,6 +1489,7 @@ func (q *Queries) UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCar
 		&i.LastMeasuredDate,
 		&i.IsAchieved,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1486,7 +1503,7 @@ SET
     contact_details = COALESCE($5, contact_details),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at
+RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at, updated_at
 `
 
 type UpdateCarePlanSupportNetworkParams struct {
@@ -1515,6 +1532,7 @@ func (q *Queries) UpdateCarePlanSupportNetwork(ctx context.Context, arg UpdateCa
 		&i.ContactDetails,
 		&i.IsActive,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
