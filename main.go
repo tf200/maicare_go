@@ -132,7 +132,7 @@ func main() {
 		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService)
 	}
 
-	grpcClient, err := grpclient.NewGrpcClient()
+	grpcClient, err := grpclient.NewGrpcClient(config.GrpcUrl)
 	if err != nil {
 		log.Fatalf("Could not create gRPC client: %v", err)
 	}

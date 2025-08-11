@@ -9,7 +9,7 @@ import (
 var testClient *GrpcClient
 
 func TestMain(m *testing.M) {
-	client, err := NewGrpcClient()
+	client, err := NewGrpcClient("localhost:50051")
 	if err != nil {
 		log.Fatalf("Could not create gRPC client: %v", err)
 	}
