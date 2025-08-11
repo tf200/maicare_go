@@ -203,6 +203,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	for _, objective := range generatedCarePlan.CarePlanObjectives.ShortTermGoals {
 		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
 			CarePlanID:  carePlan.ID,
+			GoalTitle:   objective.GoalTitle,
 			Description: objective.Description,
 			Timeframe:   "short_term",
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
@@ -229,6 +230,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	for _, objective := range generatedCarePlan.CarePlanObjectives.MediumTermGoals {
 		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
 			CarePlanID:  carePlan.ID,
+			GoalTitle:   objective.GoalTitle,
 			Description: objective.Description,
 			Timeframe:   "medium_term",
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
@@ -253,6 +255,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	for _, objective := range generatedCarePlan.CarePlanObjectives.LongTermGoals {
 		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
 			CarePlanID:  carePlan.ID,
+			GoalTitle:   objective.GoalTitle,
 			Description: objective.Description,
 			Timeframe:   "long_term",
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
