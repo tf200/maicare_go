@@ -301,6 +301,18 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 		}
 	}
 
+	for _, intervention := range generatedCarePlan.Interventions.MonthlyActivities {
+		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
+			CarePlanID:              carePlan.ID,
+			Frequency:               "monthly",
+			InterventionDescription: intervention,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
 	for _, successMetric := range generatedCarePlan.SuccessMetrics {
 		_, err := qtx.CreateCarePlanSuccessMetric(ctx, db.CreateCarePlanSuccessMetricParams{
 			CarePlanID:        carePlan.ID,
