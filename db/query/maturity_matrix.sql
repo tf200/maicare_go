@@ -394,11 +394,10 @@ WHERE id = $1;
 INSERT INTO care_plan_resources (
     care_plan_id,
     resource_description,
-    resource_type,
     is_obtained,
     obtained_date
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4
 )
 RETURNING *;
 
@@ -411,7 +410,6 @@ ORDER BY is_obtained, created_at;
 UPDATE care_plan_resources
 SET
     resource_description = COALESCE(sqlc.narg('resource_description'), resource_description),
-    resource_type = COALESCE(sqlc.narg('resource_type'), resource_type),
     is_obtained = COALESCE(sqlc.narg('is_obtained'), is_obtained),
     obtained_date = COALESCE(sqlc.narg('obtained_date'), obtained_date),
     updated_at = NOW()

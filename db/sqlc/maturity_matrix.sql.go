@@ -181,19 +181,17 @@ const createCarePlanResources = `-- name: CreateCarePlanResources :one
 INSERT INTO care_plan_resources (
     care_plan_id,
     resource_description,
-    resource_type,
     is_obtained,
     obtained_date
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4
 )
-RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
+RETURNING id, care_plan_id, resource_description, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
 `
 
 type CreateCarePlanResourcesParams struct {
 	CarePlanID          int64       `json:"care_plan_id"`
 	ResourceDescription string      `json:"resource_description"`
-	ResourceType        *string     `json:"resource_type"`
 	IsObtained          bool        `json:"is_obtained"`
 	ObtainedDate        pgtype.Date `json:"obtained_date"`
 }
@@ -203,7 +201,6 @@ func (q *Queries) CreateCarePlanResources(ctx context.Context, arg CreateCarePla
 	row := q.db.QueryRow(ctx, createCarePlanResources,
 		arg.CarePlanID,
 		arg.ResourceDescription,
-		arg.ResourceType,
 		arg.IsObtained,
 		arg.ObtainedDate,
 	)
@@ -212,7 +209,6 @@ func (q *Queries) CreateCarePlanResources(ctx context.Context, arg CreateCarePla
 		&i.ID,
 		&i.CarePlanID,
 		&i.ResourceDescription,
-		&i.ResourceType,
 		&i.IsObtained,
 		&i.ObtainedDate,
 		&i.CostEstimate,
@@ -789,7 +785,7 @@ func (q *Queries) GetCarePlanOverview(ctx context.Context, id int64) (GetCarePla
 }
 
 const getCarePlanResources = `-- name: GetCarePlanResources :many
-SELECT id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at FROM care_plan_resources 
+SELECT id, care_plan_id, resource_description, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at FROM care_plan_resources 
 WHERE care_plan_id = $1 
 ORDER BY is_obtained, created_at
 `
@@ -807,7 +803,6 @@ func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID int64) ([
 			&i.ID,
 			&i.CarePlanID,
 			&i.ResourceDescription,
-			&i.ResourceType,
 			&i.IsObtained,
 			&i.ObtainedDate,
 			&i.CostEstimate,
@@ -1386,18 +1381,16 @@ const updateCarePlanResource = `-- name: UpdateCarePlanResource :one
 UPDATE care_plan_resources
 SET
     resource_description = COALESCE($2, resource_description),
-    resource_type = COALESCE($3, resource_type),
-    is_obtained = COALESCE($4, is_obtained),
-    obtained_date = COALESCE($5, obtained_date),
+    is_obtained = COALESCE($3, is_obtained),
+    obtained_date = COALESCE($4, obtained_date),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, resource_description, resource_type, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
+RETURNING id, care_plan_id, resource_description, is_obtained, obtained_date, cost_estimate, notes, created_at, updated_at
 `
 
 type UpdateCarePlanResourceParams struct {
 	ID                  int64       `json:"id"`
 	ResourceDescription *string     `json:"resource_description"`
-	ResourceType        *string     `json:"resource_type"`
 	IsObtained          *bool       `json:"is_obtained"`
 	ObtainedDate        pgtype.Date `json:"obtained_date"`
 }
@@ -1406,7 +1399,6 @@ func (q *Queries) UpdateCarePlanResource(ctx context.Context, arg UpdateCarePlan
 	row := q.db.QueryRow(ctx, updateCarePlanResource,
 		arg.ID,
 		arg.ResourceDescription,
-		arg.ResourceType,
 		arg.IsObtained,
 		arg.ObtainedDate,
 	)
@@ -1415,7 +1407,6 @@ func (q *Queries) UpdateCarePlanResource(ctx context.Context, arg UpdateCarePlan
 		&i.ID,
 		&i.CarePlanID,
 		&i.ResourceDescription,
-		&i.ResourceType,
 		&i.IsObtained,
 		&i.ObtainedDate,
 		&i.CostEstimate,

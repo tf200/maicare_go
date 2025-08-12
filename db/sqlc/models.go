@@ -190,7 +190,6 @@ type CarePlanResource struct {
 	ID                  int64            `json:"id"`
 	CarePlanID          int64            `json:"care_plan_id"`
 	ResourceDescription string           `json:"resource_description"`
-	ResourceType        *string          `json:"resource_type"`
 	IsObtained          bool             `json:"is_obtained"`
 	ObtainedDate        pgtype.Date      `json:"obtained_date"`
 	CostEstimate        *float64         `json:"cost_estimate"`

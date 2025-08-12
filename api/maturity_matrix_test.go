@@ -172,7 +172,6 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 		resource, err := testStore.CreateCarePlanResources(context.Background(), db.CreateCarePlanResourcesParams{
 			CarePlanID:          carePlan.ID,
 			ResourceDescription: resource,
-			ResourceType:        nil,
 			IsObtained:          false,
 			ObtainedDate:        pgtype.Date{Time: time.Now(), Valid: false},
 		})
