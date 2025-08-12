@@ -130,14 +130,21 @@ jobs:
               exit 1
             fi
 
-            # Health check
+            # Health check with 2 retries and a 5-second delay
             echo "Performing health check..."
-            if curl -s http://localhost:8080/test/health | grep -q "OK"; then
-              echo "Health check passed."
-            else
-              echo "Health check failed."
+            for i in {1..2}; do
+              if curl -s http://localhost:8080/test/health | grep -q "OK"; then
+                echo "Health check passed."
+                break
+              else
+                echo "Health check failed."
+                sleep 5
+              fi
+            done
+            if [ $i -eq 2 ]; then
               exit 1
             fi
+            
             
 
             
