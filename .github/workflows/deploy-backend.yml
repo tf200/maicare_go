@@ -120,6 +120,33 @@ jobs:
             ${{ env.DOCKER_IMAGE }}:back
             
             echo "=== Deployment Complete ==="
+            # Check if the container is running
+            echo "Checking if the container is running..."
+            sleep 10  # Wait for a few seconds to allow the container to start
+            if [ "$(docker ps -q -f name=maicare-backend)" ]; then
+              echo "Container is running successfully."
+            else
+              echo "Container failed to start."
+              exit 1
+            fi
+
+            # Health check with 2 retries and a 5-second delay
+            echo "Performing health check..."
+            for i in {1..2}; do
+              if curl -s http://localhost:8080/test/health | grep -q "OK"; then
+                echo "Health check passed."
+                break
+              else
+                echo "Health check failed."
+                sleep 5
+              fi
+            done
+            if [ $i -eq 2 ]; then
+              exit 1
+            fi
+            
+            
+
             
             # Clean up unused images
             echo "Cleaning up..."

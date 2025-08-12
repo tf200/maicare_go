@@ -2017,7 +2017,6 @@ CREATE TABLE care_plan_resources (
     id BIGSERIAL PRIMARY KEY,
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
     resource_description TEXT NOT NULL,
-    resource_type VARCHAR(50), -- 'material', 'service', 'training', etc.
     is_obtained BOOLEAN NOT NULL DEFAULT FALSE,
     obtained_date DATE,
     cost_estimate DECIMAL(10,2),

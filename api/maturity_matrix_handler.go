@@ -357,7 +357,6 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 		_, err := qtx.CreateCarePlanResources(ctx, db.CreateCarePlanResourcesParams{
 			CarePlanID:          carePlan.ID,
 			ResourceDescription: resource,
-			ResourceType:        nil,
 			IsObtained:          false,
 			ObtainedDate:        pgtype.Date{Time: time.Now(), Valid: false},
 		})
@@ -1933,9 +1932,8 @@ type CreateCarePlanResourcesRequest struct {
 
 // CreateCarePlanResourcesResponse represents the response for the CreateCarePlanResources API
 type CreateCarePlanResourcesResponse struct {
-	ID                  int64   `json:"id"`
-	ResourceDescription string  `json:"resource_description"`
-	ResourceType        *string `json:"resource_type"`
+	ID                  int64  `json:"id"`
+	ResourceDescription string `json:"resource_description"`
 }
 
 // CreateCarePlanResourcesApi creates a new care plan resource
@@ -1979,7 +1977,6 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 	res := SuccessResponse(CreateCarePlanResourcesResponse{
 		ID:                  resource.ID,
 		ResourceDescription: resource.ResourceDescription,
-		ResourceType:        resource.ResourceType,
 	}, "Care plan resource created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
@@ -1989,7 +1986,6 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 type GetCarePlanResourcesResponse struct {
 	ID           int64      `json:"id"`
 	Description  string     `json:"description"`
-	Type         *string    `json:"type"`
 	IsObtained   bool       `json:"is_obtained"`
 	ObtainedDate *time.Time `json:"obtained_date"`
 }
@@ -2031,7 +2027,6 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 		response[i] = GetCarePlanResourcesResponse{
 			ID:           resource.ID,
 			Description:  resource.ResourceDescription,
-			Type:         resource.ResourceType,
 			IsObtained:   resource.IsObtained,
 			ObtainedDate: &resource.ObtainedDate.Time,
 		}
@@ -2053,7 +2048,6 @@ type UpdateCarePlanResourcesRequest struct {
 type UpdateCarePlanResourcesResponse struct {
 	ID                  int64     `json:"id"`
 	ResourceDescription string    `json:"resource_description"`
-	ResourceType        *string   `json:"resource_type"`
 	IsObtained          bool      `json:"is_obtained"`
 	ObtainedDate        time.Time `json:"obtained_date"`
 }
@@ -2089,7 +2083,6 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 	resource, err := server.store.UpdateCarePlanResource(ctx, db.UpdateCarePlanResourceParams{
 		ID:                  resourceID,
 		ResourceDescription: req.ResourceDescription,
-		ResourceType:        req.ResourceType,
 		IsObtained:          req.IsObtained,
 		ObtainedDate:        pgtype.Date{Time: req.ObtainedDate, Valid: true},
 	})
@@ -2102,7 +2095,6 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 	res := SuccessResponse(UpdateCarePlanResourcesResponse{
 		ID:                  resource.ID,
 		ResourceDescription: resource.ResourceDescription,
-		ResourceType:        resource.ResourceType,
 		IsObtained:          resource.IsObtained,
 		ObtainedDate:        resource.ObtainedDate.Time,
 	}, "Care plan resource updated successfully")
