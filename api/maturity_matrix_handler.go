@@ -2109,21 +2109,21 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 // @Description Delete all resources associated with a care plan
 // @Tags care_plan
 // @Produce json
-// @Param care_plan_id path int true "Care Plan ID"
+// @Param resource_id path int true "Resource ID"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /resources/{resource_id} [delete]
 func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Invalid care plan ID", zap.Error(err))
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
+		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Invalid resource ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid resource ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanResource(ctx, carePlanID)
+	err = server.store.DeleteCarePlanResource(ctx, resourceID)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Failed to delete care plan resources", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan resources")))
