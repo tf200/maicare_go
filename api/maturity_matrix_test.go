@@ -1524,7 +1524,6 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 				createReq := CreateCarePlanResourcesRequest{
 
 					ResourceDescription: "A comprehensive guide to nutrition for better health.",
-					ResourceType:        util.StringPtr("Nutrition Guide"),
 					IsObtained:          util.BoolPtr(true),
 					ObtainedDate:        util.TimePtr(time.Now()),
 				}
@@ -1623,7 +1622,6 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				updateReq := UpdateCarePlanResourcesRequest{
 					ResourceDescription: util.StringPtr("Updated resource description for care plan"),
-					ResourceType:        util.StringPtr("Updated Resource Type"),
 					IsObtained:          util.BoolPtr(false),
 					ObtainedDate:        time.Now().AddDate(0, 0, 1),
 				}

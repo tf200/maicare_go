@@ -1925,15 +1925,16 @@ func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 // CreateCarePlanResourcesRequest represents the request body for creating a care plan resource
 type CreateCarePlanResourcesRequest struct {
 	ResourceDescription string     `json:"resource_description" binding:"required"`
-	ResourceType        *string    `json:"resource_type"`
 	IsObtained          *bool      `json:"is_obtained"`
 	ObtainedDate        *time.Time `json:"obtained_date"`
 }
 
 // CreateCarePlanResourcesResponse represents the response for the CreateCarePlanResources API
 type CreateCarePlanResourcesResponse struct {
-	ID                  int64  `json:"id"`
-	ResourceDescription string `json:"resource_description"`
+	ID                  int64      `json:"id"`
+	ResourceDescription string     `json:"resource_description"`
+	IsObtained          bool       `json:"is_obtained"`
+	ObtainedDate        *time.Time `json:"obtained_date"`
 }
 
 // CreateCarePlanResourcesApi creates a new care plan resource
@@ -1977,6 +1978,8 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 	res := SuccessResponse(CreateCarePlanResourcesResponse{
 		ID:                  resource.ID,
 		ResourceDescription: resource.ResourceDescription,
+		IsObtained:          resource.IsObtained,
+		ObtainedDate:        &resource.ObtainedDate.Time,
 	}, "Care plan resource created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
@@ -2039,7 +2042,6 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 // UpdateCarePlanResourcesRequest represents the request body for updating a care plan resource
 type UpdateCarePlanResourcesRequest struct {
 	ResourceDescription *string   `json:"resource_description"`
-	ResourceType        *string   `json:"resource_type"`
 	IsObtained          *bool     `json:"is_obtained"`
 	ObtainedDate        time.Time `json:"obtained_date"`
 }
