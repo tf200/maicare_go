@@ -133,7 +133,7 @@ jobs:
             # Health check with 2 retries and a 5-second delay
             echo "Performing health check..."
             for i in {1..2}; do
-              if curl -s http://localhost:8080/test/health | grep -q "OK"; then
+              if curl -s http://localhost:8080/test/health | grep -q "healthy"; then
                 echo "Health check passed."
                 break
               else
