@@ -11629,9 +11629,6 @@
                 },
                 "resource_description": {
                     "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
                 }
             }
         },
@@ -11641,10 +11638,13 @@
                 "id": {
                     "type": "integer"
                 },
-                "resource_description": {
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
                     "type": "string"
                 },
-                "resource_type": {
+                "resource_description": {
                     "type": "string"
                 }
             }
@@ -14975,9 +14975,6 @@
                     "type": "boolean"
                 },
                 "obtained_date": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -21648,9 +21645,6 @@
                 },
                 "resource_description": {
                     "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
                 }
             }
         },
@@ -21667,9 +21661,6 @@
                     "type": "string"
                 },
                 "resource_description": {
-                    "type": "string"
-                },
-                "resource_type": {
                     "type": "string"
                 }
             }

@@ -11636,9 +11636,6 @@ const docTemplate = `{
                 },
                 "resource_description": {
                     "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
                 }
             }
         },
@@ -11648,10 +11645,13 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "resource_description": {
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
                     "type": "string"
                 },
-                "resource_type": {
+                "resource_description": {
                     "type": "string"
                 }
             }
@@ -14982,9 +14982,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "obtained_date": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -21655,9 +21652,6 @@ const docTemplate = `{
                 },
                 "resource_description": {
                     "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
                 }
             }
         },
@@ -21674,9 +21668,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "resource_description": {
-                    "type": "string"
-                },
-                "resource_type": {
                     "type": "string"
                 }
             }
