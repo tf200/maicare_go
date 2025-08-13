@@ -1988,7 +1988,7 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 // GetCarePlanResourcesResponse represents the response for the GetCarePlanResources API
 type GetCarePlanResourcesResponse struct {
 	ID                  int64      `json:"id"`
-	ResourceDescription string     `json:"description"`
+	ResourceDescription string     `json:"resource_description"`
 	IsObtained          bool       `json:"is_obtained"`
 	ObtainedDate        *time.Time `json:"obtained_date"`
 }
