@@ -1469,65 +1469,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/care_plans/resources/{resource_id}": {
-            "put": {
-                "description": "Update a care plan resource by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "care_plan"
-                ],
-                "summary": "Update care plan resource",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resource ID",
-                        "name": "resource_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanResourcesRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanResourcesResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/care_plans/{care_plan_id}": {
             "get": {
                 "description": "Get the care plan overview for a given assessment ID",
@@ -1817,53 +1758,6 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.Response-api_CreateCarePlanObjectiveResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/care_plans/{care_plan_id}/resources": {
-            "delete": {
-                "description": "Delete all resources associated with a care plan",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "care_plan"
-                ],
-                "summary": "Delete care plan resources",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Care Plan ID",
-                        "name": "care_plan_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "400": {
@@ -9836,6 +9730,110 @@ const docTemplate = `{
                 }
             }
         },
+        "/resources/{resource_id}": {
+            "put": {
+                "description": "Update a care plan resource by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Update care plan resource",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Resource ID",
+                        "name": "resource_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateCarePlanResourcesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanResourcesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete all resources associated with a care plan",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Delete care plan resources",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/risks/{risk_id}": {
             "put": {
                 "description": "Update a care plan risk by its ID",
@@ -11636,9 +11634,6 @@ const docTemplate = `{
                 },
                 "resource_description": {
                     "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
                 }
             }
         },
@@ -11648,10 +11643,13 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "resource_description": {
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
                     "type": "string"
                 },
-                "resource_type": {
+                "resource_description": {
                     "type": "string"
                 }
             }
@@ -14982,9 +14980,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "obtained_date": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -21655,9 +21650,6 @@ const docTemplate = `{
                 },
                 "resource_description": {
                     "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
                 }
             }
         },
@@ -21674,9 +21666,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "resource_description": {
-                    "type": "string"
-                },
-                "resource_type": {
                     "type": "string"
                 }
             }
