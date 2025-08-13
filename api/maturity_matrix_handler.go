@@ -2066,7 +2066,7 @@ type UpdateCarePlanResourcesResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plans/resources/{resource_id} [put]
+// @Router /resources/{resource_id} [put]
 func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
 	if err != nil {
@@ -2104,25 +2104,6 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func (server *Server) DeleteCarePlanResourceApi(ctx *gin.Context) {
-	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourceApi", "Invalid resource ID", zap.Error(err))
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid resource ID")))
-		return
-	}
-
-	err = server.store.DeleteCarePlanResource(ctx, resourceID)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourceApi", "Failed to delete care plan resource", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan resource")))
-		return
-	}
-
-	res := SuccessResponse[any](nil, "Care plan resource deleted successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
 // DeleteCarePlanResourcesApi deletes all resources associated with a care plan
 // @Summary Delete care plan resources
 // @Description Delete all resources associated with a care plan
@@ -2133,7 +2114,7 @@ func (server *Server) DeleteCarePlanResourceApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plans/{care_plan_id}/resources [delete]
+// @Router /resources/{resource_id} [delete]
 func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {

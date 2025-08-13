@@ -10172,37 +10172,6 @@ paths:
       summary: Create care plan objective
       tags:
       - care_plan
-  /care_plans/{care_plan_id}/resources:
-    delete:
-      description: Delete all resources associated with a care plan
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan resources
-      tags:
-      - care_plan
   /care_plans/{care_plan_id}/risks:
     post:
       consumes:
@@ -10378,45 +10347,6 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create care plan support network
-      tags:
-      - care_plan
-  /care_plans/resources/{resource_id}:
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan resource by its ID
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.UpdateCarePlanResourcesRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_UpdateCarePlanResourcesResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan resource
       tags:
       - care_plan
   /clients:
@@ -15508,6 +15438,75 @@ paths:
       summary: Update Registration Form Status
       tags:
       - Registration Form
+  /resources/{resource_id}:
+    delete:
+      description: Delete all resources associated with a care plan
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan resources
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan resource by its ID
+      parameters:
+      - description: Resource ID
+        in: path
+        name: resource_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanResourcesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanResourcesResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan resource
+      tags:
+      - care_plan
   /risks/{risk_id}:
     delete:
       description: Delete a care plan risk by its ID
