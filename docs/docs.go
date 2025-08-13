@@ -9800,8 +9800,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Care Plan ID",
-                        "name": "care_plan_id",
+                        "description": "Resource ID",
+                        "name": "resource_id",
                         "in": "path",
                         "required": true
                     }

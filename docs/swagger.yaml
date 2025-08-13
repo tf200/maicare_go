@@ -15442,9 +15442,9 @@ paths:
     delete:
       description: Delete all resources associated with a care plan
       parameters:
-      - description: Care Plan ID
+      - description: Resource ID
         in: path
-        name: care_plan_id
+        name: resource_id
         required: true
         type: integer
       produces:
