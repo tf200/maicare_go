@@ -1987,10 +1987,10 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 
 // GetCarePlanResourcesResponse represents the response for the GetCarePlanResources API
 type GetCarePlanResourcesResponse struct {
-	ID           int64      `json:"id"`
-	Description  string     `json:"description"`
-	IsObtained   bool       `json:"is_obtained"`
-	ObtainedDate *time.Time `json:"obtained_date"`
+	ID                  int64      `json:"id"`
+	ResourceDescription string     `json:"description"`
+	IsObtained          bool       `json:"is_obtained"`
+	ObtainedDate        *time.Time `json:"obtained_date"`
 }
 
 // GetCarePlanResourcesApi retrieves the resources for a given care plan ID
@@ -2028,10 +2028,10 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 	response := make([]GetCarePlanResourcesResponse, len(resources))
 	for i, resource := range resources {
 		response[i] = GetCarePlanResourcesResponse{
-			ID:           resource.ID,
-			Description:  resource.ResourceDescription,
-			IsObtained:   resource.IsObtained,
-			ObtainedDate: &resource.ObtainedDate.Time,
+			ID:                  resource.ID,
+			ResourceDescription: resource.ResourceDescription,
+			IsObtained:          resource.IsObtained,
+			ObtainedDate:        &resource.ObtainedDate.Time,
 		}
 	}
 
