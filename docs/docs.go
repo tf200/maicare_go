@@ -11346,7 +11346,7 @@ const docTemplate = `{
                 "action_description": {
                     "type": "string"
                 },
-                "id": {
+                "action_id": {
                     "type": "integer"
                 },
                 "is_completed": {
@@ -11372,7 +11372,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "id": {
+                "objective_id": {
                     "type": "integer"
                 },
                 "status": {
@@ -15160,19 +15160,19 @@ const docTemplate = `{
                 "daily_activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/api.Intervention"
                     }
                 },
                 "monthly_activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/api.Intervention"
                     }
                 },
                 "weekly_activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/api.Intervention"
                     }
                 }
             }
@@ -17025,6 +17025,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.Intervention": {
+            "type": "object",
+            "properties": {
+                "intervention_description": {
+                    "type": "string"
+                },
+                "intervention_id": {
                     "type": "integer"
                 }
             }
