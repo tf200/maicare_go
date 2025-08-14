@@ -310,18 +310,20 @@ INSERT INTO care_plan_metrics (
     care_plan_id,
     metric_name,
     target_value,
-    measurement_method
+    measurement_method,
+    current_value
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
 RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at, updated_at
 `
 
 type CreateCarePlanSuccessMetricParams struct {
-	CarePlanID        int64  `json:"care_plan_id"`
-	MetricName        string `json:"metric_name"`
-	TargetValue       string `json:"target_value"`
-	MeasurementMethod string `json:"measurement_method"`
+	CarePlanID        int64   `json:"care_plan_id"`
+	MetricName        string  `json:"metric_name"`
+	TargetValue       string  `json:"target_value"`
+	MeasurementMethod string  `json:"measurement_method"`
+	CurrentValue      *string `json:"current_value"`
 }
 
 // ==================== care plan success metrics ====================
@@ -331,6 +333,7 @@ func (q *Queries) CreateCarePlanSuccessMetric(ctx context.Context, arg CreateCar
 		arg.MetricName,
 		arg.TargetValue,
 		arg.MeasurementMethod,
+		arg.CurrentValue,
 	)
 	var i CarePlanMetric
 	err := row.Scan(
@@ -1650,6 +1653,7 @@ SET
     metric_name = COALESCE($2, metric_name),
     target_value = COALESCE($3, target_value),
     measurement_method = COALESCE($4, measurement_method),
+    current_value = COALESCE($5, current_value),
     updated_at = NOW()
 WHERE id = $1
 RETURNING id, care_plan_id, metric_name, target_value, measurement_method, current_value, last_measured_date, is_achieved, created_at, updated_at
@@ -1660,6 +1664,7 @@ type UpdateCarePlanSuccessMetricParams struct {
 	MetricName        *string `json:"metric_name"`
 	TargetValue       *string `json:"target_value"`
 	MeasurementMethod *string `json:"measurement_method"`
+	CurrentValue      *string `json:"current_value"`
 }
 
 func (q *Queries) UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCarePlanSuccessMetricParams) (CarePlanMetric, error) {
@@ -1668,6 +1673,7 @@ func (q *Queries) UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCar
 		arg.MetricName,
 		arg.TargetValue,
 		arg.MeasurementMethod,
+		arg.CurrentValue,
 	)
 	var i CarePlanMetric
 	err := row.Scan(

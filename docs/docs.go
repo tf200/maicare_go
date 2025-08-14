@@ -11961,6 +11961,10 @@ const docTemplate = `{
                 "target_value"
             ],
             "properties": {
+                "current_value": {
+                    "description": "Optional, can be nil if not set",
+                    "type": "string"
+                },
                 "measurement_method": {
                     "type": "string"
                 },
@@ -22073,6 +22077,10 @@ const docTemplate = `{
         "api.UpdateCarePlanSuccessMetricsRequest": {
             "type": "object",
             "properties": {
+                "current_value": {
+                    "description": "Optional, can be nil if not set",
+                    "type": "string"
+                },
                 "measurement_method": {
                     "type": "string"
                 },

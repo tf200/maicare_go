@@ -1255,9 +1255,10 @@ func (server *Server) DeleteCarePlanInterventionApi(ctx *gin.Context) {
 
 // CreateCarePlanSuccessMetricsRequest represents the request body for creating a care plan success metric
 type CreateCarePlanSuccessMetricsRequest struct {
-	MetricName        string `json:"metric_name" binding:"required"`
-	TargetValue       string `json:"target_value" binding:"required"`
-	MeasurementMethod string `json:"measurement_method" binding:"required"`
+	MetricName        string  `json:"metric_name" binding:"required"`
+	TargetValue       string  `json:"target_value" binding:"required"`
+	MeasurementMethod string  `json:"measurement_method" binding:"required"`
+	CurrentValue      *string `json:"current_value"` // Optional, can be nil if not set
 }
 
 // CreateCarePlanSuccessMetricsResponse represents the response for the CreateCarePlanSuccessMetrics API
@@ -1301,6 +1302,7 @@ func (server *Server) CreateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 		CarePlanID:        carePlanID,
 		MetricName:        req.MetricName,
 		TargetValue:       req.TargetValue,
+		CurrentValue:      req.CurrentValue,
 		MeasurementMethod: req.MeasurementMethod,
 	})
 	if err != nil {
@@ -1380,6 +1382,7 @@ type UpdateCarePlanSuccessMetricsRequest struct {
 	MetricName        *string `json:"metric_name"`
 	TargetValue       *string `json:"target_value"`
 	MeasurementMethod *string `json:"measurement_method"`
+	CurrentValue      *string `json:"current_value"` // Optional, can be nil if not set
 }
 
 // UpdateCarePlanSuccessMetricsResponse represents the response for the UpdateCarePlanSuccessMetrics API
@@ -1424,6 +1427,7 @@ func (server *Server) UpdateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 		MetricName:        req.MetricName,
 		TargetValue:       req.TargetValue,
 		MeasurementMethod: req.MeasurementMethod,
+		CurrentValue:      req.CurrentValue,
 	})
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSuccessMetricsApi", "Failed to update care plan success metric", zap.Error(err))

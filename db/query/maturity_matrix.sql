@@ -285,9 +285,10 @@ INSERT INTO care_plan_metrics (
     care_plan_id,
     metric_name,
     target_value,
-    measurement_method
+    measurement_method,
+    current_value
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -303,6 +304,7 @@ SET
     metric_name = COALESCE(sqlc.narg('metric_name'), metric_name),
     target_value = COALESCE(sqlc.narg('target_value'), target_value),
     measurement_method = COALESCE(sqlc.narg('measurement_method'), measurement_method),
+    current_value = COALESCE(sqlc.narg('current_value'), current_value),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;
