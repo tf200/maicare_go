@@ -688,7 +688,7 @@ func (server *Server) CreateCarePlanObjectiveApi(ctx *gin.Context) {
 
 // CarePlanActions represents the actions in a care plan objective
 type CarePlanActions struct {
-	ID                int64  `json:"id"`
+	ActionID          int64  `json:"action_id"`
 	SortOrder         int32  `json:"sort_order"`
 	ActionDescription string `json:"action_description"`
 	IsCompleted       bool   `json:"is_completed"`
@@ -697,7 +697,7 @@ type CarePlanActions struct {
 
 // CarePlanObjectives represents the objectives in a care plan
 type CarePlanObjectives struct {
-	ID          int64             `json:"id"`
+	ObjectiveID int64             `json:"objective_id"`
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
 	TimeFrame   string            `json:"timeframe"`
@@ -743,7 +743,7 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 		objective, exists := objectiveMap[row.ObjectiveID]
 		if !exists {
 			objective = &CarePlanObjectives{
-				ID:          row.ObjectiveID,
+				ObjectiveID: row.ObjectiveID,
 				Title:       row.ObjectiveTitle,
 				Description: row.ObjectiveDescription,
 				TimeFrame:   row.ObjectiveTimeframe,
@@ -754,7 +754,7 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 		}
 		if row.ActionID != nil {
 			action := CarePlanActions{
-				ID:                *row.ActionID,
+				ActionID:          *row.ActionID,
 				SortOrder:         util.DerefInt32(row.SortOrder),
 				ActionDescription: util.DerefString(row.ActionDescription),
 				IsCompleted:       util.DerefBool(row.IsCompleted),
@@ -769,6 +769,7 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 		MediumTermGoals: make([]CarePlanObjectives, 0),
 		LongTermGoals:   make([]CarePlanObjectives, 0),
 	}
+
 	for _, objective := range objectiveMap {
 		switch objective.TimeFrame {
 		case "short_term":
