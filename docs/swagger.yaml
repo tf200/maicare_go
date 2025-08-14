@@ -651,6 +651,9 @@ definitions:
     type: object
   api.CreateCarePlanSuccessMetricsRequest:
     properties:
+      current_value:
+        description: Optional, can be nil if not set
+        type: string
       measurement_method:
         type: string
       metric_name:
@@ -7343,6 +7346,9 @@ definitions:
     type: object
   api.UpdateCarePlanSuccessMetricsRequest:
     properties:
+      current_value:
+        description: Optional, can be nil if not set
+        type: string
       measurement_method:
         type: string
       metric_name:
