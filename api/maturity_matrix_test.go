@@ -956,6 +956,7 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 					MetricName:        "Weight Loss",
 					TargetValue:       "10",
 					MeasurementMethod: "kg",
+					CurrentValue:      util.StringPtr("5"),
 				}
 				data, err := json.Marshal(createReq)
 				require.NoError(t, err)
@@ -973,6 +974,9 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
 				require.Equal(t, carePlan.SuccessMetricID, response.Data.MetricID)
+				require.NotNil(t, response.Data.CurrentValue)
+				require.Equal(t, "5", *response.Data.CurrentValue)
+
 			},
 		},
 	}
@@ -1055,6 +1059,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 					MetricName:        util.StringPtr("Updated Weight Loss"),
 					TargetValue:       util.StringPtr("15"),
 					MeasurementMethod: util.StringPtr("kg"),
+					CurrentValue:      util.StringPtr("10"),
 				}
 				data, err := json.Marshal(updateReq)
 				require.NoError(t, err)
