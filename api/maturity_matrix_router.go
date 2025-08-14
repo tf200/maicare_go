@@ -57,6 +57,12 @@ func (server *Server) setupMaturityMatrixRoutes(baseRouter *gin.RouterGroup) {
 		mmGroup.PUT("/resources/:resource_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanResourcesApi)
 		mmGroup.DELETE("/resources/:resource_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanResourcesApi)
 
+		// Careplan Reports routes
+		mmGroup.POST("/care_plans/:care_plan_id/reports", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateCarePlanReportApi)
+		mmGroup.GET("/care_plans/:care_plan_id/reports", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListAiGeneratedReportsApi)
+		mmGroup.PUT("/care_plans/reports/:report_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanReportApi)
+		mmGroup.DELETE("/care_plans/reports/:report_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanReportApi)
+		// old routes to be removed
 		mmGroup.POST("/:id/maturity_matrix_assessment/:assessment_id/goals", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateClientGoalsApi)
 		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/goals", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListClientGoalsApi)
 		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/goals/:goal_id", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetClientGoalApi)

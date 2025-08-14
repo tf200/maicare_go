@@ -176,6 +176,49 @@ func (q *Queries) CreateCarePlanObjective(ctx context.Context, arg CreateCarePla
 	return i, err
 }
 
+const createCarePlanReport = `-- name: CreateCarePlanReport :one
+INSERT INTO care_plan_reports (
+    care_plan_id,
+    report_type,
+    report_content,
+    created_by_employee_id,
+    is_critical
+) VALUES (
+    $1, $2, $3, $4, $5
+) RETURNING id, care_plan_id, report_type, report_content, created_by_employee_id, is_critical, created_at, updated_at
+`
+
+type CreateCarePlanReportParams struct {
+	CarePlanID          int64  `json:"care_plan_id"`
+	ReportType          string `json:"report_type"`
+	ReportContent       string `json:"report_content"`
+	CreatedByEmployeeID int64  `json:"created_by_employee_id"`
+	IsCritical          bool   `json:"is_critical"`
+}
+
+// ===================== care plan reports ====================
+func (q *Queries) CreateCarePlanReport(ctx context.Context, arg CreateCarePlanReportParams) (CarePlanReport, error) {
+	row := q.db.QueryRow(ctx, createCarePlanReport,
+		arg.CarePlanID,
+		arg.ReportType,
+		arg.ReportContent,
+		arg.CreatedByEmployeeID,
+		arg.IsCritical,
+	)
+	var i CarePlanReport
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.ReportType,
+		&i.ReportContent,
+		&i.CreatedByEmployeeID,
+		&i.IsCritical,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createCarePlanResources = `-- name: CreateCarePlanResources :one
 
 INSERT INTO care_plan_resources (
@@ -559,6 +602,16 @@ func (q *Queries) DeleteCarePlanObjective(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteCarePlanReport = `-- name: DeleteCarePlanReport :exec
+DELETE FROM care_plan_reports
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCarePlanReport(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteCarePlanReport, id)
+	return err
+}
+
 const deleteCarePlanResource = `-- name: DeleteCarePlanResource :exec
 DELETE FROM care_plan_resources
 WHERE id = $1
@@ -780,6 +833,47 @@ func (q *Queries) GetCarePlanOverview(ctx context.Context, id int64) (GetCarePla
 		&i.TopicName,
 		&i.FirstName,
 		&i.LastName,
+	)
+	return i, err
+}
+
+const getCarePlanReport = `-- name: GetCarePlanReport :one
+SELECT
+    cpr.id, cpr.care_plan_id, cpr.report_type, cpr.report_content, cpr.created_by_employee_id, cpr.is_critical, cpr.created_at, cpr.updated_at,
+    e.first_name AS created_by_first_name,
+    e.last_name AS created_by_last_name
+FROM care_plan_reports cpr
+JOIN employee_profile e ON cpr.created_by_employee_id = e.id
+WHERE cpr.id = $1
+`
+
+type GetCarePlanReportRow struct {
+	ID                  int64              `json:"id"`
+	CarePlanID          int64              `json:"care_plan_id"`
+	ReportType          string             `json:"report_type"`
+	ReportContent       string             `json:"report_content"`
+	CreatedByEmployeeID int64              `json:"created_by_employee_id"`
+	IsCritical          bool               `json:"is_critical"`
+	CreatedAt           pgtype.Timestamp   `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	CreatedByFirstName  string             `json:"created_by_first_name"`
+	CreatedByLastName   string             `json:"created_by_last_name"`
+}
+
+func (q *Queries) GetCarePlanReport(ctx context.Context, id int64) (GetCarePlanReportRow, error) {
+	row := q.db.QueryRow(ctx, getCarePlanReport, id)
+	var i GetCarePlanReportRow
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.ReportType,
+		&i.ReportContent,
+		&i.CreatedByEmployeeID,
+		&i.IsCritical,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedByFirstName,
+		&i.CreatedByLastName,
 	)
 	return i, err
 }
@@ -1032,6 +1126,71 @@ func (q *Queries) GetMaturityMatrix(ctx context.Context, id int64) (MaturityMatr
 	var i MaturityMatrix
 	err := row.Scan(&i.ID, &i.TopicName, &i.LevelDescription)
 	return i, err
+}
+
+const listCarePlanReports = `-- name: ListCarePlanReports :many
+SELECT
+    cpr.id, cpr.care_plan_id, cpr.report_type, cpr.report_content, cpr.created_by_employee_id, cpr.is_critical, cpr.created_at, cpr.updated_at,
+    e.first_name AS created_by_first_name,
+    e.last_name AS created_by_last_name,
+    COUNT(*) OVER() AS total_count
+FROM care_plan_reports cpr
+JOIN employee_profile e ON cpr.created_by_employee_id = e.id
+WHERE cpr.care_plan_id = $1
+ORDER BY cpr.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListCarePlanReportsParams struct {
+	CarePlanID int64 `json:"care_plan_id"`
+	Limit      int32 `json:"limit"`
+	Offset     int32 `json:"offset"`
+}
+
+type ListCarePlanReportsRow struct {
+	ID                  int64              `json:"id"`
+	CarePlanID          int64              `json:"care_plan_id"`
+	ReportType          string             `json:"report_type"`
+	ReportContent       string             `json:"report_content"`
+	CreatedByEmployeeID int64              `json:"created_by_employee_id"`
+	IsCritical          bool               `json:"is_critical"`
+	CreatedAt           pgtype.Timestamp   `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	CreatedByFirstName  string             `json:"created_by_first_name"`
+	CreatedByLastName   string             `json:"created_by_last_name"`
+	TotalCount          int64              `json:"total_count"`
+}
+
+func (q *Queries) ListCarePlanReports(ctx context.Context, arg ListCarePlanReportsParams) ([]ListCarePlanReportsRow, error) {
+	rows, err := q.db.Query(ctx, listCarePlanReports, arg.CarePlanID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCarePlanReportsRow
+	for rows.Next() {
+		var i ListCarePlanReportsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CarePlanID,
+			&i.ReportType,
+			&i.ReportContent,
+			&i.CreatedByEmployeeID,
+			&i.IsCritical,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByFirstName,
+			&i.CreatedByLastName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listClientGoals = `-- name: ListClientGoals :many
@@ -1373,6 +1532,45 @@ func (q *Queries) UpdateCarePlanOverview(ctx context.Context, arg UpdateCarePlan
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Version,
+	)
+	return i, err
+}
+
+const updateCarePlanReport = `-- name: UpdateCarePlanReport :one
+UPDATE care_plan_reports
+SET
+    report_type = COALESCE($2, report_type),
+    report_content = COALESCE($3, report_content),
+    is_critical = COALESCE($4, is_critical),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, care_plan_id, report_type, report_content, created_by_employee_id, is_critical, created_at, updated_at
+`
+
+type UpdateCarePlanReportParams struct {
+	ID            int64   `json:"id"`
+	ReportType    *string `json:"report_type"`
+	ReportContent *string `json:"report_content"`
+	IsCritical    *bool   `json:"is_critical"`
+}
+
+func (q *Queries) UpdateCarePlanReport(ctx context.Context, arg UpdateCarePlanReportParams) (CarePlanReport, error) {
+	row := q.db.QueryRow(ctx, updateCarePlanReport,
+		arg.ID,
+		arg.ReportType,
+		arg.ReportContent,
+		arg.IsCritical,
+	)
+	var i CarePlanReport
+	err := row.Scan(
+		&i.ID,
+		&i.CarePlanID,
+		&i.ReportType,
+		&i.ReportContent,
+		&i.CreatedByEmployeeID,
+		&i.IsCritical,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
