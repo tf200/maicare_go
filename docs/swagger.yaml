@@ -577,6 +577,33 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.CreateCarePlanReportRequest:
+    properties:
+      is_critical:
+        type: boolean
+      report_content:
+        type: string
+      report_type:
+        type: string
+    required:
+    - report_content
+    - report_type
+    type: object
+  api.CreateCarePlanReportResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      report_content:
+        type: string
+      report_type:
+        type: string
+    type: object
   api.CreateCarePlanResourcesRequest:
     properties:
       is_obtained:
@@ -659,10 +686,6 @@ definitions:
     type: object
   api.CreateCarePlanSupportNetworkResponse:
     properties:
-      contact_details:
-        type: string
-      contact_person:
-        type: string
       responsibility_description:
         type: string
       role_title:
@@ -2836,13 +2859,13 @@ definitions:
     type: object
   api.GetCarePlanResourcesResponse:
     properties:
-      description:
-        type: string
       id:
         type: integer
       is_obtained:
         type: boolean
       obtained_date:
+        type: string
+      resource_description:
         type: string
     type: object
   api.GetCarePlanRisksResponse:
@@ -4244,6 +4267,25 @@ definitions:
       start_date:
         type: string
     type: object
+  api.ListCarePlanReportsResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      created_at:
+        type: string
+      created_by_first_name:
+        type: string
+      created_by_last_name:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      report_content:
+        type: string
+      report_type:
+        type: string
+    type: object
   api.ListClientContractsResponse:
     properties:
       VAT:
@@ -5496,6 +5538,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateCarePlanReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateCarePlanReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreateCarePlanResourcesResponse:
     properties:
       data:
@@ -6270,6 +6321,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateCarePlanReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateCarePlanReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateCarePlanResourcesResponse:
     properties:
       data:
@@ -6570,6 +6630,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.GetPermissionsByRoleIDApiResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListCarePlanReportsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListCarePlanReportsResponse'
         type: array
       message:
         type: string
@@ -7206,6 +7277,30 @@ definitions:
       care_plan_id:
         type: integer
     type: object
+  api.UpdateCarePlanReportRequest:
+    properties:
+      is_critical:
+        type: boolean
+      report_content:
+        type: string
+      report_type:
+        type: string
+    type: object
+  api.UpdateCarePlanReportResponse:
+    properties:
+      care_plan_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      report_content:
+        type: string
+      report_type:
+        type: string
+    type: object
   api.UpdateCarePlanResourcesRequest:
     properties:
       is_obtained:
@@ -7270,10 +7365,6 @@ definitions:
     type: object
   api.UpdateCarePlanSupportNetworkRequest:
     properties:
-      contact_details:
-        type: string
-      contact_person:
-        type: string
       responsibility_description:
         type: string
       role_title:
@@ -7281,10 +7372,6 @@ definitions:
     type: object
   api.UpdateCarePlanSupportNetworkResponse:
     properties:
-      contact_details:
-        type: string
-      contact_person:
-        type: string
       responsibility_description:
         type: string
       role_title:
@@ -9796,6 +9883,86 @@ paths:
       summary: Delete care plan
       tags:
       - care_plan
+  /care_plan/{care_plan_id}/reports:
+    get:
+      description: List all reports for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 5
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListCarePlanReportsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List care plan reports
+      tags:
+      - care_plan
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan report
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanReportRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanReportResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan report
+      tags:
+      - care_plan
   /care_plan/{care_plan_id}/resources:
     get:
       description: Get the resources for a given care plan ID
@@ -9896,13 +10063,13 @@ paths:
       summary: Get care plan risks
       tags:
       - care_plan
-  /care_plan/support_network/{support_network_id}:
+  /care_plan/reports/{report_id}:
     delete:
-      description: Delete a care plan support network by its ID
+      description: Delete a care plan report by its ID
       parameters:
-      - description: Support Network ID
+      - description: Report ID
         in: path
-        name: support_network_id
+        name: report_id
         required: true
         type: integer
       produces:
@@ -9924,17 +10091,17 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan support network
+      summary: Delete care plan report
       tags:
       - care_plan
     put:
       consumes:
       - application/json
-      description: Update a care plan support network by its ID
+      description: Update a care plan report by its ID
       parameters:
-      - description: Support Network ID
+      - description: Report ID
         in: path
-        name: support_network_id
+        name: report_id
         required: true
         type: integer
       - description: Request body
@@ -9942,14 +10109,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateCarePlanSupportNetworkRequest'
+          $ref: '#/definitions/api.UpdateCarePlanReportRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateCarePlanSupportNetworkResponse'
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanReportResponse'
         "400":
           description: Bad request
           schema:
@@ -9962,7 +10129,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Update care plan support network
+      summary: Update care plan report
       tags:
       - care_plan
   /care_plans/{care_plan_id}:
@@ -16102,6 +16269,75 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update care plan success metric
+      tags:
+      - care_plan
+  /support_network/{support_network_id}:
+    delete:
+      description: Delete a care plan support network by its ID
+      parameters:
+      - description: Support Network ID
+        in: path
+        name: support_network_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan support network
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan support network by its ID
+      parameters:
+      - description: Support Network ID
+        in: path
+        name: support_network_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanSupportNetworkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanSupportNetworkResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan support network
       tags:
       - care_plan
   /test/notification:

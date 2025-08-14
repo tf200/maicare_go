@@ -2005,8 +2005,8 @@ CREATE TABLE care_plan_support_network (
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
     role_title VARCHAR(255) NOT NULL,
     responsibility_description TEXT NOT NULL,
-    contact_person VARCHAR(255), -- Optional: specific person assigned
-    contact_details TEXT, -- Phone, email, etc.
+    contact_person VARCHAR(255), -- to remove
+    contact_details TEXT, -- to remove
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

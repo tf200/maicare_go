@@ -163,8 +163,6 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 			CarePlanID:                carePlan.ID,
 			RoleTitle:                 supportNetwork.Role,
 			ResponsibilityDescription: supportNetwork.Responsibility,
-			ContactPerson:             nil, // TODO: Add contact person if needed
-			ContactDetails:            nil, // TODO: Add contact details if needed
 		})
 		supportNetworkID = network.ID
 		require.NoError(t, err)

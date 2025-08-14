@@ -344,8 +344,6 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			CarePlanID:                carePlan.ID,
 			RoleTitle:                 supportNetwork.Role,
 			ResponsibilityDescription: supportNetwork.Responsibility,
-			ContactPerson:             nil, // TODO: Add contact person if needed
-			ContactDetails:            nil, // TODO: Add contact details if needed
 		})
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -1707,11 +1705,9 @@ type CreateCarePlanSupportNetworkRequest struct {
 
 // CreateCarePlanSupportNetworkResponse represents the response for the CreateCarePlanSupportNetwork API
 type CreateCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64   `json:"support_network_id"`
-	RoleTitle                 string  `json:"role_title"`
-	ResponsibilityDescription string  `json:"responsibility_description"`
-	ContactPerson             *string `json:"contact_person"`
-	ContactDetails            *string `json:"contact_details"`
+	SupportNetworkID          int64  `json:"support_network_id"`
+	RoleTitle                 string `json:"role_title"`
+	ResponsibilityDescription string `json:"responsibility_description"`
 }
 
 // CreateCareplanSupportNetworkApi creates a new care plan support network
@@ -1757,8 +1753,6 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 		SupportNetworkID:          supportNetwork.ID,
 		RoleTitle:                 supportNetwork.RoleTitle,
 		ResponsibilityDescription: supportNetwork.ResponsibilityDescription,
-		ContactPerson:             supportNetwork.ContactPerson,
-		ContactDetails:            supportNetwork.ContactDetails,
 	}, "Care plan support network created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
@@ -1818,17 +1812,13 @@ func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
 type UpdateCarePlanSupportNetworkRequest struct {
 	RoleTitle                 *string `json:"role_title"`
 	ResponsibilityDescription *string `json:"responsibility_description"`
-	ContactPerson             *string `json:"contact_person"`
-	ContactDetails            *string `json:"contact_details"`
 }
 
 // UpdateCarePlanSupportNetworkResponse represents the response for the UpdateCarePlanSupportNetwork API
 type UpdateCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64   `json:"support_network_id"`
-	RoleTitle                 string  `json:"role_title"`
-	ResponsibilityDescription string  `json:"responsibility_description"`
-	ContactPerson             *string `json:"contact_person"`
-	ContactDetails            *string `json:"contact_details"`
+	SupportNetworkID          int64  `json:"support_network_id"`
+	RoleTitle                 string `json:"role_title"`
+	ResponsibilityDescription string `json:"responsibility_description"`
 }
 
 // UpdateCarePlanSupportNetworkApi updates a care plan support network by its ID
@@ -1843,7 +1833,7 @@ type UpdateCarePlanSupportNetworkResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/support_network/{support_network_id} [put]
+// @Router /support_network/{support_network_id} [put]
 func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 	supportNetworkID, err := strconv.ParseInt(ctx.Param("support_network_id"), 10, 64)
 	if err != nil {
@@ -1863,8 +1853,6 @@ func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 		ID:                        supportNetworkID,
 		RoleTitle:                 req.RoleTitle,
 		ResponsibilityDescription: req.ResponsibilityDescription,
-		ContactPerson:             req.ContactPerson,
-		ContactDetails:            req.ContactDetails,
 	})
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSupportNetworkApi", "Failed to update care plan support network", zap.Error(err))
@@ -1876,8 +1864,6 @@ func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 		SupportNetworkID:          supportNetwork.ID,
 		RoleTitle:                 supportNetwork.RoleTitle,
 		ResponsibilityDescription: supportNetwork.ResponsibilityDescription,
-		ContactPerson:             supportNetwork.ContactPerson,
-		ContactDetails:            supportNetwork.ContactDetails,
 	}, "Care plan support network updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
@@ -1893,7 +1879,7 @@ func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/support_network/{support_network_id} [delete]
+// @Router /support_network/{support_network_id} [delete]
 func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 	supportNetworkID, err := strconv.ParseInt(ctx.Param("support_network_id"), 10, 64)
 	if err != nil {
