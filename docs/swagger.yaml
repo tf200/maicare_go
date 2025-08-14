@@ -247,7 +247,7 @@ definitions:
     properties:
       action_description:
         type: string
-      id:
+      action_id:
         type: integer
       is_completed:
         type: boolean
@@ -264,7 +264,7 @@ definitions:
         type: array
       description:
         type: string
-      id:
+      objective_id:
         type: integer
       status:
         type: string
@@ -2815,15 +2815,15 @@ definitions:
     properties:
       daily_activities:
         items:
-          type: string
+          $ref: '#/definitions/api.Intervention'
         type: array
       monthly_activities:
         items:
-          type: string
+          $ref: '#/definitions/api.Intervention'
         type: array
       weekly_activities:
         items:
-          type: string
+          $ref: '#/definitions/api.Intervention'
         type: array
     type: object
   api.GetCarePlanObjectivesResponse:
@@ -4047,6 +4047,13 @@ definitions:
       file_url:
         type: string
       size:
+        type: integer
+    type: object
+  api.Intervention:
+    properties:
+      intervention_description:
+        type: string
+      intervention_id:
         type: integer
     type: object
   api.ListAiGeneratedReportsResponse:
