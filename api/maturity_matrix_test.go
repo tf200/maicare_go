@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -26,6 +27,7 @@ type RandomCarePlan struct {
 	RiskID           int64 `json:"risk_id"`
 	SupportNetworkID int64 `json:"support_network_id"`
 	ResourceID       int64 `json:"resource_id"`
+	ReportID         int64 `json:"report_id"`
 }
 
 func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
@@ -178,6 +180,14 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 		resourceID = resource.ID
 		require.NoError(t, err)
 	}
+	employee, _ := createRandomEmployee(t)
+	report, err := testStore.CreateCarePlanReport(context.Background(), db.CreateCarePlanReportParams{
+		CarePlanID:          carePlan.ID,
+		ReportType:          "progress",
+		ReportContent:       "Initial progress report for the care plan.",
+		CreatedByEmployeeID: employee.ID,
+	})
+	require.NoError(t, err)
 
 	rnd := RandomCarePlan{
 		CarePlanID:       carePlan.ID,
@@ -188,6 +198,7 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 		RiskID:           randomRiskID,
 		SupportNetworkID: supportNetworkID,
 		ResourceID:       resourceID,
+		ReportID:         report.ID,
 	}
 
 	return rnd
@@ -1673,6 +1684,198 @@ func TestDeleteCarePlanResourceApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/resources/%d", carePlan.ResourceID)
+				req, err := http.NewRequest(http.MethodDelete, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestCreateCarePlanReportApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				createReq := CreateCarePlanReportRequest{
+					ReportType:    "progress",
+					ReportContent: "Client has shown significant improvement in mobility and daily activities.",
+					IsCritical:    false,
+				}
+				data, err := json.Marshal(createReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/care_plans/%d/reports", carePlan.CarePlanID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusCreated, recorder.Code)
+				var response Response[CreateCarePlanReportResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestListCarePlanReportsApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/care_plans/%d/reports?page=1&page_size=10", carePlan.CarePlanID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[pagination.Response[ListCarePlanReportsResponse]]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUpdateCarePlanReportApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				updateReq := UpdateCarePlanReportRequest{
+					ReportType:    util.StringPtr("updated progress"),
+					ReportContent: util.StringPtr("Client has shown significant improvement in mobility and daily activities."),
+					IsCritical:    util.BoolPtr(false),
+				}
+				data, err := json.Marshal(updateReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/care_plans/reports/%d", carePlan.ReportID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[UpdateCarePlanReportResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestDeleteCarePlanReportApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	carePlan := createRandomCarePlan(t, client.ID)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/care_plans/reports/%d", carePlan.ReportID)
 				req, err := http.NewRequest(http.MethodDelete, url, nil)
 				require.NoError(t, err)
 				return req, nil

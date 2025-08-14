@@ -419,3 +419,64 @@ RETURNING *;
 -- name: DeleteCarePlanResource :exec
 DELETE FROM care_plan_resources
 WHERE id = $1;
+
+
+
+
+
+
+
+
+
+
+
+
+-- ===================== care plan reports ====================
+-- name: CreateCarePlanReport :one
+INSERT INTO care_plan_reports (
+    care_plan_id,
+    report_type,
+    report_content,
+    created_by_employee_id,
+    is_critical
+) VALUES (
+    $1, $2, $3, $4, $5
+) RETURNING *;
+
+
+-- name: ListCarePlanReports :many
+SELECT
+    cpr.*,
+    e.first_name AS created_by_first_name,
+    e.last_name AS created_by_last_name,
+    COUNT(*) OVER() AS total_count
+FROM care_plan_reports cpr
+JOIN employee_profile e ON cpr.created_by_employee_id = e.id
+WHERE cpr.care_plan_id = $1
+ORDER BY cpr.created_at DESC
+LIMIT $2 OFFSET $3;
+
+
+-- name: GetCarePlanReport :one
+SELECT
+    cpr.*,
+    e.first_name AS created_by_first_name,
+    e.last_name AS created_by_last_name
+FROM care_plan_reports cpr
+JOIN employee_profile e ON cpr.created_by_employee_id = e.id
+WHERE cpr.id = $1;
+
+
+-- name: UpdateCarePlanReport :one
+UPDATE care_plan_reports
+SET
+    report_type = COALESCE(sqlc.narg('report_type'), report_type),
+    report_content = COALESCE(sqlc.narg('report_content'), report_content),
+    is_critical = COALESCE(sqlc.narg('is_critical'), is_critical),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;   
+
+-- name: DeleteCarePlanReport :exec
+DELETE FROM care_plan_reports
+WHERE id = $1;  

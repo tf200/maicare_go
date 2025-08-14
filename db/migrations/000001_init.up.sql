@@ -2030,7 +2030,7 @@ CREATE TABLE care_plan_resources (
 CREATE TABLE care_plan_reports (
     id BIGSERIAL PRIMARY KEY,
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    report_type VARCHAR(50) NOT NULL, -- 'progress_update', 'concern', 'achievement', 'modification'
+    report_type VARCHAR(50) NOT NULL CHECK (report_type IN ('progress', 'concern', 'achievement', 'modification')),
     report_content TEXT NOT NULL,
     created_by_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,

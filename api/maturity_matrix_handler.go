@@ -2134,6 +2134,272 @@ func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+//////////////////////
+
+////////////////////// Care Plan Reports /////////
+
+////////////////////////////
+
+// CreateCarePlanReportRequest represents the request body for creating a care plan report
+type CreateCarePlanReportRequest struct {
+	ReportType    string `json:"report_type" binding:"required" oneof:"progress concern achievement modification"`
+	ReportContent string `json:"report_content" binding:"required"`
+	IsCritical    bool   `json:"is_critical"`
+}
+
+// CreateCarePlanReportResponse represents the response for the CreateCarePlanReport API
+type CreateCarePlanReportResponse struct {
+	ID            int64     `json:"id"`
+	CarePlanID    int64     `json:"care_plan_id"`
+	ReportType    string    `json:"report_type"`
+	ReportContent string    `json:"report_content"`
+	IsCritical    bool      `json:"is_critical"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+// CreateCarePlanReportApi creates a new care plan report
+// @Summary Create care plan report
+// @Description Create a new care plan report
+// @Tags care_plan
+// @Accept json
+// @Produce json
+// @Param care_plan_id path int true "Care Plan ID"
+// @Param request body CreateCarePlanReportRequest true "Request body"
+// @Success 201 {object} Response[CreateCarePlanReportResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /care_plan/{care_plan_id}/reports [post]
+func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
+	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Invalid care plan ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
+		return
+	}
+
+	var req CreateCarePlanReportRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Unauthorized access", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
+		return
+	}
+	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, payload.UserId)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Failed to get employee ID", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get employee ID")))
+		return
+	}
+
+	arg := db.CreateCarePlanReportParams{
+		CarePlanID:          carePlanID,
+		ReportType:          req.ReportType,
+		ReportContent:       req.ReportContent,
+		IsCritical:          req.IsCritical,
+		CreatedByEmployeeID: employeeID,
+	}
+
+	report, err := server.store.CreateCarePlanReport(ctx, arg)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Failed to create care plan report", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan report")))
+		return
+	}
+
+	res := SuccessResponse(CreateCarePlanReportResponse{
+		ID:            report.ID,
+		CarePlanID:    report.CarePlanID,
+		ReportType:    report.ReportType,
+		ReportContent: report.ReportContent,
+		IsCritical:    report.IsCritical,
+		CreatedAt:     report.CreatedAt.Time,
+	}, "Care plan report created successfully")
+
+	ctx.JSON(http.StatusCreated, res)
+}
+
+// ListCarePlanReportsRequest represents the request body for listing care plan reports
+type ListCarePlanReportsRequest struct {
+	pagination.Request
+}
+
+// CarePlanReportsResponse represents the response for the ListCarePlanReports API
+type ListCarePlanReportsResponse struct {
+	ID                 int64     `json:"id"`
+	CarePlanID         int64     `json:"care_plan_id"`
+	ReportType         string    `json:"report_type"`
+	ReportContent      string    `json:"report_content"`
+	CreatedByFirstName string    `json:"created_by_first_name"`
+	CreatedByLastName  string    `json:"created_by_last_name"`
+	IsCritical         bool      `json:"is_critical"`
+	CreatedAt          time.Time `json:"created_at"`
+}
+
+// ListCarePlanReportsApi retrieves the reports for a given care plan ID
+// @Summary List care plan reports
+// @Description List all reports for a given care plan ID
+// @Tags care_plan
+// @Produce json
+// @Param care_plan_id path int true "Care Plan ID"
+// @Param request query ListCarePlanReportsRequest false "Pagination parameters"
+// @Success 200 {object} Response[[]ListCarePlanReportsResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /care_plan/{care_plan_id}/reports [get]
+func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
+	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Invalid care plan ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
+		return
+	}
+
+	var req ListCarePlanReportsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Invalid request query", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request query")))
+		return
+	}
+
+	params := req.GetParams()
+
+	reports, err := server.store.ListCarePlanReports(ctx, db.ListCarePlanReportsParams{
+		CarePlanID: carePlanID,
+		Limit:      params.Limit,
+		Offset:     params.Offset,
+	})
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Failed to list care plan reports", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list care plan reports")))
+		return
+	}
+
+	response := make([]ListCarePlanReportsResponse, len(reports))
+	for i, report := range reports {
+		response[i] = ListCarePlanReportsResponse{
+			ID:                 report.ID,
+			CarePlanID:         report.CarePlanID,
+			ReportType:         report.ReportType,
+			ReportContent:      report.ReportContent,
+			CreatedByFirstName: report.CreatedByFirstName,
+			CreatedByLastName:  report.CreatedByLastName,
+			IsCritical:         report.IsCritical,
+			CreatedAt:          report.CreatedAt.Time,
+		}
+	}
+
+	res := SuccessResponse(response, "Care plan reports retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// UpdateCarePlanReportRequest represents the request body for updating a care plan report
+type UpdateCarePlanReportRequest struct {
+	ReportType    *string `json:"report_type"`
+	ReportContent *string `json:"report_content"`
+	IsCritical    *bool   `json:"is_critical"`
+}
+
+// UpdateCarePlanReportResponse represents the response for the UpdateCarePlanReport API
+type UpdateCarePlanReportResponse struct {
+	ID            int64     `json:"id"`
+	CarePlanID    int64     `json:"care_plan_id"`
+	ReportType    string    `json:"report_type"`
+	ReportContent string    `json:"report_content"`
+	IsCritical    bool      `json:"is_critical"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+// UpdateCarePlanReportApi updates a care plan report by its ID
+// @Summary Update care plan report
+// @Description Update a care plan report by its ID
+// @Tags care_plan
+// @Accept json
+// @Produce json
+// @Param report_id path int true "Report ID"
+// @Param request body UpdateCarePlanReportRequest true "Request body"
+// @Success 200 {object} Response[UpdateCarePlanReportResponse]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /care_plan/reports/{report_id} [put]
+func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
+	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "UpdateCarePlanReportApi", "Invalid report ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid report ID")))
+		return
+	}
+
+	var req UpdateCarePlanReportRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelError, "UpdateCarePlanReportApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	arg := db.UpdateCarePlanReportParams{
+		ID:            reportID,
+		ReportType:    req.ReportType,
+		ReportContent: req.ReportContent,
+		IsCritical:    req.IsCritical,
+	}
+	report, err := server.store.UpdateCarePlanReport(ctx, arg)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "UpdateCarePlanReportApi", "Failed to update care plan report", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan report")))
+		return
+	}
+
+	res := SuccessResponse(UpdateCarePlanReportResponse{
+		ID:            report.ID,
+		CarePlanID:    report.CarePlanID,
+		ReportType:    report.ReportType,
+		ReportContent: report.ReportContent,
+		IsCritical:    report.IsCritical,
+		CreatedAt:     report.CreatedAt.Time,
+	}, "Care plan report updated successfully")
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// DeleteCarePlanReportApi deletes a care plan report by its ID
+// @Summary Delete care plan report
+// @Description Delete a care plan report by its ID
+// @Tags care_plan
+// @Produce json
+// @Param report_id path int true "Report ID"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any] "Bad request"
+// @Failure 401 {object} Response[any] "Unauthorized"
+// @Failure 500 {object} Response[any] "Internal server error"
+// @Router /care_plan/reports/{report_id} [delete]
+func (server *Server) DeleteCarePlanReportApi(ctx *gin.Context) {
+	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "DeleteCarePlanReportApi", "Invalid report ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid report ID")))
+		return
+	}
+
+	err = server.store.DeleteCarePlanReport(ctx, reportID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "DeleteCarePlanReportApi", "Failed to delete care plan report", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan report")))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Care plan report deleted successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 ///////////////////////////////////////////////////////////
 
 // OLD CODE BELOW IS FOR MATURITY MATRIX ASSESSMENT
