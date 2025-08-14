@@ -726,14 +726,14 @@ type GetCarePlanObjectivesResponse struct {
 func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanInterventionsApi", "Invalid care plan ID", zap.Error(err))
+		server.logBusinessEvent(LogLevelError, "GetCarePlanObjectivesApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
 	rows, err := server.store.GetCarePlanObjectivesWithActions(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanInterventionsApi", "Failed to get care plan objectives with actions", zap.Error(err))
+		server.logBusinessEvent(LogLevelError, "GetCarePlanObjectivesApi", "Failed to get care plan objectives with actions", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan objectives with actions")))
 		return
 	}
@@ -1097,11 +1097,16 @@ func (server *Server) CreateCarePlanInterventionApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, res)
 }
 
+type Intervention struct {
+	InterventionID          int64  `json:"intervention_id"`
+	InterventionDescription string `json:"intervention_description"`
+}
+
 // GetCarePlanInterventionsResponse represents the response for the GetCarePlanInterventions API
 type GetCarePlanInterventionsResponse struct {
-	DailyActivities   []string `json:"daily_activities"`
-	WeeklyActivities  []string `json:"weekly_activities"`
-	MonthlyActivities []string `json:"monthly_activities"`
+	DailyActivities   []Intervention `json:"daily_activities"`
+	WeeklyActivities  []Intervention `json:"weekly_activities"`
+	MonthlyActivities []Intervention `json:"monthly_activities"`
 }
 
 // GetCarePlanInterventionsApi retrieves the care plan interventions for a given care plan ID
@@ -1131,18 +1136,27 @@ func (server *Server) GetCarePlanInterventionsApi(ctx *gin.Context) {
 	}
 
 	response := &GetCarePlanInterventionsResponse{
-		DailyActivities:   []string{},
-		WeeklyActivities:  []string{},
-		MonthlyActivities: []string{},
+		DailyActivities:   []Intervention{},
+		WeeklyActivities:  []Intervention{},
+		MonthlyActivities: []Intervention{},
 	}
 	for _, intervention := range interventions {
 		switch intervention.Frequency {
 		case "daily":
-			response.DailyActivities = append(response.DailyActivities, intervention.InterventionDescription)
+			response.DailyActivities = append(response.DailyActivities, Intervention{
+				InterventionID:          intervention.ID,
+				InterventionDescription: intervention.InterventionDescription,
+			})
 		case "weekly":
-			response.WeeklyActivities = append(response.WeeklyActivities, intervention.InterventionDescription)
+			response.WeeklyActivities = append(response.WeeklyActivities, Intervention{
+				InterventionID:          intervention.ID,
+				InterventionDescription: intervention.InterventionDescription,
+			})
 		case "monthly":
-			response.MonthlyActivities = append(response.MonthlyActivities, intervention.InterventionDescription)
+			response.MonthlyActivities = append(response.MonthlyActivities, Intervention{
+				InterventionID:          intervention.ID,
+				InterventionDescription: intervention.InterventionDescription,
+			})
 		default:
 			server.logBusinessEvent(LogLevelError, "GetCarePlanInterventionsApi", "Unknown intervention frequency", zap.String("frequency", intervention.Frequency))
 		}
