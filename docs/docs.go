@@ -1167,9 +1167,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/care_plan/support_network/{support_network_id}": {
+        "/care_plan/reports/{report_id}": {
             "put": {
-                "description": "Update a care plan support network by its ID",
+                "description": "Update a care plan report by its ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -1179,12 +1179,12 @@ const docTemplate = `{
                 "tags": [
                     "care_plan"
                 ],
-                "summary": "Update care plan support network",
+                "summary": "Update care plan report",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Support Network ID",
-                        "name": "support_network_id",
+                        "description": "Report ID",
+                        "name": "report_id",
                         "in": "path",
                         "required": true
                     },
@@ -1194,7 +1194,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanSupportNetworkRequest"
+                            "$ref": "#/definitions/api.UpdateCarePlanReportRequest"
                         }
                     }
                 ],
@@ -1202,7 +1202,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanSupportNetworkResponse"
+                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanReportResponse"
                         }
                     },
                     "400": {
@@ -1226,19 +1226,19 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete a care plan support network by its ID",
+                "description": "Delete a care plan report by its ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "care_plan"
                 ],
-                "summary": "Delete care plan support network",
+                "summary": "Delete care plan report",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Support Network ID",
-                        "name": "support_network_id",
+                        "description": "Report ID",
+                        "name": "report_id",
                         "in": "path",
                         "required": true
                     }
@@ -1295,6 +1295,125 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/care_plan/{care_plan_id}/reports": {
+            "get": {
+                "description": "List all reports for a given care plan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "List care plan reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 5,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_ListCarePlanReportsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new care plan report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Create care plan report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Care Plan ID",
+                        "name": "care_plan_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateCarePlanReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_CreateCarePlanReportResponse"
                         }
                     },
                     "400": {
@@ -10728,6 +10847,110 @@ const docTemplate = `{
                 }
             }
         },
+        "/support_network/{support_network_id}": {
+            "put": {
+                "description": "Update a care plan support network by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Update care plan support network",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Support Network ID",
+                        "name": "support_network_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateCarePlanSupportNetworkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanSupportNetworkResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a care plan support network by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "care_plan"
+                ],
+                "summary": "Delete care plan support network",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Support Network ID",
+                        "name": "support_network_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/test/notification": {
             "get": {
                 "responses": {
@@ -11620,6 +11843,47 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateCarePlanReportRequest": {
+            "type": "object",
+            "required": [
+                "report_content",
+                "report_type"
+            ],
+            "properties": {
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateCarePlanResourcesRequest": {
             "type": "object",
             "required": [
@@ -11745,12 +12009,6 @@ const docTemplate = `{
         "api.CreateCarePlanSupportNetworkResponse": {
             "type": "object",
             "properties": {
-                "contact_details": {
-                    "type": "string"
-                },
-                "contact_person": {
-                    "type": "string"
-                },
                 "responsibility_description": {
                     "type": "string"
                 },
@@ -14970,9 +15228,6 @@ const docTemplate = `{
         "api.GetCarePlanResourcesResponse": {
             "type": "object",
             "properties": {
-                "description": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -14980,6 +15235,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "obtained_date": {
+                    "type": "string"
+                },
+                "resource_description": {
                     "type": "string"
                 }
             }
@@ -17099,6 +17357,35 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListCarePlanReportsResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by_first_name": {
+                    "type": "string"
+                },
+                "created_by_last_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListClientContractsResponse": {
             "type": "object",
             "properties": {
@@ -18998,6 +19285,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_CreateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateCarePlanReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_CreateCarePlanResourcesResponse": {
             "type": "object",
             "properties": {
@@ -20202,6 +20503,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_UpdateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UpdateCarePlanReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_UpdateCarePlanResourcesResponse": {
             "type": "object",
             "properties": {
@@ -20667,6 +20982,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.GetPermissionsByRoleIDApiResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListCarePlanReportsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListCarePlanReportsResponse"
                     }
                 },
                 "message": {
@@ -21639,6 +21971,43 @@ const docTemplate = `{
                 }
             }
         },
+        "api.UpdateCarePlanReportRequest": {
+            "type": "object",
+            "properties": {
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UpdateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
         "api.UpdateCarePlanResourcesRequest": {
             "type": "object",
             "properties": {
@@ -21738,12 +22107,6 @@ const docTemplate = `{
         "api.UpdateCarePlanSupportNetworkRequest": {
             "type": "object",
             "properties": {
-                "contact_details": {
-                    "type": "string"
-                },
-                "contact_person": {
-                    "type": "string"
-                },
                 "responsibility_description": {
                     "type": "string"
                 },
@@ -21755,12 +22118,6 @@ const docTemplate = `{
         "api.UpdateCarePlanSupportNetworkResponse": {
             "type": "object",
             "properties": {
-                "contact_details": {
-                    "type": "string"
-                },
-                "contact_person": {
-                    "type": "string"
-                },
                 "responsibility_description": {
                     "type": "string"
                 },

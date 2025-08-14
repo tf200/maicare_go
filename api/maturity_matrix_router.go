@@ -49,7 +49,6 @@ func (server *Server) setupMaturityMatrixRoutes(baseRouter *gin.RouterGroup) {
 		mmGroup.GET("/care_plans/:care_plan_id/support_network", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSupportNetworkApi)
 		mmGroup.PUT("/support_network/:support_network_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanSupportNetworkApi)
 		mmGroup.DELETE("/support_network/:support_network_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanSupportNetworkApi)
-		mmGroup.GET("/:id/maturity_matrix_assessment/:assessment_id/careplan/supportnetwork", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanSupportNetworkApi)
 
 		// Careplan Resources routes
 		mmGroup.GET("/care_plans/:care_plan_id/resources", RBACMiddleware(server.store, "CLIENT.VIEW"), server.GetCarePlanResourcesApi)

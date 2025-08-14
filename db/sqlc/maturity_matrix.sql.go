@@ -353,32 +353,22 @@ const createCarePlanSupportNetwork = `-- name: CreateCarePlanSupportNetwork :one
 INSERT INTO care_plan_support_network (
     care_plan_id,
     role_title,
-    responsibility_description,
-    contact_person,
-    contact_details
+    responsibility_description
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3
 )
 RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at, updated_at
 `
 
 type CreateCarePlanSupportNetworkParams struct {
-	CarePlanID                int64   `json:"care_plan_id"`
-	RoleTitle                 string  `json:"role_title"`
-	ResponsibilityDescription string  `json:"responsibility_description"`
-	ContactPerson             *string `json:"contact_person"`
-	ContactDetails            *string `json:"contact_details"`
+	CarePlanID                int64  `json:"care_plan_id"`
+	RoleTitle                 string `json:"role_title"`
+	ResponsibilityDescription string `json:"responsibility_description"`
 }
 
 // ===================== care plan support network ====================
 func (q *Queries) CreateCarePlanSupportNetwork(ctx context.Context, arg CreateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error) {
-	row := q.db.QueryRow(ctx, createCarePlanSupportNetwork,
-		arg.CarePlanID,
-		arg.RoleTitle,
-		arg.ResponsibilityDescription,
-		arg.ContactPerson,
-		arg.ContactDetails,
-	)
+	row := q.db.QueryRow(ctx, createCarePlanSupportNetwork, arg.CarePlanID, arg.RoleTitle, arg.ResponsibilityDescription)
 	var i CarePlanSupportNetwork
 	err := row.Scan(
 		&i.ID,
@@ -1700,8 +1690,6 @@ UPDATE care_plan_support_network
 SET
     role_title = COALESCE($2, role_title),
     responsibility_description = COALESCE($3, responsibility_description),
-    contact_person = COALESCE($4, contact_person),
-    contact_details = COALESCE($5, contact_details),
     updated_at = NOW()
 WHERE id = $1
 RETURNING id, care_plan_id, role_title, responsibility_description, contact_person, contact_details, is_active, created_at, updated_at
@@ -1711,18 +1699,10 @@ type UpdateCarePlanSupportNetworkParams struct {
 	ID                        int64   `json:"id"`
 	RoleTitle                 *string `json:"role_title"`
 	ResponsibilityDescription *string `json:"responsibility_description"`
-	ContactPerson             *string `json:"contact_person"`
-	ContactDetails            *string `json:"contact_details"`
 }
 
 func (q *Queries) UpdateCarePlanSupportNetwork(ctx context.Context, arg UpdateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error) {
-	row := q.db.QueryRow(ctx, updateCarePlanSupportNetwork,
-		arg.ID,
-		arg.RoleTitle,
-		arg.ResponsibilityDescription,
-		arg.ContactPerson,
-		arg.ContactDetails,
-	)
+	row := q.db.QueryRow(ctx, updateCarePlanSupportNetwork, arg.ID, arg.RoleTitle, arg.ResponsibilityDescription)
 	var i CarePlanSupportNetwork
 	err := row.Scan(
 		&i.ID,

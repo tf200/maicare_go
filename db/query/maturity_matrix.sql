@@ -357,11 +357,9 @@ WHERE id = $1;
 INSERT INTO care_plan_support_network (
     care_plan_id,
     role_title,
-    responsibility_description,
-    contact_person,
-    contact_details
+    responsibility_description
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3
 )
 RETURNING *;
 
@@ -375,8 +373,6 @@ UPDATE care_plan_support_network
 SET
     role_title = COALESCE(sqlc.narg('role_title'), role_title),
     responsibility_description = COALESCE(sqlc.narg('responsibility_description'), responsibility_description),
-    contact_person = COALESCE(sqlc.narg('contact_person'), contact_person),
-    contact_details = COALESCE(sqlc.narg('contact_details'), contact_details),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;
