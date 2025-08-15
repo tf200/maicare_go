@@ -384,20 +384,19 @@ type ListClientMaturityMatrixAssessmentsRequest struct {
 
 // ListClientMaturityMatrixAssessmentsResponse represents a response for ListClientMaturityMatrixAssessmentsApi
 type ListClientMaturityMatrixAssessmentsResponse struct {
-	ID                 int64       `json:"id"`
-	MatrixAssessmentID int64       `json:"matrix_assessment_id"`
-	ClientID           int64       `json:"client_id"`
-	StartDate          pgtype.Date `json:"start_date"`
-	EndDate            pgtype.Date `json:"end_date"`
-	InitialLevel       int32       `json:"initial_level"`
-	CurrentLevel       int32       `json:"current_level"`
-	IsActive           bool        `json:"is_active"`
-	TopicName          string      `json:"topic_name"`
+	CarePlanID   int64       `json:"care_plan_id"`
+	ClientID     int64       `json:"client_id"`
+	StartDate    pgtype.Date `json:"start_date"`
+	EndDate      pgtype.Date `json:"end_date"`
+	InitialLevel int32       `json:"initial_level"`
+	CurrentLevel int32       `json:"current_level"`
+	IsActive     bool        `json:"is_active"`
+	TopicName    string      `json:"topic_name"`
 }
 
 // @Summary List client maturity matrix assessments
 // @Description Get a list of client maturity matrix assessments
-// @Tags maturity_matrix
+// @Tags care_plan
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param page query int false "Page number"
@@ -443,15 +442,14 @@ func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 	responseClientAssessments := make([]ListClientMaturityMatrixAssessmentsResponse, len(clientAssessments))
 	for i, assessment := range clientAssessments {
 		responseClientAssessments[i] = ListClientMaturityMatrixAssessmentsResponse{
-			ID:                 assessment.ID,
-			MatrixAssessmentID: assessment.MaturityMatrixID,
-			TopicName:          assessment.TopicName,
-			ClientID:           assessment.ClientID,
-			StartDate:          assessment.StartDate,
-			EndDate:            assessment.EndDate,
-			InitialLevel:       assessment.InitialLevel,
-			CurrentLevel:       assessment.CurrentLevel,
-			IsActive:           assessment.IsActive,
+			CarePlanID:   util.DerefInt64(assessment.CarePlanID),
+			TopicName:    assessment.TopicName,
+			ClientID:     assessment.ClientID,
+			StartDate:    assessment.StartDate,
+			EndDate:      assessment.EndDate,
+			InitialLevel: assessment.InitialLevel,
+			CurrentLevel: assessment.CurrentLevel,
+			IsActive:     assessment.IsActive,
 		}
 	}
 

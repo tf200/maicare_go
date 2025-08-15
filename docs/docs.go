@@ -2821,7 +2821,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "maturity_matrix"
+                    "care_plan"
                 ],
                 "summary": "List client maturity matrix assessments",
                 "parameters": [
@@ -17648,6 +17648,9 @@ const docTemplate = `{
         "api.ListClientMaturityMatrixAssessmentsResponse": {
             "type": "object",
             "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
                 "client_id": {
                     "type": "integer"
                 },
@@ -17657,17 +17660,11 @@ const docTemplate = `{
                 "end_date": {
                     "$ref": "#/definitions/pgtype.Date"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "initial_level": {
                     "type": "integer"
                 },
                 "is_active": {
                     "type": "boolean"
-                },
-                "matrix_assessment_id": {
-                    "type": "integer"
                 },
                 "start_date": {
                     "$ref": "#/definitions/pgtype.Date"

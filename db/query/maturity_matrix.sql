@@ -42,12 +42,16 @@ JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id;
 SELECT
     cma.*,
     mm.topic_name AS topic_name,
+    cp.id AS care_plan_id,
     COUNT(*) OVER() AS total_count
+
 FROM client_maturity_matrix_assessment cma
 JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+LEFT JOIN care_plans cp ON cma.id = cp.assessment_id
 WHERE cma.client_id = $1
 ORDER BY cma.start_date DESC
 LIMIT $2 OFFSET $3;
+
 
 -- name: GetClientMaturityMatrixAssessment :one
 SELECT
