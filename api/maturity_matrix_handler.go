@@ -2286,7 +2286,8 @@ func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 	}
 
 	if len(reports) == 0 {
-		res := SuccessResponse([]ListCarePlanReportsResponse{}, "No care plan reports found")
+		pag := pagination.NewResponse(ctx, req.Request, []ListCarePlanReportsResponse{}, 0)
+		res := SuccessResponse(pag, "No care plan reports found")
 		ctx.JSON(http.StatusOK, res)
 		return
 	}
