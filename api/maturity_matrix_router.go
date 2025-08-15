@@ -58,7 +58,7 @@ func (server *Server) setupMaturityMatrixRoutes(baseRouter *gin.RouterGroup) {
 
 		// Careplan Reports routes
 		mmGroup.POST("/care_plans/:care_plan_id/reports", RBACMiddleware(server.store, "CLIENT.CREATE"), server.CreateCarePlanReportApi)
-		mmGroup.GET("/care_plans/:care_plan_id/reports", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListAiGeneratedReportsApi)
+		mmGroup.GET("/care_plans/:care_plan_id/reports", RBACMiddleware(server.store, "CLIENT.VIEW"), server.ListCarePlanReportsApi)
 		mmGroup.PUT("/care_plans/reports/:report_id", RBACMiddleware(server.store, "CLIENT.UPDATE"), server.UpdateCarePlanReportApi)
 		mmGroup.DELETE("/care_plans/reports/:report_id", RBACMiddleware(server.store, "CLIENT.DELETE"), server.DeleteCarePlanReportApi)
 		// old routes to be removed
