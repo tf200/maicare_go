@@ -2172,7 +2172,7 @@ type CreateCarePlanReportResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/{care_plan_id}/reports [post]
+// @Router /care_plans/{care_plan_id}/reports [post]
 func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
@@ -2256,7 +2256,7 @@ type ListCarePlanReportsResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/{care_plan_id}/reports [get]
+// @Router /care_plans/{care_plan_id}/reports [get]
 func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
@@ -2282,6 +2282,12 @@ func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Failed to list care plan reports", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list care plan reports")))
+		return
+	}
+
+	if len(reports) == 0 {
+		res := SuccessResponse([]ListCarePlanReportsResponse{}, "No care plan reports found")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
@@ -2332,7 +2338,7 @@ type UpdateCarePlanReportResponse struct {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/reports/{report_id} [put]
+// @Router /care_plans/reports/{report_id} [put]
 func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
 	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
 	if err != nil {
@@ -2383,7 +2389,7 @@ func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
-// @Router /care_plan/reports/{report_id} [delete]
+// @Router /care_plans/reports/{report_id} [delete]
 func (server *Server) DeleteCarePlanReportApi(ctx *gin.Context) {
 	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
 	if err != nil {
