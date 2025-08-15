@@ -169,8 +169,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			LivingSituation:  *clientDetails.LivingSituation,
 			EducationLevel:   *clientDetails.EducationLevel,
 			DomainName:       clientAssessments.TopicName,
-			CurrentLevel:     clientAssessments.InitialLevel,                       // Example current level, replace with actual data
-			LevelDescription: levelDescription[req.MaturityMatrixID-1].Description, // Use the description from the level
+			CurrentLevel:     clientAssessments.InitialLevel,                   // Example current level, replace with actual data
+			LevelDescription: levelDescription[req.InitialLevel-1].Description, // Use the description from the level
 		},
 		DomainDefinitions: map[string]*grpclient.DomainLevels{
 			topicDescription.TopicName: {
