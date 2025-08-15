@@ -86,24 +86,28 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logger.Error("failed to parse client ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	var req CreateClientMaturityMatrixAssessmentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logger.Error("failed to bind request", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		server.logger.Error("failed to get auth payload", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized")))
 		return
 	}
 
 	tx, err := server.store.ConnPool.Begin(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to begin transaction", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
 		return
 	}
 	defer tx.Rollback(ctx)
@@ -112,7 +116,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 
 	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to get employee ID by user ID", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get employee ID")))
 		return
 	}
 
@@ -128,26 +133,32 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 
 	clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to create client maturity matrix assessment", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create client maturity matrix assessment")))
 		return
 	}
 
 	topicDescription, err := qtx.GetMaturityMatrix(ctx, req.MaturityMatrixID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+
+		server.logger.Error("failed to get maturity matrix", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get maturity matrix")))
+
 		return
 	}
 	var levelDescription []Level
 
 	err = json.Unmarshal(topicDescription.LevelDescription, &levelDescription)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to unmarshal level description", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to unmarshal level description")))
 		return
 	}
 
 	clientDetails, err := qtx.GetClientDetails(ctx, clientID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to get client details", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get client details")))
 		return
 
 	}
@@ -175,13 +186,15 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 	})
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to generate care plan", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate care plan")))
 		return
 	}
 	// insert the care plan into the database
 	rawllmResp, err := json.Marshal(generatedCarePlan)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to marshal generated care plan", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal generated care plan")))
 		return
 	}
 
@@ -193,7 +206,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 		Status:                "draft",
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to create care plan", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan")))
 		return
 	}
 
@@ -209,7 +223,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan objective", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
 			return
 		}
 		for i, action := range objective.SpecificActions {
@@ -220,7 +235,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 				SortOrder:         int32(i + 1), // Use index + 1 as sort order
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logger.Error("failed to create care plan action", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
 				return
 			}
 
@@ -236,7 +252,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan objective", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
 			return
 		}
 		for i, action := range objective.SpecificActions {
@@ -246,7 +263,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 				SortOrder:         int32(i + 1), // Use index + 1 as sort order
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logger.Error("failed to create care plan action", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
 				return
 			}
 		}
@@ -261,7 +279,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan objective", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
 			return
 		}
 		for i, action := range objective.SpecificActions {
@@ -271,7 +290,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 				SortOrder:         int32(i + 1), // Use index + 1 as sort order
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logger.Error("failed to create care plan action", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
 				return
 			}
 		}
@@ -285,7 +305,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			InterventionDescription: intervention,
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan intervention", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
 			return
 		}
 	}
@@ -296,7 +317,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			InterventionDescription: intervention,
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan intervention", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
 			return
 		}
 	}
@@ -308,7 +330,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			InterventionDescription: intervention,
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan intervention", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
 			return
 		}
 	}
@@ -321,7 +344,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			MeasurementMethod: successMetric.MeasurementMethod,
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan success metric", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan success metric")))
 			return
 		}
 	}
@@ -334,7 +358,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			RiskLevel:          &risk.RiskLevel, // Use pointer to allow NULL values
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan risk", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan risk")))
 			return
 		}
 	}
@@ -346,7 +371,8 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			ResponsibilityDescription: supportNetwork.Responsibility,
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan support network", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan support network")))
 			return
 		}
 	}
@@ -359,14 +385,16 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 			ObtainedDate:        pgtype.Date{Time: time.Now(), Valid: false},
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logger.Error("failed to create care plan resources", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan resources")))
 			return
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logger.Error("failed to commit transaction", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
 		return
 	}
 
