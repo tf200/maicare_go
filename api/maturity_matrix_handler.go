@@ -2298,8 +2298,8 @@ func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 			CreatedAt:          report.CreatedAt.Time,
 		}
 	}
-
-	res := SuccessResponse(response, "Care plan reports retrieved successfully")
+	pag := pagination.NewResponse(ctx, req.Request, response, reports[0].TotalCount)
+	res := SuccessResponse(pag, "Care plan reports retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
