@@ -4459,20 +4459,18 @@ definitions:
     type: object
   api.ListClientMaturityMatrixAssessmentsResponse:
     properties:
+      care_plan_id:
+        type: integer
       client_id:
         type: integer
       current_level:
         type: integer
       end_date:
         $ref: '#/definitions/pgtype.Date'
-      id:
-        type: integer
       initial_level:
         type: integer
       is_active:
         type: boolean
-      matrix_assessment_id:
-        type: integer
       start_date:
         $ref: '#/definitions/pgtype.Date'
       topic_name:
@@ -10968,7 +10966,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: List client maturity matrix assessments
       tags:
-      - maturity_matrix
+      - care_plan
     post:
       consumes:
       - application/json

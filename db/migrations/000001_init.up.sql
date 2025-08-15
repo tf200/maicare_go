@@ -1926,7 +1926,9 @@ CREATE TABLE care_plans (
     -- Metadata
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version INT NOT NULL DEFAULT 1
+    version INT NOT NULL DEFAULT 1,
+
+    UNIQUE(assessment_id) -- Ensure only one active plan per assessment/version
 );
 
 

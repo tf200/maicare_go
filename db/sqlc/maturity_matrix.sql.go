@@ -1250,9 +1250,12 @@ const listClientMaturityMatrixAssessments = `-- name: ListClientMaturityMatrixAs
 SELECT
     cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
     mm.topic_name AS topic_name,
+    cp.id AS care_plan_id,
     COUNT(*) OVER() AS total_count
+
 FROM client_maturity_matrix_assessment cma
 JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+LEFT JOIN care_plans cp ON cma.id = cp.assessment_id
 WHERE cma.client_id = $1
 ORDER BY cma.start_date DESC
 LIMIT $2 OFFSET $3
@@ -1277,6 +1280,7 @@ type ListClientMaturityMatrixAssessmentsRow struct {
 	CarePlanStatus      string             `json:"care_plan_status"`
 	IsActive            bool               `json:"is_active"`
 	TopicName           string             `json:"topic_name"`
+	CarePlanID          *int64             `json:"care_plan_id"`
 	TotalCount          int64              `json:"total_count"`
 }
 
@@ -1302,6 +1306,7 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 			&i.CarePlanStatus,
 			&i.IsActive,
 			&i.TopicName,
+			&i.CarePlanID,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

@@ -225,7 +225,7 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 				data, err := json.Marshal(assessmentReq)
 				require.NoError(t, err)
 
-				url := fmt.Sprintf("/clients/%d/maturity_matrix_assessment", client.ID)
+				url := fmt.Sprintf("/clients/%d/assesment", client.ID)
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
@@ -257,6 +257,53 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 		})
 	}
 
+}
+
+func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
+	client := createRandomClientDetails(t)
+	_ = createRandomCarePlan(t, client.ID)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/clients/%d/assessments", client.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				q := req.URL.Query()
+				q.Add("page", "1")
+				q.Add("page_size", "10")
+				req.URL.RawQuery = q.Encode()
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log("Response Body:", recorder.Body.String())
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[pagination.Response[ListClientMaturityMatrixAssessmentsResponse]]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := tc.buildRequest()
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, req, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(recorder)
+		})
+	}
 }
 
 func TestGetCarePlanOverviewApi(t *testing.T) {
