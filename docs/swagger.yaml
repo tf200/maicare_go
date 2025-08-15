@@ -9894,86 +9894,6 @@ paths:
       summary: Delete care plan
       tags:
       - care_plan
-  /care_plan/{care_plan_id}/reports:
-    get:
-      description: List all reports for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - in: query
-        minimum: 1
-        name: page
-        required: true
-        type: integer
-      - in: query
-        maximum: 100
-        minimum: 5
-        name: page_size
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_api_ListCarePlanReportsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List care plan reports
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan report
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateCarePlanReportRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateCarePlanReportResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan report
-      tags:
-      - care_plan
   /care_plan/{care_plan_id}/resources:
     get:
       description: Get the resources for a given care plan ID
@@ -10072,75 +9992,6 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get care plan risks
-      tags:
-      - care_plan
-  /care_plan/reports/{report_id}:
-    delete:
-      description: Delete a care plan report by its ID
-      parameters:
-      - description: Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan report
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan report by its ID
-      parameters:
-      - description: Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.UpdateCarePlanReportRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_UpdateCarePlanReportResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan report
       tags:
       - care_plan
   /care_plans/{care_plan_id}:
@@ -10350,6 +10201,86 @@ paths:
       summary: Create care plan objective
       tags:
       - care_plan
+  /care_plans/{care_plan_id}/reports:
+    get:
+      description: List all reports for a given care plan ID
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 5
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListCarePlanReportsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List care plan reports
+      tags:
+      - care_plan
+    post:
+      consumes:
+      - application/json
+      description: Create a new care plan report
+      parameters:
+      - description: Care Plan ID
+        in: path
+        name: care_plan_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCarePlanReportRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateCarePlanReportResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create care plan report
+      tags:
+      - care_plan
   /care_plans/{care_plan_id}/risks:
     post:
       consumes:
@@ -10525,6 +10456,75 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Create care plan support network
+      tags:
+      - care_plan
+  /care_plans/reports/{report_id}:
+    delete:
+      description: Delete a care plan report by its ID
+      parameters:
+      - description: Report ID
+        in: path
+        name: report_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete care plan report
+      tags:
+      - care_plan
+    put:
+      consumes:
+      - application/json
+      description: Update a care plan report by its ID
+      parameters:
+      - description: Report ID
+        in: path
+        name: report_id
+        required: true
+        type: integer
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCarePlanReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateCarePlanReportResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update care plan report
       tags:
       - care_plan
   /clients:
