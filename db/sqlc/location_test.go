@@ -39,7 +39,7 @@ func TestListLocations(t *testing.T) {
 		CreateRandomLocation(t)
 	}
 
-	locations, err := testQueries.ListLocations(context.Background())
+	locations, err := testQueries.ListAllLocations(context.Background())
 	require.NoError(t, err)
 
 	for _, location := range locations {
