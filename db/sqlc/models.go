@@ -257,37 +257,51 @@ type ClientCurrentLevel struct {
 }
 
 type ClientDetail struct {
-	ID                    int64              `json:"id"`
-	IntakeFormID          *int64             `json:"intake_form_id"`
-	FirstName             string             `json:"first_name"`
-	LastName              string             `json:"last_name"`
-	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
-	Identity              bool               `json:"identity"`
-	Status                *string            `json:"status"`
-	Bsn                   *string            `json:"bsn"`
-	BsnVerifiedBy         *int64             `json:"bsn_verified_by"`
-	Source                *string            `json:"source"`
-	Birthplace            *string            `json:"birthplace"`
-	Email                 string             `json:"email"`
-	PhoneNumber           *string            `json:"phone_number"`
-	Organisation          *string            `json:"organisation"`
-	Departement           *string            `json:"departement"`
-	Gender                string             `json:"gender"`
-	Filenumber            string             `json:"filenumber"`
-	ProfilePicture        *string            `json:"profile_picture"`
-	Infix                 *string            `json:"infix"`
-	LivingSituation       *string            `json:"living_situation"`
-	EducationLevel        *string            `json:"education_level"`
-	CreatedAt             pgtype.Timestamptz `json:"created_at"`
-	SenderID              *int64             `json:"sender_id"`
-	LocationID            *int64             `json:"location_id"`
-	DepartureReason       *string            `json:"departure_reason"`
-	DepartureReport       *string            `json:"departure_report"`
-	GpsPosition           []byte             `json:"gps_position"`
-	MaturityDomains       []byte             `json:"maturity_domains"`
-	Addresses             []byte             `json:"addresses"`
-	LegalMeasure          *string            `json:"legal_measure"`
-	HasUntakenMedications bool               `json:"has_untaken_medications"`
+	ID                         int64              `json:"id"`
+	IntakeFormID               *int64             `json:"intake_form_id"`
+	FirstName                  string             `json:"first_name"`
+	LastName                   string             `json:"last_name"`
+	DateOfBirth                pgtype.Date        `json:"date_of_birth"`
+	Identity                   bool               `json:"identity"`
+	Status                     *string            `json:"status"`
+	Bsn                        *string            `json:"bsn"`
+	BsnVerifiedBy              *int64             `json:"bsn_verified_by"`
+	Source                     *string            `json:"source"`
+	Birthplace                 *string            `json:"birthplace"`
+	Email                      string             `json:"email"`
+	PhoneNumber                *string            `json:"phone_number"`
+	Organisation               *string            `json:"organisation"`
+	Departement                *string            `json:"departement"`
+	Gender                     string             `json:"gender"`
+	Filenumber                 string             `json:"filenumber"`
+	ProfilePicture             *string            `json:"profile_picture"`
+	Infix                      *string            `json:"infix"`
+	CreatedAt                  pgtype.Timestamptz `json:"created_at"`
+	SenderID                   *int64             `json:"sender_id"`
+	LocationID                 *int64             `json:"location_id"`
+	DepartureReason            *string            `json:"departure_reason"`
+	DepartureReport            *string            `json:"departure_report"`
+	GpsPosition                []byte             `json:"gps_position"`
+	MaturityDomains            []byte             `json:"maturity_domains"`
+	Addresses                  []byte             `json:"addresses"`
+	LegalMeasure               *string            `json:"legal_measure"`
+	HasUntakenMedications      bool               `json:"has_untaken_medications"`
+	EducationCurrentlyEnrolled bool               `json:"education_currently_enrolled"`
+	EducationInstitution       *string            `json:"education_institution"`
+	EducationMentorName        *string            `json:"education_mentor_name"`
+	EducationMentorPhone       *string            `json:"education_mentor_phone"`
+	EducationMentorEmail       *string            `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string            `json:"education_additional_notes"`
+	EducationLevel             *string            `json:"education_level"`
+	WorkCurrentlyEmployed      bool               `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string            `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string            `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string            `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string            `json:"work_current_position"`
+	WorkStartDate              pgtype.Date        `json:"work_start_date"`
+	WorkAdditionalNotes        *string            `json:"work_additional_notes"`
+	LivingSituation            *string            `json:"living_situation"`
+	LivingSituationNotes       *string            `json:"living_situation_notes"`
 }
 
 type ClientDiagnosis struct {
@@ -887,11 +901,12 @@ type LevelHistory struct {
 }
 
 type Location struct {
-	ID           int64  `json:"id"`
-	Name         string `json:"name"`
-	Address      string `json:"address"`
-	Capacity     *int32 `json:"capacity"`
-	LocationType string `json:"location_type"`
+	ID             int64  `json:"id"`
+	OrganisationID int64  `json:"organisation_id"`
+	Name           string `json:"name"`
+	Address        string `json:"address"`
+	Capacity       *int32 `json:"capacity"`
+	LocationType   string `json:"location_type"`
 }
 
 type LocationShift struct {
@@ -948,6 +963,20 @@ type Observation struct {
 	Date            pgtype.Date        `json:"date"`
 	ObservationText string             `json:"observation_text"`
 	Created         pgtype.Timestamptz `json:"created"`
+}
+
+type Organisation struct {
+	ID          int64              `json:"id"`
+	Name        string             `json:"name"`
+	Address     string             `json:"address"`
+	PostalCode  string             `json:"postal_code"`
+	City        string             `json:"city"`
+	PhoneNumber *string            `json:"phone_number"`
+	Email       *string            `json:"email"`
+	KvkNumber   *string            `json:"kvk_number"`
+	BtwNumber   *string            `json:"btw_number"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Permission struct {
@@ -1032,6 +1061,7 @@ type RegistrationForm struct {
 	EducationMentorEmail          *string            `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool               `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string            `json:"education_additional_notes"`
+	EducationLevel                *string            `json:"education_level"`
 	WorkCurrentEmployer           *string            `json:"work_current_employer"`
 	WorkEmployerPhone             *string            `json:"work_employer_phone"`
 	WorkEmployerEmail             *string            `json:"work_employer_email"`

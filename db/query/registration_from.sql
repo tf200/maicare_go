@@ -33,6 +33,7 @@ INSERT INTO registration_form (
     education_mentor_email,
     education_currently_enrolled,
     education_additional_notes,
+    education_level,
     work_current_employer,
     work_employer_phone,
     work_employer_email,
@@ -71,7 +72,7 @@ INSERT INTO registration_form (
     $29, $30, $31, $32, $33, $34, $35, $36, $37,
     $38, $39, $40, $41, $42, $43, $44, $45, $46,
     $47, $48, $49, $50, $51, $52, $53, $54, $55,
-    $56, $57, $58, $59, $60, $61, $62, $63, $64
+    $56, $57, $58, $59, $60, $61, $62, $63, $64, $65
 ) RETURNING *;
 
 
@@ -162,6 +163,7 @@ SET
     education_mentor_email = COALESCE(sqlc.narg('education_mentor_email'), education_mentor_email),
     education_currently_enrolled = COALESCE(sqlc.narg('education_currently_enrolled'), education_currently_enrolled),
     education_additional_notes = COALESCE(sqlc.narg('education_additional_notes'), education_additional_notes),
+    education_level = COALESCE(sqlc.narg('education_level'), education_level),
     work_current_employer = COALESCE(sqlc.narg('work_current_employer'), work_current_employer),
     work_employer_phone = COALESCE(sqlc.narg('work_employer_phone'), work_employer_phone),
     work_employer_email = COALESCE(sqlc.narg('work_employer_email'), work_employer_email),

@@ -17,24 +17,40 @@ import (
 
 // CreateClientDetailsRequest represents a request to create a new client
 type CreateClientDetailsRequest struct {
-	FirstName     string    `json:"first_name" binding:"required"`
-	LastName      string    `json:"last_name" binding:"required"`
-	Email         string    `json:"email" binding:"required,email"`
-	Organisation  *string   `json:"organisation" binding:"required"`
-	LocationID    *int64    `json:"location_id" binding:"required"`
-	LegalMeasure  *string   `json:"legal_measure"`
-	Birthplace    *string   `json:"birthplace" binding:"required"`
-	Departement   *string   `json:"departement" binding:"required"`
-	Gender        string    `json:"gender" binding:"required"`
-	Filenumber    string    `json:"filenumber" binding:"required"`
-	DateOfBirth   string    `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
-	PhoneNumber   *string   `json:"phone_number" binding:"required"`
-	SenderID      *int64    `json:"sender_id" binding:"required"`
-	Infix         *string   `json:"infix"`
-	Source        *string   `json:"source" binding:"required"`
-	Bsn           *string   `json:"bsn"`
-	BsnVerifiedBy *int64    `json:"bsn_verified_by"` // needs to be checked
-	Addresses     []Address `json:"addresses"`
+	FirstName                  string    `json:"first_name" binding:"required"`
+	LastName                   string    `json:"last_name" binding:"required"`
+	Email                      string    `json:"email" binding:"required,email"`
+	Organisation               *string   `json:"organisation" binding:"required"`
+	LocationID                 *int64    `json:"location_id" binding:"required"`
+	LegalMeasure               *string   `json:"legal_measure"`
+	Birthplace                 *string   `json:"birthplace" binding:"required"`
+	Departement                *string   `json:"departement" binding:"required"`
+	Gender                     string    `json:"gender" binding:"required"`
+	Filenumber                 string    `json:"filenumber" binding:"required"`
+	DateOfBirth                string    `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
+	PhoneNumber                *string   `json:"phone_number" binding:"required"`
+	SenderID                   *int64    `json:"sender_id" binding:"required"`
+	Infix                      *string   `json:"infix"`
+	Source                     *string   `json:"source" binding:"required"`
+	Bsn                        *string   `json:"bsn"`
+	BsnVerifiedBy              *int64    `json:"bsn_verified_by"` // needs to be checked
+	Addresses                  []Address `json:"addresses"`
+	EducationCurrentlyEnrolled bool      `json:"education_currently_enrolled"`
+	EducationInstitution       *string   `json:"education_institution"`
+	EducationMentorName        *string   `json:"education_mentor_name"`
+	EducationMentorPhone       *string   `json:"education_mentor_phone"`
+	EducationMentorEmail       *string   `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string   `json:"education_additional_notes"`
+	EducationLevel             *string   `json:"education_level" binding:"oneof=primary secondary higher none"`
+	WorkCurrentlyEmployed      bool      `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string   `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string   `json:"work_employer_phone"`
+	WorkCurrentEmployerEmail   *string   `json:"work_employer_email"`
+	WorkCurrentPosition        *string   `json:"work_current_position"`
+	WorkStartDate              time.Time `json:"work_start_date"`
+	WorkAdditionalNotes        *string   `json:"work_additional_notes"`
+	LivingSituation            *string   `json:"living_situation" binding:"oneof=home foster_care youth_care_institution other"`
+	LivingSituationNotes       *string   `json:"living_situation_notes"`
 }
 
 // Address represents a client address
@@ -48,32 +64,47 @@ type Address struct {
 
 // CreateClientDetailsResponse represents a response to a create client request
 type CreateClientDetailsResponse struct {
-	ID                    int64     `json:"id"`
-	FirstName             string    `json:"first_name"`
-	LastName              string    `json:"last_name"`
-	DateOfBirth           time.Time `json:"date_of_birth"`
-	Identity              bool      `json:"identity"`
-	Status                *string   `json:"status"`
-	Bsn                   *string   `json:"bsn"`
-	BsnVerifiedBy         *int64    `json:"bsn_verified_by"` // needs to be checked
-	Source                *string   `json:"source"`
-	Birthplace            *string   `json:"birthplace"`
-	Email                 string    `json:"email"`
-	PhoneNumber           *string   `json:"phone_number"`
-	Organisation          *string   `json:"organisation"`
-	Departement           *string   `json:"departement"`
-	Gender                string    `json:"gender"`
-	Filenumber            string    `json:"filenumber"`
-	ProfilePicture        *string   `json:"profile_picture"`
-	Infix                 *string   `json:"infix"`
-	Created               time.Time `json:"created"`
-	SenderID              *int64    `json:"sender_id"`
-	LocationID            *int64    `json:"location_id"`
-	DepartureReason       *string   `json:"departure_reason"`
-	DepartureReport       *string   `json:"departure_report"`
-	Addresses             []Address `json:"addresses"`
-	LegalMeasure          *string   `json:"legal_measure"`
-	HasUntakenMedications bool      `json:"has_untaken_medications"`
+	ID                         int64     `json:"id"`
+	FirstName                  string    `json:"first_name"`
+	LastName                   string    `json:"last_name"`
+	DateOfBirth                time.Time `json:"date_of_birth"`
+	Identity                   bool      `json:"identity"`
+	Status                     *string   `json:"status"`
+	Bsn                        *string   `json:"bsn"`
+	BsnVerifiedBy              *int64    `json:"bsn_verified_by"` // needs to be checked
+	Source                     *string   `json:"source"`
+	Birthplace                 *string   `json:"birthplace"`
+	Email                      string    `json:"email"`
+	PhoneNumber                *string   `json:"phone_number"`
+	Organisation               *string   `json:"organisation"`
+	Departement                *string   `json:"departement"`
+	Gender                     string    `json:"gender"`
+	Filenumber                 string    `json:"filenumber"`
+	ProfilePicture             *string   `json:"profile_picture"`
+	Infix                      *string   `json:"infix"`
+	Created                    time.Time `json:"created"`
+	SenderID                   *int64    `json:"sender_id"`
+	LocationID                 *int64    `json:"location_id"`
+	DepartureReason            *string   `json:"departure_reason"`
+	DepartureReport            *string   `json:"departure_report"`
+	Addresses                  []Address `json:"addresses"`
+	LegalMeasure               *string   `json:"legal_measure"`
+	EducationCurrentlyEnrolled bool      `json:"education_currently_enrolled"`
+	EducationInstitution       *string   `json:"education_institution"`
+	EducationMentorName        *string   `json:"education_mentor_name"`
+	EducationMentorEmail       *string   `json:"education_mentor_email"`
+	EducationMentorPhone       *string   `json:"education_mentor_phone"`
+	EducationAdditionalNotes   *string   `json:"education_additional_notes"`
+	EducationLevel             *string   `json:"education_level"`
+	WorkCurrentlyEmployed      bool      `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string   `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string   `json:"work_employer_phone"`
+	WorkCurrentEmployerEmail   *string   `json:"work_employer_email"`
+	WorkCurrentPosition        *string   `json:"work_current_position"`
+	WorkStartDate              time.Time `json:"work_start_date"`
+	WorkAdditionalNotes        *string   `json:"work_additional_notes"`
+	LivingSituation            *string   `json:"living_situation"`
+	LivingSituationNotes       *string   `json:"living_situation_notes"`
 }
 
 // CreateClientApi creates a new client
@@ -129,8 +160,23 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 		Addresses:    AddressesJSON,
 		LegalMeasure: req.LegalMeasure,
 		//HasUntakenMedications: false, // needs to be checked
-	},
-	)
+		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
+		EducationInstitution:       req.EducationInstitution,
+		EducationMentorName:        req.EducationMentorName,
+		EducationMentorPhone:       req.EducationMentorPhone,
+		EducationMentorEmail:       req.EducationMentorEmail,
+		EducationAdditionalNotes:   req.EducationAdditionalNotes,
+		EducationLevel:             req.EducationLevel,
+		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:        req.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:        req.WorkCurrentPosition,
+		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
+		WorkAdditionalNotes:        req.WorkAdditionalNotes,
+		LivingSituation:            req.LivingSituation,
+	})
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -143,31 +189,46 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(CreateClientDetailsResponse{
-		ID:                    client.ID,
-		FirstName:             client.FirstName,
-		LastName:              client.LastName,
-		DateOfBirth:           client.DateOfBirth.Time,
-		Identity:              client.Identity,
-		Status:                client.Status,
-		Bsn:                   client.Bsn,
-		Source:                client.Source,
-		Birthplace:            client.Birthplace,
-		Email:                 client.Email,
-		PhoneNumber:           client.PhoneNumber,
-		Organisation:          client.Organisation,
-		Departement:           client.Departement,
-		Gender:                client.Gender,
-		Filenumber:            client.Filenumber,
-		ProfilePicture:        client.ProfilePicture,
-		Infix:                 client.Infix,
-		Created:               client.CreatedAt.Time,
-		SenderID:              client.SenderID,
-		LocationID:            client.LocationID,
-		DepartureReason:       client.DepartureReason,
-		DepartureReport:       client.DepartureReport,
-		Addresses:             addresses,
-		LegalMeasure:          client.LegalMeasure,
-		HasUntakenMedications: client.HasUntakenMedications,
+		ID:                         client.ID,
+		FirstName:                  client.FirstName,
+		LastName:                   client.LastName,
+		DateOfBirth:                client.DateOfBirth.Time,
+		Identity:                   client.Identity,
+		Status:                     client.Status,
+		Bsn:                        client.Bsn,
+		Source:                     client.Source,
+		Birthplace:                 client.Birthplace,
+		Email:                      client.Email,
+		PhoneNumber:                client.PhoneNumber,
+		Organisation:               client.Organisation,
+		Departement:                client.Departement,
+		Gender:                     client.Gender,
+		Filenumber:                 client.Filenumber,
+		ProfilePicture:             client.ProfilePicture,
+		Infix:                      client.Infix,
+		Created:                    client.CreatedAt.Time,
+		SenderID:                   client.SenderID,
+		LocationID:                 client.LocationID,
+		DepartureReason:            client.DepartureReason,
+		DepartureReport:            client.DepartureReport,
+		Addresses:                  addresses,
+		LegalMeasure:               client.LegalMeasure,
+		EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
+		EducationInstitution:       client.EducationInstitution,
+		EducationMentorName:        client.EducationMentorName,
+		EducationMentorPhone:       client.EducationMentorPhone,
+		EducationMentorEmail:       client.EducationMentorEmail,
+		EducationAdditionalNotes:   client.EducationAdditionalNotes,
+		EducationLevel:             client.EducationLevel,
+		WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:        client.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail:   client.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:        client.WorkCurrentPosition,
+		WorkStartDate:              client.WorkStartDate.Time,
+		WorkAdditionalNotes:        client.WorkAdditionalNotes,
+		LivingSituation:            client.LivingSituation,
+		LivingSituationNotes:       client.LivingSituationNotes,
 	}, "Client created successfully")
 	ctx.JSON(http.StatusCreated, res)
 
@@ -327,33 +388,49 @@ func (server *Server) GetClientsCountApi(ctx *gin.Context) {
 
 // GetClientApiResponse represents a response to a get client request
 type GetClientApiResponse struct {
-	ID                     int64     `json:"id"`
-	FirstName              string    `json:"first_name"`
-	LastName               string    `json:"last_name"`
-	DateOfBirth            time.Time `json:"date_of_birth"`
-	Identity               bool      `json:"identity"`
-	Status                 *string   `json:"status"`
-	Bsn                    *string   `json:"bsn"`
-	BsnVerifiedBy          *int64    `json:"bsn_verified_by"`
-	BsnVerifiedByFirstName *string   `json:"bsn_verified_by_first_name"`
-	BsnVerifiedByLastName  *string   `json:"bsn_verified_by_last_name"`
-	Source                 *string   `json:"source"`
-	Birthplace             *string   `json:"birthplace"`
-	Email                  string    `json:"email"`
-	PhoneNumber            *string   `json:"phone_number"`
-	Organisation           *string   `json:"organisation"`
-	Departement            *string   `json:"departement"`
-	Gender                 string    `json:"gender"`
-	Filenumber             string    `json:"filenumber"`
-	ProfilePicture         *string   `json:"profile_picture"`
-	Infix                  *string   `json:"infix"`
-	CreatedAt              time.Time `json:"created_at"`
-	SenderID               *int64    `json:"sender_id"`
-	LocationID             *int64    `json:"location_id"`
-	DepartureReason        *string   `json:"departure_reason"`
-	DepartureReport        *string   `json:"departure_report"`
-	LegalMeasure           *string   `json:"legal_measure"`
-	HasUntakenMedications  bool      `json:"has_untaken_medications"`
+	ID                         int64     `json:"id"`
+	FirstName                  string    `json:"first_name"`
+	LastName                   string    `json:"last_name"`
+	DateOfBirth                time.Time `json:"date_of_birth"`
+	Identity                   bool      `json:"identity"`
+	Status                     *string   `json:"status"`
+	Bsn                        *string   `json:"bsn"`
+	BsnVerifiedBy              *int64    `json:"bsn_verified_by"`
+	BsnVerifiedByFirstName     *string   `json:"bsn_verified_by_first_name"`
+	BsnVerifiedByLastName      *string   `json:"bsn_verified_by_last_name"`
+	Source                     *string   `json:"source"`
+	Birthplace                 *string   `json:"birthplace"`
+	Email                      string    `json:"email"`
+	PhoneNumber                *string   `json:"phone_number"`
+	Organisation               *string   `json:"organisation"`
+	Departement                *string   `json:"departement"`
+	Gender                     string    `json:"gender"`
+	Filenumber                 string    `json:"filenumber"`
+	ProfilePicture             *string   `json:"profile_picture"`
+	Infix                      *string   `json:"infix"`
+	CreatedAt                  time.Time `json:"created_at"`
+	SenderID                   *int64    `json:"sender_id"`
+	LocationID                 *int64    `json:"location_id"`
+	DepartureReason            *string   `json:"departure_reason"`
+	DepartureReport            *string   `json:"departure_report"`
+	LegalMeasure               *string   `json:"legal_measure"`
+	HasUntakenMedications      bool      `json:"has_untaken_medications"`
+	EducationCurrentlyEnrolled bool      `json:"education_currently_enrolled"`
+	EducationInstitution       *string   `json:"education_institution"`
+	EducationMentorName        *string   `json:"education_mentor_name"`
+	EducationMentorEmail       *string   `json:"education_mentor_email"`
+	EducationMentorPhone       *string   `json:"education_mentor_phone"`
+	EducationAdditionalNotes   *string   `json:"education_additional_notes"`
+	EducationLevel             *string   `json:"education_level"`
+	WorkCurrentlyEmployed      bool      `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string   `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string   `json:"work_employer_phone"`
+	WorkCurrentEmployerEmail   *string   `json:"work_employer_email"`
+	WorkCurrentPosition        *string   `json:"work_current_position"`
+	WorkStartDate              time.Time `json:"work_start_date"`
+	WorkAdditionalNotes        *string   `json:"work_additional_notes"`
+	LivingSituation            *string   `json:"living_situation"`
+	LivingSituationNotes       *string   `json:"living_situation_notes"`
 }
 
 // GetClientApi gets a client
@@ -386,33 +463,49 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(GetClientApiResponse{
-		ID:                     client.ID,
-		FirstName:              client.FirstName,
-		LastName:               client.LastName,
-		DateOfBirth:            client.DateOfBirth.Time,
-		Identity:               client.Identity,
-		Status:                 client.Status,
-		Bsn:                    client.Bsn,
-		BsnVerifiedBy:          client.BsnVerifiedBy,
-		BsnVerifiedByFirstName: client.BsnVerifiedByFirstName,
-		BsnVerifiedByLastName:  client.BsnVerifiedByLastName,
-		Source:                 client.Source,
-		Birthplace:             client.Birthplace,
-		Email:                  client.Email,
-		PhoneNumber:            client.PhoneNumber,
-		Organisation:           client.Organisation,
-		Departement:            client.Departement,
-		Gender:                 client.Gender,
-		Filenumber:             client.Filenumber,
-		ProfilePicture:         client.ProfilePicture,
-		Infix:                  client.Infix,
-		CreatedAt:              client.CreatedAt.Time,
-		SenderID:               client.SenderID,
-		LocationID:             client.LocationID,
-		DepartureReason:        client.DepartureReason,
-		DepartureReport:        client.DepartureReport,
-		LegalMeasure:           client.LegalMeasure,
-		HasUntakenMedications:  client.HasUntakenMedications,
+		ID:                         client.ID,
+		FirstName:                  client.FirstName,
+		LastName:                   client.LastName,
+		DateOfBirth:                client.DateOfBirth.Time,
+		Identity:                   client.Identity,
+		Status:                     client.Status,
+		Bsn:                        client.Bsn,
+		BsnVerifiedBy:              client.BsnVerifiedBy,
+		BsnVerifiedByFirstName:     client.BsnVerifiedByFirstName,
+		BsnVerifiedByLastName:      client.BsnVerifiedByLastName,
+		Source:                     client.Source,
+		Birthplace:                 client.Birthplace,
+		Email:                      client.Email,
+		PhoneNumber:                client.PhoneNumber,
+		Organisation:               client.Organisation,
+		Departement:                client.Departement,
+		Gender:                     client.Gender,
+		Filenumber:                 client.Filenumber,
+		ProfilePicture:             client.ProfilePicture,
+		Infix:                      client.Infix,
+		CreatedAt:                  client.CreatedAt.Time,
+		SenderID:                   client.SenderID,
+		LocationID:                 client.LocationID,
+		DepartureReason:            client.DepartureReason,
+		DepartureReport:            client.DepartureReport,
+		LegalMeasure:               client.LegalMeasure,
+		HasUntakenMedications:      client.HasUntakenMedications,
+		EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
+		EducationInstitution:       client.EducationInstitution,
+		EducationMentorName:        client.EducationMentorName,
+		EducationMentorEmail:       client.EducationMentorEmail,
+		EducationMentorPhone:       client.EducationMentorPhone,
+		EducationAdditionalNotes:   client.EducationAdditionalNotes,
+		EducationLevel:             client.EducationLevel,
+		WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:        client.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail:   client.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:        client.WorkCurrentPosition,
+		WorkStartDate:              client.WorkStartDate.Time,
+		WorkAdditionalNotes:        client.WorkAdditionalNotes,
+		LivingSituation:            client.LivingSituation,
+		LivingSituationNotes:       client.LivingSituationNotes,
 	}, "Client fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -459,27 +552,43 @@ func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
 
 // UpdateClientDetailsRequest represents a request to update a client
 type UpdateClientDetailsRequest struct {
-	FirstName       *string   `json:"first_name"`
-	LastName        *string   `json:"last_name"`
-	DateOfBirth     time.Time `json:"date_of_birth"`
-	Identity        *bool     `json:"identity"`
-	Bsn             *string   `json:"bsn"`
-	BsnVerifiedBy   *int64    `json:"bsn_verified_by"`
-	Source          *string   `json:"source"`
-	Birthplace      *string   `json:"birthplace"`
-	Email           *string   `json:"email"`
-	PhoneNumber     *string   `json:"phone_number"`
-	Organisation    *string   `json:"organisation"`
-	Departement     *string   `json:"departement"`
-	Gender          *string   `json:"gender"`
-	Filenumber      *string   `json:"filenumber"`
-	ProfilePicture  *string   `json:"profile_picture"`
-	Infix           *string   `json:"infix"`
-	SenderID        *int64    `json:"sender_id"`
-	LocationID      *int64    `json:"location_id"`
-	DepartureReason *string   `json:"departure_reason"`
-	DepartureReport *string   `json:"departure_report"`
-	LegalMeasure    *string   `json:"legal_measure"`
+	FirstName                  *string   `json:"first_name"`
+	LastName                   *string   `json:"last_name"`
+	DateOfBirth                time.Time `json:"date_of_birth"`
+	Identity                   *bool     `json:"identity"`
+	Bsn                        *string   `json:"bsn"`
+	BsnVerifiedBy              *int64    `json:"bsn_verified_by"`
+	Source                     *string   `json:"source"`
+	Birthplace                 *string   `json:"birthplace"`
+	Email                      *string   `json:"email"`
+	PhoneNumber                *string   `json:"phone_number"`
+	Organisation               *string   `json:"organisation"`
+	Departement                *string   `json:"departement"`
+	Gender                     *string   `json:"gender"`
+	Filenumber                 *string   `json:"filenumber"`
+	ProfilePicture             *string   `json:"profile_picture"`
+	Infix                      *string   `json:"infix"`
+	SenderID                   *int64    `json:"sender_id"`
+	LocationID                 *int64    `json:"location_id"`
+	DepartureReason            *string   `json:"departure_reason"`
+	DepartureReport            *string   `json:"departure_report"`
+	LegalMeasure               *string   `json:"legal_measure"`
+	EducationCurrentlyEnrolled *bool     `json:"education_currently_enrolled"`
+	EducationInstitution       *string   `json:"education_institution"`
+	EducationMentorName        *string   `json:"education_mentor_name"`
+	EducationMentorPhone       *string   `json:"education_mentor_phone"`
+	EducationMentorEmail       *string   `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string   `json:"education_additional_notes"`
+	EducationLevel             *string   `json:"education_level"`
+	WorkCurrentlyEmployed      *bool     `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string   `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string   `json:"work_employer_phone"`
+	WorkCurrentEmployerEmail   *string   `json:"work_employer_email"`
+	WorkCurrentPosition        *string   `json:"work_current_position"`
+	WorkStartDate              time.Time `json:"work_start_date"`
+	WorkAdditionalNotes        *string   `json:"work_additional_notes"`
+	LivingSituation            *string   `json:"living_situation"`
+	LivingSituationNotes       *string   `json:"living_situation_notes"`
 }
 
 // UpdateClientDetailsResponse represents a response to an update client request
@@ -536,28 +645,44 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 	}
 
 	client, err := server.store.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
-		ID:              clientID,
-		FirstName:       req.FirstName,
-		LastName:        req.LastName,
-		DateOfBirth:     pgtype.Date{Time: req.DateOfBirth, Valid: true},
-		Identity:        req.Identity,
-		Bsn:             req.Bsn,
-		BsnVerifiedBy:   req.BsnVerifiedBy,
-		Source:          req.Source,
-		Birthplace:      req.Birthplace,
-		Email:           req.Email,
-		PhoneNumber:     req.PhoneNumber,
-		Organisation:    req.Organisation,
-		Departement:     req.Departement,
-		Gender:          req.Gender,
-		Filenumber:      req.Filenumber,
-		ProfilePicture:  req.ProfilePicture,
-		Infix:           req.Infix,
-		SenderID:        req.SenderID,
-		LocationID:      req.LocationID,
-		DepartureReason: req.DepartureReason,
-		DepartureReport: req.DepartureReport,
-		LegalMeasure:    req.LegalMeasure,
+		ID:                         clientID,
+		FirstName:                  req.FirstName,
+		LastName:                   req.LastName,
+		DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
+		Identity:                   req.Identity,
+		Bsn:                        req.Bsn,
+		BsnVerifiedBy:              req.BsnVerifiedBy,
+		Source:                     req.Source,
+		Birthplace:                 req.Birthplace,
+		Email:                      req.Email,
+		PhoneNumber:                req.PhoneNumber,
+		Organisation:               req.Organisation,
+		Departement:                req.Departement,
+		Gender:                     req.Gender,
+		Filenumber:                 req.Filenumber,
+		ProfilePicture:             req.ProfilePicture,
+		Infix:                      req.Infix,
+		SenderID:                   req.SenderID,
+		LocationID:                 req.LocationID,
+		DepartureReason:            req.DepartureReason,
+		DepartureReport:            req.DepartureReport,
+		LegalMeasure:               req.LegalMeasure,
+		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
+		EducationInstitution:       req.EducationInstitution,
+		EducationMentorName:        req.EducationMentorName,
+		EducationMentorPhone:       req.EducationMentorPhone,
+		EducationMentorEmail:       req.EducationMentorEmail,
+		EducationAdditionalNotes:   req.EducationAdditionalNotes,
+		EducationLevel:             req.EducationLevel,
+		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:        req.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:        req.WorkCurrentPosition,
+		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
+		WorkAdditionalNotes:        req.WorkAdditionalNotes,
+		LivingSituation:            req.LivingSituation,
+		LivingSituationNotes:       req.LivingSituationNotes,
 	},
 	)
 	if err != nil {

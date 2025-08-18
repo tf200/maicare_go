@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pdf"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // CreateAppointmentCardRequest represents a request to create a new appointment card
@@ -305,7 +307,12 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 	}
 
 	if appointmentCard.FileUrl != nil && *appointmentCard.FileUrl != "" {
-		server.b2Client.DeleteFromB2URL(ctx, *appointmentCard.FileUrl)
+		err = server.b2Client.DeleteFromB2URL(ctx, *appointmentCard.FileUrl)
+		if err != nil {
+			server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Failed to delete existing appointment card document", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to delete existing appointment card document"))
+			return
+		}
 	}
 
 	pdfArg := pdf.AppointmentCard{
@@ -339,7 +346,6 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	
 
 	res := SuccessResponse(updatedAppointmentCard, "Appointment card document generated successfully")
 	ctx.JSON(http.StatusOK, res)
