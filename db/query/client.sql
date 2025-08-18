@@ -23,11 +23,25 @@ INSERT INTO client_details (
     departure_report,
     addresses,
     legal_measure,
+    education_currently_enrolled,
+    education_institution,
+    education_mentor_name,
+    education_mentor_phone,
+    education_mentor_email,
+    education_additional_notes,
+    education_level, 
+    work_currently_employed,
+    work_current_employer,
+    work_current_employer_phone,
+    work_current_employer_email,
+    work_current_position,
+    work_start_date,
+    work_additional_notes, 
     living_situation,
-    education_level
+    living_situation_notes
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24, $25
+    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
 ) RETURNING *;
 
 
@@ -96,7 +110,24 @@ SET
     location_id = COALESCE (sqlc.narg('location_id'), location_id),
     departure_reason = COALESCE (sqlc.narg('departure_reason'), departure_reason),
     departure_report = COALESCE (sqlc.narg('departure_report'), departure_report),
-    legal_measure = COALESCE (sqlc.narg('legal_measure'), legal_measure)
+    legal_measure = COALESCE (sqlc.narg('legal_measure'), legal_measure),
+    education_currently_enrolled = COALESCE (sqlc.narg('education_currently_enrolled'), education_currently_enrolled),
+    education_institution = COALESCE (sqlc.narg('education_institution'), education_institution),
+    education_mentor_name = COALESCE (sqlc.narg('education_mentor_name'), education_mentor_name),
+    education_mentor_phone = COALESCE (sqlc.narg('education_mentor_phone'), education_mentor_phone),
+    education_mentor_email = COALESCE (sqlc.narg('education_mentor_email'), education_mentor_email),
+    education_additional_notes = COALESCE (sqlc.narg('education_additional_notes'), education_additional_notes),
+    education_level = COALESCE (sqlc.narg('education_level'), education_level),
+    work_currently_employed = COALESCE (sqlc.narg('work_currently_employed'), work_currently_employed),
+    work_current_employer = COALESCE (sqlc.narg('work_current_employer'), work_current_employer),
+    work_current_employer_phone = COALESCE (sqlc.narg('work_current_employer_phone'), work_current_employer_phone),
+    work_current_employer_email = COALESCE (sqlc.narg('work_current_employer_email'), work_current_employer_email),
+    work_current_position = COALESCE (sqlc.narg('work_current_position'), work_current_position),
+    work_start_date = COALESCE (sqlc.narg('work_start_date'), work_start_date),
+    work_additional_notes = COALESCE (sqlc.narg('work_additional_notes'), work_additional_notes),
+    living_situation = COALESCE (sqlc.narg('living_situation'), living_situation),
+    living_situation_notes = COALESCE (sqlc.narg('living_situation_notes'), living_situation_notes)
+
 WHERE id = $1
 RETURNING *;
 

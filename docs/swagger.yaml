@@ -713,6 +713,25 @@ definitions:
         type: string
       departement:
         type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        enum:
+        - primary
+        - secondary
+        - higher
+        - none
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
       email:
         type: string
       filenumber:
@@ -727,6 +746,15 @@ definitions:
         type: string
       legal_measure:
         type: string
+      living_situation:
+        enum:
+        - home
+        - foster_care
+        - youth_care_institution
+        - other
+        type: string
+      living_situation_notes:
+        type: string
       location_id:
         type: integer
       organisation:
@@ -736,6 +764,20 @@ definitions:
       sender_id:
         type: integer
       source:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     required:
     - birthplace
@@ -775,6 +817,20 @@ definitions:
         type: string
       departure_report:
         type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
       email:
         type: string
       filenumber:
@@ -783,8 +839,6 @@ definitions:
         type: string
       gender:
         type: string
-      has_untaken_medications:
-        type: boolean
       id:
         type: integer
       identity:
@@ -794,6 +848,10 @@ definitions:
       last_name:
         type: string
       legal_measure:
+        type: string
+      living_situation:
+        type: string
+      living_situation_notes:
         type: string
       location_id:
         type: integer
@@ -808,6 +866,20 @@ definitions:
       source:
         type: string
       status:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     type: object
   api.CreateClientDiagnosisRequest:
@@ -2017,6 +2089,8 @@ definitions:
         type: boolean
       education_institution:
         type: string
+      education_level:
+        type: string
       education_mentor_email:
         type: string
       education_mentor_name:
@@ -2933,6 +3007,20 @@ definitions:
         type: string
       departure_report:
         type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
       email:
         type: string
       filenumber:
@@ -2953,6 +3041,10 @@ definitions:
         type: string
       legal_measure:
         type: string
+      living_situation:
+        type: string
+      living_situation_notes:
+        type: string
       location_id:
         type: integer
       organisation:
@@ -2966,6 +3058,20 @@ definitions:
       source:
         type: string
       status:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     type: object
   api.GetClientContractResponse:
@@ -3831,6 +3937,8 @@ definitions:
       education_currently_enrolled:
         type: boolean
       education_institution:
+        type: string
+      education_level:
         type: string
       education_mentor_email:
         type: string
@@ -7406,6 +7514,20 @@ definitions:
         type: string
       departure_report:
         type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
       email:
         type: string
       filenumber:
@@ -7422,6 +7544,10 @@ definitions:
         type: string
       legal_measure:
         type: string
+      living_situation:
+        type: string
+      living_situation_notes:
+        type: string
       location_id:
         type: integer
       organisation:
@@ -7433,6 +7559,20 @@ definitions:
       sender_id:
         type: integer
       source:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
         type: string
     type: object
   api.UpdateClientDetailsResponse:
@@ -8303,6 +8443,8 @@ definitions:
       education_currently_enrolled:
         type: boolean
       education_institution:
+        type: string
+      education_level:
         type: string
       education_mentor_email:
         type: string

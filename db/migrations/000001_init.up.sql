@@ -6,8 +6,25 @@ CREATE TABLE "group" (
 );
 
 
+
+CREATE TABLE organisation (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    address VARCHAR(200) NOT NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20) NULL,
+    email VARCHAR(100) NULL,
+    kvk_number VARCHAR(20) NULL,
+    btw_number VARCHAR(20) NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE location (
     id BIGSERIAL PRIMARY KEY,
+    organisation_id BIGINT NOT NULL REFERENCES organisation(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100) NOT NULL,
     capacity INTEGER NULL,
@@ -418,8 +435,6 @@ CREATE TABLE client_details (
     filenumber VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(600) NULL,
     infix VARCHAR(100) NULL,
-    living_situation VARCHAR(100) NULL CHECK (living_situation IN ('Home','Youth care institution', 'Other')),
-    education_level VARCHAR(100) NULL CHECK (education_level IN ('Primary', 'Secondary', 'Higher', 'Other')),
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
@@ -429,7 +444,32 @@ CREATE TABLE client_details (
     maturity_domains JSONB NOT NULL DEFAULT '[]',
     addresses JSONB NOT NULL DEFAULT '[]',
     legal_measure VARCHAR(255) NULL,
-    has_untaken_medications BOOLEAN NOT NULL DEFAULT FALSE
+    has_untaken_medications BOOLEAN NOT NULL DEFAULT FALSE,
+
+
+    -- EDUCATION
+    education_currently_enrolled BOOLEAN NOT NULL DEFAULT FALSE,
+    education_institution VARCHAR(255) NULL,
+    education_mentor_name VARCHAR(255) NULL,
+    education_mentor_phone VARCHAR(50) NULL,
+    education_mentor_email VARCHAR(255) NULL,
+    education_additional_notes TEXT NULL,
+    education_level VARCHAR(50) NULL CHECK (education_level IN ('primary', 'secondary', 'higher', 'none')) DEFAULT 'none',
+
+    -- WORK 
+
+    work_currently_employed BOOLEAN NOT NULL DEFAULT FALSE,
+    work_current_employer VARCHAR(255) NULL,
+    work_current_employer_phone VARCHAR(50) NULL,
+    work_current_employer_email VARCHAR(255) NULL,
+    work_current_position VARCHAR(255) NULL,
+    work_start_date DATE NULL,
+    work_additional_notes TEXT NULL,
+
+    -- living situation 
+    living_situation VARCHAR(50) NULL CHECK (living_situation IN ('home', 'foster_care', 'youth_care_institution', 'other')),
+    living_situation_notes TEXT NULL 
+
 );
 
 CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);
@@ -2251,6 +2291,7 @@ CREATE TABLE registration_form (
     education_mentor_email VARCHAR(255) NULL,
     education_currently_enrolled BOOLEAN NOT NULL DEFAULT FALSE,
     education_additional_notes TEXT NULL,
+    education_level VARCHAR(50) NULL CHECK (education_level IN ('primary', 'secondary', 'higher', 'none')) DEFAULT 'none',
 
 
     -- Work and Employment (Werk en Werkgelegenheid)

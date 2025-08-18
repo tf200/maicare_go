@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
@@ -18,11 +19,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func createRandomOrganisation(t *testing.T) *db.Organisation {
+	arg := db.CreateOrganisationParams{
+		Name:       util.RandomString(5),
+		Address:    faker.GetRealAddress().Address,
+		PostalCode: faker.GetRealAddress().PostalCode,
+		City:       faker.GetRealAddress().City,
+		Email:      util.StringPtr(faker.Email()),
+		KvkNumber:  util.StringPtr(faker.CCNumber()),
+		BtwNumber:  util.StringPtr(faker.CCNumber()),
+	}
+
+	organisation, err := testStore.CreateOrganisation(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, organisation)
+
+	// Check if the returned organisation matches the input
+	require.Equal(t, arg.Name, organisation.Name)
+
+	// Verify ID is generated
+	require.NotZero(t, organisation.ID)
+	return &organisation
+}
+
 func createRandomLocation(t *testing.T) *db.Location {
+	organisation := createRandomOrganisation(t)
 	arg := db.CreateLocationParams{
-		Name:     util.RandomString(5),
-		Address:  util.RandomString(8),
-		Capacity: util.Int32Ptr(52),
+		OrganisationID: organisation.ID,
+		Name:           util.RandomString(5),
+		Address:        util.RandomString(8),
+		Capacity:       util.Int32Ptr(52),
 	}
 
 	location, err := testStore.CreateLocation(context.Background(), arg)
@@ -41,6 +67,7 @@ func createRandomLocation(t *testing.T) *db.Location {
 
 func TestCreateLocationApi(t *testing.T) {
 	user := createRandomUser(t)
+	organization := createRandomOrganisation(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -60,7 +87,8 @@ func TestCreateLocationApi(t *testing.T) {
 				}
 				reqBody, err := json.Marshal(locationReq)
 				require.NoError(t, err)
-				req, err := http.NewRequest(http.MethodPost, "/locations", bytes.NewReader(reqBody))
+				url := fmt.Sprintf("/organisations/%d/locations", organization.ID)
+				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil

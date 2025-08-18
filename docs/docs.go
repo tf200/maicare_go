@@ -12064,6 +12064,33 @@ const docTemplate = `{
                 "departement": {
                     "type": "string"
                 },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string",
+                    "enum": [
+                        "primary",
+                        "secondary",
+                        "higher",
+                        "none"
+                    ]
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -12085,6 +12112,18 @@ const docTemplate = `{
                 "legal_measure": {
                     "type": "string"
                 },
+                "living_situation": {
+                    "type": "string",
+                    "enum": [
+                        "home",
+                        "foster_care",
+                        "youth_care_institution",
+                        "other"
+                    ]
+                },
+                "living_situation_notes": {
+                    "type": "string"
+                },
                 "location_id": {
                     "type": "integer"
                 },
@@ -12098,6 +12137,27 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "source": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -12136,6 +12196,27 @@ const docTemplate = `{
                 "departure_report": {
                     "type": "string"
                 },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -12147,9 +12228,6 @@ const docTemplate = `{
                 },
                 "gender": {
                     "type": "string"
-                },
-                "has_untaken_medications": {
-                    "type": "boolean"
                 },
                 "id": {
                     "type": "integer"
@@ -12164,6 +12242,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "legal_measure": {
+                    "type": "string"
+                },
+                "living_situation": {
+                    "type": "string"
+                },
+                "living_situation_notes": {
                     "type": "string"
                 },
                 "location_id": {
@@ -12185,6 +12269,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -13953,6 +14058,9 @@ const docTemplate = `{
                 "education_institution": {
                     "type": "string"
                 },
+                "education_level": {
+                    "type": "string"
+                },
                 "education_mentor_email": {
                     "type": "string"
                 },
@@ -15341,6 +15449,27 @@ const docTemplate = `{
                 "departure_report": {
                     "type": "string"
                 },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -15371,6 +15500,12 @@ const docTemplate = `{
                 "legal_measure": {
                     "type": "string"
                 },
+                "living_situation": {
+                    "type": "string"
+                },
+                "living_situation_notes": {
+                    "type": "string"
+                },
                 "location_id": {
                     "type": "integer"
                 },
@@ -15390,6 +15525,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -16700,6 +16856,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
                     "type": "string"
                 },
                 "education_mentor_email": {
@@ -22169,6 +22328,27 @@ const docTemplate = `{
                 "departure_report": {
                     "type": "string"
                 },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -22193,6 +22373,12 @@ const docTemplate = `{
                 "legal_measure": {
                     "type": "string"
                 },
+                "living_situation": {
+                    "type": "string"
+                },
+                "living_situation_notes": {
+                    "type": "string"
+                },
                 "location_id": {
                     "type": "integer"
                 },
@@ -22209,6 +22395,27 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "source": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -23527,6 +23734,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
                     "type": "string"
                 },
                 "education_mentor_email": {

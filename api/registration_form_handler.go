@@ -51,6 +51,7 @@ type CreateRegistrationFormRequest struct {
 	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
+	EducationLevel                *string    `json:"education_level"`
 	WorkCurrentEmployer           *string    `json:"work_current_employer"`
 	WorkEmployerPhone             *string    `json:"work_employer_phone"`
 	WorkEmployerEmail             *string    `json:"work_employer_email"`
@@ -213,6 +214,7 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:          req.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    req.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      req.EducationAdditionalNotes,
+		EducationLevel:                req.EducationLevel,
 		WorkCurrentEmployer:           req.WorkCurrentEmployer,
 		WorkEmployerPhone:             req.WorkEmployerPhone,
 		WorkEmployerEmail:             req.WorkEmployerEmail,
@@ -672,6 +674,7 @@ type GetRegistrationFormResponse struct {
 	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      string     `json:"education_additional_notes"`
+	EducationLevel                *string    `json:"education_level"`
 	WorkCurrentEmployer           *string    `json:"work_current_employer"`
 	WorkEmployerPhone             *string    `json:"work_employer_phone"`
 	WorkEmployerEmail             *string    `json:"work_employer_email"`
@@ -778,6 +781,7 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:          registrationForm.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    registrationForm.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      util.DerefString(registrationForm.EducationAdditionalNotes),
+		EducationLevel:                registrationForm.EducationLevel,
 		WorkCurrentEmployer:           registrationForm.WorkCurrentEmployer,
 		WorkEmployerPhone:             registrationForm.WorkEmployerPhone,
 		WorkEmployerEmail:             registrationForm.WorkEmployerEmail,
@@ -860,6 +864,7 @@ type UpdateRegistrationFormRequest struct {
 	EducationMentorEmail          *string     `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    *bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string     `json:"education_additional_notes"`
+	EducationLevel                *string     `json:"education_level"`
 	WorkCurrentEmployer           *string     `json:"work_current_employer"`
 	WorkEmployerPhone             *string     `json:"work_employer_phone"`
 	WorkEmployerEmail             *string     `json:"work_employer_email"`
@@ -1031,6 +1036,7 @@ func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
+		EducationLevel:             req.EducationLevel,
 		WorkCurrentEmployer:        req.WorkCurrentEmployer,
 		WorkEmployerPhone:          req.WorkEmployerPhone,
 		WorkEmployerEmail:          req.WorkEmployerEmail,

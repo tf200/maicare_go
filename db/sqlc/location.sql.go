@@ -7,33 +7,97 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createLocation = `-- name: CreateLocation :one
 INSERT INTO location (
+    organisation_id,
     name,
     address,
     capacity
 ) VALUES (
-    $1, $2, $3
-) RETURNING id, name, address, capacity, location_type
+    $1, $2, $3, $4
+) RETURNING id, organisation_id, name, address, capacity, location_type
 `
 
 type CreateLocationParams struct {
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	OrganisationID int64  `json:"organisation_id"`
+	Name           string `json:"name"`
+	Address        string `json:"address"`
+	Capacity       *int32 `json:"capacity"`
 }
 
 func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error) {
-	row := q.db.QueryRow(ctx, createLocation, arg.Name, arg.Address, arg.Capacity)
+	row := q.db.QueryRow(ctx, createLocation,
+		arg.OrganisationID,
+		arg.Name,
+		arg.Address,
+		arg.Capacity,
+	)
 	var i Location
 	err := row.Scan(
 		&i.ID,
+		&i.OrganisationID,
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
 		&i.LocationType,
+	)
+	return i, err
+}
+
+const createOrganisation = `-- name: CreateOrganisation :one
+INSERT INTO organisation (
+    name,
+    address,
+    postal_code,
+    city,
+    phone_number,
+    email,
+    kvk_number,
+    btw_number
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
+`
+
+type CreateOrganisationParams struct {
+	Name        string  `json:"name"`
+	Address     string  `json:"address"`
+	PostalCode  string  `json:"postal_code"`
+	City        string  `json:"city"`
+	PhoneNumber *string `json:"phone_number"`
+	Email       *string `json:"email"`
+	KvkNumber   *string `json:"kvk_number"`
+	BtwNumber   *string `json:"btw_number"`
+}
+
+func (q *Queries) CreateOrganisation(ctx context.Context, arg CreateOrganisationParams) (Organisation, error) {
+	row := q.db.QueryRow(ctx, createOrganisation,
+		arg.Name,
+		arg.Address,
+		arg.PostalCode,
+		arg.City,
+		arg.PhoneNumber,
+		arg.Email,
+		arg.KvkNumber,
+		arg.BtwNumber,
+	)
+	var i Organisation
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.PostalCode,
+		&i.City,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.KvkNumber,
+		&i.BtwNumber,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -41,7 +105,7 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 const deleteLocation = `-- name: DeleteLocation :one
 DELETE FROM location
 WHERE id = $1
-RETURNING id, name, address, capacity, location_type
+RETURNING id, organisation_id, name, address, capacity, location_type
 `
 
 func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error) {
@@ -49,6 +113,7 @@ func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error
 	var i Location
 	err := row.Scan(
 		&i.ID,
+		&i.OrganisationID,
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
@@ -57,8 +122,33 @@ func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error
 	return i, err
 }
 
+const deleteOrganisation = `-- name: DeleteOrganisation :one
+DELETE FROM organisation
+WHERE id = $1
+RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
+`
+
+func (q *Queries) DeleteOrganisation(ctx context.Context, id int64) (Organisation, error) {
+	row := q.db.QueryRow(ctx, deleteOrganisation, id)
+	var i Organisation
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.PostalCode,
+		&i.City,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.KvkNumber,
+		&i.BtwNumber,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getLocation = `-- name: GetLocation :one
-SELECT id, name, address, capacity, location_type FROM location
+SELECT id, organisation_id, name, address, capacity, location_type FROM location
 WHERE id = $1
 `
 
@@ -67,6 +157,7 @@ func (q *Queries) GetLocation(ctx context.Context, id int64) (Location, error) {
 	var i Location
 	err := row.Scan(
 		&i.ID,
+		&i.OrganisationID,
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
@@ -75,12 +166,56 @@ func (q *Queries) GetLocation(ctx context.Context, id int64) (Location, error) {
 	return i, err
 }
 
-const listLocations = `-- name: ListLocations :many
-SELECT id, name, address, capacity, location_type FROM location
+const getOrganisation = `-- name: GetOrganisation :one
+SELECT o.id, o.name, o.address, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
+       COUNT(l.id) AS location_count
+FROM organisation o
+LEFT JOIN location l ON o.id = l.organisation_id
+WHERE o.id = $1
 `
 
-func (q *Queries) ListLocations(ctx context.Context) ([]Location, error) {
-	rows, err := q.db.Query(ctx, listLocations)
+type GetOrganisationRow struct {
+	ID            int64              `json:"id"`
+	Name          string             `json:"name"`
+	Address       string             `json:"address"`
+	PostalCode    string             `json:"postal_code"`
+	City          string             `json:"city"`
+	PhoneNumber   *string            `json:"phone_number"`
+	Email         *string            `json:"email"`
+	KvkNumber     *string            `json:"kvk_number"`
+	BtwNumber     *string            `json:"btw_number"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	LocationCount int64              `json:"location_count"`
+}
+
+func (q *Queries) GetOrganisation(ctx context.Context, id int64) (GetOrganisationRow, error) {
+	row := q.db.QueryRow(ctx, getOrganisation, id)
+	var i GetOrganisationRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.PostalCode,
+		&i.City,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.KvkNumber,
+		&i.BtwNumber,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LocationCount,
+	)
+	return i, err
+}
+
+const listAllLocations = `-- name: ListAllLocations :many
+SELECT id, organisation_id, name, address, capacity, location_type FROM location
+ORDER BY name
+`
+
+func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
+	rows, err := q.db.Query(ctx, listAllLocations)
 	if err != nil {
 		return nil, err
 	}
@@ -90,10 +225,100 @@ func (q *Queries) ListLocations(ctx context.Context) ([]Location, error) {
 		var i Location
 		if err := rows.Scan(
 			&i.ID,
+			&i.OrganisationID,
 			&i.Name,
 			&i.Address,
 			&i.Capacity,
 			&i.LocationType,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listLocations = `-- name: ListLocations :many
+SELECT id, organisation_id, name, address, capacity, location_type FROM location 
+WHERE organisation_id = $1
+`
+
+func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]Location, error) {
+	rows, err := q.db.Query(ctx, listLocations, organisationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Location
+	for rows.Next() {
+		var i Location
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganisationID,
+			&i.Name,
+			&i.Address,
+			&i.Capacity,
+			&i.LocationType,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrganisations = `-- name: ListOrganisations :many
+SELECT o.id, o.name, o.address, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
+         COUNT(l.id) AS location_count
+FROM organisation o
+LEFT JOIN location l ON o.id = l.organisation_id
+GROUP BY o.id
+ORDER BY o.name
+`
+
+type ListOrganisationsRow struct {
+	ID            int64              `json:"id"`
+	Name          string             `json:"name"`
+	Address       string             `json:"address"`
+	PostalCode    string             `json:"postal_code"`
+	City          string             `json:"city"`
+	PhoneNumber   *string            `json:"phone_number"`
+	Email         *string            `json:"email"`
+	KvkNumber     *string            `json:"kvk_number"`
+	BtwNumber     *string            `json:"btw_number"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	LocationCount int64              `json:"location_count"`
+}
+
+func (q *Queries) ListOrganisations(ctx context.Context) ([]ListOrganisationsRow, error) {
+	rows, err := q.db.Query(ctx, listOrganisations)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrganisationsRow
+	for rows.Next() {
+		var i ListOrganisationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Address,
+			&i.PostalCode,
+			&i.City,
+			&i.PhoneNumber,
+			&i.Email,
+			&i.KvkNumber,
+			&i.BtwNumber,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.LocationCount,
 		); err != nil {
 			return nil, err
 		}
@@ -112,7 +337,7 @@ SET
     address = COALESCE($3, address),
     capacity = COALESCE($4, capacity)
 WHERE id = $1
-RETURNING id, name, address, capacity, location_type
+RETURNING id, organisation_id, name, address, capacity, location_type
 `
 
 type UpdateLocationParams struct {
@@ -132,10 +357,68 @@ func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) 
 	var i Location
 	err := row.Scan(
 		&i.ID,
+		&i.OrganisationID,
 		&i.Name,
 		&i.Address,
 		&i.Capacity,
 		&i.LocationType,
+	)
+	return i, err
+}
+
+const updateOrganisation = `-- name: UpdateOrganisation :one
+UPDATE organisation
+SET
+    name = COALESCE($2, name),
+    address = COALESCE($3, address),
+    postal_code = COALESCE($4, postal_code),
+    city = COALESCE($5, city),
+    phone_number = COALESCE($6, phone_number),
+    email = COALESCE($7, email),
+    kvk_number = COALESCE($8, kvk_number),
+    btw_number = COALESCE($9, btw_number),
+    updated_at = now()
+WHERE id = $1
+RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
+`
+
+type UpdateOrganisationParams struct {
+	ID          int64   `json:"id"`
+	Name        *string `json:"name"`
+	Address     *string `json:"address"`
+	PostalCode  *string `json:"postal_code"`
+	City        *string `json:"city"`
+	PhoneNumber *string `json:"phone_number"`
+	Email       *string `json:"email"`
+	KvkNumber   *string `json:"kvk_number"`
+	BtwNumber   *string `json:"btw_number"`
+}
+
+func (q *Queries) UpdateOrganisation(ctx context.Context, arg UpdateOrganisationParams) (Organisation, error) {
+	row := q.db.QueryRow(ctx, updateOrganisation,
+		arg.ID,
+		arg.Name,
+		arg.Address,
+		arg.PostalCode,
+		arg.City,
+		arg.PhoneNumber,
+		arg.Email,
+		arg.KvkNumber,
+		arg.BtwNumber,
+	)
+	var i Organisation
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Address,
+		&i.PostalCode,
+		&i.City,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.KvkNumber,
+		&i.BtwNumber,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 // CreateAppointmentRequest represents the request payload for creating an appointment
@@ -93,7 +94,11 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-		defer tx.Rollback(ctx)
+		defer func() {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to rollback transaction", zap.Error(rbErr))
+			}
+		}()
 		qtx := server.store.WithTx(tx)
 
 		appointment, err := qtx.CreateAppointment(ctx, db.CreateAppointmentParams{
