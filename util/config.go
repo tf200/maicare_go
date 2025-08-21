@@ -59,7 +59,10 @@ func LoadConfig(path string) (config Config, err error) {
 	}
 
 	for _, envVar := range envVars {
-		viper.BindEnv(envVar)
+		err = viper.BindEnv(envVar)
+		if err != nil {
+			return config, fmt.Errorf("failed to bind event")
+		}
 	}
 
 	// Try to read the config file (works locally)

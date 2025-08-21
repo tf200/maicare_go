@@ -89,7 +89,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 
 	var totalAmount float64
 	var totalPreVat float64
-	var invoice []InvoiceDetails = make([]InvoiceDetails, len(contracts))
+	var invoice = make([]InvoiceDetails, len(contracts))
 
 	for i, contract := range contracts {
 		billablePeriods, err := store.GetBillablePeriodsForContract(ctx, db.GetBillablePeriodsForContractParams{

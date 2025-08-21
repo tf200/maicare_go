@@ -87,7 +87,7 @@ func (c *Client) readPump() {
 
 		// Optional: Process message if needed (e.g., echo, handle commands)
 		// For now, we can just log it or ignore it if client->server messages aren't needed
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		message = bytes.TrimSpace(bytes.ReplaceAll(message, newline, space))
 		log.Printf("Received message from user %d: %s", c.userID, message) // Example logging
 
 		// Reset read deadline with every message read (optional, pong handler does this too)

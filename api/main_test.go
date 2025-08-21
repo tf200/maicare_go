@@ -9,6 +9,7 @@ import (
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
+	"maicare_go/notification"
 
 	"maicare_go/util"
 	"net/http"
@@ -24,6 +25,7 @@ var testServer *Server
 var testb2Client *bucket.B2Client
 var testasynqClient *async.AsynqClient
 var testGrpcClient grpclient.GrpcClientInterface
+var testNotifService *notification.Service
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
@@ -47,12 +49,13 @@ func TestMain(m *testing.M) {
 	hubInstance := hub.NewHub()
 
 	testGrpcClient := CreateMockGrpcClient()
+	testNotifService = notification.NewService(testStore, hubInstance)
 
-	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance, testGrpcClient)
+	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance, testNotifService, testGrpcClient)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}
-	testServer.router.GET("/auth", AuthMiddleware(testServer.tokenMaker), func(ctx *gin.Context) {
+	testServer.router.GET("/auth", testServer.AuthMiddleware(), func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{})
 	})
 

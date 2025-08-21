@@ -192,7 +192,7 @@ func createRandomSession(t *testing.T, token string, payload *token.Payload) db.
 }
 
 func TestRefreshTokenHandler(t *testing.T) {
-	token, payload, err := testServer.tokenMaker.CreateToken(1, 1, testServer.config.RefreshTokenDuration, token.RefreshToken)
+	token, payload, err := testServer.tokenMaker.CreateToken(1, 1, 1, testServer.config.RefreshTokenDuration, token.RefreshToken)
 	createRandomSession(t, token, payload)
 	require.NoError(t, err)
 	testCases := []struct {
@@ -311,4 +311,45 @@ func TestChangePasswordApi(t *testing.T) {
 		})
 	}
 
+}
+
+func TestSetup2FAHandler(t *testing.T) {
+	_, user := createRandomEmployee(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := "/auth/setup_2fa"
+				req, err := http.NewRequest(http.MethodPost, url, nil)
+				require.NoError(t, err)
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				t.Log(recorder.Body)
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
 }

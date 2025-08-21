@@ -7,7 +7,7 @@ CREATE TABLE "group" (
 
 
 
-CREATE TABLE organisation (
+CREATE TABLE organisations (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(200) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE organisation (
 
 CREATE TABLE location (
     id BIGSERIAL PRIMARY KEY,
-    organisation_id BIGINT NOT NULL REFERENCES organisation(id) ON DELETE CASCADE,
+    organisation_id BIGINT NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100) NOT NULL,
     capacity INTEGER NULL,
@@ -2151,7 +2151,7 @@ CREATE TABLE objectives_report (
 
 -- Table to store notifications for users
 CREATE TABLE notifications (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     user_id BIGINT NOT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
     type VARCHAR(100) NOT NULL CHECK (type IN (
@@ -2162,7 +2162,6 @@ CREATE TABLE notifications (
         'incident_report',
         'client_contract_reminder'
     )),
-    entity_id VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     data JSONB NULL,

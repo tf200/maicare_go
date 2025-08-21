@@ -11,14 +11,15 @@ INSERT INTO custom_user (
 RETURNING *;
 
 -- name: GetUserByID :one
-SELECT * FROM custom_user
-WHERE id = $1 LIMIT 1;
+SELECT cu.*, e.id as employee_id FROM custom_user cu
+JOIN employee_profile e ON e.user_id = cu.id
+WHERE cu.id = $1 LIMIT 1;
 
 
 -- name: GetUserByEmail :one
-SELECT * FROM custom_user
-WHERE email= $1 LIMIT 1;
-
+SELECT cu.*, e.id as employee_id FROM custom_user cu
+JOIN employee_profile e ON e.user_id = cu.id
+WHERE cu.email = $1 LIMIT 1;
 
 -- name: UpdatePassword :exec
 UPDATE custom_user

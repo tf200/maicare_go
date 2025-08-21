@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -794,7 +795,10 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-		defer tx.Rollback(ctx)
+		defer func() {
+			err = tx.Rollback(ctx)
+			server.logBusinessEvent(LogLevelError, "UpdateClientStatus", "Failed to rollback db", zap.Error(err))
+		}()
 
 		qtx := server.store.WithTx(tx)
 

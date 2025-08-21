@@ -114,13 +114,6 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
-	if err != nil {
-		server.logger.Error("failed to get employee ID by user ID", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get employee ID")))
-		return
-	}
-
 	arg := db.CreateClientMaturityMatrixAssessmentParams{
 		ClientID:         clientID,
 		MaturityMatrixID: req.MaturityMatrixID,
@@ -200,7 +193,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 
 	carePlan, err := qtx.CreateCarePlan(ctx, db.CreateCarePlanParams{
 		AssessmentID:          clientAssessments.ID,
-		GeneratedByEmployeeID: &employeeID,
+		GeneratedByEmployeeID: &payload.EmployeeID,
 		AssessmentSummary:     generatedCarePlan.AssessmentSummary,
 		RawLlmResponse:        rawllmResp,
 		Status:                "draft",
@@ -2222,19 +2215,13 @@ func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
-	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, payload.UserId)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Failed to get employee ID", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get employee ID")))
-		return
-	}
 
 	arg := db.CreateCarePlanReportParams{
 		CarePlanID:          carePlanID,
 		ReportType:          req.ReportType,
 		ReportContent:       req.ReportContent,
 		IsCritical:          req.IsCritical,
-		CreatedByEmployeeID: employeeID,
+		CreatedByEmployeeID: payload.EmployeeID,
 	}
 
 	report, err := server.store.CreateCarePlanReport(ctx, arg)

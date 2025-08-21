@@ -1,5 +1,5 @@
 -- name: CreateOrganisation :one
-INSERT INTO organisation (
+INSERT INTO organisations (
     name,
     address,
     postal_code,
@@ -16,7 +16,7 @@ INSERT INTO organisation (
 -- name: ListOrganisations :many
 SELECT o.*,
          COUNT(l.id) AS location_count
-FROM organisation o
+FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
 GROUP BY o.id
 ORDER BY o.name;
@@ -25,13 +25,13 @@ ORDER BY o.name;
 -- name: GetOrganisation :one
 SELECT o.*,
        COUNT(l.id) AS location_count
-FROM organisation o
+FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
 WHERE o.id = $1;
 
 
 -- name: UpdateOrganisation :one
-UPDATE organisation
+UPDATE organisations
 SET
     name = COALESCE(sqlc.narg('name'), name),
     address = COALESCE(sqlc.narg('address'), address),
@@ -47,7 +47,7 @@ RETURNING *;
 
 
 -- name: DeleteOrganisation :one
-DELETE FROM organisation
+DELETE FROM organisations
 WHERE id = $1
 RETURNING *;
 

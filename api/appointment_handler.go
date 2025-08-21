@@ -2,8 +2,11 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
+	"maicare_go/notification"
+	"maicare_go/util"
 	"net/http"
 	"strconv"
 	"time"
@@ -55,32 +58,36 @@ type CreateAppointmentResponse struct {
 func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to get auth payload", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
 
 	userID := payload.UserId
 
-	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, userID)
+	employee, err := server.store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to get employee profile", zap.Error(err))
+		ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("employee not found")))
 		return
 	}
 
 	var req CreateAppointmentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to bind request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
 	if req.StartTime.After(req.EndTime) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("start time must be before end time")))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Start time must be before end time", zap.Time("start_time", req.StartTime), zap.Time("end_time", req.EndTime))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start time must be before end time")))
 		return
 	}
 
 	filteredParticipants := req.ParticipantEmployeeIDs[:0] // Reuse the slice's backing array
 	for _, participantID := range req.ParticipantEmployeeIDs {
-		if participantID != employeeID {
+		if participantID != employee.EmployeeID {
 			filteredParticipants = append(filteredParticipants, participantID)
 		}
 	}
@@ -91,18 +98,24 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 	if req.RecurrenceType == "NONE" {
 		tx, err := server.store.ConnPool.Begin(ctx)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to begin transaction", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
 			return
 		}
+
+		commited := false
 		defer func() {
-			if rbErr := tx.Rollback(ctx); rbErr != nil {
-				server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to rollback transaction", zap.Error(rbErr))
+			if !commited {
+				if rbErr := tx.Rollback(ctx); rbErr != nil {
+					server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to rollback transaction", zap.Error(rbErr))
+					ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to rollback transaction")))
+				}
 			}
 		}()
 		qtx := server.store.WithTx(tx)
 
 		appointment, err := qtx.CreateAppointment(ctx, db.CreateAppointmentParams{
-			CreatorEmployeeID: &employeeID,
+			CreatorEmployeeID: &employee.EmployeeID,
 			StartTime:         pgtype.Timestamp{Time: req.StartTime, Valid: true},
 			EndTime:           pgtype.Timestamp{Time: req.EndTime, Valid: true},
 			Location:          req.Location,
@@ -110,7 +123,8 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			Color:             req.Color,
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to create appointment", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create appointment")))
 			return
 		}
 
@@ -120,7 +134,8 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 				EmployeeIds:   req.ParticipantEmployeeIDs,
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to add appointment participants", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add appointment participants")))
 				return
 			}
 		}
@@ -131,16 +146,19 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 				ClientIds:     req.ClientIDs,
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to add appointment clients", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add appointment clients")))
 				return
 			}
 		}
 
 		err = tx.Commit(ctx)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to commit transaction", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
 			return
 		}
+		commited = true
 		response = CreateAppointmentResponse{
 			ID:                appointment.ID,
 			CreatorEmployeeID: *appointment.CreatorEmployeeID,
@@ -153,7 +171,7 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 
 	} else {
 		appointmentTemp, err := server.store.CreateAppointmentTemplate(ctx, db.CreateAppointmentTemplateParams{
-			CreatorEmployeeID:  employeeID,
+			CreatorEmployeeID:  employee.EmployeeID,
 			StartTime:          pgtype.Timestamp{Time: req.StartTime, Valid: true},
 			EndTime:            pgtype.Timestamp{Time: req.EndTime, Valid: true},
 			Location:           req.Location,
@@ -164,7 +182,8 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			RecurrenceEndDate:  pgtype.Date{Time: req.RecurrenceEndDate, Valid: true},
 		})
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to create appointment template", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create appointment template")))
 			return
 		}
 		response = CreateAppointmentResponse{
@@ -177,12 +196,36 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 			Description:       appointmentTemp.Description,
 		}
 
-		server.asynqClient.EnqueueAppointmentTask(ctx, async.AppointmentPayload{
+		err = server.asynqClient.EnqueueAppointmentTask(ctx, async.AppointmentPayload{
 			AppointmentTemplateID:  appointmentTemp.ID,
 			ParticipantEmployeeIDs: req.ParticipantEmployeeIDs,
 			ClientIDs:              req.ClientIDs,
 		})
+		if err != nil {
+			server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to enqueue appointment task for reacurring appointment", zap.Error(err))
+		}
 
+	}
+	if len(req.ParticipantEmployeeIDs) > 0 {
+		data := notification.NewAppointmentData{
+			AppointmentID: response.ID,
+			CreatedBy:     employee.FirstName + " " + employee.LastName,
+			StartTime:     response.StartTime,
+			EndTime:       response.EndTime,
+			Location:      util.DerefString(req.Location),
+		}
+		err = server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+			RecipientUserIDs: req.ParticipantEmployeeIDs,
+			Type:             notification.TypeNewAppointment,
+			Data: notification.NotificationData{
+				NewAppointment: &data,
+			},
+			Message:   data.NewAppointmentMessage(),
+			CreatedAt: time.Now(),
+		})
+		if err != nil {
+			server.logBusinessEvent(LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
+		}
 	}
 
 	res := SuccessResponse(response, "Appointment created successfully")
@@ -702,7 +745,12 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 		return
 	}
 
-	defer tx.Rollback(ctx)
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err != nil && err.Error() != "pgx: tx is closed" {
+			server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to rollback appointment update", zap.Error(err))
+		}
+	}()
 	qtx := server.store.WithTx(tx)
 
 	appointment, err := qtx.UpdateAppointment(ctx, db.UpdateAppointmentParams{
@@ -839,17 +887,9 @@ func (server *Server) ConfirmAppointmentApi(ctx *gin.Context) {
 		return
 	}
 
-	userID := payload.UserId
-
-	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, userID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	err = server.store.ConfirmAppointment(ctx, db.ConfirmAppointmentParams{
 		ID:         appointmentID,
-		EmployeeID: &employeeID,
+		EmployeeID: &payload.EmployeeID,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

@@ -45,7 +45,7 @@ func isWebSocketUpgrade(ctx *gin.Context) bool {
 }
 
 // AuthMiddleware restricts query param auth to WebSocket requests only.
-func AuthMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
+func (s *Server) AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var accessToken string
 
@@ -88,7 +88,7 @@ func AuthMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 		}
 
 		// 4. Verify the token (this part is the same)
-		payload, err := tokenMaker.VerifyToken(accessToken)
+		payload, err := s.tokenMaker.VerifyToken(accessToken)
 		if err != nil {
 			// Handle specific token errors if needed (e.g., expired token)
 			// Example: if errors.Is(err, token.ErrExpiredToken) { ... }
@@ -117,7 +117,7 @@ func GetAuthPayload(ctx *gin.Context) (*token.Payload, error) {
 	return tokenPayload, nil
 }
 
-func RBACMiddleware(store *db.Store, requiredPermission string) gin.HandlerFunc {
+func (s *Server) RBACMiddleware(requiredPermission string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Get auth payload from context (set by AuthMiddleware)
 		payload, err := GetAuthPayload(ctx)
@@ -127,7 +127,7 @@ func RBACMiddleware(store *db.Store, requiredPermission string) gin.HandlerFunc 
 		}
 
 		// Check if role has required permission
-		hasPermission, err := store.CheckRolePermission(ctx, db.CheckRolePermissionParams{
+		hasPermission, err := s.store.CheckRolePermission(ctx, db.CheckRolePermissionParams{
 			RoleID: payload.RoleID,
 			Name:   requiredPermission})
 		if err != nil {

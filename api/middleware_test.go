@@ -27,7 +27,7 @@ func addAuthorization(
 		roleID = options[0]
 	}
 
-	accessToken, payload, err := tokenMaker.CreateToken(userID, roleID, duration, token.AccessToken)
+	accessToken, payload, err := tokenMaker.CreateToken(userID, 1, roleID, duration, token.AccessToken)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
 

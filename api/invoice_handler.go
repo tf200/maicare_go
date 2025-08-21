@@ -88,13 +88,8 @@ func (server *Server) CreateInvoiceApi(ctx *gin.Context) {
 	defer tx.Rollback(ctx)
 
 	qtx := server.store.WithTx(tx)
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
 
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -330,13 +325,7 @@ func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 	defer tx.Rollback(ctx)
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -681,13 +670,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -1100,13 +1083,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 	defer tx.Rollback(ctx)
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -1126,7 +1103,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		PaymentDate:      pgtype.Date{Time: req.PaymentDate, Valid: true},
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,
-		RecordedBy:       &employeeID,
+		RecordedBy:       &payload.EmployeeID,
 	})
 
 	if err != nil {
@@ -1379,13 +1356,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 	defer tx.Rollback(ctx)
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -1418,7 +1389,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 		Amount:           req.Amount,
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,
-		RecordedBy:       &employeeID,
+		RecordedBy:       &payload.EmployeeID,
 	}
 
 	if req.PaymentDate != nil {
@@ -1548,13 +1519,7 @@ func (server *Server) DeletePaymentApi(ctx *gin.Context) {
 	defer tx.Rollback(ctx)
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx.Request.Context(), payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

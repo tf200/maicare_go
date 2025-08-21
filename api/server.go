@@ -29,6 +29,7 @@ import (
 	"maicare_go/docs"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
+	"maicare_go/notification"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -43,20 +44,21 @@ import (
 )
 
 type Server struct {
-	store       *db.Store
-	router      *gin.Engine
-	config      util.Config
-	tokenMaker  token.Maker
-	b2Client    *bucket.B2Client
-	asynqClient *async.AsynqClient
-	httpServer  *http.Server
-	aiHandler   *ai.AiHandler
-	hub         *hub.Hub
-	logger      *zap.Logger
-	grpClient   grpclient.GrpcClientInterface
+	store        *db.Store
+	router       *gin.Engine
+	config       util.Config
+	tokenMaker   token.Maker
+	b2Client     *bucket.B2Client
+	asynqClient  *async.AsynqClient
+	httpServer   *http.Server
+	aiHandler    *ai.AiHandler
+	hub          *hub.Hub
+	notifService *notification.Service
+	logger       *zap.Logger
+	grpClient    grpclient.GrpcClientInterface
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub, notifService *notification.Service, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)
@@ -75,15 +77,16 @@ func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.Asy
 	}
 
 	server := &Server{
-		store:       store,
-		config:      config,
-		tokenMaker:  tokenMaker,
-		b2Client:    b2Client,
-		asynqClient: asyqClient,
-		aiHandler:   aiHandler,
-		hub:         hubInstance,
-		logger:      logger,
-		grpClient:   grpcClient,
+		store:        store,
+		config:       config,
+		tokenMaker:   tokenMaker,
+		b2Client:     b2Client,
+		asynqClient:  asyqClient,
+		aiHandler:    aiHandler,
+		hub:          hubInstance,
+		logger:       logger,
+		notifService: notifService,
+		grpClient:    grpcClient,
 	}
 
 	// Initialize swagger docs

@@ -476,21 +476,6 @@ func (q *Queries) GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, 
 	return i, err
 }
 
-const getEmployeeIDByUserID = `-- name: GetEmployeeIDByUserID :one
-SELECT 
-    ep.id AS employee_id
-FROM employee_profile ep
-JOIN custom_user cu ON ep.user_id = cu.id
-WHERE cu.id = $1
-`
-
-func (q *Queries) GetEmployeeIDByUserID(ctx context.Context, id int64) (int64, error) {
-	row := q.db.QueryRow(ctx, getEmployeeIDByUserID, id)
-	var employee_id int64
-	err := row.Scan(&employee_id)
-	return employee_id, err
-}
-
 const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
 SELECT 
     ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
@@ -573,6 +558,8 @@ func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmpl
 }
 
 const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
+
+
 SELECT 
     cu.id as user_id,
     cu.email as email,
@@ -604,6 +591,14 @@ type GetEmployeeProfileByUserIDRow struct {
 	Permissions []byte `json:"permissions"`
 }
 
+// -- name: GetEmployeeIDByUserID :one
+// SELECT
+//
+//	ep.id AS employee_id
+//
+// FROM employee_profile ep
+// JOIN custom_user cu ON ep.user_id = cu.id
+// WHERE cu.id = $1;
 func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeProfileByUserID, id)
 	var i GetEmployeeProfileByUserIDRow

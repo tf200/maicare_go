@@ -113,3 +113,4 @@ DROP TABLE IF EXISTS "public"."care_plan_risks" CASCADE;
 DROP TABLE IF EXISTS "public"."care_plan_support_network" CASCADE;
 DROP TABLE IF EXISTS "public"."care_plan_resources" CASCADE;
 DROP TABLE IF EXISTS "public"."care_plan_reports" CASCADE;
+DROP TABLE IF EXISTS "public"."organisations" CASCADE;

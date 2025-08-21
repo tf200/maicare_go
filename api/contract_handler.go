@@ -441,13 +441,7 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -554,12 +548,7 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 
 	qtx := server.store.WithTx(tx)
 
-	employeeID, err := qtx.GetEmployeeIDByUserID(ctx, payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

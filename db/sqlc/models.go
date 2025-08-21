@@ -935,10 +935,9 @@ type Measurement struct {
 }
 
 type Notification struct {
-	ID        int64              `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	UserID    int64              `json:"user_id"`
 	Type      string             `json:"type"`
-	EntityID  string             `json:"entity_id"`
 	Message   string             `json:"message"`
 	IsRead    bool               `json:"is_read"`
 	Data      []byte             `json:"data"`

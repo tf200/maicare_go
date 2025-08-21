@@ -1218,12 +1218,6 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 		return
 	}
 
-	employeeID, err := server.store.GetEmployeeIDByUserID(ctx, payload.UserId)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
 	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -1233,7 +1227,7 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	arg := db.UpdateRegistrationFormStatusParams{
 		ID:                        rfId,
 		FormStatus:                req.Status,
-		ProcessedByEmployeeID:     &employeeID,
+		ProcessedByEmployeeID:     &payload.EmployeeID,
 		IntakeAppointmentLocation: req.IntakeAppointmentLocation,
 		AddmissionType:            req.AddmissionType,
 	}
