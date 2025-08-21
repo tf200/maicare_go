@@ -2,8 +2,8 @@ package api
 
 import (
 	"maicare_go/async"
+	"maicare_go/notification"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -100,10 +100,17 @@ func (server *Server) Notification(c *gin.Context) {
 	// Get the user ID from the payload
 	userID := payload.UserId
 	// Enqueue the notification task
-	server.asynqClient.EnqueueNotificationTask(c, async.NotificationPayload{
+	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
 		RecipientUserIDs: []int64{userID},
 		Type:             "employee_assigned",
-		Data:             []byte(`{"client_id":` + strconv.FormatInt(1, 10) + `,"employee_id":` + strconv.FormatInt(userID, 10) + `}`),
+		Data: notification.NotificationData{
+			NewClientAssignment: &notification.NewClientAssignmentData{
+				ClientID:        12345,
+				ClientFirstName: "John",
+				ClientLastName:  "Doe",
+				ClientLocation:  nil, // Assuming no location provided
+			},
+		},
 	})
 	c.JSON(http.StatusOK, gin.H{
 		"echo":      "Notification sent",

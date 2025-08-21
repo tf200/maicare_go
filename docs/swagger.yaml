@@ -1922,6 +1922,47 @@ definitions:
       name:
         type: string
     type: object
+  api.CreateOrganisationRequest:
+    properties:
+      address:
+        type: string
+      btw_number:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      kvk_number:
+        type: string
+      name:
+        type: string
+      postal_code:
+        type: string
+    required:
+    - address
+    - city
+    - name
+    - postal_code
+    type: object
+  api.CreateOrganisationResponse:
+    properties:
+      address:
+        type: string
+      btw_number:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      kvk_number:
+        type: string
+      name:
+        type: string
+      postal_code:
+        type: string
+    type: object
   api.CreatePaymentRequest:
     properties:
       amount:
@@ -2584,6 +2625,11 @@ definitions:
         type: string
     type: object
   api.DeleteLocationResponse:
+    properties:
+      id:
+        type: integer
+    type: object
+  api.DeleteOrganisationResponse:
     properties:
       id:
         type: integer
@@ -3807,6 +3853,27 @@ definitions:
         items:
           $ref: '#/definitions/api.Shift'
         type: array
+    type: object
+  api.GetOrganisationResponse:
+    properties:
+      address:
+        type: string
+      btw_number:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      kvk_number:
+        type: string
+      location_count:
+        type: integer
+      name:
+        type: string
+      postal_code:
+        type: string
     type: object
   api.GetPaymentByIDResponse:
     properties:
@@ -5113,6 +5180,41 @@ definitions:
       topic_name:
         type: string
     type: object
+  api.ListNotificationsResponse:
+    properties:
+      created_at:
+        type: string
+      data: {}
+      is_read:
+        type: boolean
+      message:
+        type: string
+      notification_id:
+        type: string
+      notification_type:
+        type: string
+    type: object
+  api.ListOrganisationsResponse:
+    properties:
+      address:
+        type: string
+      btw_number:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      kvk_number:
+        type: string
+      location_count:
+        type: integer
+      name:
+        type: string
+      postal_code:
+        type: string
+    type: object
   api.ListPaymentsResponse:
     properties:
       amount:
@@ -5413,10 +5515,10 @@ definitions:
   api.LoginUserRequest:
     properties:
       email:
-        example: testemail@gmail.com
+        example: admin1@company.com
         type: string
       password:
-        example: t2aha000
+        example: admin123!
         type: string
     required:
     - email
@@ -5798,6 +5900,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_CreateOrganisationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateOrganisationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_CreatePaymentResponse:
     properties:
       data:
@@ -5919,6 +6030,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.DeleteLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_DeleteOrganisationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DeleteOrganisationResponse'
       message:
         type: string
       success:
@@ -6212,6 +6332,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_GetOrganisationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetOrganisationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GetPaymentByIDResponse:
     properties:
       data:
@@ -6297,6 +6426,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ListClientEmergencyContactsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListNotificationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListNotificationsResponse'
       message:
         type: string
       success:
@@ -6590,6 +6728,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateOrganisationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateOrganisationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdatePaymentResponse:
     properties:
       data:
@@ -6812,6 +6959,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.ListMaturityMatrixResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListOrganisationsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListOrganisationsResponse'
         type: array
       message:
         type: string
@@ -8310,6 +8468,42 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.UpdateOrganisationRequest:
+    properties:
+      address:
+        type: string
+      btw_number:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      kvk_number:
+        type: string
+      name:
+        type: string
+      postal_code:
+        type: string
+    type: object
+  api.UpdateOrganisationResponse:
+    properties:
+      address:
+        type: string
+      btw_number:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      kvk_number:
+        type: string
+      name:
+        type: string
+      postal_code:
         type: string
     type: object
   api.UpdatePaymentRequest:
@@ -15008,7 +15202,7 @@ paths:
       - Invoice
   /locations:
     get:
-      description: Get a list of all locations
+      description: Get a list of all locations across all organisations
       produces:
       - application/json
       responses:
@@ -15016,54 +15210,13 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/api.Response-array_api_ListLocationsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: List all locations
       tags:
-      - locations
-    post:
-      consumes:
-      - application/json
-      description: Create a new location
-      parameters:
-      - description: Create location
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/api.CreateLocationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_CreateLocationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create a location
-      tags:
-      - locations
+      - organisations
   /locations/{id}:
     delete:
       consumes:
@@ -15096,7 +15249,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Delete a location
       tags:
-      - locations
+      - organisations
     get:
       consumes:
       - application/json
@@ -15128,7 +15281,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Get a location
       tags:
-      - locations
+      - organisations
     put:
       consumes:
       - application/json
@@ -15166,7 +15319,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Update a location
       tags:
-      - locations
+      - organisations
   /locations/{id}/daily_schedules:
     get:
       description: Get all schedules for a specific location for a given day
@@ -15411,6 +15564,47 @@ paths:
       summary: List all maturity matrix
       tags:
       - maturity_matrix
+  /notifications:
+    get:
+      description: List notifications for the authenticated user
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        minimum: 0
+        name: offset
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of notifications
+          schema:
+            $ref: '#/definitions/api.Response-api_ListNotificationsResponse'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List Notifications
+      tags:
+      - Notifications
   /objectives/{objective_id}:
     delete:
       description: Delete a care plan objective by its ID
@@ -15519,6 +15713,236 @@ paths:
       summary: Create care plan action
       tags:
       - care_plan
+  /organisations:
+    get:
+      description: Get a list of all organisations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListOrganisationsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all organisations
+      tags:
+      - organisations
+    post:
+      consumes:
+      - application/json
+      description: Create a new organisation
+      parameters:
+      - description: Create organisation
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateOrganisationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create an organisation
+      tags:
+      - organisations
+  /organisations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an organisation by ID
+      parameters:
+      - description: Organisation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_DeleteOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete an organisation
+      tags:
+      - organisations
+    get:
+      consumes:
+      - application/json
+      description: Get an organisation by ID
+      parameters:
+      - description: Organisation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get an organisation
+      tags:
+      - organisations
+    put:
+      consumes:
+      - application/json
+      description: Update an organisation by ID
+      parameters:
+      - description: Organisation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update organisation
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateOrganisationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update an organisation
+      tags:
+      - organisations
+  /organisations/{id}/locations:
+    get:
+      description: Get a list of all locations
+      parameters:
+      - description: Organisation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListLocationsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all locations
+      tags:
+      - organisations
+    post:
+      consumes:
+      - application/json
+      description: Create a new location
+      parameters:
+      - description: Organisation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Create location
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateLocationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateLocationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a location
+      tags:
+      - organisations
   /registration_form:
     get:
       description: List all registration forms

@@ -73,12 +73,12 @@ WHERE
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL);
 
 
--- name: GetEmployeeIDByUserID :one
-SELECT 
-    ep.id AS employee_id
-FROM employee_profile ep
-JOIN custom_user cu ON ep.user_id = cu.id
-WHERE cu.id = $1;
+-- -- name: GetEmployeeIDByUserID :one
+-- SELECT 
+--     ep.id AS employee_id
+-- FROM employee_profile ep
+-- JOIN custom_user cu ON ep.user_id = cu.id
+-- WHERE cu.id = $1;
 
 
 -- name: GetEmployeeProfileByUserID :one

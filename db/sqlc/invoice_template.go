@@ -45,7 +45,7 @@ type FetchQueryData struct {
 
 func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQueryData) (map[string]string, error) {
 	extraContent := make(map[string]string)
-	templItemsIds, err := store.Queries.GetSenderInvoiceTemplate(ctx, data.SenderID)
+	templItemsIds, err := store.GetSenderInvoiceTemplate(ctx, data.SenderID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -58,7 +58,7 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 		return nil, nil
 	}
 
-	templItems, err := store.Queries.GetTemplateItemsBySourceTable(ctx, templItemsIds)
+	templItems, err := store.GetTemplateItemsBySourceTable(ctx, templItemsIds)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no template items found for sender ID %d", data.SenderID)
@@ -77,7 +77,7 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 	for table, items := range groupedItems {
 		switch table {
 		case TableClientDetails.Name:
-			clientDetails, err := store.Queries.GetClientDetails(ctx, data.ClientID)
+			clientDetails, err := store.GetClientDetails(ctx, data.ClientID)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					return nil, fmt.Errorf("no client details found for client ID %d", data.ClientID)

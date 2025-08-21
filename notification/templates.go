@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,14 +16,37 @@ const (
 	TypeNewIncidentReport      = "new_incident_report"
 )
 
+type NotificationPayload struct {
+	RecipientUserIDs []int64          `json:"recipient_user_ids"`
+	Type             string           `json:"type"`
+	Data             NotificationData `json:"data"`
+	CreatedAt        time.Time        `json:"created_at"`
+	Message          string           `json:"message"`
+}
+
+type NotificationData struct {
+	NewAppointment         *NewAppointmentData         `json:"new_appointment,omitempty"`
+	NewClientAssignment    *NewClientAssignmentData    `json:"new_client_assignment,omitempty"`
+	ClientContractReminder *ClientContractReminderData `json:"client_contract_reminder,omitempty"`
+	NewIncidentReport      *NewIncidentReportData      `json:"new_incident_report,omitempty"`
+}
+
 // Notifications Data Templates
 
 type NewAppointmentData struct {
 	AppointmentID uuid.UUID `json:"appointment_id"`
 	CreatedBy     string    `json:"created_by"`
-	StartTime     string    `json:"start_time"`
-	EndTime       string    `json:"end_time"`
+	StartTime     time.Time `json:"start_time"`
+	EndTime       time.Time `json:"end_time"`
 	Location      string    `json:"location"`
+}
+
+func (a *NewAppointmentData) NewAppointmentMessage() string {
+	message := fmt.Sprintf(
+		"New appointment created by %s from %s to %s at %s",
+		a.CreatedBy, a.StartTime.Format(time.RFC3339), a.EndTime.Format(time.RFC3339), a.Location,
+	)
+	return message
 }
 
 type NewClientAssignmentData struct {
@@ -30,6 +54,13 @@ type NewClientAssignmentData struct {
 	ClientFirstName string  `json:"client_first_name"`
 	ClientLastName  string  `json:"client_last_name"`
 	ClientLocation  *string `json:"client_location"`
+}
+
+func (n *NewClientAssignmentData) NewClientAssignmentMessage() string {
+	if n.ClientLocation != nil {
+		return fmt.Sprintf("New client assigned: %s %s at %s", n.ClientFirstName, n.ClientLastName, *n.ClientLocation)
+	}
+	return fmt.Sprintf("New client assigned: %s %s", n.ClientFirstName, n.ClientLastName)
 }
 
 type ClientContractReminderData struct {

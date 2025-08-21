@@ -49,7 +49,7 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 }
 
 const createOrganisation = `-- name: CreateOrganisation :one
-INSERT INTO organisation (
+INSERT INTO organisations (
     name,
     address,
     postal_code,
@@ -123,7 +123,7 @@ func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error
 }
 
 const deleteOrganisation = `-- name: DeleteOrganisation :one
-DELETE FROM organisation
+DELETE FROM organisations
 WHERE id = $1
 RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
 `
@@ -169,7 +169,7 @@ func (q *Queries) GetLocation(ctx context.Context, id int64) (Location, error) {
 const getOrganisation = `-- name: GetOrganisation :one
 SELECT o.id, o.name, o.address, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
        COUNT(l.id) AS location_count
-FROM organisation o
+FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
 WHERE o.id = $1
 `
@@ -276,7 +276,7 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]Lo
 const listOrganisations = `-- name: ListOrganisations :many
 SELECT o.id, o.name, o.address, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
          COUNT(l.id) AS location_count
-FROM organisation o
+FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
 GROUP BY o.id
 ORDER BY o.name
@@ -367,7 +367,7 @@ func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) 
 }
 
 const updateOrganisation = `-- name: UpdateOrganisation :one
-UPDATE organisation
+UPDATE organisations
 SET
     name = COALESCE($2, name),
     address = COALESCE($3, address),

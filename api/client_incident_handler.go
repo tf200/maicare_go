@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -265,7 +266,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	server.asynqClient.EnqueueIncident(async.IncidentPayload{
+	err = server.asynqClient.EnqueueIncident(async.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -312,6 +313,10 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		LocationName:            "",
 		To:                      incident.Emails,
 	}, ctx)
+
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to start Task", zap.Error(err))
+	}
 
 	res := SuccessResponse(CreateIncidentResponse{
 		ID:                      incident.ID,
@@ -1226,12 +1231,6 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 		SeverityOfIncident: incident.SeverityOfIncident,
 	}
 
-	notificationDataBytes, err := json.Marshal(notificationData)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
 	receipients, err := server.store.GetAllAdminUsers(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -1243,11 +1242,13 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 		recipientUserIDs = append(recipientUserIDs, user.ID)
 	}
 
-	server.asynqClient.EnqueueNotificationTask(ctx, async.NotificationPayload{
+	server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 		RecipientUserIDs: recipientUserIDs,
 		Type:             notification.TypeNewClientAssignment,
-		Data:             notificationDataBytes,
-		CreatedAt:        time.Now(),
+		Data: notification.NotificationData{
+			NewIncidentReport: &notificationData,
+		},
+		CreatedAt: time.Now(),
 	})
 
 	incidentData := pdf.IncidentReportData{

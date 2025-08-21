@@ -42,4 +42,8 @@ generate-grpc:
   --go-grpc_out=grpclient --go-grpc_opt=paths=source_relative \
   proto/service.proto
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce update-proto generate-grpc
+lint:
+	golangci-lint run
+
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce update-proto generate-grpc lint

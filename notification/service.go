@@ -16,23 +16,28 @@ import (
 
 // Service handles notification business logic.
 type Service struct {
-	store *db.Store
-	wsHub *hub.Hub
+	store             *db.Store
+	wsHub             *hub.Hub
+	processorRegistry map[string]func([]byte) (any, error)
 }
 
 // NewService creates a new notification service.
 func NewService(store *db.Store, wsHub *hub.Hub) *Service {
-	return &Service{
-		store: store,
-		wsHub: wsHub,
+	service := &Service{
+		store:             store,
+		wsHub:             wsHub,
+		processorRegistry: make(map[string]func([]byte) (any, error)),
 	}
-}
 
-type NotificationPayload struct {
-	RecipientUserIDs []int64 `json:"recipient_user_ids"`
-	Type             string  `json:"type"`
-	Data             []byte
-	CreatedAt        time.Time `json:"created_at"`
+	// Register default processors
+	service.Register(TypeNewAppointment, func(data []byte) (any, error) {
+		var appData NewAppointmentData
+		if err := json.Unmarshal(data, &appData); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal new appointment data: %w", err)
+		}
+		return appData, nil
+	})
+	return service
 }
 
 type WebSocketMessage struct {
@@ -41,24 +46,24 @@ type WebSocketMessage struct {
 	CreatedAt time.Time       `json:"created_at"`
 }
 
-func (s *Service)CreateAndDeliver(ctx context.Context, payload []byte) error {
-	var notificationPayload NotificationPayload
-	if err := json.Unmarshal(payload, &notificationPayload); err != nil {
-		log.Printf("Error unmarshalling payload: %v", err)
-		// Don't retry if payload is invalid
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
+
+	dataBytes, err := json.Marshal(payload.Data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal notification data: %w", err)
 	}
-	log.Printf("Processing notification for %d recipients, Type: %s", len(notificationPayload.RecipientUserIDs), notificationPayload.Type)
+	log.Printf("Notification data marshalled successfully for type: %s", payload.Type)
 
 	wsMsg := WebSocketMessage{
-		Type:      notificationPayload.Type,
-		Data:      notificationPayload.Data, // Assumes notificationPayload.Data is valid JSON bytes. Adjust if it's not.
-		CreatedAt: notificationPayload.CreatedAt,
+		Type:      payload.Type,
+		Data:      dataBytes,
+		CreatedAt: payload.CreatedAt,
 	}
+	log.Printf("Preparing WebSocket message for type: %s", payload.Type)
 
 	wsPayload, err := json.Marshal(wsMsg)
 	if err != nil {
-		log.Printf("Error marshalling WebSocket message (Type: %s): %v", notificationPayload.Type, err)
+		log.Printf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err)
 		// If we can't marshal this, we can't send it via WS.
 		// Depending on requirements, you might still want to proceed with DB saves,
 		// or return an error here. Let's log and proceed with DB saves for now.
@@ -68,12 +73,14 @@ func (s *Service)CreateAndDeliver(ctx context.Context, payload []byte) error {
 
 	var firstError error // Keep track of the first error for potential return
 
-	for _, recipientID := range notificationPayload.RecipientUserIDs {
+	for _, recipientID := range payload.RecipientUserIDs {
+		log.Printf("Processing notification for recipient ID: %d", recipientID)
 		// 1. Save to Database
 		_, dbErr := s.store.CreateNotification(ctx, db.CreateNotificationParams{
-			UserID: recipientID,
-			Type:   notificationPayload.Type,
-			Data:   notificationPayload.Data,
+			UserID:  recipientID,
+			Type:    payload.Type,
+			Data:    dataBytes,
+			Message: "", // Use the original data bytes
 			// You might want to store CreatedAt from the payload too,
 			// ensure your DB schema/params support this if needed.
 		})
@@ -108,4 +115,17 @@ func (s *Service)CreateAndDeliver(ctx context.Context, payload []byte) error {
 	// Return the first error encountered during DB operations, or nil if all succeeded.
 	// Asynq will handle retries based on this error return.
 	return firstError
+}
+
+func (s *Service) Register(notificationType string, processor func([]byte) (interface{}, error)) {
+	s.processorRegistry[notificationType] = processor
+}
+
+func (s *Service) Process(notificationType string, data []byte) (interface{}, error) {
+	processor, exists := s.processorRegistry[notificationType]
+	if !exists {
+		return nil, fmt.Errorf("no processor registered for notification type: %s", notificationType)
+	}
+
+	return processor(data)
 }

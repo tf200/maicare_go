@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maicare_go/notification"
 
 	"github.com/goccy/go-json"
 
@@ -61,7 +62,7 @@ func (c *AsynqClient) EnqueueIncident(
 
 func (c *AsynqClient) EnqueueNotificationTask(
 	ctx context.Context,
-	payload NotificationPayload,
+	payload notification.NotificationPayload,
 	opts ...asynq.Option) error {
 
 	jsonPayload, err := json.Marshal(payload)

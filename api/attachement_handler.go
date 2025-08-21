@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 const maxFileSize int64 = 10 << 20 // 10 MB
@@ -204,7 +205,9 @@ func (server *Server) DeleteAttachment(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		server.logBusinessEvent(LogLevelInfo, "DeleteAttachment", "Failed db rollback", zap.Error(err))
+	}()
 	qtx := server.store.WithTx(tx)
 
 	attachment, err = qtx.DeleteAttachment(ctx, id)

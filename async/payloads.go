@@ -70,13 +70,6 @@ type AcceptedRegistrationFormPayload struct {
 	To                  string `json:"to"`
 }
 
-type NotificationPayload struct {
-	RecipientUserIDs []int64   `json:"recipient_user_ids"`
-	Type             string    `json:"type"`
-	Data             []byte    `json:"data"`
-	CreatedAt        time.Time `json:"created_at"`
-}
-
 type AppointmentPayload struct {
 	AppointmentTemplateID  uuid.UUID `json:"appointment_template_id"`
 	ParticipantEmployeeIDs []int64   `json:"participant_employee_ids"`

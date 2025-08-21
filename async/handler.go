@@ -120,7 +120,7 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.
 // ProcessNotificationTask handles tasks of type TypeNotificationSend.
 // It decodes the payload and delegates to the NotificationService.
 func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *asynq.Task) error {
-	var payload NotificationPayload
+	var payload notification.NotificationPayload
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		// Return a non-nil error to indicate failure, but don't retry if payload is invalid
 		return fmt.Errorf("failed to unmarshal notification payload: %w: %v", asynq.SkipRetry, err)
@@ -134,15 +134,8 @@ func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *asynq.Task
 		return fmt.Errorf("notification service not initialized on AsynqServer: %w", asynq.SkipRetry)
 	}
 
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		// Log the error and return it
-		log.Printf("Failed to marshal notification payload: %v", err)
-		return fmt.Errorf("failed to marshal notification payload: %w", err)
-	}
-
 	// Delegate the actual work to the notification service
-	err = a.notificationService.CreateAndDeliver(ctx, payloadBytes)
+	err := a.notificationService.CreateAndDeliver(ctx, payload)
 	if err != nil {
 		// Log the error from the service
 		log.Printf("Error processing notification task (ID: %s, Type: %s): %v", t.ResultWriter().TaskID(), payload.Type, err)
@@ -335,12 +328,6 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 			LastReminderSentAt: &reminder.ReminderSentAt.Time,
 		}
 
-		notificationDataBytes, err := json.Marshal(notificationData)
-		if err != nil {
-			log.Printf("Failed to marshal notification data for contract ID %d: %v", contract.ID, err)
-			return fmt.Errorf("failed to marshal notification data for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)
-		}
-
 		adminUsers, err := c.store.GetAllAdminUsers(ctx)
 		if err != nil {
 			log.Printf("Failed to get admin users: %v", err)
@@ -355,21 +342,16 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 		notificationPayload := notification.NotificationPayload{
 			RecipientUserIDs: make([]int64, len(adminUsers)),
 			Type:             notification.TypeClientContractReminder,
-			Data:             notificationDataBytes,
-			CreatedAt:        time.Now(),
+			Data: notification.NotificationData{
+				ClientContractReminder: &notificationData,
+			},
+			CreatedAt: time.Now(),
 		}
 		for i, user := range adminUsers {
 			notificationPayload.RecipientUserIDs[i] = user.ID
 		}
 
-		notificationPayloadBytes, err := json.Marshal(notificationPayload)
-		if err != nil {
-			log.Printf("Failed to marshal notification payload for contract ID %d: %v", contract.ID, err)
-			return fmt.Errorf("failed to marshal notification payload for contract ID %d:%v: %w", contract.ID, err, asynq.SkipRetry)
-
-		}
-
-		err = c.notificationService.CreateAndDeliver(ctx, notificationPayloadBytes)
+		err = c.notificationService.CreateAndDeliver(ctx, notificationPayload)
 		if err != nil {
 			log.Printf("Failed to deliver notification for contract ID %d: %v", contract.ID, err)
 			return fmt.Errorf("failed to deliver notification for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)

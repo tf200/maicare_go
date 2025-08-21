@@ -7,35 +7,108 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createNotification = `-- name: CreateNotification :one
 INSERT INTO notifications (
     user_id,
     type,
-    data
-
+    data,
+    message
 )  VALUES (
     $1,
     $2,
-    $3
-) RETURNING id, user_id, type, entity_id, message, is_read, data, read_at, created_at
+    $3,
+    $4
+) RETURNING id, user_id, type, message, is_read, data, read_at, created_at
 `
 
 type CreateNotificationParams struct {
-	UserID int64  `json:"user_id"`
-	Type   string `json:"type"`
-	Data   []byte `json:"data"`
+	UserID  int64  `json:"user_id"`
+	Type    string `json:"type"`
+	Data    []byte `json:"data"`
+	Message string `json:"message"`
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
-	row := q.db.QueryRow(ctx, createNotification, arg.UserID, arg.Type, arg.Data)
+	row := q.db.QueryRow(ctx, createNotification,
+		arg.UserID,
+		arg.Type,
+		arg.Data,
+		arg.Message,
+	)
 	var i Notification
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Type,
-		&i.EntityID,
+		&i.Message,
+		&i.IsRead,
+		&i.Data,
+		&i.ReadAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const listNotifications = `-- name: ListNotifications :many
+SELECT id, user_id, type, message, is_read, data, read_at, created_at FROM notifications
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListNotificationsParams struct {
+	UserID int64 `json:"user_id"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListNotifications(ctx context.Context, arg ListNotificationsParams) ([]Notification, error) {
+	rows, err := q.db.Query(ctx, listNotifications, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Notification
+	for rows.Next() {
+		var i Notification
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Type,
+			&i.Message,
+			&i.IsRead,
+			&i.Data,
+			&i.ReadAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markNotificationAsRead = `-- name: MarkNotificationAsRead :one
+UPDATE notifications
+SET is_read = TRUE
+WHERE id = $1
+RETURNING id, user_id, type, message, is_read, data, read_at, created_at
+`
+
+func (q *Queries) MarkNotificationAsRead(ctx context.Context, id uuid.UUID) (Notification, error) {
+	row := q.db.QueryRow(ctx, markNotificationAsRead, id)
+	var i Notification
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
 		&i.Message,
 		&i.IsRead,
 		&i.Data,

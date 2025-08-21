@@ -3,7 +3,7 @@ package api
 import "github.com/gin-gonic/gin"
 
 func (server *Server) setupAppointmentCardRoutes(baseRouter *gin.RouterGroup) {
-	appointmentCardRouter := baseRouter.Group("/clients").Use(AuthMiddleware(server.tokenMaker))
+	appointmentCardRouter := baseRouter.Group("/clients").Use(server.AuthMiddleware())
 	{
 		appointmentCardRouter.POST("/:id/appointment_cards", server.CreateAppointmentCardApi)
 		appointmentCardRouter.GET("/:id/appointment_cards", server.GetAppointmentCardApi)

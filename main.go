@@ -153,7 +153,7 @@ func main() {
 	log.Println("Asynq server started successfully in background")
 
 	// Start your main server
-	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey, hubInstance, grpcClient)
+	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey, hubInstance, notificationService, grpcClient)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

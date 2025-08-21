@@ -98,7 +98,7 @@ func (h *Hub) Run() {
 					// This case shouldn't happen often if cleanup is working, but good to notice
 					log.Printf("Warning: No active clients could receive message for user %d, but %d clients were registered.", userMessage.UserID, len(userClients))
 				} else if ok {
-					// log.Printf("Message sent to %d active connections for user %d", activeClients, userMessage.UserID)
+					log.Printf("Message sent to %d active connections for user %d", activeClients, userMessage.UserID)
 				}
 			} // Don't log if user not found, could be too noisy
 

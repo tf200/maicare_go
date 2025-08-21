@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createTemp2FaSecret = `-- name: CreateTemp2FaSecret :exec
@@ -143,13 +145,30 @@ func (q *Queries) GetTemp2FaSecret(ctx context.Context, id int64) (*string, erro
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, password, last_login, email, role_id, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes FROM custom_user
-WHERE email= $1 LIMIT 1
+SELECT cu.id, cu.password, cu.last_login, cu.email, cu.role_id, cu.is_active, cu.date_joined, cu.profile_picture, cu.two_factor_enabled, cu.two_factor_secret, cu.two_factor_secret_temp, cu.recovery_codes, e.id as employee_id FROM custom_user cu
+JOIN employee_profile e ON e.user_id = cu.id
+WHERE cu.email = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CustomUser, error) {
+type GetUserByEmailRow struct {
+	ID                  int64              `json:"id"`
+	Password            string             `json:"password"`
+	LastLogin           pgtype.Timestamptz `json:"last_login"`
+	Email               string             `json:"email"`
+	RoleID              int32              `json:"role_id"`
+	IsActive            bool               `json:"is_active"`
+	DateJoined          pgtype.Timestamptz `json:"date_joined"`
+	ProfilePicture      *string            `json:"profile_picture"`
+	TwoFactorEnabled    bool               `json:"two_factor_enabled"`
+	TwoFactorSecret     *string            `json:"two_factor_secret"`
+	TwoFactorSecretTemp *string            `json:"two_factor_secret_temp"`
+	RecoveryCodes       []string           `json:"recovery_codes"`
+	EmployeeID          int64              `json:"employee_id"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i CustomUser
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Password,
@@ -163,18 +182,36 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CustomUser,
 		&i.TwoFactorSecret,
 		&i.TwoFactorSecretTemp,
 		&i.RecoveryCodes,
+		&i.EmployeeID,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, password, last_login, email, role_id, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes FROM custom_user
-WHERE id = $1 LIMIT 1
+SELECT cu.id, cu.password, cu.last_login, cu.email, cu.role_id, cu.is_active, cu.date_joined, cu.profile_picture, cu.two_factor_enabled, cu.two_factor_secret, cu.two_factor_secret_temp, cu.recovery_codes, e.id as employee_id FROM custom_user cu
+JOIN employee_profile e ON e.user_id = cu.id
+WHERE cu.id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int64) (CustomUser, error) {
+type GetUserByIDRow struct {
+	ID                  int64              `json:"id"`
+	Password            string             `json:"password"`
+	LastLogin           pgtype.Timestamptz `json:"last_login"`
+	Email               string             `json:"email"`
+	RoleID              int32              `json:"role_id"`
+	IsActive            bool               `json:"is_active"`
+	DateJoined          pgtype.Timestamptz `json:"date_joined"`
+	ProfilePicture      *string            `json:"profile_picture"`
+	TwoFactorEnabled    bool               `json:"two_factor_enabled"`
+	TwoFactorSecret     *string            `json:"two_factor_secret"`
+	TwoFactorSecretTemp *string            `json:"two_factor_secret_temp"`
+	RecoveryCodes       []string           `json:"recovery_codes"`
+	EmployeeID          int64              `json:"employee_id"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i CustomUser
+	var i GetUserByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Password,
@@ -188,6 +225,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (CustomUser, error)
 		&i.TwoFactorSecret,
 		&i.TwoFactorSecretTemp,
 		&i.RecoveryCodes,
+		&i.EmployeeID,
 	)
 	return i, err
 }

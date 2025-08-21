@@ -2,7 +2,6 @@ package api
 
 import (
 	"log"
-	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/notification"
 	"maicare_go/pagination"
@@ -520,17 +519,13 @@ func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 		ClientLocation:  assign.ClientLocationName,
 	}
 
-	notificationDataBytes, err := json.Marshal(notificationData)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	server.asynqClient.EnqueueNotificationTask(ctx, async.NotificationPayload{
+	server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 		RecipientUserIDs: []int64{assign.UserID},
 		Type:             notification.TypeNewClientAssignment,
-		Data:             notificationDataBytes,
-		CreatedAt:        time.Now(),
+		Data: notification.NotificationData{
+			NewClientAssignment: &notificationData,
+		},
+		CreatedAt: time.Now(),
 	})
 
 	res := SuccessResponse(AssignEmployeeResponse{

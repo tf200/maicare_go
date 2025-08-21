@@ -5,7 +5,7 @@ import "github.com/gin-gonic/gin"
 func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 
 	clientGroup := baseRouter.Group("/clients")
-	clientGroup.Use(AuthMiddleware(server.tokenMaker))
+	clientGroup.Use(server.AuthMiddleware())
 	{
 		clientGroup.POST("/:id/contracts", server.CreateContractApi)
 		clientGroup.GET("/:id/contracts", server.ListClientContractsApi)
