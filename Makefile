@@ -38,9 +38,9 @@ update-proto:
 
 generate-grpc:
 	protoc \
-  --go_out=grpclient --go_opt=paths=source_relative \
-  --go-grpc_out=grpclient --go-grpc_opt=paths=source_relative \
-  proto/service.proto
+		--go_out=grpclient --go_opt=paths=source_relative \
+		--go-grpc_out=grpclient --go-grpc_opt=paths=source_relative \
+		proto/service.proto proto/spelling_service.proto
 
 lint:
 	golangci-lint run

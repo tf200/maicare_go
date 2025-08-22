@@ -83,84 +83,71 @@ std::string serializeMethod(const YAML::Node &node) {
 // Insert permissions into the database
 void insert_permissions(pqxx::work &txn, const YAML::Node &permissions) {
     for (const auto &perm : permissions) {
-        std::string name = perm["name"].as<std::string>();
+        std::string name     = perm["name"].as<std::string>();
         std::string resource = perm["resource"].as<std::string>();
-        std::string method = serializeMethod(perm["method"]);
+        std::string method   = serializeMethod(perm["method"]);
 
-        // Check if permission already exists
         std::string selectQuery =
-            "SELECT id FROM permissions WHERE name = " + txn.quote(name) +
-            " AND resource = " + txn.quote(resource) +
-            " AND method = " + txn.quote(method) + ";";
+            "SELECT id FROM permissions "
+            "WHERE name = "     + txn.quote(name) +
+            "  AND resource = " + txn.quote(resource) +
+            "  AND method = "   + txn.quote(method) + ";";
 
         pqxx::result res = txn.exec(selectQuery);
 
         if (res.empty()) {
-            // Insert new permission
             std::string insertQuery =
                 "INSERT INTO permissions (name, resource, method) VALUES (" +
-                txn.quote(name) + ", " + txn.quote(resource) + ", " +
+                txn.quote(name) + ", " +
+                txn.quote(resource) + ", " +
                 txn.quote(method) + ");";
             txn.exec(insertQuery);
+            std::cout << "Inserted permission: " << name << std::endl;
+        } else {
+            std::cout << "Permission already exists: " << name << std::endl;
         }
-        std::cout << "Processed permission: " << name << std::endl;
     }
 }
 
-// Insert roles and their permission mappings into the database
+
 void insert_roles(pqxx::work &txn, const YAML::Node &roles) {
     for (const auto &role : roles) {
-        std::string roleName = role["name"].as<std::string>();
-        int roleId = role["id"].as<int>();
+        std::string name        = role["name"].as<std::string>();
+        int         id          = role["id"].as<int>();
+        std::string description = role["description"]
+                                      ? role["description"].as<std::string>()
+                                      : "";
 
-        // Check if role exists
-        std::string selectQuery =
-            "SELECT id FROM roles WHERE name = " + txn.quote(roleName) + ";";
-        pqxx::result res = txn.exec(selectQuery);
-        int dbRoleId;
+        // Upsert role row
+        std::string upsertRole =
+            "INSERT INTO roles (id, name) VALUES (" +
+            txn.quote(id) + ", " + txn.quote(name) + ") " +
+            "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;";
+        txn.exec(upsertRole);
+        std::cout << "Processed role: " << name << std::endl;
 
-        if (res.empty()) {
-            // Insert new role with provided id
-            std::string insertQuery =
-                "INSERT INTO roles (id, name) VALUES (" +
-                txn.quote(roleId) + ", " + txn.quote(roleName) + ");";
-            txn.exec(insertQuery);
-            dbRoleId = roleId;
-        } else {
-            dbRoleId = res[0]["id"].as<int>();
-        }
-        std::cout << "Processed role: " << roleName << std::endl;
-
-        // Handle permissions for this role
+        // Sync role_permissions
         if (role["permissions"]) {
             for (const auto &permNameNode : role["permissions"]) {
                 std::string permName = permNameNode.as<std::string>();
 
-                // Get permission id from the permissions table
-                std::string permSelectQuery =
-                    "SELECT id FROM permissions WHERE name = " + txn.quote(permName) + ";";
-                pqxx::result permRes = txn.exec(permSelectQuery);
-
-                if (!permRes.empty()) {
-                    int permissionId = permRes[0]["id"].as<int>();
-
-                    // Check if role-permission mapping already exists
-                    std::string mappingQuery =
-                        "SELECT 1 FROM role_permissions WHERE role_id = " +
-                        txn.quote(dbRoleId) + " AND permission_id = " +
-                        txn.quote(permissionId) + ";";
-                    pqxx::result mappingRes = txn.exec(mappingQuery);
-
-                    if (mappingRes.empty()) {
-                        // Insert new role-permission mapping
-                        std::string insertMapping =
-                            "INSERT INTO role_permissions (role_id, permission_id) VALUES (" +
-                            txn.quote(dbRoleId) + ", " + txn.quote(permissionId) + ");";
-                        txn.exec(insertMapping);
-                        std::cout << "Added permission " << permName
-                                  << " to role " << roleName << std::endl;
-                    }
+                // Get permission id
+                pqxx::result permRes =
+                    txn.exec("SELECT id FROM permissions WHERE name = " +
+                             txn.quote(permName) + ";");
+                if (permRes.empty()) {
+                    std::cerr << "Warning: permission '" << permName
+                              << "' not found, skipping.\n";
+                    continue;
                 }
+                int permId = permRes[0]["id"].as<int>();
+
+                // Idempotent insert into role_permissions
+                std::string insertMap =
+                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (" +
+                    txn.quote(id) + ", " + txn.quote(permId) + ") " +
+                    "ON CONFLICT (role_id, permission_id) DO NOTHING;";
+                txn.exec(insertMap);
             }
         }
     }

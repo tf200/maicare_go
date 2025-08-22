@@ -1,7 +1,7 @@
 package api
 
 import (
-	"log"
+	grpclient "maicare_go/grpclient/proto"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,9 +36,9 @@ func (server *Server) SpellingCheckApi(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("Received request: %+v", request)
-
-	correctedText, err := server.aiHandler.SpellingCheck(request.InitialText, "anthropic/claude-3.5-haiku-20241022:beta")
+	correctedText, err := server.grpClient.CorrectSpelling(ctx, &grpclient.CorrectSpellingRequest{
+		InitialText: request.InitialText,
+	})
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "SpellingCheckApi", "Failed to correct spelling", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

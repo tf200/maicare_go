@@ -43,6 +43,7 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 type CreateEmployeeWithAccountTxParams struct {
 	CreateUserParams     CreateUserParams
 	CreateEmployeeParams CreateEmployeeProfileParams
+	RoleID               int32
 }
 
 type CreateEmployeeWithAccountTxResult struct {
@@ -62,6 +63,14 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 
 		arg.CreateEmployeeParams.UserID = result.User.ID
 		result.Employee, err = q.CreateEmployeeProfile(ctx, arg.CreateEmployeeParams)
+		if err != nil {
+			return err
+		}
+
+		err = q.GrantRoleToUser(ctx, GrantRoleToUserParams{
+			UserID: result.User.ID,
+			RoleID: arg.RoleID,
+		})
 		if err != nil {
 			return err
 		}

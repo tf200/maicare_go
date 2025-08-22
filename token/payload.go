@@ -14,7 +14,6 @@ type Payload struct {
 	TokenType  TokenType `json:"token_type"`
 	IssuedAt   time.Time `json:"issued_at"`
 	ExpiresAt  time.Time `json:"expires_at"`
-	RoleID     int32     `json:"role_id"`
 }
 
 // You can adjust this duration
@@ -24,7 +23,7 @@ var (
 	ErrExpiredToken = errors.New("token has expired")
 )
 
-func NewPayload(user_id int64, employee_id int64, role_id int32, duration time.Duration, tokenType TokenType) (*Payload, error) {
+func NewPayload(user_id int64, employee_id int64, duration time.Duration, tokenType TokenType) (*Payload, error) {
 
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
@@ -36,7 +35,6 @@ func NewPayload(user_id int64, employee_id int64, role_id int32, duration time.D
 		ID:         tokenID,
 		EmployeeID: employee_id,
 		UserId:     user_id,
-		RoleID:     role_id,
 		TokenType:  tokenType,
 		IssuedAt:   now,
 		ExpiresAt:  now.Add(duration),

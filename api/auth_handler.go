@@ -80,7 +80,7 @@ func (server *Server) Login(ctx *gin.Context) {
 	}
 
 	if user.TwoFactorEnabled {
-		tempToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, int32(user.RoleID), server.config.TwoFATokenDuration, token.TwoFAToken)
+		tempToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.TwoFATokenDuration, token.TwoFAToken)
 		if err != nil {
 			server.logBusinessEvent(LogLevelError, "Login", "Failed to create temp token for 2FA", zap.Error(err), zap.String("email", lowerCaseEmail))
 			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
@@ -94,14 +94,14 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, int32(user.RoleID), server.config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "Login", "Failed to create access token", zap.Error(err), zap.String("email", lowerCaseEmail))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
 		return
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, int32(user.RoleID), server.config.RefreshTokenDuration, token.RefreshToken)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "Login", "Failed to create refresh token", zap.Error(err), zap.String("email", lowerCaseEmail))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
@@ -208,7 +208,7 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(payload.UserId, payload.EmployeeID, payload.RoleID, server.config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := server.tokenMaker.CreateToken(payload.UserId, payload.EmployeeID, server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "RefreshToken", "Failed to create access token", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
@@ -277,13 +277,13 @@ func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, int32(user.RoleID), server.config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Failed to create access token", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
 		return
 	}
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, int32(user.RoleID), server.config.RefreshTokenDuration, token.RefreshToken)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Failed to create refresh token", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))

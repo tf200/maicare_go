@@ -373,7 +373,7 @@ func TestCountEmployeeProfile(t *testing.T) {
 }
 
 func TestGetEmployeeProfileByUserID(t *testing.T) {
-	employee, user := createRandomEmployee(t)
+	employee, _ := createRandomEmployee(t)
 	employee2, err := testQueries.GetEmployeeProfileByUserID(context.Background(), employee.UserID)
 	require.NoError(t, err)
 	require.NotEmpty(t, employee2)
@@ -382,11 +382,10 @@ func TestGetEmployeeProfileByUserID(t *testing.T) {
 	require.Equal(t, employee.UserID, employee2.UserID)
 	require.Equal(t, employee.FirstName, employee2.FirstName)
 	require.Equal(t, employee.LastName, employee2.LastName)
-	require.Equal(t, user.RoleID, employee2.RoleID)
 }
 
 func TestGetEmployeeProfileByID(t *testing.T) {
-	employee, user := createRandomEmployee(t)
+	employee, _ := createRandomEmployee(t)
 	employee2, err := testQueries.GetEmployeeProfileByID(context.Background(), employee.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, employee2)
@@ -394,7 +393,6 @@ func TestGetEmployeeProfileByID(t *testing.T) {
 	require.Equal(t, employee.UserID, employee2.UserID)
 	require.Equal(t, employee.FirstName, employee2.FirstName)
 	require.Equal(t, employee.LastName, employee2.LastName)
-	require.Equal(t, user.RoleID, employee2.RoleID)
 	require.Equal(t, employee.Email, employee2.Email)
 }
 

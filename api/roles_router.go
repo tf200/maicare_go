@@ -7,8 +7,6 @@ func (server *Server) setupRolesRoutes(baseRouter *gin.RouterGroup) {
 	rolesgroup.Use(server.AuthMiddleware())
 	{
 		rolesgroup.GET("", server.ListRolesApi)
-		rolesgroup.GET("/:role_id/permissions", server.GetPermissionsByRoleIDApi)
-		rolesgroup.GET("/user", server.GetRoleByIDApi)
 
 		rolesgroup.PUT("/assign", server.RBACMiddleware("ROLES.UPDATE"), server.AssignRoleToEmployeeApi)
 

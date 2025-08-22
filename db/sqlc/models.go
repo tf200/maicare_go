@@ -540,7 +540,6 @@ type CustomUser struct {
 	Password            string             `json:"password"`
 	LastLogin           pgtype.Timestamptz `json:"last_login"`
 	Email               string             `json:"email"`
-	RoleID              int32              `json:"role_id"`
 	IsActive            bool               `json:"is_active"`
 	DateJoined          pgtype.Timestamptz `json:"date_joined"`
 	ProfilePicture      *string            `json:"profile_picture"`
@@ -1280,6 +1279,16 @@ type Treatment struct {
 	TreatmentName string             `json:"treatment_name"`
 	TreatmentDate string             `json:"treatment_date"`
 	Created       pgtype.Timestamptz `json:"created"`
+}
+
+type UserPermission struct {
+	UserID       int64 `json:"user_id"`
+	PermissionID int32 `json:"permission_id"`
+}
+
+type UserRole struct {
+	UserID int64 `json:"user_id"`
+	RoleID int32 `json:"role_id"`
 }
 
 type WeeklyReportSummary struct {

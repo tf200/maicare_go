@@ -1,4 +1,3 @@
-
 package api
 
 import (
@@ -16,6 +15,7 @@ import (
 
 func TestCreateAppointmentCardApi(t *testing.T) {
 	client := createRandomClientDetails(t)
+	_, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -26,7 +26,7 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, client.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				appointmentReq := CreateAppointmentCardRequest{

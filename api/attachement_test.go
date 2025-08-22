@@ -35,6 +35,7 @@ func createRandomFile(t *testing.T) (string, []byte) {
 
 func TestUploadHandler(t *testing.T) {
 	filename, fileContent := createRandomFile(t)
+	_, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -45,7 +46,7 @@ func TestUploadHandler(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
@@ -89,7 +90,7 @@ func TestUploadHandler(t *testing.T) {
 		{
 			name: "NoFile",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
@@ -113,7 +114,7 @@ func TestUploadHandler(t *testing.T) {
 		{
 			name: "EmptyFile",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
@@ -158,6 +159,7 @@ func TestUploadHandler(t *testing.T) {
 
 func TestGetAttachmentById(t *testing.T) {
 	file := createRandomAttachmentFile(t)
+	_, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -168,7 +170,7 @@ func TestGetAttachmentById(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/attachments/%s", file.Uuid), nil)
@@ -191,7 +193,7 @@ func TestGetAttachmentById(t *testing.T) {
 		{
 			name: "NotFound",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				req, err := http.NewRequest(http.MethodGet, "/attachment/00000000-0000-0000-0000-000000000000", nil)

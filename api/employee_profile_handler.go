@@ -68,7 +68,6 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		FirstName:   profile.FirstName,
 		LastName:    profile.LastName,
 		Email:       profile.Email,
-		RoleID:      profile.RoleID,
 		Permissions: permissions,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
@@ -161,7 +160,6 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				Password: hashedPassword,
 				Email:    req.Email,
 				IsActive: true,
-				RoleID:   req.RoleID,
 			},
 
 			CreateEmployeeParams: db.CreateEmployeeProfileParams{
@@ -183,6 +181,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				Position:                  req.Position,
 				Department:                req.Department,
 			},
+			RoleID: req.RoleID,
 		},
 	)
 	if err != nil {
@@ -455,8 +454,8 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		OutOfService:              employee.OutOfService,
 		IsArchived:                employee.IsArchived,
 		ProfilePicture:            employee.ProfilePicture,
-		RoleID:                    employee.RoleID,
-		IsLoggedInUser:            employee.UserID == currentUserID,
+		// to do list all roles
+		IsLoggedInUser: employee.UserID == currentUserID,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -603,7 +602,6 @@ type SetEmployeeProfilePictureRequest struct {
 type SetEmployeeProfilePictureResponse struct {
 	ID             int64   `json:"id"`
 	Email          string  `json:"email"`
-	RoleID         int32   `json:"role_id"`
 	ProfilePicture *string `json:"profile_picture"`
 }
 
@@ -641,7 +639,6 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 	res := SuccessResponse(SetEmployeeProfilePictureResponse{
 		ID:             user.User.ID,
 		Email:          user.User.Email,
-		RoleID:         user.User.RoleID,
 		ProfilePicture: user.User.ProfilePicture,
 	}, "Employee profile picture updated successfully")
 
