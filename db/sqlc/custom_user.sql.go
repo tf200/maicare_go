@@ -32,19 +32,17 @@ INSERT INTO custom_user (
     password,
     email,
     is_active,
-    role_id,
     profile_picture
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4
 )
-RETURNING id, password, last_login, email, role_id, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes
+RETURNING id, password, last_login, email, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes
 `
 
 type CreateUserParams struct {
 	Password       string  `json:"password"`
 	Email          string  `json:"email"`
 	IsActive       bool    `json:"is_active"`
-	RoleID         int32   `json:"role_id"`
 	ProfilePicture *string `json:"profile_picture"`
 }
 
@@ -53,7 +51,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 		arg.Password,
 		arg.Email,
 		arg.IsActive,
-		arg.RoleID,
 		arg.ProfilePicture,
 	)
 	var i CustomUser
@@ -62,7 +59,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
-		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
@@ -95,7 +91,7 @@ func (q *Queries) Enable2Fa(ctx context.Context, arg Enable2FaParams) error {
 }
 
 const getAllAdminUsers = `-- name: GetAllAdminUsers :many
-SELECT id, password, last_login, email, role_id, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes FROM custom_user
+SELECT id, password, last_login, email, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes FROM custom_user
 WHERE role_id = (SELECT id FROM roles WHERE name = 'admin')
 `
 
@@ -113,7 +109,6 @@ func (q *Queries) GetAllAdminUsers(ctx context.Context) ([]CustomUser, error) {
 			&i.Password,
 			&i.LastLogin,
 			&i.Email,
-			&i.RoleID,
 			&i.IsActive,
 			&i.DateJoined,
 			&i.ProfilePicture,
@@ -145,7 +140,7 @@ func (q *Queries) GetTemp2FaSecret(ctx context.Context, id int64) (*string, erro
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT cu.id, cu.password, cu.last_login, cu.email, cu.role_id, cu.is_active, cu.date_joined, cu.profile_picture, cu.two_factor_enabled, cu.two_factor_secret, cu.two_factor_secret_temp, cu.recovery_codes, e.id as employee_id FROM custom_user cu
+SELECT cu.id, cu.password, cu.last_login, cu.email, cu.is_active, cu.date_joined, cu.profile_picture, cu.two_factor_enabled, cu.two_factor_secret, cu.two_factor_secret_temp, cu.recovery_codes, e.id as employee_id FROM custom_user cu
 JOIN employee_profile e ON e.user_id = cu.id
 WHERE cu.email = $1 LIMIT 1
 `
@@ -155,7 +150,6 @@ type GetUserByEmailRow struct {
 	Password            string             `json:"password"`
 	LastLogin           pgtype.Timestamptz `json:"last_login"`
 	Email               string             `json:"email"`
-	RoleID              int32              `json:"role_id"`
 	IsActive            bool               `json:"is_active"`
 	DateJoined          pgtype.Timestamptz `json:"date_joined"`
 	ProfilePicture      *string            `json:"profile_picture"`
@@ -174,7 +168,6 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
-		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,
@@ -188,7 +181,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT cu.id, cu.password, cu.last_login, cu.email, cu.role_id, cu.is_active, cu.date_joined, cu.profile_picture, cu.two_factor_enabled, cu.two_factor_secret, cu.two_factor_secret_temp, cu.recovery_codes, e.id as employee_id FROM custom_user cu
+SELECT cu.id, cu.password, cu.last_login, cu.email, cu.is_active, cu.date_joined, cu.profile_picture, cu.two_factor_enabled, cu.two_factor_secret, cu.two_factor_secret_temp, cu.recovery_codes, e.id as employee_id FROM custom_user cu
 JOIN employee_profile e ON e.user_id = cu.id
 WHERE cu.id = $1 LIMIT 1
 `
@@ -198,7 +191,6 @@ type GetUserByIDRow struct {
 	Password            string             `json:"password"`
 	LastLogin           pgtype.Timestamptz `json:"last_login"`
 	Email               string             `json:"email"`
-	RoleID              int32              `json:"role_id"`
 	IsActive            bool               `json:"is_active"`
 	DateJoined          pgtype.Timestamptz `json:"date_joined"`
 	ProfilePicture      *string            `json:"profile_picture"`
@@ -217,7 +209,6 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
-		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,

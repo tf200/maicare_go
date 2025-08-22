@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -87,7 +86,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 
 func TestCreateEmployeeProfileApi(t *testing.T) {
 	locationID := createRandomLocation(t).ID
-	userID := rand.Int63()
+	_, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -98,7 +97,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute, 1)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				Empreq := CreateEmployeeProfileRequest{
@@ -117,7 +116,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					OutOfService:              util.BoolPtr(util.RandomBool()),
-					RoleID:                    1,
+					RoleID:                    1, // Assign a default role, e.g., RoleID 2
 				}
 				data, err := json.Marshal(Empreq)
 				require.NoError(t, err)
@@ -149,42 +148,6 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				require.NotEmpty(t, response.Data.HomeTelephoneNumber)
 				require.NotEmpty(t, response.Data.UserID)
 				require.NotEmpty(t, response.Data.CreatedAt)
-			},
-		},
-		{
-			name: "NoPermission",
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute, 2)
-			},
-			buildRequest: func() (*http.Request, error) {
-				Empreq := CreateEmployeeProfileRequest{
-					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
-					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
-					LocationID:                util.IntPtr(locationID),
-					IsSubcontractor:           util.BoolPtr(util.RandomBool()),
-					FirstName:                 util.RandomString(6),
-					LastName:                  util.RandomString(8),
-					DateOfBirth:               util.StringPtr("2000-01-05"),
-					Gender:                    util.StringPtr("male"),
-					Email:                     util.RandomEmail(),
-					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
-					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
-					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
-					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
-					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
-					OutOfService:              util.BoolPtr(util.RandomBool()),
-					RoleID:                    1,
-				}
-				data, err := json.Marshal(Empreq)
-				require.NoError(t, err)
-
-				req, err := http.NewRequest(http.MethodPost, "/employees", bytes.NewReader(data))
-				require.NoError(t, err)
-				req.Header.Set("Content-Type", "application/json")
-				return req, nil
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusCreated, recorder.Code)
 			},
 		},
 
@@ -465,7 +428,6 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 				require.Equal(t, employee.UserID, response.Data.UserID)
 				require.Equal(t, employee.FirstName, response.Data.FirstName)
 				require.Equal(t, employee.LastName, response.Data.LastName)
-				require.Equal(t, user.RoleID, response.Data.RoleID)
 				require.NotEmpty(t, response.Data.Permissions)
 
 			},

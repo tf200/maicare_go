@@ -9,13 +9,15 @@ import (
 
 type GrpcClientInterface interface {
 	GenerateCarePlan(ctx context.Context, req *PersonalizedCarePlanRequest) (*PersonalizedCarePlanResponse, error)
+	CorrectSpelling(ctx context.Context, req *CorrectSpellingRequest) (*CorrectSpellingResponse, error)
 	Close() error
 }
 
 type GrpcClient struct {
 	// Add any necessary fields here, such as connection or client instances
-	conn   *grpc.ClientConn
-	client CarePlannerClient
+	conn                *grpc.ClientConn
+	carePlanClient      CarePlannerClient
+	spellingCheckClient SpellingCorrectionClient
 }
 
 func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
@@ -24,8 +26,9 @@ func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
 		return nil, err
 	}
 	return &GrpcClient{
-		conn:   conn,
-		client: NewCarePlannerClient(conn),
+		conn:                conn,
+		carePlanClient:      NewCarePlannerClient(conn),
+		spellingCheckClient: NewSpellingCorrectionClient(conn),
 	}, nil
 }
 func (c *GrpcClient) Close() error {

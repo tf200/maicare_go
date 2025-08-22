@@ -41,7 +41,7 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 		EndDate:          pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
 	})
 	require.NoError(t, err)
-	mockLLmResp := CreateMockGrpcClient().Response
+	mockLLmResp := CreateMockGrpcClient().CarePlanResponse
 	mockLLmRespBytes, err := json.Marshal(mockLLmResp)
 	require.NoError(t, err)
 	require.NoError(t, err)

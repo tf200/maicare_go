@@ -3,10 +3,9 @@ INSERT INTO custom_user (
     password,
     email,
     is_active,
-    role_id,
     profile_picture
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4
 )
 RETURNING *;
 

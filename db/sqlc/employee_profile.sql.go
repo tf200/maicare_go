@@ -479,8 +479,7 @@ func (q *Queries) GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, 
 const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
 SELECT 
     ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
-    cu.profile_picture as profile_picture,
-    cu.role_id
+    cu.profile_picture as profile_picture
 FROM employee_profile ep
 JOIN custom_user cu ON ep.user_id = cu.id
 WHERE ep.id = $1
@@ -516,7 +515,6 @@ type GetEmployeeProfileByIDRow struct {
 	ContractType              *string            `json:"contract_type"`
 	ContractRate              *float64           `json:"contract_rate"`
 	ProfilePicture            *string            `json:"profile_picture"`
-	RoleID                    int32              `json:"role_id"`
 }
 
 func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmployeeProfileByIDRow, error) {
@@ -552,33 +550,31 @@ func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmpl
 		&i.ContractType,
 		&i.ContractRate,
 		&i.ProfilePicture,
-		&i.RoleID,
 	)
 	return i, err
 }
 
 const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
-
-
 SELECT 
-    cu.id as user_id,
-    cu.email as email,
-    ep.id as employee_id,
+    cu.id           AS user_id,
+    cu.email        AS email,
+    ep.id           AS employee_id,
     ep.first_name,
     ep.last_name,
-    cu.role_id,
-    json_agg(json_build_object(
-        'id', p.id,
-        'name', p.name,
-        'resource', p.resource,
-        'method', p.method
-    )) AS permissions
+    (
+        SELECT COALESCE(json_agg(json_build_object(
+            'id',       p.id,
+            'name',     p.name,
+            'resource', p.resource,
+            'method',   p.method
+        )), '[]'::json)
+        FROM user_permissions up
+        JOIN permissions p ON p.id = up.permission_id
+        WHERE up.user_id = cu.id
+    )::json AS permissions
 FROM custom_user cu
 JOIN employee_profile ep ON ep.user_id = cu.id
-JOIN role_permissions rp ON rp.role_id = cu.role_id
-JOIN permissions p ON p.id = rp.permission_id
 WHERE cu.id = $1
-GROUP BY cu.id, cu.email, ep.id, ep.first_name, ep.last_name, cu.role_id
 `
 
 type GetEmployeeProfileByUserIDRow struct {
@@ -587,18 +583,9 @@ type GetEmployeeProfileByUserIDRow struct {
 	EmployeeID  int64  `json:"employee_id"`
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
-	RoleID      int32  `json:"role_id"`
 	Permissions []byte `json:"permissions"`
 }
 
-// -- name: GetEmployeeIDByUserID :one
-// SELECT
-//
-//	ep.id AS employee_id
-//
-// FROM employee_profile ep
-// JOIN custom_user cu ON ep.user_id = cu.id
-// WHERE cu.id = $1;
 func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeProfileByUserID, id)
 	var i GetEmployeeProfileByUserIDRow
@@ -608,10 +595,21 @@ func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (Get
 		&i.EmployeeID,
 		&i.FirstName,
 		&i.LastName,
-		&i.RoleID,
 		&i.Permissions,
 	)
 	return i, err
+}
+
+const getUserIDByEmployeeID = `-- name: GetUserIDByEmployeeID :one
+SELECT user_id FROM employee_profile
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserIDByEmployeeID(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, getUserIDByEmployeeID, id)
+	var user_id int64
+	err := row.Scan(&user_id)
+	return user_id, err
 }
 
 const listEducations = `-- name: ListEducations :many
@@ -894,7 +892,7 @@ WHERE id = (
     FROM employee_profile
     WHERE employee_profile.id = $1
 )
-RETURNING id, password, last_login, email, role_id, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes
+RETURNING id, password, last_login, email, is_active, date_joined, profile_picture, two_factor_enabled, two_factor_secret, two_factor_secret_temp, recovery_codes
 `
 
 type SetEmployeeProfilePictureParams struct {
@@ -910,7 +908,6 @@ func (q *Queries) SetEmployeeProfilePicture(ctx context.Context, arg SetEmployee
 		&i.Password,
 		&i.LastLogin,
 		&i.Email,
-		&i.RoleID,
 		&i.IsActive,
 		&i.DateJoined,
 		&i.ProfilePicture,

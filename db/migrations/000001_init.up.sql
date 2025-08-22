@@ -99,43 +99,60 @@ EXECUTE FUNCTION insert_default_shifts();
 
 
 
--- Table: Roles
+-- 1. Roles (pure templates, no FK from users)
 CREATE TABLE roles (
-    id SERIAL PRIMARY KEY,       
-    "name" VARCHAR(255) NOT NULL UNIQUE 
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE
 );
 
--- Table: Permissions
+-- 2. Permissions
 CREATE TABLE permissions (
-    id SERIAL PRIMARY KEY,       
-    "name" VARCHAR(255) NOT NULL,  
-    "resource" VARCHAR(255) NOT NULL,
-    "method" VARCHAR(255) NOT NULL
+    id       SERIAL PRIMARY KEY,
+    name     VARCHAR(255) NOT NULL,
+    resource VARCHAR(255) NOT NULL,
+    method   VARCHAR(255) NOT NULL
 );
 
--- Table: Role_Permissions
-CREATE TABLE role_Permissions (
-    role_id INT NOT NULL,        -- Role ID
-    permission_id INT NOT NULL,  -- Permission ID
+-- 3. Role-to-Permission mapping (template)
+CREATE TABLE role_permissions (
+    role_id       INT NOT NULL,
+    permission_id INT NOT NULL,
     PRIMARY KEY (role_id, permission_id),
-    FOREIGN KEY (role_id) REFERENCES Roles(id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_id) REFERENCES Permissions(id) ON DELETE CASCADE
+    FOREIGN KEY (role_id)       REFERENCES roles(id)       ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id)  ON DELETE CASCADE
 );
 
--- Table: Custom_User
+-- 4. Users
 CREATE TABLE custom_user (
-    id BIGSERIAL PRIMARY KEY,
-    "password" VARCHAR(128) NOT NULL,
-    last_login TIMESTAMPTZ NULL,
-    email VARCHAR(254) NOT NULL UNIQUE,
-    role_id INT NOT NULL DEFAULT 1 REFERENCES roles(id) ON DELETE CASCADE,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    date_joined TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    profile_picture VARCHAR(100) NULL,
-    two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
-    two_factor_secret VARCHAR(100) NULL,
-    two_factor_secret_temp VARCHAR(100) NULL,
-    recovery_codes TEXT[] NULL DEFAULT '{}'
+    id                     BIGSERIAL PRIMARY KEY,
+    password               VARCHAR(128) NOT NULL,
+    last_login             TIMESTAMPTZ,
+    email                  VARCHAR(254) NOT NULL UNIQUE,
+    is_active              BOOLEAN NOT NULL DEFAULT TRUE,
+    date_joined            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    profile_picture        VARCHAR(100),
+    two_factor_enabled     BOOLEAN NOT NULL DEFAULT FALSE,
+    two_factor_secret      VARCHAR(100),
+    two_factor_secret_temp VARCHAR(100),
+    recovery_codes         TEXT[] NOT NULL DEFAULT '{}'
+);
+
+-- 5. Direct user-to-permission assignments
+CREATE TABLE user_permissions (
+    user_id       BIGINT NOT NULL,
+    permission_id INT    NOT NULL,
+    PRIMARY KEY (user_id, permission_id),
+    FOREIGN KEY (user_id)       REFERENCES custom_user(id)  ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id)  ON DELETE CASCADE
+);
+
+-- 6. (Optional) Track which role templates were given to a user
+CREATE TABLE user_roles (
+    user_id BIGINT NOT NULL,
+    role_id INT    NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES custom_user(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id)       ON DELETE CASCADE
 );
 
 CREATE INDEX custom_user_email_idx ON custom_user(email);

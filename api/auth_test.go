@@ -27,10 +27,14 @@ func createRandomUser(t *testing.T) *db.CustomUser {
 		Email:          util.RandomEmail(),
 		IsActive:       true,
 		ProfilePicture: util.StringPtr(util.GetRandomImageURL()),
-		RoleID:         1,
 	}
 
 	user, err := testStore.CreateUser(context.Background(), arg)
+	require.NoError(t, err)
+	err = testStore.GrantRoleToUser(context.Background(), db.GrantRoleToUserParams{
+		UserID: user.ID,
+		RoleID: 1, // Assign a default role, e.g., RoleID 1
+	})
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
@@ -45,7 +49,7 @@ func createRandomUser(t *testing.T) *db.CustomUser {
 }
 
 func TestLogin(t *testing.T) {
-	user := createRandomUser(t)
+	_, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -192,7 +196,7 @@ func createRandomSession(t *testing.T, token string, payload *token.Payload) db.
 }
 
 func TestRefreshTokenHandler(t *testing.T) {
-	token, payload, err := testServer.tokenMaker.CreateToken(1, 1, 1, testServer.config.RefreshTokenDuration, token.RefreshToken)
+	token, payload, err := testServer.tokenMaker.CreateToken(1, 1, testServer.config.RefreshTokenDuration, token.RefreshToken)
 	createRandomSession(t, token, payload)
 	require.NoError(t, err)
 	testCases := []struct {

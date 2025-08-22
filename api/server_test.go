@@ -6,12 +6,17 @@ import (
 )
 
 type MockGrpcClient struct {
-	Response *grpclient.PersonalizedCarePlanResponse
-	Err      error
+	CarePlanResponse *grpclient.PersonalizedCarePlanResponse
+	SpellingResponse *grpclient.CorrectSpellingResponse
+	Err              error
 }
 
 func (m *MockGrpcClient) GenerateCarePlan(ctx context.Context, req *grpclient.PersonalizedCarePlanRequest) (*grpclient.PersonalizedCarePlanResponse, error) {
-	return m.Response, m.Err
+	return m.CarePlanResponse, m.Err
+}
+
+func (m *MockGrpcClient) CorrectSpelling(ctx context.Context, req *grpclient.CorrectSpellingRequest) (*grpclient.CorrectSpellingResponse, error) {
+	return m.SpellingResponse, m.Err
 }
 
 func (m *MockGrpcClient) Close() error {
@@ -20,7 +25,7 @@ func (m *MockGrpcClient) Close() error {
 
 func CreateMockGrpcClient() *MockGrpcClient {
 	return &MockGrpcClient{
-		Response: &grpclient.PersonalizedCarePlanResponse{
+		CarePlanResponse: &grpclient.PersonalizedCarePlanResponse{
 			ResourcesRequired: []string{
 				"Certified youth financial advisor",
 				"Financial literacy resources (digital tools, workbooks)",
@@ -137,6 +142,9 @@ func CreateMockGrpcClient() *MockGrpcClient {
 				},
 			},
 			TransitionCriteria: nil,
+		},
+		SpellingResponse: &grpclient.CorrectSpellingResponse{
+			CorrectedText: "This is a sample corrected text.",
 		},
 		Err: nil,
 	}

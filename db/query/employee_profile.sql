@@ -73,41 +73,37 @@ WHERE
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL);
 
 
--- -- name: GetEmployeeIDByUserID :one
--- SELECT 
---     ep.id AS employee_id
--- FROM employee_profile ep
--- JOIN custom_user cu ON ep.user_id = cu.id
--- WHERE cu.id = $1;
-
+-- name: GetUserIDByEmployeeID :one
+SELECT user_id FROM employee_profile
+WHERE id = $1 LIMIT 1;
 
 -- name: GetEmployeeProfileByUserID :one
 SELECT 
-    cu.id as user_id,
-    cu.email as email,
-    ep.id as employee_id,
+    cu.id           AS user_id,
+    cu.email        AS email,
+    ep.id           AS employee_id,
     ep.first_name,
     ep.last_name,
-    cu.role_id,
-    json_agg(json_build_object(
-        'id', p.id,
-        'name', p.name,
-        'resource', p.resource,
-        'method', p.method
-    )) AS permissions
+    (
+        SELECT COALESCE(json_agg(json_build_object(
+            'id',       p.id,
+            'name',     p.name,
+            'resource', p.resource,
+            'method',   p.method
+        )), '[]'::json)
+        FROM user_permissions up
+        JOIN permissions p ON p.id = up.permission_id
+        WHERE up.user_id = cu.id
+    )::json AS permissions
 FROM custom_user cu
 JOIN employee_profile ep ON ep.user_id = cu.id
-JOIN role_permissions rp ON rp.role_id = cu.role_id
-JOIN permissions p ON p.id = rp.permission_id
-WHERE cu.id = $1
-GROUP BY cu.id, cu.email, ep.id, ep.first_name, ep.last_name, cu.role_id;
+WHERE cu.id = $1;
 
 
 -- name: GetEmployeeProfileByID :one
 SELECT 
     ep.*,
-    cu.profile_picture as profile_picture,
-    cu.role_id
+    cu.profile_picture as profile_picture
 FROM employee_profile ep
 JOIN custom_user cu ON ep.user_id = cu.id
 WHERE ep.id = $1;
