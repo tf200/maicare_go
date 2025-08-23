@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
@@ -796,8 +797,9 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 			return
 		}
 		defer func() {
-			err = tx.Rollback(ctx)
-			server.logBusinessEvent(LogLevelError, "UpdateClientStatus", "Failed to rollback db", zap.Error(err))
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+				server.logBusinessEvent(LogLevelError, "UpdateClientStatus", "Failed to rollback db", zap.Error(rollbackErr))
+			}
 		}()
 
 		qtx := server.store.WithTx(tx)

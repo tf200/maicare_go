@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"maicare_go/async"
@@ -746,9 +747,8 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 	}
 
 	defer func() {
-		err := tx.Rollback(ctx)
-		if err != nil && err.Error() != "pgx: tx is closed" {
-			server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to rollback appointment update", zap.Error(err))
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+			server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to rollback appointment update", zap.Error(rollbackErr))
 		}
 	}()
 	qtx := server.store.WithTx(tx)
