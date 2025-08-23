@@ -6139,6 +6139,171 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/{employee_id}/permissions": {
+            "post": {
+                "description": "Grant specific permissions to a user by employee ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Grant user permissions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Grant user permissions",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.GrantUserPermissionsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GrantUserPermissionsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/{employee_id}/roles": {
+            "post": {
+                "description": "Assign a role to a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Assign role to user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Assign role to user",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.AssignRoleToUserParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_AssignRoleToUserApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/{employee_id}/roles_and_permissions": {
+            "get": {
+                "description": "List roles and permissions for a user by employee ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "List user roles and permissions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ListUserRolesAndPermissionsApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/{id}": {
             "get": {
                 "description": "Get employee profile by ID",
@@ -9833,6 +9998,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/permissions": {
+            "get": {
+                "description": "List all permissions",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "List all permissions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_api_ListAllPermissionsApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/registration_form": {
             "get": {
                 "description": "List all registration forms",
@@ -10437,11 +10640,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/roles/assign": {
-            "put": {
-                "description": "Assign a role to a user",
+            },
+            "post": {
+                "description": "Create a new role with the specified name",
                 "consumes": [
                     "application/json"
                 ],
@@ -10451,15 +10652,15 @@ const docTemplate = `{
                 "tags": [
                     "roles"
                 ],
-                "summary": "Assign role to user",
+                "summary": "Create a new role",
                 "parameters": [
                     {
-                        "description": "Assign role to user",
+                        "description": "Create role",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AssignRoleToUserParams"
+                            "$ref": "#/definitions/api.CreateRoleRequest"
                         }
                     }
                 ],
@@ -10467,45 +10668,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AssignRoleToUserApiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/roles/user": {
-            "get": {
-                "description": "Get a role by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "roles"
-                ],
-                "summary": "Get role by ID",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetRoleByIDApiResponse"
+                            "$ref": "#/definitions/api.Response-api_CreateRoleResponse"
                         }
                     },
                     "400": {
@@ -10531,14 +10694,14 @@ const docTemplate = `{
         },
         "/roles/{role_id}/permissions": {
             "get": {
-                "description": "Get all permissions associated with a role ID",
+                "description": "List all permissions associated with a specific role",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "roles"
                 ],
-                "summary": "Get permissions by role ID",
+                "summary": "List all permissions for a role",
                 "parameters": [
                     {
                         "type": "integer",
@@ -10552,7 +10715,64 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetPermissionsByRoleIDApiResponse"
+                            "$ref": "#/definitions/api.Response-array_api_ListAllRolePermissionsApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add specific permissions to a role by role ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Add permissions to a role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add permissions to role",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.AddPermissionsToRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_AddPermissionsToRoleResponse"
                         }
                     },
                     "400": {
@@ -11586,6 +11806,34 @@ const docTemplate = `{
                 }
             }
         },
+        "api.AddPermissionsToRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_ids"
+            ],
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "api.AddPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.AddUrgencyScoreRequest": {
             "type": "object",
             "properties": {
@@ -11665,7 +11913,7 @@ const docTemplate = `{
         "api.AssignRoleToUserApiResponse": {
             "type": "object",
             "properties": {
-                "id": {
+                "employee_id": {
                     "type": "integer"
                 },
                 "role_id": {
@@ -11676,9 +11924,6 @@ const docTemplate = `{
         "api.AssignRoleToUserParams": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
                 "role_id": {
                     "type": "integer"
                 }
@@ -14812,6 +15057,28 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.CreateScheduleRequest": {
             "type": "object",
             "properties": {
@@ -17151,23 +17418,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetPermissionsByRoleIDApiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "method": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "resource": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetProgressReportResponse": {
             "type": "object",
             "properties": {
@@ -17446,17 +17696,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetRoleByIDApiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetScheduleByIdResponse": {
             "type": "object",
             "properties": {
@@ -17593,6 +17832,31 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "api.GrantUserPermissionsRequest": {
+            "type": "object",
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "api.GrantUserPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -17807,6 +18071,37 @@ const docTemplate = `{
                 },
                 "violence": {
                     "type": "boolean"
+                }
+            }
+        },
+        "api.ListAllPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permission_id": {
+                    "type": "integer"
+                },
+                "permission_name": {
+                    "type": "string"
+                },
+                "permission_resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ListAllRolePermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permission_id": {
+                    "type": "integer"
+                },
+                "permission_name": {
+                    "type": "string"
+                },
+                "permission_resource": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -19560,6 +19855,42 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListUserRolesAndPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "resource": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "api.ListWorkingHoursResponse": {
             "type": "object",
             "properties": {
@@ -19791,6 +20122,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.AddEmployeeExperienceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_AddPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.AddPermissionsToRoleResponse"
                 },
                 "message": {
                     "type": "string"
@@ -20211,6 +20556,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateProgressReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.CreateRoleResponse"
                 },
                 "message": {
                     "type": "string"
@@ -20906,20 +21265,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_GetRoleByIDApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetRoleByIDApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GetScheduleByIdResponse": {
             "type": "object",
             "properties": {
@@ -20939,6 +21284,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetSenderByIdResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GrantUserPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GrantUserPermissionsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -21023,6 +21382,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.ListStatusHistoryApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_ListUserRolesAndPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ListUserRolesAndPermissionsApiResponse"
                 },
                 "message": {
                     "type": "string"
@@ -21714,13 +22087,30 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetPermissionsByRoleIDApiResponse": {
+        "api.Response-array_api_ListAllPermissionsApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetPermissionsByRoleIDApiResponse"
+                        "$ref": "#/definitions/api.ListAllPermissionsApiResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListAllRolePermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListAllRolePermissionsApiResponse"
                     }
                 },
                 "message": {
@@ -22217,9 +22607,6 @@ const docTemplate = `{
                 },
                 "profile_picture": {
                     "type": "string"
-                },
-                "role_id": {
-                    "type": "integer"
                 }
             }
         },

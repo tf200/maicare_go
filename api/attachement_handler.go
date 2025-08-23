@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -206,7 +207,9 @@ func (server *Server) DeleteAttachment(ctx *gin.Context) {
 		return
 	}
 	defer func() {
-		server.logBusinessEvent(LogLevelInfo, "DeleteAttachment", "Failed db rollback", zap.Error(err))
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+			server.logBusinessEvent(LogLevelError, "DeleteAttachment", "Failed to rollback transaction", zap.Error(rollbackErr))
+		}
 	}()
 	qtx := server.store.WithTx(tx)
 

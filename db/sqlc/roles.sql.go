@@ -9,7 +9,25 @@ import (
 	"context"
 )
 
+const addPermissionsToRole = `-- name: AddPermissionsToRole :exec
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT $1, unnest($2::int[])
+ON CONFLICT (role_id, permission_id) DO NOTHING
+`
+
+type AddPermissionsToRoleParams struct {
+	RoleID        int32   `json:"role_id"`
+	PermissionIds []int32 `json:"permission_ids"`
+}
+
+// Bulk-insert permission IDs into a role (idempotent).
+func (q *Queries) AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error {
+	_, err := q.db.Exec(ctx, addPermissionsToRole, arg.RoleID, arg.PermissionIds)
+	return err
+}
+
 const checkUserPermission = `-- name: CheckUserPermission :one
+
 SELECT EXISTS (
     SELECT 1
     FROM user_permissions up
@@ -24,6 +42,8 @@ type CheckUserPermissionParams struct {
 	Name   string `json:"name"`
 }
 
+// ---------- 6. CHECK UTILITIES ----------
+// Returns true/false whether the user has the named permission.
 func (q *Queries) CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error) {
 	row := q.db.QueryRow(ctx, checkUserPermission, arg.UserID, arg.Name)
 	var has_permission bool
@@ -31,7 +51,54 @@ func (q *Queries) CheckUserPermission(ctx context.Context, arg CheckUserPermissi
 	return has_permission, err
 }
 
+const createRole = `-- name: CreateRole :one
+/*
+ *  RBAC – Role & Permission Management
+ *  This file contains all sqlc queries for the simple role-based
+ *  access-control system.  They are grouped in the following order:
+ *    1. Core roles
+ *    2. Core permissions
+ *    3. Role <-> Permission mapping
+ *    4. User <-> Role mapping
+ *    5. User <-> Permission mapping
+ *    6. Read queries
+ *    7. Helper utilities
+ *
+ *  sqlc will generate Go types and funcs named after the ` + "`" + `-- name:` + "`" + ` tags.
+ */
+
+
+INSERT INTO roles (name)
+VALUES ($1)
+RETURNING id, name
+`
+
+// ---------- 1. ROLES ----------
+// Insert a new role and return the created row.
+func (q *Queries) CreateRole(ctx context.Context, name string) (Role, error) {
+	row := q.db.QueryRow(ctx, createRole, name)
+	var i Role
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const deleteUserPermissions = `-- name: DeleteUserPermissions :exec
+DELETE FROM user_permissions
+WHERE user_id = $1
+`
+
+// Removes *all* permissions from the given user.
+func (q *Queries) DeleteUserPermissions(ctx context.Context, userID int64) error {
+	_, err := q.db.Exec(ctx, deleteUserPermissions, userID)
+	return err
+}
+
 const grantRoleToUser = `-- name: GrantRoleToUser :exec
+/*
+ * Assigns a role to a user (idempotent).
+ * As a convenience it also copies all the role’s permissions
+ * into the user_permissions table so permission checks stay cheap.
+ */
 WITH ins_role AS (
     INSERT INTO user_roles (user_id, role_id)
     VALUES ($1, $2)
@@ -39,8 +106,8 @@ WITH ins_role AS (
 )
 INSERT INTO user_permissions (user_id, permission_id)
 SELECT $1, rp.permission_id
-FROM   role_permissions rp
-WHERE  rp.role_id = $2
+FROM role_permissions rp
+WHERE rp.role_id = $2
 ON CONFLICT (user_id, permission_id) DO NOTHING
 `
 
@@ -54,11 +121,32 @@ func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams
 	return err
 }
 
+const grantUserPermissions = `-- name: GrantUserPermissions :exec
+INSERT INTO user_permissions (user_id, permission_id)
+SELECT $1, unnest($2::int[])
+ON CONFLICT (user_id, permission_id) DO NOTHING
+`
+
+type GrantUserPermissionsParams struct {
+	UserID        int64   `json:"user_id"`
+	PermissionIds []int32 `json:"permission_ids"`
+}
+
+// Bulk-insert permission IDs for a user (idempotent).
+func (q *Queries) GrantUserPermissions(ctx context.Context, arg GrantUserPermissionsParams) error {
+	_, err := q.db.Exec(ctx, grantUserPermissions, arg.UserID, arg.PermissionIds)
+	return err
+}
+
 const listAllPermissions = `-- name: ListAllPermissions :many
-SELECT id, name, resource, method FROM permissions
+
+SELECT id, name, resource, method
+FROM permissions
 ORDER BY id
 `
 
+// ---------- 2. PERMISSIONS ----------
+// Returns every permission ordered by id.
 func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) {
 	rows, err := q.db.Query(ctx, listAllPermissions)
 	if err != nil {
@@ -85,21 +173,24 @@ func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) 
 }
 
 const listAllRolePermissions = `-- name: ListAllRolePermissions :many
-SELECT p.id AS permission_id,
+
+SELECT p.id   AS permission_id,
        p.name AS permission_name,
-       p.resource AS permission_resource
+       p.resource
 FROM role_permissions rp
-JOIN permissions p ON rp.permission_id = p.id
+JOIN permissions p ON p.id = rp.permission_id
 WHERE rp.role_id = $1
 ORDER BY p.id
 `
 
 type ListAllRolePermissionsRow struct {
-	PermissionID       int32  `json:"permission_id"`
-	PermissionName     string `json:"permission_name"`
-	PermissionResource string `json:"permission_resource"`
+	PermissionID   int32  `json:"permission_id"`
+	PermissionName string `json:"permission_name"`
+	Resource       string `json:"resource"`
 }
 
+// ---------- 3. ROLE-PERMISSION MAPPING ----------
+// Returns all permissions attached to a single role.
 func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID int32) ([]ListAllRolePermissionsRow, error) {
 	rows, err := q.db.Query(ctx, listAllRolePermissions, roleID)
 	if err != nil {
@@ -109,7 +200,7 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID int32) ([]L
 	var items []ListAllRolePermissionsRow
 	for rows.Next() {
 		var i ListAllRolePermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.PermissionResource); err != nil {
+		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -121,10 +212,12 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID int32) ([]L
 }
 
 const listRoles = `-- name: ListRoles :many
-SELECT id, name FROM roles
+SELECT id, name
+FROM roles
 ORDER BY id
 `
 
+// Returns every role ordered by id.
 func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
 	rows, err := q.db.Query(ctx, listRoles)
 	if err != nil {
@@ -146,21 +239,24 @@ func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
 }
 
 const listUserPermissions = `-- name: ListUserPermissions :many
-SELECT p.id AS permission_id,
+
+SELECT p.id   AS permission_id,
        p.name AS permission_name,
-       p.resource AS permission_resource
+       p.resource
 FROM user_permissions up
-JOIN permissions p ON up.permission_id = p.id
+JOIN permissions p ON p.id = up.permission_id
 WHERE up.user_id = $1
 ORDER BY p.id
 `
 
 type ListUserPermissionsRow struct {
-	PermissionID       int32  `json:"permission_id"`
-	PermissionName     string `json:"permission_name"`
-	PermissionResource string `json:"permission_resource"`
+	PermissionID   int32  `json:"permission_id"`
+	PermissionName string `json:"permission_name"`
+	Resource       string `json:"resource"`
 }
 
+// ---------- 5. USER-PERMISSION MAPPING ----------
+// Returns every permission granted to a user (direct or via roles).
 func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]ListUserPermissionsRow, error) {
 	rows, err := q.db.Query(ctx, listUserPermissions, userID)
 	if err != nil {
@@ -170,7 +266,7 @@ func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]List
 	var items []ListUserPermissionsRow
 	for rows.Next() {
 		var i ListUserPermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.PermissionResource); err != nil {
+		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -182,13 +278,16 @@ func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]List
 }
 
 const listUserRoles = `-- name: ListUserRoles :many
+
 SELECT r.id, r.name
 FROM user_roles ur
-JOIN roles r ON ur.role_id = r.id
+JOIN roles r ON r.id = ur.role_id
 WHERE ur.user_id = $1
 ORDER BY r.id
 `
 
+// ---------- 4. USER-ROLE MAPPING ----------
+// Returns every role granted to a user.
 func (q *Queries) ListUserRoles(ctx context.Context, userID int64) ([]Role, error) {
 	rows, err := q.db.Query(ctx, listUserRoles, userID)
 	if err != nil {
@@ -207,4 +306,15 @@ func (q *Queries) ListUserRoles(ctx context.Context, userID int64) ([]Role, erro
 		return nil, err
 	}
 	return items, nil
+}
+
+const removePermissionsFromRole = `-- name: RemovePermissionsFromRole :exec
+DELETE FROM role_permissions
+WHERE role_id = $1
+`
+
+// Removes *all* permissions from the given role.
+func (q *Queries) RemovePermissionsFromRole(ctx context.Context, roleID int32) error {
+	_, err := q.db.Exec(ctx, removePermissionsFromRole, roleID)
+	return err
 }

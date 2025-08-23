@@ -180,6 +180,24 @@ definitions:
           type: integer
         type: array
     type: object
+  api.AddPermissionsToRoleRequest:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - permission_ids
+    type: object
+  api.AddPermissionsToRoleResponse:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        type: array
+      role_id:
+        type: integer
+    type: object
   api.AddUrgencyScoreRequest:
     properties:
       urgency_score:
@@ -231,15 +249,13 @@ definitions:
     type: object
   api.AssignRoleToUserApiResponse:
     properties:
-      id:
+      employee_id:
         type: integer
       role_id:
         type: integer
     type: object
   api.AssignRoleToUserParams:
     properties:
-      id:
-        type: integer
       role_id:
         type: integer
     type: object
@@ -2362,6 +2378,20 @@ definitions:
       work_start_date:
         type: string
     type: object
+  api.CreateRoleRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  api.CreateRoleResponse:
+    properties:
+      name:
+        type: string
+      role_id:
+        type: integer
+    type: object
   api.CreateScheduleRequest:
     properties:
       employee_id:
@@ -3904,17 +3934,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.GetPermissionsByRoleIDApiResponse:
-    properties:
-      id:
-        type: integer
-      method:
-        type: string
-      name:
-        type: string
-      resource:
-        type: string
-    type: object
   api.GetProgressReportResponse:
     properties:
       client_id:
@@ -4100,13 +4119,6 @@ definitions:
       work_start_date:
         type: string
     type: object
-  api.GetRoleByIDApiResponse:
-    properties:
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
   api.GetScheduleByIdResponse:
     properties:
       color:
@@ -4199,6 +4211,22 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  api.GrantUserPermissionsRequest:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  api.GrantUserPermissionsResponse:
+    properties:
+      employee_id:
+        type: integer
+      permission_ids:
+        items:
+          type: integer
+        type: array
     type: object
   api.GuardionInfo:
     properties:
@@ -4340,6 +4368,26 @@ definitions:
         type: boolean
       violence:
         type: boolean
+    type: object
+  api.ListAllPermissionsApiResponse:
+    properties:
+      permission_id:
+        type: integer
+      permission_name:
+        type: string
+      permission_resource:
+        type: string
+    type: object
+  api.ListAllRolePermissionsApiResponse:
+    properties:
+      permission_id:
+        type: integer
+      permission_name:
+        type: string
+      permission_resource:
+        type: string
+      role_id:
+        type: integer
     type: object
   api.ListAppointmentsForClientRequest:
     properties:
@@ -5499,6 +5547,29 @@ definitions:
       reason:
         type: string
     type: object
+  api.ListUserRolesAndPermissionsApiResponse:
+    properties:
+      permissions:
+        items:
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            resource:
+              type: string
+          type: object
+        type: array
+      roles:
+        items:
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+          type: object
+        type: array
+    type: object
   api.ListWorkingHoursResponse:
     properties:
       employee_id:
@@ -5652,6 +5723,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.AddEmployeeExperienceResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_AddPermissionsToRoleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.AddPermissionsToRoleResponse'
       message:
         type: string
       success:
@@ -5922,6 +6002,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateProgressReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_CreateRoleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.CreateRoleResponse'
       message:
         type: string
       success:
@@ -6368,15 +6457,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetRoleByIDApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetRoleByIDApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetScheduleByIdResponse:
     properties:
       data:
@@ -6390,6 +6470,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetSenderByIdResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GrantUserPermissionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GrantUserPermissionsResponse'
       message:
         type: string
       success:
@@ -6444,6 +6533,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ListStatusHistoryApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListUserRolesAndPermissionsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListUserRolesAndPermissionsApiResponse'
       message:
         type: string
       success:
@@ -6888,11 +6986,22 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-array_api_GetPermissionsByRoleIDApiResponse:
+  api.Response-array_api_ListAllPermissionsApiResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/api.GetPermissionsByRoleIDApiResponse'
+          $ref: '#/definitions/api.ListAllPermissionsApiResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListAllRolePermissionsApiResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListAllRolePermissionsApiResponse'
         type: array
       message:
         type: string
@@ -7213,8 +7322,6 @@ definitions:
         type: integer
       profile_picture:
         type: string
-      role_id:
-        type: integer
     type: object
   api.Setup2FAResponse:
     properties:
@@ -13383,6 +13490,115 @@ paths:
       summary: Create employee profile
       tags:
       - employees
+  /employees/{employee_id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Grant specific permissions to a user by employee ID
+      parameters:
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: integer
+      - description: Grant user permissions
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.GrantUserPermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GrantUserPermissionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Grant user permissions
+      tags:
+      - roles
+  /employees/{employee_id}/roles:
+    post:
+      consumes:
+      - application/json
+      description: Assign a role to a user
+      parameters:
+      - description: Employee ID
+        in: query
+        name: employee_id
+        required: true
+        type: integer
+      - description: Assign role to user
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.AssignRoleToUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_AssignRoleToUserApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Assign role to user
+      tags:
+      - roles
+  /employees/{employee_id}/roles_and_permissions:
+    get:
+      description: List roles and permissions for a user by employee ID
+      parameters:
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListUserRolesAndPermissionsApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List user roles and permissions
+      tags:
+      - roles
   /employees/{id}:
     get:
       description: Get employee profile by ID
@@ -15943,6 +16159,31 @@ paths:
       summary: Create a location
       tags:
       - organisations
+  /permissions:
+    get:
+      description: List all permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_api_ListAllPermissionsApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all permissions
+      tags:
+      - roles
   /registration_form:
     get:
       description: List all registration forms
@@ -16345,9 +16586,42 @@ paths:
       summary: List roles
       tags:
       - roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role with the specified name
+      parameters:
+      - description: Create role
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_CreateRoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create a new role
+      tags:
+      - roles
   /roles/{role_id}/permissions:
     get:
-      description: Get all permissions associated with a role ID
+      description: List all permissions associated with a specific role
       parameters:
       - description: Role ID
         in: path
@@ -16360,7 +16634,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-array_api_GetPermissionsByRoleIDApiResponse'
+            $ref: '#/definitions/api.Response-array_api_ListAllRolePermissionsApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -16373,28 +16647,32 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Get permissions by role ID
+      summary: List all permissions for a role
       tags:
       - roles
-  /roles/assign:
-    put:
+    post:
       consumes:
       - application/json
-      description: Assign a role to a user
+      description: Add specific permissions to a role by role ID
       parameters:
-      - description: Assign role to user
+      - description: Role ID
+        in: path
+        name: role_id
+        required: true
+        type: integer
+      - description: Add permissions to role
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/api.AssignRoleToUserParams'
+          $ref: '#/definitions/api.AddPermissionsToRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_AssignRoleToUserApiResponse'
+            $ref: '#/definitions/api.Response-api_AddPermissionsToRoleResponse'
         "400":
           description: Bad Request
           schema:
@@ -16407,32 +16685,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Assign role to user
-      tags:
-      - roles
-  /roles/user:
-    get:
-      description: Get a role by ID
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-api_GetRoleByIDApiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get role by ID
+      summary: Add permissions to a role
       tags:
       - roles
   /schedules:

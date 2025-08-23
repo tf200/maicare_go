@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
@@ -76,6 +77,7 @@ func (server *Server) ListAllPermissionsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Permissions retrieved successfully"))
 }
 
+// ListAllRolePermissionsApiResponse represents a response for ListAllRolePermissionsApi
 type ListAllRolePermissionsApiResponse struct {
 	RoleID             int32  `json:"role_id"`
 	PermissionID       int32  `json:"permission_id"`
@@ -83,6 +85,14 @@ type ListAllRolePermissionsApiResponse struct {
 	PermissionResource string `json:"permission_resource"`
 }
 
+// @Summary List all permissions for a role
+// @Description List all permissions associated with a specific role
+// @Tags roles
+// @Produce json
+// @Param role_id path int true "Role ID"
+// @Success 200 {object} Response[[]ListAllRolePermissionsApiResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /roles/{role_id}/permissions [get]
 func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 	roleID, err := strconv.ParseInt(ctx.Param("role_id"), 10, 32)
 	if err != nil {
@@ -103,7 +113,7 @@ func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 			RoleID:             int32(roleID),
 			PermissionID:       perm.PermissionID,
 			PermissionName:     perm.PermissionName,
-			PermissionResource: perm.PermissionResource,
+			PermissionResource: perm.Resource,
 		})
 	}
 
@@ -112,8 +122,7 @@ func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 
 // AssignRoleToUserParams represents a request for AssignRoleToUserApi
 type AssignRoleToUserParams struct {
-	EmployeeID int64 `json:"employee_id"`
-	RoleID     int32 `json:"role_id"`
+	RoleID int32 `json:"role_id"`
 }
 
 // AssignRoleToUserApiResponse represents a response for AssignRoleToUserApi
@@ -125,13 +134,20 @@ type AssignRoleToUserApiResponse struct {
 // @Summary Assign role to user
 // @Description Assign a role to a user
 // @Tags roles
+// @Param employee_id query int true "Employee ID"
 // @Accept json
 // @Produce json
 // @Param input body AssignRoleToUserParams true "Assign role to user"
 // @Success 200 {object} Response[AssignRoleToUserApiResponse]
 // @Failure 400,404,500 {object} Response[any]
-// @Router /roles/assign [put]
+// @Router /employees/{employee_id}/roles [post]
 func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
+	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelWarn, "AssignRoleToUserApi", "Invalid employee_id parameter", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
+		return
+	}
 	var req AssignRoleToUserParams
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.logBusinessEvent(LogLevelWarn, "AssignRoleToUserApi", "Invalid request body", zap.Error(err))
@@ -139,14 +155,14 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 		return
 	}
 
-	userID, err := server.store.GetUserIDByEmployeeID(ctx, req.EmployeeID)
+	userID, err := server.store.GetUserIDByEmployeeID(ctx, employeeID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			server.logBusinessEvent(LogLevelWarn, "AssignRoleToUserApi", "Employee not found", zap.Int64("employee_id", req.EmployeeID))
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("employee with ID %d not found", req.EmployeeID)))
+			server.logBusinessEvent(LogLevelWarn, "AssignRoleToUserApi", "Employee not found", zap.Int64("employee_id", employeeID))
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("employee with ID %d not found", employeeID)))
 			return
 		}
-		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to get user ID by employee ID", zap.Error(err), zap.Int64("employee_id", req.EmployeeID))
+		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to get user ID by employee ID", zap.Error(err), zap.Int64("employee_id", employeeID))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get user ID by employee ID")))
 		return
 	}
@@ -157,13 +173,13 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to assign role to user", zap.Error(err), zap.Int64("employee_id", req.EmployeeID), zap.Int32("role_id", req.RoleID))
+		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to assign role to user", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to assign role to user")))
 		return
 	}
 
 	response := AssignRoleToUserApiResponse{
-		EmployeeID: req.EmployeeID,
+		EmployeeID: employeeID,
 		RoleID:     req.RoleID,
 	}
 
@@ -241,8 +257,224 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 		}{
 			PermissionID:       perm.PermissionID,
 			PermissionName:     perm.PermissionName,
-			PermissionResource: perm.PermissionResource,
+			PermissionResource: perm.Resource,
 		})
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "User roles and permissions retrieved successfully"))
+}
+
+// GrantUserPermissionsRequest represents a request for GrantUserPermissionsApi
+type GrantUserPermissionsRequest struct {
+	PermissionIDs []int32 `json:"permission_ids"`
+}
+
+// GrantUserPermissionsResponse represents a response for GrantUserPermissionsApi
+type GrantUserPermissionsResponse struct {
+	EmployeeID    int64   `json:"employee_id"`
+	PermissionIDs []int32 `json:"permission_ids"`
+}
+
+// @Summary Grant user permissions
+// @Description Grant specific permissions to a user by employee ID
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param employee_id path int true "Employee ID"
+// @Param input body GrantUserPermissionsRequest true "Grant user permissions"
+// @Success 200 {object} Response[GrantUserPermissionsResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /employees/{employee_id}/permissions [post]
+func (server *Server) GrantUserPermissionsApi(ctx *gin.Context) {
+	employeeID, err := strconv.ParseInt(ctx.Param("employee_id"), 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelWarn, "GrantUserPermissionsApi", "Invalid employee_id parameter", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
+		return
+	}
+
+	var req GrantUserPermissionsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelWarn, "GrantUserPermissionsApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	userID, err := server.store.GetUserIDByEmployeeID(ctx, employeeID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			server.logBusinessEvent(LogLevelWarn, "GrantUserPermissionsApi", "Employee not found", zap.Int64("employee_id", employeeID))
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("employee with ID %d not found", employeeID)))
+			return
+		}
+		server.logBusinessEvent(LogLevelError, "GrantUserPermissionsApi", "Failed to get user ID by employee ID", zap.Error(err), zap.Int64("employee_id", employeeID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get user ID by employee ID")))
+		return
+	}
+
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GrantUserPermissionsApi", "Failed to begin transaction", zap.Error(err), zap.Int64("employee_id", employeeID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
+		return
+	}
+
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+			server.logBusinessEvent(LogLevelError, "GrantUserPermissionsApi", "Failed to rollback transaction", zap.Error(rollbackErr), zap.Int64("employee_id", employeeID))
+		}
+	}()
+
+	qtx := server.store.WithTx(tx)
+
+	err = qtx.DeleteUserPermissions(ctx, userID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GrantUserPermissionsApi", "Failed to delete user permissions", zap.Error(err), zap.Int64("employee_id", employeeID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete user permissions")))
+		return
+	}
+
+	err = qtx.GrantUserPermissions(ctx, db.GrantUserPermissionsParams{
+		UserID:        userID,
+		PermissionIds: req.PermissionIDs,
+	})
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GrantUserPermissionsApi", "Failed to grant user permissions", zap.Error(err), zap.Int64("employee_id", employeeID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to grant user permissions")))
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GrantUserPermissionsApi", "Failed to commit transaction", zap.Error(err), zap.Int64("employee_id", employeeID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
+		return
+	}
+	response := GrantUserPermissionsResponse{
+		EmployeeID:    employeeID,
+		PermissionIDs: req.PermissionIDs,
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "User permissions granted successfully"))
+}
+
+// CreateRoleRequest represents a request for CreateRoleApi
+type CreateRoleRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+// CreateRoleResponse represents a response for CreateRoleApi
+type CreateRoleResponse struct {
+	RoleID int32  `json:"role_id"`
+	Name   string `json:"name"`
+}
+
+// @Summary Create a new role
+// @Description Create a new role with the specified name
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param input body CreateRoleRequest true "Create role"
+// @Success 200 {object} Response[CreateRoleResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /roles [post]
+func (server *Server) CreateRoleApi(ctx *gin.Context) {
+	var req CreateRoleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelWarn, "CreateRoleApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	role, err := server.store.CreateRole(ctx, req.Name)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "CreateRoleApi", "Failed to create role", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create role")))
+		return
+	}
+
+	response := CreateRoleResponse{
+		RoleID: role.ID,
+		Name:   role.Name,
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Role created successfully"))
+}
+
+// AddPermissionsToRoleRequest represents a request for AddPermissionsToRoleApi
+type AddPermissionsToRoleRequest struct {
+	PermissionIDs []int32 `json:"permission_ids" binding:"required"`
+}
+
+// AddPermissionsToRoleResponse represents a response for AddPermissionsToRoleApi
+type AddPermissionsToRoleResponse struct {
+	RoleID        int32   `json:"role_id"`
+	PermissionIDs []int32 `json:"permission_ids"`
+}
+
+// @Summary Add permissions to a role
+// @Description Add specific permissions to a role by role ID
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param role_id path int true "Role ID"
+// @Param input body AddPermissionsToRoleRequest true "Add permissions to role"
+// @Success 200 {object} Response[AddPermissionsToRoleResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /roles/{role_id}/permissions [post]
+func (server *Server) AddPermissionsToRoleApi(ctx *gin.Context) {
+	roleID, err := strconv.ParseInt(ctx.Param("role_id"), 10, 32)
+	if err != nil {
+		server.logBusinessEvent(LogLevelWarn, "AddPermissionsToRoleApi", "Invalid role_id parameter", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid role_id parameter")))
+		return
+	}
+	var req AddPermissionsToRoleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelWarn, "AddPermissionsToRoleApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AddPermissionsToRoleApi", "Failed to begin transaction", zap.Error(err), zap.Int32("role_id", int32(roleID)))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
+		return
+	}
+
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+			server.logBusinessEvent(LogLevelError, "AddPermissionsToRoleApi", "Failed to rollback transaction", zap.Error(rollbackErr), zap.Int32("role_id", int32(roleID)))
+		}
+	}()
+
+	qtx := server.store.WithTx(tx)
+	err = qtx.RemovePermissionsFromRole(ctx, int32(roleID))
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AddPermissionsToRoleApi", "Failed to remove existing permissions from role", zap.Error(err), zap.Int32("role_id", int32(roleID)))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to remove existing permissions from role")))
+		return
+	}
+
+	err = qtx.AddPermissionsToRole(ctx, db.AddPermissionsToRoleParams{
+		RoleID:        int32(roleID),
+		PermissionIds: req.PermissionIDs,
+	})
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AddPermissionsToRoleApi", "Failed to add permissions to role", zap.Error(err), zap.Int32("role_id", int32(roleID)))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add permissions to role")))
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AddPermissionsToRoleApi", "Failed to commit transaction", zap.Error(err), zap.Int32("role_id", int32(roleID)))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
+		return
+	}
+
+	response := AddPermissionsToRoleResponse{
+		RoleID:        int32(roleID),
+		PermissionIDs: req.PermissionIDs,
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Permissions added to role successfully"))
 }
