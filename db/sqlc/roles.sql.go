@@ -26,6 +26,22 @@ func (q *Queries) AddPermissionsToRole(ctx context.Context, arg AddPermissionsTo
 	return err
 }
 
+const assignRoleToUser = `-- name: AssignRoleToUser :exec
+INSERT INTO user_roles (user_id, role_id)
+VALUES ($1, $2)
+ON CONFLICT (user_id) DO UPDATE SET role_id = $2
+`
+
+type AssignRoleToUserParams struct {
+	UserID int64 `json:"user_id"`
+	RoleID int32 `json:"role_id"`
+}
+
+func (q *Queries) AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error {
+	_, err := q.db.Exec(ctx, assignRoleToUser, arg.UserID, arg.RoleID)
+	return err
+}
+
 const checkUserPermission = `-- name: CheckUserPermission :one
 
 SELECT EXISTS (
@@ -93,31 +109,38 @@ func (q *Queries) DeleteUserPermissions(ctx context.Context, userID int64) error
 	return err
 }
 
-const grantRoleToUser = `-- name: GrantRoleToUser :exec
-/*
- * Assigns a role to a user (idempotent).
- * As a convenience it also copies all the role’s permissions
- * into the user_permissions table so permission checks stay cheap.
- */
-WITH ins_role AS (
-    INSERT INTO user_roles (user_id, role_id)
-    VALUES ($1, $2)
-    ON CONFLICT (user_id, role_id) DO NOTHING
-)
+const getUserRoles = `-- name: GetUserRoles :one
+
+SELECT r.id, r.name
+FROM user_roles ur
+JOIN roles r ON r.id = ur.role_id
+WHERE ur.user_id = $1
+LIMIT 1
+`
+
+// ---------- 4. USER-ROLE MAPPING ----------
+// Returns every role granted to a user.
+func (q *Queries) GetUserRoles(ctx context.Context, userID int64) (Role, error) {
+	row := q.db.QueryRow(ctx, getUserRoles, userID)
+	var i Role
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const grantRolePermissionsToUser = `-- name: GrantRolePermissionsToUser :exec
 INSERT INTO user_permissions (user_id, permission_id)
 SELECT $1, rp.permission_id
 FROM role_permissions rp
 WHERE rp.role_id = $2
-ON CONFLICT (user_id, permission_id) DO NOTHING
 `
 
-type GrantRoleToUserParams struct {
+type GrantRolePermissionsToUserParams struct {
 	UserID int64 `json:"user_id"`
 	RoleID int32 `json:"role_id"`
 }
 
-func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) error {
-	_, err := q.db.Exec(ctx, grantRoleToUser, arg.UserID, arg.RoleID)
+func (q *Queries) GrantRolePermissionsToUser(ctx context.Context, arg GrantRolePermissionsToUserParams) error {
+	_, err := q.db.Exec(ctx, grantRolePermissionsToUser, arg.UserID, arg.RoleID)
 	return err
 }
 
@@ -277,37 +300,6 @@ func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]List
 	for rows.Next() {
 		var i ListUserPermissionsRow
 		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listUserRoles = `-- name: ListUserRoles :many
-
-SELECT r.id, r.name
-FROM user_roles ur
-JOIN roles r ON r.id = ur.role_id
-WHERE ur.user_id = $1
-ORDER BY r.id
-`
-
-// ---------- 4. USER-ROLE MAPPING ----------
-// Returns every role granted to a user.
-func (q *Queries) ListUserRoles(ctx context.Context, userID int64) ([]Role, error) {
-	rows, err := q.db.Query(ctx, listUserRoles, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Role
-	for rows.Next() {
-		var i Role
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

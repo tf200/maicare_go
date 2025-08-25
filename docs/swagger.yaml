@@ -5567,14 +5567,12 @@ definitions:
           type: object
         type: array
       roles:
-        items:
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-          type: object
-        type: array
+        properties:
+          id:
+            type: integer
+          name:
+            type: string
+        type: object
     type: object
   api.ListWorkingHoursResponse:
     properties:

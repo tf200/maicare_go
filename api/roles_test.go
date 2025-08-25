@@ -18,6 +18,7 @@ import (
 
 func createRandomRole(t *testing.T) int32 {
 	name := faker.Word()
+	t.Log(name)
 	role, err := testStore.CreateRole(context.Background(), name)
 	require.NoError(t, err)
 	require.NotEmpty(t, role)
@@ -301,6 +302,53 @@ func TestAssignRoleToEmployeeApi(t *testing.T) {
 				require.NotEmpty(t, response.Data)
 				require.Equal(t, employee.ID, response.Data.EmployeeID)
 				require.Equal(t, roleID, response.Data.RoleID)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestListUserRolesAndPermissionsApi(t *testing.T) {
+	employee, user := createRandomEmployee(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/employees/%d/roles_permissions", employee.ID)
+				request, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				return request, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var response Response[ListUserRolesAndPermissionsApiResponse]
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.NotEmpty(t, response.Data)
+				require.NotEmpty(t, response.Data.Roles)
+				require.Equal(t, int32(1), response.Data.Roles.RoleID)
+				require.NotEmpty(t, response.Data.Permissions)
 			},
 		},
 	}

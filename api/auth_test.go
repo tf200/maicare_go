@@ -31,11 +31,17 @@ func createRandomUser(t *testing.T) *db.CustomUser {
 
 	user, err := testStore.CreateUser(context.Background(), arg)
 	require.NoError(t, err)
-	err = testStore.GrantRoleToUser(context.Background(), db.GrantRoleToUserParams{
+	err = testStore.AssignRoleToUser(context.Background(), db.AssignRoleToUserParams{
 		UserID: user.ID,
-		RoleID: 1, // Assign a default role, e.g., RoleID 1
+		RoleID: 1, // Assign a default role (e.g., role ID 1)
 	})
 	require.NoError(t, err)
+	err = testStore.GrantRolePermissionsToUser(context.Background(), db.GrantRolePermissionsToUserParams{
+		UserID: user.ID,
+		RoleID: 1, // Assign a default role (e.g., role ID 1)
+	})
+	require.NoError(t, err)
+
 	require.NotEmpty(t, user)
 
 	require.Equal(t, arg.Email, user.Email)

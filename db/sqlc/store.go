@@ -67,7 +67,15 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 			return err
 		}
 
-		err = q.GrantRoleToUser(ctx, GrantRoleToUserParams{
+		err = q.AssignRoleToUser(ctx, AssignRoleToUserParams{
+			UserID: result.User.ID,
+			RoleID: arg.RoleID,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = q.GrantRolePermissionsToUser(ctx, GrantRolePermissionsToUserParams{
 			UserID: result.User.ID,
 			RoleID: arg.RoleID,
 		})
