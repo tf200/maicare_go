@@ -4918,6 +4918,10 @@ definitions:
         type: string
       profile_picture:
         type: string
+      role_id:
+        type: integer
+      role_name:
+        type: string
       user_id:
         type: integer
       work_phone_number:
@@ -5481,7 +5485,9 @@ definitions:
     properties:
       id:
         type: integer
-      name:
+      permission_count:
+        type: integer
+      role_name:
         type: string
     type: object
   api.ListSendersResponse:

@@ -18905,6 +18905,12 @@ const docTemplate = `{
                 "profile_picture": {
                     "type": "string"
                 },
+                "role_id": {
+                    "type": "integer"
+                },
+                "role_name": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "integer"
                 },
@@ -19754,7 +19760,10 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "permission_count": {
+                    "type": "integer"
+                },
+                "role_name": {
                     "type": "string"
                 }
             }
