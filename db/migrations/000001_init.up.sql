@@ -148,9 +148,8 @@ CREATE TABLE user_permissions (
 
 -- 6. (Optional) Track which role templates were given to a user
 CREATE TABLE user_roles (
-    user_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL PRIMARY KEY,
     role_id INT    NOT NULL,
-    PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES custom_user(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id)       ON DELETE CASCADE
 );

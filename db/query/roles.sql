@@ -65,30 +65,26 @@ WHERE role_id = $1;
 
 /* ---------- 4. USER-ROLE MAPPING ---------- */
 
--- name: ListUserRoles :many
+-- name: GetUserRoles :one
 /* Returns every role granted to a user. */
 SELECT r.id, r.name
 FROM user_roles ur
 JOIN roles r ON r.id = ur.role_id
 WHERE ur.user_id = $1
-ORDER BY r.id;
+LIMIT 1;
 
--- name: GrantRoleToUser :exec
-/*
- * Assigns a role to a user (idempotent).
- * As a convenience it also copies all the role’s permissions
- * into the user_permissions table so permission checks stay cheap.
- */
-WITH ins_role AS (
-    INSERT INTO user_roles (user_id, role_id)
-    VALUES ($1, $2)
-    ON CONFLICT (user_id, role_id) DO NOTHING
-)
+-- name: AssignRoleToUser :exec
+INSERT INTO user_roles (user_id, role_id)
+VALUES ($1, $2)
+ON CONFLICT (user_id) DO UPDATE SET role_id = $2;
+
+-- name: GrantRolePermissionsToUser :exec
 INSERT INTO user_permissions (user_id, permission_id)
 SELECT $1, rp.permission_id
 FROM role_permissions rp
-WHERE rp.role_id = $2
-ON CONFLICT (user_id, permission_id) DO NOTHING;
+WHERE rp.role_id = $2;
+
+
 
 /* ---------- 5. USER-PERMISSION MAPPING ---------- */
 

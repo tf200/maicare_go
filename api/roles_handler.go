@@ -169,16 +169,43 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.store.GrantRoleToUser(ctx, db.GrantRoleToUserParams{
+	tx, err := server.store.ConnPool.Begin(ctx)
+
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+			server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to rollback transaction", zap.Error(rollbackErr), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		}
+	}()
+
+	qtx := server.store.WithTx(tx)
+
+	err = qtx.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
 		UserID: userID,
 		RoleID: req.RoleID,
 	})
-
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to assign role to user", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to assign role to user")))
 		return
 	}
+
+	err = qtx.DeleteUserPermissions(ctx, userID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to delete user permissions", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete user permissions")))
+		return
+	}
+
+	err = qtx.GrantRolePermissionsToUser(ctx, db.GrantRolePermissionsToUserParams{
+		UserID: userID,
+		RoleID: req.RoleID,
+	})
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to grant role permissions to user", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to grant role permissions to user")))
+		return
+	}
+	err = tx.Commit(ctx)
 
 	response := AssignRoleToUserApiResponse{
 		EmployeeID: employeeID,
@@ -190,7 +217,7 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 
 // ListUserRolesAndPermissionsApiResponse represents a response for ListUserRolesAndPermissionsApi
 type ListUserRolesAndPermissionsApiResponse struct {
-	Roles []struct {
+	Roles struct {
 		RoleID   int32  `json:"id"`
 		RoleName string `json:"name"`
 	} `json:"roles"`
@@ -210,7 +237,7 @@ type ListUserRolesAndPermissionsApiResponse struct {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles_and_permissions [get]
 func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("employee_id"), 10, 64)
+	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		server.logBusinessEvent(LogLevelWarn, "ListUserRolesAndPermissionsApi", "Invalid employee_id parameter", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
@@ -229,7 +256,7 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 		return
 	}
 
-	roles, err := server.store.ListUserRoles(ctx, int64(userID))
+	roles, err := server.store.GetUserRoles(ctx, int64(userID))
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "ListUserRolesAndPermissionsApi", "Failed to list user roles", zap.Error(err), zap.Int64("user_id", userID))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list user roles")))
@@ -241,16 +268,21 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list user permissions")))
 		return
 	}
-	var response ListUserRolesAndPermissionsApiResponse
-	for _, role := range roles {
-		response.Roles = append(response.Roles, struct {
+	response := ListUserRolesAndPermissionsApiResponse{
+		Roles: struct {
 			RoleID   int32  `json:"id"`
 			RoleName string `json:"name"`
 		}{
-			RoleID:   role.ID,
-			RoleName: role.Name,
-		})
+			RoleID:   roles.ID,
+			RoleName: roles.Name,
+		},
+		Permissions: []struct {
+			PermissionID       int32  `json:"id"`
+			PermissionName     string `json:"name"`
+			PermissionResource string `json:"resource"`
+		}{},
 	}
+
 	for _, perm := range permissions {
 		response.Permissions = append(response.Permissions, struct {
 			PermissionID       int32  `json:"id"`
