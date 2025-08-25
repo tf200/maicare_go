@@ -89,6 +89,7 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 		return
 	}
 	defer tx.Rollback(ctx)
+	
 
 	qtx := server.store.WithTx(tx)
 

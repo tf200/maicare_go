@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/notification"
@@ -127,50 +128,58 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Invalid client ID", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	var req CreateIncidentRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Invalid request body", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
 	informWhoBytes, err := json.Marshal(req.InformWho)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to marshal informWho", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process informWho")))
 		return
 	}
 
 	technicalBytes, err := json.Marshal(req.Technical)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to marshal technical", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process technical")))
 		return
 	}
 
 	organizationalBytes, err := json.Marshal(req.Organizational)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to marshal organizational", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process organizational")))
 		return
 	}
 
 	meseWorkerBytes, err := json.Marshal(req.MeseWorker)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to marshal meseWorker", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process meseWorker")))
 		return
 	}
 
 	clientOptionsBytes, err := json.Marshal(req.ClientOptions)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to marshal clientOptions", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process clientOptions")))
 		return
 	}
 
 	successionBytes, err := json.Marshal(req.Succession)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to marshal succession", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process succession")))
 		return
 	}
 
@@ -220,42 +229,48 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 
 	incident, err := server.store.CreateIncident(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to create incident", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create incident")))
 		return
 	}
 
 	var informWho []string
 	err = json.Unmarshal(incident.InformWho, &informWho)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to unmarshal informWho", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process informWho")))
 		return
 	}
 
 	var technical []string
 	err = json.Unmarshal(incident.Technical, &technical)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to unmarshal technical", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process technical")))
 		return
 	}
 
 	var organizational []string
 	err = json.Unmarshal(incident.Organizational, &organizational)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to unmarshal organizational", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process organizational")))
 		return
 	}
 
 	var meseWorker []string
 	err = json.Unmarshal(incident.MeseWorker, &meseWorker)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to unmarshal meseWorker", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process meseWorker")))
 		return
 	}
 
 	var clientOptions []string
 	err = json.Unmarshal(incident.ClientOptions, &clientOptions)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to unmarshal clientOptions", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process clientOptions")))
 		return
 	}
 
@@ -263,7 +278,8 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 	err = json.Unmarshal(incident.Succession, &succession)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Failed to unmarshal succession", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process succession")))
 		return
 	}
 	err = server.asynqClient.EnqueueIncident(async.IncidentPayload{
@@ -442,13 +458,15 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Invalid client ID", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid client ID")))
 		return
 	}
 
 	var req ListIncidentsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to bind query parameters", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("failed to bind query parameters")))
 		return
 	}
 
@@ -460,7 +478,8 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 		ClientID: clientID,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to list incidents", zap.String("client_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to list incidents")))
 		return
 	}
 
@@ -478,35 +497,40 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 		var informWho []string
 		err = json.Unmarshal(incident.InformWho, &informWho)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to unmarshal informWho", zap.String("client_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process informWho")))
 			return
 		}
 
 		var technical []string
 		err = json.Unmarshal(incident.Technical, &technical)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to unmarshal technical", zap.String("client_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process technical")))
 			return
 		}
 
 		var organizational []string
 		err = json.Unmarshal(incident.Organizational, &organizational)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to unmarshal organizational", zap.String("client_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process organizational")))
 			return
 		}
 
 		var meseWorker []string
 		err = json.Unmarshal(incident.MeseWorker, &meseWorker)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to unmarshal meseWorker", zap.String("client_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process meseWorker")))
 			return
 		}
 
 		var clientOptions []string
 		err = json.Unmarshal(incident.ClientOptions, &clientOptions)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to unmarshal clientOptions", zap.String("client_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process clientOptions")))
 			return
 		}
 
@@ -644,59 +668,67 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
 	incidentID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Invalid incident ID", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
 	}
 
 	incident, err := server.store.GetIncident(ctx, incidentID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Incident not found", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("incident not found")))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to retrieve incident")))
 		return
 	}
 
 	var informWho []string
 	err = json.Unmarshal(incident.InformWho, &informWho)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Failed to unmarshal informWho", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process informWho")))
 		return
 	}
 
 	var technical []string
 	err = json.Unmarshal(incident.Technical, &technical)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Failed to unmarshal technical", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process technical")))
 		return
 	}
 
 	var organizational []string
 	err = json.Unmarshal(incident.Organizational, &organizational)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Failed to unmarshal organizational", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process organizational")))
 		return
 	}
 
 	var meseWorker []string
 	err = json.Unmarshal(incident.MeseWorker, &meseWorker)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Failed to unmarshal meseWorker", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process meseWorker")))
 		return
 	}
 
 	var clientOptions []string
 	err = json.Unmarshal(incident.ClientOptions, &clientOptions)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Failed to unmarshal clientOptions", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process clientOptions")))
 		return
 	}
 
 	var succession []string
 	err = json.Unmarshal(incident.Succession, &succession)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetIncidentApi", "Failed to unmarshal succession", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process succession")))
 		return
 	}
 
@@ -864,13 +896,15 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
 	incidentID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Invalid incident ID", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
 	}
 
 	var req UpdateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to bind JSON", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("failed to process incident data")))
 		return
 	}
 
@@ -915,7 +949,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	if req.InformWho != nil {
 		informWhoBytes, err := json.Marshal(req.InformWho)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to marshal InformWho", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process InformWho")))
 			return
 		}
 		arg.InformWho = informWhoBytes
@@ -924,7 +959,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	if req.Technical != nil {
 		technicalBytes, err := json.Marshal(req.Technical)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to marshal Technical", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process Technical")))
 			return
 		}
 		arg.Technical = technicalBytes
@@ -933,7 +969,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	if req.Organizational != nil {
 		organizationalBytes, err := json.Marshal(req.Organizational)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to marshal Organizational", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process Organizational")))
 			return
 		}
 		arg.Organizational = organizationalBytes
@@ -942,7 +979,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	if req.MeseWorker != nil {
 		meseWorkerBytes, err := json.Marshal(req.MeseWorker)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to marshal MeseWorker", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process MeseWorker")))
 			return
 		}
 		arg.MeseWorker = meseWorkerBytes
@@ -951,7 +989,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	if req.ClientOptions != nil {
 		clientOptionsBytes, err := json.Marshal(req.ClientOptions)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to marshal ClientOptions", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process ClientOptions")))
 			return
 		}
 		arg.ClientOptions = clientOptionsBytes
@@ -960,7 +999,8 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	if req.Succession != nil {
 		successionBytes, err := json.Marshal(req.Succession)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to marshal Succession", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process Succession")))
 			return
 		}
 		arg.Succession = successionBytes
@@ -968,53 +1008,60 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 
 	incident, err := server.store.UpdateIncident(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to update incident", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process incident data")))
 		return
 	}
 
 	var informWho []string
 	err = json.Unmarshal(incident.InformWho, &informWho)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to unmarshal InformWho", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process InformWho")))
 		return
 	}
 
 	var technical []string
 	err = json.Unmarshal(incident.Technical, &technical)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to unmarshal Technical", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process Technical")))
 		return
 	}
 
 	var organizational []string
 	err = json.Unmarshal(incident.Organizational, &organizational)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to unmarshal Organizational", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process Organizational")))
 		return
 	}
 
 	var meseWorker []string
 	err = json.Unmarshal(incident.MeseWorker, &meseWorker)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to unmarshal MeseWorker", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process MeseWorker")))
 		return
 	}
 
 	var clientOptions []string
 	err = json.Unmarshal(incident.ClientOptions, &clientOptions)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to unmarshal ClientOptions", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process ClientOptions")))
 		return
 	}
 
 	var succession []string
 	err = json.Unmarshal(incident.Succession, &succession)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to unmarshal Succession", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process Succession")))
 		return
 	}
 
-	server.asynqClient.EnqueueIncident(async.IncidentPayload{
+	err = server.asynqClient.EnqueueIncident(async.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -1061,6 +1108,9 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		LocationName:            "",
 		To:                      incident.Emails,
 	}, ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "UpdateIncidentApi", "Failed to enqueue incident", zap.String("incident_id", id), zap.Error(err))
+	}
 
 	res := SuccessResponse(UpdateIncidentResponse{
 		ID:                      incident.ID,
@@ -1128,13 +1178,15 @@ func (server *Server) DeleteIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
 	incidentID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DeleteIncidentApi", "Invalid incident ID", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
 	}
 
 	err = server.store.DeleteIncident(ctx, incidentID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DeleteIncidentApi", "Failed to delete incident", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to delete incident")))
 		return
 	}
 
@@ -1162,59 +1214,68 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
 	incidentID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Invalid incident ID", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
 	}
 
 	incident, err := server.store.GetIncident(ctx, incidentID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Incident not found", zap.String("incident_id", id), zap.Error(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("incident not found")))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to retrieve incident", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to retrieve incident")))
 		return
 	}
 
 	var informWho []string
 	err = json.Unmarshal(incident.InformWho, &informWho)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to unmarshal InformWho", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to process InformWho")))
 		return
 	}
 
 	var technical []string
 	err = json.Unmarshal(incident.Technical, &technical)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to unmarshal Technical", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to process Technical")))
 		return
 	}
 
 	var organizational []string
 	err = json.Unmarshal(incident.Organizational, &organizational)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to unmarshal Organizational", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to process Organizational")))
 		return
 	}
 
 	var meseWorker []string
 	err = json.Unmarshal(incident.MeseWorker, &meseWorker)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to unmarshal MeseWorker", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to process MeseWorker")))
 		return
 	}
 
 	var clientOptions []string
 	err = json.Unmarshal(incident.ClientOptions, &clientOptions)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to unmarshal ClientOptions", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to process ClientOptions")))
 		return
 	}
 
 	var succession []string
 	err = json.Unmarshal(incident.Succession, &succession)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to unmarshal Succession", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to process Succession")))
 		return
 	}
 
@@ -1233,7 +1294,8 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 
 	receipients, err := server.store.GetAllAdminUsers(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to retrieve admin users", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to retrieve admin users")))
 		return
 	}
 
@@ -1302,7 +1364,8 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 
 	fileUrl, err := pdf.GenerateAndUploadIncidentPDF(ctx, incidentData, server.b2Client)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to generate incident PDF", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to generate incident file")))
 		return
 	}
 
@@ -1311,7 +1374,8 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 		FileUrl: &fileUrl,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateIncidentFileApi", "Failed to update incident file URL", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to update incident file URL")))
 		return
 	}
 
@@ -1341,13 +1405,15 @@ func (server *Server) ConfirmIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
 	incidentID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ConfirmIncidentApi", "Invalid incident ID", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
 	}
 
 	incident, err := server.store.ConfirmIncident(ctx, incidentID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ConfirmIncidentApi", "Failed to confirm incident", zap.String("incident_id", id), zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("failed to confirm incident")))
 		return
 	}
 
@@ -1355,6 +1421,8 @@ func (server *Server) ConfirmIncidentApi(ctx *gin.Context) {
 		ID:      incident.ID,
 		FileUrl: incident.FileUrl,
 	}, "Incident confirmed successfully")
+
+	// TODO: Send notification to the party responsivle for the client
 
 	ctx.JSON(http.StatusOK, res)
 }

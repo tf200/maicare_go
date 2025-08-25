@@ -257,13 +257,15 @@ type AddParticipantToAppointmentRequest struct {
 func (server *Server) AddParticipantToAppointmentApi(ctx *gin.Context) {
 	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "AddParticipantToAppointmentApi", "Invalid appointment ID parameter", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid appointment ID parameter")))
 		return
 	}
 
 	var req AddParticipantToAppointmentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "AddParticipantToAppointmentApi", "Failed to bind request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
 
@@ -272,7 +274,8 @@ func (server *Server) AddParticipantToAppointmentApi(ctx *gin.Context) {
 		EmployeeIds:   req.ParticipantEmployeeIDs,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "AddParticipantToAppointmentApi", "Failed to add participants to appointment", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add participants to appointment")))
 		return
 	}
 

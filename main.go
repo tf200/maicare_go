@@ -45,7 +45,7 @@ func main() {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}
 
-	var asynqClient *async.AsynqClient
+	var asynqClient async.AsynqClientInterface
 	if !config.Remote {
 		asynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
 	} else {

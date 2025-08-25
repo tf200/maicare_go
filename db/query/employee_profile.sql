@@ -30,9 +30,13 @@ INSERT INTO employee_profile (
 -- name: ListEmployeeProfile :many
 SELECT 
     ep.*,
-    u.profile_picture as profile_picture
+    u.profile_picture as profile_picture,
+    r.id as role_id,
+    r.name as role_name
 FROM employee_profile ep
 JOIN custom_user u ON ep.user_id = u.id
+LEFT JOIN user_roles ur ON ur.user_id = ep.user_id
+LEFT JOIN roles r ON r.id = ur.role_id
 WHERE 
     (CASE 
         WHEN sqlc.narg('include_archived')::boolean IS NULL THEN true

@@ -22,10 +22,14 @@ VALUES ($1)
 RETURNING *;
 
 -- name: ListRoles :many
-/* Returns every role ordered by id. */
-SELECT *
-FROM roles
-ORDER BY id;
+/* Returns every role ordered by id with count of permissions. */
+SELECT 
+    r.*,
+        COALESCE(COUNT(rp.permission_id), 0)::BIGINT AS permission_count
+FROM roles r
+LEFT JOIN role_permissions rp ON r.id = rp.role_id
+GROUP BY r.id, r.name
+ORDER BY r.id;
 
 /* ---------- 2. PERMISSIONS ---------- */
 
@@ -46,6 +50,7 @@ FROM role_permissions rp
 JOIN permissions p ON p.id = rp.permission_id
 WHERE rp.role_id = $1
 ORDER BY p.id;
+
 
 -- name: AddPermissionsToRole :exec
 /* Bulk-insert permission IDs into a role (idempotent). */

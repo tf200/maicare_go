@@ -49,7 +49,7 @@ type Server struct {
 	config       util.Config
 	tokenMaker   token.Maker
 	b2Client     *bucket.B2Client
-	asynqClient  *async.AsynqClient
+	asynqClient  async.AsynqClientInterface
 	httpServer   *http.Server
 	aiHandler    *ai.AiHandler
 	hub          *hub.Hub
@@ -58,7 +58,7 @@ type Server struct {
 	grpClient    grpclient.GrpcClientInterface
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient *async.AsynqClient, apiKey string, hubInstance *hub.Hub, notifService *notification.Service, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub, notifService *notification.Service, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)

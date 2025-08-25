@@ -712,9 +712,13 @@ func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT 
     ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
-    u.profile_picture as profile_picture
+    u.profile_picture as profile_picture,
+    r.id as role_id,
+    r.name as role_name
 FROM employee_profile ep
 JOIN custom_user u ON ep.user_id = u.id
+LEFT JOIN user_roles ur ON ur.user_id = ep.user_id
+LEFT JOIN roles r ON r.id = ur.role_id
 WHERE 
     (CASE 
         WHEN $3::boolean IS NULL THEN true
@@ -777,6 +781,8 @@ type ListEmployeeProfileRow struct {
 	ContractType              *string            `json:"contract_type"`
 	ContractRate              *float64           `json:"contract_rate"`
 	ProfilePicture            *string            `json:"profile_picture"`
+	RoleID                    *int32             `json:"role_id"`
+	RoleName                  *string            `json:"role_name"`
 }
 
 func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error) {
@@ -827,6 +833,8 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 			&i.ContractType,
 			&i.ContractRate,
 			&i.ProfilePicture,
+			&i.RoleID,
+			&i.RoleName,
 		); err != nil {
 			return nil, err
 		}

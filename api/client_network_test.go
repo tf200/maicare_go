@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -350,8 +351,9 @@ func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) db.Ass
 }
 
 func TestAssignEmployeeApi(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueNotificationTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -362,7 +364,7 @@ func TestAssignEmployeeApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				assignReq := AssignEmployeeRequest{
