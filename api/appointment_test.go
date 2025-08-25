@@ -15,6 +15,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func createRandomAppointment(t *testing.T, employeeID int64) db.ScheduledAppointment {
@@ -33,6 +34,7 @@ func createRandomAppointment(t *testing.T, employeeID int64) db.ScheduledAppoint
 }
 
 func TestCreateAppointmentApi(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueNotificationTask(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	employee, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
@@ -113,7 +115,7 @@ func TestAddParticipantToAppointmentApi(t *testing.T) {
 				}
 				reqBody, err := json.Marshal(addParticipantReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/appointments/%d/participants", appointment.ID)
+				url := fmt.Sprintf("/appointments/%s/participants", appointment.ID.String())
 				request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(reqBody))
 				require.NoError(t, err)
 				request.Header.Set("Content-Type", "application/json")
@@ -155,7 +157,7 @@ func TestGetAppointmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/appointments/%d", appointment.ID)
+				url := fmt.Sprintf("/appointments/%s", appointment.ID.String())
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return request, nil
@@ -214,7 +216,7 @@ func TestUpdateAppointmentApi(t *testing.T) {
 				}
 				reqBody, err := json.Marshal(updateReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/appointments/%d", appointment.ID)
+				url := fmt.Sprintf("/appointments/%s", appointment.ID.String())
 				request, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(reqBody))
 				require.NoError(t, err)
 				request.Header.Set("Content-Type", "application/json")
@@ -262,7 +264,7 @@ func TestDeleteAppointmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/appointments/%d", appointment.ID)
+				url := fmt.Sprintf("/appointments/%s", appointment.ID.String())
 				request, err := http.NewRequest(http.MethodDelete, url, nil)
 				require.NoError(t, err)
 				return request, nil

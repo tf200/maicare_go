@@ -15,8 +15,9 @@ import (
 
 // ListRolesApiResponse represents a response for ListRolesApi
 type ListRolesApiResponse struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
+	ID              int32  `json:"id"`
+	RoleName        string `json:"role_name"`
+	PermissionCount int64  `json:"permission_count"`
 }
 
 // @Summary List roles
@@ -35,8 +36,9 @@ func (server *Server) ListRolesApi(ctx *gin.Context) {
 	response := make([]ListRolesApiResponse, len(roles))
 	for i, role := range roles {
 		response[i] = ListRolesApiResponse{
-			ID:   role.ID,
-			Name: role.Name,
+			ID:              role.ID,
+			RoleName:        role.Name,
+			PermissionCount: role.PermissionCount,
 		}
 	}
 

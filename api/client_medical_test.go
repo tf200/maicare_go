@@ -45,7 +45,7 @@ func createRandomClientDiagnosis(t *testing.T, clientID int64) db.ClientDiagnosi
 }
 
 func TestCreateClientDiagnosisApi(t *testing.T) {
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	testCases := []struct {
@@ -57,7 +57,7 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				diagnosisReq := CreateClientDiagnosisRequest{
@@ -128,7 +128,7 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 
 func TestListClientDiagnoses(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	for i := 0; i < 20; i++ {
 		diag := createRandomClientDiagnosis(t, client.ID)
 		createRandomClientMedication(t, diag.ID, employee.ID)
@@ -143,7 +143,7 @@ func TestListClientDiagnoses(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/diagnosis?page=1&page_size=5", client.ID)
@@ -357,7 +357,7 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID in
 }
 
 func TestCreateClientMedicationApi(t *testing.T) {
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
 
@@ -370,7 +370,7 @@ func TestCreateClientMedicationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				medicationReq := CreateclientMedicationRequest{
@@ -421,7 +421,7 @@ func TestCreateClientMedicationApi(t *testing.T) {
 func TestListClientMedications(t *testing.T) {
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	for i := 0; i < 20; i++ {
 		createRandomClientMedication(t, diagnosis.ID, employee.ID)
 	}
@@ -435,7 +435,7 @@ func TestListClientMedications(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/diagnosis/%d/medications?page=1&page_size=5", client.ID, diagnosis.ID)
@@ -469,7 +469,7 @@ func TestListClientMedications(t *testing.T) {
 func TestGetClientMedicationApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	medication := createRandomClientMedication(t, diagnosis.ID, employee.ID)
 
 	testCases := []struct {
@@ -481,7 +481,7 @@ func TestGetClientMedicationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/diagnosis/%d/medications/%d", client.ID, diagnosis.ID, medication.ID)
@@ -516,7 +516,7 @@ func TestGetClientMedicationApi(t *testing.T) {
 func TestUpdateClientMedicationApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	medication := createRandomClientMedication(t, diagnosis.ID, employee.ID)
 
 	testCases := []struct {
@@ -528,7 +528,7 @@ func TestUpdateClientMedicationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				medicationReq := UpdateClientMedicationRequest{

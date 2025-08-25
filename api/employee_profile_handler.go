@@ -252,6 +252,8 @@ type ListEmployeeResponse struct {
 	IsArchived                bool      `json:"is_archived"`
 	ProfilePicture            *string   `json:"profile_picture"`
 	Age                       int64     `json:"age"`
+	RoleID                    *int32    `json:"role_id"`
+	RoleName                  *string   `json:"role_name"`
 }
 
 // @Summary List employee profiles
@@ -336,6 +338,8 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 			IsArchived:                employee.IsArchived,
 			ProfilePicture:            employee.ProfilePicture,
 			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
+			RoleID:                    employee.RoleID,
+			RoleName:                  employee.RoleName,
 		}
 	}
 

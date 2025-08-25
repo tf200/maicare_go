@@ -78,7 +78,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		EducationMentorEmail:       util.StringPtr("test mentor email"),
 		EducationMentorPhone:       util.StringPtr("test mentor phone"),
 		EducationAdditionalNotes:   util.StringPtr("test additional notes"),
-		EducationLevel:             util.StringPtr("test education level"),
+		EducationLevel:             util.StringPtr("primary"),
 		WorkCurrentlyEmployed:      false,
 		WorkCurrentEmployer:        util.StringPtr("test employer"),
 		WorkCurrentEmployerPhone:   util.StringPtr("test employer phone"),
@@ -86,7 +86,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		WorkCurrentPosition:        util.StringPtr("test position"),
 		WorkStartDate:              pgtype.Date{Time: time.Now(), Valid: true},
 		WorkAdditionalNotes:        util.StringPtr("test work additional notes"),
-		LivingSituation:            util.StringPtr("test living situation"),
+		LivingSituation:            util.StringPtr("home"),
 		LivingSituationNotes:       util.StringPtr("test living situation notes"),
 	}
 
@@ -114,7 +114,7 @@ func TestCreateClientApi(t *testing.T) {
 
 	sender := createRandomSender(t)
 	location := createRandomLocation(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -124,7 +124,7 @@ func TestCreateClientApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				clientReq := CreateClientDetailsRequest{
@@ -205,6 +205,7 @@ func TestCreateClientApi(t *testing.T) {
 }
 
 func TestListClient(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomClientDetails(t)
 	}
@@ -217,7 +218,7 @@ func TestListClient(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/clients?page=1&page_size=5"
@@ -253,7 +254,7 @@ func TestListClient(t *testing.T) {
 		{
 			name: "Invalid Page Number",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/clients?page=0&page_size=5"
@@ -282,6 +283,7 @@ func TestListClient(t *testing.T) {
 }
 
 func TestGetClientDetails(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	testCases := []struct {
 		name          string
@@ -292,7 +294,7 @@ func TestGetClientDetails(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d", client.ID)
@@ -326,6 +328,7 @@ func TestGetClientDetails(t *testing.T) {
 }
 
 func TestUpdateClientDetailsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	location := createRandomLocation(t)
 	_ = createRandomSender(t)
@@ -338,7 +341,7 @@ func TestUpdateClientDetailsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				clientReq := UpdateClientDetailsRequest{
@@ -435,6 +438,7 @@ func TestSetClientProfilePictureApi(t *testing.T) {
 }
 
 func TestAddClientDocumentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	file := createRandomAttachmentFile(t)
 	testCases := []struct {
@@ -446,7 +450,7 @@ func TestAddClientDocumentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				reqBody := AddClientDocumentApiRequest{
@@ -503,6 +507,7 @@ func addRandomClientDocument(t *testing.T, ClientID int64) db.ClientDocument {
 }
 
 func TestListClientDocumentsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	for i := 0; i < 10; i++ {
 		addRandomClientDocument(t, client.ID)
@@ -516,7 +521,7 @@ func TestListClientDocumentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/documents?page=1&page_size=5", client.ID)
@@ -550,6 +555,7 @@ func TestListClientDocumentsApi(t *testing.T) {
 }
 
 func TestDeleteClientDocumentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	cleint := createRandomClientDetails(t)
 	clientDoc := addRandomClientDocument(t, cleint.ID)
 
@@ -562,7 +568,7 @@ func TestDeleteClientDocumentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/documents/%d", cleint.ID, clientDoc.ID)
@@ -595,6 +601,7 @@ func TestDeleteClientDocumentApi(t *testing.T) {
 }
 
 func TestGetMissingClientDocumentsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	clientDoc := addRandomClientDocument(t, client.ID)
 	testCases := []struct {
@@ -606,7 +613,7 @@ func TestGetMissingClientDocumentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/missing_documents", client.ID)
@@ -642,6 +649,7 @@ func TestGetMissingClientDocumentsApi(t *testing.T) {
 }
 
 func TestUpdateClientStatusApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	testCases := []struct {
 		name          string
@@ -652,7 +660,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 		{
 			name: "OK No Scheduling",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				reqBody := UpdateClientStatusRequest{

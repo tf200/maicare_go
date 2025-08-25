@@ -18,7 +18,7 @@ import (
 )
 
 var testStore *db.Store
-var testasynqClient *AsynqClient
+var testasynqClient AsynqClientInterface
 var testWorker *AsynqServer
 
 func TestMain(m *testing.M) {

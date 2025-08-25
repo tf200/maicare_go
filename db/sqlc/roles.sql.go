@@ -212,22 +212,32 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID int32) ([]L
 }
 
 const listRoles = `-- name: ListRoles :many
-SELECT id, name
-FROM roles
-ORDER BY id
+SELECT 
+    r.id, r.name,
+        COALESCE(COUNT(rp.permission_id), 0)::BIGINT AS permission_count
+FROM roles r
+LEFT JOIN role_permissions rp ON r.id = rp.role_id
+GROUP BY r.id, r.name
+ORDER BY r.id
 `
 
-// Returns every role ordered by id.
-func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
+type ListRolesRow struct {
+	ID              int32  `json:"id"`
+	Name            string `json:"name"`
+	PermissionCount int64  `json:"permission_count"`
+}
+
+// Returns every role ordered by id with count of permissions.
+func (q *Queries) ListRoles(ctx context.Context) ([]ListRolesRow, error) {
 	rows, err := q.db.Query(ctx, listRoles)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Role
+	var items []ListRolesRow
 	for rows.Next() {
-		var i Role
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		var i ListRolesRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.PermissionCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

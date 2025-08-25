@@ -2,13 +2,12 @@ package api
 
 import (
 	"context"
-	"crypto/tls"
 	"log"
-	"maicare_go/async"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
+	"maicare_go/mocks"
 	"maicare_go/notification"
 
 	"maicare_go/util"
@@ -18,14 +17,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/mock/gomock"
 )
 
 var testStore *db.Store
 var testServer *Server
 var testb2Client *bucket.B2Client
-var testasynqClient *async.AsynqClient
+var testasynqClient *mocks.MockAsynqClientInterface
 var testGrpcClient grpclient.GrpcClientInterface
 var testNotifService *notification.Service
+var testMockCtrl *gomock.Controller
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
@@ -41,11 +42,16 @@ func TestMain(m *testing.M) {
 	defer conn.Close()
 
 	testStore = db.NewStore(conn)
+
+	testMockCtrl = gomock.NewController(&testing.T{})
+	defer testMockCtrl.Finish()
+
 	testb2Client, err = bucket.NewB2Client(config)
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
-	testasynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, &tls.Config{})
+	testasynqClient = mocks.NewMockAsynqClientInterface(testMockCtrl)
+
 	hubInstance := hub.NewHub()
 
 	testGrpcClient := CreateMockGrpcClient()

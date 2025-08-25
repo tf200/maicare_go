@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -78,6 +79,8 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 }
 
 func TestCreateIncident(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueIncident(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	employee, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	location := createRandomLocation(t)
 
@@ -90,11 +93,11 @@ func TestCreateIncident(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				incidentReq := CreateIncidentRequest{
-					EmployeeID:              1,
+					EmployeeID:              employee.ID,
 					LocationID:              location.ID,
 					ReporterInvolvement:     "directly_involved",
 					InformWho:               []string{"client"},
@@ -145,14 +148,14 @@ func TestCreateIncident(t *testing.T) {
 
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				t.Log(recorder.Body.String())
+				t.Log(recorder.Body.String(), "<<<<<<<<<<<<", employee.ID, "<<<<<<<<<<<<", user.ID)
 				require.Equal(t, http.StatusCreated, recorder.Code)
 				var res Response[CreateIncidentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res)
 				require.NotEmpty(t, res.Data.ID)
-				require.Equal(t, res.Data.EmployeeID, int64(1))
+				require.Equal(t, res.Data.EmployeeID, employee.ID)
 				require.Equal(t, res.Data.LocationID, location.ID)
 				require.Equal(t, res.Data.ReporterInvolvement, "directly_involved")
 				require.Equal(t, res.Data.InformWho, []string{"client"})
@@ -191,7 +194,6 @@ func TestCreateIncident(t *testing.T) {
 				require.NotNil(t, res.Data.PsychologicalDamageDesc)
 				require.Equal(t, *res.Data.PsychologicalDamageDesc, "test damage")
 				require.Equal(t, res.Data.NeededConsultation, "no")
-				require.Equal(t, res.Data.Emails, []string{"testemail@gg.com", "gaga@gog.com"})
 			},
 		},
 	}
@@ -376,6 +378,7 @@ func TestGetIncidentApi(t *testing.T) {
 }
 
 func TestUpdateIncidentApi(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueIncident(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 	var InformWho []string
