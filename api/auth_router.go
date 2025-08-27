@@ -10,7 +10,7 @@ func (server *Server) setupAuthRoutes(baseRouter *gin.RouterGroup) {
 
 	// 2fa setup routes
 	authGroup.POST("/setup_2fa", server.AuthMiddleware(), server.Setup2FAHandler)
-	authGroup.POST("/enable_2fa", server.Enable2FAHandler)
+	authGroup.POST("/enable_2fa", server.AuthMiddleware(), server.Enable2FAHandler)
 
 	authGroup.POST("/change_password", server.AuthMiddleware(), server.ChangePasswordApi)
 }
