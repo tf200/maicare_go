@@ -1,17 +1,25 @@
 
 -- name: CreateSchedule :one
-INSERT INTO schedules (
-    employee_id,
-    location_id,
-    location_shift_id,
-    color,
-    is_custom,
-    start_datetime,
-    end_datetime
-) VALUES (
-    $1, $2, $3, $4, $5 , $6, $7
+WITH inserted_schedule AS (
+    INSERT INTO schedules (
+        employee_id,
+        location_id,
+        location_shift_id,
+        color,
+        is_custom,
+        created_by_employee_id,
+        start_datetime,
+        end_datetime
+    ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8
+    )
+    RETURNING *
 )
-RETURNING *;
+SELECT 
+    s.*,
+    l.name as location_name
+FROM inserted_schedule s
+JOIN location l ON s.location_id = l.id;
 
 
 -- name: GetMonthlySchedulesByLocation :many

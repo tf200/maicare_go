@@ -17,6 +17,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func createRandomRegistrationForm(t *testing.T) db.RegistrationForm {
@@ -222,7 +223,7 @@ func TestListRegistrationFormsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/registration_form?page=1&page_size=5"
+				url := "/registration_form?page=1&page_size=5&status=all"
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return req, nil
@@ -394,6 +395,7 @@ func TestDeleteRegistrationFormApi(t *testing.T) {
 }
 
 func TestUpdateRegistrationFormStatusApi(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueAcceptedRegistration(gomock.Any(), gomock.Any()).Times(1)
 	registrationForm := createRandomRegistrationForm(t)
 
 	testCases := []struct {

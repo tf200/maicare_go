@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomSchedule(t *testing.T, employeeID int64) db.Schedule {
+func createRandomSchedule(t *testing.T, employeeID int64) db.CreateScheduleRow {
 	location := createRandomLocation(t)
 
 	arg := db.CreateScheduleParams{

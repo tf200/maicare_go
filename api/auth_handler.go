@@ -535,6 +535,7 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
+	log.Printf("Auth payload retrieved successfully for user ID: %d", payload.UserId)
 
 	userID := payload.UserId
 
@@ -544,6 +545,8 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
+
+	log.Printf("Request payload bound successfully for user ID: %d", userID)
 
 	user, err := server.store.GetUserByID(ctx, userID)
 	if err != nil {
@@ -555,16 +558,20 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 		return
 	}
 
+	log.Printf("User retrieved successfully for user ID: %d", userID)
+
 	if user.TwoFactorSecretTemp == nil || *user.TwoFactorSecretTemp == "" {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("2FA setup not initiated")))
 		return
 	}
+	log.Printf("Temporary 2FA secret exists for user ID: %d", userID)
 
 	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecretTemp)
 	if !valid {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("invalid validation code")))
 		return
 	}
+	log.Printf("Validation code verified successfully for user ID: %d", userID)
 
 	recoveryCodes := util.GenerateRecoveryCodes(10)
 
@@ -578,6 +585,8 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 		hashedRecoveryCodes[i] = hashedCode
 	}
 
+	log.Printf("Recovery codes generated successfully for user ID: %d", userID)
+
 	err = server.store.Enable2Fa(ctx, db.Enable2FaParams{
 		ID:              user.ID,
 		TwoFactorSecret: user.TwoFactorSecretTemp,
@@ -587,6 +596,8 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	log.Printf("2FA enabled successfully for user ID: %d", userID)
 
 	res := SuccessResponse(Enable2FAResponse{
 		RecoveryCodes: recoveryCodes,

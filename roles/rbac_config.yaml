@@ -1,210 +1,477 @@
+########################################
+#  PERMISSIONS
+########################################
 permissions:
-  - name: TEST.VIEW
-    resource: /test
-    method: [GET]
-  - name: EMPLOYEE.CREATE
-    resource: /employees
-    method: [POST]
-  - name: EMPLOYEE.VIEW
-    resource: /employees
-    method: [GET]
-  - name: EMPLOYEE.UPDATE
-    resource: /employees
-    method: [PUT]
-  - name: EMPLOYEE.DELETE
-    resource: /employees
-    method: [DELETE]
-  - name: ROLES.VIEW
-    resource: /roles
-    method: [GET]
-  - name: ROLES.CREATE
-    resource: /roles
-    method: [POST]  
-  - name: ROLES.UPDATE
-    resource: /roles/asign
-    method: [PUT]
-  - name: ROLES.DELETE
-    resource: /roles
-    method: [DELETE]  
-  - name: SENDER.CREATE
-    resource: /senders
-    method: [POST]
-  - name: SENDER.VIEW
-    resource: /senders
-    method: [GET]
-  - name: SENDER.UPDATE
-    resource: /senders
-    method: [PUT]
-  - name: LOCATION.CREATE
-    resource: /locations
-    method: [POST]
-  - name: LOCATION.VIEW
-    resource: /locations
-    method: [GET]
-  - name: LOCATION.UPDATE
-    resource: /locations
-    method: [PUT]
-  - name: LOCATION.DELETE
-    resource: /locations
-    method: [DELETE]
-  - name: DASHBOARD.VIEW
-    resource: /dashboard
-    method: [GET]
-  - name: CLIENT.CREATE
-    resource: /clients
-    method: [POST]
-  - name: CLIENT.VIEW
-    resource: /clients
-    method: [GET]
-  - name: CLIENT.UPDATE
-    resource: /clients
-    method: [PUT]
-  - name: CLIENT.DELETE
-    resource: /clients
-    method: [DELETE]
+  # Appointments & Cards
+  - name: APPOINTMENT.CREATE
+    resource: /appointments
+    method: [POST]                     # create new appointment
+  - name: APPOINTMENT.DELETE
+    resource: /appointments
+    method: [DELETE]                   # remove appointment
+  - name: APPOINTMENT.UPDATE
+    resource: /appointments
+    method: [PUT]                      # edit appointment
+  - name: APPOINTMENT.VIEW
+    resource: /appointments
+    method: [GET]                      # list / read appointment(s)
+  - name: APPOINTMENT.CONFIRM
+    resource: /appointments/confirm
+    method: [POST]                     # confirm appointment (e.g. by client)
+
   - name: APPOINTMENT_CARD.CREATE
     resource: /appointment_cards
     method: [POST]
-  - name: APPOINTMENT_CARD.VIEW
-    resource: /appointment_cards
-    method: [GET]
-  - name: APPOINTMENT_CARD.UPDATE
-    resource: /appointment_cards
-    method: [PUT]
   - name: APPOINTMENT_CARD.DELETE
     resource: /appointment_cards
     method: [DELETE]
-  - name: APPOINTMENT.CREATE
-    resource: /appointments
-    method: [POST]
-  - name: APPOINTMENT.VIEW
-    resource: /appointments
-    method: [GET]
-  - name: APPOINTMENT.UPDATE
-    resource: /appointments
+  - name: APPOINTMENT_CARD.UPDATE
+    resource: /appointment_cards
     method: [PUT]
-  - name: APPOINTMENT.DELETE
-    resource: /appointments
-    method: [DELETE]
-  - name: FINANCE.VIEW
-    resource: /finance
+  - name: APPOINTMENT_CARD.VIEW
+    resource: /appointment_cards
     method: [GET]
-  - name: PROFILE.VIEW
-    resource: /finance
+  
+  
+
+  # Clients
+  - name: CLIENT.CREATE
+    resource: /clients
     method: [POST]
+  - name: CLIENT.DELETE
+    resource: /clients
+    method: [DELETE]
+  - name: CLIENT.UPDATE
+    resource: /clients
+    method: [PUT]
+  - name: CLIENT.VIEW
+    resource: /clients
+    method: [GET]
+  - name: CLIENT.STATUS.UPDATE
+    resource: /clients/status
+    method: [PUT]
+  
+  # Client Incidents
+  - name: CLIENT.INCIDENT.CREATE
+    resource: /clients/incidents
+    method: [POST]
+  - name: CLIENT.INCIDENT.DELETE
+    resource: /clients/incidents
+    method: [DELETE]
+  - name: CLIENT.INCIDENT.UPDATE
+    resource: /clients/incidents
+    method: [PUT]
+  - name: CLIENT.INCIDENT.VIEW
+    resource: /clients/incidents
+    method: [GET]
+  - name: CLIENT.INCIDENT.CONFIRM
+    resource: /clients/incidents/confirm
+    method: [PUT]
+  
+  # Client Diagnoses
+  - name: CLIENT.DIAGNOSIS.CREATE
+    resource: /clients/diagnoses
+    method: [POST]
+  - name: CLIENT.DIAGNOSIS.DELETE
+    resource: /clients/diagnoses
+    method: [DELETE]
+  - name: CLIENT.DIAGNOSIS.UPDATE
+    resource: /clients/diagnoses
+    method: [PUT]
+  - name: CLIENT.DIAGNOSIS.VIEW
+    resource: /clients/diagnoses
+    method: [GET]
+
+  # Client Medications
+  - name: CLIENT.MEDICATION.CREATE
+    resource: /clients/medications
+    method: [POST]
+  - name: CLIENT.MEDICATION.DELETE
+    resource: /clients/medications
+    method: [DELETE]
+  - name: CLIENT.MEDICATION.UPDATE
+    resource: /clients/medications
+    method: [PUT]
+  - name: CLIENT.MEDICATION.VIEW
+    resource: /clients/medications
+    method: [GET]
+  
+  # Client Emergency Contacts
+  - name: CLIENT.EMERGENCY_CONTACT.CREATE
+    resource: /clients/emergency_contacts
+    method: [POST]
+  - name: CLIENT.EMERGENCY_CONTACT.DELETE
+    resource: /clients/emergency_contacts
+    method: [DELETE]
+  - name: CLIENT.EMERGENCY_CONTACT.UPDATE
+    resource: /clients/emergency_contacts
+    method: [PUT]
+  - name: CLIENT.EMERGENCY_CONTACT.VIEW
+    resource: /clients/emergency_contacts
+    method: [GET]
+  
+  # Client Involved Employees
+  - name: CLIENT.INVOLVED_EMPLOYEE.CREATE
+    resource: /clients/involved_employees
+    method: [POST]
+  - name: CLIENT.INVOLVED_EMPLOYEE.DELETE
+    resource: /clients/involved_employees
+    method: [DELETE]
+  - name: CLIENT.INVOLVED_EMPLOYEE.UPDATE
+    resource: /clients/involved_employees
+    method: [PUT]
+  - name: CLIENT.INVOLVED_EMPLOYEE.VIEW
+    resource: /clients/involved_employees
+    method: [GET]
+
+  # Client Progress Reports
+  - name: CLIENT.PROGRESS_REPORT.CREATE
+    resource: /clients/progress_reports
+    method: [POST]
+  - name: CLIENT.PROGRESS_REPORT.DELETE
+    resource: /clients/progress_reports
+    method: [DELETE]
+  - name: CLIENT.PROGRESS_REPORT.UPDATE
+    resource: /clients/progress_reports
+    method: [PUT]
+  - name: CLIENT.PROGRESS_REPORT.VIEW
+    resource: /clients/progress_reports
+    method: [GET]
+  
+  # Client AI Progress Reports
+  - name: CLIENT.AI_PROGRESS_REPORT.GENERATE
+    resource: /clients/ai_progress_reports
+    method: [POST]
+  - name: CLIENT.AI_PROGRESS_REPORT.CONFIRM
+    resource: /clients/ai_progress_reports/confirm
+    method: [POST]
+  - name: CLIENT.AI_PROGRESS_REPORT.VIEW
+    resource: /clients/ai_progress_reports
+    method: [GET]
+
+  # Contracts 
+  - name: CONTRACT.CREATE
+    resource: /contracts
+    method: [POST]
+  - name: CONTRACT.DELETE
+    resource: /contracts
+    method: [DELETE]
+  - name: CONTRACT.UPDATE
+    resource: /contracts
+    method: [PUT]
+  - name: CONTRACT.VIEW
+    resource: /contracts
+    method: [GET]
+  - name: CONTRACT_TYPE.CREATE
+    resource: /contract_types
+    method: [POST]
+  - name: CONTRACT_TYPE.DELETE
+    resource: /contract_types
+    method: [DELETE]
+  - name: CONTRACT_TYPE.VIEW
+    resource: /contract_types
+    method: [GET]
+
+  # Care Plans & Maturity Matrix
+  - name: CARE_PLAN.CREATE
+    resource: /care_plans
+    method: [POST]
+  - name: CARE_PLAN.DELETE
+    resource: /care_plans
+    method: [DELETE]
+  - name: CARE_PLAN.UPDATE
+    resource: /care_plans
+    method: [PUT]
+  - name: CARE_PLAN.VIEW
+    resource: /care_plans
+    method: [GET]
+
+  # Dashboard & Settings
+  - name: DASHBOARD.VIEW
+    resource: /dashboard
+    method: [GET]
   - name: SETTINGS.VIEW
     resource: /settings
     method: [GET]
-  - name: SCHEDULE.CREATE
-    resource: /schedules
+
+  # Employees
+  - name: EMPLOYEE.CREATE
+    resource: /employees
     method: [POST]
-  - name: SCHEDULE.VIEW
-    resource: /schedules
-    method: [GET]
-  - name: SCHEDULE.UPDATE
-    resource: /schedules
+  - name: EMPLOYEE.DELETE
+    resource: /employees
+    method: [DELETE]
+  - name: EMPLOYEE.UPDATE
+    resource: /employees
     method: [PUT]
-  - name: SCHEDULE.DELETE
-    resource: /schedules
-    method: [DELETE]
-  - name: CARE_COORDINATION.VIEW
-    resource: "none"
-    method: [none]
-  - name: SHIFT.CREATE
-    resource: /shifts
-    method: [POST]
-  - name: SHIFT.VIEW
-    resource: /shifts
+  - name: EMPLOYEE.VIEW
+    resource: /employees
     method: [GET]
-  - name: SHIFT.UPDATE
-    resource: /shifts
-    method: [PUT] 
-  - name: SHIFT.DELETE
-    resource: /shifts
-    method: [DELETE]
+  
+  # Incidents
+  - name: INCIDENT.VIEW
+    resource: /incidents
+    method: [GET]
+
+  # Finance & Invoices
+  - name: FINANCE.VIEW
+    resource: /finance
+    method: [GET]
+
   - name: INVOICE.CREATE
     resource: /invoices
     method: [POST]
-  - name: INVOICE.VIEW
-    resource: /invoices
-    method: [GET]
-  - name: INVOICE.UPDATE
-    resource: /invoices
-    method: [PUT]
   - name: INVOICE.DELETE
     resource: /invoices
     method: [DELETE]
+  - name: INVOICE.UPDATE
+    resource: /invoices
+    method: [PUT]
+  - name: INVOICE.VIEW
+    resource: /invoices
+    method: [GET]
+
   - name: INVOICE.PAYMENT.CREATE
     resource: /invoices/payments
     method: [POST]
-  - name: INVOICE.PAYMENT.VIEW
-    resource: /invoices/payments
-    method: [GET]
-  - name: INVOICE.PAYMENT.UPDATE
-    resource: /invoices/payments
-    method: [PUT]
   - name: INVOICE.PAYMENT.DELETE
     resource: /invoices/payments
     method: [DELETE]
+  - name: INVOICE.PAYMENT.UPDATE
+    resource: /invoices/payments
+    method: [PUT]
+  - name: INVOICE.PAYMENT.VIEW
+    resource: /invoices/payments
+    method: [GET]
 
-  
-  
+  # Locations
+  - name: LOCATION.CREATE
+    resource: /locations
+    method: [POST]
+  - name: LOCATION.DELETE
+    resource: /locations
+    method: [DELETE]
+  - name: LOCATION.UPDATE
+    resource: /locations
+    method: [PUT]
+  - name: LOCATION.VIEW
+    resource: /locations
+    method: [GET]
 
+  # Profile
+  - name: PROFILE.VIEW
+    resource: /finance
+    method: [POST]                     # sic (path reused; kept for compatibility)
+
+
+  #Registration Forms
+  - name: REGISTRATION_FORM.VIEW
+    resource: /registration_form
+    method: [GET]
+  - name: REGISTRATION_FORM.UPDATE
+    resource: /registration_form
+    method: [PUT]
+  - name: REGISTRATION_FORM.DELETE
+    resource: /registration_form
+    method: [DELETE]
+
+
+
+  # Roles management
+  - name: ROLES.CREATE
+    resource: /roles
+    method: [POST]
+  - name: ROLES.DELETE
+    resource: /roles
+    method: [DELETE]
+  - name: ROLES.UPDATE
+    resource: /roles/asign            # typo kept (should probably be "assign")
+    method: [PUT]
+  - name: ROLES.VIEW
+    resource: /roles
+    method: [GET]
+  - name: ROLES.ASSIGN
+    resource: /employees/roles
+    method: [POST]
+  
+  - name: PERMISSIONS.VIEW
+    resource: /permissions
+    method: [GET]
+  - name: PERMISSIONS.UPDATE
+    resource: /permissions
+    method: [PUT]
+  - name: PERMISSIONS.DELETE
+    resource: /permissions
+    method: [DELETE]
+  - name: PERMISSIONS.CREATE
+    resource: /permissions
+    method: [POST]
+  - name: PERMISSIONS.GRANT
+    resource: /permissions/grant
+    method: [POST]
+
+  # Schedules & Shifts
+  - name: SCHEDULE.CREATE
+    resource: /schedules
+    method: [POST]
+  - name: SCHEDULE.DELETE
+    resource: /schedules
+    method: [DELETE]
+  - name: SCHEDULE.UPDATE
+    resource: /schedules
+    method: [PUT]
+  - name: SCHEDULE.VIEW
+    resource: /schedules
+    method: [GET]
+
+  - name: SHIFT.CREATE
+    resource: /shifts
+    method: [POST]
+  - name: SHIFT.DELETE
+    resource: /shifts
+    method: [DELETE]
+  - name: SHIFT.UPDATE
+    resource: /shifts
+    method: [PUT]
+  - name: SHIFT.VIEW
+    resource: /shifts
+    method: [GET]
+
+  # Senders
+  - name: SENDER.CREATE
+    resource: /senders
+    method: [POST]
+  - name: SENDER.UPDATE
+    resource: /senders
+    method: [PUT]
+  - name: SENDER.VIEW
+    resource: /senders
+    method: [GET]
+
+  # Test endpoint
+  - name: TEST.VIEW
+    resource: /test
+    method: [GET]
+
+  # Placeholder / meta permission
+  - name: CARE_COORDINATION.VIEW
+    resource: "none"
+    method: [none]
+
+  # >>> ADD NEW PERMISSIONS HERE <<<
+  - name: REPORTS.VIEW
+    resource: /reports
+    method: [GET]
+  - name: AUDIT.LOG.VIEW
+    resource: /audit/logs
+    method: [GET]
+
+########################################
+#  ROLES
+########################################
 roles:
   - name: admin
     id: 1
-    description: "Admin role"
+    description: Full administrative access
     permissions:
-      - TEST.VIEW
-      - EMPLOYEE.CREATE
-      - EMPLOYEE.VIEW
-      - EMPLOYEE.UPDATE
-      - EMPLOYEE.DELETE
-      - ROLES.UPDATE
-      - SENDER.CREATE
-      - SENDER.VIEW
-      - SENDER.UPDATE
-      - DASHBOARD.VIEW
-      - LOCATION.CREATE
-      - LOCATION.VIEW
-      - LOCATION.UPDATE
-      - LOCATION.DELETE
-      - CLIENT.CREATE
-      - CLIENT.VIEW
-      - CLIENT.UPDATE
-      - CLIENT.DELETE
-      - APPOINTMENT_CARD.CREATE
-      - APPOINTMENT_CARD.VIEW
-      - APPOINTMENT_CARD.UPDATE
-      - APPOINTMENT_CARD.DELETE
       - APPOINTMENT.CREATE
-      - APPOINTMENT.VIEW
-      - APPOINTMENT.UPDATE
       - APPOINTMENT.DELETE
-      - FINANCE.VIEW
-      - SETTINGS.VIEW
-      - PROFILE.VIEW
-      - SCHEDULE.CREATE
-      - SCHEDULE.VIEW
-      - SCHEDULE.UPDATE
-      - SCHEDULE.DELETE
+      - APPOINTMENT.UPDATE
+      - APPOINTMENT.VIEW
+      - APPOINTMENT.CONFIRM
+      - APPOINTMENT_CARD.CREATE
+      - APPOINTMENT_CARD.DELETE
+      - APPOINTMENT_CARD.UPDATE
+      - APPOINTMENT_CARD.VIEW
       - CARE_COORDINATION.VIEW
-      - SHIFT.CREATE
-      - SHIFT.VIEW
-      - SHIFT.UPDATE
-      - SHIFT.DELETE
+      - CLIENT.CREATE
+      - CLIENT.DELETE
+      - CLIENT.UPDATE
+      - CLIENT.VIEW
+      - CLIENT.STATUS.UPDATE
+      - CLIENT.INCIDENT.CREATE
+      - CLIENT.INCIDENT.DELETE
+      - CLIENT.INCIDENT.UPDATE
+      - CLIENT.INCIDENT.VIEW
+      - CLIENT.INCIDENT.CONFIRM
+      - CLIENT.DIAGNOSIS.CREATE
+      - CLIENT.DIAGNOSIS.DELETE
+      - CLIENT.DIAGNOSIS.UPDATE
+      - CLIENT.DIAGNOSIS.VIEW
+      - CLIENT.MEDICATION.CREATE
+      - CLIENT.MEDICATION.DELETE
+      - CLIENT.MEDICATION.UPDATE
+      - CLIENT.MEDICATION.VIEW
+      - CLIENT.EMERGENCY_CONTACT.CREATE
+      - CLIENT.EMERGENCY_CONTACT.DELETE
+      - CLIENT.EMERGENCY_CONTACT.UPDATE
+      - CLIENT.EMERGENCY_CONTACT.VIEW
+      - CLIENT.INVOLVED_EMPLOYEE.CREATE
+      - CLIENT.INVOLVED_EMPLOYEE.DELETE
+      - CLIENT.INVOLVED_EMPLOYEE.UPDATE
+      - CLIENT.INVOLVED_EMPLOYEE.VIEW
+      - CLIENT.PROGRESS_REPORT.CREATE
+      - CLIENT.PROGRESS_REPORT.DELETE
+      - CLIENT.PROGRESS_REPORT.UPDATE
+      - CLIENT.PROGRESS_REPORT.VIEW
+      - CLIENT.AI_PROGRESS_REPORT.GENERATE
+      - CLIENT.AI_PROGRESS_REPORT.CONFIRM
+      - CLIENT.AI_PROGRESS_REPORT.VIEW
+      - CONTRACT.CREATE
+      - CONTRACT.DELETE
+      - CONTRACT.UPDATE
+      - CONTRACT.VIEW
+      - CONTRACT_TYPE.CREATE
+      - CONTRACT_TYPE.DELETE
+      - CONTRACT_TYPE.VIEW
+      - DASHBOARD.VIEW
+      - EMPLOYEE.CREATE
+      - EMPLOYEE.DELETE
+      - EMPLOYEE.UPDATE
+      - EMPLOYEE.VIEW
+      - FINANCE.VIEW
       - INVOICE.CREATE
-      - INVOICE.VIEW
-      - INVOICE.UPDATE
       - INVOICE.DELETE
+      - INVOICE.UPDATE
+      - INVOICE.VIEW
       - INVOICE.PAYMENT.CREATE
-      - INVOICE.PAYMENT.VIEW
-      - INVOICE.PAYMENT.UPDATE
       - INVOICE.PAYMENT.DELETE
-
+      - INVOICE.PAYMENT.UPDATE
+      - INVOICE.PAYMENT.VIEW
+      - LOCATION.CREATE
+      - LOCATION.DELETE
+      - LOCATION.UPDATE
+      - LOCATION.VIEW
+      - REGISTRATION_FORM.VIEW
+      - REGISTRATION_FORM.UPDATE
+      - REGISTRATION_FORM.DELETE
+      - PROFILE.VIEW
+      - ROLES.CREATE
+      - ROLES.DELETE
+      - ROLES.UPDATE
+      - ROLES.VIEW
+      - ROLES.ASSIGN
+      - PERMISSIONS.VIEW
+      - PERMISSIONS.UPDATE
+      - PERMISSIONS.DELETE
+      - PERMISSIONS.CREATE
+      - PERMISSIONS.GRANT
+      - SCHEDULE.CREATE
+      - SCHEDULE.DELETE
+      - SCHEDULE.UPDATE
+      - SCHEDULE.VIEW
+      - SENDER.CREATE
+      - SENDER.UPDATE
+      - SENDER.VIEW
+      - SETTINGS.VIEW
+      - SHIFT.CREATE
+      - SHIFT.DELETE
+      - SHIFT.UPDATE
+      - SHIFT.VIEW
+      - TEST.VIEW
 
   - name: Worker
     id: 2
-    description: "Test role"
+    description: Minimal test role
     permissions:
       - EMPLOYEE.CREATE

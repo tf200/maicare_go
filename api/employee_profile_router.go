@@ -32,7 +32,7 @@ func (server *Server) setupEmployeeRoutes(baseRouter *gin.RouterGroup) {
 		employeeGroup.PUT("/:id/certification/:certification_id", server.RBACMiddleware("EMPLOYEE.UPDATE"), server.UpdateEmployeeCertificationApi)
 		employeeGroup.DELETE("/:id/certification/:certification_id", server.RBACMiddleware("EMPLOYEE.DELETE"), server.DeleteEmployeeCertificationApi)
 
-		employeeGroup.POST("/:id/appointments", server.RBACMiddleware("EMPLOYEE.CREATE"), server.ListAppointmentsForEmployee)
+		employeeGroup.POST("/:id/appointments", server.RBACMiddleware("APPOINTMENT.VIEW"), server.ListAppointmentsForEmployee)
 
 		employeeGroup.GET("/emails", server.RBACMiddleware("EMPLOYEE.VIEW"), server.SearchEmployeesByNameOrEmailApi)
 

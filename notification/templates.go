@@ -9,11 +9,12 @@ import (
 
 const (
 	// Notification Types
-	TypeNewAppointment         = "new_appointment"
-	TypeAppointmentUpdate      = "appointment_update"
-	TypeNewClientAssignment    = "new_client_assigned"
-	TypeClientContractReminder = "client_contract_reminder"
-	TypeNewIncidentReport      = "new_incident_report"
+	TypeNewAppointment          = "new_appointment"
+	TypeAppointmentUpdate       = "appointment_update"
+	TypeNewClientAssignment     = "new_client_assigned"
+	TypeClientContractReminder  = "client_contract_reminder"
+	TypeNewIncidentReport       = "new_incident_report"
+	TypeNewScheduleNotification = "new_schedule_notification"
 )
 
 type NotificationPayload struct {
@@ -25,10 +26,11 @@ type NotificationPayload struct {
 }
 
 type NotificationData struct {
-	NewAppointment         *NewAppointmentData         `json:"new_appointment,omitempty"`
-	NewClientAssignment    *NewClientAssignmentData    `json:"new_client_assignment,omitempty"`
-	ClientContractReminder *ClientContractReminderData `json:"client_contract_reminder,omitempty"`
-	NewIncidentReport      *NewIncidentReportData      `json:"new_incident_report,omitempty"`
+	NewAppointment          *NewAppointmentData          `json:"new_appointment,omitempty"`
+	NewClientAssignment     *NewClientAssignmentData     `json:"new_client_assignment,omitempty"`
+	ClientContractReminder  *ClientContractReminderData  `json:"client_contract_reminder,omitempty"`
+	NewIncidentReport       *NewIncidentReportData       `json:"new_incident_report,omitempty"`
+	NewScheduleNotification *NewScheduleNotificationData `json:"new_schedule_notification,omitempty"`
 }
 
 // Notifications Data Templates
@@ -86,4 +88,20 @@ type NewIncidentReportData struct {
 	ClientFirstName    string `json:"client_first_name"`
 	ClientLastName     string `json:"client_last_name"`
 	SeverityOfIncident string `json:"severity_of_incident"`
+}
+
+type NewScheduleNotificationData struct {
+	ScheduleID uuid.UUID `json:"schedule_id"`
+	CreatedBy  int64     `json:"created_by"`
+	StartTime  time.Time `json:"start_time"`
+	EndTime    time.Time `json:"end_time"`
+	Location   string    `json:"location"`
+}
+
+func (n *NewScheduleNotificationData) NewScheduleMessage() string {
+	message := fmt.Sprintf(
+		"New schedule created from %s to %s at %s",
+		n.StartTime.Format(time.RFC3339), n.EndTime.Format(time.RFC3339), n.Location,
+	)
+	return message
 }
