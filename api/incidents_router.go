@@ -7,6 +7,6 @@ func (server *Server) setupIncidentsAllRoutes(baseRouter *gin.RouterGroup) {
 	incidents := baseRouter.Group("/incidents")
 
 	{
-		incidents.GET("", server.ListAllIncidentsApi)
+		incidents.GET("", server.RBACMiddleware("INCIDENT.VIEW"), server.ListAllIncidentsApi)
 	}
 }

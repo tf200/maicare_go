@@ -66,20 +66,6 @@ type AppointmentTemplate struct {
 	UpdatedAt          pgtype.Timestamp `json:"updated_at"`
 }
 
-type Assessment struct {
-	ID       int64              `json:"id"`
-	Content  *string            `json:"content"`
-	DomainID *int64             `json:"domain_id"`
-	Level    int32              `json:"level"`
-	Updated  pgtype.Timestamptz `json:"updated"`
-	Created  pgtype.Timestamptz `json:"created"`
-}
-
-type AssessmentDomain struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
 type AssignedEmployee struct {
 	ID         int64              `json:"id"`
 	ClientID   int64              `json:"client_id"`
@@ -237,25 +223,6 @@ type ClientAgreement struct {
 	Created          pgtype.Timestamptz `json:"created"`
 }
 
-type ClientAllergy struct {
-	ID          int64              `json:"id"`
-	ClientID    int64              `json:"client_id"`
-	AllergyType string             `json:"allergy_type"`
-	Severity    string             `json:"severity"`
-	Reaction    string             `json:"reaction"`
-	Notes       *string            `json:"notes"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-}
-
-type ClientCurrentLevel struct {
-	ID       int64              `json:"id"`
-	ClientID int64              `json:"client_id"`
-	DomainID int64              `json:"domain_id"`
-	Level    int32              `json:"level"`
-	Content  *string            `json:"content"`
-	Created  pgtype.Timestamptz `json:"created"`
-}
-
 type ClientDetail struct {
 	ID                         int64              `json:"id"`
 	IntakeFormID               *int64             `json:"intake_form_id"`
@@ -341,18 +308,6 @@ type ClientEmergencyContact struct {
 	GoalsReports     bool               `json:"goals_reports"`
 }
 
-type ClientGoal struct {
-	ID                               int64              `json:"id"`
-	ClientMaturityMatrixAssessmentID int64              `json:"client_maturity_matrix_assessment_id"`
-	Description                      string             `json:"description"`
-	Status                           string             `json:"status"`
-	TargetLevel                      int32              `json:"target_level"`
-	StartDate                        pgtype.Date        `json:"start_date"`
-	TargetDate                       pgtype.Date        `json:"target_date"`
-	CompletionDate                   pgtype.Date        `json:"completion_date"`
-	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
-}
-
 type ClientMaturityMatrixAssessment struct {
 	ID                  int64              `json:"id"`
 	ClientID            int64              `json:"client_id"`
@@ -381,26 +336,6 @@ type ClientMedication struct {
 	IsCritical       bool               `json:"is_critical"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-}
-
-type ClientMedicationRecord struct {
-	ID                 int64              `json:"id"`
-	ClientMedicationID int64              `json:"client_medication_id"`
-	Status             *string            `json:"status"`
-	Reason             *string            `json:"reason"`
-	Time               pgtype.Timestamptz `json:"time"`
-	Updated            pgtype.Timestamptz `json:"updated"`
-	Created            pgtype.Timestamptz `json:"created"`
-}
-
-type ClientState struct {
-	ID       int64              `json:"id"`
-	Value    int32              `json:"value"`
-	Type     string             `json:"type"`
-	Content  *string            `json:"content"`
-	ClientID int64              `json:"client_id"`
-	Updated  pgtype.Timestamptz `json:"updated"`
-	Created  pgtype.Timestamptz `json:"created"`
 }
 
 type ClientStatusHistory struct {
@@ -576,22 +511,6 @@ type DataSharingStatement struct {
 	Created                                pgtype.Timestamptz `json:"created"`
 }
 
-type DbSetting struct {
-	ID          int64  `json:"id"`
-	OptionName  string `json:"option_name"`
-	OptionValue string `json:"option_value"`
-	OptionType  string `json:"option_type"`
-}
-
-type EmotionalState struct {
-	ID               int64              `json:"id"`
-	ClientID         int64              `json:"client_id"`
-	Date             pgtype.Timestamptz `json:"date"`
-	StateDescription string             `json:"state_description"`
-	Intensity        int32              `json:"intensity"`
-	Created          pgtype.Timestamptz `json:"created"`
-}
-
 type EmployeeEducation struct {
 	ID              int64              `json:"id"`
 	EmployeeID      int64              `json:"employee_id"`
@@ -645,57 +564,11 @@ type EmployeeProfile struct {
 	ContractRate              *float64           `json:"contract_rate"`
 }
 
-type Expense struct {
-	ID            int64              `json:"id"`
-	Amount        float64            `json:"amount"`
-	Tax           float64            `json:"tax"`
-	Desc          *string            `json:"desc"`
-	AttachmentIds []byte             `json:"attachment_ids"`
-	LocationID    *int64             `json:"location_id"`
-	Updated       pgtype.Timestamptz `json:"updated"`
-	Created       pgtype.Timestamptz `json:"created"`
-}
-
-type Feedback struct {
-	ID           int64              `json:"id"`
-	AuthorID     *int64             `json:"author_id"`
-	ClientID     int64              `json:"client_id"`
-	Date         pgtype.Date        `json:"date"`
-	FeedbackText string             `json:"feedback_text"`
-	Created      pgtype.Timestamptz `json:"created"`
-}
-
 type FrameworkAgreement struct {
 	ID               int64              `json:"id"`
 	ClientID         int64              `json:"client_id"`
 	AgreementDetails string             `json:"agreement_details"`
 	Created          pgtype.Timestamptz `json:"created"`
-}
-
-type GoalObjective struct {
-	ID                   int64              `json:"id"`
-	GoalID               int64              `json:"goal_id"`
-	ObjectiveDescription string             `json:"objective_description"`
-	DueDate              pgtype.Date        `json:"due_date"`
-	Status               string             `json:"status"`
-	CompletionDate       pgtype.Date        `json:"completion_date"`
-	CreatedAt            pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
-}
-
-type Group struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-type GroupAccess struct {
-	ID         int64              `json:"id"`
-	EmployeeID int64              `json:"employee_id"`
-	GroupID    int64              `json:"group_id"`
-	StartDate  pgtype.Timestamptz `json:"start_date"`
-	EndDate    pgtype.Timestamptz `json:"end_date"`
-	Updated    pgtype.Timestamptz `json:"updated"`
-	Created    pgtype.Timestamptz `json:"created"`
 }
 
 type Incident struct {
@@ -746,25 +619,6 @@ type Incident struct {
 	IsConfirmed             bool               `json:"is_confirmed"`
 	FileUrl                 *string            `json:"file_url"`
 	Emails                  []string           `json:"emails"`
-}
-
-type IncidentDetail struct {
-	ID               int64              `json:"id"`
-	ReportedByID     int64              `json:"reported_by_id"`
-	DateReported     pgtype.Timestamptz `json:"date_reported"`
-	DateOfIncident   pgtype.Timestamptz `json:"date_of_incident"`
-	Location         string             `json:"location"`
-	Description      string             `json:"description"`
-	ActionTaken      *string            `json:"action_taken"`
-	FollowUpRequired bool               `json:"follow_up_required"`
-	FollowUpDate     pgtype.Date        `json:"follow_up_date"`
-	Notes            *string            `json:"notes"`
-	Status           string             `json:"status"`
-}
-
-type IncidentInvolvedChild struct {
-	IncidentID int64 `json:"incident_id"`
-	ClientID   int64 `json:"client_id"`
 }
 
 type IntakeForm struct {
@@ -924,15 +778,6 @@ type MaturityMatrix struct {
 	LevelDescription []byte `json:"level_description"`
 }
 
-type Measurement struct {
-	ID              int64              `json:"id"`
-	ClientID        int64              `json:"client_id"`
-	Date            pgtype.Date        `json:"date"`
-	MeasurementType string             `json:"measurement_type"`
-	Value           float64            `json:"value"`
-	Created         pgtype.Timestamptz `json:"created"`
-}
-
 type Notification struct {
 	ID        uuid.UUID          `json:"id"`
 	UserID    int64              `json:"user_id"`
@@ -942,25 +787,6 @@ type Notification struct {
 	Data      []byte             `json:"data"`
 	ReadAt    pgtype.Timestamptz `json:"read_at"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-type ObjectivesReport struct {
-	ID                               int64              `json:"id"`
-	ClientMaturityMatrixAssessmentID *int64             `json:"client_maturity_matrix_assessment_id"`
-	EmployeeID                       int64              `json:"employee_id"`
-	Title                            string             `json:"title"`
-	ReportText                       string             `json:"report_text"`
-	Level                            *int32             `json:"level"`
-	CreatedAt                        pgtype.Timestamptz `json:"created_at"`
-}
-
-type Observation struct {
-	ID              int64              `json:"id"`
-	ClientID        int64              `json:"client_id"`
-	Category        *string            `json:"category"`
-	Date            pgtype.Date        `json:"date"`
-	ObservationText string             `json:"observation_text"`
-	Created         pgtype.Timestamptz `json:"created"`
 }
 
 type Organisation struct {
@@ -984,15 +810,6 @@ type Permission struct {
 	Method   string `json:"method"`
 }
 
-type PhysicalState struct {
-	ID       int64              `json:"id"`
-	ClientID int64              `json:"client_id"`
-	Date     pgtype.Timestamptz `json:"date"`
-	Symptoms string             `json:"symptoms"`
-	Severity int32              `json:"severity"`
-	Created  pgtype.Timestamptz `json:"created"`
-}
-
 type ProgressReport struct {
 	ID             int64              `json:"id"`
 	ClientID       int64              `json:"client_id"`
@@ -1003,18 +820,6 @@ type ProgressReport struct {
 	Type           string             `json:"type"`
 	EmotionalState string             `json:"emotional_state"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-}
-
-type ProtectedEmail struct {
-	Uuid      uuid.UUID          `json:"uuid"`
-	Email     string             `json:"email"`
-	Subject   *string            `json:"subject"`
-	Content   *string            `json:"content"`
-	EmailType string             `json:"email_type"`
-	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
-	Metadata  []byte             `json:"metadata"`
-	Passkey   string             `json:"passkey"`
-	Created   pgtype.Timestamptz `json:"created"`
 }
 
 type Provision struct {
@@ -1175,16 +980,17 @@ type Room struct {
 }
 
 type Schedule struct {
-	ID              uuid.UUID        `json:"id"`
-	EmployeeID      int64            `json:"employee_id"`
-	Color           *string          `json:"color"`
-	LocationID      int64            `json:"location_id"`
-	LocationShiftID *int64           `json:"location_shift_id"`
-	IsCustom        bool             `json:"is_custom"`
-	StartDatetime   pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime     pgtype.Timestamp `json:"end_datetime"`
-	CreatedAt       pgtype.Timestamp `json:"created_at"`
-	UpdatedAt       pgtype.Timestamp `json:"updated_at"`
+	ID                  uuid.UUID        `json:"id"`
+	EmployeeID          int64            `json:"employee_id"`
+	Color               *string          `json:"color"`
+	LocationID          int64            `json:"location_id"`
+	LocationShiftID     *int64           `json:"location_shift_id"`
+	IsCustom            bool             `json:"is_custom"`
+	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
+	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	CreatedAt           pgtype.Timestamp `json:"created_at"`
+	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
 }
 
 type ScheduledAppointment struct {
@@ -1233,15 +1039,6 @@ type Sender struct {
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
-type SenderAudit struct {
-	ID        int64              `json:"id"`
-	SenderID  int64              `json:"sender_id"`
-	ChangedBy string             `json:"changed_by"`
-	ChangedAt pgtype.Timestamptz `json:"changed_at"`
-	OldData   []byte             `json:"old_data"`
-	NewData   []byte             `json:"new_data"`
-}
-
 type SenderContactRelation struct {
 	ID           int64 `json:"id"`
 	ClientTypeID int64 `json:"client_type_id"`
@@ -1273,14 +1070,6 @@ type TemporaryFile struct {
 	UploadedAt pgtype.Timestamptz `json:"uploaded_at"`
 }
 
-type Treatment struct {
-	ID            int64              `json:"id"`
-	UserID        int64              `json:"user_id"`
-	TreatmentName string             `json:"treatment_name"`
-	TreatmentDate string             `json:"treatment_date"`
-	Created       pgtype.Timestamptz `json:"created"`
-}
-
 type UserPermission struct {
 	UserID       int64 `json:"user_id"`
 	PermissionID int32 `json:"permission_id"`
@@ -1289,13 +1078,6 @@ type UserPermission struct {
 type UserRole struct {
 	UserID int64 `json:"user_id"`
 	RoleID int32 `json:"role_id"`
-}
-
-type WeeklyReportSummary struct {
-	ID          int64              `json:"id"`
-	ClientID    int64              `json:"client_id"`
-	SummaryText string             `json:"summary_text"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type YouthCareIntake struct {

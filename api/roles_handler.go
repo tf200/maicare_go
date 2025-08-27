@@ -170,6 +170,11 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 	}
 
 	tx, err := server.store.ConnPool.Begin(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to begin transaction", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
+		return
+	}
 
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
@@ -206,6 +211,11 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 		return
 	}
 	err = tx.Commit(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AssignRoleToUserApi", "Failed to commit transaction", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
+		return
+	}
 
 	response := AssignRoleToUserApiResponse{
 		EmployeeID: employeeID,
@@ -235,7 +245,7 @@ type ListUserRolesAndPermissionsApiResponse struct {
 // @Param employee_id path int true "Employee ID"
 // @Success 200 {object} Response[ListUserRolesAndPermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
-// @Router /employees/{employee_id}/roles_and_permissions [get]
+// @Router /employees/{employee_id}/roles_permissions [get]
 func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {

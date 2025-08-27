@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomSchedule(t *testing.T, employeeID int64) Schedule {
+func createRandomSchedule(t *testing.T, employeeID int64) CreateScheduleRow {
 	location := CreateRandomLocation(t)
 
 	arg := CreateScheduleParams{
@@ -62,7 +62,6 @@ func TestGetDailySchedulesByLocation(t *testing.T) {
 		Month:      int32(month),
 		Day:        int32(day),
 	})
-	
 
 	require.NoError(t, err)
 	require.NotEmpty(t, schedules)
