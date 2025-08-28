@@ -105,3 +105,11 @@ func (n *NewScheduleNotificationData) NewScheduleMessage() string {
 	)
 	return message
 }
+
+func (u *NewScheduleNotificationData) UpdatedScheduleMessage() string {
+	message := fmt.Sprintf(
+		"Schedule updated from %s to %s at %s",
+		u.StartTime.Format(time.RFC3339), u.EndTime.Format(time.RFC3339), u.Location,
+	)
+	return message
+}

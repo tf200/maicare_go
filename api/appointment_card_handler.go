@@ -61,13 +61,15 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentCardApi", "Invalid client ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	var req CreateAppointmentCardRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentCardApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
@@ -88,7 +90,8 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 
 	appointmentCard, err := server.store.CreateAppointmentCard(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "CreateAppointmentCardApi", "Failed to create appointment card", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create appointment card")))
 		return
 	}
 
@@ -147,13 +150,15 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetAppointmentCardApi", "Invalid client ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	appointmentCard, err := server.store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetAppointmentCardApi", "Failed to retrieve appointment card", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to retrieve appointment card")))
 		return
 	}
 
@@ -227,13 +232,15 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentCardApi", "Invalid client ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	var req UpdateAppointmentCardRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentCardApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
@@ -254,7 +261,8 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 
 	appointmentCard, err := server.store.UpdateAppointmentCard(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentCardApi", "Failed to update appointment card", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update appointment card")))
 		return
 	}
 
@@ -296,13 +304,15 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Invalid client ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	appointmentCard, err := server.store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Failed to retrieve appointment card", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to retrieve appointment card")))
 		return
 	}
 
@@ -334,7 +344,8 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 
 	pdfUrl, err := pdf.GenerateAndUploadAppointmentCardPDF(ctx, pdfArg, server.b2Client)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Failed to generate and upload appointment card PDF", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate and upload appointment card PDF")))
 		return
 	}
 
@@ -343,7 +354,8 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		FileUrl:  &pdfUrl,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Failed to update appointment card with file URL", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update appointment card with file URL")))
 		return
 	}
 

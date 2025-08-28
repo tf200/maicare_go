@@ -97,6 +97,8 @@ func validateConfig(config *Config) error {
 		"SERVER_ADDRESS":           config.ServerAddress,
 		"ACCESS_TOKEN_SECRET_KEY":  config.AccessTokenSecretKey,
 		"REFRESH_TOKEN_SECRET_KEY": config.RefreshTokenSecretKey,
+		"2FA_TOKEN_SECRET_KEY":     config.TwoFATokenSecretKey,
+		"2FA_TOKEN_DURATION":       config.TwoFATokenDuration.String(),
 		"HOST":                     config.Host,
 		"ENVIRONMENT":              config.Environment,
 		"GRPC_URL":                 config.GrpcUrl,

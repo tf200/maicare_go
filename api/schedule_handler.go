@@ -180,7 +180,6 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 		EndTime:    endDatetime,
 		Location:   schedule.LocationName,
 	}
-	
 
 	err = server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 		RecipientUserIDs: []int64{req.EmployeeID},
@@ -690,6 +689,24 @@ func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+	}
+
+	notifData := &notification.NewScheduleNotificationData{
+		ScheduleID: schedule.ID,
+		CreatedBy:  existingSchedule.EmployeeID,
+		StartTime:  startDatetime,
+		EndTime:    endDatetime,
+		Location:   schedule.LocationName,
+	}
+	err = server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+		RecipientUserIDs: []int64{employeeID},
+		Type:             notification.TypeNewScheduleNotification,
+		Data:             notification.NotificationData{NewScheduleNotification: notifData},
+		CreatedAt:        time.Now(),
+		Message:          notifData.UpdatedScheduleMessage(),
+	})
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "UpdateScheduleApi", "Failed to enqueue notification task", zap.Error(err))
 	}
 
 	res := SuccessResponse(UpdateScheduleResponse{

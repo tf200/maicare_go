@@ -728,24 +728,28 @@ type UpdateAppointmentResponse struct {
 func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Invalid appointment ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid appointment ID")))
 		return
 	}
 
 	var req UpdateAppointmentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
 	if req.StartTime.After(req.EndTime) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("start time must be before end time")))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Start time must be before end time", zap.Time("start_time", req.StartTime), zap.Time("end_time", req.EndTime))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start time must be before end time")))
 		return
 	}
 
 	tx, err := server.store.ConnPool.Begin(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to begin transaction", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
 		return
 	}
 
@@ -765,14 +769,16 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 		Description: req.Description,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to update appointment", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update appointment")))
 		return
 	}
 
 	if req.ParticipantEmployeeIDs != nil {
 		err = qtx.DeleteAppointmentParticipants(ctx, appointment.ID)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to delete appointment participants", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete appointment participants")))
 			return
 		}
 
@@ -782,7 +788,8 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 				EmployeeIds:   *req.ParticipantEmployeeIDs,
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to add appointment participants", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add appointment participants")))
 				return
 			}
 		}
@@ -791,7 +798,8 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 	if req.ClientIDs != nil {
 		err = qtx.DeleteAppointmentClients(ctx, appointment.ID)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to delete appointment clients", zap.Error(err))
+			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete appointment clients")))
 			return
 		}
 
@@ -801,14 +809,16 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 				ClientIds:     *req.ClientIDs,
 			})
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to add appointment clients", zap.Error(err))
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add appointment clients")))
 				return
 			}
 		}
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UpdateAppointmentApi", "Failed to commit transaction", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
 		return
 	}
 
@@ -850,13 +860,15 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 func (server *Server) DeleteAppointmentApi(ctx *gin.Context) {
 	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DeleteAppointmentApi", "Invalid appointment ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid appointment ID")))
 		return
 	}
 
 	err = server.store.DeleteAppointment(ctx, appointmentID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DeleteAppointmentApi", "Failed to delete appointment", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete appointment")))
 		return
 	}
 
@@ -880,13 +892,15 @@ func (server *Server) DeleteAppointmentApi(ctx *gin.Context) {
 func (server *Server) ConfirmAppointmentApi(ctx *gin.Context) {
 	appointmentID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ConfirmAppointmentApi", "Invalid appointment ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid appointment ID")))
 		return
 	}
 
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "ConfirmAppointmentApi", "Failed to get auth payload", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to get auth payload")))
 		return
 	}
 
