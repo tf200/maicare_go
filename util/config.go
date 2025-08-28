@@ -15,8 +15,8 @@ type Config struct {
 	AccessTokenDuration   time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenSecretKey string        `mapstructure:"REFRESH_TOKEN_SECRET_KEY"`
 	RefreshTokenDuration  time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
-	TwoFATokenSecretKey   string        `mapstructure:"2FA_TOKEN_SECRET_KEY"`
-	TwoFATokenDuration    time.Duration `mapstructure:"2FA_TOKEN_DURATION"`
+	TwoFATokenSecretKey   string        `mapstructure:"TWO_FA_TOKEN_SECRET_KEY"`
+	TwoFATokenDuration    time.Duration `mapstructure:"TWO_FA_TOKEN_DURATION"`
 	B2Key                 string        `mapstructure:"B2_KEY"`
 	B2KeyID               string        `mapstructure:"B2_KEY_ID"`
 	B2Bucket              string        `mapstructure:"B2_BUCKET"`
@@ -97,8 +97,8 @@ func validateConfig(config *Config) error {
 		"SERVER_ADDRESS":           config.ServerAddress,
 		"ACCESS_TOKEN_SECRET_KEY":  config.AccessTokenSecretKey,
 		"REFRESH_TOKEN_SECRET_KEY": config.RefreshTokenSecretKey,
-		"2FA_TOKEN_SECRET_KEY":     config.TwoFATokenSecretKey,
-		"2FA_TOKEN_DURATION":       config.TwoFATokenDuration.String(),
+		"TWO_FA_TOKEN_SECRET_KEY":  config.TwoFATokenSecretKey,
+		"TWO_FA_TOKEN_DURATION":    config.TwoFATokenDuration.String(),
 		"HOST":                     config.Host,
 		"ENVIRONMENT":              config.Environment,
 		"GRPC_URL":                 config.GrpcUrl,
