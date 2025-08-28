@@ -394,16 +394,23 @@ func (q *Queries) GetScheduleById(ctx context.Context, id uuid.UUID) (GetSchedul
 }
 
 const updateSchedule = `-- name: UpdateSchedule :one
-UPDATE schedules
-SET
-    employee_id = $2,
-    location_id = $3,
-    location_shift_id = $4,
-    color = $5,
-    start_datetime = $6,
-    end_datetime = $7
-WHERE id = $1
-RETURNING id, employee_id, color, location_id, location_shift_id, is_custom, start_datetime, end_datetime, created_by_employee_id, created_at, updated_at
+WITH updated_schedule AS (
+    UPDATE schedules
+    SET
+        employee_id = $2,
+        location_id = $3,
+        location_shift_id = $4,
+        color = $5,
+        start_datetime = $6,
+        end_datetime = $7
+    WHERE schedules.id = $1
+    RETURNING id, employee_id, color, location_id, location_shift_id, is_custom, start_datetime, end_datetime, created_by_employee_id, created_at, updated_at
+)
+SELECT 
+    s.id, s.employee_id, s.color, s.location_id, s.location_shift_id, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
+    l.name as location_name
+FROM updated_schedule s
+JOIN location l ON s.location_id = l.id
 `
 
 type UpdateScheduleParams struct {
@@ -416,7 +423,22 @@ type UpdateScheduleParams struct {
 	EndDatetime     pgtype.Timestamp `json:"end_datetime"`
 }
 
-func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (Schedule, error) {
+type UpdateScheduleRow struct {
+	ID                  uuid.UUID        `json:"id"`
+	EmployeeID          int64            `json:"employee_id"`
+	Color               *string          `json:"color"`
+	LocationID          int64            `json:"location_id"`
+	LocationShiftID     *int64           `json:"location_shift_id"`
+	IsCustom            bool             `json:"is_custom"`
+	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
+	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
+	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	CreatedAt           pgtype.Timestamp `json:"created_at"`
+	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
+	LocationName        string           `json:"location_name"`
+}
+
+func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (UpdateScheduleRow, error) {
 	row := q.db.QueryRow(ctx, updateSchedule,
 		arg.ID,
 		arg.EmployeeID,
@@ -426,7 +448,7 @@ func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) 
 		arg.StartDatetime,
 		arg.EndDatetime,
 	)
-	var i Schedule
+	var i UpdateScheduleRow
 	err := row.Scan(
 		&i.ID,
 		&i.EmployeeID,
@@ -439,6 +461,7 @@ func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) 
 		&i.CreatedByEmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.LocationName,
 	)
 	return i, err
 }

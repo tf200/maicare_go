@@ -98,16 +98,23 @@ WHERE s.id = $1
 LIMIT 1;
 
 -- name: UpdateSchedule :one
-UPDATE schedules
-SET
-    employee_id = $2,
-    location_id = $3,
-    location_shift_id = $4,
-    color = $5,
-    start_datetime = $6,
-    end_datetime = $7
-WHERE id = $1
-RETURNING *;
+WITH updated_schedule AS (
+    UPDATE schedules
+    SET
+        employee_id = $2,
+        location_id = $3,
+        location_shift_id = $4,
+        color = $5,
+        start_datetime = $6,
+        end_datetime = $7
+    WHERE schedules.id = $1
+    RETURNING *
+)
+SELECT 
+    s.*,
+    l.name as location_name
+FROM updated_schedule s
+JOIN location l ON s.location_id = l.id;
 
 -- name: DeleteSchedule :exec
 DELETE FROM schedules

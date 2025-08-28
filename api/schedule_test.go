@@ -15,6 +15,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func createRandomSchedule(t *testing.T, employeeID int64) db.CreateScheduleRow {
@@ -34,6 +35,7 @@ func createRandomSchedule(t *testing.T, employeeID int64) db.CreateScheduleRow {
 }
 
 func TestCreateScheduleApi(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueNotificationTask(gomock.Any(), gomock.Any(), gomock.Any()).Times(2).Return(nil)
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
 	// shift := createRandomShift(t, location.ID)

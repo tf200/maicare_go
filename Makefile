@@ -45,5 +45,8 @@ generate-grpc:
 lint:
 	golangci-lint run
 
+mocks:
+	go generate ./...
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce update-proto generate-grpc lint
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce update-proto generate-grpc lint mocks
