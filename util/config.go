@@ -106,6 +106,8 @@ func validateConfig(config *Config) error {
 
 	var missingVars []string
 
+	fmt.Printf("TWO_FA_TOKEN_SECRET_KEY loaded value: '%s'\n", config.TwoFATokenSecretKey)
+
 	// Check if crucial variables are empty
 	for varName, varValue := range crucialVars {
 		if strings.TrimSpace(varValue) == "" {
