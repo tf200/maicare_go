@@ -75,8 +75,8 @@ jobs:
             ACCESS_TOKEN_DURATION=${{ secrets.ACCESS_TOKEN_DURATION }}
             REFRESH_TOKEN_SECRET_KEY=${{ secrets.REFRESH_TOKEN_SECRET_KEY }}
             REFRESH_TOKEN_DURATION=${{ secrets.REFRESH_TOKEN_DURATION }}
-            2FA_TOKEN_SECRET_KEY=${{ secrets.TWO_FA_TOKEN_SECRET_KEY }}
-            2FA_TOKEN_DURATION=${{ secrets.TWO_FA_TOKEN_DURATION }}
+            TWO_FA_TOKEN_SECRET_KEY=${{ secrets.TWO_FA_TOKEN_SECRET_KEY }}
+            TWO_FA_TOKEN_DURATION=${{ secrets.TWO_FA_TOKEN_DURATION }}
             B2_KEY=${{ secrets.B2_KEY }}
             B2_KEY_ID=${{ secrets.B2_KEY_ID }}
             B2_BUCKET=${{ secrets.B2_BUCKET }}
