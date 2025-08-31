@@ -470,6 +470,12 @@ func (server *Server) Setup2FAHandler(ctx *gin.Context) {
 		return
 	}
 
+	if user.TwoFactorEnabled {
+		server.logBusinessEvent(LogLevelWarn, "Setup2FAHandler", "2FA already enabled for user", zap.Int64("user_id", userID))
+		ctx.JSON(http.StatusConflict, errorResponse(fmt.Errorf("2FA already enabled")))
+		return
+	}
+
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "Maicare",
 		AccountName: user.Email,
@@ -558,13 +564,10 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("User retrieved successfully for user ID: %d", userID)
-
 	if user.TwoFactorSecretTemp == nil || *user.TwoFactorSecretTemp == "" {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("2FA setup not initiated")))
 		return
 	}
-	log.Printf("Temporary 2FA secret exists for user ID: %d", userID)
 
 	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecretTemp)
 	if !valid {

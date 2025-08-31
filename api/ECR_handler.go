@@ -9,7 +9,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
+
+// ======================================================
+// ADMIN DASHBOARD
+// ======================================================
 
 // CreateSchedueledClientStatusChangeRequest defines the request for the CreateSchedueledClientStatusChange handler.
 type DischargeOverviewRequest struct {
@@ -185,4 +190,49 @@ func (server *Server) TotalDischargeCountApi(ctx *gin.Context) {
 		ContractEndCount:    contractEndingCount,
 	}, "Total Discharge Count Retrieved Successfully")
 	ctx.JSON(http.StatusOK, res)
+}
+
+// ListEmployeesByContractEndDateResponse defines the response for the ListEmployeesByContractEndDate handler.
+type ListEmployeesByContractEndDateResponse struct {
+	ID                int64     `json:"id"`
+	FirstName         string    `json:"first_name"`
+	LastName          string    `json:"last_name"`
+	Position          *string   `json:"position"`
+	Department        *string   `json:"department"`
+	EmployeeNumber    *string   `json:"employee_number"`
+	EmploymentNumber  *string   `json:"employment_number"`
+	Email             string    `json:"email"`
+	ContractStartDate time.Time `json:"contract_start_date"`
+	ContractEndDate   time.Time `json:"contract_end_date"`
+	ContractType      *string   `json:"contract_type"`
+}
+
+// ListEmployeesByContractEndDateApi handles the API request for listing employees by contract end date.
+
+func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
+	employees, err := server.store.ListEmployeesByContractEndDate(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListEmployeesByContractEndDateApi", "Failed to list employees by contract end date", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var response []ListEmployeesByContractEndDateResponse
+	for _, emp := range employees {
+		response = append(response, ListEmployeesByContractEndDateResponse{
+			ID:                emp.ID,
+			FirstName:         emp.FirstName,
+			LastName:          emp.LastName,
+			Position:          emp.Position,
+			Department:        emp.Department,
+			EmployeeNumber:    emp.EmployeeNumber,
+			EmploymentNumber:  emp.EmploymentNumber,
+			Email:             emp.Email,
+			ContractStartDate: emp.ContractStartDate.Time,
+			ContractEndDate:   emp.ContractEndDate.Time,
+			ContractType:      emp.ContractType,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Employees listed successfully"))
 }

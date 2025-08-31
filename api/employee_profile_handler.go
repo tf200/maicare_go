@@ -32,6 +32,8 @@ type GetEmployeeProfileResponse struct {
 	EmployeeID  int64        `json:"employee_id"`
 	FirstName   string       `json:"first_name"`
 	LastName    string       `json:"last_name"`
+	TwoFactor   bool         `json:"two_factor_enabled"`
+	LastLogin   time.Time    `json:"last_login"`
 	RoleID      int32        `json:"role_id"`
 	Permissions []Permission `json:"permissions"`
 }
@@ -68,6 +70,8 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		FirstName:   profile.FirstName,
 		LastName:    profile.LastName,
 		Email:       profile.Email,
+		TwoFactor:   profile.TwoFactorEnabled,
+		LastLogin:   profile.LastLogin.Time,
 		Permissions: permissions,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)

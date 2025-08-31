@@ -174,6 +174,78 @@ func (q *Queries) DischargeOverview(ctx context.Context, arg DischargeOverviewPa
 	return items, nil
 }
 
+const listEmployeesByContractEndDate = `-- name: ListEmployeesByContractEndDate :many
+SELECT 
+    id,
+    user_id,
+    first_name,
+    last_name,
+    position,
+    department,
+    employee_number,
+    employment_number,
+    email,
+    contract_start_date,
+    contract_end_date,
+    contract_type,
+    created_at
+FROM employee_profile 
+WHERE contract_end_date IS NOT NULL
+  AND is_archived = FALSE
+ORDER BY contract_end_date ASC
+LIMIT 10
+`
+
+type ListEmployeesByContractEndDateRow struct {
+	ID                int64              `json:"id"`
+	UserID            int64              `json:"user_id"`
+	FirstName         string             `json:"first_name"`
+	LastName          string             `json:"last_name"`
+	Position          *string            `json:"position"`
+	Department        *string            `json:"department"`
+	EmployeeNumber    *string            `json:"employee_number"`
+	EmploymentNumber  *string            `json:"employment_number"`
+	Email             string             `json:"email"`
+	ContractStartDate pgtype.Date        `json:"contract_start_date"`
+	ContractEndDate   pgtype.Date        `json:"contract_end_date"`
+	ContractType      *string            `json:"contract_type"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error) {
+	rows, err := q.db.Query(ctx, listEmployeesByContractEndDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListEmployeesByContractEndDateRow
+	for rows.Next() {
+		var i ListEmployeesByContractEndDateRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Position,
+			&i.Department,
+			&i.EmployeeNumber,
+			&i.EmploymentNumber,
+			&i.Email,
+			&i.ContractStartDate,
+			&i.ContractEndDate,
+			&i.ContractType,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const recentIncidents = `-- name: RecentIncidents :one
 SELECT COUNT(id) AS total_recent_incidents
 FROM incident

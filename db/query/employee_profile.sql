@@ -85,6 +85,8 @@ WHERE id = $1 LIMIT 1;
 SELECT 
     cu.id           AS user_id,
     cu.email        AS email,
+    cu.last_login   AS last_login,
+    cu.two_factor_enabled AS two_factor_enabled,
     ep.id           AS employee_id,
     ep.first_name,
     ep.last_name,
