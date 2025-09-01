@@ -464,7 +464,7 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(GetClientApiResponse{
+	response := GetClientApiResponse{
 		ID:                         client.ID,
 		FirstName:                  client.FirstName,
 		LastName:                   client.LastName,
@@ -483,7 +483,7 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 		Departement:                client.Departement,
 		Gender:                     client.Gender,
 		Filenumber:                 client.Filenumber,
-		ProfilePicture:             client.ProfilePicture,
+		ProfilePicture:             server.generateResponsePresignedURL(client.ProfilePicture),
 		Infix:                      client.Infix,
 		CreatedAt:                  client.CreatedAt.Time,
 		SenderID:                   client.SenderID,
@@ -508,7 +508,9 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
 		LivingSituation:            client.LivingSituation,
 		LivingSituationNotes:       client.LivingSituationNotes,
-	}, "Client fetched successfully")
+	}
+
+	res := SuccessResponse(response, "Client fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

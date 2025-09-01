@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
 	defer conn.Close()
-	testB2client, err := bucket.NewB2Client(config)
+	testB2client, err := bucket.NewObjectStorageClient(context.Background(), config)
 	if err != nil {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}

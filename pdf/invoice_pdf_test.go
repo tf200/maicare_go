@@ -18,7 +18,7 @@ func TestGenerateInvoicePDF(t *testing.T) {
 		log.Fatalf("Could not load conf %v", err)
 	}
 
-	testb2Client, err := bucket.NewB2Client(config)
+	testb2Client, err := bucket.NewObjectStorageClient(context.Background(), config)
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
@@ -57,7 +57,7 @@ func TestGenerateInvoicePDF(t *testing.T) {
 		},
 	}
 
-	pdfBytes, _, _, err := GenerateAndUploadInvoicePDF(context.Background(), data, testb2Client)
+	pdfBytes, _, err := GenerateAndUploadInvoicePDF(context.Background(), data, testb2Client)
 	require.NoError(t, err)
 	require.NotEmpty(t, pdfBytes)
 

@@ -236,3 +236,5 @@ func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Employees listed successfully"))
 }
+
+

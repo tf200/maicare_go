@@ -50,7 +50,7 @@ func TestGenerateContractPDF(t *testing.T) {
 		log.Fatalf("Could not load config %v", err)
 	}
 
-	testb2Client, err := bucket.NewB2Client(config)
+	testb2Client, err := bucket.NewObjectStorageClient(context.Background(), config)
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}

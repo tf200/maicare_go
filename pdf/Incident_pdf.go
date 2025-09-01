@@ -6,8 +6,8 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io"
 	"maicare_go/bucket"
+	"mime/multipart"
 	"strings"
 	"time"
 
@@ -67,7 +67,7 @@ type IncidentReportData struct {
 }
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
-func GenerateIncidentPDF(incidentData IncidentReportData) ([]byte, error) {
+func GenerateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
 
 	funcMap := template.FuncMap{
 		"lower": strings.ToLower,
@@ -114,51 +114,39 @@ func GenerateIncidentPDF(incidentData IncidentReportData) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create PDF: %w", err)
 	}
 
-	return pdfg.Bytes(), nil
+	// Get the generated PDF as a byte slice
+	pdfBytes := pdfg.Bytes()
+	// Wrap the byte slice in our InMemoryFile to satisfy the interface
+	file := &bucket.InMemoryFile{
+		Reader: bytes.NewReader(pdfBytes),
+	}
+	return file, nil
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadIncidentPDF(ctx context.Context, pdfBytes []byte, incidentID int64, b2Client *bucket.B2Client) (string, error) {
+func UploadIncidentPDF(ctx context.Context, pdfFile multipart.File, incidentID int64, b2Client *bucket.ObjectStorageClient) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("incident_reports/%s/incident_report_%d.pdf", timestamp, incidentID)
 
-	// Create reader from PDF bytes
-	pdfReader := bytes.NewReader(pdfBytes)
-
 	// Upload to B2
-	obj := b2Client.Bucket.Object(filename)
-	writer := obj.NewWriter(ctx)
-	writer.ConcurrentUploads = 4
-
-	// Copy the PDF data to B2
-	_, err := io.Copy(writer, pdfReader)
+	key, _, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
-		writer.Close()
-		return "", fmt.Errorf("failed to copy PDF to B2: %w", err)
+		return "", fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
-
-	if err := writer.Close(); err != nil {
-		return "", fmt.Errorf("failed to close B2 writer: %w", err)
-	}
-	fileURL := fmt.Sprintf("%s/file/%s/%s",
-		b2Client.Bucket.BaseURL(),
-		b2Client.Bucket.Name(),
-		filename)
-
-	return fileURL, nil
+	return key, nil
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadIncidentPDF(ctx context.Context, incidentData IncidentReportData, b2Client *bucket.B2Client) (string, error) {
+func GenerateAndUploadIncidentPDF(ctx context.Context, incidentData IncidentReportData, b2Client *bucket.ObjectStorageClient) (string, error) {
 	// Generate PDF
-	pdfBytes, err := GenerateIncidentPDF(incidentData)
+	pdfFile, err := GenerateIncidentPDF(incidentData)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	filename, err := UploadIncidentPDF(ctx, pdfBytes, incidentData.ID, b2Client)
+	filename, err := UploadIncidentPDF(ctx, pdfFile, incidentData.ID, b2Client)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF: %w", err)
 	}

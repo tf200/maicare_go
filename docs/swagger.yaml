@@ -9345,6 +9345,7 @@ definitions:
     - 1
     - 0
     - -1
+    format: int32
     type: integer
     x-enum-varnames:
     - Infinity
@@ -14487,10 +14488,12 @@ paths:
         ID, status, and date range.
       parameters:
       - description: Client ID
+        format: int64
         in: query
         name: client_id
         type: integer
       - description: Sender ID
+        format: int64
         in: query
         name: sender_id
         type: integer
@@ -14583,6 +14586,7 @@ paths:
       description: Delete an invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14617,6 +14621,7 @@ paths:
       description: Get an invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14653,6 +14658,7 @@ paths:
       description: Update an existing invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14694,6 +14700,7 @@ paths:
       description: Retrieve audit logs for a specific invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14729,6 +14736,7 @@ paths:
       description: Create a credit note for an existing invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14764,6 +14772,7 @@ paths:
       description: Generate an invoice in PDF format by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14799,6 +14808,7 @@ paths:
       description: List all payments for a specific invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14835,6 +14845,7 @@ paths:
       description: Create a payment for an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14876,6 +14887,7 @@ paths:
       description: Get a payment by its ID.
       parameters:
       - description: Payment ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14913,11 +14925,13 @@ paths:
       description: Delete a payment from an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
+        format: int64
         in: path
         name: payment_id
         required: true
@@ -14954,11 +14968,13 @@ paths:
       description: Update a payment for an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
+        format: int64
         in: path
         name: payment_id
         required: true
@@ -15434,20 +15450,15 @@ paths:
     get:
       description: List notifications for the authenticated user
       parameters:
-      - default: 10
-        description: Limit
+      - default: 1
+        description: Page number
         in: query
-        maximum: 100
-        minimum: 1
-        name: limit
-        required: true
+        name: page
         type: integer
-      - default: 0
-        description: Offset
+      - default: 10
+        description: Number of items per page
         in: query
-        minimum: 0
-        name: offset
-        required: true
+        name: page_size
         type: integer
       produces:
       - application/json

@@ -6,8 +6,8 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io"
 	"maicare_go/bucket"
+	"mime/multipart"
 	"time"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
@@ -58,7 +58,7 @@ type ContractData struct {
 }
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
-func GenerateContractPDF(contractData ContractData) ([]byte, error) {
+func GenerateContractPDF(contractData ContractData) (multipart.File, error) {
 
 	// Parse and execute HTML template
 	templ, err := template.ParseFS(contractTemplateFS, "templates/contract.html")
@@ -98,54 +98,42 @@ func GenerateContractPDF(contractData ContractData) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create PDF: %w", err)
 	}
 
-	return pdfg.Bytes(), nil
+	// Get the generated PDF as a byte slice
+	pdfBytes := pdfg.Bytes()
+	// Wrap the byte slice in our InMemoryFile to satisfy the interface
+	file := &bucket.InMemoryFile{
+		Reader: bytes.NewReader(pdfBytes),
+	}
+	return file, nil
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadContractPDF(ctx context.Context, pdfBytes []byte, contractID int64, b2Client *bucket.B2Client) (string, error) {
+func UploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID int64, b2Client *bucket.ObjectStorageClient) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("contract/%s/contract-%d.pdf", timestamp, contractID)
 
-	// Create reader from PDF bytes
-	pdfReader := bytes.NewReader(pdfBytes)
-
 	// Upload to B2
-	obj := b2Client.Bucket.Object(filename)
-	writer := obj.NewWriter(ctx)
-	writer.ConcurrentUploads = 4
-
-	// Copy the PDF data to B2
-	_, err := io.Copy(writer, pdfReader)
+	key, _, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
-		writer.Close()
-		return "", fmt.Errorf("failed to copy PDF to B2: %w", err)
+		return "", fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
-
-	if err := writer.Close(); err != nil {
-		return "", fmt.Errorf("failed to close B2 writer: %w", err)
-	}
-	fileURL := fmt.Sprintf("%s/file/%s/%s",
-		b2Client.Bucket.BaseURL(),
-		b2Client.Bucket.Name(),
-		filename)
-
-	return fileURL, nil
+	return key, nil
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData, b2Client *bucket.B2Client) (string, error) {
+func GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData, b2Client *bucket.ObjectStorageClient) (string, error) {
 	// Generate PDF
-	pdfBytes, err := GenerateContractPDF(contractData)
+	pdfFile, err := GenerateContractPDF(contractData)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	filename, err := UploadContractPDF(ctx, pdfBytes, contractData.ID, b2Client)
+	fileURL, err := UploadContractPDF(ctx, pdfFile, contractData.ID, b2Client)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF: %w", err)
 	}
 
-	return filename, nil
+	return fileURL, nil
 }

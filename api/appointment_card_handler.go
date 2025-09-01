@@ -317,7 +317,7 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 	}
 
 	if appointmentCard.FileUrl != nil && *appointmentCard.FileUrl != "" {
-		err = server.b2Client.DeleteFromB2URL(ctx, *appointmentCard.FileUrl)
+		err = server.b2Client.Delete(ctx, *appointmentCard.FileUrl)
 		if err != nil {
 			server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Failed to delete existing appointment card document", zap.Error(err))
 			ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to delete existing appointment card document"))

@@ -40,7 +40,7 @@ func main() {
 	defer conn.Close()
 
 	store := db.NewStore(conn)
-	b2Client, err := bucket.NewB2Client(config)
+	b2Client, err := bucket.NewObjectStorageClient(ctx, config)
 	if err != nil {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}

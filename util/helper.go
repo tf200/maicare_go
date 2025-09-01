@@ -189,3 +189,11 @@ func ParseObjectToJSON(obj JSONObject) []byte {
 	}
 	return data
 }
+
+func HandleLambdaFunction(key string, fn func() (string, error)) *string {
+	result, err := fn()
+	if err != nil {
+		return nil
+	}
+	return &result
+}

@@ -7750,12 +7750,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Client ID",
                         "name": "client_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Sender ID",
                         "name": "sender_id",
                         "in": "query"
@@ -8002,6 +8004,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8056,6 +8059,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8116,6 +8120,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8169,6 +8174,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8222,6 +8228,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8275,6 +8282,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8328,6 +8336,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8382,6 +8391,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8444,6 +8454,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "id",
                         "in": "path",
@@ -8500,6 +8511,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8507,6 +8519,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -8570,6 +8583,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8577,6 +8591,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -9174,23 +9189,18 @@ const docTemplate = `{
                 "summary": "List Notifications",
                 "parameters": [
                     {
-                        "maximum": 100,
-                        "minimum": 1,
                         "type": "integer",
-                        "default": 10,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query",
-                        "required": true
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
                     },
                     {
-                        "minimum": 0,
                         "type": "integer",
-                        "default": 0,
-                        "description": "Offset",
-                        "name": "offset",
-                        "in": "query",
-                        "required": true
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "page_size",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -25393,6 +25403,7 @@ const docTemplate = `{
         },
         "pgtype.InfinityModifier": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 0,

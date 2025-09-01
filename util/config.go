@@ -17,6 +17,7 @@ type Config struct {
 	RefreshTokenDuration  time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	TwoFATokenSecretKey   string        `mapstructure:"TWO_FA_TOKEN_SECRET_KEY"`
 	TwoFATokenDuration    time.Duration `mapstructure:"TWO_FA_TOKEN_DURATION"`
+	B2Endpoint            string        `mapstructure:"B2_ENDPOINT"`
 	B2Key                 string        `mapstructure:"B2_KEY"`
 	B2KeyID               string        `mapstructure:"B2_KEY_ID"`
 	B2Bucket              string        `mapstructure:"B2_BUCKET"`
@@ -51,7 +52,7 @@ func LoadConfig(path string) (config Config, err error) {
 		"DB_SOURCE", "SERVER_ADDRESS", "ACCESS_TOKEN_SECRET_KEY",
 		"ACCESS_TOKEN_DURATION", "REFRESH_TOKEN_SECRET_KEY",
 		"REFRESH_TOKEN_DURATION", "TWO_FA_TOKEN_SECRET_KEY",
-		"TWO_FA_TOKEN_DURATION", "B2_KEY", "B2_KEY_ID", "B2_BUCKET",
+		"TWO_FA_TOKEN_DURATION", "B2_ENDPOINT", "B2_KEY", "B2_KEY_ID", "B2_BUCKET",
 		"HOST", "REDIS_HOST", "REDIS_PASSWORD", "REMOTE",
 		"OPEN_ROUTER_API_KEY", "SMTP_NAME", "SMTP_ADDRESS",
 		"SMTP_AUTH", "SMTP_HOST", "SMTP_PORT", "BREVO_SENDER_NAME",

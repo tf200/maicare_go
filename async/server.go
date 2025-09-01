@@ -15,11 +15,11 @@ type AsynqServer struct {
 	server              *asynq.Server
 	store               *db.Store
 	brevoConf           *email.BrevoConf
-	b2Bucket            *bucket.B2Client
+	b2Bucket            *bucket.ObjectStorageClient
 	notificationService *notification.Service
 }
 
-func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, brevoConf *email.BrevoConf, b2Bucket *bucket.B2Client, notificationService *notification.Service) *AsynqServer {
+func NewAsynqServer(redisHost, redisUser, redisPassword string, store *db.Store, tls *tls.Config, brevoConf *email.BrevoConf, b2Bucket *bucket.ObjectStorageClient, notificationService *notification.Service) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
 			Addr:         redisHost,

@@ -2,14 +2,10 @@ package api
 
 import (
 	"fmt"
-	"io"
-	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
-	"maicare_go/util"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,100 +14,100 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// IntakeFormUploadHandlerResponse represents a response from the intake form upload handler
-type IntakeFormUploadHandlerResponse struct {
-	FileURL   string    `json:"file_url"`
-	FileID    uuid.UUID `json:"file_id"`
-	CreatedAt time.Time `json:"created_at"`
-	Size      int64     `json:"size"`
-}
+// // IntakeFormUploadHandlerResponse represents a response from the intake form upload handler
+// type IntakeFormUploadHandlerResponse struct {
+// 	FileURL   string    `json:"file_url"`
+// 	FileID    uuid.UUID `json:"file_id"`
+// 	CreatedAt time.Time `json:"created_at"`
+// 	Size      int64     `json:"size"`
+// }
 
-// @Summary Upload a file for intake form
-// @Description Upload a file for intake form
-// @Tags intake_form
-// @Accept mpfd
-// @Produce json
-// @Param file formData file true "File to upload"
-// @Success 201 {object} Response[IntakeFormUploadHandlerResponse]
-// @Failure 400 {object} Response[any] "Bad request"
-// @Failure 401 {object} Response[any] "Unauthorized"
-// @Failure 413 {object} Response[any] "Request entity too large"
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /intake_form/upload [post]
-// @Security -
-func (server *Server) IntakeFormUploadHandlerApi(ctx *gin.Context) {
+// // @Summary Upload a file for intake form
+// // @Description Upload a file for intake form
+// // @Tags intake_form
+// // @Accept mpfd
+// // @Produce json
+// // @Param file formData file true "File to upload"
+// // @Success 201 {object} Response[IntakeFormUploadHandlerResponse]
+// // @Failure 400 {object} Response[any] "Bad request"
+// // @Failure 401 {object} Response[any] "Unauthorized"
+// // @Failure 413 {object} Response[any] "Request entity too large"
+// // @Failure 500 {object} Response[any] "Internal server error"
+// // @Router /intake_form/upload [post]
+// // @Security -
+// func (server *Server) IntakeFormUploadHandlerApi(ctx *gin.Context) {
 
-	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
-	file, header, err := ctx.Request.FormFile("file")
-	if err != nil {
-		if strings.Contains(err.Error(), "request body too large") {
-			ctx.JSON(http.StatusRequestEntityTooLarge, errorResponse(fmt.Errorf("file size exceeds maximum limit of 10MB")))
-			return
-		}
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+// 	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, maxFileSize)
+// 	file, header, err := ctx.Request.FormFile("file")
+// 	if err != nil {
+// 		if strings.Contains(err.Error(), "request body too large") {
+// 			ctx.JSON(http.StatusRequestEntityTooLarge, errorResponse(fmt.Errorf("file size exceeds maximum limit of 10MB")))
+// 			return
+// 		}
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
 
-	// Basic validations
-	if err := bucket.ValidateFile(header, maxFileSize); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+// 	// Basic validations
+// 	if err := bucket.ValidateFile(header, maxFileSize); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
 
-	filename := bucket.GenerateUniqueFilename(header.Filename)
+// 	filename := bucket.GenerateUniqueFilename(header.Filename)
 
-	buff := make([]byte, 512)
-	_, err = file.Read(buff)
-	if err != nil && err != io.EOF {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("error reading file: %v", err)))
-		return
-	}
+// 	buff := make([]byte, 512)
+// 	_, err = file.Read(buff)
+// 	if err != nil && err != io.EOF {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("error reading file: %v", err)))
+// 		return
+// 	}
 
-	// Reset file pointer after reading
-	if _, err := file.Seek(0, 0); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("error resetting file: %v", err)))
-		return
-	}
+// 	// Reset file pointer after reading
+// 	if _, err := file.Seek(0, 0); err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("error resetting file: %v", err)))
+// 		return
+// 	}
 
-	// Verify content type
-	contentType := http.DetectContentType(buff)
-	if !allowedMimeTypes[contentType] {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("unsupported file type: %s", contentType)))
-		return
-	}
+// 	// Verify content type
+// 	contentType := http.DetectContentType(buff)
+// 	if !allowedMimeTypes[contentType] {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("unsupported file type: %s", contentType)))
+// 		return
+// 	}
 
-	err = server.b2Client.UploadToB2(ctx.Request.Context(), file, filename)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	err = server.b2Client.UploadToB2(ctx.Request.Context(), file, filename)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	fileURL := fmt.Sprintf("%s/file/%s/%s",
-		server.b2Client.Bucket.BaseURL(),
-		server.b2Client.Bucket.Name(),
-		filename)
+// 	fileURL := fmt.Sprintf("%s/file/%s/%s",
+// 		server.b2Client.Bucket.BaseURL(),
+// 		server.b2Client.Bucket.Name(),
+// 		filename)
 
-	arg := db.CreateAttachmentParams{
-		Name: filename,
-		File: fileURL,
-		Size: int32(header.Size),
-		Tag:  util.StringPtr(""),
-	}
-	attachment, err := server.store.CreateAttachment(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	arg := db.CreateAttachmentParams{
+// 		Name: filename,
+// 		File: fileURL,
+// 		Size: int32(header.Size),
+// 		Tag:  util.StringPtr(""),
+// 	}
+// 	attachment, err := server.store.CreateAttachment(ctx, arg)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	res := SuccessResponse(UploadHandlerResponse{
-		FileURL:   fileURL,
-		FileID:    attachment.Uuid,
-		CreatedAt: attachment.Created.Time,
-		Size:      int64(attachment.Size),
-	}, "File uploaded successfully")
+// 	res := SuccessResponse(UploadHandlerResponse{
+// 		FileURL:   fileURL,
+// 		FileID:    attachment.Uuid,
+// 		CreatedAt: attachment.Created.Time,
+// 		Size:      int64(attachment.Size),
+// 	}, "File uploaded successfully")
 
-	ctx.JSON(http.StatusCreated, res)
-}
+// 	ctx.JSON(http.StatusCreated, res)
+// }
 
 type GuardionInfo struct {
 	FirstName   string `json:"first_name"`

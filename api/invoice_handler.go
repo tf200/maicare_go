@@ -889,14 +889,14 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		ExtraItems:           extraItems,
 	}
 
-	fileUrl, filename, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)
+	fileUrl, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate invoice PDF: %w", err)))
 		return
 	}
 
 	fileArgs := db.CreateAttachmentParams{
-		Name: filename,
+		Name: "Invoice_" + invoiceData.InvoiceNumber + ".pdf",
 		File: fileUrl,
 		Size: int32(filesize),
 		Tag:  util.StringPtr(""),
