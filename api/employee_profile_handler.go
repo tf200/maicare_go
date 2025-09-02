@@ -340,7 +340,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 			HasBorrowed:               employee.HasBorrowed,
 			OutOfService:              employee.OutOfService,
 			IsArchived:                employee.IsArchived,
-			ProfilePicture:            employee.ProfilePicture,
+			ProfilePicture:            server.generateResponsePresignedURL(employee.ProfilePicture),
 			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
 			RoleID:                    employee.RoleID,
 			RoleName:                  employee.RoleName,
@@ -461,7 +461,7 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		HasBorrowed:               employee.HasBorrowed,
 		OutOfService:              employee.OutOfService,
 		IsArchived:                employee.IsArchived,
-		ProfilePicture:            employee.ProfilePicture,
+		ProfilePicture:            server.generateResponsePresignedURL(employee.ProfilePicture),
 		// to do list all roles
 		IsLoggedInUser: employee.UserID == currentUserID,
 	}, "Employee profile retrieved successfully")

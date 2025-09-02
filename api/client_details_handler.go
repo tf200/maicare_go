@@ -337,7 +337,7 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 			Departement:           client.Departement,
 			Gender:                client.Gender,
 			Filenumber:            client.Filenumber,
-			ProfilePicture:        client.ProfilePicture,
+			ProfilePicture:        server.generateResponsePresignedURL(client.ProfilePicture),
 			Infix:                 client.Infix,
 			CreatedAt:             client.CreatedAt.Time,
 			SenderID:              client.SenderID,
@@ -1046,7 +1046,7 @@ type ListClientDocumentsApiResponse struct {
 	Label          string     `json:"label"`
 	Uuid           uuid.UUID  `json:"uuid"`
 	Name           string     `json:"name"`
-	File           string     `json:"file"`
+	File           *string    `json:"file"`
 	Size           int32      `json:"size"`
 	IsUsed         bool       `json:"is_used"`
 	Tag            *string    `json:"tag"`
@@ -1106,7 +1106,7 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 			Label:          clientDoc.Label,
 			Uuid:           clientDoc.Uuid,
 			Name:           clientDoc.Name,
-			File:           clientDoc.File,
+			File:           server.generateResponsePresignedURL(&clientDoc.File),
 			Size:           clientDoc.Size,
 			IsUsed:         clientDoc.IsUsed,
 			Tag:            clientDoc.Tag,
