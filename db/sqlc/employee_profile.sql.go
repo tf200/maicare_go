@@ -558,6 +558,8 @@ const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
 SELECT 
     cu.id           AS user_id,
     cu.email        AS email,
+    cu.last_login   AS last_login,
+    cu.two_factor_enabled AS two_factor_enabled,
     ep.id           AS employee_id,
     ep.first_name,
     ep.last_name,
@@ -578,12 +580,14 @@ WHERE cu.id = $1
 `
 
 type GetEmployeeProfileByUserIDRow struct {
-	UserID      int64  `json:"user_id"`
-	Email       string `json:"email"`
-	EmployeeID  int64  `json:"employee_id"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	Permissions []byte `json:"permissions"`
+	UserID           int64              `json:"user_id"`
+	Email            string             `json:"email"`
+	LastLogin        pgtype.Timestamptz `json:"last_login"`
+	TwoFactorEnabled bool               `json:"two_factor_enabled"`
+	EmployeeID       int64              `json:"employee_id"`
+	FirstName        string             `json:"first_name"`
+	LastName         string             `json:"last_name"`
+	Permissions      []byte             `json:"permissions"`
 }
 
 func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error) {
@@ -592,6 +596,8 @@ func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (Get
 	err := row.Scan(
 		&i.UserID,
 		&i.Email,
+		&i.LastLogin,
+		&i.TwoFactorEnabled,
 		&i.EmployeeID,
 		&i.FirstName,
 		&i.LastName,

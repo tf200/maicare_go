@@ -889,15 +889,15 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		ExtraItems:           extraItems,
 	}
 
-	fileUrl, filename, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)
+	fileKey, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate invoice PDF: %w", err)))
 		return
 	}
 
 	fileArgs := db.CreateAttachmentParams{
-		Name: filename,
-		File: fileUrl,
+		Name: "Invoice_" + invoiceData.InvoiceNumber + ".pdf",
+		File: fileKey,
 		Size: int32(filesize),
 		Tag:  util.StringPtr(""),
 	}
@@ -907,8 +907,13 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		return
 	}
 
+	url := server.generateResponsePresignedURL(&attachment.File)
+	if url == nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate presigned url")))
+		return
+	}
 	res := SuccessResponse(GenerateInvoicePDFResponse{
-		FileUrl: attachment.File,
+		FileUrl: *url,
 	}, "Invoice Pdf generated")
 	ctx.JSON(http.StatusCreated, res)
 

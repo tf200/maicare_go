@@ -64,16 +64,19 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		if strings.Contains(err.Error(), "request body too large") {
+			server.logBusinessEvent(LogLevelError, "UploadHandlerApi", "File size exceeds maximum limit", zap.Error(err))
 			ctx.JSON(http.StatusRequestEntityTooLarge, errorResponse(fmt.Errorf("file size exceeds maximum limit of 10MB")))
 			return
 		}
+		server.logBusinessEvent(LogLevelError, "UploadHandlerApi", "Failed to get form file", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	// Basic validations
 	if err := bucket.ValidateFile(header, maxFileSize); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "UploadHandlerApi", "File validation failed", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("file validation error")))
 		return
 	}
 
@@ -99,21 +102,16 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.b2Client.UploadToB2(ctx.Request.Context(), file, filename)
+	key, size, err := server.b2Client.Upload(ctx, file, filename, contentType)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	fileURL := fmt.Sprintf("%s/file/%s/%s",
-		server.b2Client.Bucket.BaseURL(),
-		server.b2Client.Bucket.Name(),
-		filename)
-
 	arg := db.CreateAttachmentParams{
 		Name: filename,
-		File: fileURL,
-		Size: int32(header.Size),
+		File: key,
+		Size: int32(size),
 		Tag:  util.StringPtr(""),
 	}
 	attachment, err := server.store.CreateAttachment(ctx, arg)
@@ -123,7 +121,7 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(UploadHandlerResponse{
-		FileURL:   fileURL,
+		FileURL:   key,
 		FileID:    attachment.Uuid,
 		CreatedAt: attachment.Created.Time,
 		Size:      int64(attachment.Size),
@@ -152,18 +150,27 @@ type GetAttachmentByIdResponse struct {
 func (server *Server) GetAttachmentByIdApi(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetAttachmentByIdApi", "Invalid UUID format", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid attachment ID format")))
 		return
 	}
 
 	attachment, err := server.store.GetAttachmentById(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "GetAttachmentByIdApi", "Failed to get attachment by ID", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get attachment by ID")))
+		return
+	}
+
+	presignedUrl, err := server.b2Client.GeneratePresignedURL(ctx, attachment.File, time.Minute*15)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GetAttachmentByIdApi", "Failed to generate presigned URL", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate presigned URL")))
 		return
 	}
 
 	res := SuccessResponse(GetAttachmentByIdResponse{
-		FileURL:   attachment.File,
+		FileURL:   presignedUrl,
 		FileID:    attachment.Uuid,
 		CreatedAt: attachment.Created.Time,
 		Size:      int64(attachment.Size),
@@ -219,16 +226,17 @@ func (server *Server) DeleteAttachment(ctx *gin.Context) {
 		return
 	}
 
-	err = server.b2Client.DeleteFromB2(ctx, attachment.Name)
+	err = server.b2Client.Delete(ctx, attachment.Name)
 	if err != nil {
-
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DeleteAttachment", "Failed to delete attachment from B2", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete attachment from B2: %w", err)))
 		return
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DeleteAttachment", "Failed to commit transaction", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction: %w", err)))
 		return
 	}
 

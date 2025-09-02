@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"maicare_go/ai"
 	"maicare_go/async"
@@ -48,7 +49,7 @@ type Server struct {
 	router       *gin.Engine
 	config       util.Config
 	tokenMaker   token.Maker
-	b2Client     *bucket.B2Client
+	b2Client     *bucket.ObjectStorageClient
 	asynqClient  async.AsynqClientInterface
 	httpServer   *http.Server
 	aiHandler    *ai.AiHandler
@@ -58,7 +59,7 @@ type Server struct {
 	grpClient    grpclient.GrpcClientInterface
 }
 
-func NewServer(store *db.Store, b2Client *bucket.B2Client, asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub, notifService *notification.Service, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
+func NewServer(store *db.Store, b2Client *bucket.ObjectStorageClient, asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub, notifService *notification.Service, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load env %v", err)
@@ -275,4 +276,16 @@ func setupLogger(environment string) (*zap.Logger, error) {
 
 	return logger, nil
 
+}
+
+func (server *Server) generateResponsePresignedURL(key *string) *string {
+	if key == nil {
+		return nil
+	}
+	url, err := server.b2Client.GeneratePresignedURL(context.Background(), *key, 15*time.Minute)
+	if err != nil {
+		server.logger.Error("Failed to generate presigned URL", zap.String("key", *key), zap.Error(err))
+		return nil
+	}
+	return &url
 }

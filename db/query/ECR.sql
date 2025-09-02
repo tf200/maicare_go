@@ -1,3 +1,39 @@
+-- name: ListEmployeesByContractEndDate :many
+SELECT 
+    id,
+    user_id,
+    first_name,
+    last_name,
+    position,
+    department,
+    employee_number,
+    employment_number,
+    email,
+    contract_start_date,
+    contract_end_date,
+    contract_type
+FROM employee_profile 
+WHERE contract_end_date IS NOT NULL
+  AND is_archived = FALSE
+ORDER BY contract_end_date ASC
+LIMIT 10;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- name: DischargeOverview :many
 WITH client_discharges AS (

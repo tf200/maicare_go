@@ -32,6 +32,8 @@ type GetEmployeeProfileResponse struct {
 	EmployeeID  int64        `json:"employee_id"`
 	FirstName   string       `json:"first_name"`
 	LastName    string       `json:"last_name"`
+	TwoFactor   bool         `json:"two_factor_enabled"`
+	LastLogin   time.Time    `json:"last_login"`
 	RoleID      int32        `json:"role_id"`
 	Permissions []Permission `json:"permissions"`
 }
@@ -68,6 +70,8 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 		FirstName:   profile.FirstName,
 		LastName:    profile.LastName,
 		Email:       profile.Email,
+		TwoFactor:   profile.TwoFactorEnabled,
+		LastLogin:   profile.LastLogin.Time,
 		Permissions: permissions,
 	}, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
@@ -336,7 +340,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 			HasBorrowed:               employee.HasBorrowed,
 			OutOfService:              employee.OutOfService,
 			IsArchived:                employee.IsArchived,
-			ProfilePicture:            employee.ProfilePicture,
+			ProfilePicture:            server.generateResponsePresignedURL(employee.ProfilePicture),
 			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
 			RoleID:                    employee.RoleID,
 			RoleName:                  employee.RoleName,
@@ -457,7 +461,7 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		HasBorrowed:               employee.HasBorrowed,
 		OutOfService:              employee.OutOfService,
 		IsArchived:                employee.IsArchived,
-		ProfilePicture:            employee.ProfilePicture,
+		ProfilePicture:            server.generateResponsePresignedURL(employee.ProfilePicture),
 		// to do list all roles
 		IsLoggedInUser: employee.UserID == currentUserID,
 	}, "Employee profile retrieved successfully")

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
 	"net/http"
 	"time"
 
@@ -13,8 +14,7 @@ import (
 
 // ListNotificationsRequest defines the request structure for listing notifications
 type ListNotificationsRequest struct {
-	Limit  int32 `form:"limit" binding:"required,min=1,max=100"`
-	Offset int32 `form:"offset" binding:"required,min=0"`
+	pagination.Request
 }
 
 // ListNotificationsResponse defines the response structure for listing notifications
@@ -32,8 +32,8 @@ type ListNotificationsResponse struct {
 // @Description List notifications for the authenticated user
 // @Tags Notifications
 // @Produce json
-// @Param limit query int true "Limit" default(10) minimum(1) maximum(100)
-// @Param offset query int true "Offset" default(0) minimum(0)
+// @Param page query integer false "Page number" default(1)
+// @Param page_size query integer false "Number of items per page" default(10)
 // @Success 200 {object} Response[ListNotificationsResponse] "List of notifications"
 // @Failure 400 {object} Response[any] "Invalid request parameters"
 // @Failure 401 {object} Response[any] "Unauthorized"
@@ -52,10 +52,11 @@ func (server *Server) ListNotificationsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
+	params := req.GetParams()
 	notifs, err := server.store.ListNotifications(ctx, db.ListNotificationsParams{
 		UserID: payload.UserId,
-		Limit:  req.Limit,
-		Offset: req.Offset,
+		Limit:  params.Limit,
+		Offset: params.Offset,
 	})
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "ListNotificationsApi", "Failed to list notifications", zap.Error(err))

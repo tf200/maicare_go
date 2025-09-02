@@ -6,8 +6,8 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io"
 	"maicare_go/bucket"
+	"mime/multipart"
 	"time"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
@@ -62,7 +62,7 @@ func sumVat(details []InvoiceDetail) float64 {
 //go:embed templates/invoice.html
 var invoiceTemplateFS embed.FS
 
-func GenerateInvoicePDF(invoiceData InvoicePDFData) ([]byte, error) {
+func GenerateInvoicePDF(invoiceData InvoicePDFData) (multipart.File, error) {
 	funcMap := template.FuncMap{
 		"sumPreVat": sumPreVat,
 		"sumVat":    sumVat,
@@ -106,58 +106,42 @@ func GenerateInvoicePDF(invoiceData InvoicePDFData) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create PDF: %w", err)
 	}
 
-	return pdfg.Bytes(), nil
+	// Get the generated PDF as a byte slice
+	pdfBytes := pdfg.Bytes()
+	// Wrap the byte slice in our InMemoryFile to satisfy the interface
+	file := &bucket.InMemoryFile{
+		Reader: bytes.NewReader(pdfBytes),
+	}
+	return file, nil
 }
 
 // UploadInvoicePDF uploads a PDF to B2 with a generated filename
-func UploadInvoicePDF(ctx context.Context, pdfBytes []byte, invoiceID int64, b2Client *bucket.B2Client) (string, string, int64, error) {
+func UploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int64, b2Client *bucket.ObjectStorageClient) (string, int64, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("invoice_reports/%s/invoice_report_%d.pdf", timestamp, invoiceID)
 
-	// Create reader from PDF bytes
-	pdfReader := bytes.NewReader(pdfBytes)
-
 	// Upload to B2
-	obj := b2Client.Bucket.Object(filename)
-	writer := obj.NewWriter(ctx)
-	writer.ConcurrentUploads = 4
-
-	// Copy the PDF data to B2
-	_, err := io.Copy(writer, pdfReader)
+	key, size, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
-		writer.Close()
-		return "", "", 0, fmt.Errorf("failed to copy PDF to B2: %w", err)
+		return "", 0, fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
-
-	if err := writer.Close(); err != nil {
-		return "", "", 0, fmt.Errorf("failed to close B2 writer: %w", err)
-	}
-
-	// Get file size from pdfBytes
-	fileSize := int64(len(pdfBytes))
-
-	fileURL := fmt.Sprintf("%s/file/%s/%s",
-		b2Client.Bucket.BaseURL(),
-		b2Client.Bucket.Name(),
-		filename)
-
-	return fileURL, filename, fileSize, nil
+	return key, size, nil
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData, b2Client *bucket.B2Client) (string, string, int64, error) {
+func GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData, b2Client *bucket.ObjectStorageClient) (string, int64, error) {
 	// Generate PDF
-	pdfBytes, err := GenerateInvoicePDF(invoiceData)
+	pdfFile, err := GenerateInvoicePDF(invoiceData)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("failed to generate PDF: %w", err)
+		return "", 0, fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	fileURL, filename, fileSize, err := UploadInvoicePDF(ctx, pdfBytes, invoiceData.ID, b2Client)
+	fileURL, size, err := UploadInvoicePDF(ctx, pdfFile, invoiceData.ID, b2Client)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("failed to upload PDF: %w", err)
+		return "", 0, fmt.Errorf("failed to upload PDF: %w", err)
 	}
 
-	return fileURL, filename, fileSize, nil
+	return fileURL, size, nil
 }

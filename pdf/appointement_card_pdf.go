@@ -6,8 +6,8 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io"
 	"maicare_go/bucket"
+	"mime/multipart"
 	"time"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
@@ -34,7 +34,7 @@ type AppointmentCard struct {
 	Leave                  []string
 }
 
-func GenerateAppointmentCardPDF(appointmentCardData AppointmentCard) ([]byte, error) {
+func GenerateAppointmentCardPDF(appointmentCardData AppointmentCard) (multipart.File, error) {
 	// Parse and execute HTML template
 	templ, err := template.ParseFS(appointmentCardTemplateFS, "templates/appointment_card.html")
 	if err != nil {
@@ -73,51 +73,42 @@ func GenerateAppointmentCardPDF(appointmentCardData AppointmentCard) ([]byte, er
 		return nil, fmt.Errorf("failed to create PDF: %w", err)
 	}
 
-	return pdfg.Bytes(), nil
+	// Get the generated PDF as a byte slice
+	pdfBytes := pdfg.Bytes()
+
+	// Wrap the byte slice in our InMemoryFile to satisfy the interface
+	file := &bucket.InMemoryFile{
+		Reader: bytes.NewReader(pdfBytes),
+	}
+
+	return file, nil
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadAppointmentCardPDF(ctx context.Context, pdfBytes []byte, appointmentCardID int64, b2Client *bucket.B2Client) (string, error) {
+func UploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID int64, b2Client *bucket.ObjectStorageClient) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("appointment_cards/%s/appointment_card_%d.pdf", timestamp, appointmentCardID)
 
-	// Create reader from PDF bytes
-	pdfReader := bytes.NewReader(pdfBytes)
-
 	// Upload to B2
-	obj := b2Client.Bucket.Object(filename)
-	writer := obj.NewWriter(ctx)
-	writer.ConcurrentUploads = 4
-
-	// Copy the PDF data to B2
-	_, err := io.Copy(writer, pdfReader)
+	key, _, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
-		writer.Close()
-		return "", fmt.Errorf("failed to copy PDF to B2: %w", err)
+		return "", fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
 
-	if err := writer.Close(); err != nil {
-		return "", fmt.Errorf("failed to close B2 writer: %w", err)
-	}
-	fileURL := fmt.Sprintf("%s/file/%s/%s",
-		b2Client.Bucket.BaseURL(),
-		b2Client.Bucket.Name(),
-		filename)
-
-	return fileURL, nil
+	return key, nil
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard, b2Client *bucket.B2Client) (string, error) {
+func GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard, b2Client *bucket.ObjectStorageClient) (string, error) {
 	// Generate PDF
-	pdfBytes, err := GenerateAppointmentCardPDF(cardData)
+	pdfFile, err := GenerateAppointmentCardPDF(cardData)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	fileURL, err := UploadAppointmentCardPDF(ctx, pdfBytes, cardData.ID, b2Client)
+	fileURL, err := UploadAppointmentCardPDF(ctx, pdfFile, cardData.ID, b2Client)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF: %w", err)
 	}

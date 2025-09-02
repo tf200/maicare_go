@@ -18,7 +18,7 @@ func TestGenerateIncidentPDF(t *testing.T) {
 		log.Fatalf("Could not load conf %v", err)
 	}
 
-	testb2Client, err := bucket.NewB2Client(config)
+	testb2Client, err := bucket.NewObjectStorageClient(context.Background(), config)
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
@@ -90,7 +90,6 @@ func TestGenerateIncidentPDF(t *testing.T) {
 		ClientID:        300,
 		ClientFirstName: "Jane",
 		ClientLastName:  "Smith",
-		
 	}
 
 	pdfBytes, err := GenerateAndUploadIncidentPDF(context.Background(), mockIncident, testb2Client)

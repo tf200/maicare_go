@@ -22,7 +22,7 @@ import (
 
 var testStore *db.Store
 var testServer *Server
-var testb2Client *bucket.B2Client
+var testb2Client *bucket.ObjectStorageClient
 var testasynqClient *mocks.MockAsynqClientInterface
 var testGrpcClient grpclient.GrpcClientInterface
 var testNotifService *notification.Service
@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 	testMockCtrl = gomock.NewController(&testing.T{})
 	defer testMockCtrl.Finish()
 
-	testb2Client, err = bucket.NewB2Client(config)
+	testb2Client, err = bucket.NewObjectStorageClient(context.Background(), config)
 	if err != nil {
 		log.Fatal("cannot create b2 client:", err)
 	}
