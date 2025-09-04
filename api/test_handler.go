@@ -103,7 +103,7 @@ func (server *Server) Notification(c *gin.Context) {
 	// // Enqueue the notification task
 	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
 		RecipientUserIDs: []int64{1},
-		Type:             "employee_assigned",
+		Type:             "new_client_assigned",
 		Data: notification.NotificationData{
 			NewClientAssignment: &notification.NewClientAssignmentData{
 				ClientID:        12345,
@@ -112,6 +112,8 @@ func (server *Server) Notification(c *gin.Context) {
 				ClientLocation:  util.StringPtr("test Location"), // Assuming no location provided
 			},
 		},
+		Message:   "You have been assigned a new client: John Doe",
+		CreatedAt: time.Now(),
 	})
 	c.JSON(http.StatusOK, gin.H{
 		"echo":      "Notification sent",
