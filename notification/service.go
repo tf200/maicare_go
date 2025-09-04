@@ -17,27 +17,17 @@ import (
 
 // Service handles notification business logic.
 type Service struct {
-	store             *db.Store
-	wsHub             *hub.Hub
-	processorRegistry map[string]func([]byte) (any, error)
+	store *db.Store
+	wsHub *hub.Hub
 }
 
 // NewService creates a new notification service.
 func NewService(store *db.Store, wsHub *hub.Hub) *Service {
 	service := &Service{
-		store:             store,
-		wsHub:             wsHub,
-		processorRegistry: make(map[string]func([]byte) (any, error)),
+		store: store,
+		wsHub: wsHub,
 	}
 
-	// Register default processors
-	service.Register(TypeNewAppointment, func(data []byte) (any, error) {
-		var appData NewAppointmentData
-		if err := json.Unmarshal(data, &appData); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal new appointment data: %w", err)
-		}
-		return appData, nil
-	})
 	return service
 }
 
@@ -123,17 +113,4 @@ func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayl
 	// Return the first error encountered during DB operations, or nil if all succeeded.
 	// Asynq will handle retries based on this error return.
 	return firstError
-}
-
-func (s *Service) Register(notificationType string, processor func([]byte) (interface{}, error)) {
-	s.processorRegistry[notificationType] = processor
-}
-
-func (s *Service) Process(notificationType string, data []byte) (interface{}, error) {
-	processor, exists := s.processorRegistry[notificationType]
-	if !exists {
-		return nil, fmt.Errorf("no processor registered for notification type: %s", notificationType)
-	}
-
-	return processor(data)
 }
