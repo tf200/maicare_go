@@ -5110,7 +5110,7 @@ definitions:
         type: string
       notification_id:
         type: string
-      notification_type:
+      type:
         type: string
     type: object
   api.ListOrganisationsResponse:

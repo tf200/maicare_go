@@ -20,7 +20,7 @@ type ListNotificationsRequest struct {
 // ListNotificationsResponse defines the response structure for listing notifications
 type ListNotificationsResponse struct {
 	NotificationID   uuid.UUID `json:"notification_id"`
-	NotificationType string    `json:"notification_type"`
+	NotificationType string    `json:"type"`
 	Message          string    `json:"message"`
 	IsRead           bool      `json:"is_read"`
 	Data             any       `json:"data"`
