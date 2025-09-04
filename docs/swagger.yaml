@@ -5487,6 +5487,20 @@ definitions:
         example: logout successful
         type: string
     type: object
+  api.MarkNotificationAsReadResponse:
+    properties:
+      created_at:
+        type: string
+      data: {}
+      is_read:
+        type: boolean
+      message:
+        type: string
+      notification_id:
+        type: string
+      notification_type:
+        type: string
+    type: object
   api.NotificationResponse:
     properties:
       echo:
@@ -6413,6 +6427,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.LogoutResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_MarkNotificationAsReadResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.MarkNotificationAsReadResponse'
       message:
         type: string
       success:
@@ -15407,6 +15430,43 @@ paths:
       summary: List Notifications
       tags:
       - Notifications
+  /notifications/{id}/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks a notification as read for the authenticated user
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_MarkNotificationAsReadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Mark Notification as Read
+      tags:
+      - notifications
   /objectives/{objective_id}:
     delete:
       description: Delete a care plan objective by its ID

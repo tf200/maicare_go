@@ -109,11 +109,11 @@ type MarkNotificationAsReadResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path string true "Notification ID"
-// @Success 200 {object} MarkNotificationAsReadResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 403 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} Response[MarkNotificationAsReadResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 401 {object} Response[any]
+// @Failure 403 {object} Response[any]
+// @Failure 500 {object} Response[any]
 // @Router /notifications/{id}/read [post]
 func (server *Server) MarkNotificationAsReadApi(ctx *gin.Context) {
 	notifID := ctx.Param("id")
