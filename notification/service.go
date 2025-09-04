@@ -11,6 +11,7 @@ import (
 	"maicare_go/hub"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	// "your_project_root/websocket" // Import when ready
 )
 
@@ -41,28 +42,16 @@ func NewService(store *db.Store, wsHub *hub.Hub) *Service {
 }
 
 type WebSocketMessage struct {
-	Type      string           `json:"type"`
-	Data      NotificationData `json:"data"` // Use json.RawMessage to avoid double encoding if Data is already JSON
-	CreatedAt time.Time        `json:"created_at"`
+	NotificationID   uuid.UUID        `json:"notification_id"`
+	NotificationType string           `json:"type"`
+	Message          string           `json:"message"`
+	IsRead           bool             `json:"is_read"`
+	Data             NotificationData `json:"data"`
+	CreatedAt        time.Time        `json:"created_at"`
 }
 
 func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
 
-	wsMsg := WebSocketMessage{
-		Type:      payload.Type,
-		Data:      payload.Data,
-		CreatedAt: payload.CreatedAt,
-	}
-	log.Printf("Preparing WebSocket message for type: %s", payload.Type)
-
-	wsPayload, err := json.Marshal(wsMsg)
-	if err != nil {
-		log.Printf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err)
-		// If we can't marshal this, we can't send it via WS.
-		// Depending on requirements, you might still want to proceed with DB saves,
-		// or return an error here. Let's log and proceed with DB saves for now.
-		return fmt.Errorf("failed to marshal websocket payload: %w", err) // Uncomment this if WS delivery is critical
-	}
 	// --- End Prepare WebSocket Message ---
 
 	var firstError error // Keep track of the first error for potential return
@@ -77,7 +66,7 @@ func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayl
 	for _, recipientID := range payload.RecipientUserIDs {
 		log.Printf("Processing notification for recipient ID: %d", recipientID)
 		// 1. Save to Database
-		_, dbErr := s.store.CreateNotification(ctx, db.CreateNotificationParams{
+		notif, dbErr := s.store.CreateNotification(ctx, db.CreateNotificationParams{
 			UserID:  recipientID,
 			Type:    payload.Type,
 			Data:    dataBytes,
@@ -97,6 +86,24 @@ func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayl
 		}
 
 		log.Printf("Notification saved to DB for user %d.", recipientID)
+		// Prepare WebSocket message
+		wsMsg := WebSocketMessage{
+			NotificationID:   notif.ID,
+			NotificationType: notif.Type,
+			Message:          notif.Message,
+			IsRead:           notif.IsRead,
+			Data:             payload.Data,
+			CreatedAt:        notif.CreatedAt.Time,
+		}
+
+		wsPayload, err := json.Marshal(wsMsg)
+		if err != nil {
+			log.Printf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err)
+			// If we can't marshal this, we can't send it via WS.
+			// Depending on requirements, you might still want to proceed with DB saves,
+			// or return an error here. Let's log and proceed with DB saves for now.
+			return fmt.Errorf("failed to marshal websocket payload: %w", err) // Uncomment this if WS delivery is critical
+		}
 
 		// 2. Deliver via WebSocket (if marshalling succeeded)
 		if s.wsHub != nil { // Check if marshalling failed earlier and hub exists

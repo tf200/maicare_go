@@ -151,6 +151,7 @@ func (server *Server) setupRoutes() {
 	server.setupShiftsRoutes(baseRouter)
 	server.setupWorkingHours(baseRouter)
 	server.setupInvoiceRoutes(baseRouter)
+	server.setupNotificationRoutes(baseRouter)
 	// Add more route setups as needed
 
 	server.setupWebsocketRoutes(baseRouter)
