@@ -92,6 +92,7 @@ type NotificationResponse struct {
 // @Success 200 {object} NotificationResponse
 // @Failure 400 {object} Response[any]
 // @Router /test/notification [get]
+// @Security -
 func (server *Server) Notification(c *gin.Context) {
 	// payload, err := GetAuthPayload(c)
 	// if err != nil {

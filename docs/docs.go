@@ -11240,6 +11240,11 @@ const docTemplate = `{
         },
         "/test/notification": {
             "get": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

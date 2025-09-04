@@ -16827,6 +16827,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Response-any'
+      security:
+      - '-': []
 security:
 - Bearer: []
 securityDefinitions:
