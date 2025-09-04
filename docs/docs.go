@@ -18922,7 +18922,7 @@ const docTemplate = `{
                 "notification_id": {
                     "type": "string"
                 },
-                "notification_type": {
+                "type": {
                     "type": "string"
                 }
             }
