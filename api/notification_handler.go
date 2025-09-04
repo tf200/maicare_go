@@ -3,11 +3,13 @@ package api
 import (
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/notification"
 	"maicare_go/pagination"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -19,12 +21,12 @@ type ListNotificationsRequest struct {
 
 // ListNotificationsResponse defines the response structure for listing notifications
 type ListNotificationsResponse struct {
-	NotificationID   uuid.UUID `json:"notification_id"`
-	NotificationType string    `json:"type"`
-	Message          string    `json:"message"`
-	IsRead           bool      `json:"is_read"`
-	Data             any       `json:"data"`
-	CreatedAT        time.Time `json:"created_at"`
+	NotificationID   uuid.UUID                     `json:"notification_id"`
+	NotificationType string                        `json:"type"`
+	Message          string                        `json:"message"`
+	IsRead           bool                          `json:"is_read"`
+	Data             notification.NotificationData `json:"data"`
+	CreatedAT        time.Time                     `json:"created_at"`
 }
 
 // ListNotificationsApi handles the API endpoint for listing notifications
@@ -71,11 +73,13 @@ func (server *Server) ListNotificationsApi(ctx *gin.Context) {
 		return
 	}
 
+	server.logBusinessEvent(LogLevelInfo, "ListNotificationsApi", "Notifications retrieved from DB", zap.Int("count", len(notifs)), zap.Int64("user_id", payload.UserId))
+
 	var res []ListNotificationsResponse
 	for _, notif := range notifs {
-		processedData, err := server.notifService.Process(notif.Type, notif.Data)
-		if err != nil {
-			server.logBusinessEvent(LogLevelError, "ListNotificationsApi", "Failed to process notification data", zap.Error(err), zap.String("notification_type", notif.Type))
+		var processedData notification.NotificationData
+		if err := json.Unmarshal(notif.Data, &processedData); err != nil {
+			server.logBusinessEvent(LogLevelError, "ListNotificationsApi", "Failed to unmarshal notification data", zap.Error(err), zap.String("notification_id", notif.ID.String()))
 			continue
 		}
 
@@ -88,6 +92,7 @@ func (server *Server) ListNotificationsApi(ctx *gin.Context) {
 			CreatedAT:        notif.CreatedAt.Time,
 		})
 	}
+	server.logBusinessEvent(LogLevelInfo, "ListNotificationsApi", "Successfully retrieved notifications", zap.Int("count", len(res)), zap.Int64("user_id", payload.UserId))
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Notifications retrieved successfully"))
 
 }
@@ -98,7 +103,6 @@ type MarkNotificationAsReadResponse struct {
 	NotificationType string    `json:"notification_type"`
 	Message          string    `json:"message"`
 	IsRead           bool      `json:"is_read"`
-	Data             any       `json:"data"`
 	CreatedAT        time.Time `json:"created_at"`
 }
 
@@ -163,19 +167,11 @@ func (server *Server) MarkNotificationAsReadApi(ctx *gin.Context) {
 		return
 	}
 
-	processedData, err := server.notifService.Process(updatedNotif.Type, updatedNotif.Data)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "ListNotificationsApi", "Failed to process notification data", zap.Error(err), zap.String("notification_type", updatedNotif.Type))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process notification data")))
-		return
-	}
-
 	res := MarkNotificationAsReadResponse{
 		NotificationID:   updatedNotif.ID,
 		NotificationType: updatedNotif.Type,
 		Message:          updatedNotif.Message,
 		IsRead:           updatedNotif.IsRead,
-		Data:             processedData,
 		CreatedAT:        updatedNotif.CreatedAt.Time,
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Notification marked as read successfully"))
