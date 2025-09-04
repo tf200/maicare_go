@@ -4140,17 +4140,6 @@ definitions:
       phone_number:
         type: string
     type: object
-  api.IntakeFormUploadHandlerResponse:
-    properties:
-      created_at:
-        type: string
-      file_id:
-        type: string
-      file_url:
-        type: string
-      size:
-        type: integer
-    type: object
   api.Intervention:
     properties:
       intervention_description:
@@ -6343,15 +6332,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GrantUserPermissionsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_IntakeFormUploadHandlerResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.IntakeFormUploadHandlerResponse'
       message:
         type: string
       success:
@@ -9345,7 +9325,6 @@ definitions:
     - 1
     - 0
     - -1
-    format: int32
     type: integer
     x-enum-varnames:
     - Infinity
@@ -14374,45 +14353,6 @@ paths:
       summary: Add urgency score to an intake form
       tags:
       - intake_form
-  /intake_form/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Upload a file for intake form
-      parameters:
-      - description: File to upload
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-api_IntakeFormUploadHandlerResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "413":
-          description: Request entity too large
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      security:
-      - '-': []
-      summary: Upload a file for intake form
-      tags:
-      - intake_form
   /interventions/{intervention_id}:
     delete:
       description: Delete a care plan intervention by its ID
@@ -14488,12 +14428,10 @@ paths:
         ID, status, and date range.
       parameters:
       - description: Client ID
-        format: int64
         in: query
         name: client_id
         type: integer
       - description: Sender ID
-        format: int64
         in: query
         name: sender_id
         type: integer
@@ -14586,7 +14524,6 @@ paths:
       description: Delete an invoice by its ID.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14621,7 +14558,6 @@ paths:
       description: Get an invoice by its ID.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14658,7 +14594,6 @@ paths:
       description: Update an existing invoice by its ID.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14700,7 +14635,6 @@ paths:
       description: Retrieve audit logs for a specific invoice by its ID.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14736,7 +14670,6 @@ paths:
       description: Create a credit note for an existing invoice.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14772,7 +14705,6 @@ paths:
       description: Generate an invoice in PDF format by its ID.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14808,7 +14740,6 @@ paths:
       description: List all payments for a specific invoice.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14845,7 +14776,6 @@ paths:
       description: Create a payment for an invoice.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14887,7 +14817,6 @@ paths:
       description: Get a payment by its ID.
       parameters:
       - description: Payment ID
-        format: int64
         in: path
         name: id
         required: true
@@ -14925,13 +14854,11 @@ paths:
       description: Delete a payment from an invoice.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
-        format: int64
         in: path
         name: payment_id
         required: true
@@ -14968,13 +14895,11 @@ paths:
       description: Update a payment for an invoice.
       parameters:
       - description: Invoice ID
-        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
-        format: int64
         in: path
         name: payment_id
         required: true

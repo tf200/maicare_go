@@ -3,6 +3,7 @@ package api
 import (
 	"maicare_go/async"
 	"maicare_go/notification"
+	"maicare_go/util"
 	"net/http"
 	"time"
 
@@ -92,23 +93,23 @@ type NotificationResponse struct {
 // @Failure 400 {object} Response[any]
 // @Router /test/notification [get]
 func (server *Server) Notification(c *gin.Context) {
-	payload, err := GetAuthPayload(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-	// Get the user ID from the payload
-	userID := payload.UserId
-	// Enqueue the notification task
+	// payload, err := GetAuthPayload(c)
+	// if err != nil {
+	// 	c.JSON(http.StatusUnauthorized, errorResponse(err))
+	// 	return
+	// }
+	// // Get the user ID from the payload
+	// // _ := payload.UserId
+	// // Enqueue the notification task
 	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
-		RecipientUserIDs: []int64{userID},
+		RecipientUserIDs: []int64{1},
 		Type:             "employee_assigned",
 		Data: notification.NotificationData{
 			NewClientAssignment: &notification.NewClientAssignmentData{
 				ClientID:        12345,
 				ClientFirstName: "John",
 				ClientLastName:  "Doe",
-				ClientLocation:  nil, // Assuming no location provided
+				ClientLocation:  util.StringPtr("test Location"), // Assuming no location provided
 			},
 		},
 	})
