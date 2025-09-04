@@ -92,6 +92,7 @@ func (server *Server) ListNotificationsApi(ctx *gin.Context) {
 
 }
 
+// MarkNotificationAsReadResponse represents the response for marking a notification as read
 type MarkNotificationAsReadResponse struct {
 	NotificationID   uuid.UUID `json:"notification_id"`
 	NotificationType string    `json:"notification_type"`
@@ -101,6 +102,19 @@ type MarkNotificationAsReadResponse struct {
 	CreatedAT        time.Time `json:"created_at"`
 }
 
+// MarkNotificationAsReadApi handles marking a notification as read
+// @Summary Mark Notification as Read
+// @Description Marks a notification as read for the authenticated user
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Param id path string true "Notification ID"
+// @Success 200 {object} Response[MarkNotificationAsReadResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 401 {object} Response[any]
+// @Failure 403 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /notifications/{id}/read [post]
 func (server *Server) MarkNotificationAsReadApi(ctx *gin.Context) {
 	notifID := ctx.Param("id")
 	payload, err := GetAuthPayload(ctx)
