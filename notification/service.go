@@ -41,22 +41,16 @@ func NewService(store *db.Store, wsHub *hub.Hub) *Service {
 }
 
 type WebSocketMessage struct {
-	Type      string          `json:"type"`
-	Data      json.RawMessage `json:"data"` // Use json.RawMessage to avoid double encoding if Data is already JSON
-	CreatedAt time.Time       `json:"created_at"`
+	Type      string           `json:"type"`
+	Data      NotificationData `json:"data"` // Use json.RawMessage to avoid double encoding if Data is already JSON
+	CreatedAt time.Time        `json:"created_at"`
 }
 
 func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
 
-	dataBytes, err := json.Marshal(payload.Data)
-	if err != nil {
-		return fmt.Errorf("failed to marshal notification data: %w", err)
-	}
-	log.Printf("Notification data marshalled successfully for type: %s", payload.Type)
-
 	wsMsg := WebSocketMessage{
 		Type:      payload.Type,
-		Data:      dataBytes,
+		Data:      payload.Data,
 		CreatedAt: payload.CreatedAt,
 	}
 	log.Printf("Preparing WebSocket message for type: %s", payload.Type)
@@ -72,6 +66,13 @@ func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayl
 	// --- End Prepare WebSocket Message ---
 
 	var firstError error // Keep track of the first error for potential return
+
+	dataBytes, err := json.Marshal(payload.Data)
+	if err != nil {
+		log.Printf("Error marshalling notification data (Type: %s): %v", payload.Type, err)
+		return fmt.Errorf("failed to marshal notification data: %w", err)
+	}
+	log.Printf("Notification data marshalled successfully for type: %s", payload.Type)
 
 	for _, recipientID := range payload.RecipientUserIDs {
 		log.Printf("Processing notification for recipient ID: %d", recipientID)

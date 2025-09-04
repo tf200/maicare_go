@@ -7475,67 +7475,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/intake_form/upload": {
-            "post": {
-                "security": [
-                    {
-                        "-": []
-                    }
-                ],
-                "description": "Upload a file for intake form",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "Upload a file for intake form",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "File to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_IntakeFormUploadHandlerResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "413": {
-                        "description": "Request entity too large",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/intake_form/{id}": {
             "get": {
                 "description": "Get an intake form",
@@ -7750,14 +7689,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Client ID",
                         "name": "client_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Sender ID",
                         "name": "sender_id",
                         "in": "query"
@@ -8004,7 +7941,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8059,7 +7995,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8120,7 +8055,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8174,7 +8108,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8228,7 +8161,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8282,7 +8214,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8336,7 +8267,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8391,7 +8321,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8454,7 +8383,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Payment ID",
                         "name": "id",
                         "in": "path",
@@ -8511,7 +8439,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8519,7 +8446,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -8583,7 +8509,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8591,7 +8516,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -17471,23 +17395,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.IntakeFormUploadHandlerResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "file_id": {
-                    "type": "string"
-                },
-                "file_url": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
         "api.Intervention": {
             "type": "object",
             "properties": {
@@ -20835,20 +20742,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GrantUserPermissionsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_IntakeFormUploadHandlerResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.IntakeFormUploadHandlerResponse"
                 },
                 "message": {
                     "type": "string"
@@ -25403,7 +25296,6 @@ const docTemplate = `{
         },
         "pgtype.InfinityModifier": {
             "type": "integer",
-            "format": "int32",
             "enum": [
                 1,
                 0,
