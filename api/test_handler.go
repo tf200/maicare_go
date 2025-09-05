@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type TestResponse struct {
@@ -88,7 +89,8 @@ type NotificationResponse struct {
 // @Summary: Test Notification delivery
 // @Description: Test Notification delivery
 // @Tags: Test
-// @Produces: json
+// @Accept: json
+// @Produce: json
 // @Success 200 {object} NotificationResponse
 // @Failure 400 {object} Response[any]
 // @Router /test/notification [get]
@@ -102,6 +104,7 @@ func (server *Server) Notification(c *gin.Context) {
 	// // Get the user ID from the payload
 	// // _ := payload.UserId
 	// // Enqueue the notification task
+
 	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
 		RecipientUserIDs: []int64{1},
 		Type:             "new_client_assigned",
@@ -114,6 +117,133 @@ func (server *Server) Notification(c *gin.Context) {
 			},
 		},
 		Message:   "You have been assigned a new client: John Doe",
+		CreatedAt: time.Now(),
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"echo":      "Notification sent",
+		"timestamp": time.Now(),
+	})
+}
+
+// NotificationAppointement to test Notification delivery .
+// @Summary: Test Notification delivery
+// @Description: Test Notification delivery
+// @Tags: Test
+// @Accept: json
+// @Produce: json
+// @Success 200 {object} NotificationResponse
+// @Failure 400 {object} Response[any]
+// @Router /test/notification_2 [get]
+// @Security -
+func (server *Server) NotificationAppointement(c *gin.Context) {
+	// payload, err := GetAuthPayload(c)
+	// if err != nil {
+	// 	c.JSON(http.StatusUnauthorized, errorResponse(err))
+	// 	return
+	// }
+	// // Get the user ID from the payload
+	// // _ := payload.UserId
+	// // Enqueue the notification task
+
+	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
+		RecipientUserIDs: []int64{1},
+		Type:             "new_appointment",
+		Data: notification.NotificationData{
+			NewAppointment: &notification.NewAppointmentData{
+				AppointmentID: uuid.New(),
+				CreatedBy:     "Admin User",
+				StartTime:     time.Now().Add(24 * time.Hour),
+				EndTime:       time.Now().Add(25 * time.Hour),
+				Location:      "Office",
+			},
+		},
+		Message:   "You have been assigned a new appointment: John Doe",
+		CreatedAt: time.Now(),
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"echo":      "Notification sent",
+		"timestamp": time.Now(),
+	})
+}
+
+// NotificationNewSchedule to test Notification delivery .
+// @Summary: Test Notification delivery
+// @Description: Test Notification delivery
+// @Tags: Test
+// @Accept: json
+// @Produce: json
+// @Success 200 {object} NotificationResponse
+// @Failure 400 {object} Response[any]
+// @Router /test/notification_3 [get]
+// @Security -
+func (server *Server) NotificationNewSchedule(c *gin.Context) {
+	// payload, err := GetAuthPayload(c)
+	// if err != nil {
+	// 	c.JSON(http.StatusUnauthorized, errorResponse(err))
+	// 	return
+	// }
+	// // Get the user ID from the payload
+	// // _ := payload.UserId
+	// // Enqueue the notification task
+
+	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
+		RecipientUserIDs: []int64{1},
+		Type:             "new_schedule_notification",
+		Data: notification.NotificationData{
+			NewScheduleNotification: &notification.NewScheduleNotificationData{
+				ScheduleID: uuid.New(),
+				CreatedBy:  2,
+				StartTime:  time.Now().Add(24 * time.Hour),
+				EndTime:    time.Now().Add(25 * time.Hour),
+				Location:   "Office",
+			},
+		},
+		Message:   "You have been assigned a new appointment: John Doe",
+		CreatedAt: time.Now(),
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"echo":      "Notification sent",
+		"timestamp": time.Now(),
+	})
+}
+
+// NotificationNewIncident to test Notification delivery .
+// @Summary: Test Notification delivery
+// @Description: Test Notification delivery
+// @Tags: Test
+// @Accept: json
+// @Produce: json
+// @Success 200 {object} NotificationResponse
+// @Failure 400 {object} Response[any]
+// @Router /test/notification_4 [get]
+// @Security -
+func (server *Server) NotificationNewIncident(c *gin.Context) {
+	// payload, err := GetAuthPayload(c)
+	// if err != nil {
+	// 	c.JSON(http.StatusUnauthorized, errorResponse(err))
+	// 	return
+	// }
+	// // Get the user ID from the payload
+	// // _ := payload.UserId
+	// // Enqueue the notification task
+
+	server.asynqClient.EnqueueNotificationTask(c, notification.NotificationPayload{
+		RecipientUserIDs: []int64{1},
+		Type:             "incident_report",
+		Data: notification.NotificationData{
+			NewIncidentReport: &notification.NewIncidentReportData{
+				ID:                 4,
+				EmployeeID:         2,
+				EmployeeFirstName:  "Jane",
+				EmployeeLastName:   "Doe",
+				LocationID:         3,
+				LocationName:       "Main Office",
+				ClientFirstName:    "John",
+				ClientLastName:     "Doe",
+				SeverityOfIncident: "High",
+			},
+		},
+		Message:   "You have been assigned a new incident report: 4",
 		CreatedAt: time.Now(),
 	})
 	c.JSON(http.StatusOK, gin.H{
