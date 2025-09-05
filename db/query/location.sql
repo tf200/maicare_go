@@ -27,7 +27,8 @@ SELECT o.*,
        COUNT(l.id) AS location_count
 FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
-WHERE o.id = $1;
+WHERE o.id = $1
+GROUP BY o.id;
 
 
 -- name: UpdateOrganisation :one

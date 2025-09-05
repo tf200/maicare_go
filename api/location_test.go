@@ -265,3 +265,51 @@ func TestGetLocationApi(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOrganisationApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
+	organisation := createRandomOrganisation(t)
+
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				url := fmt.Sprintf("/organisations/%d", organisation.ID)
+				req, err := http.NewRequest(http.MethodGet, url, nil)
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var orgRes Response[GetOrganisationResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&orgRes)
+				require.NoError(t, err)
+				require.NotEmpty(t, orgRes.Data)
+				require.NotEmpty(t, orgRes.Data.ID)
+				require.NotEmpty(t, orgRes.Data.Name)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
