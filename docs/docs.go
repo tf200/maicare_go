@@ -11260,6 +11260,75 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/test/notification_2": {
+            "get": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/test/notification_3": {
+            "get": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/test/notification_4": {
+            "get": {
+                "security": [
+                    {
+                        "-": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.NotificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -18912,7 +18981,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
-                "data": {},
+                "data": {
+                    "$ref": "#/definitions/notification.NotificationData"
+                },
                 "is_read": {
                     "type": "boolean"
                 },
@@ -19497,7 +19568,6 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
-                "data": {},
                 "is_read": {
                     "type": "boolean"
                 },
@@ -24976,6 +25046,152 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                }
+            }
+        },
+        "notification.ClientContractReminderData": {
+            "type": "object",
+            "properties": {
+                "care_type": {
+                    "description": "e.g., \"ambulante\", \"accommodation\"",
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "contract_end": {
+                    "type": "string"
+                },
+                "contract_id": {
+                    "type": "integer"
+                },
+                "contract_start": {
+                    "type": "string"
+                },
+                "last_reminder_sent_at": {
+                    "type": "string"
+                },
+                "reminder_type": {
+                    "description": "e.g., \"initial",
+                    "type": "string"
+                }
+            }
+        },
+        "notification.NewAppointmentData": {
+            "type": "object",
+            "properties": {
+                "appointment_id": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.NewClientAssignmentData": {
+            "type": "object",
+            "properties": {
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_location": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.NewIncidentReportData": {
+            "type": "object",
+            "properties": {
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "severity_of_incident": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.NewScheduleNotificationData": {
+            "type": "object",
+            "properties": {
+                "created_by": {
+                    "type": "integer"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "schedule_id": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.NotificationData": {
+            "type": "object",
+            "properties": {
+                "client_contract_reminder": {
+                    "$ref": "#/definitions/notification.ClientContractReminderData"
+                },
+                "new_appointment": {
+                    "$ref": "#/definitions/notification.NewAppointmentData"
+                },
+                "new_client_assignment": {
+                    "$ref": "#/definitions/notification.NewClientAssignmentData"
+                },
+                "new_incident_report": {
+                    "$ref": "#/definitions/notification.NewIncidentReportData"
+                },
+                "new_schedule_notification": {
+                    "$ref": "#/definitions/notification.NewScheduleNotificationData"
                 }
             }
         },

@@ -18,6 +18,9 @@ func (server *Server) setupTestRoutes(baseRouter *gin.RouterGroup) {
 		testGroup.GET("/send-email", server.EmailAndAsynq)
 
 		testGroup.GET("/notification", server.Notification)
+		testGroup.GET("/notification_2", server.NotificationAppointement)
+		testGroup.GET("/notification_3", server.NotificationNewSchedule)
+		testGroup.GET("/notification_4", server.NotificationNewIncident)
 
 	}
 }
