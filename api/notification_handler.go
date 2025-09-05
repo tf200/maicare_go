@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/notification"
@@ -141,9 +142,8 @@ func (server *Server) MarkNotificationAsReadApi(ctx *gin.Context) {
 		return
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if err := tx.Rollback(ctx); err != sql.ErrTxDone {
 			server.logBusinessEvent(LogLevelError, "SetNotificationAsReadApi", "Failed to rollback transaction", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to rollback transaction")))
 		}
 	}()
 
