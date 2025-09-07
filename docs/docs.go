@@ -5514,11 +5514,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.DischargeOverviewResponse"
+                            "$ref": "#/definitions/api.Response-api_DischargeOverviewResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecr/employees_contract-end": {
+            "get": {
+                "description": "This endpoint retrieves a list of employees whose contracts are approaching their end date.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ECR"
+                ],
+                "summary": "Lists employees whose contracts are ending soon.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_ListEmployeesByContractEndDateResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -5539,7 +5565,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.TotalDischargeCountResponse"
+                            "$ref": "#/definitions/api.Response-api_TotalDischargeCountResponse"
                         }
                     },
                     "400": {
@@ -18515,6 +18541,44 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ListEmployeesByContractEndDateResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ListIncidentsResponse": {
             "type": "object",
             "properties": {
@@ -20385,6 +20449,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.DischargeOverviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_GenerateAutoReportsResponse": {
             "type": "object",
             "properties": {
@@ -20945,6 +21023,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_ListEmployeesByContractEndDateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.ListEmployeesByContractEndDateResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_ListNotificationsResponse": {
             "type": "object",
             "properties": {
@@ -21090,6 +21182,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.Setup2FAResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_TotalDischargeCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.TotalDischargeCountResponse"
                 },
                 "message": {
                     "type": "string"

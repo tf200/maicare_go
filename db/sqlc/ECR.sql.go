@@ -243,6 +243,62 @@ func (q *Queries) ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmp
 	return items, nil
 }
 
+const listLatestPayments = `-- name: ListLatestPayments :many
+SELECT
+    i.id as invoice_id,
+    i.invoice_number,
+    iph.payment_method,
+    iph.payment_status,
+    iph.amount,
+    iph.payment_date,
+    iph.updated_at
+FROM
+    invoice_payment_history iph
+JOIN
+    invoice i ON iph.invoice_id = i.id
+ORDER BY
+    iph.updated_at DESC
+LIMIT 10
+`
+
+type ListLatestPaymentsRow struct {
+	InvoiceID     int64              `json:"invoice_id"`
+	InvoiceNumber string             `json:"invoice_number"`
+	PaymentMethod *string            `json:"payment_method"`
+	PaymentStatus string             `json:"payment_status"`
+	Amount        float64            `json:"amount"`
+	PaymentDate   pgtype.Date        `json:"payment_date"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsRow, error) {
+	rows, err := q.db.Query(ctx, listLatestPayments)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListLatestPaymentsRow
+	for rows.Next() {
+		var i ListLatestPaymentsRow
+		if err := rows.Scan(
+			&i.InvoiceID,
+			&i.InvoiceNumber,
+			&i.PaymentMethod,
+			&i.PaymentStatus,
+			&i.Amount,
+			&i.PaymentDate,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const recentIncidents = `-- name: RecentIncidents :one
 SELECT COUNT(id) AS total_recent_incidents
 FROM incident

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"go.uber.org/mock/gomock"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
@@ -74,6 +75,18 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 	require.Equal(t, arg.HasBorrowed, employee.HasBorrowed)
 	require.Equal(t, arg.OutOfService, employee.OutOfService)
 	require.Equal(t, arg.IsArchived, employee.IsArchived)
+
+	arg2 := db.AddEmployeeContractDetailsParams{
+		ID:                 employee.ID,
+		FixedContractHours: util.Float64Ptr(40),
+		ContractStartDate:  pgtype.Date{Time: time.Now(), Valid: true},
+		ContractEndDate:    pgtype.Date{Time: time.Now().AddDate(1, 0, 0), Valid: true},
+		ContractType:       util.StringPtr("loondienst"),
+		ContractRate:       util.Float64Ptr(43), // Optional field, can be set later if needed
+	}
+	contractDetails, err := testStore.AddEmployeeContractDetails(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, contractDetails)
 
 	// Verify auto-generated fields
 	require.NotZero(t, employee.ID)
@@ -775,4 +788,57 @@ func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
 		})
 	}
 
+}
+
+func TestAddEmployeeContractDetailsApi(t *testing.T) {
+	testasynqClient.EXPECT().EnqueueEmailDelivery(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	employee, user := createRandomEmployee(t)
+	testCases := []struct {
+		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildRequest  func() (*http.Request, error)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			buildRequest: func() (*http.Request, error) {
+				addContractReq := AddEmployeeContractDetailsRequest{
+					FixedContractHours: util.Float64Ptr(40),
+					ContractStartDate:  time.Now().AddDate(-1, 0, 0),
+					ContractEndDate:    time.Now().AddDate(1, 0, 0),
+					ContractType:       util.StringPtr("loondienst"),
+					ContractRate:       util.Float64Ptr(3000),
+				}
+				data, err := json.Marshal(addContractReq)
+				require.NoError(t, err)
+				url := fmt.Sprintf("/employees/%d/contract_details", employee.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+				require.NoError(t, err)
+				req.Header.Set("Content-Type", "application/json")
+				return req, nil
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusCreated, recorder.Code)
+
+				var response Response[AddEmployeeContractDetailsResponse]
+				err := json.NewDecoder(recorder.Body).Decode(&response)
+				require.NoError(t, err)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request, err := tc.buildRequest()
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, testServer.tokenMaker)
+			testServer.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
 }

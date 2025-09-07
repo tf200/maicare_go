@@ -22,14 +22,22 @@ LIMIT 10;
 
 
 
-
-
-
-
-
-
-
-
+-- name: ListLatestPayments :many
+SELECT
+    i.id as invoice_id,
+    i.invoice_number,
+    iph.payment_method,
+    iph.payment_status,
+    iph.amount,
+    iph.payment_date,
+    iph.updated_at
+FROM
+    invoice_payment_history iph
+JOIN
+    invoice i ON iph.invoice_id = i.id
+ORDER BY
+    iph.updated_at DESC
+LIMIT 10;
 
 
 

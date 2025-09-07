@@ -146,7 +146,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 	arg := db.CreateContractParams{
 		TypeID:          &contractType.ID,
 		StartDate:       pgtype.Timestamptz{Time: time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC), Valid: true},
-		EndDate:         pgtype.Timestamptz{Time: time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC), Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC), Valid: true},
 		ReminderPeriod:  10,
 		Vat:             util.Int32Ptr(15),
 		Price:           5.58,
