@@ -47,7 +47,7 @@ type DischargeOverviewResponse struct {
 // @Param page query integer false "page number"
 // @Param page_size query integer false "number of items per page"
 // @Param filter_type query string false "filter type" Enums(urgent, contract, status_change, all)
-// @Success 200 {object} Response[DischargeOverviewResponse]
+// @Success 200 {object} Response[pagination.Response[DischargeOverviewResponse]]
 // @Failure 400 {object} Response[any]
 // @Router /ecr/discharge_overview [get]
 func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
@@ -217,7 +217,7 @@ type ListEmployeesByContractEndDateResponse struct {
 // @Description This endpoint retrieves a list of employees whose contracts are approaching their end date.
 // @Tags ECR
 // @Produce json
-// @Success 200 {object} Response[ListEmployeesByContractEndDateResponse]
+// @Success 200 {object} Response[[]ListEmployeesByContractEndDateResponse]
 // @Failure 500 {object} Response[any]
 // @Router /ecr/employees_contract-end [get]
 func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
@@ -264,7 +264,7 @@ type ListLatestPaymentsResponse struct {
 // @Description This endpoint retrieves a list of the latest payments.
 // @Tags ECR
 // @Produce json
-// @Success 200 {object} Response[ListLatestPaymentsResponse]
+// @Success 200 {object} Response[[]ListLatestPaymentsResponse]
 // @Failure 500 {object} Response[any]
 // @Router /ecr/latest_payments [get]
 func (server *Server) ListLatestPaymentsApi(ctx *gin.Context) {
@@ -305,7 +305,7 @@ type ListUpcomingAppointmentsResponse struct {
 // @Description This endpoint retrieves a list of upcoming appointments.
 // @Tags ECR
 // @Produce json
-// @Success 200 {object} Response[ListUpcomingAppointmentsResponse]
+// @Success 200 {object} Response[[]ListUpcomingAppointmentsResponse]
 // @Failure 500 {object} Response[any]
 // @Router /ecr/upcoming_appointments [get]
 func (server *Server) ListUpcomingAppointmentsApi(ctx *gin.Context) {
@@ -336,8 +336,3 @@ func (server *Server) ListUpcomingAppointmentsApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Upcoming appointments listed successfully"))
 }
-
-
-
-
-

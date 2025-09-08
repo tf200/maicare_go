@@ -5514,7 +5514,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DischargeOverviewResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-api_DischargeOverviewResponse"
                         }
                     },
                     "400": {
@@ -5540,7 +5540,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListEmployeesByContractEndDateResponse"
+                            "$ref": "#/definitions/api.Response-array_api_ListEmployeesByContractEndDateResponse"
                         }
                     },
                     "500": {
@@ -5566,7 +5566,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListLatestPaymentsResponse"
+                            "$ref": "#/definitions/api.Response-array_api_ListLatestPaymentsResponse"
                         }
                     },
                     "500": {
@@ -5617,7 +5617,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListUpcomingAppointmentsResponse"
+                            "$ref": "#/definitions/api.Response-array_api_ListUpcomingAppointmentsResponse"
                         }
                     },
                     "500": {
@@ -20547,20 +20547,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_DischargeOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DischargeOverviewResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GenerateAutoReportsResponse": {
             "type": "object",
             "properties": {
@@ -21121,34 +21107,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_ListEmployeesByContractEndDateResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListEmployeesByContractEndDateResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_ListLatestPaymentsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListLatestPaymentsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_ListNotificationsResponse": {
             "type": "object",
             "properties": {
@@ -21168,20 +21126,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.ListStatusHistoryApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_ListUpcomingAppointmentsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListUpcomingAppointmentsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -22000,6 +21944,40 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_api_ListEmployeesByContractEndDateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListEmployeesByContractEndDateResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListLatestPaymentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListLatestPaymentsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-array_api_ListLocationsResponse": {
             "type": "object",
             "properties": {
@@ -22102,6 +22080,23 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_api_ListUpcomingAppointmentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListUpcomingAppointmentsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-array_api_SearchEmployeesByNameOrEmailResponse": {
             "type": "object",
             "properties": {
@@ -22110,6 +22105,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.SearchEmployeesByNameOrEmailResponse"
                     }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-api_DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-api_DischargeOverviewResponse"
                 },
                 "message": {
                     "type": "string"
@@ -25424,6 +25433,29 @@ const docTemplate = `{
                 },
                 "new_schedule_notification": {
                     "$ref": "#/definitions/notification.NewScheduleNotificationData"
+                }
+            }
+        },
+        "pagination.Response-api_DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.DischargeOverviewResponse"
+                    }
                 }
             }
         },
