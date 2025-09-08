@@ -5526,7 +5526,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ecr/employees_contract-end": {
+        "/ecr/employee_ending_contract": {
             "get": {
                 "description": "This endpoint retrieves a list of employees whose contracts are approaching their end date.",
                 "produces": [

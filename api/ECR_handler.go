@@ -70,7 +70,7 @@ func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
 		return
 	}
 
-	var overviewRes []DischargeOverviewResponse
+	overviewRes := []DischargeOverviewResponse{}
 	for _, item := range overview {
 		overviewRes = append(overviewRes, DischargeOverviewResponse{
 			ID:                 item.ID,
@@ -219,7 +219,7 @@ type ListEmployeesByContractEndDateResponse struct {
 // @Produce json
 // @Success 200 {object} Response[[]ListEmployeesByContractEndDateResponse]
 // @Failure 500 {object} Response[any]
-// @Router /ecr/employees_contract-end [get]
+// @Router /ecr/employee_ending_contract [get]
 func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
 	employees, err := server.store.ListEmployeesByContractEndDate(ctx)
 	if err != nil {
@@ -228,7 +228,7 @@ func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
 		return
 	}
 
-	var response []ListEmployeesByContractEndDateResponse
+	response := []ListEmployeesByContractEndDateResponse{}
 	for _, emp := range employees {
 		response = append(response, ListEmployeesByContractEndDateResponse{
 			ID:                emp.ID,
@@ -275,7 +275,7 @@ func (server *Server) ListLatestPaymentsApi(ctx *gin.Context) {
 		return
 	}
 
-	var response []ListLatestPaymentsResponse
+	response := []ListLatestPaymentsResponse{}
 	for _, payment := range latestPayments {
 		response = append(response, ListLatestPaymentsResponse{
 			InvoiceID:     payment.InvoiceID,
@@ -323,7 +323,7 @@ func (server *Server) ListUpcomingAppointmentsApi(ctx *gin.Context) {
 		return
 	}
 
-	var response []ListUpcomingAppointmentsResponse
+	response := []ListUpcomingAppointmentsResponse{}
 	for _, appt := range appointments {
 		response = append(response, ListUpcomingAppointmentsResponse{
 			ID:          appt.ID,
