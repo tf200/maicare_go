@@ -6073,15 +6073,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_DischargeOverviewResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DischargeOverviewResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GenerateAutoReportsResponse:
     properties:
       data:
@@ -6442,24 +6433,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ListEmployeesByContractEndDateResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListEmployeesByContractEndDateResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_ListLatestPaymentsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListLatestPaymentsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_ListNotificationsResponse:
     properties:
       data:
@@ -6473,15 +6446,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ListStatusHistoryApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_ListUpcomingAppointmentsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListUpcomingAppointmentsResponse'
       message:
         type: string
       success:
@@ -7008,6 +6972,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_ListEmployeesByContractEndDateResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListEmployeesByContractEndDateResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListLatestPaymentsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListLatestPaymentsResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_ListLocationsResponse:
     properties:
       data:
@@ -7074,12 +7060,32 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_api_ListUpcomingAppointmentsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListUpcomingAppointmentsResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-array_api_SearchEmployeesByNameOrEmailResponse:
     properties:
       data:
         items:
           $ref: '#/definitions/api.SearchEmployeesByNameOrEmailResponse'
         type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-api_DischargeOverviewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-api_DischargeOverviewResponse'
       message:
         type: string
       success:
@@ -9270,6 +9276,21 @@ definitions:
         $ref: '#/definitions/notification.NewIncidentReportData'
       new_schedule_notification:
         $ref: '#/definitions/notification.NewScheduleNotificationData'
+    type: object
+  pagination.Response-api_DischargeOverviewResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/api.DischargeOverviewResponse'
+        type: array
     type: object
   pagination.Response-api_ListAllIncidentsResponse:
     properties:
@@ -13208,7 +13229,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DischargeOverviewResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-api_DischargeOverviewResponse'
         "400":
           description: Bad Request
           schema:
@@ -13226,7 +13247,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListEmployeesByContractEndDateResponse'
+            $ref: '#/definitions/api.Response-array_api_ListEmployeesByContractEndDateResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -13243,7 +13264,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListLatestPaymentsResponse'
+            $ref: '#/definitions/api.Response-array_api_ListLatestPaymentsResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -13276,7 +13297,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListUpcomingAppointmentsResponse'
+            $ref: '#/definitions/api.Response-array_api_ListUpcomingAppointmentsResponse'
         "500":
           description: Internal Server Error
           schema:
