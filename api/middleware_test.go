@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"maicare_go/token"
 	"net/http"
@@ -19,7 +20,9 @@ func addAuthorization(
 	userID int64,
 	duration time.Duration,
 ) {
-	accessToken, payload, err := tokenMaker.CreateToken(userID, 1, duration, token.AccessToken)
+	employee, err := testStore.GetEmployeeProfileByUserID(context.Background(), userID)
+	require.NoError(t, err)
+	accessToken, payload, err := tokenMaker.CreateToken(userID, employee.EmployeeID, duration, token.AccessToken)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
 

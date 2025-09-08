@@ -10,6 +10,9 @@ func (server *Server) setupECRRoutes(baseRouter *gin.RouterGroup) {
 	{
 		ECRGroup.GET("/discharge_overview", server.DischargeOverviewApi)
 		ECRGroup.GET("/total_discharge_count", server.TotalDischargeCountApi)
+		ECRGroup.GET("/latest_payments", server.ListLatestPaymentsApi)
+		ECRGroup.GET("/employee_ending_contract", server.ListEmployeesByContractEndDateApi)
+		ECRGroup.GET("/upcoming_appointments", server.ListUpcomingAppointmentsApi)
 
 	}
 

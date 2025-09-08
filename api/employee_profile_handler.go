@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"go.uber.org/zap"
 
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
@@ -735,12 +736,16 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		return
 	}
 
-	server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
+	err = server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
 		Name:         contractDetails.FirstName + " " + contractDetails.LastName,
 		To:           contractDetails.Email,
 		UserEmail:    user.Email,
 		UserPassword: password,
 	}, ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "AddEmployeeContractDetailsApi", "Failed to enqueue email delivery", zap.Error(err))
+		return
+	}
 	res := SuccessResponse(AddEmployeeContractDetailsResponse{
 		ID:                    contractDetails.ID,
 		FixedContractHours:    contractDetails.FixedContractHours,

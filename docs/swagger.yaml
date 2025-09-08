@@ -4794,6 +4794,31 @@ definitions:
       work_phone_number:
         type: string
     type: object
+  api.ListEmployeesByContractEndDateResponse:
+    properties:
+      contract_end_date:
+        type: string
+      contract_start_date:
+        type: string
+      contract_type:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      position:
+        type: string
+    type: object
   api.ListIncidentsResponse:
     properties:
       accident:
@@ -5080,6 +5105,23 @@ definitions:
         type: string
       warning_count:
         type: integer
+    type: object
+  api.ListLatestPaymentsResponse:
+    properties:
+      amount:
+        type: number
+      invoice_id:
+        type: integer
+      invoice_number:
+        type: string
+      payment_date:
+        type: string
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+      updated_at:
+        type: string
     type: object
   api.ListLocationsResponse:
     properties:
@@ -5419,6 +5461,19 @@ definitions:
       old_status:
         type: string
       reason:
+        type: string
+    type: object
+  api.ListUpcomingAppointmentsResponse:
+    properties:
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      location:
+        type: string
+      start_time:
         type: string
     type: object
   api.ListUserRolesAndPermissionsApiResponse:
@@ -6018,6 +6073,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_DischargeOverviewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.DischargeOverviewResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_GenerateAutoReportsResponse:
     properties:
       data:
@@ -6378,6 +6442,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_ListEmployeesByContractEndDateResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListEmployeesByContractEndDateResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListLatestPaymentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListLatestPaymentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_ListNotificationsResponse:
     properties:
       data:
@@ -6391,6 +6473,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ListStatusHistoryApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListUpcomingAppointmentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListUpcomingAppointmentsResponse'
       message:
         type: string
       success:
@@ -6472,6 +6563,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.Setup2FAResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_TotalDischargeCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.TotalDischargeCountResponse'
       message:
         type: string
       success:
@@ -13108,12 +13208,47 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.DischargeOverviewResponse'
+            $ref: '#/definitions/api.Response-api_DischargeOverviewResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Returns a list of discharge overview.
+      tags:
+      - ECR
+  /ecr/employees_contract-end:
+    get:
+      description: This endpoint retrieves a list of employees whose contracts are
+        approaching their end date.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListEmployeesByContractEndDateResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Lists employees whose contracts are ending soon.
+      tags:
+      - ECR
+  /ecr/latest_payments:
+    get:
+      description: This endpoint retrieves a list of the latest payments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListLatestPaymentsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Lists the latest payments.
       tags:
       - ECR
   /ecr/total_discharge_count:
@@ -13124,12 +13259,29 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.TotalDischargeCountResponse'
+            $ref: '#/definitions/api.Response-api_TotalDischargeCountResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Returns the total discharge count.
+      tags:
+      - ECR
+  /ecr/upcoming_appointments:
+    get:
+      description: This endpoint retrieves a list of upcoming appointments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListUpcomingAppointmentsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Lists upcoming appointments.
       tags:
       - ECR
   /employees:

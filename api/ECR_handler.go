@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +21,7 @@ import (
 // CreateSchedueledClientStatusChangeRequest defines the request for the CreateSchedueledClientStatusChange handler.
 type DischargeOverviewRequest struct {
 	pagination.Request
-	FilterType string `form:"filter_type" binding:"required ,oneof=urgent contract status_change all"`
+	FilterType string `form:"filter_type" binding:"required,oneof=urgent contract status_change all"`
 }
 
 // GetParams returns the pagination params for the request.
@@ -45,13 +47,14 @@ type DischargeOverviewResponse struct {
 // @Param page query integer false "page number"
 // @Param page_size query integer false "number of items per page"
 // @Param filter_type query string false "filter type" Enums(urgent, contract, status_change, all)
-// @Success 200 {object} DischargeOverviewResponse
+// @Success 200 {object} Response[DischargeOverviewResponse]
 // @Failure 400 {object} Response[any]
 // @Router /ecr/discharge_overview [get]
 func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
 	var req DischargeOverviewRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DischargeOverviewApi", "Failed to bind query parameters", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("failed to bind query parameters")))
 		return
 	}
 
@@ -62,13 +65,14 @@ func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
 		Offset: params.Offset,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DischargeOverviewApi", "Failed to get discharge overview", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get discharge overview")))
 		return
 	}
 
-	overviewRes := make([]DischargeOverviewResponse, len(overview))
-	for i, item := range overview {
-		overviewRes[i] = DischargeOverviewResponse{
+	var overviewRes []DischargeOverviewResponse
+	for _, item := range overview {
+		overviewRes = append(overviewRes, DischargeOverviewResponse{
 			ID:                 item.ID,
 			FirstName:          item.FirstName,
 			LastName:           item.LastName,
@@ -81,12 +85,13 @@ func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
 			DepartureReason:    item.DepartureReason,
 			FollowUpPlan:       item.FollowUpPlan,
 			DischargeType:      item.DischargeType,
-		}
+		})
 	}
 
 	count, err := server.store.TotalDischargeCount(context.Background())
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		server.logBusinessEvent(LogLevelError, "DischargeOverviewApi", "Failed to get total discharge count", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get total discharge count")))
 		return
 	}
 
@@ -108,7 +113,7 @@ type TotalDischargeCountResponse struct {
 // @Summary Returns the total discharge count.
 // @Tags ECR
 // @Produce json
-// @Success 200 {object} TotalDischargeCountResponse
+// @Success 200 {object} Response[TotalDischargeCountResponse]
 // @Failure 400 {object} Response[any]
 // @Router /ecr/total_discharge_count [get]
 func (server *Server) TotalDischargeCountApi(ctx *gin.Context) {
@@ -208,7 +213,13 @@ type ListEmployeesByContractEndDateResponse struct {
 }
 
 // ListEmployeesByContractEndDateApi handles the API request for listing employees by contract end date.
-
+// @Summary Lists employees whose contracts are ending soon.
+// @Description This endpoint retrieves a list of employees whose contracts are approaching their end date.
+// @Tags ECR
+// @Produce json
+// @Success 200 {object} Response[ListEmployeesByContractEndDateResponse]
+// @Failure 500 {object} Response[any]
+// @Router /ecr/employees_contract-end [get]
 func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
 	employees, err := server.store.ListEmployeesByContractEndDate(ctx)
 	if err != nil {
@@ -236,5 +247,97 @@ func (server *Server) ListEmployeesByContractEndDateApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Employees listed successfully"))
 }
+
+// ListLatestPaymentsResponse defines the response for the ListLatestPayments API.
+type ListLatestPaymentsResponse struct {
+	InvoiceID     int64     `json:"invoice_id"`
+	InvoiceNumber string    `json:"invoice_number"`
+	PaymentMethod *string   `json:"payment_method"`
+	PaymentStatus string    `json:"payment_status"`
+	Amount        float64   `json:"amount"`
+	PaymentDate   time.Time `json:"payment_date"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+// ListLatestPaymentsApi handles the API request for listing the latest payments.
+// @Summary Lists the latest payments.
+// @Description This endpoint retrieves a list of the latest payments.
+// @Tags ECR
+// @Produce json
+// @Success 200 {object} Response[ListLatestPaymentsResponse]
+// @Failure 500 {object} Response[any]
+// @Router /ecr/latest_payments [get]
+func (server *Server) ListLatestPaymentsApi(ctx *gin.Context) {
+	latestPayments, err := server.store.ListLatestPayments(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListLatestPaymentsApi", "Failed to list latest payments", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var response []ListLatestPaymentsResponse
+	for _, payment := range latestPayments {
+		response = append(response, ListLatestPaymentsResponse{
+			InvoiceID:     payment.InvoiceID,
+			InvoiceNumber: payment.InvoiceNumber,
+			PaymentMethod: payment.PaymentMethod,
+			PaymentStatus: payment.PaymentStatus,
+			Amount:        payment.Amount,
+			PaymentDate:   payment.PaymentDate.Time,
+			UpdatedAt:     payment.UpdatedAt.Time,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Latest payments listed successfully"))
+}
+
+// ListUpcomingAppointmentsResponse defines the response for the ListUpcomingAppointments API.
+type ListUpcomingAppointmentsResponse struct {
+	ID          uuid.UUID `json:"id"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	Location    *string   `json:"location"`
+	Description *string   `json:"description"`
+}
+
+// ListUpcomingAppointmentsApi handles the API request for listing upcoming appointments.
+// @Summary Lists upcoming appointments.
+// @Description This endpoint retrieves a list of upcoming appointments.
+// @Tags ECR
+// @Produce json
+// @Success 200 {object} Response[ListUpcomingAppointmentsResponse]
+// @Failure 500 {object} Response[any]
+// @Router /ecr/upcoming_appointments [get]
+func (server *Server) ListUpcomingAppointmentsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListUpcomingAppointmentsApi", "Failed to get auth payload", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to get auth payload")))
+		return
+	}
+
+	appointments, err := server.store.ListUpcomingAppointments(ctx, &payload.EmployeeID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListUpcomingAppointmentsApi", "Failed to list upcoming appointments", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var response []ListUpcomingAppointmentsResponse
+	for _, appt := range appointments {
+		response = append(response, ListUpcomingAppointmentsResponse{
+			ID:          appt.ID,
+			StartTime:   appt.StartTime.Time,
+			EndTime:     appt.EndTime.Time,
+			Location:    appt.Location,
+			Description: appt.Description,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Upcoming appointments listed successfully"))
+}
+
+
+
 
 

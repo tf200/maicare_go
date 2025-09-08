@@ -22,14 +22,43 @@ LIMIT 10;
 
 
 
+-- name: ListLatestPayments :many
+SELECT
+    i.id as invoice_id,
+    i.invoice_number,
+    iph.payment_method,
+    iph.payment_status,
+    iph.amount,
+    iph.payment_date,
+    iph.updated_at
+FROM
+    invoice_payment_history iph
+JOIN
+    invoice i ON iph.invoice_id = i.id
+ORDER BY
+    iph.updated_at DESC
+LIMIT 10;
 
 
-
-
-
-
-
-
+-- name: ListUpcomingAppointments :many
+SELECT
+    t1.id,
+    t1.start_time, 
+    t1.end_time, 
+    t1.location, 
+    t1.description
+FROM 
+    scheduled_appointments AS t1
+LEFT JOIN 
+    appointment_participants AS t2 
+ON 
+    t1.id = t2.appointment_id
+WHERE 
+    t1.creator_employee_id = $1 
+    OR t2.employee_id = $1
+ORDER BY 
+    t1.start_time ASC
+LIMIT 10;
 
 
 
