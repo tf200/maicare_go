@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -288,6 +289,58 @@ func (q *Queries) ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsR
 			&i.Amount,
 			&i.PaymentDate,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUpcomingAppointments = `-- name: ListUpcomingAppointments :many
+SELECT
+    t1.id,
+    t1.start_time, 
+    t1.end_time, 
+    t1.location, 
+    t1.description
+FROM 
+    scheduled_appointments AS t1
+LEFT JOIN 
+    appointment_participants AS t2 
+ON 
+    t1.id = t2.appointment_id
+WHERE 
+    t1.creator_employee_id = $1 
+    OR t2.employee_id = $1
+`
+
+type ListUpcomingAppointmentsRow struct {
+	ID          uuid.UUID        `json:"id"`
+	StartTime   pgtype.Timestamp `json:"start_time"`
+	EndTime     pgtype.Timestamp `json:"end_time"`
+	Location    *string          `json:"location"`
+	Description *string          `json:"description"`
+}
+
+func (q *Queries) ListUpcomingAppointments(ctx context.Context, creatorEmployeeID *int64) ([]ListUpcomingAppointmentsRow, error) {
+	rows, err := q.db.Query(ctx, listUpcomingAppointments, creatorEmployeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUpcomingAppointmentsRow
+	for rows.Next() {
+		var i ListUpcomingAppointmentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Location,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}

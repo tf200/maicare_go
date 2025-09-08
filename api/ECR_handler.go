@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -289,3 +290,54 @@ func (server *Server) ListLatestPaymentsApi(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Latest payments listed successfully"))
 }
+
+// ListUpcomingAppointmentsResponse defines the response for the ListUpcomingAppointments API.
+type ListUpcomingAppointmentsResponse struct {
+	ID          uuid.UUID `json:"id"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	Location    *string   `json:"location"`
+	Description *string   `json:"description"`
+}
+
+// ListUpcomingAppointmentsApi handles the API request for listing upcoming appointments.
+// @Summary Lists upcoming appointments.
+// @Description This endpoint retrieves a list of upcoming appointments.
+// @Tags ECR
+// @Produce json
+// @Success 200 {object} Response[ListUpcomingAppointmentsResponse]
+// @Failure 500 {object} Response[any]
+// @Router /ecr/upcoming_appointments [get]
+func (server *Server) ListUpcomingAppointmentsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListUpcomingAppointmentsApi", "Failed to get auth payload", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to get auth payload")))
+		return
+	}
+
+	appointments, err := server.store.ListUpcomingAppointments(ctx, &payload.EmployeeID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ListUpcomingAppointmentsApi", "Failed to list upcoming appointments", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var response []ListUpcomingAppointmentsResponse
+	for _, appt := range appointments {
+		response = append(response, ListUpcomingAppointmentsResponse{
+			ID:          appt.ID,
+			StartTime:   appt.StartTime.Time,
+			EndTime:     appt.EndTime.Time,
+			Location:    appt.Location,
+			Description: appt.Description,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Upcoming appointments listed successfully"))
+}
+
+
+
+
+

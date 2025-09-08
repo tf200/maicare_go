@@ -5106,6 +5106,23 @@ definitions:
       warning_count:
         type: integer
     type: object
+  api.ListLatestPaymentsResponse:
+    properties:
+      amount:
+        type: number
+      invoice_id:
+        type: integer
+      invoice_number:
+        type: string
+      payment_date:
+        type: string
+      payment_method:
+        type: string
+      payment_status:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.ListLocationsResponse:
     properties:
       address:
@@ -5444,6 +5461,19 @@ definitions:
       old_status:
         type: string
       reason:
+        type: string
+    type: object
+  api.ListUpcomingAppointmentsResponse:
+    properties:
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      location:
+        type: string
+      start_time:
         type: string
     type: object
   api.ListUserRolesAndPermissionsApiResponse:
@@ -6421,6 +6451,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_ListLatestPaymentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListLatestPaymentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_ListNotificationsResponse:
     properties:
       data:
@@ -6434,6 +6473,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.ListStatusHistoryApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_ListUpcomingAppointmentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.ListUpcomingAppointmentsResponse'
       message:
         type: string
       success:
@@ -13186,6 +13234,23 @@ paths:
       summary: Lists employees whose contracts are ending soon.
       tags:
       - ECR
+  /ecr/latest_payments:
+    get:
+      description: This endpoint retrieves a list of the latest payments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListLatestPaymentsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Lists the latest payments.
+      tags:
+      - ECR
   /ecr/total_discharge_count:
     get:
       produces:
@@ -13200,6 +13265,23 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Returns the total discharge count.
+      tags:
+      - ECR
+  /ecr/upcoming_appointments:
+    get:
+      description: This endpoint retrieves a list of upcoming appointments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_ListUpcomingAppointmentsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Lists upcoming appointments.
       tags:
       - ECR
   /employees:

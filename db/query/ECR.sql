@@ -40,6 +40,27 @@ ORDER BY
 LIMIT 10;
 
 
+-- name: ListUpcomingAppointments :many
+SELECT
+    t1.id,
+    t1.start_time, 
+    t1.end_time, 
+    t1.location, 
+    t1.description
+FROM 
+    scheduled_appointments AS t1
+LEFT JOIN 
+    appointment_participants AS t2 
+ON 
+    t1.id = t2.appointment_id
+WHERE 
+    t1.creator_employee_id = $1 
+    OR t2.employee_id = $1
+ORDER BY 
+    t1.start_time ASC
+LIMIT 10;
+
+
 
 
 
