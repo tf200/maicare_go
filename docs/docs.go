@@ -19686,11 +19686,11 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "admin1@company.com"
+                    "example": "testemail@gmail.com"
                 },
                 "password": {
                     "type": "string",
-                    "example": "admin123!"
+                    "example": "t2aha000"
                 }
             }
         },

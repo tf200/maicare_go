@@ -30,7 +30,7 @@ type DischargeOverviewResponse struct {
 	FirstName          string    `json:"first_name"`
 	LastName           string    `json:"last_name"`
 	CurrentStatus      *string   `json:"current_status"`
-	ScheduledStatus    string    `json:"scheduled_status"`
+	ScheduledStatus    *string   `json:"scheduled_status"`
 	StatusChangeReason *string   `json:"status_change_reason"`
 	StatusChangeDate   time.Time `json:"status_change_date"`
 	ContractEndDate    time.Time `json:"contract_end_date"`
@@ -61,8 +61,9 @@ func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
 	params := req.GetParams()
 
 	overview, err := server.store.DischargeOverview(ctx, db.DischargeOverviewParams{
-		Limit:  params.Limit,
-		Offset: params.Offset,
+		Limit:      params.Limit,
+		Offset:     params.Offset,
+		FilterType: req.FilterType,
 	})
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "DischargeOverviewApi", "Failed to get discharge overview", zap.Error(err))
@@ -87,6 +88,8 @@ func (server *Server) DischargeOverviewApi(ctx *gin.Context) {
 			DischargeType:      item.DischargeType,
 		})
 	}
+
+	server.logBusinessEvent(LogLevelInfo, "DischargeOverviewApi", fmt.Sprintf("Retrieved %d discharge overview records", len(overviewRes)), zap.Int("record_count", len(overviewRes)))
 
 	count, err := server.store.TotalDischargeCount(context.Background())
 	if err != nil {

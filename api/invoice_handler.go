@@ -234,9 +234,7 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to fetch extra content", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to fetch extra content")))
-		return
+		server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Failed to fetch extra content", zap.Error(err))
 	}
 
 	var extraContentBytes []byte

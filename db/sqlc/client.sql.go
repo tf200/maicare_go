@@ -273,7 +273,7 @@ INSERT INTO scheduled_status_changes (
 
 type CreateSchedueledClientStatusChangeParams struct {
 	ClientID      int64       `json:"client_id"`
-	NewStatus     string      `json:"new_status"`
+	NewStatus     *string     `json:"new_status"`
 	Reason        *string     `json:"reason"`
 	ScheduledDate pgtype.Date `json:"scheduled_date"`
 }

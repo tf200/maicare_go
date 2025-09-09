@@ -475,9 +475,9 @@ CREATE INDEX idx_client_status_history_changed_at ON client_status_history(chang
 CREATE TABLE scheduled_status_changes (
     id SERIAL PRIMARY KEY,
     client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    new_status VARCHAR(50) NOT NULL,
+    new_status VARCHAR(50) NULL,
     reason TEXT,
-    scheduled_date DATE NOT NULL,
+    scheduled_date DATE NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
