@@ -44,7 +44,14 @@ func (s *Scheduler) ScheduleContractReminder() error {
 	return nil
 }
 
+// func (s *)
+
 func (s *Scheduler) Start() error {
+
+	if err := s.ScheduleContractReminder(); err != nil {
+		return err
+	}
+
 	if err := s.Scheduler.Run(); err != nil {
 		return err
 	}

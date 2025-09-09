@@ -202,6 +202,9 @@ func TestCreateClientContractApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				requestBody := CreateContractRequest{
 					TypeID:          &contractType.ID,
+
+
+					
 					StartDate:       time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC),
 					EndDate:         time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC),
 					ReminderPeriod:  10,

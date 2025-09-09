@@ -132,7 +132,7 @@ type DischargeOverviewRow struct {
 	FirstName          string      `json:"first_name"`
 	LastName           string      `json:"last_name"`
 	CurrentStatus      *string     `json:"current_status"`
-	ScheduledStatus    string      `json:"scheduled_status"`
+	ScheduledStatus    *string     `json:"scheduled_status"`
 	StatusChangeReason *string     `json:"status_change_reason"`
 	StatusChangeDate   pgtype.Date `json:"status_change_date"`
 	ContractEndDate    pgtype.Date `json:"contract_end_date"`
@@ -316,6 +316,9 @@ ON
 WHERE 
     t1.creator_employee_id = $1 
     OR t2.employee_id = $1
+ORDER BY 
+    t1.start_time ASC
+LIMIT 10
 `
 
 type ListUpcomingAppointmentsRow struct {

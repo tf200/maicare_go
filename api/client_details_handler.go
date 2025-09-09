@@ -776,7 +776,7 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 
 		schedueledChange, err := server.store.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
 			ClientID:      clientID,
-			NewStatus:     req.Status,
+			NewStatus:     &req.Status,
 			Reason:        &req.Reason,
 			ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
 		})
@@ -787,7 +787,7 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 
 		res := SuccessResponse(UpdateClientStatusResponse{
 			ID:     schedueledChange.ClientID,
-			Status: &schedueledChange.NewStatus,
+			Status: schedueledChange.NewStatus,
 		}, "Client status update schedueled successfully")
 		ctx.JSON(http.StatusOK, res)
 		return
