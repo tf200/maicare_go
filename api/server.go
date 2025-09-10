@@ -31,6 +31,7 @@ import (
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/notification"
+	"maicare_go/service"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -45,30 +46,25 @@ import (
 )
 
 type Server struct {
-	store        *db.Store
-	router       *gin.Engine
-	config       util.Config
-	tokenMaker   token.Maker
-	b2Client     *bucket.ObjectStorageClient
-	asynqClient  async.AsynqClientInterface
-	httpServer   *http.Server
-	aiHandler    *ai.AiHandler
-	hub          *hub.Hub
-	notifService *notification.Service
-	logger       *zap.Logger
-	grpClient    grpclient.GrpcClientInterface
+	store           *db.Store
+	router          *gin.Engine
+	config          util.Config
+	tokenMaker      token.Maker
+	b2Client        *bucket.ObjectStorageClient
+	asynqClient     async.AsynqClientInterface
+	httpServer      *http.Server
+	aiHandler       *ai.AiHandler
+	hub             *hub.Hub
+	notifService    *notification.Service
+	logger          *zap.Logger
+	grpClient       grpclient.GrpcClientInterface
+	businessService *service.BusinessService
 }
 
-func NewServer(store *db.Store, b2Client *bucket.ObjectStorageClient, asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub, notifService *notification.Service, grpcClient grpclient.GrpcClientInterface) (*Server, error) {
-	config, err := util.LoadConfig("../..")
-	if err != nil {
-		return nil, fmt.Errorf("cannot load env %v", err)
-	}
-
-	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create tokenmaker %v", err)
-	}
+func NewServer(store *db.Store, b2Client *bucket.ObjectStorageClient,
+	asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub,
+	notifService *notification.Service, grpcClient grpclient.GrpcClientInterface,
+	tokenMaker token.Maker, config util.Config, service *service.BusinessService) (*Server, error) {
 
 	aiHandler := ai.NewAiHandler(apiKey)
 
@@ -78,16 +74,17 @@ func NewServer(store *db.Store, b2Client *bucket.ObjectStorageClient, asyqClient
 	}
 
 	server := &Server{
-		store:        store,
-		config:       config,
-		tokenMaker:   tokenMaker,
-		b2Client:     b2Client,
-		asynqClient:  asyqClient,
-		aiHandler:    aiHandler,
-		hub:          hubInstance,
-		logger:       logger,
-		notifService: notifService,
-		grpClient:    grpcClient,
+		store:           store,
+		config:          config,
+		tokenMaker:      tokenMaker,
+		b2Client:        b2Client,
+		asynqClient:     asyqClient,
+		aiHandler:       aiHandler,
+		hub:             hubInstance,
+		logger:          logger,
+		notifService:    notifService,
+		grpClient:       grpcClient,
+		businessService: service,
 	}
 
 	// Initialize swagger docs

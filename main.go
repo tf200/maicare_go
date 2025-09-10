@@ -11,7 +11,10 @@ import (
 	"maicare_go/email"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
+	"maicare_go/logger"
 	"maicare_go/notification"
+	"maicare_go/service"
+	"maicare_go/token"
 	"maicare_go/util"
 	"os"
 	"os/signal"
@@ -152,8 +155,25 @@ func main() {
 
 	log.Println("Asynq server started successfully in background")
 
+	// move this to services
+	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
+	if err != nil {
+		log.Fatalf("cannot create tokenmaker: %v", err)
+	}
+
+	// move this to services
+	logger, err := logger.SetupLogger(config.Environment)
+	if err != nil {
+		log.Fatalf("cannot setup logger: %v", err)
+	}
+
+	// Init the buisness service
+	businessService := service.NewBusinessService(store, tokenMaker, logger, &config)
+
 	// Start your main server
-	server, err := api.NewServer(store, b2Client, asynqClient, config.OpenRouterAPIKey, hubInstance, notificationService, grpcClient)
+	server, err := api.NewServer(store, b2Client, asynqClient,
+		config.OpenRouterAPIKey, hubInstance, notificationService,
+		grpcClient, tokenMaker, config, businessService)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

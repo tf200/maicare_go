@@ -235,7 +235,7 @@ func TestCreateSchedueledClientStatusChange(t *testing.T) {
 	client := createRandomClientDetails(t)
 	arg := CreateSchedueledClientStatusChangeParams{
 		ClientID:      client.ID,
-		NewStatus:     util.StringPtr(),
+		NewStatus:     util.StringPtr("In Care"),
 		Reason:        util.StringPtr("Test Reason"),
 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
 	}
