@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pdf"
@@ -158,7 +159,7 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 
 	appointmentCard, err := server.store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "No appointment card found for the given client ID"))
 			return
 		}
