@@ -7,8 +7,11 @@ import (
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
+	"maicare_go/logger"
 	"maicare_go/mocks"
 	"maicare_go/notification"
+	"maicare_go/service"
+	"maicare_go/token"
 
 	"maicare_go/util"
 	"net/http"
@@ -57,7 +60,21 @@ func TestMain(m *testing.M) {
 	testGrpcClient := CreateMockGrpcClient()
 	testNotifService = notification.NewService(testStore, hubInstance)
 
-	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey, hubInstance, testNotifService, testGrpcClient)
+	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
+	if err != nil {
+		log.Fatalf("cannot create tokenmaker: %v", err)
+	}
+
+	logger, err := logger.SetupLogger(config.Environment)
+	if err != nil {
+		log.Fatalf("cannot setup logger: %v", err)
+	}
+
+	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config)
+
+	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey,
+		hubInstance, testNotifService, testGrpcClient,
+		tokenMaker, config, businessService)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

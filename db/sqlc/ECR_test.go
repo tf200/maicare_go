@@ -15,7 +15,7 @@ func TestDischargeOverview(t *testing.T) {
 	_ = createRandomContract(t, client.ID, client.SenderID)
 	arg := CreateSchedueledClientStatusChangeParams{
 		ClientID:      client.ID,
-		NewStatus:     "Out Of Care",
+		NewStatus:     util.StringPtr("Out Of Care"),
 		Reason:        util.StringPtr("Test Reason"),
 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
 	}
@@ -38,7 +38,7 @@ func TestTotalDischargeCount(t *testing.T) {
 	_ = createRandomContract(t, client.ID, client.SenderID)
 	arg := CreateSchedueledClientStatusChangeParams{
 		ClientID:      client.ID,
-		NewStatus:     "Out Of Care",
+		NewStatus:     util.StringPtr("Out Of Care"),
 		Reason:        util.StringPtr("Test Reason"),
 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
 	}
@@ -59,7 +59,7 @@ func TestUrgentCasesCount(t *testing.T) {
 	client2 := createRandomClientDetails(t)
 	arg := CreateSchedueledClientStatusChangeParams{
 		ClientID:      client2.ID,
-		NewStatus:     "Out Of Care",
+		NewStatus:     util.StringPtr("Out Of Care"),
 		Reason:        util.StringPtr("Test Reason"),
 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
 	}
@@ -76,7 +76,7 @@ func TestStatusChangeCount(t *testing.T) {
 	client := createRandomClientDetails(t)
 	arg := CreateSchedueledClientStatusChangeParams{
 		ClientID:      client.ID,
-		NewStatus:     "Out Of Care",
+		NewStatus:     util.StringPtr("Out Of Care"),
 		Reason:        util.StringPtr("Test Reason"),
 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
 	}

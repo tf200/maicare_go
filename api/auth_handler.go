@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/service"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -57,90 +57,23 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	// convert email to lowercase
-	lowerCaseEmail := strings.ToLower(req.Email)
+	loginResult, err := server.businessService.AuthService.Login(service.LoginRequest{
+		Email:     req.Email,
+		Password:  req.Password,
+		ClientIP:  ctx.ClientIP(),
+		UserAgent: ctx.Request.UserAgent(),
+	}, ctx)
 
-	user, err := server.store.GetUserByEmail(ctx, lowerCaseEmail)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			server.logBusinessEvent(LogLevelError, "Login", "User not found", zap.String("email", lowerCaseEmail))
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("invalid password or email for user")))
-			return
-		}
-		server.logBusinessEvent(LogLevelError, "Login", "Failed to get user by email", zap.Error(err), zap.String("email", lowerCaseEmail))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-		return
-	}
-
-	err = util.CheckPassword(req.Password, user.Password)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Login", "Invalid password for user", zap.Error(err), zap.String("email", lowerCaseEmail))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid password or email for user")))
-		return
-	}
-
-	if user.TwoFactorEnabled {
-		tempToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.TwoFATokenDuration, token.TwoFAToken)
-		if err != nil {
-			server.logBusinessEvent(LogLevelError, "Login", "Failed to create temp token for 2FA", zap.Error(err), zap.String("email", lowerCaseEmail))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-			return
-		}
-		res := SuccessResponse(LoginUserResponse{
-			RequiresTwoFA: true,
-			TempToken:     tempToken,
-		}, "2FA required")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.AccessTokenDuration, token.AccessToken)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Login", "Failed to create access token", zap.Error(err), zap.String("email", lowerCaseEmail))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-		return
-	}
-
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.RefreshTokenDuration, token.RefreshToken)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Login", "Failed to create refresh token", zap.Error(err), zap.String("email", lowerCaseEmail))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-		return
-	}
-
-	clientIP := ctx.ClientIP()
-	userAgent := ctx.Request.UserAgent()
-
-	_, err = server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           refreshPayload.ID,
-		RefreshToken: refreshToken,
-		UserAgent:    userAgent,
-		ClientIp:     clientIP,
-		IsBlocked:    false,
-		ExpiresAt:    pgtype.Timestamptz{Time: refreshPayload.ExpiresAt, Valid: true},
-		CreatedAt:    pgtype.Timestamptz{Time: refreshPayload.IssuedAt, Valid: true},
-		UserID:       user.ID,
-	})
-	if err != nil {
-		if pqErr, ok := err.(*pgconn.PgError); ok {
-			switch pqErr.Code {
-			case "23505":
-				server.logBusinessEvent(LogLevelError, "Login", "Duplicate session creation", zap.Error(err), zap.String("email", lowerCaseEmail))
-				ctx.JSON(http.StatusConflict, errorResponse(fmt.Errorf("session already exists")))
-				return
-			case "23503": // foreign_key_violation
-				ctx.JSON(http.StatusNotFound, errorResponse(err))
-				return
-			}
-		}
-		server.logBusinessEvent(LogLevelError, "Login", "Failed to create session", zap.Error(err), zap.String("email", lowerCaseEmail))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
 	res := SuccessResponse(LoginUserResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:   loginResult.AccessToken,
+		RefreshToken:  loginResult.RefreshToken,
+		RequiresTwoFA: loginResult.RequiresTwoFA,
+		TempToken:     loginResult.TempToken,
 	}, "login successful")
 
 	ctx.JSON(http.StatusOK, res)

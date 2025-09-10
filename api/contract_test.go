@@ -201,12 +201,10 @@ func TestCreateClientContractApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				requestBody := CreateContractRequest{
-					TypeID:          &contractType.ID,
+					TypeID: &contractType.ID,
 
-
-					
 					StartDate:       time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC),
-					EndDate:         time.Date(2021, 9, 30, 0, 0, 0, 0, time.UTC),
+					EndDate:         time.Date(2025, 10, 30, 0, 0, 0, 0, time.UTC),
 					ReminderPeriod:  10,
 					Vat:             util.Int32Ptr(15),
 					Price:           5.58,
