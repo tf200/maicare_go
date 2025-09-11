@@ -1,6 +1,8 @@
 package api
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pdf"
@@ -157,6 +159,10 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 
 	appointmentCard, err := server.store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "No appointment card found for the given client ID"))
+			return
+		}
 		server.logBusinessEvent(LogLevelError, "GetAppointmentCardApi", "Failed to retrieve appointment card", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to retrieve appointment card")))
 		return
