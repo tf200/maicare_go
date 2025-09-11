@@ -355,7 +355,7 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	updatedAppointmentCard, err := server.store.UpdateAppointmentCardUrl(ctx, db.UpdateAppointmentCardUrlParams{
+	fileKey, err := server.store.UpdateAppointmentCardUrl(ctx, db.UpdateAppointmentCardUrlParams{
 		ClientID: clientID,
 		FileUrl:  &pdfUrl,
 	})
@@ -365,7 +365,12 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(updatedAppointmentCard, "Appointment card document generated successfully")
+	response := GenerateAppointmentCardDocumentApiResponse{
+		FileUrl:  server.generateResponsePresignedURL(fileKey),
+		ClientID: clientID,
+	}
+
+	res := SuccessResponse(response, "Appointment card document generated successfully")
 	ctx.JSON(http.StatusOK, res)
 
 }
