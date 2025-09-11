@@ -226,8 +226,7 @@ CREATE TABLE employee_profile (
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,
     is_archived BOOLEAN NOT NULL DEFAULT FALSE,
-    fixed_contract_hours FLOAT NULL DEFAULT 0.0,
-    variable_contract_hours FLOAT NULL DEFAULT 0.0,
+    contract_hours FLOAT NULL DEFAULT 0.0,
     contract_end_date DATE NULL,
     contract_start_date DATE NULL,
     contract_type VARCHAR(50) NULL CHECK (contract_type IN ('loondienst', 'ZZP', 'none')) DEFAULT 'none',
@@ -451,7 +450,21 @@ CREATE TABLE client_details (
     work_additional_notes TEXT NULL,
     -- Living situation
     living_situation VARCHAR(50) NULL CHECK (living_situation IN ('home', 'foster_care', 'youth_care_institution', 'other')),
-    living_situation_notes TEXT NULL
+    living_situation_notes TEXT NULL,
+
+    -- Risks 
+    risk_aggressive_behavior BOOLEAN DEFAULT FALSE,
+    risk_suicidal_selfharm BOOLEAN DEFAULT FALSE,
+    risk_substance_abuse BOOLEAN DEFAULT FALSE,
+    risk_psychiatric_issues BOOLEAN DEFAULT FALSE,
+    risk_criminal_history BOOLEAN DEFAULT FALSE,
+    risk_flight_behavior BOOLEAN DEFAULT FALSE,
+    risk_weapon_possession BOOLEAN DEFAULT FALSE,
+    risk_sexual_behavior BOOLEAN DEFAULT FALSE,
+    risk_day_night_rhythm BOOLEAN DEFAULT FALSE,
+    risk_other BOOLEAN DEFAULT FALSE,
+    risk_other_description TEXT,
+    risk_additional_notes TEXT
 );
 
 CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);

@@ -86,6 +86,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 	if len(contracts) == 0 {
 		return nil, warningCount, fmt.Errorf("no contracts found for client %d", invoiceData.ClientID)
 	}
+	var totalInvoiceItems int
 
 	var totalAmount float64
 	var totalPreVat float64
@@ -104,6 +105,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 		if len(billablePeriods) == 0 {
 			continue
 		}
+		totalInvoiceItems++
 
 		invoice[i] = InvoiceDetails{
 			ContractID:    contract.ID,
@@ -112,6 +114,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 			PriceTimeUnit: contract.PriceTimeUnit,
 			Vat:           float64(*contract.Vat),
 			Warnings:      []string{},
+			Periods:       []InvoicePeriod{},
 		}
 
 		if len(billablePeriods) > 1 {
@@ -165,6 +168,9 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 					continue
 				}
 				if len(appointments) == 0 {
+					invoice[i].Warnings = append(invoice[i].Warnings,
+						fmt.Sprintf("no appointments found for ambulante contract %d in the specified date range", contract.ID))
+					warningCount++
 					continue
 				}
 
@@ -196,6 +202,10 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 
 			invoice[i].Periods = append(invoice[i].Periods, periodItem)
 		}
+	}
+
+	if totalInvoiceItems == 0 {
+		return nil, warningCount, fmt.Errorf("no billable items found for client %d in the specified date range", invoiceData.ClientID)
 	}
 
 	invoiceDate := time.Now()

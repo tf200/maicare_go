@@ -17,12 +17,10 @@ INSERT INTO employee_profile (
     is_subcontractor,
     gender,
     location_id,
-    has_borrowed,
-    out_of_service,
-    is_archived
+    contract_type
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+    $11, $12, $13, $14, $15, $16, $17, $18
 ) RETURNING *;
 
 
@@ -140,6 +138,16 @@ SET
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
+
+ 
+-- name: UpdateEmployeeIsSubcontractor :one
+UPDATE employee_profile
+SET
+    is_subcontractor = $2,
+    contract_type = $3
+WHERE id = $1
+RETURNING *;
+
 -- name: SetEmployeeProfilePicture :one
 UPDATE custom_user
 SET profile_picture = $2
@@ -154,8 +162,7 @@ RETURNING *;
 -- name: AddEmployeeContractDetails :one
 UPDATE employee_profile
 SET
-    fixed_contract_hours = COALESCE(sqlc.narg('fixed_contract_hours'), fixed_contract_hours),
-    variable_contract_hours = COALESCE(sqlc.narg('variable_contract_hours'), variable_contract_hours),
+    contract_hours = COALESCE(sqlc.narg('contract_hours'), contract_hours),
     contract_start_date = COALESCE(sqlc.narg('contract_start_date'), contract_start_date),
     contract_end_date = COALESCE(sqlc.narg('contract_end_date'), contract_end_date),
     contract_type = COALESCE(sqlc.narg('contract_type'), contract_type),
@@ -165,12 +172,12 @@ RETURNING *;
 
 -- name: GetEmployeeContractDetails :one
 SELECT
-    fixed_contract_hours,
-    variable_contract_hours,
+    contract_hours,
     contract_start_date,
     contract_end_date,
     contract_type,
-    contract_rate
+    contract_rate,
+    is_subcontractor
 FROM employee_profile
 WHERE id = $1;
 

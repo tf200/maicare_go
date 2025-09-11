@@ -45,9 +45,6 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 		IsSubcontractor:           util.BoolPtr(util.RandomBool()),
 		Gender:                    util.StringPtr("male"),
 		LocationID:                util.IntPtr(location.ID),
-		HasBorrowed:               false,
-		OutOfService:              util.BoolPtr(util.RandomBool()),
-		IsArchived:                util.RandomBool(),
 	}
 
 	employee, err := testStore.CreateEmployeeProfile(context.Background(), arg)
@@ -72,17 +69,14 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 	require.Equal(t, arg.IsSubcontractor, employee.IsSubcontractor)
 	require.Equal(t, arg.Gender, employee.Gender)
 	require.Equal(t, arg.LocationID, employee.LocationID)
-	require.Equal(t, arg.HasBorrowed, employee.HasBorrowed)
-	require.Equal(t, arg.OutOfService, employee.OutOfService)
-	require.Equal(t, arg.IsArchived, employee.IsArchived)
 
 	arg2 := db.AddEmployeeContractDetailsParams{
-		ID:                 employee.ID,
-		FixedContractHours: util.Float64Ptr(40),
-		ContractStartDate:  pgtype.Date{Time: time.Now(), Valid: true},
-		ContractEndDate:    pgtype.Date{Time: time.Now().AddDate(1, 0, 0), Valid: true},
-		ContractType:       util.StringPtr("loondienst"),
-		ContractRate:       util.Float64Ptr(43), // Optional field, can be set later if needed
+		ID:                employee.ID,
+		ContractHours:     util.Float64Ptr(40),
+		ContractStartDate: pgtype.Date{Time: time.Now(), Valid: true},
+		ContractEndDate:   pgtype.Date{Time: time.Now().AddDate(1, 0, 0), Valid: true},
+		ContractType:      util.StringPtr("loondienst"),
+		ContractRate:      util.Float64Ptr(43), // Optional field, can be set later if needed
 	}
 	contractDetails, err := testStore.AddEmployeeContractDetails(context.Background(), arg2)
 	require.NoError(t, err)
@@ -128,8 +122,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
-					OutOfService:              util.BoolPtr(util.RandomBool()),
-					RoleID:                    1, // Assign a default role, e.g., RoleID 2
+					RoleID:                    1,
 				}
 				data, err := json.Marshal(Empreq)
 				require.NoError(t, err)
@@ -183,7 +176,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 }
 
 func TestListEmployeeProfileApi(t *testing.T) {
-	user := createRandomUser(t)
+	_, user := createRandomEmployee(t)
 	initialCount, err := testStore.CountEmployeeProfile(context.Background(), db.CountEmployeeProfileParams{
 		IncludeArchived:     util.BoolPtr(true),
 		IncludeOutOfService: util.BoolPtr(true),
@@ -806,11 +799,10 @@ func TestAddEmployeeContractDetailsApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				addContractReq := AddEmployeeContractDetailsRequest{
-					FixedContractHours: util.Float64Ptr(40),
-					ContractStartDate:  time.Now().AddDate(-1, 0, 0),
-					ContractEndDate:    time.Now().AddDate(1, 0, 0),
-					ContractType:       util.StringPtr("loondienst"),
-					ContractRate:       util.Float64Ptr(3000),
+					ContractHours:     util.Float64Ptr(40),
+					ContractStartDate: time.Now().AddDate(-1, 0, 0),
+					ContractEndDate:   time.Now().AddDate(1, 0, 0),
+					ContractRate:      util.Float64Ptr(3000),
 				}
 				data, err := json.Marshal(addContractReq)
 				require.NoError(t, err)

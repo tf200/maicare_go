@@ -35,12 +35,10 @@ func TestCreateEmployeeWithAccountTx(t *testing.T) {
 			Valid: true,
 		},
 		HomeTelephoneNumber: util.StringPtr(util.RandomString(5)),
-		IsSubcontractor:     util.BoolPtr(util.RandomBool()),
+		IsSubcontractor:     util.BoolPtr(false),
 		Gender:              util.StringPtr(util.RandomString(5)),
 		LocationID:          util.IntPtr(location.ID),
-		HasBorrowed:         false,
-		OutOfService:        util.BoolPtr(util.RandomBool()),
-		IsArchived:          util.RandomBool(),
+		ContractType:        util.StringPtr("loondienst"),
 	}
 	userArg := CreateUserParams{
 		Email:    employeeArg.Email,
@@ -72,7 +70,6 @@ func TestCreateEmployeeWithAccountTx(t *testing.T) {
 	require.Equal(t, arg.CreateEmployeeParams.Position, result.Employee.Position)
 	require.Equal(t, arg.CreateEmployeeParams.Department, result.Employee.Department)
 	require.Equal(t, arg.CreateEmployeeParams.LocationID, result.Employee.LocationID)
-	require.Equal(t, arg.CreateEmployeeParams.HasBorrowed, result.Employee.HasBorrowed)
 
 	// Verify IDs were generated
 	require.NotZero(t, result.User.ID)

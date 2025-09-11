@@ -269,6 +269,18 @@ type ClientDetail struct {
 	WorkAdditionalNotes        *string            `json:"work_additional_notes"`
 	LivingSituation            *string            `json:"living_situation"`
 	LivingSituationNotes       *string            `json:"living_situation_notes"`
+	RiskAggressiveBehavior     *bool              `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool              `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool              `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool              `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool              `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool              `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool              `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool              `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool              `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool              `json:"risk_other"`
+	RiskOtherDescription       *string            `json:"risk_other_description"`
+	RiskAdditionalNotes        *string            `json:"risk_additional_notes"`
 }
 
 type ClientDiagnosis struct {
@@ -556,8 +568,7 @@ type EmployeeProfile struct {
 	HasBorrowed               bool               `json:"has_borrowed"`
 	OutOfService              *bool              `json:"out_of_service"`
 	IsArchived                bool               `json:"is_archived"`
-	FixedContractHours        *float64           `json:"fixed_contract_hours"`
-	VariableContractHours     *float64           `json:"variable_contract_hours"`
+	ContractHours             *float64           `json:"contract_hours"`
 	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractType              *string            `json:"contract_type"`

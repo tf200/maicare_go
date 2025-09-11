@@ -917,7 +917,7 @@ const docTemplate = `{
                         "-": []
                     }
                 ],
-                "description": "Refresh access token using refresh token",
+                "description": "Refresh access token using refresh token“",
                 "consumes": [
                     "application/json"
                 ],
@@ -7210,6 +7210,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/{id}/is_subcontractor": {
+            "put": {
+                "description": "Update an employee's subcontractor status and adjust contract details accordingly",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Update employee's subcontractor status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subcontractor status details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateEmployeeIsSubcontractorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_UpdateEmployeeIsSubcontractorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/{id}/profile_picture": {
             "put": {
                 "description": "Set employee profile picture by ID",
@@ -11562,6 +11633,9 @@ const docTemplate = `{
         },
         "api.AddEmployeeContractDetailsRequest": {
             "type": "object",
+            "required": [
+                "fixed_contract_hours"
+            ],
             "properties": {
                 "contract_end_date": {
                     "type": "string"
@@ -11573,17 +11647,7 @@ const docTemplate = `{
                 "contract_start_date": {
                     "type": "string"
                 },
-                "contract_type": {
-                    "type": "string",
-                    "enum": [
-                        "loondienst",
-                        "ZZP"
-                    ]
-                },
                 "fixed_contract_hours": {
-                    "type": "number"
-                },
-                "variable_contract_hours": {
                     "type": "number"
                 }
             }
@@ -11601,17 +11665,11 @@ const docTemplate = `{
                 "contract_start_date": {
                     "type": "string"
                 },
-                "contract_type": {
-                    "type": "string"
-                },
                 "fixed_contract_hours": {
                     "type": "number"
                 },
                 "id": {
                     "type": "integer"
-                },
-                "variable_contract_hours": {
-                    "type": "number"
                 }
             }
         },
@@ -13166,6 +13224,7 @@ const docTemplate = `{
             "required": [
                 "email",
                 "first_name",
+                "is_subcontractor",
                 "last_name",
                 "role_id"
             ],
@@ -13199,7 +13258,8 @@ const docTemplate = `{
                     "example": "fara"
                 },
                 "gender": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "man"
                 },
                 "home_telephone_number": {
                     "type": "string",
@@ -13216,10 +13276,6 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer",
                     "example": 1
-                },
-                "out_of_service": {
-                    "type": "boolean",
-                    "example": false
                 },
                 "position": {
                     "type": "string",
@@ -16422,8 +16478,8 @@ const docTemplate = `{
                 "fixed_contract_hours": {
                     "type": "number"
                 },
-                "variable_contract_hours": {
-                    "type": "number"
+                "is_subcontractor": {
+                    "type": "boolean"
                 }
             }
         },
@@ -21555,6 +21611,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-api_UpdateEmployeeIsSubcontractorResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.UpdateEmployeeIsSubcontractorResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-api_UpdateEmployeeProfileResponse": {
             "type": "object",
             "properties": {
@@ -23820,6 +23890,43 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                }
+            }
+        },
+        "api.UpdateEmployeeIsSubcontractorRequest": {
+            "type": "object",
+            "required": [
+                "is_subcontractor"
+            ],
+            "properties": {
+                "is_subcontractor": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.UpdateEmployeeIsSubcontractorResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_rate": {
+                    "type": "number"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "fixed_contract_hours": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
                 }
             }
         },

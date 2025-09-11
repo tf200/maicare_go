@@ -237,18 +237,15 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Failed to fetch extra content", zap.Error(err))
 	}
 
-	var extraContentBytes []byte
-
 	if len(extraContent) == 0 {
-		extraContent = nil // Set to nil if no extra content is found
-	} else {
-		// marshal extra content to JSON
-		extraContentBytes, err = json.Marshal(extraContent)
-		if err != nil {
-			server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to marshal extra content", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal extra content")))
-			return
-		}
+		extraContent = map[string]string{} // empty object instead of nil
+	}
+
+	extraContentBytes, err := json.Marshal(extraContent)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to marshal extra content", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal extra content")))
+		return
 	}
 
 	invoice, err := server.store.CreateInvoice(ctx.Request.Context(), db.CreateInvoiceParams{

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/service/employees"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -83,18 +85,17 @@ type CreateEmployeeProfileRequest struct {
 	EmployeeNumber            *string `json:"employee_number" example:"123456"`
 	EmploymentNumber          *string `json:"employment_number" example:"123456"`
 	LocationID                *int64  `json:"location_id" example:"1"`
-	IsSubcontractor           *bool   `json:"is_subcontractor" example:"false"`
+	IsSubcontractor           *bool   `json:"is_subcontractor" binding:"required" example:"false"`
 	FirstName                 string  `json:"first_name" binding:"required" example:"fara"`
 	LastName                  string  `json:"last_name" binding:"required" example:"joe"`
 	DateOfBirth               *string `json:"date_of_birth" example:"2000-01-01"`
-	Gender                    *string `json:"gender" exmple:"man"`
+	Gender                    *string `json:"gender" example:"man"`
 	Email                     string  `json:"email" binding:"required,email" example:"emai@exe.com"`
 	PrivateEmailAddress       *string `json:"private_email_address" binding:"email" example:"joe@ex.com"`
 	AuthenticationPhoneNumber *string `json:"authentication_phone_number" example:"1234567890"`
 	WorkPhoneNumber           *string `json:"work_phone_number" example:"1234567890"`
 	PrivatePhoneNumber        *string `json:"private_phone_number" example:"1234567890"`
 	HomeTelephoneNumber       *string `json:"home_telephone_number" example:"1234567890"`
-	OutOfService              *bool   `json:"out_of_service" example:"false"`
 	RoleID                    int32   `json:"role_id" binding:"required" example:"1"`
 	Position                  *string `json:"position" example:"developer"`
 	Department                *string `json:"department" example:"IT"`
@@ -158,6 +159,11 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 		}
 	}
 
+	contractType := "loondienst"
+	if req.IsSubcontractor != nil && *req.IsSubcontractor {
+		contractType = "zzp"
+	}
+
 	employee, err := server.store.CreateEmployeeWithAccountTx(
 		ctx,
 		db.CreateEmployeeWithAccountTxParams{
@@ -182,9 +188,9 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 				WorkPhoneNumber:           req.WorkPhoneNumber,
 				PrivatePhoneNumber:        req.PrivatePhoneNumber,
 				HomeTelephoneNumber:       req.HomeTelephoneNumber,
-				OutOfService:              req.OutOfService,
 				Position:                  req.Position,
 				Department:                req.Department,
+				ContractType:              &contractType,
 			},
 			RoleID: req.RoleID,
 		},
@@ -655,25 +661,82 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 
 }
 
-// I will impement contract here
+// UpdateEmployeeIsSubcontractorRequest represents the request for UpdateEmployeeIsSubcontractorApi
+type UpdateEmployeeIsSubcontractorRequest struct {
+	IsSubcontractor *bool `json:"is_subcontractor" binding:"required"`
+}
+
+// UpdateEmployeeIsSubcontractorResponse represents the response for UpdateEmployeeIsSubcontractorApi
+type UpdateEmployeeIsSubcontractorResponse struct {
+	ID                int64     `json:"id"`
+	IsSubcontractor   *bool     `json:"is_subcontractor"`
+	ContractType      *string   `json:"contract_type"`
+	ContractHours     *float64  `json:"contract_hours"`
+	ContractRate      *float64  `json:"contract_rate"`
+	ContractStartdate time.Time `json:"contract_start_date"`
+	ContractEndDate   time.Time `json:"contract_end_date"`
+}
+
+// @Summary Update employee's subcontractor status
+// @Description Update an employee's subcontractor status and adjust contract details accordingly
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param id path int true "Employee ID"
+// @Param request body UpdateEmployeeIsSubcontractorRequest true "Subcontractor status details"
+// @Success 200 {object} Response[UpdateEmployeeIsSubcontractorResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/{id}/is_subcontractor [put]
+func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	employeeID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee ID: %w", err)))
+		return
+	}
+	var req UpdateEmployeeIsSubcontractorRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body: %w", err)))
+		return
+	}
+
+	result, err := server.businessService.EmployeeService.UpdateEmployeeIsSubcontractor(
+		employees.UpdateEmployeeIsSubcontractorRequest{
+			EmployeeID:      employeeID,
+			IsSubcontractor: req.IsSubcontractor,
+		}, ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update subcontractor status: %w", err)))
+		return
+	}
+
+	res := SuccessResponse(UpdateEmployeeIsSubcontractorResponse{
+		ID:                result.ID,
+		IsSubcontractor:   result.IsSubcontractor,
+		ContractType:      result.ContractType,
+		ContractHours:     result.ContractHours,
+		ContractRate:      result.ContractRate,
+		ContractStartdate: result.ContractStartDate,
+		ContractEndDate:   result.ContractEndDate,
+	}, "Employee subcontractor status updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// AddEmployeeContractDetailsRequest represents the request for AddEmployeeContractDetailsApi
 type AddEmployeeContractDetailsRequest struct {
-	FixedContractHours    *float64  `json:"fixed_contract_hours"`
-	VariableContractHours *float64  `json:"variable_contract_hours"`
-	ContractStartDate     time.Time `json:"contract_start_date"`
-	ContractEndDate       time.Time `json:"contract_end_date"`
-	ContractType          *string   `json:"contract_type" binding:"oneof= loondienst ZZP"`
-	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
+	ContractHours     *float64  `json:"contract_hours" binding:"required"`
+	ContractStartDate time.Time `json:"contract_start_date"`
+	ContractEndDate   time.Time `json:"contract_end_date"`
+	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
 }
 
 // AddEmployeeContractDetailsResponse represents the response for AddEmployeeContractDetailsApi
 type AddEmployeeContractDetailsResponse struct {
-	ID                    int64     `json:"id"`
-	FixedContractHours    *float64  `json:"fixed_contract_hours"`
-	VariableContractHours *float64  `json:"variable_contract_hours"`
-	ContractStartDate     time.Time `json:"contract_start_date"`
-	ContractEndDate       time.Time `json:"contract_end_date"`
-	ContractType          *string   `json:"contract_type"`
-	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
+	ID                int64     `json:"id"`
+	ContractHours     *float64  `json:"contract_hours"`
+	ContractStartDate time.Time `json:"contract_start_date"`
+	ContractEndDate   time.Time `json:"contract_end_date"`
+	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
 }
 
 // @Summary Add contract details to employee profile
@@ -698,14 +761,13 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
 	arg := db.AddEmployeeContractDetailsParams{
-		ID:                    employeeID,
-		FixedContractHours:    req.FixedContractHours,
-		VariableContractHours: req.VariableContractHours,
-		ContractStartDate:     pgtype.Date{Time: req.ContractStartDate, Valid: true},
-		ContractEndDate:       pgtype.Date{Time: req.ContractEndDate, Valid: true},
-		ContractType:          req.ContractType,
-		ContractRate:          req.ContractRate, // Optional field, can be set later if needed
+		ID:                employeeID,
+		ContractHours:     req.ContractHours,
+		ContractStartDate: pgtype.Date{Time: req.ContractStartDate, Valid: true},
+		ContractEndDate:   pgtype.Date{Time: req.ContractEndDate, Valid: true},
+		ContractRate:      req.ContractRate, // Optional field, can be set later if needed
 	}
 	contractDetails, err := server.store.AddEmployeeContractDetails(ctx, arg)
 	if err != nil {
@@ -747,24 +809,22 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		return
 	}
 	res := SuccessResponse(AddEmployeeContractDetailsResponse{
-		ID:                    contractDetails.ID,
-		FixedContractHours:    contractDetails.FixedContractHours,
-		VariableContractHours: contractDetails.VariableContractHours,
-		ContractStartDate:     contractDetails.ContractStartDate.Time,
-		ContractEndDate:       contractDetails.ContractEndDate.Time,
-		ContractType:          contractDetails.ContractType,
+		ID:                contractDetails.ID,
+		ContractHours:     contractDetails.ContractHours,
+		ContractStartDate: contractDetails.ContractStartDate.Time,
+		ContractEndDate:   contractDetails.ContractEndDate.Time,
 	}, "Contract details added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
 }
 
 // GetEmployeeContractDetailsResponse represents the response for GetEmployeeContractDetailsApi
 type GetEmployeeContractDetailsResponse struct {
-	FixedContractHours    *float64  `json:"fixed_contract_hours"`
-	VariableContractHours *float64  `json:"variable_contract_hours"`
-	ContractStartDate     time.Time `json:"contract_start_date"`
-	ContractEndDate       time.Time `json:"contract_end_date"`
-	ContractType          *string   `json:"contract_type"`
-	ContractRate          *float64  `json:"contract_rate"` // Optional field for contract rate
+	ContractHours     *float64  `json:"contract_hours"`
+	ContractStartDate time.Time `json:"contract_start_date"`
+	ContractEndDate   time.Time `json:"contract_end_date"`
+	ContractType      *string   `json:"contract_type"`
+	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
+	IsSubcontractor   *bool     `json:"is_subcontractor"`
 }
 
 // @Summary Get employee contract details by ID
@@ -788,18 +848,13 @@ func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 		return
 	}
 
-	if contractDetails.FixedContractHours == nil && contractDetails.VariableContractHours == nil || contractDetails.FixedContractHours == util.Float64Ptr(0) && contractDetails.VariableContractHours == util.Float64Ptr(0) {
-		res := SuccessResponse[any](nil, "No contract details found for this employee")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
 	res := SuccessResponse(GetEmployeeContractDetailsResponse{
-		FixedContractHours:    contractDetails.FixedContractHours,
-		VariableContractHours: contractDetails.VariableContractHours,
-		ContractStartDate:     contractDetails.ContractStartDate.Time,
-		ContractEndDate:       contractDetails.ContractEndDate.Time,
-		ContractType:          contractDetails.ContractType,
-		ContractRate:          contractDetails.ContractRate, // Optional field for contract rate
+		ContractHours:     contractDetails.ContractHours,
+		ContractStartDate: contractDetails.ContractStartDate.Time,
+		ContractEndDate:   contractDetails.ContractEndDate.Time,
+		ContractType:      contractDetails.ContractType,
+		ContractRate:      contractDetails.ContractRate, // Optional field for contract rate
+		IsSubcontractor:   contractDetails.IsSubcontractor,
 	}, "Employee contract details retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
