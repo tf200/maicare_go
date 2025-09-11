@@ -238,7 +238,7 @@ func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID uuid.
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAppointmentClientsRow
+	items := []GetAppointmentClientsRow{}
 	for rows.Next() {
 		var i GetAppointmentClientsRow
 		if err := rows.Scan(&i.ClientID, &i.FirstName, &i.LastName); err != nil {
@@ -279,7 +279,7 @@ func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentID 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAppointmentParticipantsRow
+	items := []GetAppointmentParticipantsRow{}
 	for rows.Next() {
 		var i GetAppointmentParticipantsRow
 		if err := rows.Scan(&i.EmployeeID, &i.FirstName, &i.LastName); err != nil {
@@ -457,7 +457,7 @@ func (q *Queries) ListClientAppointmentsInRange(ctx context.Context, arg ListCli
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientAppointmentsInRangeRow
+	items := []ListClientAppointmentsInRangeRow{}
 	for rows.Next() {
 		var i ListClientAppointmentsInRangeRow
 		if err := rows.Scan(
@@ -535,7 +535,7 @@ func (q *Queries) ListClientAppointmentsStartingInRange(ctx context.Context, arg
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientAppointmentsStartingInRangeRow
+	items := []ListClientAppointmentsStartingInRangeRow{}
 	for rows.Next() {
 		var i ListClientAppointmentsStartingInRangeRow
 		if err := rows.Scan(
@@ -639,7 +639,7 @@ func (q *Queries) ListEmployeeAppointmentsInRange(ctx context.Context, arg ListE
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListEmployeeAppointmentsInRangeRow
+	items := []ListEmployeeAppointmentsInRangeRow{}
 	for rows.Next() {
 		var i ListEmployeeAppointmentsInRangeRow
 		if err := rows.Scan(

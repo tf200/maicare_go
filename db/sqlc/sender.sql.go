@@ -205,7 +205,7 @@ func (q *Queries) ListSenders(ctx context.Context, arg ListSendersParams) ([]Sen
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Sender
+	items := []Sender{}
 	for rows.Next() {
 		var i Sender
 		if err := rows.Scan(

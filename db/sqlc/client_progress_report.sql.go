@@ -197,7 +197,7 @@ func (q *Queries) GetProgressReportsByDateRange(ctx context.Context, arg GetProg
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ProgressReport
+	items := []ProgressReport{}
 	for rows.Next() {
 		var i ProgressReport
 		if err := rows.Scan(
@@ -253,7 +253,7 @@ func (q *Queries) ListAiGeneratedReports(ctx context.Context, arg ListAiGenerate
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListAiGeneratedReportsRow
+	items := []ListAiGeneratedReportsRow{}
 	for rows.Next() {
 		var i ListAiGeneratedReportsRow
 		if err := rows.Scan(
@@ -318,7 +318,7 @@ func (q *Queries) ListProgressReports(ctx context.Context, arg ListProgressRepor
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListProgressReportsRow
+	items := []ListProgressReportsRow{}
 	for rows.Next() {
 		var i ListProgressReportsRow
 		if err := rows.Scan(

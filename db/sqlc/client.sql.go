@@ -495,7 +495,7 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID int64)
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	items := []string{}
 	for rows.Next() {
 		var missing_label string
 		if err := rows.Scan(&missing_label); err != nil {
@@ -596,7 +596,7 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientDetailsRow
+	items := []ListClientDetailsRow{}
 	for rows.Next() {
 		var i ListClientDetailsRow
 		if err := rows.Scan(
@@ -696,7 +696,7 @@ func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumen
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientDocumentsRow
+	items := []ListClientDocumentsRow{}
 	for rows.Next() {
 		var i ListClientDocumentsRow
 		if err := rows.Scan(
@@ -743,7 +743,7 @@ func (q *Queries) ListClientStatusHistory(ctx context.Context, arg ListClientSta
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ClientStatusHistory
+	items := []ClientStatusHistory{}
 	for rows.Next() {
 		var i ClientStatusHistory
 		if err := rows.Scan(

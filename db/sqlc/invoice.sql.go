@@ -289,7 +289,7 @@ func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]G
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetInvoiceAuditLogsRow
+	items := []GetInvoiceAuditLogsRow{}
 	for rows.Next() {
 		var i GetInvoiceAuditLogsRow
 		if err := rows.Scan(
@@ -548,7 +548,7 @@ func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]L
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListInvoicesRow
+	items := []ListInvoicesRow{}
 	for rows.Next() {
 		var i ListInvoicesRow
 		if err := rows.Scan(
@@ -621,7 +621,7 @@ func (q *Queries) ListPayments(ctx context.Context, invoiceID int64) ([]ListPaym
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListPaymentsRow
+	items := []ListPaymentsRow{}
 	for rows.Next() {
 		var i ListPaymentsRow
 		if err := rows.Scan(

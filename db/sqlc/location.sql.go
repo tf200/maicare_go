@@ -221,7 +221,7 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Location
+	items := []Location{}
 	for rows.Next() {
 		var i Location
 		if err := rows.Scan(
@@ -253,7 +253,7 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]Lo
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Location
+	items := []Location{}
 	for rows.Next() {
 		var i Location
 		if err := rows.Scan(
@@ -304,7 +304,7 @@ func (q *Queries) ListOrganisations(ctx context.Context) ([]ListOrganisationsRow
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListOrganisationsRow
+	items := []ListOrganisationsRow{}
 	for rows.Next() {
 		var i ListOrganisationsRow
 		if err := rows.Scan(

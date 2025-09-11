@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	db "maicare_go/db/sqlc"
-	"maicare_go/service"
+	"maicare_go/service/auth"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -57,7 +56,7 @@ func (server *Server) Login(ctx *gin.Context) {
 		return
 	}
 
-	loginResult, err := server.businessService.AuthService.Login(service.LoginRequest{
+	loginResult, err := server.businessService.AuthService.Login(auth.LoginRequest{
 		Email:     req.Email,
 		Password:  req.Password,
 		ClientIP:  ctx.ClientIP(),
@@ -90,7 +89,7 @@ type RefreshTokenResponse struct {
 }
 
 // @Summary Refresh access token
-// @Description Refresh access token using refresh token
+// @Description Refresh access token using refresh token“
 // @Tags authentication
 // @Accept json
 // @Produce json
@@ -102,54 +101,21 @@ type RefreshTokenResponse struct {
 func (server *Server) RefreshToken(ctx *gin.Context) {
 	var req RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Invalid request payload", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
 
-	payload, err := server.tokenMaker.VerifyToken(req.Token)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Invalid token", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid token")))
-		return
-	}
+	result, err := server.businessService.AuthService.RefreshToken(auth.RefreshTokenRequest{
+		RefreshToken: req.Token,
+	}, ctx)
 
-	session, err := server.store.GetSessionByID(ctx, payload.ID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			server.logBusinessEvent(LogLevelError, "RefreshToken", "Session not found", zap.Error(err))
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("session not found")))
-			return
-		}
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Failed to get session", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-	}
-	if session.IsBlocked {
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Session is blocked", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("session is blocked")))
-		return
-	}
-
-	if session.RefreshToken != req.Token {
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Mismatched session token", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("mismatched session token")))
-		return
-	}
-	if time.Now().After(session.ExpiresAt.Time) {
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Expired session", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("expired session")))
-		return
-	}
-
-	accessToken, _, err := server.tokenMaker.CreateToken(payload.UserId, payload.EmployeeID, server.config.AccessTokenDuration, token.AccessToken)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "RefreshToken", "Failed to create access token", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to refresh token: %v", err)))
 		return
 	}
 
 	res := SuccessResponse(RefreshTokenResponse{
-		AccessToken: accessToken,
+		AccessToken: result.AccessToken,
 	}, "access token refreshed successfully")
 
 	ctx.JSON(http.StatusOK, res)

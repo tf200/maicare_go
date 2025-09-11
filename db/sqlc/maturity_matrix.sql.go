@@ -582,7 +582,7 @@ func (q *Queries) GetCarePlanInterventions(ctx context.Context, carePlanID int64
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CarePlanIntervention
+	items := []CarePlanIntervention{}
 	for rows.Next() {
 		var i CarePlanIntervention
 		if err := rows.Scan(
@@ -649,7 +649,7 @@ func (q *Queries) GetCarePlanObjectivesWithActions(ctx context.Context, carePlan
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetCarePlanObjectivesWithActionsRow
+	items := []GetCarePlanObjectivesWithActionsRow{}
 	for rows.Next() {
 		var i GetCarePlanObjectivesWithActionsRow
 		if err := rows.Scan(
@@ -790,7 +790,7 @@ func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID int64) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CarePlanResource
+	items := []CarePlanResource{}
 	for rows.Next() {
 		var i CarePlanResource
 		if err := rows.Scan(
@@ -831,7 +831,7 @@ func (q *Queries) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]Car
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CarePlanRisk
+	items := []CarePlanRisk{}
 	for rows.Next() {
 		var i CarePlanRisk
 		if err := rows.Scan(
@@ -866,7 +866,7 @@ func (q *Queries) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int6
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CarePlanMetric
+	items := []CarePlanMetric{}
 	for rows.Next() {
 		var i CarePlanMetric
 		if err := rows.Scan(
@@ -903,7 +903,7 @@ func (q *Queries) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int6
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CarePlanSupportNetwork
+	items := []CarePlanSupportNetwork{}
 	for rows.Next() {
 		var i CarePlanSupportNetwork
 		if err := rows.Scan(
@@ -1046,7 +1046,7 @@ func (q *Queries) ListCarePlanReports(ctx context.Context, arg ListCarePlanRepor
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListCarePlanReportsRow
+	items := []ListCarePlanReportsRow{}
 	for rows.Next() {
 		var i ListCarePlanReportsRow
 		if err := rows.Scan(
@@ -1116,7 +1116,7 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientMaturityMatrixAssessmentsRow
+	items := []ListClientMaturityMatrixAssessmentsRow{}
 	for rows.Next() {
 		var i ListClientMaturityMatrixAssessmentsRow
 		if err := rows.Scan(
@@ -1155,7 +1155,7 @@ func (q *Queries) ListMaturityMatrix(ctx context.Context) ([]MaturityMatrix, err
 		return nil, err
 	}
 	defer rows.Close()
-	var items []MaturityMatrix
+	items := []MaturityMatrix{}
 	for rows.Next() {
 		var i MaturityMatrix
 		if err := rows.Scan(&i.ID, &i.TopicName, &i.LevelDescription); err != nil {

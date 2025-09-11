@@ -72,7 +72,7 @@ func (q *Queries) ListNotifications(ctx context.Context, arg ListNotificationsPa
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Notification
+	items := []Notification{}
 	for rows.Next() {
 		var i Notification
 		if err := rows.Scan(

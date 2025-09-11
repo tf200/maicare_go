@@ -119,7 +119,7 @@ func (q *Queries) ListAllIncidents(ctx context.Context, arg ListAllIncidentsPara
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListAllIncidentsRow
+	items := []ListAllIncidentsRow{}
 	for rows.Next() {
 		var i ListAllIncidentsRow
 		if err := rows.Scan(

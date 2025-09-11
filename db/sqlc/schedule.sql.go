@@ -165,7 +165,7 @@ func (q *Queries) GetDailySchedulesByLocation(ctx context.Context, arg GetDailyS
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetDailySchedulesByLocationRow
+	items := []GetDailySchedulesByLocationRow{}
 	for rows.Next() {
 		var i GetDailySchedulesByLocationRow
 		if err := rows.Scan(
@@ -231,7 +231,7 @@ func (q *Queries) GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSched
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetEmployeeSchedulesRow
+	items := []GetEmployeeSchedulesRow{}
 	for rows.Next() {
 		var i GetEmployeeSchedulesRow
 		if err := rows.Scan(
@@ -308,7 +308,7 @@ func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMont
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetMonthlySchedulesByLocationRow
+	items := []GetMonthlySchedulesByLocationRow{}
 	for rows.Next() {
 		var i GetMonthlySchedulesByLocationRow
 		if err := rows.Scan(

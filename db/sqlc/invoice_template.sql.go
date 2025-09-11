@@ -21,7 +21,7 @@ func (q *Queries) GetAllTemplateItems(ctx context.Context) ([]TemplateItem, erro
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TemplateItem
+	items := []TemplateItem{}
 	for rows.Next() {
 		var i TemplateItem
 		if err := rows.Scan(
@@ -53,7 +53,7 @@ func (q *Queries) GetTemplateItemsByIds(ctx context.Context, dollar_1 []int64) (
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int64
+	items := []int64{}
 	for rows.Next() {
 		var id int64
 		if err := rows.Scan(&id); err != nil {
@@ -80,7 +80,7 @@ func (q *Queries) GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TemplateItem
+	items := []TemplateItem{}
 	for rows.Next() {
 		var i TemplateItem
 		if err := rows.Scan(

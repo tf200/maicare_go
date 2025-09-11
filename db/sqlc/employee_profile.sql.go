@@ -628,7 +628,7 @@ func (q *Queries) ListEducations(ctx context.Context, employeeID int64) ([]Emplo
 		return nil, err
 	}
 	defer rows.Close()
-	var items []EmployeeEducation
+	items := []EmployeeEducation{}
 	for rows.Next() {
 		var i EmployeeEducation
 		if err := rows.Scan(
@@ -661,7 +661,7 @@ func (q *Queries) ListEmployeeCertifications(ctx context.Context, employeeID int
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Certification
+	items := []Certification{}
 	for rows.Next() {
 		var i Certification
 		if err := rows.Scan(
@@ -692,7 +692,7 @@ func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []EmployeeExperience
+	items := []EmployeeExperience{}
 	for rows.Next() {
 		var i EmployeeExperience
 		if err := rows.Scan(
@@ -806,7 +806,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListEmployeeProfileRow
+	items := []ListEmployeeProfileRow{}
 	for rows.Next() {
 		var i ListEmployeeProfileRow
 		if err := rows.Scan(
@@ -879,7 +879,7 @@ func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, search *stri
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SearchEmployeesByNameOrEmailRow
+	items := []SearchEmployeesByNameOrEmailRow{}
 	for rows.Next() {
 		var i SearchEmployeesByNameOrEmailRow
 		if err := rows.Scan(

@@ -323,7 +323,7 @@ func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID int64) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	items := []string{}
 	for rows.Next() {
 		var employee_email string
 		if err := rows.Scan(&employee_email); err != nil {
@@ -438,7 +438,7 @@ func (q *Queries) ListAssignedEmployees(ctx context.Context, arg ListAssignedEmp
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListAssignedEmployeesRow
+	items := []ListAssignedEmployeesRow{}
 	for rows.Next() {
 		var i ListAssignedEmployeesRow
 		if err := rows.Scan(
@@ -512,7 +512,7 @@ func (q *Queries) ListEmergencyContacts(ctx context.Context, arg ListEmergencyCo
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListEmergencyContactsRow
+	items := []ListEmergencyContactsRow{}
 	for rows.Next() {
 		var i ListEmergencyContactsRow
 		if err := rows.Scan(
