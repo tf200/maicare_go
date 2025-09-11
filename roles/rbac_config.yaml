@@ -31,8 +31,9 @@ permissions:
   - name: APPOINTMENT_CARD.VIEW
     resource: /appointment_cards
     method: [GET]
-  
-  
+  - name: APPOINTMENT_CARD.GENERATE_DOCUMENT
+    resource: /appointment_cards/generate_document
+    method: [POST]                    
 
   # Clients
   - name: CLIENT.CREATE
@@ -383,6 +384,7 @@ roles:
       - APPOINTMENT_CARD.DELETE
       - APPOINTMENT_CARD.UPDATE
       - APPOINTMENT_CARD.VIEW
+      - APPOINTMENT_CARD.GENERATE_DOCUMENT
       - CARE_COORDINATION.VIEW
       - CLIENT.CREATE
       - CLIENT.DELETE
