@@ -16,7 +16,7 @@ INSERT INTO appointment_card (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 ) RETURNING *;
 
--- name: GetAppointmentCard :zero_or_one
+-- name: GetAppointmentCard :one
 SELECT 
     ac.*,
     c.first_name,

@@ -91,7 +91,7 @@ func (q *Queries) GetShiftsByLocationID(ctx context.Context, locationID int64) (
 		return nil, err
 	}
 	defer rows.Close()
-	var items []LocationShift
+	items := []LocationShift{}
 	for rows.Next() {
 		var i LocationShift
 		if err := rows.Scan(

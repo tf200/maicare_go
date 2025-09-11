@@ -9,6 +9,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+//go:generate mockgen -source=logger.go -destination=../mocks/mock_logger.go -package=mocks
 type Logger interface {
 	LogBusinessEvent(level LogLevel, operation, message string, fields ...zap.Field)
 }

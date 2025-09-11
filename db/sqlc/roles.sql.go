@@ -176,7 +176,7 @@ func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Permission
+	items := []Permission{}
 	for rows.Next() {
 		var i Permission
 		if err := rows.Scan(
@@ -220,7 +220,7 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID int32) ([]L
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListAllRolePermissionsRow
+	items := []ListAllRolePermissionsRow{}
 	for rows.Next() {
 		var i ListAllRolePermissionsRow
 		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
@@ -257,7 +257,7 @@ func (q *Queries) ListRoles(ctx context.Context) ([]ListRolesRow, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListRolesRow
+	items := []ListRolesRow{}
 	for rows.Next() {
 		var i ListRolesRow
 		if err := rows.Scan(&i.ID, &i.Name, &i.PermissionCount); err != nil {
@@ -296,7 +296,7 @@ func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]List
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListUserPermissionsRow
+	items := []ListUserPermissionsRow{}
 	for rows.Next() {
 		var i ListUserPermissionsRow
 		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {

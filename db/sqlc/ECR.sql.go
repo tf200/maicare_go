@@ -148,7 +148,7 @@ func (q *Queries) DischargeOverview(ctx context.Context, arg DischargeOverviewPa
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DischargeOverviewRow
+	items := []DischargeOverviewRow{}
 	for rows.Next() {
 		var i DischargeOverviewRow
 		if err := rows.Scan(
@@ -217,7 +217,7 @@ func (q *Queries) ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmp
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListEmployeesByContractEndDateRow
+	items := []ListEmployeesByContractEndDateRow{}
 	for rows.Next() {
 		var i ListEmployeesByContractEndDateRow
 		if err := rows.Scan(
@@ -278,7 +278,7 @@ func (q *Queries) ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsR
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListLatestPaymentsRow
+	items := []ListLatestPaymentsRow{}
 	for rows.Next() {
 		var i ListLatestPaymentsRow
 		if err := rows.Scan(
@@ -335,7 +335,7 @@ func (q *Queries) ListUpcomingAppointments(ctx context.Context, creatorEmployeeI
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListUpcomingAppointmentsRow
+	items := []ListUpcomingAppointmentsRow{}
 	for rows.Next() {
 		var i ListUpcomingAppointmentsRow
 		if err := rows.Scan(

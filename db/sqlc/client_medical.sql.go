@@ -264,7 +264,7 @@ func (q *Queries) ListClientDiagnoses(ctx context.Context, arg ListClientDiagnos
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientDiagnosesRow
+	items := []ListClientDiagnosesRow{}
 	for rows.Next() {
 		var i ListClientDiagnosesRow
 		if err := rows.Scan(
@@ -329,7 +329,7 @@ func (q *Queries) ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedi
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListMedicationsByDiagnosisIDRow
+	items := []ListMedicationsByDiagnosisIDRow{}
 	for rows.Next() {
 		var i ListMedicationsByDiagnosisIDRow
 		if err := rows.Scan(
@@ -370,7 +370,7 @@ func (q *Queries) ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ClientMedication
+	items := []ClientMedication{}
 	for rows.Next() {
 		var i ClientMedication
 		if err := rows.Scan(

@@ -225,7 +225,7 @@ func (q *Queries) GetBillablePeriodsForContract(ctx context.Context, arg GetBill
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetBillablePeriodsForContractRow
+	items := []GetBillablePeriodsForContractRow{}
 	for rows.Next() {
 		var i GetBillablePeriodsForContractRow
 		if err := rows.Scan(&i.BillableStart, &i.BillableEnd); err != nil {
@@ -347,7 +347,7 @@ func (q *Queries) GetContractAudit(ctx context.Context, contractID int64) ([]Get
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetContractAuditRow
+	items := []GetContractAuditRow{}
 	for rows.Next() {
 		var i GetContractAuditRow
 		if err := rows.Scan(
@@ -383,7 +383,7 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Co
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Contract
+	items := []Contract{}
 	for rows.Next() {
 		var i Contract
 		if err := rows.Scan(
@@ -486,7 +486,7 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListClientContractsRow
+	items := []ListClientContractsRow{}
 	for rows.Next() {
 		var i ListClientContractsRow
 		if err := rows.Scan(
@@ -539,7 +539,7 @@ func (q *Queries) ListContractTypes(ctx context.Context) ([]ContractType, error)
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ContractType
+	items := []ContractType{}
 	for rows.Next() {
 		var i ContractType
 		if err := rows.Scan(&i.ID, &i.Name); err != nil {
@@ -647,7 +647,7 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListContractsRow
+	items := []ListContractsRow{}
 	for rows.Next() {
 		var i ListContractsRow
 		if err := rows.Scan(
@@ -735,7 +735,7 @@ func (q *Queries) ListContractsTobeReminded(ctx context.Context) ([]ListContract
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListContractsTobeRemindedRow
+	items := []ListContractsTobeRemindedRow{}
 	for rows.Next() {
 		var i ListContractsTobeRemindedRow
 		if err := rows.Scan(

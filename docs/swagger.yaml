@@ -108,15 +108,10 @@ definitions:
         type: number
       contract_start_date:
         type: string
-      contract_type:
-        enum:
-        - loondienst
-        - ZZP
-        type: string
       fixed_contract_hours:
         type: number
-      variable_contract_hours:
-        type: number
+    required:
+    - fixed_contract_hours
     type: object
   api.AddEmployeeContractDetailsResponse:
     properties:
@@ -127,14 +122,10 @@ definitions:
         type: number
       contract_start_date:
         type: string
-      contract_type:
-        type: string
       fixed_contract_hours:
         type: number
       id:
         type: integer
-      variable_contract_hours:
-        type: number
     type: object
   api.AddEmployeeExperienceRequest:
     properties:
@@ -1196,6 +1187,7 @@ definitions:
         example: fara
         type: string
       gender:
+        example: man
         type: string
       home_telephone_number:
         example: "1234567890"
@@ -1209,9 +1201,6 @@ definitions:
       location_id:
         example: 1
         type: integer
-      out_of_service:
-        example: false
-        type: boolean
       position:
         example: developer
         type: string
@@ -1230,6 +1219,7 @@ definitions:
     required:
     - email
     - first_name
+    - is_subcontractor
     - last_name
     - role_id
     type: object
@@ -3358,8 +3348,8 @@ definitions:
         type: string
       fixed_contract_hours:
         type: number
-      variable_contract_hours:
-        type: number
+      is_subcontractor:
+        type: boolean
     type: object
   api.GetEmployeeCountsResponse:
     properties:
@@ -6721,6 +6711,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-api_UpdateEmployeeIsSubcontractorResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.UpdateEmployeeIsSubcontractorResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-api_UpdateEmployeeProfileResponse:
     properties:
       data:
@@ -8204,6 +8203,30 @@ definitions:
         type: string
       start_date:
         type: string
+    type: object
+  api.UpdateEmployeeIsSubcontractorRequest:
+    properties:
+      is_subcontractor:
+        type: boolean
+    required:
+    - is_subcontractor
+    type: object
+  api.UpdateEmployeeIsSubcontractorResponse:
+    properties:
+      contract_end_date:
+        type: string
+      contract_rate:
+        type: number
+      contract_start_date:
+        type: string
+      contract_type:
+        type: string
+      fixed_contract_hours:
+        type: number
+      id:
+        type: integer
+      is_subcontractor:
+        type: boolean
     type: object
   api.UpdateEmployeeProfileResponse:
     properties:
@@ -10194,7 +10217,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Refresh access token using refresh token
+      description: Refresh access token using refresh token“
       parameters:
       - description: Refresh token
         in: body
@@ -14248,6 +14271,54 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update experience for employee profile
+      tags:
+      - employees
+  /employees/{id}/is_subcontractor:
+    put:
+      consumes:
+      - application/json
+      description: Update an employee's subcontractor status and adjust contract details
+        accordingly
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Subcontractor status details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateEmployeeIsSubcontractorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_UpdateEmployeeIsSubcontractorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update employee's subcontractor status
       tags:
       - employees
   /employees/{id}/profile_picture:

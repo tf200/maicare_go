@@ -520,7 +520,7 @@ func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistratio
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RegistrationForm
+	items := []RegistrationForm{}
 	for rows.Next() {
 		var i RegistrationForm
 		if err := rows.Scan(

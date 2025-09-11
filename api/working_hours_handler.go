@@ -183,11 +183,8 @@ func (server *Server) ListWorkingHours(ctx *gin.Context) {
 	}
 
 	if contractDetails.ContractType != nil {
-		// Determine the correct standard hours based on contract type
-		if *contractDetails.ContractType == "loondienst" && contractDetails.FixedContractHours != nil {
-			standardHours = *contractDetails.FixedContractHours
-		} else if *contractDetails.ContractType == "ZZP" && contractDetails.VariableContractHours != nil {
-			standardHours = *contractDetails.VariableContractHours
+		if contractDetails.ContractHours != nil {
+			standardHours = *contractDetails.ContractHours
 		}
 
 		// Perform the overtime calculation if standard hours have been set

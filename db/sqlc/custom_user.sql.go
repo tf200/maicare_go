@@ -101,7 +101,7 @@ func (q *Queries) GetAllAdminUsers(ctx context.Context) ([]CustomUser, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CustomUser
+	items := []CustomUser{}
 	for rows.Next() {
 		var i CustomUser
 		if err := rows.Scan(

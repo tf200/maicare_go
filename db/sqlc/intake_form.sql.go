@@ -544,7 +544,7 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListIntakeFormsRow
+	items := []ListIntakeFormsRow{}
 	for rows.Next() {
 		var i ListIntakeFormsRow
 		if err := rows.Scan(

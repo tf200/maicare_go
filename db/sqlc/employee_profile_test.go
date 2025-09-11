@@ -36,9 +36,7 @@ func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 		IsSubcontractor:           util.BoolPtr(true),
 		Gender:                    util.StringPtr("male"),
 		LocationID:                util.IntPtr(location.ID),
-		HasBorrowed:               false,
-		OutOfService:              util.BoolPtr(util.RandomBool()),
-		IsArchived:                util.RandomBool(),
+		ContractType:              util.StringPtr("zzp"),
 	}
 
 	employee, err := testQueries.CreateEmployeeProfile(context.Background(), arg)
@@ -63,10 +61,6 @@ func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 	require.Equal(t, arg.IsSubcontractor, employee.IsSubcontractor)
 	require.Equal(t, arg.Gender, employee.Gender)
 	require.Equal(t, arg.LocationID, employee.LocationID)
-	require.Equal(t, arg.HasBorrowed, employee.HasBorrowed)
-	require.Equal(t, arg.OutOfService, employee.OutOfService)
-	require.Equal(t, arg.IsArchived, employee.IsArchived)
-
 	require.NotZero(t, employee.ID)
 	require.NotZero(t, employee.CreatedAt)
 

@@ -186,7 +186,7 @@ func TestGenerateInvoiceApi(t *testing.T) {
 				req := GenerateInvoiceRequest{
 					ClientID:  clientID,
 					StartDate: time.Date(2025, time.August, 1, 0, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2025, time.August, 31, 23, 59, 59, 0, time.UTC),
+					EndDate:   time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC),
 				}
 				data, err := json.Marshal(req)
 				require.NoError(t, err)

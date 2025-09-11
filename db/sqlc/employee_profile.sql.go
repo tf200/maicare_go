@@ -97,31 +97,28 @@ func (q *Queries) AddEmployeeCertification(ctx context.Context, arg AddEmployeeC
 const addEmployeeContractDetails = `-- name: AddEmployeeContractDetails :one
 UPDATE employee_profile
 SET
-    fixed_contract_hours = COALESCE($2, fixed_contract_hours),
-    variable_contract_hours = COALESCE($3, variable_contract_hours),
-    contract_start_date = COALESCE($4, contract_start_date),
-    contract_end_date = COALESCE($5, contract_end_date),
-    contract_type = COALESCE($6, contract_type),
-    contract_rate = COALESCE($7, contract_rate)
+    contract_hours = COALESCE($2, contract_hours),
+    contract_start_date = COALESCE($3, contract_start_date),
+    contract_end_date = COALESCE($4, contract_end_date),
+    contract_type = COALESCE($5, contract_type),
+    contract_rate = COALESCE($6, contract_rate)
 WHERE id = $1
-RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, fixed_contract_hours, variable_contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type AddEmployeeContractDetailsParams struct {
-	ID                    int64       `json:"id"`
-	FixedContractHours    *float64    `json:"fixed_contract_hours"`
-	VariableContractHours *float64    `json:"variable_contract_hours"`
-	ContractStartDate     pgtype.Date `json:"contract_start_date"`
-	ContractEndDate       pgtype.Date `json:"contract_end_date"`
-	ContractType          *string     `json:"contract_type"`
-	ContractRate          *float64    `json:"contract_rate"`
+	ID                int64       `json:"id"`
+	ContractHours     *float64    `json:"contract_hours"`
+	ContractStartDate pgtype.Date `json:"contract_start_date"`
+	ContractEndDate   pgtype.Date `json:"contract_end_date"`
+	ContractType      *string     `json:"contract_type"`
+	ContractRate      *float64    `json:"contract_rate"`
 }
 
 func (q *Queries) AddEmployeeContractDetails(ctx context.Context, arg AddEmployeeContractDetailsParams) (EmployeeProfile, error) {
 	row := q.db.QueryRow(ctx, addEmployeeContractDetails,
 		arg.ID,
-		arg.FixedContractHours,
-		arg.VariableContractHours,
+		arg.ContractHours,
 		arg.ContractStartDate,
 		arg.ContractEndDate,
 		arg.ContractType,
@@ -151,8 +148,7 @@ func (q *Queries) AddEmployeeContractDetails(ctx context.Context, arg AddEmploye
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
-		&i.FixedContractHours,
-		&i.VariableContractHours,
+		&i.ContractHours,
 		&i.ContractEndDate,
 		&i.ContractStartDate,
 		&i.ContractType,
@@ -265,13 +261,11 @@ INSERT INTO employee_profile (
     is_subcontractor,
     gender,
     location_id,
-    has_borrowed,
-    out_of_service,
-    is_archived
+    contract_type
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, fixed_contract_hours, variable_contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+    $11, $12, $13, $14, $15, $16, $17, $18
+) RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type CreateEmployeeProfileParams struct {
@@ -292,9 +286,7 @@ type CreateEmployeeProfileParams struct {
 	IsSubcontractor           *bool       `json:"is_subcontractor"`
 	Gender                    *string     `json:"gender"`
 	LocationID                *int64      `json:"location_id"`
-	HasBorrowed               bool        `json:"has_borrowed"`
-	OutOfService              *bool       `json:"out_of_service"`
-	IsArchived                bool        `json:"is_archived"`
+	ContractType              *string     `json:"contract_type"`
 }
 
 func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error) {
@@ -316,9 +308,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 		arg.IsSubcontractor,
 		arg.Gender,
 		arg.LocationID,
-		arg.HasBorrowed,
-		arg.OutOfService,
-		arg.IsArchived,
+		arg.ContractType,
 	)
 	var i EmployeeProfile
 	err := row.Scan(
@@ -344,8 +334,7 @@ func (q *Queries) CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeP
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
-		&i.FixedContractHours,
-		&i.VariableContractHours,
+		&i.ContractHours,
 		&i.ContractEndDate,
 		&i.ContractStartDate,
 		&i.ContractType,
@@ -414,35 +403,35 @@ func (q *Queries) DeleteEmployeeExperience(ctx context.Context, id int64) (Emplo
 
 const getEmployeeContractDetails = `-- name: GetEmployeeContractDetails :one
 SELECT
-    fixed_contract_hours,
-    variable_contract_hours,
+    contract_hours,
     contract_start_date,
     contract_end_date,
     contract_type,
-    contract_rate
+    contract_rate,
+    is_subcontractor
 FROM employee_profile
 WHERE id = $1
 `
 
 type GetEmployeeContractDetailsRow struct {
-	FixedContractHours    *float64    `json:"fixed_contract_hours"`
-	VariableContractHours *float64    `json:"variable_contract_hours"`
-	ContractStartDate     pgtype.Date `json:"contract_start_date"`
-	ContractEndDate       pgtype.Date `json:"contract_end_date"`
-	ContractType          *string     `json:"contract_type"`
-	ContractRate          *float64    `json:"contract_rate"`
+	ContractHours     *float64    `json:"contract_hours"`
+	ContractStartDate pgtype.Date `json:"contract_start_date"`
+	ContractEndDate   pgtype.Date `json:"contract_end_date"`
+	ContractType      *string     `json:"contract_type"`
+	ContractRate      *float64    `json:"contract_rate"`
+	IsSubcontractor   *bool       `json:"is_subcontractor"`
 }
 
 func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id int64) (GetEmployeeContractDetailsRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeContractDetails, id)
 	var i GetEmployeeContractDetailsRow
 	err := row.Scan(
-		&i.FixedContractHours,
-		&i.VariableContractHours,
+		&i.ContractHours,
 		&i.ContractStartDate,
 		&i.ContractEndDate,
 		&i.ContractType,
 		&i.ContractRate,
+		&i.IsSubcontractor,
 	)
 	return i, err
 }
@@ -478,7 +467,7 @@ func (q *Queries) GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, 
 
 const getEmployeeProfileByID = `-- name: GetEmployeeProfileByID :one
 SELECT 
-    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
     cu.profile_picture as profile_picture
 FROM employee_profile ep
 JOIN custom_user cu ON ep.user_id = cu.id
@@ -508,8 +497,7 @@ type GetEmployeeProfileByIDRow struct {
 	HasBorrowed               bool               `json:"has_borrowed"`
 	OutOfService              *bool              `json:"out_of_service"`
 	IsArchived                bool               `json:"is_archived"`
-	FixedContractHours        *float64           `json:"fixed_contract_hours"`
-	VariableContractHours     *float64           `json:"variable_contract_hours"`
+	ContractHours             *float64           `json:"contract_hours"`
 	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractType              *string            `json:"contract_type"`
@@ -543,8 +531,7 @@ func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmpl
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
-		&i.FixedContractHours,
-		&i.VariableContractHours,
+		&i.ContractHours,
 		&i.ContractEndDate,
 		&i.ContractStartDate,
 		&i.ContractType,
@@ -628,7 +615,7 @@ func (q *Queries) ListEducations(ctx context.Context, employeeID int64) ([]Emplo
 		return nil, err
 	}
 	defer rows.Close()
-	var items []EmployeeEducation
+	items := []EmployeeEducation{}
 	for rows.Next() {
 		var i EmployeeEducation
 		if err := rows.Scan(
@@ -661,7 +648,7 @@ func (q *Queries) ListEmployeeCertifications(ctx context.Context, employeeID int
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Certification
+	items := []Certification{}
 	for rows.Next() {
 		var i Certification
 		if err := rows.Scan(
@@ -692,7 +679,7 @@ func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []EmployeeExperience
+	items := []EmployeeExperience{}
 	for rows.Next() {
 		var i EmployeeExperience
 		if err := rows.Scan(
@@ -717,7 +704,7 @@ func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) 
 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT 
-    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.fixed_contract_hours, ep.variable_contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
+    ep.id, ep.user_id, ep.first_name, ep.last_name, ep.position, ep.department, ep.employee_number, ep.employment_number, ep.private_email_address, ep.email, ep.authentication_phone_number, ep.private_phone_number, ep.work_phone_number, ep.date_of_birth, ep.home_telephone_number, ep.created_at, ep.is_subcontractor, ep.gender, ep.location_id, ep.has_borrowed, ep.out_of_service, ep.is_archived, ep.contract_hours, ep.contract_end_date, ep.contract_start_date, ep.contract_type, ep.contract_rate,
     u.profile_picture as profile_picture,
     r.id as role_id,
     r.name as role_name
@@ -780,8 +767,7 @@ type ListEmployeeProfileRow struct {
 	HasBorrowed               bool               `json:"has_borrowed"`
 	OutOfService              *bool              `json:"out_of_service"`
 	IsArchived                bool               `json:"is_archived"`
-	FixedContractHours        *float64           `json:"fixed_contract_hours"`
-	VariableContractHours     *float64           `json:"variable_contract_hours"`
+	ContractHours             *float64           `json:"contract_hours"`
 	ContractEndDate           pgtype.Date        `json:"contract_end_date"`
 	ContractStartDate         pgtype.Date        `json:"contract_start_date"`
 	ContractType              *string            `json:"contract_type"`
@@ -806,7 +792,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListEmployeeProfileRow
+	items := []ListEmployeeProfileRow{}
 	for rows.Next() {
 		var i ListEmployeeProfileRow
 		if err := rows.Scan(
@@ -832,8 +818,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 			&i.HasBorrowed,
 			&i.OutOfService,
 			&i.IsArchived,
-			&i.FixedContractHours,
-			&i.VariableContractHours,
+			&i.ContractHours,
 			&i.ContractEndDate,
 			&i.ContractStartDate,
 			&i.ContractType,
@@ -879,7 +864,7 @@ func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, search *stri
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SearchEmployeesByNameOrEmailRow
+	items := []SearchEmployeesByNameOrEmailRow{}
 	for rows.Next() {
 		var i SearchEmployeesByNameOrEmailRow
 		if err := rows.Scan(
@@ -1057,6 +1042,56 @@ func (q *Queries) UpdateEmployeeExperience(ctx context.Context, arg UpdateEmploy
 	return i, err
 }
 
+const updateEmployeeIsSubcontractor = `-- name: UpdateEmployeeIsSubcontractor :one
+UPDATE employee_profile
+SET
+    is_subcontractor = $2,
+    contract_type = $3
+WHERE id = $1
+RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+`
+
+type UpdateEmployeeIsSubcontractorParams struct {
+	ID              int64   `json:"id"`
+	IsSubcontractor *bool   `json:"is_subcontractor"`
+	ContractType    *string `json:"contract_type"`
+}
+
+func (q *Queries) UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error) {
+	row := q.db.QueryRow(ctx, updateEmployeeIsSubcontractor, arg.ID, arg.IsSubcontractor, arg.ContractType)
+	var i EmployeeProfile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Position,
+		&i.Department,
+		&i.EmployeeNumber,
+		&i.EmploymentNumber,
+		&i.PrivateEmailAddress,
+		&i.Email,
+		&i.AuthenticationPhoneNumber,
+		&i.PrivatePhoneNumber,
+		&i.WorkPhoneNumber,
+		&i.DateOfBirth,
+		&i.HomeTelephoneNumber,
+		&i.CreatedAt,
+		&i.IsSubcontractor,
+		&i.Gender,
+		&i.LocationID,
+		&i.HasBorrowed,
+		&i.OutOfService,
+		&i.IsArchived,
+		&i.ContractHours,
+		&i.ContractEndDate,
+		&i.ContractStartDate,
+		&i.ContractType,
+		&i.ContractRate,
+	)
+	return i, err
+}
+
 const updateEmployeeProfile = `-- name: UpdateEmployeeProfile :one
 UPDATE employee_profile
 SET
@@ -1080,7 +1115,7 @@ SET
     out_of_service = COALESCE($18, out_of_service),
     is_archived = COALESCE($19, is_archived)
 WHERE id = $20
-RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, fixed_contract_hours, variable_contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type UpdateEmployeeProfileParams struct {
@@ -1153,8 +1188,7 @@ func (q *Queries) UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeP
 		&i.HasBorrowed,
 		&i.OutOfService,
 		&i.IsArchived,
-		&i.FixedContractHours,
-		&i.VariableContractHours,
+		&i.ContractHours,
 		&i.ContractEndDate,
 		&i.ContractStartDate,
 		&i.ContractType,
