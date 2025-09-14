@@ -8,6 +8,7 @@ import (
 	"maicare_go/invoice"
 	"maicare_go/pagination"
 	"maicare_go/pdf"
+	invserv "maicare_go/service/invoice"
 	"maicare_go/util"
 	"net/http"
 	"strconv"
@@ -167,7 +168,7 @@ type GenerateInvoiceResponse struct {
 	IssueDate       time.Time                `json:"issue_date"`
 	DueDate         time.Time                `json:"due_date"`
 	Status          string                   `json:"status"`
-	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
+	InvoiceDetails  []invserv.InvoiceDetails `json:"invoice_details"`
 	TotalAmount     float64                  `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject          `json:"extra_content"`
@@ -193,95 +194,31 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
-	invoiceData := invoice.InvoiceParams{
+	inv, _, err := server.businessService.InvoiceService.GenerateInvoice(invserv.GenerateInvoiceRequest{
 		ClientID:  req.ClientID,
 		StartDate: req.StartDate,
 		EndDate:   req.EndDate,
-	}
-
-	clientSender, err := server.store.GetClientSender(ctx.Request.Context(), invoiceData.ClientID)
+	}, ctx)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Client sender not found", zap.Error(err))
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("client sender not found")))
-			return
-		}
-		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to get client sender", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get client sender")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	var invoiceResult *invoice.InvoiceData
-
-	invoiceResult, warningCount, err := invoice.GenerateInvoice(server.store, invoiceData, ctx.Request.Context())
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to generate invoice", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate invoice")))
-		return
-	}
-
-	invoiceDetailsBytes, err := json.Marshal(invoiceResult.InvoiceDetails)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to marshal invoice details", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal invoice details")))
-		return
-	}
-
-	extraContent, err := server.store.FetchInvoiceTemplateItems(ctx.Request.Context(), db.FetchQueryData{
-		ClientID:   invoiceData.ClientID,
-		ContractID: invoiceResult.InvoiceDetails[0].ContractID,
-		SenderID:   clientSender.ID,
-	})
-
-	if err != nil {
-		server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Failed to fetch extra content", zap.Error(err))
-	}
-
-	if len(extraContent) == 0 {
-		extraContent = map[string]string{} // empty object instead of nil
-	}
-
-	extraContentBytes, err := json.Marshal(extraContent)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to marshal extra content", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal extra content")))
-		return
-	}
-
-	invoice, err := server.store.CreateInvoice(ctx.Request.Context(), db.CreateInvoiceParams{
-		ClientID:        invoiceResult.ClientID,
-		SenderID:        &clientSender.ID,
-		DueDate:         pgtype.Date{Time: time.Now().Add(30 * 24 * time.Hour), Valid: true},
-		TotalAmount:     invoiceResult.TotalAmount,
-		InvoiceDetails:  invoiceDetailsBytes,
-		InvoiceNumber:   invoiceResult.InvoiceNumber,
-		ExtraContent:    extraContentBytes,
-		WarningCount:    int32(warningCount),
-		IssueDate:       pgtype.Date{Time: invoiceResult.InvoiceDate, Valid: true},
-		InvoiceType:     "standard",
-		InvoiceSequence: invoiceResult.InvoiceSequence,
-	})
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateInvoiceApi", "Failed to create invoice in database", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create invoice in database")))
-		return
-	}
-
 	response := GenerateInvoiceResponse{
-		ID:              invoice.ID,
-		InvoiceNumber:   invoice.InvoiceNumber,
-		IssueDate:       invoice.IssueDate.Time,
-		DueDate:         invoice.DueDate.Time,
-		Status:          invoice.Status,
-		InvoiceDetails:  invoiceResult.InvoiceDetails,
-		TotalAmount:     invoice.TotalAmount,
-		PdfAttachmentID: invoice.PdfAttachmentID,
-		ExtraContent:    util.ParseJSONToObject(invoice.ExtraContent),
-		ClientID:        invoice.ClientID,
-		SenderID:        invoice.SenderID,
-		UpdatedAt:       invoice.UpdatedAt.Time,
-		CreatedAt:       invoice.CreatedAt.Time,
+		ID:              inv.ID,
+		InvoiceNumber:   inv.InvoiceNumber,
+		IssueDate:       inv.IssueDate,
+		DueDate:         inv.DueDate,
+		Status:          inv.Status,
+		InvoiceDetails:  inv.InvoiceDetails,
+		TotalAmount:     inv.TotalAmount,
+		PdfAttachmentID: inv.PdfAttachmentID,
+		ExtraContent:    util.ParseJSONToObject(inv.ExtraContent),
+		ClientID:        inv.ClientID,
+		SenderID:        inv.SenderID,
+		UpdatedAt:       inv.UpdatedAt,
+		CreatedAt:       inv.CreatedAt,
 	}
+
 	res := SuccessResponse(response, "Invoice generated successfully")
 	ctx.JSON(http.StatusOK, res)
 
