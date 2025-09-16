@@ -5,6 +5,9 @@ import (
 	"maicare_go/service/deps"
 )
 
+// InvoiceService Interface and implementation
+//
+//go:generate mockgen -source=service.go -destination=../mocks/mock_invoice_service.go -package=mocks
 type InvoiceService interface {
 	GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResult, int64, error)
 }

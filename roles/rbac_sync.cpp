@@ -120,8 +120,8 @@ void insert_roles(pqxx::work &txn, const YAML::Node &roles) {
 
         // Upsert role row
         std::string upsertRole =
-            "INSERT INTO roles (id, name) VALUES (" +
-            txn.quote(id) + ", " + txn.quote(name) + ") " +
+            "INSERT INTO roles ( name) VALUES (" +
+            txn.quote(name) + ") " +
             "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;";
         txn.exec(upsertRole);
         std::cout << "Processed role: " << name << std::endl;

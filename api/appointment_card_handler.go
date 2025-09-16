@@ -1,11 +1,11 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pdf"
+	"maicare_go/service/client"
 	"net/http"
 	"strconv"
 	"time"
@@ -63,19 +63,17 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateAppointmentCardApi", "Invalid client ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	var req CreateAppointmentCardRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateAppointmentCardApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	arg := db.CreateAppointmentCardParams{
+	appointmentCard, err := server.businessService.ClientService.CreateAppointmentCard(client.CreateAppointmentCardRequest{
 		ClientID:               clientID,
 		GeneralInformation:     req.GeneralInformation,
 		ImportantContacts:      req.ImportantContacts,
@@ -88,11 +86,8 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 		SchoolInternship:       req.SchoolInternship,
 		Travel:                 req.Travel,
 		Leave:                  req.Leave,
-	}
-
-	appointmentCard, err := server.store.CreateAppointmentCard(ctx, arg)
+	}, ctx)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateAppointmentCardApi", "Failed to create appointment card", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create appointment card")))
 		return
 	}
@@ -152,19 +147,18 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
 	clientID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetAppointmentCardApi", "Invalid client ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
-	appointmentCard, err := server.store.GetAppointmentCard(ctx, clientID)
+	appointmentCard, err := server.businessService.ClientService.GetAppointmentCard(ctx, clientID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "No appointment card found for the given client ID"))
+		if errors.Is(err, fmt.Errorf("appointment card not found")) {
+			res := SuccessResponse[any](nil, "Appointment card not found")
+			ctx.JSON(http.StatusNotFound, res)
 			return
 		}
-		server.logBusinessEvent(LogLevelError, "GetAppointmentCardApi", "Failed to retrieve appointment card", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to retrieve appointment card")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get appointment card")))
 		return
 	}
 

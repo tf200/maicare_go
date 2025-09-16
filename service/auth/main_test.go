@@ -3,15 +3,15 @@ package auth
 import (
 	"context"
 	db "maicare_go/db/sqlc"
-	"maicare_go/mocks"
+	"maicare_go/logger"
 	"maicare_go/service/deps"
+
 	"maicare_go/token"
 	"maicare_go/util"
 	"os"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.uber.org/mock/gomock"
 )
 
 var testAuthService AuthService
@@ -36,10 +36,11 @@ func TestMain(m *testing.M) {
 	defer conn.Close()
 
 	testStore := db.NewStore(conn)
-	testMockCtrl := gomock.NewController(&testing.T{})
-	defer testMockCtrl.Finish()
 
-	mockLogger := mocks.NewMockLogger(testMockCtrl)
+	mockLogger, err := logger.SetupLogger("development")
+	if err != nil {
+		panic(err)
+	}
 
 	deps := deps.NewServiceDependencies(testStore, tokenMaker, mockLogger, &config)
 	testAuthService = NewAuthService(deps)

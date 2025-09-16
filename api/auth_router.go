@@ -7,6 +7,7 @@ func (server *Server) setupAuthRoutes(baseRouter *gin.RouterGroup) {
 	authGroup.POST("/token", server.Login)
 	authGroup.POST("/refresh", server.RefreshToken)
 	authGroup.POST("/verify_2fa", server.Verify2FAHandler)
+	authGroup.POST("/logout", server.AuthMiddleware(), server.LogOutApi)
 
 	// 2fa setup routes
 	authGroup.POST("/setup_2fa", server.AuthMiddleware(), server.Setup2FAHandler)

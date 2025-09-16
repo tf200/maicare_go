@@ -344,3 +344,47 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 
 	return result, warningCount, nil
 }
+
+func (s *invoiceService) BatchGenerateInvoices(ctx context.Context) error {
+	// sleep for 10 seconds to allow other services to start
+	time.Sleep(10 * time.Second)
+	now := time.Now()
+	currentIsoWeek, currentYear := now.ISOWeek()
+
+	// Quarterly invoices
+	if currentIsoWeek%4 == 1 && now.Weekday() == time.Monday {
+
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "BatchGenerateInvoices", "Starting batch invoice generation",
+			zap.Int("current_week", currentIsoWeek), zap.Int("current_year", currentYear))
+
+		startDate := time.Date(currentYear, now.Month(), now.Day()-28, 0, 0, 0, 0, time.UTC)
+		endDate := time.Date(currentYear, now.Month(), now.Day()-1, 23, 59, 59, 0, time.UTC)
+		// Generate invoices for all clients
+		clientIDs, err := s.Store.GetAllClientsIDs(ctx)
+		if err != nil {
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "BatchGenerateInvoices", "Failed to fetch client IDs",
+				zap.String("error", err.Error()))
+			return fmt.Errorf("failed to fetch client IDs: %v", err)
+		}
+		for _, clientID := range clientIDs {
+			req := GenerateInvoiceRequest{
+				ClientID:  clientID,
+				StartDate: startDate,
+				EndDate:   endDate,
+			}
+			_, warnings, err := s.GenerateInvoice(req, ctx)
+			if err != nil {
+				s.Logger.LogBusinessEvent(logger.LogLevelError, "BatchGenerateInvoices", "Failed to generate invoice",
+					zap.Int64("client_id", clientID), zap.String("error", err.Error()))
+				continue
+			}
+			s.Logger.LogBusinessEvent(logger.LogLevelInfo, "BatchGenerateInvoices", "Successfully generated invoice",
+				zap.Int64("client_id", clientID), zap.Int64("warnings", warnings))
+		}
+
+	} else {
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "BatchGenerateInvoices", "Not the scheduled time for batch invoice generation",
+			zap.Int("current_week", currentIsoWeek), zap.Int("current_year", currentYear))
+	}
+	return nil
+}

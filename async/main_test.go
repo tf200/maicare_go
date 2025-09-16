@@ -8,13 +8,17 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"maicare_go/hub"
+	"maicare_go/logger"
 	"maicare_go/notification"
+	"maicare_go/service"
+	"maicare_go/token"
 
 	"maicare_go/util"
 	"os"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/mock/gomock"
 )
 
 var testStore *db.Store
@@ -43,7 +47,12 @@ func TestMain(m *testing.M) {
 	hubInstance := hub.NewHub()
 	testNotifService := notification.NewService(testStore, hubInstance)
 
-	testWorker = NewAsynqServer(config.RedisHost, "", config.RedisPassword, testStore, &tls.Config{}, testBrevo, testB2client, testNotifService)
+	ctrl := gomock.NewController(&testing.T{})
+	defer ctrl.Finish()
+
+	buisnessService := service.NewBusinessService(testStore, &token.JWTMaker{}, &logger.LoggerImpl{}, &config)
+
+	testWorker = NewAsynqServer(config.RedisHost, "", config.RedisPassword, testStore, &tls.Config{}, testBrevo, testB2client, testNotifService, buisnessService)
 
 	os.Exit(m.Run())
 }

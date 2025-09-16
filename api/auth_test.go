@@ -155,8 +155,7 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func createRandomSession(t *testing.T, token string, payload *token.Payload) db.Session {
-	user := createRandomUser(t)
+func createRandomSession(t *testing.T, token string, payload *token.Payload, userID int64) db.Session {
 
 	// Get current time for timestamps
 	now := time.Now()
@@ -176,7 +175,7 @@ func createRandomSession(t *testing.T, token string, payload *token.Payload) db.
 			Time:  now,
 			Valid: true,
 		},
-		UserID: user.ID,
+		UserID: userID,
 	}
 
 	// Create the session
@@ -197,13 +196,14 @@ func createRandomSession(t *testing.T, token string, payload *token.Payload) db.
 	require.WithinDuration(t, arg.CreatedAt.Time, session.CreatedAt.Time, time.Second)
 
 	// Verify session was created with correct user
-	require.Equal(t, user.ID, session.UserID)
+	require.Equal(t, userID, session.UserID)
 	return session
 }
 
 func TestRefreshTokenHandler(t *testing.T) {
-	token, payload, err := testServer.tokenMaker.CreateToken(1, 1, testServer.config.RefreshTokenDuration, token.RefreshToken)
-	createRandomSession(t, token, payload)
+	employee, user := createRandomEmployee(t)
+	token, payload, err := testServer.tokenMaker.CreateToken(user.ID, employee.ID, testServer.config.RefreshTokenDuration, token.RefreshToken)
+	createRandomSession(t, token, payload, user.ID)
 	require.NoError(t, err)
 	testCases := []struct {
 		name          string

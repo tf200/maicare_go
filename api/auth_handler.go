@@ -1,24 +1,12 @@
 package api
 
 import (
-	"database/sql"
-	"encoding/base64"
-	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
-	db "maicare_go/db/sqlc"
 	"maicare_go/service/auth"
-	"maicare_go/token"
-	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pquerna/otp/totp"
-	"github.com/skip2/go-qrcode"
-	"go.uber.org/zap"
 )
 
 // LoginUserRequest represents the login request payload
@@ -141,83 +129,25 @@ type Verify2FARequest struct {
 func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 	var req Verify2FARequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Invalid request payload", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
 
-	tempPayload, err := server.tokenMaker.VerifyToken(req.TempToken)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Invalid temp token", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid temp token")))
-		return
-	}
-	user, err := server.store.GetUserByID(ctx, tempPayload.UserId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "User not found", zap.Error(err))
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("user not found")))
-			return
-		}
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Failed to get user by ID", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-		return
-	}
-
-	if !user.TwoFactorEnabled || user.TwoFactorSecret == nil || *user.TwoFactorSecret == "" {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "2FA not enabled for user", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA not enabled for user")))
-		return
-	}
-	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecret)
-	if !valid {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Invalid validation code", zap.Error(err))
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid validation code")))
-		return
-	}
-
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.AccessTokenDuration, token.AccessToken)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Failed to create access token", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-		return
-	}
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.ID, user.EmployeeID, server.config.RefreshTokenDuration, token.RefreshToken)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Failed to create refresh token", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
-		return
-	}
-
-	clientIP := ctx.ClientIP()
-	userAgent := ctx.Request.UserAgent()
-	_, err = server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           refreshPayload.ID,
-		RefreshToken: refreshToken,
-		UserAgent:    userAgent,
-		ClientIp:     clientIP,
-		IsBlocked:    false,
-		ExpiresAt:    pgtype.Timestamptz{Time: refreshPayload.ExpiresAt, Valid: true},
-		CreatedAt:    pgtype.Timestamptz{Time: refreshPayload.IssuedAt, Valid: true},
-		UserID:       user.ID,
-	})
+	loginResult, err := server.businessService.AuthService.VerifyTwoFAToken(auth.VerifyTwoFATokenRequest{
+		ValidationCode: req.ValidationCode,
+		TempToken:      req.TempToken,
+	}, ctx)
 
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Verify2FAHandler", "Failed to create session", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("internal server error")))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA verification failed: %v", err)))
 		return
 	}
 	res := SuccessResponse(LoginUserResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:  loginResult.AccessToken,
+		RefreshToken: loginResult.RefreshToken,
 	}, "login successful")
 	ctx.JSON(http.StatusOK, res)
 
-}
-
-// LogoutRequest represents the logout request payload
-type LogoutResponse struct {
-	Message string `json:"message" example:"logout successful"`
 }
 
 // @Summary Logout user
@@ -228,29 +158,19 @@ type LogoutResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /auth/logout [post]
 func (server *Server) LogOutApi(ctx *gin.Context) {
-	payload, exist := ctx.Get(authorizationPayloadKey)
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("authorization payload not found")))
-		return
-	}
-	sessionPayload, ok := payload.(*token.Payload)
-	if !ok {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(errors.New("invalid authorization payload type")))
-		return
-	}
-
-	err := server.store.DeleteSession(ctx, sessionPayload.ID)
+	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	err = server.businessService.AuthService.Logout(auth.LogoutRequest{
+		PayloadID: payload.ID,
+	}, ctx)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(LogoutResponse{
-		Message: "logout successful",
-	}, "logout successful")
+	res := SuccessResponse[any](nil, "logout successful")
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -284,46 +204,16 @@ func (server *Server) ChangePasswordApi(ctx *gin.Context) {
 
 	var req ChangePasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
-	user, err := server.store.GetUserByID(ctx, userID)
+	err = server.businessService.AuthService.ChangePassword(auth.ChangePasswordRequest{
+		UserID:      userID,
+		OldPassword: req.OldPassword,
+		NewPassword: req.NewPassword,
+	}, ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	err = util.CheckPassword(req.OldPassword, user.Password)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		log.Printf("failed password check for user: %v", err)
-		return
-	}
-	hashedPassword, err := util.HashPassword(req.NewPassword)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	err = server.store.UpdatePassword(ctx, db.UpdatePasswordParams{
-		ID:       user.ID,
-		Password: hashedPassword,
-	})
-	if err != nil {
-		if pqErr, ok := err.(*pgconn.PgError); ok {
-			switch pqErr.Code {
-			case "23505": // unique_violation
-				ctx.JSON(http.StatusConflict, errorResponse(err))
-				return
-			case "23503": // foreign_key_violation
-				ctx.JSON(http.StatusNotFound, errorResponse(err))
-				return
-			}
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to change password")))
 		return
 	}
 	res := SuccessResponse[any](nil, "password changed successfully")
@@ -355,58 +245,18 @@ func (server *Server) Setup2FAHandler(ctx *gin.Context) {
 
 		return
 	}
-
 	userID := payload.UserId
-
-	user, err := server.store.GetUserByID(ctx, userID)
+	setup2FAResult, err := server.businessService.AuthService.SetupTwoFA(auth.SetupTwoFARequest{
+		UserID: userID,
+	}, ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			server.logBusinessEvent(LogLevelError, "Setup2FAHandler", "User not found", zap.Error(err), zap.Int64("user_id", userID))
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("user not found")))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to setup 2FA: %v", err)))
 		return
 	}
-
-	if user.TwoFactorEnabled {
-		server.logBusinessEvent(LogLevelWarn, "Setup2FAHandler", "2FA already enabled for user", zap.Int64("user_id", userID))
-		ctx.JSON(http.StatusConflict, errorResponse(fmt.Errorf("2FA already enabled")))
-		return
-	}
-
-	key, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "Maicare",
-		AccountName: user.Email,
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	secretKey := key.Secret()
-
-	err = server.store.CreateTemp2FaSecret(ctx, db.CreateTemp2FaSecretParams{
-		ID:                  user.ID,
-		TwoFactorSecretTemp: &secretKey,
-	})
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	qrCode, err := qrcode.Encode(key.URL(), qrcode.Medium, 256)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	qrCodeBase64 := base64.StdEncoding.EncodeToString(qrCode)
 
 	res := SuccessResponse(Setup2FAResponse{
-		QrCode: "data:image/png;base64," + qrCodeBase64,
-		Secret: secretKey,
+		QrCode: "data:image/png;base64," + setup2FAResult.QRCodeBase64,
+		Secret: setup2FAResult.Secret,
 	}, "2FA setup successful")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -436,73 +286,28 @@ type Enable2FAResponse struct {
 func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "Enable2FAHandler", "Failed to get auth payload", zap.Error(err))
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
-	log.Printf("Auth payload retrieved successfully for user ID: %d", payload.UserId)
 
 	userID := payload.UserId
 
 	var req Enable2FARequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "Enable2FAHandler", "Invalid request payload", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
-
-	log.Printf("Request payload bound successfully for user ID: %d", userID)
-
-	user, err := server.store.GetUserByID(ctx, userID)
+	result, err := server.businessService.AuthService.EnableTwoFA(auth.EnableTwoFARequest{
+		UserID:         userID,
+		ValidationCode: req.ValidationCode,
+	}, ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to enable 2FA")))
 		return
 	}
-
-	if user.TwoFactorSecretTemp == nil || *user.TwoFactorSecretTemp == "" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("2FA setup not initiated")))
-		return
-	}
-
-	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecretTemp)
-	if !valid {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("invalid validation code")))
-		return
-	}
-	log.Printf("Validation code verified successfully for user ID: %d", userID)
-
-	recoveryCodes := util.GenerateRecoveryCodes(10)
-
-	hashedRecoveryCodes := make([]string, len(recoveryCodes))
-	for i, code := range recoveryCodes {
-		hashedCode, err := util.HashPassword(code)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-		hashedRecoveryCodes[i] = hashedCode
-	}
-
-	log.Printf("Recovery codes generated successfully for user ID: %d", userID)
-
-	err = server.store.Enable2Fa(ctx, db.Enable2FaParams{
-		ID:              user.ID,
-		TwoFactorSecret: user.TwoFactorSecretTemp,
-		RecoveryCodes:   hashedRecoveryCodes,
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	log.Printf("2FA enabled successfully for user ID: %d", userID)
 
 	res := SuccessResponse(Enable2FAResponse{
-		RecoveryCodes: recoveryCodes,
+		RecoveryCodes: result.RecoveryCodes,
 	}, "2FA enabled successfully")
 	ctx.JSON(http.StatusOK, res)
 }

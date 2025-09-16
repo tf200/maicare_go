@@ -129,6 +129,7 @@ type Querier interface {
 	Enable2Fa(ctx context.Context, arg Enable2FaParams) error
 	GetAiGeneratedReport(ctx context.Context, id int64) (AiGeneratedReport, error)
 	GetAllAdminUsers(ctx context.Context) ([]CustomUser, error)
+	GetAllClientsIDs(ctx context.Context) ([]int64, error)
 	GetAllTemplateItems(ctx context.Context) ([]TemplateItem, error)
 	GetAppointmentCard(ctx context.Context, clientID int64) (GetAppointmentCardRow, error)
 	// Optional ordering

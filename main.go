@@ -22,6 +22,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
@@ -36,11 +37,30 @@ func main() {
 		log.Fatal("cannot load config:", err)
 	}
 
-	conn, err := pgxpool.New(ctx, config.DbSource)
+	poolConfig, err := pgxpool.ParseConfig(config.DbSource)
+	if err != nil {
+		log.Fatalf("unable to parse database config: %v", err)
+	}
+	// Configure connection pool settings
+	poolConfig.MaxConns = 30                      // Maximum connections
+	poolConfig.MinConns = 5                       // Minimum connections to keep open
+	poolConfig.MaxConnLifetime = time.Hour        // Close connections after 1 hour
+	poolConfig.MaxConnIdleTime = time.Minute * 30 // Close idle connections after 30 min
+	poolConfig.HealthCheckPeriod = time.Minute    // Health check every minute
+	poolConfig.BeforeAcquire = func(ctx context.Context, conn *pgx.Conn) bool {
+		// Return true if connection is healthy
+		return !conn.PgConn().IsClosed()
+	}
+	// Create the pool with the config
+	conn, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
 	defer conn.Close()
+
+	if err := conn.Ping(ctx); err != nil {
+		log.Fatalf("unable to ping database: %v", err)
+	}
 
 	store := db.NewStore(conn)
 	b2Client, err := bucket.NewObjectStorageClient(ctx, config)
@@ -67,6 +87,29 @@ func main() {
 	// Initialize Asynq server
 	var asynqServer *async.AsynqServer
 
+	grpcClient, err := grpclient.NewGrpcClient(config.GrpcUrl)
+	if err != nil {
+		log.Fatalf("Could not create gRPC client: %v", err)
+	}
+
+	// Create error channel to catch server errors
+	errChan := make(chan error, 1)
+
+	// move this to services
+	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
+	if err != nil {
+		log.Fatalf("cannot create tokenmaker: %v", err)
+	}
+
+	// move this to services
+	logger, err := logger.SetupLogger(config.Environment)
+	if err != nil {
+		log.Fatalf("cannot setup logger: %v", err)
+	}
+
+	// Init the buisness service
+	businessService := service.NewBusinessService(store, tokenMaker, logger, &config)
+
 	if !config.Remote {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -99,7 +142,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService)
+		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
 	} else {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -132,16 +175,8 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService)
+		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
 	}
-
-	grpcClient, err := grpclient.NewGrpcClient(config.GrpcUrl)
-	if err != nil {
-		log.Fatalf("Could not create gRPC client: %v", err)
-	}
-
-	// Create error channel to catch server errors
-	errChan := make(chan error, 1)
 
 	// Start the Asynq server in a goroutine
 	go func() {
@@ -154,21 +189,6 @@ func main() {
 	}()
 
 	log.Println("Asynq server started successfully in background")
-
-	// move this to services
-	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
-	if err != nil {
-		log.Fatalf("cannot create tokenmaker: %v", err)
-	}
-
-	// move this to services
-	logger, err := logger.SetupLogger(config.Environment)
-	if err != nil {
-		log.Fatalf("cannot setup logger: %v", err)
-	}
-
-	// Init the buisness service
-	businessService := service.NewBusinessService(store, tokenMaker, logger, &config)
 
 	// Start your main server
 	server, err := api.NewServer(store, b2Client, asynqClient,

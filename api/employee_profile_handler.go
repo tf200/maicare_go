@@ -139,88 +139,55 @@ type CreateEmployeeProfileResponse struct {
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 	var req CreateEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	password := util.RandomString(6)
-	hashedPassword, err := util.HashPassword(password)
+	employee, err := server.businessService.EmployeeService.CreateEmployee(employees.CreateEmployeeRequest{
+		EmployeeNumber:            req.EmployeeNumber,
+		EmploymentNumber:          req.EmploymentNumber,
+		LocationID:                req.LocationID,
+		IsSubcontractor:           req.IsSubcontractor,
+		FirstName:                 req.FirstName,
+		LastName:                  req.LastName,
+		DateOfBirth:               req.DateOfBirth,
+		Gender:                    req.Gender,
+		Email:                     req.Email,
+		PrivateEmailAddress:       req.PrivateEmailAddress,
+		AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
+		WorkPhoneNumber:           req.WorkPhoneNumber,
+		PrivatePhoneNumber:        req.PrivatePhoneNumber,
+		HomeTelephoneNumber:       req.HomeTelephoneNumber,
+		Position:                  req.Position,
+		Department:                req.Department,
+		RoleID:                    req.RoleID,
+	}, ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	var parsedDate time.Time
-	if req.DateOfBirth != nil {
-		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-
-	contractType := "loondienst"
-	if req.IsSubcontractor != nil && *req.IsSubcontractor {
-		contractType = "zzp"
-	}
-
-	employee, err := server.store.CreateEmployeeWithAccountTx(
-		ctx,
-		db.CreateEmployeeWithAccountTxParams{
-			CreateUserParams: db.CreateUserParams{
-				Password: hashedPassword,
-				Email:    req.Email,
-				IsActive: true,
-			},
-
-			CreateEmployeeParams: db.CreateEmployeeProfileParams{
-				FirstName:                 req.FirstName,
-				LastName:                  req.LastName,
-				EmployeeNumber:            req.EmployeeNumber,
-				EmploymentNumber:          req.EmploymentNumber,
-				LocationID:                req.LocationID,
-				IsSubcontractor:           req.IsSubcontractor,
-				DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
-				Gender:                    req.Gender,
-				Email:                     req.Email,
-				PrivateEmailAddress:       req.PrivateEmailAddress,
-				AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
-				WorkPhoneNumber:           req.WorkPhoneNumber,
-				PrivatePhoneNumber:        req.PrivatePhoneNumber,
-				HomeTelephoneNumber:       req.HomeTelephoneNumber,
-				Position:                  req.Position,
-				Department:                req.Department,
-				ContractType:              &contractType,
-			},
-			RoleID: req.RoleID,
-		},
-	)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create employee profile")))
 		return
 	}
 
 	res := SuccessResponse(CreateEmployeeProfileResponse{
-		ID:                        employee.Employee.ID,
-		EmployeeNumber:            employee.Employee.EmployeeNumber,
-		EmploymentNumber:          employee.Employee.EmploymentNumber,
-		FirstName:                 employee.Employee.FirstName,
-		LastName:                  employee.Employee.LastName,
-		IsSubcontractor:           employee.Employee.IsSubcontractor,
-		DateOfBirth:               employee.Employee.DateOfBirth.Time,
-		Gender:                    employee.Employee.Gender,
-		Email:                     employee.Employee.Email,
-		PrivateEmailAddress:       employee.Employee.PrivateEmailAddress,
-		AuthenticationPhoneNumber: employee.Employee.AuthenticationPhoneNumber,
-		WorkPhoneNumber:           employee.Employee.WorkPhoneNumber,
-		PrivatePhoneNumber:        employee.Employee.PrivatePhoneNumber,
-		HomeTelephoneNumber:       employee.Employee.HomeTelephoneNumber,
-		OutOfService:              employee.Employee.OutOfService,
-		HasBorrowed:               employee.Employee.HasBorrowed,
-		UserID:                    employee.User.ID,
-		CreatedAt:                 employee.Employee.CreatedAt.Time,
-		IsArchived:                employee.Employee.IsArchived,
-		LocationID:                employee.Employee.LocationID,
+		ID:                        employee.ID,
+		EmployeeNumber:            employee.EmployeeNumber,
+		EmploymentNumber:          employee.EmploymentNumber,
+		FirstName:                 employee.FirstName,
+		LastName:                  employee.LastName,
+		IsSubcontractor:           employee.IsSubcontractor,
+		DateOfBirth:               employee.DateOfBirth,
+		Gender:                    employee.Gender,
+		Email:                     employee.Email,
+		PrivateEmailAddress:       employee.PrivateEmailAddress,
+		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
+		WorkPhoneNumber:           employee.WorkPhoneNumber,
+		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
+		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
+		OutOfService:              employee.OutOfService,
+		HasBorrowed:               employee.HasBorrowed,
+		UserID:                    employee.ID,
+		CreatedAt:                 employee.CreatedAt,
+		IsArchived:                employee.IsArchived,
+		LocationID:                employee.LocationID,
 	}, "Employee profile created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
@@ -291,7 +258,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 
 	params := req.GetParams()
 
-	arg := db.ListEmployeeProfileParams{
+	employees, totalCount, err := server.businessService.EmployeeService.ListEmployees(employees.ListEmployeesRequest{
 		Limit:               params.Limit,
 		Offset:              params.Offset,
 		IncludeArchived:     req.IncludeArchived,
@@ -300,28 +267,12 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 		Department:          req.Department,
 		Position:            req.Position,
 		LocationID:          req.LocationID,
-	}
-
-	employees, err := server.store.ListEmployeeProfile(ctx, arg)
+	}, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	countArg := db.CountEmployeeProfileParams{
-		IncludeArchived:     arg.IncludeArchived,
-		IncludeOutOfService: arg.IncludeOutOfService,
-		Department:          arg.Department,
-		Position:            arg.Position,
-		LocationID:          arg.LocationID,
-	}
-
-	// Get total count
-	totalCount, err := server.store.CountEmployeeProfile(ctx, countArg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
 	responseEmployees := make([]ListEmployeeResponse, len(employees))
 	for i, employee := range employees {
 		responseEmployees[i] = ListEmployeeResponse{
@@ -354,7 +305,7 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 		}
 	}
 
-	response := pagination.NewResponse(ctx, req.Request, responseEmployees, totalCount)
+	response := pagination.NewResponse(ctx, req.Request, responseEmployees, *totalCount)
 	res := SuccessResponse(response, "Employee profiles retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
