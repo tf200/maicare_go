@@ -13,13 +13,13 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	}
 
 	// Routes without /client prefix
-	baseRouter.POST("/contract_types", server.RBACMiddleware("CONTRACT_TYPE.CREATE"), server.CreateContractTypeApi)
-	baseRouter.GET("/contract_types", server.RBACMiddleware("CONTRACT_TYPE.VIEW"), server.ListContractTypesApi)
-	baseRouter.DELETE("/contract_types/:id", server.RBACMiddleware("CONTRACT_TYPE.DELETE"), server.DeleteContractTypeApi)
+	baseRouter.POST("/contract_types", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT_TYPE.CREATE"), server.CreateContractTypeApi)
+	baseRouter.GET("/contract_types", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT_TYPE.VIEW"), server.ListContractTypesApi)
+	baseRouter.DELETE("/contract_types/:id", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT_TYPE.DELETE"), server.DeleteContractTypeApi)
 
-	baseRouter.GET("/contracts", server.RBACMiddleware("CONTRACT.VIEW"), server.ListContractsApi)
-	baseRouter.PUT("/contracts/:id", server.RBACMiddleware("CONTRACT.UPDATE"), server.UpdateContractApi)
+	baseRouter.GET("/contracts", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.VIEW"), server.ListContractsApi)
+	baseRouter.PUT("/contracts/:id", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.UPDATE"), server.UpdateContractApi)
 
-	baseRouter.GET("/contracts/:id/audit", server.RBACMiddleware("CONTRACT.VIEW"), server.GetContractAuditLogApi)
+	baseRouter.GET("/contracts/:id/audit", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.VIEW"), server.GetContractAuditLogApi)
 
 }

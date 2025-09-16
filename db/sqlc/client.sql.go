@@ -327,6 +327,30 @@ func (q *Queries) DeleteClientDocument(ctx context.Context, attachmentUuid *uuid
 	return i, err
 }
 
+const getAllClientsIDs = `-- name: GetAllClientsIDs :many
+SELECT id FROM client_details
+`
+
+func (q *Queries) GetAllClientsIDs(ctx context.Context) ([]int64, error) {
+	rows, err := q.db.Query(ctx, getAllClientsIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getClientAddresses = `-- name: GetClientAddresses :one
 SELECT addresses
 FROM client_details

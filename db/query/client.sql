@@ -71,6 +71,10 @@ SELECT
 FROM client_details;
 
 
+-- name: GetAllClientsIDs :many
+SELECT id FROM client_details;
+
+
 
 
 -- name: GetClientDetails :one
