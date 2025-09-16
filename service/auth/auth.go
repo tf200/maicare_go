@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pquerna/otp/totp"
 	"go.uber.org/zap"
 )
@@ -80,16 +81,32 @@ func (s *authService) Login(req LoginRequest, ctx context.Context) (*LoginResult
 		return nil, fmt.Errorf("failed to create access token")
 	}
 
-	refreshToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
+	refreshToken, payload, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Failed to create refresh token",
 			zap.String("email", email), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create refresh token: %v", err)
 	}
 
+	session, err := s.Store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           payload.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    req.UserAgent,
+		ClientIp:     req.ClientIP,
+		IsBlocked:    false,
+		ExpiresAt:    pgtype.Timestamptz{Time: payload.ExpiresAt, Valid: true},
+		CreatedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		UserID:       payload.UserId,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Database error during session creation",
+			zap.String("email", email), zap.String("error", err.Error()))
+		return nil, fmt.Errorf("failed to create session: %v", err)
+	}
+
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "Login", "User logged in successfully",
 		zap.String("email", email), zap.String("client_ip", req.ClientIP),
-		zap.String("user_agent", req.UserAgent))
+		zap.String("user_agent", req.UserAgent), zap.String("session_id", session.ID.String()))
 
 	return &LoginResult{
 		AccessToken:   accessToken,
