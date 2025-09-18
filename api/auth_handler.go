@@ -154,7 +154,7 @@ func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 // @Description Logout user and invalidate refresh token
 // @Tags authentication
 // @Produce json
-// @Success 200 {object} Response[LogoutResponse]
+// @Success 200 {object} Response[any] "Logout successful"
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /auth/logout [post]
 func (server *Server) LogOutApi(ctx *gin.Context) {

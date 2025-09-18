@@ -850,13 +850,13 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 
 // ListStatusHistoryApiResponse represents a response to a list status history request
 type ListStatusHistoryApiResponse struct {
-	ID        int64              `json:"id"`
-	ClientID  int64              `json:"client_id"`
-	OldStatus *string            `json:"old_status"`
-	NewStatus string             `json:"new_status"`
-	ChangedAt pgtype.Timestamptz `json:"changed_at"`
-	ChangedBy *int64             `json:"changed_by"`
-	Reason    *string            `json:"reason"`
+	ID        int64     `json:"id"`
+	ClientID  int64     `json:"client_id"`
+	OldStatus *string   `json:"old_status"`
+	NewStatus string    `json:"new_status"`
+	ChangedAt time.Time `json:"changed_at"`
+	ChangedBy *int64    `json:"changed_by"`
+	Reason    *string   `json:"reason"`
 }
 
 // ListStatusHistoryApi lists status history of a client
@@ -864,7 +864,7 @@ type ListStatusHistoryApiResponse struct {
 // @Tags clients
 // @Produce json
 // @Param id path int true "Client ID"
-// @Success 200 {object} Response[ListStatusHistoryApiResponse]
+// @Success 200 {object} Response[[]ListStatusHistoryApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/status_history [get]
 func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
@@ -900,7 +900,7 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 			ClientID:  status.ClientID,
 			OldStatus: status.OldStatus,
 			NewStatus: status.NewStatus,
-			ChangedAt: status.ChangedAt,
+			ChangedAt: status.ChangedAt.Time,
 			ChangedBy: status.ChangedBy,
 			Reason:    status.Reason,
 		}
