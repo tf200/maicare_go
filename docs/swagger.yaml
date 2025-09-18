@@ -103,27 +103,27 @@ definitions:
     properties:
       contract_end_date:
         type: string
+      contract_hours:
+        type: number
       contract_rate:
         description: Optional field for contract rate
         type: number
       contract_start_date:
         type: string
-      fixed_contract_hours:
-        type: number
     required:
-    - fixed_contract_hours
+    - contract_hours
     type: object
   api.AddEmployeeContractDetailsResponse:
     properties:
       contract_end_date:
         type: string
+      contract_hours:
+        type: number
       contract_rate:
         description: Optional field for contract rate
         type: number
       contract_start_date:
         type: string
-      fixed_contract_hours:
-        type: number
       id:
         type: integer
     type: object
@@ -1778,7 +1778,7 @@ definitions:
         $ref: '#/definitions/util.JSONObject'
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
         type: array
       invoice_type:
         enum:
@@ -1823,7 +1823,7 @@ definitions:
         type: integer
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
         type: array
       invoice_number:
         type: string
@@ -2739,7 +2739,7 @@ definitions:
         type: integer
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_service_invoice.InvoiceDetails'
         type: array
       invoice_number:
         type: string
@@ -3339,6 +3339,8 @@ definitions:
     properties:
       contract_end_date:
         type: string
+      contract_hours:
+        type: number
       contract_rate:
         description: Optional field for contract rate
         type: number
@@ -3346,8 +3348,6 @@ definitions:
         type: string
       contract_type:
         type: string
-      fixed_contract_hours:
-        type: number
       is_subcontractor:
         type: boolean
     type: object
@@ -3723,7 +3723,7 @@ definitions:
         type: integer
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
         type: array
       invoice_number:
         type: string
@@ -5071,7 +5071,7 @@ definitions:
         type: integer
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
         type: array
       invoice_number:
         type: string
@@ -5439,7 +5439,7 @@ definitions:
   api.ListStatusHistoryApiResponse:
     properties:
       changed_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
+        type: string
       changed_by:
         type: integer
       client_id:
@@ -5525,12 +5525,6 @@ definitions:
         type: boolean
       temp_token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-    type: object
-  api.LogoutResponse:
-    properties:
-      message:
-        example: logout successful
         type: string
     type: object
   api.MarkNotificationAsReadResponse:
@@ -6432,15 +6426,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ListStatusHistoryApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListStatusHistoryApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_ListUserRolesAndPermissionsApiResponse:
     properties:
       data:
@@ -6463,15 +6448,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.LoginUserResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_LogoutResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.LogoutResponse'
       message:
         type: string
       success:
@@ -7053,6 +7029,17 @@ definitions:
       data:
         items:
           $ref: '#/definitions/api.ListShiftsByLocationIDResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_api_ListStatusHistoryApiResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ListStatusHistoryApiResponse'
         type: array
       message:
         type: string
@@ -8215,14 +8202,14 @@ definitions:
     properties:
       contract_end_date:
         type: string
+      contract_hours:
+        type: number
       contract_rate:
         type: number
       contract_start_date:
         type: string
       contract_type:
         type: string
-      fixed_contract_hours:
-        type: number
       id:
         type: integer
       is_subcontractor:
@@ -8491,7 +8478,7 @@ definitions:
         $ref: '#/definitions/util.JSONObject'
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
         type: array
       issue_date:
         type: string
@@ -8516,7 +8503,7 @@ definitions:
         type: integer
       invoice_details:
         items:
-          $ref: '#/definitions/invoice.InvoiceDetails'
+          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
         type: array
       invoice_number:
         type: string
@@ -9168,7 +9155,7 @@ definitions:
       type:
         type: string
     type: object
-  invoice.InvoiceDetails:
+  maicare_go_invoice.InvoiceDetails:
     properties:
       contract_id:
         type: integer
@@ -9176,7 +9163,7 @@ definitions:
         type: string
       periods:
         items:
-          $ref: '#/definitions/invoice.InvoicePeriod'
+          $ref: '#/definitions/maicare_go_invoice.InvoicePeriod'
         type: array
       pre_vat_total_price:
         type: number
@@ -9193,7 +9180,43 @@ definitions:
           type: string
         type: array
     type: object
-  invoice.InvoicePeriod:
+  maicare_go_invoice.InvoicePeriod:
+    properties:
+      accommodation_time_frame:
+        type: string
+      ambulante_total_minutes:
+        type: number
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
+  maicare_go_service_invoice.InvoiceDetails:
+    properties:
+      contract_id:
+        type: integer
+      contract_name:
+        type: string
+      periods:
+        items:
+          $ref: '#/definitions/maicare_go_service_invoice.InvoicePeriod'
+        type: array
+      pre_vat_total_price:
+        type: number
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      total_price:
+        type: number
+      vat:
+        type: number
+      warnings:
+        items:
+          type: string
+        type: array
+    type: object
+  maicare_go_service_invoice.InvoicePeriod:
     properties:
       accommodation_time_frame:
         type: string
@@ -10187,9 +10210,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Logout successful
           schema:
-            $ref: '#/definitions/api.Response-api_LogoutResponse'
+            $ref: '#/definitions/api.Response-any'
         "400":
           description: Bad Request
           schema:
@@ -12988,7 +13011,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListStatusHistoryApiResponse'
+            $ref: '#/definitions/api.Response-array_api_ListStatusHistoryApiResponse'
         "400":
           description: Bad Request
           schema:

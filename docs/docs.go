@@ -872,9 +872,9 @@ const docTemplate = `{
                 "summary": "Logout user",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Logout successful",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_LogoutResponse"
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "400": {
@@ -5153,7 +5153,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListStatusHistoryApiResponse"
+                            "$ref": "#/definitions/api.Response-array_api_ListStatusHistoryApiResponse"
                         }
                     },
                     "400": {
@@ -11634,11 +11634,14 @@ const docTemplate = `{
         "api.AddEmployeeContractDetailsRequest": {
             "type": "object",
             "required": [
-                "fixed_contract_hours"
+                "contract_hours"
             ],
             "properties": {
                 "contract_end_date": {
                     "type": "string"
+                },
+                "contract_hours": {
+                    "type": "number"
                 },
                 "contract_rate": {
                     "description": "Optional field for contract rate",
@@ -11646,9 +11649,6 @@ const docTemplate = `{
                 },
                 "contract_start_date": {
                     "type": "string"
-                },
-                "fixed_contract_hours": {
-                    "type": "number"
                 }
             }
         },
@@ -11658,15 +11658,15 @@ const docTemplate = `{
                 "contract_end_date": {
                     "type": "string"
                 },
+                "contract_hours": {
+                    "type": "number"
+                },
                 "contract_rate": {
                     "description": "Optional field for contract rate",
                     "type": "number"
                 },
                 "contract_start_date": {
                     "type": "string"
-                },
-                "fixed_contract_hours": {
-                    "type": "number"
                 },
                 "id": {
                     "type": "integer"
@@ -14130,7 +14130,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
                     }
                 },
                 "invoice_type": {
@@ -14181,7 +14181,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -15553,7 +15553,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_service_invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -16465,6 +16465,9 @@ const docTemplate = `{
                 "contract_end_date": {
                     "type": "string"
                 },
+                "contract_hours": {
+                    "type": "number"
+                },
                 "contract_rate": {
                     "description": "Optional field for contract rate",
                     "type": "number"
@@ -16474,9 +16477,6 @@ const docTemplate = `{
                 },
                 "contract_type": {
                     "type": "string"
-                },
-                "fixed_contract_hours": {
-                    "type": "number"
                 },
                 "is_subcontractor": {
                     "type": "boolean"
@@ -17044,7 +17044,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -19081,7 +19081,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -19638,7 +19638,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "changed_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
+                    "type": "string"
                 },
                 "changed_by": {
                     "type": "integer"
@@ -19768,15 +19768,6 @@ const docTemplate = `{
                 "temp_token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                }
-            }
-        },
-        "api.LogoutResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "logout successful"
                 }
             }
         },
@@ -21177,20 +21168,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_ListStatusHistoryApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListStatusHistoryApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_ListUserRolesAndPermissionsApiResponse": {
             "type": "object",
             "properties": {
@@ -21224,20 +21201,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.LoginUserResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_LogoutResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.LogoutResponse"
                 },
                 "message": {
                     "type": "string"
@@ -22140,6 +22103,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListShiftsByLocationIDResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_api_ListStatusHistoryApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ListStatusHistoryApiResponse"
                     }
                 },
                 "message": {
@@ -23910,6 +23890,9 @@ const docTemplate = `{
                 "contract_end_date": {
                     "type": "string"
                 },
+                "contract_hours": {
+                    "type": "number"
+                },
                 "contract_rate": {
                     "type": "number"
                 },
@@ -23918,9 +23901,6 @@ const docTemplate = `{
                 },
                 "contract_type": {
                     "type": "string"
-                },
-                "fixed_contract_hours": {
-                    "type": "number"
                 },
                 "id": {
                     "type": "integer"
@@ -24326,7 +24306,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
                     }
                 },
                 "issue_date": {
@@ -24364,7 +24344,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -25342,7 +25322,7 @@ const docTemplate = `{
                 }
             }
         },
-        "invoice.InvoiceDetails": {
+        "maicare_go_invoice.InvoiceDetails": {
             "type": "object",
             "properties": {
                 "contract_id": {
@@ -25354,7 +25334,7 @@ const docTemplate = `{
                 "periods": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoicePeriod"
+                        "$ref": "#/definitions/maicare_go_invoice.InvoicePeriod"
                     }
                 },
                 "pre_vat_total_price": {
@@ -25380,7 +25360,62 @@ const docTemplate = `{
                 }
             }
         },
-        "invoice.InvoicePeriod": {
+        "maicare_go_invoice.InvoicePeriod": {
+            "type": "object",
+            "properties": {
+                "accommodation_time_frame": {
+                    "type": "string"
+                },
+                "ambulante_total_minutes": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "maicare_go_service_invoice.InvoiceDetails": {
+            "type": "object",
+            "properties": {
+                "contract_id": {
+                    "type": "integer"
+                },
+                "contract_name": {
+                    "type": "string"
+                },
+                "periods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/maicare_go_service_invoice.InvoicePeriod"
+                    }
+                },
+                "pre_vat_total_price": {
+                    "type": "number"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_time_unit": {
+                    "type": "string"
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "vat": {
+                    "type": "number"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "maicare_go_service_invoice.InvoicePeriod": {
             "type": "object",
             "properties": {
                 "accommodation_time_frame": {
