@@ -158,6 +158,7 @@ type Querier interface {
 	GetClientMaturityMatrixAssessment(ctx context.Context, id int64) (GetClientMaturityMatrixAssessmentRow, error)
 	GetClientRelatedEmails(ctx context.Context, clientID int64) ([]string, error)
 	GetClientSender(ctx context.Context, id int64) (Sender, error)
+	GetCompletedPaymentSum(ctx context.Context, invoiceID int64) (float64, error)
 	GetContractAudit(ctx context.Context, contractID int64) ([]GetContractAuditRow, error)
 	GetDailySchedulesByLocation(ctx context.Context, arg GetDailySchedulesByLocationParams) ([]GetDailySchedulesByLocationRow, error)
 	GetEmergencyContact(ctx context.Context, id int64) (ClientEmergencyContact, error)

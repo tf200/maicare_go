@@ -453,79 +453,27 @@ func (server *Server) ListInvoicesApi(ctx *gin.Context) {
 
 }
 
-// GetInvoiceByIDResponse represents the response body for getting an invoice by ID.
-type GetInvoiceByIDResponse struct {
-	ID                int64                    `json:"id"`
-	InvoiceNumber     string                   `json:"invoice_number"`
-	IssueDate         time.Time                `json:"issue_date"`
-	DueDate           time.Time                `json:"due_date"`
-	Status            string                   `json:"status"`
-	InvoiceDetails    []invoice.InvoiceDetails `json:"invoice_details"`
-	TotalAmount       float64                  `json:"total_amount"`
-	PdfAttachmentID   *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent      util.JSONObject          `json:"extra_content"`
-	ClientID          int64                    `json:"client_id"`
-	SenderID          *int64                   `json:"sender_id"`
-	InvoiceType       string                   `json:"invoice_type"`
-	OriginalInvoiceID *int64                   `json:"original_invoice_id"`
-	UpdatedAt         time.Time                `json:"updated_at"`
-	CreatedAt         time.Time                `json:"created_at"`
-	SenderName        *string                  `json:"sender_name"`
-	SenderKvknumber   *string                  `json:"sender_kvknumber"`
-	SenderBtwnumber   *string                  `json:"sender_btwnumber"`
-	ClientFirstName   string                   `json:"client_first_name"`
-	ClientLastName    string                   `json:"client_last_name"`
-}
-
 // @Summary Get Invoice by ID
 // @Description Get an invoice by its ID.
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Success 200 {object} Response[GetInvoiceByIDResponse] "Successful response with invoice details"
+// @Success 200 {object} Response[invoice.GetInvoiceByIDResponse] "Successful response with invoice details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id} [get]
 func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID")))
 		return
 	}
 
-	invoiceItem, err := server.store.GetInvoice(ctx.Request.Context(), invoiceID)
+	response, err := server.businessService.InvoiceService.GetInvoiceByID(ctx.Request.Context(), invoiceID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	var invoiceDetails []invoice.InvoiceDetails
-	if err := json.Unmarshal(invoiceItem.InvoiceDetails, &invoiceDetails); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	response := GetInvoiceByIDResponse{
-		ID:                invoiceItem.ID,
-		InvoiceNumber:     invoiceItem.InvoiceNumber,
-		IssueDate:         invoiceItem.IssueDate.Time,
-		DueDate:           invoiceItem.DueDate.Time,
-		Status:            invoiceItem.Status,
-		InvoiceDetails:    invoiceDetails,
-		TotalAmount:       invoiceItem.TotalAmount,
-		PdfAttachmentID:   invoiceItem.PdfAttachmentID,
-		ExtraContent:      util.ParseJSONToObject(invoiceItem.ExtraContent),
-		ClientID:          invoiceItem.ClientID,
-		SenderID:          invoiceItem.SenderID,
-		InvoiceType:       invoiceItem.InvoiceType,
-		OriginalInvoiceID: invoiceItem.OriginalInvoiceID,
-		UpdatedAt:         invoiceItem.UpdatedAt.Time,
-		CreatedAt:         invoiceItem.CreatedAt.Time,
-		SenderName:        invoiceItem.SenderName,
-		SenderKvknumber:   invoiceItem.SenderKvknumber,
-		SenderBtwnumber:   invoiceItem.SenderBtwnumber,
-		ClientFirstName:   invoiceItem.ClientFirstName,
-		ClientLastName:    invoiceItem.ClientLastName,
-	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Invoice retrieved successfully"))
 
 }

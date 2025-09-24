@@ -1,6 +1,12 @@
 package invoice
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"maicare_go/logger"
+
+	"go.uber.org/zap"
+)
 
 const (
 	PAYMENT_TOLERANCE float64 = 50
@@ -26,4 +32,17 @@ func DetermineInvoiceStatus(invoiceTotal, totalPaid float64) (InvoiceStatus, err
 
 	return "", fmt.Errorf("could not determine invoice status for totalPaid: %f, invoiceTotal: %f", totalPaid, invoiceTotal)
 
+}
+
+func (s *invoiceService) calculatePaymentCompletionPercentage(ctx context.Context, totalAmount float64, invoiceID int64) float64 {
+	if totalAmount == 0 {
+		return 0
+	}
+
+	totalPaid, err := s.Store.GetCompletedPaymentSum(ctx, invoiceID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "calculatePaymentCompletionPercentage", "Failed to get total completed payment", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		return 0
+	}
+	return (totalPaid / totalAmount) * 100
 }

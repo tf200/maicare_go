@@ -7,13 +7,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/goccy/go-json"
-	"go.uber.org/zap"
-
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
+	_ "maicare_go/pagination" // import for pagination.Response used in swagger
 	"maicare_go/service/employees"
 	"maicare_go/util"
+
+	"github.com/goccy/go-json"
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -255,7 +256,6 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 }
 
 // UpdateEmployeeProfileRequest represents the request for UpdateEmployeeProfileApi
-
 type UpdateEmployeeProfileRequest struct {
 	FirstName                 *string `json:"first_name"`
 	LastName                  *string `json:"last_name"`
@@ -446,8 +446,8 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Param request body UpdateEmployeeIsSubcontractorRequest true "Subcontractor status details"
-// @Success 200 {object} Response[UpdateEmployeeIsSubcontractorResponse]
+// @Param request body employees.UpdateEmployeeIsSubcontractorRequest true "Subcontractor status details"
+// @Success 200 {object} Response[employees.UpdateEmployeeIsSubcontractorResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/is_subcontractor [put]
 func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {

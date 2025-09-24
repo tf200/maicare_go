@@ -816,7 +816,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.Enable2FARequest"
+                            "$ref": "#/definitions/auth.Enable2FARequest"
                         }
                     }
                 ],
@@ -5692,7 +5692,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListEmployeeResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-employees_ListEmployeeResponse"
                         }
                     },
                     "400": {
@@ -5746,7 +5746,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateEmployeeProfileRequest"
+                            "$ref": "#/definitions/employees.CreateEmployeeProfileRequest"
                         }
                     }
                 ],
@@ -5754,7 +5754,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateEmployeeProfileResponse"
+                            "$ref": "#/definitions/api.Response-employees_CreateEmployeeProfileResponse"
                         }
                     },
                     "400": {
@@ -7236,7 +7236,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateEmployeeIsSubcontractorRequest"
+                            "$ref": "#/definitions/employees.UpdateEmployeeIsSubcontractorRequest"
                         }
                     }
                 ],
@@ -7244,7 +7244,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateEmployeeIsSubcontractorResponse"
+                            "$ref": "#/definitions/api.Response-employees_UpdateEmployeeIsSubcontractorResponse"
                         }
                     },
                     "400": {
@@ -8099,7 +8099,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with invoice details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetInvoiceByIDResponse"
+                            "$ref": "#/definitions/api.Response-invoice_GetInvoiceByIDResponse"
                         }
                     },
                     "400": {
@@ -12809,162 +12809,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateEmployeeProfileRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "first_name",
-                "is_subcontractor",
-                "last_name",
-                "role_id"
-            ],
-            "properties": {
-                "authentication_phone_number": {
-                    "type": "string",
-                    "example": "1234567890"
-                },
-                "date_of_birth": {
-                    "type": "string",
-                    "example": "2000-01-01"
-                },
-                "department": {
-                    "type": "string",
-                    "example": "IT"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "emai@exe.com"
-                },
-                "employee_number": {
-                    "type": "string",
-                    "example": "123456"
-                },
-                "employment_number": {
-                    "type": "string",
-                    "example": "123456"
-                },
-                "first_name": {
-                    "type": "string",
-                    "example": "fara"
-                },
-                "gender": {
-                    "type": "string",
-                    "example": "man"
-                },
-                "home_telephone_number": {
-                    "type": "string",
-                    "example": "1234567890"
-                },
-                "is_subcontractor": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "last_name": {
-                    "type": "string",
-                    "example": "joe"
-                },
-                "location_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "position": {
-                    "type": "string",
-                    "example": "developer"
-                },
-                "private_email_address": {
-                    "type": "string",
-                    "example": "joe@ex.com"
-                },
-                "private_phone_number": {
-                    "type": "string",
-                    "example": "1234567890"
-                },
-                "role_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "work_phone_number": {
-                    "type": "string",
-                    "example": "1234567890"
-                }
-            }
-        },
-        "api.CreateEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "authentication_phone_number": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "department": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employee_number": {
-                    "type": "string"
-                },
-                "employment_number": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string",
-                    "enum": [
-                        "male",
-                        "female",
-                        "not_specified"
-                    ]
-                },
-                "has_borrowed": {
-                    "type": "boolean"
-                },
-                "home_telephone_number": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "out_of_service": {
-                    "type": "boolean"
-                },
-                "position": {
-                    "type": "string"
-                },
-                "private_email_address": {
-                    "type": "string"
-                },
-                "private_phone_number": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "work_phone_number": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CreateIncidentRequest": {
             "type": "object",
             "required": [
@@ -15054,17 +14898,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Enable2FARequest": {
-            "type": "object",
-            "required": [
-                "validation_code"
-            ],
-            "properties": {
-                "validation_code": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GenerateAutoReportsRequest": {
             "type": "object",
             "properties": {
@@ -16355,74 +16188,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/util.JSONObject"
                 },
                 "operation": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetInvoiceByIDResponse": {
-            "type": "object",
-            "properties": {
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
-                    }
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "invoice_type": {
-                    "type": "string"
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "original_invoice_id": {
-                    "type": "integer"
-                },
-                "pdf_attachment_id": {
-                    "type": "string"
-                },
-                "sender_btwnumber": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "sender_kvknumber": {
-                    "type": "string"
-                },
-                "sender_name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -17821,89 +17586,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "age": {
-                    "type": "integer"
-                },
-                "authentication_phone_number": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "department": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employee_number": {
-                    "type": "string"
-                },
-                "employment_number": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "has_borrowed": {
-                    "type": "boolean"
-                },
-                "home_telephone_number": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "out_of_service": {
-                    "type": "boolean"
-                },
-                "position": {
-                    "type": "string"
-                },
-                "private_email_address": {
-                    "type": "string"
-                },
-                "private_phone_number": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "integer"
-                },
-                "role_name": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "work_phone_number": {
                     "type": "string"
                 }
             }
@@ -19444,20 +19126,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateEmployeeProfileResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CreateIncidentResponse": {
             "type": "object",
             "properties": {
@@ -20088,20 +19756,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_GetInvoiceByIDResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetInvoiceByIDResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GetLocationResponse": {
             "type": "object",
             "properties": {
@@ -20625,20 +20279,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UpdateEmployeeExperienceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateEmployeeIsSubcontractorResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateEmployeeIsSubcontractorResponse"
                 },
                 "message": {
                     "type": "string"
@@ -21378,6 +21018,48 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-employees_CreateEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.CreateEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_UpdateEmployeeIsSubcontractorResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.UpdateEmployeeIsSubcontractorResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_GetInvoiceByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.GetInvoiceByIDResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-api_DischargeOverviewResponse": {
             "type": "object",
             "properties": {
@@ -21467,20 +21149,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListClientMedicationsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-pagination_Response-api_ListEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListEmployeeResponse"
                 },
                 "message": {
                     "type": "string"
@@ -21593,6 +21261,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-clientp_ListClientsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-employees_ListEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-employees_ListEmployeeResponse"
                 },
                 "message": {
                     "type": "string"
@@ -22869,43 +22551,6 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeIsSubcontractorRequest": {
-            "type": "object",
-            "required": [
-                "is_subcontractor"
-            ],
-            "properties": {
-                "is_subcontractor": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.UpdateEmployeeIsSubcontractorResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_date": {
-                    "type": "string"
-                },
-                "contract_hours": {
-                    "type": "number"
-                },
-                "contract_rate": {
-                    "type": "number"
-                },
-                "contract_start_date": {
-                    "type": "string"
-                },
-                "contract_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
                 }
             }
         },
@@ -24321,6 +23966,17 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.Enable2FARequest": {
+            "type": "object",
+            "required": [
+                "validation_code"
+            ],
+            "properties": {
+                "validation_code": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.LoginUserRequest": {
             "type": "object",
             "required": [
@@ -25383,6 +25039,353 @@ const docTemplate = `{
                 }
             }
         },
+        "employees.CreateEmployeeProfileRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "first_name",
+                "is_subcontractor",
+                "last_name",
+                "role_id"
+            ],
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "2000-01-01"
+                },
+                "department": {
+                    "type": "string",
+                    "example": "IT"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "emai@exe.com"
+                },
+                "employee_number": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "employment_number": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "fara"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "man"
+                },
+                "home_telephone_number": {
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "is_subcontractor": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "joe"
+                },
+                "location_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "position": {
+                    "type": "string",
+                    "example": "developer"
+                },
+                "private_email_address": {
+                    "type": "string",
+                    "example": "joe@ex.com"
+                },
+                "private_phone_number": {
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "work_phone_number": {
+                    "type": "string",
+                    "example": "1234567890"
+                }
+            }
+        },
+        "employees.CreateEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "not_specified"
+                    ]
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.ListEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "role_name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.UpdateEmployeeIsSubcontractorRequest": {
+            "type": "object",
+            "required": [
+                "is_subcontractor"
+            ],
+            "properties": {
+                "is_subcontractor": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "employees.UpdateEmployeeIsSubcontractorResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_hours": {
+                    "type": "number"
+                },
+                "contract_rate": {
+                    "type": "number"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "invoice.GetInvoiceByIDResponse": {
+            "type": "object",
+            "properties": {
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/maicare_go_service_invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "original_invoice_id": {
+                    "type": "integer"
+                },
+                "payment_completion_prc": {
+                    "type": "number"
+                },
+                "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "sender_btwnumber": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "sender_kvknumber": {
+                    "type": "string"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "maicare_go_invoice.InvoiceDetails": {
             "type": "object",
             "properties": {
@@ -25846,29 +25849,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-api_ListEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListEmployeeResponse"
-                    }
-                }
-            }
-        },
         "pagination.Response-api_ListIncidentsResponse": {
             "type": "object",
             "properties": {
@@ -26055,6 +26035,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/clientp.ListClientsApiResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-employees_ListEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.ListEmployeeResponse"
                     }
                 }
             }

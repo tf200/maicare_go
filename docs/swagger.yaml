@@ -850,117 +850,6 @@ definitions:
       name:
         type: string
     type: object
-  api.CreateEmployeeProfileRequest:
-    properties:
-      authentication_phone_number:
-        example: "1234567890"
-        type: string
-      date_of_birth:
-        example: "2000-01-01"
-        type: string
-      department:
-        example: IT
-        type: string
-      email:
-        example: emai@exe.com
-        type: string
-      employee_number:
-        example: "123456"
-        type: string
-      employment_number:
-        example: "123456"
-        type: string
-      first_name:
-        example: fara
-        type: string
-      gender:
-        example: man
-        type: string
-      home_telephone_number:
-        example: "1234567890"
-        type: string
-      is_subcontractor:
-        example: false
-        type: boolean
-      last_name:
-        example: joe
-        type: string
-      location_id:
-        example: 1
-        type: integer
-      position:
-        example: developer
-        type: string
-      private_email_address:
-        example: joe@ex.com
-        type: string
-      private_phone_number:
-        example: "1234567890"
-        type: string
-      role_id:
-        example: 1
-        type: integer
-      work_phone_number:
-        example: "1234567890"
-        type: string
-    required:
-    - email
-    - first_name
-    - is_subcontractor
-    - last_name
-    - role_id
-    type: object
-  api.CreateEmployeeProfileResponse:
-    properties:
-      authentication_phone_number:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      department:
-        type: string
-      email:
-        type: string
-      employee_number:
-        type: string
-      employment_number:
-        type: string
-      first_name:
-        type: string
-      gender:
-        enum:
-        - male
-        - female
-        - not_specified
-        type: string
-      has_borrowed:
-        type: boolean
-      home_telephone_number:
-        type: string
-      id:
-        type: integer
-      is_archived:
-        type: boolean
-      is_subcontractor:
-        type: boolean
-      last_name:
-        type: string
-      location_id:
-        type: integer
-      out_of_service:
-        type: boolean
-      position:
-        type: string
-      private_email_address:
-        type: string
-      private_phone_number:
-        type: string
-      user_id:
-        type: integer
-      work_phone_number:
-        type: string
-    type: object
   api.CreateIncidentRequest:
     properties:
       accident:
@@ -2368,13 +2257,6 @@ definitions:
       status_change_reason:
         type: string
     type: object
-  api.Enable2FARequest:
-    properties:
-      validation_code:
-        type: string
-    required:
-    - validation_code
-    type: object
   api.GenerateAutoReportsRequest:
     properties:
       end_date:
@@ -3226,51 +3108,6 @@ definitions:
       old_values:
         $ref: '#/definitions/util.JSONObject'
       operation:
-        type: string
-    type: object
-  api.GetInvoiceByIDResponse:
-    properties:
-      client_first_name:
-        type: string
-      client_id:
-        type: integer
-      client_last_name:
-        type: string
-      created_at:
-        type: string
-      due_date:
-        type: string
-      extra_content:
-        $ref: '#/definitions/util.JSONObject'
-      id:
-        type: integer
-      invoice_details:
-        items:
-          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
-        type: array
-      invoice_number:
-        type: string
-      invoice_type:
-        type: string
-      issue_date:
-        type: string
-      original_invoice_id:
-        type: integer
-      pdf_attachment_id:
-        type: string
-      sender_btwnumber:
-        type: string
-      sender_id:
-        type: integer
-      sender_kvknumber:
-        type: string
-      sender_name:
-        type: string
-      status:
-        type: string
-      total_amount:
-        type: number
-      updated_at:
         type: string
     type: object
   api.GetInvoiceTemplateItemsResponse:
@@ -4195,61 +4032,6 @@ definitions:
       job_title:
         type: string
       start_date:
-        type: string
-    type: object
-  api.ListEmployeeResponse:
-    properties:
-      age:
-        type: integer
-      authentication_phone_number:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      department:
-        type: string
-      email:
-        type: string
-      employee_number:
-        type: string
-      employment_number:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_borrowed:
-        type: boolean
-      home_telephone_number:
-        type: string
-      id:
-        type: integer
-      is_archived:
-        type: boolean
-      is_subcontractor:
-        type: boolean
-      last_name:
-        type: string
-      location_id:
-        type: integer
-      out_of_service:
-        type: boolean
-      position:
-        type: string
-      private_email_address:
-        type: string
-      private_phone_number:
-        type: string
-      profile_picture:
-        type: string
-      role_id:
-        type: integer
-      role_name:
-        type: string
-      user_id:
-        type: integer
-      work_phone_number:
         type: string
     type: object
   api.ListEmployeesByContractEndDateResponse:
@@ -5259,15 +5041,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateEmployeeProfileResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateEmployeeProfileResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateIncidentResponse:
     properties:
       data:
@@ -5673,15 +5446,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetInvoiceByIDResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetInvoiceByIDResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetLocationResponse:
     properties:
       data:
@@ -6019,15 +5783,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdateEmployeeExperienceResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateEmployeeIsSubcontractorResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateEmployeeIsSubcontractorResponse'
       message:
         type: string
       success:
@@ -6504,6 +6259,33 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-employees_CreateEmployeeProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/employees.CreateEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-employees_UpdateEmployeeIsSubcontractorResponse:
+    properties:
+      data:
+        $ref: '#/definitions/employees.UpdateEmployeeIsSubcontractorResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-invoice_GetInvoiceByIDResponse:
+    properties:
+      data:
+        $ref: '#/definitions/invoice.GetInvoiceByIDResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_DischargeOverviewResponse:
     properties:
       data:
@@ -6562,15 +6344,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientMedicationsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListEmployeeResponse'
       message:
         type: string
       success:
@@ -6643,6 +6416,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-clientp_ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-employees_ListEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-employees_ListEmployeeResponse'
       message:
         type: string
       success:
@@ -7483,30 +7265,6 @@ definitions:
         type: string
       start_date:
         type: string
-    type: object
-  api.UpdateEmployeeIsSubcontractorRequest:
-    properties:
-      is_subcontractor:
-        type: boolean
-    required:
-    - is_subcontractor
-    type: object
-  api.UpdateEmployeeIsSubcontractorResponse:
-    properties:
-      contract_end_date:
-        type: string
-      contract_hours:
-        type: number
-      contract_rate:
-        type: number
-      contract_start_date:
-        type: string
-      contract_type:
-        type: string
-      id:
-        type: integer
-      is_subcontractor:
-        type: boolean
     type: object
   api.UpdateEmployeeProfileResponse:
     properties:
@@ -8448,6 +8206,13 @@ definitions:
     - new_password
     - old_password
     type: object
+  auth.Enable2FARequest:
+    properties:
+      validation_code:
+        type: string
+    required:
+    - validation_code
+    type: object
   auth.LoginUserRequest:
     properties:
       email:
@@ -9159,6 +8924,243 @@ definitions:
       status:
         type: string
     type: object
+  employees.CreateEmployeeProfileRequest:
+    properties:
+      authentication_phone_number:
+        example: "1234567890"
+        type: string
+      date_of_birth:
+        example: "2000-01-01"
+        type: string
+      department:
+        example: IT
+        type: string
+      email:
+        example: emai@exe.com
+        type: string
+      employee_number:
+        example: "123456"
+        type: string
+      employment_number:
+        example: "123456"
+        type: string
+      first_name:
+        example: fara
+        type: string
+      gender:
+        example: man
+        type: string
+      home_telephone_number:
+        example: "1234567890"
+        type: string
+      is_subcontractor:
+        example: false
+        type: boolean
+      last_name:
+        example: joe
+        type: string
+      location_id:
+        example: 1
+        type: integer
+      position:
+        example: developer
+        type: string
+      private_email_address:
+        example: joe@ex.com
+        type: string
+      private_phone_number:
+        example: "1234567890"
+        type: string
+      role_id:
+        example: 1
+        type: integer
+      work_phone_number:
+        example: "1234567890"
+        type: string
+    required:
+    - email
+    - first_name
+    - is_subcontractor
+    - last_name
+    - role_id
+    type: object
+  employees.CreateEmployeeProfileResponse:
+    properties:
+      authentication_phone_number:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        - not_specified
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
+        type: string
+    type: object
+  employees.ListEmployeeResponse:
+    properties:
+      age:
+        type: integer
+      authentication_phone_number:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      profile_picture:
+        type: string
+      role_id:
+        type: integer
+      role_name:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
+        type: string
+    type: object
+  employees.UpdateEmployeeIsSubcontractorRequest:
+    properties:
+      is_subcontractor:
+        type: boolean
+    required:
+    - is_subcontractor
+    type: object
+  employees.UpdateEmployeeIsSubcontractorResponse:
+    properties:
+      contract_end_date:
+        type: string
+      contract_hours:
+        type: number
+      contract_rate:
+        type: number
+      contract_start_date:
+        type: string
+      contract_type:
+        type: string
+      id:
+        type: integer
+      is_subcontractor:
+        type: boolean
+    type: object
+  invoice.GetInvoiceByIDResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      due_date:
+        type: string
+      extra_content:
+        $ref: '#/definitions/util.JSONObject'
+      id:
+        type: integer
+      invoice_details:
+        items:
+          $ref: '#/definitions/maicare_go_service_invoice.InvoiceDetails'
+        type: array
+      invoice_number:
+        type: string
+      invoice_type:
+        type: string
+      issue_date:
+        type: string
+      original_invoice_id:
+        type: integer
+      payment_completion_prc:
+        type: number
+      pdf_attachment_id:
+        type: string
+      sender_btwnumber:
+        type: string
+      sender_id:
+        type: integer
+      sender_kvknumber:
+        type: string
+      sender_name:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+    type: object
   maicare_go_invoice.InvoiceDetails:
     properties:
       contract_id:
@@ -9462,21 +9464,6 @@ definitions:
           $ref: '#/definitions/api.ListContractsResponse'
         type: array
     type: object
-  pagination.Response-api_ListEmployeeResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListEmployeeResponse'
-        type: array
-    type: object
   pagination.Response-api_ListIncidentsResponse:
     properties:
       count:
@@ -9599,6 +9586,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/clientp.ListClientsApiResponse'
+        type: array
+    type: object
+  pagination.Response-employees_ListEmployeeResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/employees.ListEmployeeResponse'
         type: array
     type: object
   pgtype.Date:
@@ -10176,7 +10178,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.Enable2FARequest'
+          $ref: '#/definitions/auth.Enable2FARequest'
       produces:
       - application/json
       responses:
@@ -13396,7 +13398,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListEmployeeResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-employees_ListEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -13430,14 +13432,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateEmployeeProfileRequest'
+          $ref: '#/definitions/employees.CreateEmployeeProfileRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateEmployeeProfileResponse'
+            $ref: '#/definitions/api.Response-employees_CreateEmployeeProfileResponse'
         "400":
           description: Bad Request
           schema:
@@ -14316,14 +14318,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateEmployeeIsSubcontractorRequest'
+          $ref: '#/definitions/employees.UpdateEmployeeIsSubcontractorRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateEmployeeIsSubcontractorResponse'
+            $ref: '#/definitions/api.Response-employees_UpdateEmployeeIsSubcontractorResponse'
         "400":
           description: Bad Request
           schema:
@@ -14957,7 +14959,7 @@ paths:
         "200":
           description: Successful response with invoice details
           schema:
-            $ref: '#/definitions/api.Response-api_GetInvoiceByIDResponse'
+            $ref: '#/definitions/api.Response-invoice_GetInvoiceByIDResponse'
         "400":
           description: Bad Request
           schema:

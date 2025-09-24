@@ -194,8 +194,8 @@ func (server *Server) Setup2FAHandler(ctx *gin.Context) {
 // @Description Enable 2FA for user
 // @Tags authentication
 // @Accept json
-// @Produce json“
-// @Param request body Enable2FARequest true "Enable 2FA request"
+// @Produce json
+// @Param request body auth.Enable2FARequest true "Enable 2FA request"
 // @Success 200 {object} Response[any] "2FA enabled successfully"
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"

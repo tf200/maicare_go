@@ -10,6 +10,7 @@ import (
 //go:generate mockgen -source=service.go -destination=../mocks/mock_invoice_service.go -package=mocks
 type InvoiceService interface {
 	GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResult, int64, error)
+	GetInvoiceByID(ctx context.Context, invoiceID int64) (*GetInvoiceByIDResponse, error)
 	SendInvoiceReminder(ctx context.Context, invoiceID int64) error
 }
 
