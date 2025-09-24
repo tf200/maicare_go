@@ -201,19 +201,6 @@ definitions:
       urgency_score:
         type: string
     type: object
-  api.Address:
-    properties:
-      address:
-        type: string
-      belongs_to:
-        type: string
-      city:
-        type: string
-      phone_number:
-        type: string
-      zip_code:
-        type: string
-    type: object
   api.AssignEmployeeRequest:
     properties:
       employee_id:
@@ -280,16 +267,6 @@ definitions:
       title:
         type: string
     type: object
-  api.ChangePasswordRequest:
-    properties:
-      new_password:
-        type: string
-      old_password:
-        type: string
-    required:
-    - new_password
-    - old_password
-    type: object
   api.ClientsDetails:
     properties:
       client_id:
@@ -345,110 +322,6 @@ definitions:
         type: string
       initial_text:
         type: string
-    type: object
-  api.CreateAppointmentCardRequest:
-    properties:
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
-  api.CreateAppointmentCardResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      file_url:
-        type: string
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      id:
-        type: integer
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
     type: object
   api.CreateAppointmentRequest:
     properties:
@@ -702,192 +575,6 @@ definitions:
         type: string
       support_network_id:
         type: integer
-    type: object
-  api.CreateClientDetailsRequest:
-    properties:
-      addresses:
-        items:
-          $ref: '#/definitions/api.Address'
-        type: array
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      bsn_verified_by:
-        description: needs to be checked
-        type: integer
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      education_additional_notes:
-        type: string
-      education_currently_enrolled:
-        type: boolean
-      education_institution:
-        type: string
-      education_level:
-        enum:
-        - primary
-        - secondary
-        - higher
-        - none
-        type: string
-      education_mentor_email:
-        type: string
-      education_mentor_name:
-        type: string
-      education_mentor_phone:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      living_situation:
-        enum:
-        - home
-        - foster_care
-        - youth_care_institution
-        - other
-        type: string
-      living_situation_notes:
-        type: string
-      location_id:
-        type: integer
-      organisation:
-        type: string
-      phone_number:
-        type: string
-      sender_id:
-        type: integer
-      source:
-        type: string
-      work_additional_notes:
-        type: string
-      work_current_employer:
-        type: string
-      work_current_position:
-        type: string
-      work_currently_employed:
-        type: boolean
-      work_employer_email:
-        type: string
-      work_employer_phone:
-        type: string
-      work_start_date:
-        type: string
-    required:
-    - birthplace
-    - date_of_birth
-    - departement
-    - email
-    - filenumber
-    - first_name
-    - gender
-    - last_name
-    - location_id
-    - organisation
-    - phone_number
-    - sender_id
-    - source
-    type: object
-  api.CreateClientDetailsResponse:
-    properties:
-      addresses:
-        items:
-          $ref: '#/definitions/api.Address'
-        type: array
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      bsn_verified_by:
-        description: needs to be checked
-        type: integer
-      created:
-        type: string
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      education_additional_notes:
-        type: string
-      education_currently_enrolled:
-        type: boolean
-      education_institution:
-        type: string
-      education_level:
-        type: string
-      education_mentor_email:
-        type: string
-      education_mentor_name:
-        type: string
-      education_mentor_phone:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      id:
-        type: integer
-      identity:
-        type: boolean
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      living_situation:
-        type: string
-      living_situation_notes:
-        type: string
-      location_id:
-        type: integer
-      organisation:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        type: string
-      sender_id:
-        type: integer
-      source:
-        type: string
-      status:
-        type: string
-      work_additional_notes:
-        type: string
-      work_current_employer:
-        type: string
-      work_current_position:
-        type: string
-      work_currently_employed:
-        type: boolean
-      work_employer_email:
-        type: string
-      work_employer_phone:
-        type: string
-      work_start_date:
-        type: string
     type: object
   api.CreateClientDiagnosisRequest:
     properties:
@@ -2756,63 +2443,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.GetAppointmentCardResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      file_url:
-        type: string
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      id:
-        type: integer
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
   api.GetAppointmentResponse:
     properties:
       appointment_templates_id:
@@ -2980,102 +2610,6 @@ definitions:
         type: string
       support_network_id:
         type: integer
-    type: object
-  api.GetClientAddressesApiResponse:
-    properties:
-      addresses:
-        items:
-          $ref: '#/definitions/api.Address'
-        type: array
-    type: object
-  api.GetClientApiResponse:
-    properties:
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      bsn_verified_by:
-        type: integer
-      bsn_verified_by_first_name:
-        type: string
-      bsn_verified_by_last_name:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      education_additional_notes:
-        type: string
-      education_currently_enrolled:
-        type: boolean
-      education_institution:
-        type: string
-      education_level:
-        type: string
-      education_mentor_email:
-        type: string
-      education_mentor_name:
-        type: string
-      education_mentor_phone:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_untaken_medications:
-        type: boolean
-      id:
-        type: integer
-      identity:
-        type: boolean
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      living_situation:
-        type: string
-      living_situation_notes:
-        type: string
-      location_id:
-        type: integer
-      organisation:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        type: string
-      sender_id:
-        type: integer
-      source:
-        type: string
-      status:
-        type: string
-      work_additional_notes:
-        type: string
-      work_current_employer:
-        type: string
-      work_current_position:
-        type: string
-      work_currently_employed:
-        type: boolean
-      work_employer_email:
-        type: string
-      work_employer_phone:
-        type: string
-      work_start_date:
-        type: string
     type: object
   api.GetClientContractResponse:
     properties:
@@ -3289,17 +2823,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  api.GetClientsCountResponse:
-    properties:
-      clients_in_care:
-        type: integer
-      clients_on_waiting_list:
-        type: integer
-      clients_out_of_care:
-        type: integer
-      total_clients:
-        type: integer
     type: object
   api.GetContractAuditLogResponse:
     properties:
@@ -4583,61 +4106,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.ListClientsApiResponse:
-    properties:
-      addresses:
-        items:
-          $ref: '#/definitions/api.Address'
-        type: array
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_untaken_medications:
-        type: boolean
-      id:
-        type: integer
-      identity:
-        type: boolean
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      location_id:
-        type: integer
-      organisation:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        type: string
-      sender_id:
-        type: integer
-      source:
-        type: string
-      status:
-        type: string
-    type: object
   api.ListContractTypesResponse:
     properties:
       id:
@@ -5500,33 +4968,6 @@ definitions:
           $ref: '#/definitions/api.WorkingHourItem'
         type: array
     type: object
-  api.LoginUserRequest:
-    properties:
-      email:
-        example: testemail@gmail.com
-        type: string
-      password:
-        example: t2aha000
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  api.LoginUserResponse:
-    properties:
-      access:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      refresh:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      requires_2fa:
-        example: false
-        type: boolean
-      temp_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-    type: object
   api.MarkNotificationAsReadResponse:
     properties:
       created_at:
@@ -5583,20 +5024,6 @@ definitions:
       name:
         type: string
       resource:
-        type: string
-    type: object
-  api.RefreshTokenRequest:
-    properties:
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-    required:
-    - token
-    type: object
-  api.RefreshTokenResponse:
-    properties:
-      access:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
   api.Response-any:
@@ -5715,15 +5142,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateAppointmentCardResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateAppointmentCardResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateAppointmentResponse:
     properties:
       data:
@@ -5800,15 +5218,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreateCarePlanSupportNetworkResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_CreateClientDetailsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateClientDetailsResponse'
       message:
         type: string
       success:
@@ -6093,15 +5502,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetAppointmentCardResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetAppointmentCardResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetAppointmentResponse:
     properties:
       data:
@@ -6156,24 +5556,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetClientAddressesApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientAddressesApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetClientApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetClientDiagnosisResponse:
     properties:
       data:
@@ -6223,15 +5605,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetClientSenderResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetClientsCountResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientsCountResponse'
       message:
         type: string
       success:
@@ -6444,28 +5817,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_LoginUserResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.LoginUserResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_MarkNotificationAsReadResponse:
     properties:
       data:
         $ref: '#/definitions/api.MarkNotificationAsReadResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_RefreshTokenResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.RefreshTokenResponse'
       message:
         type: string
       success:
@@ -6484,15 +5839,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.SetEmployeeProfilePictureResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_Setup2FAResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.Setup2FAResponse'
       message:
         type: string
       success:
@@ -6610,15 +5956,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdateCarePlanSupportNetworkResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateClientDetailsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientDetailsResponse'
       message:
         type: string
       success:
@@ -7068,6 +6405,105 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-auth_LoginUserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/auth.LoginUserResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-auth_RefreshTokenResponse:
+    properties:
+      data:
+        $ref: '#/definitions/auth.RefreshTokenResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-auth_Setup2FAResponse:
+    properties:
+      data:
+        $ref: '#/definitions/auth.Setup2FAResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_CreateAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateAppointmentCardResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_CreateClientDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateClientDetailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetAppointmentCardResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientAddressesApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientAddressesApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientsCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientsCountResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_ListClientsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateClientDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateClientDetailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-api_DischargeOverviewResponse:
     properties:
       data:
@@ -7126,15 +6562,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientMedicationsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListClientsApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListClientsApiResponse'
       message:
         type: string
       success:
@@ -7212,6 +6639,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-clientp_ListClientsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.SearchEmployeesByNameOrEmailResponse:
     properties:
       email:
@@ -7260,15 +6696,6 @@ definitions:
       id:
         type: integer
       profile_picture:
-        type: string
-    type: object
-  api.Setup2FAResponse:
-    properties:
-      qr_code_base64:
-        example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
-        type: string
-      secret:
-        example: JBSWY3DPEHPK3PXP
         type: string
     type: object
   api.Shift:
@@ -7701,140 +7128,6 @@ definitions:
         type: string
       support_network_id:
         type: integer
-    type: object
-  api.UpdateClientDetailsRequest:
-    properties:
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      bsn_verified_by:
-        type: integer
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      education_additional_notes:
-        type: string
-      education_currently_enrolled:
-        type: boolean
-      education_institution:
-        type: string
-      education_level:
-        type: string
-      education_mentor_email:
-        type: string
-      education_mentor_name:
-        type: string
-      education_mentor_phone:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      identity:
-        type: boolean
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      living_situation:
-        type: string
-      living_situation_notes:
-        type: string
-      location_id:
-        type: integer
-      organisation:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        type: string
-      sender_id:
-        type: integer
-      source:
-        type: string
-      work_additional_notes:
-        type: string
-      work_current_employer:
-        type: string
-      work_current_position:
-        type: string
-      work_currently_employed:
-        type: boolean
-      work_employer_email:
-        type: string
-      work_employer_phone:
-        type: string
-      work_start_date:
-        type: string
-    type: object
-  api.UpdateClientDetailsResponse:
-    properties:
-      addresses:
-        items:
-          $ref: '#/definitions/api.Address'
-        type: array
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      bsn_verified_by:
-        type: integer
-      created:
-        type: string
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_untaken_medications:
-        type: boolean
-      id:
-        type: integer
-      identity:
-        type: boolean
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      location_id:
-        type: integer
-      organisation:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        type: string
-      sender_id:
-        type: integer
-      source:
-        type: string
-      status:
-        type: string
     type: object
   api.UpdateClientDiagnosisRequest:
     properties:
@@ -9122,16 +8415,6 @@ definitions:
       size:
         type: integer
     type: object
-  api.Verify2FARequest:
-    properties:
-      temp_token:
-        type: string
-      validation_code:
-        type: string
-    required:
-    - temp_token
-    - validation_code
-    type: object
   api.WorkingHourItem:
     properties:
       color:
@@ -9153,6 +8436,727 @@ definitions:
       status:
         type: string
       type:
+        type: string
+    type: object
+  auth.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  auth.LoginUserRequest:
+    properties:
+      email:
+        example: testemail@gmail.com
+        type: string
+      password:
+        example: t2aha000
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.LoginUserResponse:
+    properties:
+      access:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      refresh:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      requires_2fa:
+        example: false
+        type: boolean
+      temp_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  auth.RefreshTokenRequest:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    required:
+    - token
+    type: object
+  auth.RefreshTokenResponse:
+    properties:
+      access:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  auth.Setup2FAResponse:
+    properties:
+      qr_code_base64:
+        example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+        type: string
+      secret:
+        example: JBSWY3DPEHPK3PXP
+        type: string
+    type: object
+  auth.Verify2FARequest:
+    properties:
+      temp_token:
+        type: string
+      validation_code:
+        type: string
+    required:
+    - temp_token
+    - validation_code
+    type: object
+  clientp.Address:
+    properties:
+      address:
+        type: string
+      belongs_to:
+        type: string
+      city:
+        type: string
+      phone_number:
+        type: string
+      zip_code:
+        type: string
+    type: object
+  clientp.CreateAppointmentCardRequest:
+    properties:
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.CreateAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      file_url:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.CreateClientDetailsRequest:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/clientp.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      bsn_verified_by:
+        description: needs to be checked
+        type: integer
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        enum:
+        - primary
+        - secondary
+        - higher
+        - none
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      living_situation:
+        enum:
+        - home
+        - foster_care
+        - youth_care_institution
+        - other
+        type: string
+      living_situation_notes:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
+    required:
+    - date_of_birth
+    - email
+    - filenumber
+    - first_name
+    - last_name
+    - phone_number
+    - sender_id
+    - source
+    type: object
+  clientp.CreateClientDetailsResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/clientp.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      bsn_verified_by:
+        description: needs to be checked
+        type: integer
+      created:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      living_situation:
+        type: string
+      living_situation_notes:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
+    type: object
+  clientp.GetAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      file_url:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.GetClientAddressesApiResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/clientp.Address'
+        type: array
+    type: object
+  clientp.GetClientApiResponse:
+    properties:
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      bsn_verified_by:
+        type: integer
+      bsn_verified_by_first_name:
+        type: string
+      bsn_verified_by_last_name:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_untaken_medications:
+        type: boolean
+      id:
+        type: integer
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      living_situation:
+        type: string
+      living_situation_notes:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
+    type: object
+  clientp.GetClientsCountResponse:
+    properties:
+      clients_in_care:
+        type: integer
+      clients_on_waiting_list:
+        type: integer
+      clients_out_of_care:
+        type: integer
+      total_clients:
+        type: integer
+    type: object
+  clientp.ListClientsApiResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/clientp.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_untaken_medications:
+        type: boolean
+      id:
+        type: integer
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
+        type: string
+    type: object
+  clientp.UpdateClientDetailsRequest:
+    properties:
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      bsn_verified_by:
+        type: integer
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      education_additional_notes:
+        type: string
+      education_currently_enrolled:
+        type: boolean
+      education_institution:
+        type: string
+      education_level:
+        type: string
+      education_mentor_email:
+        type: string
+      education_mentor_name:
+        type: string
+      education_mentor_phone:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      living_situation:
+        type: string
+      living_situation_notes:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      work_additional_notes:
+        type: string
+      work_current_employer:
+        type: string
+      work_current_position:
+        type: string
+      work_currently_employed:
+        type: boolean
+      work_employer_email:
+        type: string
+      work_employer_phone:
+        type: string
+      work_start_date:
+        type: string
+    type: object
+  clientp.UpdateClientDetailsResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/clientp.Address'
+        type: array
+      birthplace:
+        type: string
+      bsn:
+        type: string
+      bsn_verified_by:
+        type: integer
+      created:
+        type: string
+      date_of_birth:
+        type: string
+      departement:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      email:
+        type: string
+      filenumber:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_untaken_medications:
+        type: boolean
+      id:
+        type: integer
+      identity:
+        type: boolean
+      infix:
+        type: string
+      last_name:
+        type: string
+      legal_measure:
+        type: string
+      location_id:
+        type: integer
+      organisation:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      sender_id:
+        type: integer
+      source:
+        type: string
+      status:
         type: string
     type: object
   maicare_go_invoice.InvoiceDetails:
@@ -9443,21 +9447,6 @@ definitions:
           $ref: '#/definitions/api.ListClientMedicationsResponse'
         type: array
     type: object
-  pagination.Response-api_ListClientsApiResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListClientsApiResponse'
-        type: array
-    type: object
   pagination.Response-api_ListContractsResponse:
     properties:
       count:
@@ -9595,6 +9584,21 @@ definitions:
           items:
             $ref: '#/definitions/api.ListProgressReportsResponse'
           type: array
+        type: array
+    type: object
+  pagination.Response-clientp_ListClientsApiResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListClientsApiResponse'
         type: array
     type: object
   pgtype.Date:
@@ -10130,7 +10134,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.ChangePasswordRequest'
+          $ref: '#/definitions/auth.ChangePasswordRequest'
       produces:
       - application/json
       responses:
@@ -10247,14 +10251,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.RefreshTokenRequest'
+          $ref: '#/definitions/auth.RefreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_RefreshTokenResponse'
+            $ref: '#/definitions/api.Response-auth_RefreshTokenResponse'
         "400":
           description: Bad Request
           schema:
@@ -10277,7 +10281,6 @@ paths:
             $ref: '#/definitions/api.Response-any'
       security:
       - '-': []
-      summary: Refresh access token
       tags:
       - authentication
   /auth/setup_2fa:
@@ -10289,7 +10292,7 @@ paths:
         "200":
           description: 2FA setup successful
           schema:
-            $ref: '#/definitions/api.Response-api_Setup2FAResponse'
+            $ref: '#/definitions/api.Response-auth_Setup2FAResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -10324,14 +10327,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.LoginUserRequest'
+          $ref: '#/definitions/auth.LoginUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Successfully authenticated
           schema:
-            $ref: '#/definitions/api.Response-api_LoginUserResponse'
+            $ref: '#/definitions/api.Response-auth_LoginUserResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -10368,14 +10371,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.Verify2FARequest'
+          $ref: '#/definitions/auth.Verify2FARequest'
       produces:
       - application/json
       responses:
         "200":
           description: 2FA verification successful
           schema:
-            $ref: '#/definitions/api.Response-api_LoginUserResponse'
+            $ref: '#/definitions/api.Response-auth_LoginUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -11094,19 +11097,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientsApiResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListClientsApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Response-any'
+            $ref: '#/definitions/api.Response-clientp_ListClientsApiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Response-any'
+            $ref: '#/definitions/api.Response-clientp_ListClientsApiResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.Response-any'
+            $ref: '#/definitions/api.Response-clientp_ListClientsApiResponse'
       summary: List clients
       tags:
       - clients
@@ -11119,26 +11122,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateClientDetailsRequest'
+          $ref: '#/definitions/clientp.CreateClientDetailsRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateClientDetailsResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateClientDetailsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Response-any'
+            $ref: '#/definitions/api.Response-clientp_CreateClientDetailsResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Response-any'
+            $ref: '#/definitions/api.Response-clientp_CreateClientDetailsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.Response-any'
+            $ref: '#/definitions/api.Response-clientp_CreateClientDetailsResponse'
       summary: Create a new client
       tags:
       - clients
@@ -11156,7 +11159,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientApiResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -11186,14 +11189,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateClientDetailsRequest'
+          $ref: '#/definitions/clientp.UpdateClientDetailsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientDetailsResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateClientDetailsResponse'
         "400":
           description: Bad Request
           schema:
@@ -11223,7 +11226,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientAddressesApiResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientAddressesApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -11348,7 +11351,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetAppointmentCardResponse'
+            $ref: '#/definitions/api.Response-clientp_GetAppointmentCardResponse'
       summary: Get an appointment card by client ID
       tags:
       - appointment_cards
@@ -11367,14 +11370,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateAppointmentCardRequest'
+          $ref: '#/definitions/clientp.CreateAppointmentCardRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateAppointmentCardResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateAppointmentCardResponse'
       summary: Create a new appointment card
       tags:
       - appointment_cards
@@ -13035,7 +13038,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientsCountResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientsCountResponse'
         "400":
           description: Bad Request
           schema:
@@ -15231,6 +15234,41 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get Payment by ID
+      tags:
+      - Invoice
+  /invoices/{id}/send_reminder:
+    post:
+      description: Send a reminder for a specific invoice by its ID.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response indicating reminder sent
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Send Invoice Reminder
       tags:
       - Invoice
   /invoices/{invoice_id}/payments/{payment_id}:

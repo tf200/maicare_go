@@ -85,7 +85,7 @@ func GenerateAppointmentCardPDF(appointmentCardData AppointmentCard) (multipart.
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID int64, b2Client *bucket.ObjectStorageClient) (string, error) {
+func UploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID int64, b2Client bucket.ObjectStorageInterface) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("appointment_cards/%s/appointment_card_%d.pdf", timestamp, appointmentCardID)
@@ -100,7 +100,7 @@ func UploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appoi
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard, b2Client *bucket.ObjectStorageClient) (string, error) {
+func GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard, b2Client bucket.ObjectStorageInterface) (string, error) {
 	// Generate PDF
 	pdfFile, err := GenerateAppointmentCardPDF(cardData)
 	if err != nil {

@@ -42,47 +42,47 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // ChangePassword mocks base method.
-func (m *MockAuthService) ChangePassword(req auth.ChangePasswordRequest, ctx context.Context) error {
+func (m *MockAuthService) ChangePassword(req auth.ChangePasswordRequest, userID int64, ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", req, ctx)
+	ret := m.ctrl.Call(m, "ChangePassword", req, userID, ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockAuthServiceMockRecorder) ChangePassword(req, ctx any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) ChangePassword(req, userID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAuthService)(nil).ChangePassword), req, ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAuthService)(nil).ChangePassword), req, userID, ctx)
 }
 
 // EnableTwoFA mocks base method.
-func (m *MockAuthService) EnableTwoFA(req auth.EnableTwoFARequest, ctx context.Context) (*auth.EnableTwoFAResult, error) {
+func (m *MockAuthService) EnableTwoFA(req auth.Enable2FARequest, userID int64, ctx context.Context) (*auth.Enable2FAResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EnableTwoFA", req, ctx)
-	ret0, _ := ret[0].(*auth.EnableTwoFAResult)
+	ret := m.ctrl.Call(m, "EnableTwoFA", req, userID, ctx)
+	ret0, _ := ret[0].(*auth.Enable2FAResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EnableTwoFA indicates an expected call of EnableTwoFA.
-func (mr *MockAuthServiceMockRecorder) EnableTwoFA(req, ctx any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) EnableTwoFA(req, userID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableTwoFA", reflect.TypeOf((*MockAuthService)(nil).EnableTwoFA), req, ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableTwoFA", reflect.TypeOf((*MockAuthService)(nil).EnableTwoFA), req, userID, ctx)
 }
 
 // Login mocks base method.
-func (m *MockAuthService) Login(req auth.LoginRequest, ctx context.Context) (*auth.LoginResult, error) {
+func (m *MockAuthService) Login(req auth.LoginUserRequest, clientIP, userAgent string, ctx context.Context) (*auth.LoginUserResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", req, ctx)
-	ret0, _ := ret[0].(*auth.LoginResult)
+	ret := m.ctrl.Call(m, "Login", req, clientIP, userAgent, ctx)
+	ret0, _ := ret[0].(*auth.LoginUserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Login indicates an expected call of Login.
-func (mr *MockAuthServiceMockRecorder) Login(req, ctx any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) Login(req, clientIP, userAgent, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuthService)(nil).Login), req, ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuthService)(nil).Login), req, clientIP, userAgent, ctx)
 }
 
 // Logout mocks base method.
@@ -100,10 +100,10 @@ func (mr *MockAuthServiceMockRecorder) Logout(req, ctx any) *gomock.Call {
 }
 
 // RefreshToken mocks base method.
-func (m *MockAuthService) RefreshToken(req auth.RefreshTokenRequest, ctx context.Context) (*auth.RefreshTokenResult, error) {
+func (m *MockAuthService) RefreshToken(req auth.RefreshTokenRequest, ctx context.Context) (*auth.RefreshTokenResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshToken", req, ctx)
-	ret0, _ := ret[0].(*auth.RefreshTokenResult)
+	ret0, _ := ret[0].(*auth.RefreshTokenResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -115,25 +115,25 @@ func (mr *MockAuthServiceMockRecorder) RefreshToken(req, ctx any) *gomock.Call {
 }
 
 // SetupTwoFA mocks base method.
-func (m *MockAuthService) SetupTwoFA(req auth.SetupTwoFARequest, ctx context.Context) (*auth.SetupTwoFAResult, error) {
+func (m *MockAuthService) SetupTwoFA(userID int64, ctx context.Context) (*auth.Setup2FAResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetupTwoFA", req, ctx)
-	ret0, _ := ret[0].(*auth.SetupTwoFAResult)
+	ret := m.ctrl.Call(m, "SetupTwoFA", userID, ctx)
+	ret0, _ := ret[0].(*auth.Setup2FAResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SetupTwoFA indicates an expected call of SetupTwoFA.
-func (mr *MockAuthServiceMockRecorder) SetupTwoFA(req, ctx any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) SetupTwoFA(userID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupTwoFA", reflect.TypeOf((*MockAuthService)(nil).SetupTwoFA), req, ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetupTwoFA", reflect.TypeOf((*MockAuthService)(nil).SetupTwoFA), userID, ctx)
 }
 
 // VerifyTwoFAToken mocks base method.
-func (m *MockAuthService) VerifyTwoFAToken(req auth.VerifyTwoFATokenRequest, ctx context.Context) (*auth.LoginResult, error) {
+func (m *MockAuthService) VerifyTwoFAToken(req auth.Verify2FARequest, ctx context.Context) (*auth.LoginUserResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyTwoFAToken", req, ctx)
-	ret0, _ := ret[0].(*auth.LoginResult)
+	ret0, _ := ret[0].(*auth.LoginUserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

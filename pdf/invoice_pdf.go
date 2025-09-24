@@ -116,7 +116,7 @@ func GenerateInvoicePDF(invoiceData InvoicePDFData) (multipart.File, error) {
 }
 
 // UploadInvoicePDF uploads a PDF to B2 with a generated filename
-func UploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int64, b2Client *bucket.ObjectStorageClient) (string, int64, error) {
+func UploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int64, b2Client bucket.ObjectStorageInterface) (string, int64, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("invoice_reports/%s/invoice_report_%d.pdf", timestamp, invoiceID)
@@ -130,7 +130,7 @@ func UploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData, b2Client *bucket.ObjectStorageClient) (string, int64, error) {
+func GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData, b2Client bucket.ObjectStorageInterface) (string, int64, error) {
 	// Generate PDF
 	pdfFile, err := GenerateInvoicePDF(invoiceData)
 	if err != nil {

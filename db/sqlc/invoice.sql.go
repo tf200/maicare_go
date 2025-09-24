@@ -314,6 +314,19 @@ func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]G
 	return items, nil
 }
 
+const getInvoiceSenderID = `-- name: GetInvoiceSenderID :one
+SELECT sender_id
+FROM invoice
+WHERE id = $1
+`
+
+func (q *Queries) GetInvoiceSenderID(ctx context.Context, id int64) (*int64, error) {
+	row := q.db.QueryRow(ctx, getInvoiceSenderID, id)
+	var sender_id *int64
+	err := row.Scan(&sender_id)
+	return sender_id, err
+}
+
 const getMaxInvoiceSequenceForDate = `-- name: GetMaxInvoiceSequenceForDate :one
 SELECT COALESCE(MAX(invoice_sequence), 0)::BIGINT as max_sequence
 FROM invoice

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -127,7 +128,7 @@ func TestCreateClientApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				clientReq := CreateClientDetailsRequest{
+				clientReq := clientp.CreateClientDetailsRequest{
 					FirstName:     faker.FirstName(),
 					LastName:      faker.LastName(),
 					Email:         faker.Email(),
@@ -144,7 +145,7 @@ func TestCreateClientApi(t *testing.T) {
 					Source:        util.StringPtr("Test Sources"),
 					Bsn:           util.StringPtr("Test Bsn"),
 					BsnVerifiedBy: &employee.ID,
-					Addresses: []Address{
+					Addresses: []clientp.Address{
 						{
 							BelongsTo:   util.StringPtr("Test Belongs To"),
 							Address:     util.StringPtr("Test Address"),
@@ -182,7 +183,7 @@ func TestCreateClientApi(t *testing.T) {
 				t.Logf("Response Status Code: %d", recorder.Code)
 				t.Logf("Raw Response Body: %s", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var clientRes Response[CreateClientDetailsResponse]
+				var clientRes Response[clientp.CreateClientDetailsResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -229,7 +230,7 @@ func TestListClient(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clients Response[pagination.Response[ListClientsApiResponse]]
+				var clients Response[pagination.Response[clientp.ListClientsApiResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&clients)
 				require.NoError(t, err)
 				require.NotEmpty(t, clients.Data)
@@ -304,7 +305,7 @@ func TestGetClientDetails(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[GetClientApiResponse]
+				var clientRes Response[clientp.GetClientApiResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -344,7 +345,7 @@ func TestUpdateClientDetailsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				clientReq := UpdateClientDetailsRequest{
+				clientReq := clientp.UpdateClientDetailsRequest{
 					FirstName:    util.StringPtr(faker.FirstName()),
 					LastName:     util.StringPtr(faker.LastName()),
 					Email:        util.StringPtr(faker.Email()),
@@ -366,7 +367,7 @@ func TestUpdateClientDetailsApi(t *testing.T) {
 				t.Logf("Response Status Code: %d", recorder.Code)
 				t.Logf("Raw Response Body: %s", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[UpdateClientDetailsResponse]
+				var clientRes Response[clientp.UpdateClientDetailsResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -682,6 +683,8 @@ func TestUpdateClientStatusApi(t *testing.T) {
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
+				require.NotNil(t, clientRes.Data.Status)
+				require.Equal(t, "In Care", *clientRes.Data.Status)
 			},
 		},
 		{

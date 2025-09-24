@@ -3,8 +3,10 @@ package employees
 import (
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
 	"maicare_go/service/deps"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -21,9 +23,9 @@ var (
 //
 //go:generate mockgen -source=service.go -destination=../mocks/mock_employee_service.go -package=mocks
 type EmployeeService interface {
-	CreateEmployee(req CreateEmployeeRequest, ctx context.Context) (*CreateEmployeeResult, error)
-	ListEmployees(req ListEmployeesRequest, ctx context.Context) ([]db.ListEmployeeProfileRow, *int64, error)
-	UpdateEmployeeIsSubcontractor(req UpdateEmployeeIsSubcontractorRequest, ctx context.Context) (*UpdateEmployeeIsSubcontractorResult, error)
+	CreateEmployee(req CreateEmployeeProfileRequest, ctx context.Context) (*CreateEmployeeProfileResponse, error)
+	ListEmployees(req ListEmployeeRequest, ctx *gin.Context) (*pagination.Response[ListEmployeeResponse], error)
+	UpdateEmployeeIsSubcontractor(req UpdateEmployeeIsSubcontractorRequest, employeeID int64, ctx context.Context) (*UpdateEmployeeIsSubcontractorResponse, error)
 }
 
 type employeeService struct {

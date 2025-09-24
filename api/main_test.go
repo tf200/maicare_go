@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 	"log"
-	"maicare_go/bucket"
+	asyncmocks "maicare_go/async/mocks"
+	bucketmocks "maicare_go/bucket/mocks"
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/logger"
-	"maicare_go/mocks"
 	"maicare_go/notification"
 	"maicare_go/service"
 	"maicare_go/token"
@@ -25,8 +25,8 @@ import (
 
 var testStore *db.Store
 var testServer *Server
-var testb2Client *bucket.ObjectStorageClient
-var testasynqClient *mocks.MockAsynqClientInterface
+var testb2Client *bucketmocks.MockObjectStorageInterface
+var testasynqClient *asyncmocks.MockAsynqClientInterface
 var testGrpcClient grpclient.GrpcClientInterface
 var testNotifService *notification.Service
 var testMockCtrl *gomock.Controller
@@ -49,11 +49,9 @@ func TestMain(m *testing.M) {
 	testMockCtrl = gomock.NewController(&testing.T{})
 	defer testMockCtrl.Finish()
 
-	testb2Client, err = bucket.NewObjectStorageClient(context.Background(), config)
-	if err != nil {
-		log.Fatal("cannot create b2 client:", err)
-	}
-	testasynqClient = mocks.NewMockAsynqClientInterface(testMockCtrl)
+	testb2Client = bucketmocks.NewMockObjectStorageInterface(testMockCtrl)
+
+	testasynqClient = asyncmocks.NewMockAsynqClientInterface(testMockCtrl)
 
 	hubInstance := hub.NewHub()
 
@@ -70,7 +68,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("cannot setup logger: %v", err)
 	}
 
-	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config)
+	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config, testb2Client)
 
 	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey,
 		hubInstance, testNotifService, testGrpcClient,

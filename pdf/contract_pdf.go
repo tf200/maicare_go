@@ -108,7 +108,7 @@ func GenerateContractPDF(contractData ContractData) (multipart.File, error) {
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID int64, b2Client *bucket.ObjectStorageClient) (string, error) {
+func UploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID int64, b2Client bucket.ObjectStorageInterface) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("contract/%s/contract-%d.pdf", timestamp, contractID)
@@ -122,7 +122,7 @@ func UploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID i
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData, b2Client *bucket.ObjectStorageClient) (string, error) {
+func GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData, b2Client bucket.ObjectStorageInterface) (string, error) {
 	// Generate PDF
 	pdfFile, err := GenerateContractPDF(contractData)
 	if err != nil {

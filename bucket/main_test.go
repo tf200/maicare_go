@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var testBucketClient *ObjectStorageClient
+var testBucketClient ObjectStorageInterface
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")

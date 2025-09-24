@@ -50,7 +50,7 @@ type Server struct {
 	router          *gin.Engine
 	config          util.Config
 	tokenMaker      token.Maker
-	b2Client        *bucket.ObjectStorageClient
+	b2Client        bucket.ObjectStorageInterface
 	asynqClient     async.AsynqClientInterface
 	httpServer      *http.Server
 	aiHandler       *ai.AiHandler
@@ -61,7 +61,7 @@ type Server struct {
 	businessService *service.BusinessService
 }
 
-func NewServer(store *db.Store, b2Client *bucket.ObjectStorageClient,
+func NewServer(store *db.Store, b2Client bucket.ObjectStorageInterface,
 	asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub,
 	notifService *notification.Service, grpcClient grpclient.GrpcClientInterface,
 	tokenMaker token.Maker, config util.Config, service *service.BusinessService) (*Server, error) {

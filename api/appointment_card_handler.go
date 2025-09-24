@@ -5,7 +5,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pdf"
-	"maicare_go/service/client"
+	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,41 +14,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// CreateAppointmentCardRequest represents a request to create a new appointment card
-type CreateAppointmentCardRequest struct {
-	GeneralInformation     []string `json:"general_information"`
-	ImportantContacts      []string `json:"important_contacts"`
-	HouseholdInfo          []string `json:"household_info"`
-	OrganizationAgreements []string `json:"organization_agreements"`
-	YouthOfficerAgreements []string `json:"youth_officer_agreements"`
-	TreatmentAgreements    []string `json:"treatment_agreements"`
-	SmokingRules           []string `json:"smoking_rules"`
-	Work                   []string `json:"work"`
-	SchoolInternship       []string `json:"school_internship"`
-	Travel                 []string `json:"travel"`
-	Leave                  []string `json:"leave"`
-}
-
-// CreateAppointmentCardResponse represents a response to a create appointment card request
-type CreateAppointmentCardResponse struct {
-	ID                     int64     `json:"id"`
-	ClientID               int64     `json:"client_id"`
-	GeneralInformation     []string  `json:"general_information"`
-	ImportantContacts      []string  `json:"important_contacts"`
-	HouseholdInfo          []string  `json:"household_info"`
-	OrganizationAgreements []string  `json:"organization_agreements"`
-	YouthOfficerAgreements []string  `json:"youth_officer_agreements"`
-	TreatmentAgreements    []string  `json:"treatment_agreements"`
-	SmokingRules           []string  `json:"smoking_rules"`
-	Work                   []string  `json:"work"`
-	SchoolInternship       []string  `json:"school_internship"`
-	Travel                 []string  `json:"travel"`
-	Leave                  []string  `json:"leave"`
-	CreatedAt              time.Time `json:"created_at"`
-	UpdatedAt              time.Time `json:"updated_at"`
-	FileUrl                *string   `json:"file_url"`
-}
-
 // CreateAppointmentCardApi creates a new appointment card
 // @Summary Create a new appointment card
 // @Description Create a new appointment card
@@ -56,8 +21,8 @@ type CreateAppointmentCardResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body CreateAppointmentCardRequest true "Request body"
-// @Success 201 {object} Response[CreateAppointmentCardResponse]
+// @Param request body clientp.CreateAppointmentCardRequest true "Request body"
+// @Success 201 {object} Response[clientp.CreateAppointmentCardResponse]
 // @Router /clients/{id}/appointment_cards [post]
 func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -67,72 +32,22 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateAppointmentCardRequest
+	var req clientp.CreateAppointmentCardRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	appointmentCard, err := server.businessService.ClientService.CreateAppointmentCard(client.CreateAppointmentCardRequest{
-		ClientID:               clientID,
-		GeneralInformation:     req.GeneralInformation,
-		ImportantContacts:      req.ImportantContacts,
-		HouseholdInfo:          req.HouseholdInfo,
-		OrganizationAgreements: req.OrganizationAgreements,
-		YouthOfficerAgreements: req.YouthOfficerAgreements,
-		TreatmentAgreements:    req.TreatmentAgreements,
-		SmokingRules:           req.SmokingRules,
-		Work:                   req.Work,
-		SchoolInternship:       req.SchoolInternship,
-		Travel:                 req.Travel,
-		Leave:                  req.Leave,
-	}, ctx)
+	appointmentCard, err := server.businessService.ClientService.CreateAppointmentCard(req, clientID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create appointment card")))
 		return
 	}
 
-	res := SuccessResponse(CreateAppointmentCardResponse{
-		ID:                     appointmentCard.ID,
-		ClientID:               appointmentCard.ClientID,
-		GeneralInformation:     appointmentCard.GeneralInformation,
-		ImportantContacts:      appointmentCard.ImportantContacts,
-		HouseholdInfo:          appointmentCard.HouseholdInfo,
-		OrganizationAgreements: appointmentCard.OrganizationAgreements,
-		YouthOfficerAgreements: appointmentCard.YouthOfficerAgreements,
-		TreatmentAgreements:    appointmentCard.TreatmentAgreements,
-		SmokingRules:           appointmentCard.SmokingRules,
-		Work:                   appointmentCard.Work,
-		SchoolInternship:       appointmentCard.SchoolInternship,
-		Travel:                 appointmentCard.Travel,
-		Leave:                  appointmentCard.Leave,
-		CreatedAt:              appointmentCard.CreatedAt.Time,
-		UpdatedAt:              appointmentCard.UpdatedAt.Time,
-		FileUrl:                appointmentCard.FileUrl,
-	}, "Appointment card created successfully")
+	res := SuccessResponse(appointmentCard, "Appointment card created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
 
-}
-
-// GetAppointmentCardResponse represents a response to a get appointment card request
-type GetAppointmentCardResponse struct {
-	ID                     int64     `json:"id"`
-	ClientID               int64     `json:"client_id"`
-	GeneralInformation     []string  `json:"general_information"`
-	ImportantContacts      []string  `json:"important_contacts"`
-	HouseholdInfo          []string  `json:"household_info"`
-	OrganizationAgreements []string  `json:"organization_agreements"`
-	YouthOfficerAgreements []string  `json:"youth_officer_agreements"`
-	TreatmentAgreements    []string  `json:"treatment_agreements"`
-	SmokingRules           []string  `json:"smoking_rules"`
-	Work                   []string  `json:"work"`
-	SchoolInternship       []string  `json:"school_internship"`
-	Travel                 []string  `json:"travel"`
-	Leave                  []string  `json:"leave"`
-	CreatedAt              time.Time `json:"created_at"`
-	UpdatedAt              time.Time `json:"updated_at"`
-	FileUrl                *string   `json:"file_url"`
 }
 
 // GetAppointmentCardApi retrieves an appointment card by client ID
@@ -141,7 +56,7 @@ type GetAppointmentCardResponse struct {
 // @Tags appointment_cards
 // @Produce json
 // @Param id path int true "Client ID"
-// @Success 200 {object} Response[GetAppointmentCardResponse]
+// @Success 200 {object} Response[clientp.GetAppointmentCardResponse]
 // @Router /clients/{id}/appointment_cards [get]
 func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -162,24 +77,7 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(GetAppointmentCardResponse{
-		ID:                     appointmentCard.ID,
-		ClientID:               appointmentCard.ClientID,
-		GeneralInformation:     appointmentCard.GeneralInformation,
-		ImportantContacts:      appointmentCard.ImportantContacts,
-		HouseholdInfo:          appointmentCard.HouseholdInfo,
-		OrganizationAgreements: appointmentCard.OrganizationAgreements,
-		YouthOfficerAgreements: appointmentCard.YouthOfficerAgreements,
-		TreatmentAgreements:    appointmentCard.TreatmentAgreements,
-		SmokingRules:           appointmentCard.SmokingRules,
-		Work:                   appointmentCard.Work,
-		SchoolInternship:       appointmentCard.SchoolInternship,
-		Travel:                 appointmentCard.Travel,
-		Leave:                  appointmentCard.Leave,
-		CreatedAt:              appointmentCard.CreatedAt.Time,
-		UpdatedAt:              appointmentCard.UpdatedAt.Time,
-		FileUrl:                appointmentCard.FileUrl,
-	}, "Appointment card retrieved successfully")
+	res := SuccessResponse(appointmentCard, "Appointment card retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

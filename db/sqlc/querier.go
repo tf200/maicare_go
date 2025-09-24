@@ -170,6 +170,7 @@ type Querier interface {
 	GetIntakeForm(ctx context.Context, id int64) (IntakeForm, error)
 	GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error)
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]GetInvoiceAuditLogsRow, error)
+	GetInvoiceSenderID(ctx context.Context, id int64) (*int64, error)
 	GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) (GetLevelDescriptionRow, error)
 	GetLocation(ctx context.Context, id int64) (Location, error)
 	GetMaturityMatrix(ctx context.Context, id int64) (MaturityMatrix, error)

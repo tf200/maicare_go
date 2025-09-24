@@ -18,13 +18,13 @@ type AsynqServer struct {
 	server              *asynq.Server
 	store               *db.Store
 	brevoConf           *email.BrevoConf
-	b2Bucket            *bucket.ObjectStorageClient
+	b2Bucket            bucket.ObjectStorageInterface
 	notificationService *notification.Service
 }
 
 func NewAsynqServer(redisHost, redisUser, redisPassword string,
 	store *db.Store, tls *tls.Config,
-	brevoConf *email.BrevoConf, b2Bucket *bucket.ObjectStorageClient,
+	brevoConf *email.BrevoConf, b2Bucket bucket.ObjectStorageInterface,
 	notificationService *notification.Service,
 	businessService *service.BusinessService) *AsynqServer {
 	srv := asynq.NewServer(
