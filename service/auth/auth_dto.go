@@ -41,3 +41,13 @@ type Setup2FAResponse struct {
 	QrCode string `json:"qr_code_base64" example:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."`
 	Secret string `json:"secret" example:"JBSWY3DPEHPK3PXP"`
 }
+
+// Enable2FARequest represents the enable 2FA request payload
+type Enable2FARequest struct {
+	ValidationCode string `json:"validation_code" binding:"required"`
+}
+
+// Enable2FAResponse represents the enable 2FA response payload
+type Enable2FAResponse struct {
+	RecoveryCodes []string `json:"recovery_codes" example:"[\"code1\", \"code2\"]"`
+}

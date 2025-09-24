@@ -15,6 +15,7 @@ import (
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/service/employees"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -107,7 +108,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				Empreq := CreateEmployeeProfileRequest{
+				Empreq := employees.CreateEmployeeProfileRequest{
 					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
 					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
 					LocationID:                util.IntPtr(locationID),
@@ -136,7 +137,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				t.Log(recorder.Body)
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[CreateEmployeeProfileResponse]
+				var response Response[employees.CreateEmployeeProfileResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.Empty(t, response.Data.EmployeeNumber)
@@ -211,7 +212,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[pagination.Response[ListEmployeeResponse]]
+				var response Response[pagination.Response[employees.ListEmployeeResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -274,7 +275,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[pagination.Response[ListEmployeeResponse]]
+				var response Response[pagination.Response[employees.ListEmployeeResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 

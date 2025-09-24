@@ -11,10 +11,11 @@ package mocks
 
 import (
 	context "context"
-	db "maicare_go/db/sqlc"
+	pagination "maicare_go/pagination"
 	employees "maicare_go/service/employees"
 	reflect "reflect"
 
+	gin "github.com/gin-gonic/gin"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -43,10 +44,10 @@ func (m *MockEmployeeService) EXPECT() *MockEmployeeServiceMockRecorder {
 }
 
 // CreateEmployee mocks base method.
-func (m *MockEmployeeService) CreateEmployee(req employees.CreateEmployeeRequest, ctx context.Context) (*employees.CreateEmployeeResult, error) {
+func (m *MockEmployeeService) CreateEmployee(req employees.CreateEmployeeProfileRequest, ctx context.Context) (*employees.CreateEmployeeProfileResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateEmployee", req, ctx)
-	ret0, _ := ret[0].(*employees.CreateEmployeeResult)
+	ret0, _ := ret[0].(*employees.CreateEmployeeProfileResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -58,13 +59,12 @@ func (mr *MockEmployeeServiceMockRecorder) CreateEmployee(req, ctx any) *gomock.
 }
 
 // ListEmployees mocks base method.
-func (m *MockEmployeeService) ListEmployees(req employees.ListEmployeesRequest, ctx context.Context) ([]db.ListEmployeeProfileRow, *int64, error) {
+func (m *MockEmployeeService) ListEmployees(req employees.ListEmployeeRequest, ctx *gin.Context) (*pagination.Response[employees.ListEmployeeResponse], error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEmployees", req, ctx)
-	ret0, _ := ret[0].([]db.ListEmployeeProfileRow)
-	ret1, _ := ret[1].(*int64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(*pagination.Response[employees.ListEmployeeResponse])
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListEmployees indicates an expected call of ListEmployees.
@@ -74,16 +74,16 @@ func (mr *MockEmployeeServiceMockRecorder) ListEmployees(req, ctx any) *gomock.C
 }
 
 // UpdateEmployeeIsSubcontractor mocks base method.
-func (m *MockEmployeeService) UpdateEmployeeIsSubcontractor(req employees.UpdateEmployeeIsSubcontractorRequest, ctx context.Context) (*employees.UpdateEmployeeIsSubcontractorResult, error) {
+func (m *MockEmployeeService) UpdateEmployeeIsSubcontractor(req employees.UpdateEmployeeIsSubcontractorRequest, employeeID int64, ctx context.Context) (*employees.UpdateEmployeeIsSubcontractorResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateEmployeeIsSubcontractor", req, ctx)
-	ret0, _ := ret[0].(*employees.UpdateEmployeeIsSubcontractorResult)
+	ret := m.ctrl.Call(m, "UpdateEmployeeIsSubcontractor", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.UpdateEmployeeIsSubcontractorResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateEmployeeIsSubcontractor indicates an expected call of UpdateEmployeeIsSubcontractor.
-func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeIsSubcontractor(req, ctx any) *gomock.Call {
+func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeIsSubcontractor(req, employeeID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeIsSubcontractor", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeIsSubcontractor), req, ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeIsSubcontractor", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeIsSubcontractor), req, employeeID, ctx)
 }

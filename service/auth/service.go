@@ -26,7 +26,7 @@ type AuthService interface {
 	VerifyTwoFAToken(req Verify2FARequest, ctx context.Context) (*LoginUserResponse, error)
 	Logout(req LogoutRequest, ctx context.Context) error
 	ChangePassword(req ChangePasswordRequest, userID int64, ctx context.Context) error
-	EnableTwoFA(req EnableTwoFARequest, ctx context.Context) (*EnableTwoFAResult, error)
+	EnableTwoFA(req Enable2FARequest, userID int64, ctx context.Context) (*Enable2FAResponse, error)
 }
 
 type authService struct {

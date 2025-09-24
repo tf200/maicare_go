@@ -59,7 +59,6 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
-
 	result, err := server.businessService.AuthService.RefreshToken(req, ctx)
 
 	if err != nil {
@@ -93,7 +92,7 @@ func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 	loginResult, err := server.businessService.AuthService.VerifyTwoFAToken(req, ctx)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA verification failed: %v", err)))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA verification failed")))
 		return
 	}
 	res := SuccessResponse(loginResult, "login successful")
@@ -141,7 +140,7 @@ func (server *Server) LogOutApi(ctx *gin.Context) {
 func (server *Server) ChangePasswordApi(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
 
@@ -191,20 +190,11 @@ func (server *Server) Setup2FAHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// Enable2FARequest represents the enable 2FA request payload
-type Enable2FARequest struct {
-	ValidationCode string `json:"validation_code" binding:"required"`
-}
-
-type Enable2FAResponse struct {
-	RecoveryCodes []string `json:"recovery_codes" example:"[\"code1\", \"code2\"]"`
-}
-
 // @Summary Enable 2FA
 // @Description Enable 2FA for user
 // @Tags authentication
 // @Accept json
-// @Produce json
+// @Produce json“
 // @Param request body Enable2FARequest true "Enable 2FA request"
 // @Success 200 {object} Response[any] "2FA enabled successfully"
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
@@ -222,22 +212,17 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 
 	userID := payload.UserId
 
-	var req Enable2FARequest
+	var req auth.Enable2FARequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
 		return
 	}
-	result, err := server.businessService.AuthService.EnableTwoFA(auth.EnableTwoFARequest{
-		UserID:         userID,
-		ValidationCode: req.ValidationCode,
-	}, ctx)
+	result, err := server.businessService.AuthService.EnableTwoFA(req, userID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to enable 2FA")))
 		return
 	}
 
-	res := SuccessResponse(Enable2FAResponse{
-		RecoveryCodes: result.RecoveryCodes,
-	}, "2FA enabled successfully")
+	res := SuccessResponse(result, "2FA enabled successfully")
 	ctx.JSON(http.StatusOK, res)
 }

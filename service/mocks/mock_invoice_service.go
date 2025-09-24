@@ -56,3 +56,17 @@ func (mr *MockInvoiceServiceMockRecorder) GenerateInvoice(req, ctx any) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateInvoice", reflect.TypeOf((*MockInvoiceService)(nil).GenerateInvoice), req, ctx)
 }
+
+// SendInvoiceReminder mocks base method.
+func (m *MockInvoiceService) SendInvoiceReminder(ctx context.Context, invoiceID int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendInvoiceReminder", ctx, invoiceID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendInvoiceReminder indicates an expected call of SendInvoiceReminder.
+func (mr *MockInvoiceServiceMockRecorder) SendInvoiceReminder(ctx, invoiceID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendInvoiceReminder", reflect.TypeOf((*MockInvoiceService)(nil).SendInvoiceReminder), ctx, invoiceID)
+}

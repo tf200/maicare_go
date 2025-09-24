@@ -12,7 +12,6 @@ import (
 
 	"maicare_go/async"
 	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
 	"maicare_go/service/employees"
 	"maicare_go/util"
 
@@ -80,158 +79,31 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// CreateEmployeeProfileRequest represents the request for CreateEmployeeProfileApi
-type CreateEmployeeProfileRequest struct {
-	EmployeeNumber            *string `json:"employee_number" example:"123456"`
-	EmploymentNumber          *string `json:"employment_number" example:"123456"`
-	LocationID                *int64  `json:"location_id" example:"1"`
-	IsSubcontractor           *bool   `json:"is_subcontractor" binding:"required" example:"false"`
-	FirstName                 string  `json:"first_name" binding:"required" example:"fara"`
-	LastName                  string  `json:"last_name" binding:"required" example:"joe"`
-	DateOfBirth               *string `json:"date_of_birth" example:"2000-01-01"`
-	Gender                    *string `json:"gender" example:"man"`
-	Email                     string  `json:"email" binding:"required,email" example:"emai@exe.com"`
-	PrivateEmailAddress       *string `json:"private_email_address" binding:"email" example:"joe@ex.com"`
-	AuthenticationPhoneNumber *string `json:"authentication_phone_number" example:"1234567890"`
-	WorkPhoneNumber           *string `json:"work_phone_number" example:"1234567890"`
-	PrivatePhoneNumber        *string `json:"private_phone_number" example:"1234567890"`
-	HomeTelephoneNumber       *string `json:"home_telephone_number" example:"1234567890"`
-	RoleID                    int32   `json:"role_id" binding:"required" example:"1"`
-	Position                  *string `json:"position" example:"developer"`
-	Department                *string `json:"department" example:"IT"`
-}
-
-// CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
-type CreateEmployeeProfileResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
-	FirstName                 string    `json:"first_name"`
-	LastName                  string    `json:"last_name"`
-	Position                  *string   `json:"position"`
-	Department                *string   `json:"department"`
-	EmployeeNumber            *string   `json:"employee_number"`
-	EmploymentNumber          *string   `json:"employment_number"`
-	PrivateEmailAddress       *string   `json:"private_email_address"`
-	Email                     string    `json:"email"`
-	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string   `json:"private_phone_number"`
-	WorkPhoneNumber           *string   `json:"work_phone_number"`
-	DateOfBirth               time.Time `json:"date_of_birth"`
-	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
-	CreatedAt                 time.Time `json:"created_at"`
-	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender" binding:"oneof= male female not_specified"`
-	LocationID                *int64    `json:"location_id"`
-	HasBorrowed               bool      `json:"has_borrowed"`
-	OutOfService              *bool     `json:"out_of_service"`
-	IsArchived                bool      `json:"is_archived"`
-}
-
 // @Summary Create employee profile
 // @Description Create a new employee profile with associated user account
 // @Tags employees
 // @Accept json
 // @Produce json
-// @Param request body CreateEmployeeProfileRequest true "Employee profile details"
-// @Success 201 {object} Response[CreateEmployeeProfileResponse]
+// @Param request body employees.CreateEmployeeProfileRequest true "Employee profile details"
+// @Success 201 {object} Response[employees.CreateEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees [post]
 func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
-	var req CreateEmployeeProfileRequest
+	var req employees.CreateEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	employee, err := server.businessService.EmployeeService.CreateEmployee(employees.CreateEmployeeRequest{
-		EmployeeNumber:            req.EmployeeNumber,
-		EmploymentNumber:          req.EmploymentNumber,
-		LocationID:                req.LocationID,
-		IsSubcontractor:           req.IsSubcontractor,
-		FirstName:                 req.FirstName,
-		LastName:                  req.LastName,
-		DateOfBirth:               req.DateOfBirth,
-		Gender:                    req.Gender,
-		Email:                     req.Email,
-		PrivateEmailAddress:       req.PrivateEmailAddress,
-		AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
-		WorkPhoneNumber:           req.WorkPhoneNumber,
-		PrivatePhoneNumber:        req.PrivatePhoneNumber,
-		HomeTelephoneNumber:       req.HomeTelephoneNumber,
-		Position:                  req.Position,
-		Department:                req.Department,
-		RoleID:                    req.RoleID,
-	}, ctx)
+	employee, err := server.businessService.EmployeeService.CreateEmployee(req, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create employee profile")))
 		return
 	}
 
-	res := SuccessResponse(CreateEmployeeProfileResponse{
-		ID:                        employee.ID,
-		EmployeeNumber:            employee.EmployeeNumber,
-		EmploymentNumber:          employee.EmploymentNumber,
-		FirstName:                 employee.FirstName,
-		LastName:                  employee.LastName,
-		IsSubcontractor:           employee.IsSubcontractor,
-		DateOfBirth:               employee.DateOfBirth,
-		Gender:                    employee.Gender,
-		Email:                     employee.Email,
-		PrivateEmailAddress:       employee.PrivateEmailAddress,
-		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		OutOfService:              employee.OutOfService,
-		HasBorrowed:               employee.HasBorrowed,
-		UserID:                    employee.ID,
-		CreatedAt:                 employee.CreatedAt,
-		IsArchived:                employee.IsArchived,
-		LocationID:                employee.LocationID,
-	}, "Employee profile created successfully")
+	res := SuccessResponse(employee, "Employee profile created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// ListEmployeeRequest represents the request for ListEmployeeProfileApi
-type ListEmployeeRequest struct {
-	pagination.Request
-	IncludeArchived     *bool   `form:"is_archived"`
-	IncludeOutOfService *bool   `form:"out_of_service"`
-	Department          *string `form:"department"`
-	Position            *string `form:"position"`
-	LocationID          *int64  `form:"location_id"`
-	Search              *string `form:"search"`
-}
-
-// ListEmployeeResponse represents the response for ListEmployeeProfileApi
-type ListEmployeeResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
-	FirstName                 string    `json:"first_name"`
-	LastName                  string    `json:"last_name"`
-	Position                  *string   `json:"position"`
-	Department                *string   `json:"department"`
-	EmployeeNumber            *string   `json:"employee_number"`
-	EmploymentNumber          *string   `json:"employment_number"`
-	PrivateEmailAddress       *string   `json:"private_email_address"`
-	Email                     string    `json:"email"`
-	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string   `json:"private_phone_number"`
-	WorkPhoneNumber           *string   `json:"work_phone_number"`
-	DateOfBirth               time.Time `json:"date_of_birth"`
-	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
-	CreatedAt                 time.Time `json:"created_at"`
-	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
-	LocationID                *int64    `json:"location_id"`
-	HasBorrowed               bool      `json:"has_borrowed"`
-	OutOfService              *bool     `json:"out_of_service"`
-	IsArchived                bool      `json:"is_archived"`
-	ProfilePicture            *string   `json:"profile_picture"`
-	Age                       int64     `json:"age"`
-	RoleID                    *int32    `json:"role_id"`
-	RoleName                  *string   `json:"role_name"`
 }
 
 // @Summary List employee profiles
@@ -246,66 +118,22 @@ type ListEmployeeResponse struct {
 // @Param position query string false "Filter by position"
 // @Param location_id query integer false "Filter by location ID"
 // @Param search query string false "Search term for employee name or number"
-// @Success 200 {object} Response[pagination.Response[ListEmployeeResponse]]
+// @Success 200 {object} Response[pagination.Response[employees.ListEmployeeResponse]]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees [get]
 func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
-	var req ListEmployeeRequest
+	var req employees.ListEmployeeRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid query parameters")))
 		return
 	}
+	response, err := server.businessService.EmployeeService.ListEmployees(req, ctx)
 
-	params := req.GetParams()
-
-	employees, totalCount, err := server.businessService.EmployeeService.ListEmployees(employees.ListEmployeesRequest{
-		Limit:               params.Limit,
-		Offset:              params.Offset,
-		IncludeArchived:     req.IncludeArchived,
-		IncludeOutOfService: req.IncludeOutOfService,
-		Search:              req.Search,
-		Department:          req.Department,
-		Position:            req.Position,
-		LocationID:          req.LocationID,
-	}, ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list employee profiles")))
 		return
 	}
 
-	responseEmployees := make([]ListEmployeeResponse, len(employees))
-	for i, employee := range employees {
-		responseEmployees[i] = ListEmployeeResponse{
-			ID:                        employee.ID,
-			UserID:                    employee.UserID,
-			FirstName:                 employee.FirstName,
-			LastName:                  employee.LastName,
-			Position:                  employee.Position,
-			Department:                employee.Department,
-			EmployeeNumber:            employee.EmployeeNumber,
-			EmploymentNumber:          employee.EmploymentNumber,
-			PrivateEmailAddress:       employee.PrivateEmailAddress,
-			Email:                     employee.Email,
-			AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-			PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-			WorkPhoneNumber:           employee.WorkPhoneNumber,
-			DateOfBirth:               employee.DateOfBirth.Time,
-			HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-			CreatedAt:                 employee.CreatedAt.Time,
-			IsSubcontractor:           employee.IsSubcontractor,
-			Gender:                    employee.Gender,
-			LocationID:                employee.LocationID,
-			HasBorrowed:               employee.HasBorrowed,
-			OutOfService:              employee.OutOfService,
-			IsArchived:                employee.IsArchived,
-			ProfilePicture:            server.generateResponsePresignedURL(employee.ProfilePicture),
-			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
-			RoleID:                    employee.RoleID,
-			RoleName:                  employee.RoleName,
-		}
-	}
-
-	response := pagination.NewResponse(ctx, req.Request, responseEmployees, *totalCount)
 	res := SuccessResponse(response, "Employee profiles retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
@@ -612,22 +440,6 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 
 }
 
-// UpdateEmployeeIsSubcontractorRequest represents the request for UpdateEmployeeIsSubcontractorApi
-type UpdateEmployeeIsSubcontractorRequest struct {
-	IsSubcontractor *bool `json:"is_subcontractor" binding:"required"`
-}
-
-// UpdateEmployeeIsSubcontractorResponse represents the response for UpdateEmployeeIsSubcontractorApi
-type UpdateEmployeeIsSubcontractorResponse struct {
-	ID                int64     `json:"id"`
-	IsSubcontractor   *bool     `json:"is_subcontractor"`
-	ContractType      *string   `json:"contract_type"`
-	ContractHours     *float64  `json:"contract_hours"`
-	ContractRate      *float64  `json:"contract_rate"`
-	ContractStartdate time.Time `json:"contract_start_date"`
-	ContractEndDate   time.Time `json:"contract_end_date"`
-}
-
 // @Summary Update employee's subcontractor status
 // @Description Update an employee's subcontractor status and adjust contract details accordingly
 // @Tags employees
@@ -645,31 +457,20 @@ func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee ID: %w", err)))
 		return
 	}
-	var req UpdateEmployeeIsSubcontractorRequest
+	var req employees.UpdateEmployeeIsSubcontractorRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body: %w", err)))
 		return
 	}
 
 	result, err := server.businessService.EmployeeService.UpdateEmployeeIsSubcontractor(
-		employees.UpdateEmployeeIsSubcontractorRequest{
-			EmployeeID:      employeeID,
-			IsSubcontractor: req.IsSubcontractor,
-		}, ctx)
+		req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update subcontractor status: %w", err)))
 		return
 	}
 
-	res := SuccessResponse(UpdateEmployeeIsSubcontractorResponse{
-		ID:                result.ID,
-		IsSubcontractor:   result.IsSubcontractor,
-		ContractType:      result.ContractType,
-		ContractHours:     result.ContractHours,
-		ContractRate:      result.ContractRate,
-		ContractStartdate: result.ContractStartDate,
-		ContractEndDate:   result.ContractEndDate,
-	}, "Employee subcontractor status updated successfully")
+	res := SuccessResponse(result, "Employee subcontractor status updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

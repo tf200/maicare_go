@@ -5,59 +5,16 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
+	"maicare_go/pagination"
 	"maicare_go/util"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-type CreateEmployeeRequest struct {
-	EmployeeNumber            *string
-	EmploymentNumber          *string
-	LocationID                *int64
-	IsSubcontractor           *bool
-	FirstName                 string
-	LastName                  string
-	DateOfBirth               *string
-	Gender                    *string
-	Email                     string
-	PrivateEmailAddress       *string
-	AuthenticationPhoneNumber *string
-	WorkPhoneNumber           *string
-	PrivatePhoneNumber        *string
-	HomeTelephoneNumber       *string
-	RoleID                    int32
-	Position                  *string
-	Department                *string
-}
-
-type CreateEmployeeResult struct {
-	ID                        int64
-	UserID                    int64
-	FirstName                 string
-	LastName                  string
-	Position                  *string
-	Department                *string
-	EmployeeNumber            *string
-	EmploymentNumber          *string
-	PrivateEmailAddress       *string
-	Email                     string
-	AuthenticationPhoneNumber *string
-	PrivatePhoneNumber        *string
-	WorkPhoneNumber           *string
-	DateOfBirth               time.Time
-	HomeTelephoneNumber       *string
-	CreatedAt                 time.Time
-	IsSubcontractor           *bool
-	Gender                    *string
-	LocationID                *int64
-	HasBorrowed               bool
-	OutOfService              *bool
-	IsArchived                bool
-}
-
-func (s *employeeService) CreateEmployee(req CreateEmployeeRequest, ctx context.Context) (*CreateEmployeeResult, error) {
+func (s *employeeService) CreateEmployee(req CreateEmployeeProfileRequest, ctx context.Context) (*CreateEmployeeProfileResponse, error) {
 	password := util.RandomString(12)
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
@@ -115,7 +72,7 @@ func (s *employeeService) CreateEmployee(req CreateEmployeeRequest, ctx context.
 		return nil, fmt.Errorf("failed to create employee with account: %v", err)
 	}
 
-	res := &CreateEmployeeResult{
+	res := &CreateEmployeeProfileResponse{
 		ID:                        employee.Employee.ID,
 		EmployeeNumber:            employee.Employee.EmployeeNumber,
 		EmploymentNumber:          employee.Employee.EmploymentNumber,
@@ -141,21 +98,11 @@ func (s *employeeService) CreateEmployee(req CreateEmployeeRequest, ctx context.
 	return res, nil
 }
 
-type ListEmployeesRequest struct {
-	Limit               int32
-	Offset              int32
-	IncludeArchived     *bool
-	IncludeOutOfService *bool
-	Department          *string
-	Position            *string
-	LocationID          *int64
-	Search              *string
-}
-
-func (s *employeeService) ListEmployees(req ListEmployeesRequest, ctx context.Context) ([]db.ListEmployeeProfileRow, *int64, error) {
+func (s *employeeService) ListEmployees(req ListEmployeeRequest, ctx *gin.Context) (*pagination.Response[ListEmployeeResponse], error) {
+	params := req.GetParams()
 	employees, err := s.Store.ListEmployeeProfile(ctx, db.ListEmployeeProfileParams{
-		Limit:               req.Limit,
-		Offset:              req.Offset,
+		Limit:               params.Limit,
+		Offset:              params.Offset,
 		IncludeArchived:     req.IncludeArchived,
 		IncludeOutOfService: req.IncludeOutOfService,
 		Department:          req.Department,
@@ -166,7 +113,7 @@ func (s *employeeService) ListEmployees(req ListEmployeesRequest, ctx context.Co
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListEmployees",
 			"Failed to list employees", zap.Error(err))
-		return nil, nil, fmt.Errorf("failed to list employees")
+		return nil, fmt.Errorf("failed to list employees")
 	}
 	totalCount, err := s.Store.CountEmployeeProfile(ctx, db.CountEmployeeProfileParams{
 		IncludeArchived:     req.IncludeArchived,
@@ -178,46 +125,68 @@ func (s *employeeService) ListEmployees(req ListEmployeesRequest, ctx context.Co
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListEmployees",
 			"Failed to count employees", zap.Error(err))
-		return nil, nil, fmt.Errorf("failed to count employees")
+		return nil, fmt.Errorf("failed to count employees")
 	}
+
+	responseEmployees := make([]ListEmployeeResponse, len(employees))
+
+	for i, employee := range employees {
+		responseEmployees[i] = ListEmployeeResponse{
+			ID:                        employee.ID,
+			UserID:                    employee.UserID,
+			FirstName:                 employee.FirstName,
+			LastName:                  employee.LastName,
+			Position:                  employee.Position,
+			Department:                employee.Department,
+			EmployeeNumber:            employee.EmployeeNumber,
+			EmploymentNumber:          employee.EmploymentNumber,
+			PrivateEmailAddress:       employee.PrivateEmailAddress,
+			Email:                     employee.Email,
+			AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
+			PrivatePhoneNumber:        employee.PrivatePhoneNumber,
+			WorkPhoneNumber:           employee.WorkPhoneNumber,
+			DateOfBirth:               employee.DateOfBirth.Time,
+			HomeTelephoneNumber:       employee.HomeTelephoneNumber,
+			CreatedAt:                 employee.CreatedAt.Time,
+			IsSubcontractor:           employee.IsSubcontractor,
+			Gender:                    employee.Gender,
+			LocationID:                employee.LocationID,
+			HasBorrowed:               employee.HasBorrowed,
+			OutOfService:              employee.OutOfService,
+			IsArchived:                employee.IsArchived,
+			ProfilePicture:            s.GenerateResponsePresignedURL(employee.ProfilePicture, ctx),
+			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
+			RoleID:                    employee.RoleID,
+			RoleName:                  employee.RoleName,
+		}
+	}
+
+	response := pagination.NewResponse(ctx, req.Request, responseEmployees, totalCount)
+
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListEmployees", "Successfully listed employees",
 		zap.Int("Count", len(employees)), zap.Int64("TotalCount", totalCount))
-	return employees, &totalCount, nil
-}
-
-type UpdateEmployeeIsSubcontractorRequest struct {
-	EmployeeID      int64
-	IsSubcontractor *bool
-}
-
-type UpdateEmployeeIsSubcontractorResult struct {
-	ID                int64
-	IsSubcontractor   *bool
-	ContractType      *string
-	ContractHours     *float64
-	ContractStartDate time.Time
-	ContractEndDate   time.Time
-	ContractRate      *float64
+	return &response, nil
 }
 
 func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	req UpdateEmployeeIsSubcontractorRequest,
-	ctx context.Context) (*UpdateEmployeeIsSubcontractorResult, error) {
+	employeeID int64,
+	ctx context.Context) (*UpdateEmployeeIsSubcontractorResponse, error) {
 	contractType := "loondienst"
 	if req.IsSubcontractor != nil && *req.IsSubcontractor {
 		contractType = "ZZP"
 	}
 
 	emp, err := s.Store.UpdateEmployeeIsSubcontractor(ctx, db.UpdateEmployeeIsSubcontractorParams{
-		ID:              req.EmployeeID,
+		ID:              employeeID,
 		IsSubcontractor: req.IsSubcontractor,
 		ContractType:    &contractType,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeIsSubcontractor", "Failed to update employee subcontractor status", zap.Error(err), zap.Int64("EmployeeID", req.EmployeeID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeIsSubcontractor", "Failed to update employee subcontractor status", zap.Error(err), zap.Int64("EmployeeID", employeeID), zap.Bool("IsSubcontractor", *req.IsSubcontractor))
 		return nil, fmt.Errorf("failed to update employee subcontractor status")
 	}
-	res := &UpdateEmployeeIsSubcontractorResult{
+	res := &UpdateEmployeeIsSubcontractorResponse{
 		ID:                emp.ID,
 		IsSubcontractor:   emp.IsSubcontractor,
 		ContractType:      emp.ContractType,
@@ -226,6 +195,6 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 		ContractEndDate:   emp.ContractEndDate.Time,
 		ContractRate:      emp.ContractRate,
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateEmployeeIsSubcontractor", "Successfully updated employee subcontractor status", zap.Int64("EmployeeID", req.EmployeeID), zap.Bool("IsSubcontractor", *req.IsSubcontractor))
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateEmployeeIsSubcontractor", "Successfully updated employee subcontractor status", zap.Int64("EmployeeID", employeeID), zap.Bool("IsSubcontractor", *req.IsSubcontractor))
 	return res, nil
 }
