@@ -231,3 +231,7 @@ RETURNING *;
 
 
 
+-- name: GetInvoiceSenderID :one
+SELECT sender_id
+FROM invoice
+WHERE id = $1;

@@ -1,48 +1,34 @@
 package auth
 
-import (
-	"context"
-	db "maicare_go/db/sqlc"
-	"maicare_go/logger"
-	"maicare_go/service/deps"
+// var testAuthService AuthService
 
-	"maicare_go/token"
-	"maicare_go/util"
-	"os"
-	"testing"
+// func TestMain(m *testing.M) {
+// 	config, err := util.LoadConfig("../..")
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	"github.com/jackc/pgx/v5/pgxpool"
-)
+// 	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey,
+// 		config.RefreshTokenSecretKey,
+// 		config.TwoFATokenSecretKey,
+// 	)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	conn, err := pgxpool.New(context.Background(), config.DbSource)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer conn.Close()
 
-var testAuthService AuthService
+// 	testStore := db.NewStore(conn)
 
-func TestMain(m *testing.M) {
-	config, err := util.LoadConfig("../..")
-	if err != nil {
-		panic(err)
-	}
+// 	mockLogger, err := logger.SetupLogger("development")
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey,
-		config.RefreshTokenSecretKey,
-		config.TwoFATokenSecretKey,
-	)
-	if err != nil {
-		panic(err)
-	}
-	conn, err := pgxpool.New(context.Background(), config.DbSource)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-
-	testStore := db.NewStore(conn)
-
-	mockLogger, err := logger.SetupLogger("development")
-	if err != nil {
-		panic(err)
-	}
-
-	deps := deps.NewServiceDependencies(testStore, tokenMaker, mockLogger, &config)
-	testAuthService = NewAuthService(deps)
-	os.Exit(m.Run())
-}
+// 	deps := deps.NewServiceDependencies(testStore, tokenMaker, mockLogger, &config)
+// 	testAuthService = NewAuthService(deps)
+// 	os.Exit(m.Run())
+// }

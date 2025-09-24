@@ -894,6 +894,30 @@ func (server *Server) GetInvoiceTemplateItemsApi(ctx *gin.Context) {
 
 }
 
+// SendInvoiceReminderApi handles sending a reminder for a specific invoice.
+// @Summary Send Invoice Reminder
+// @Description Send a reminder for a specific invoice by its ID.
+// @Tags Invoice
+// @Produce json
+// @Param id path int64 true "Invoice ID"
+// @Success 200 {object} Response[any] "Successful response indicating reminder sent"
+// @Failure 400,401,404,500 {object} Response[any]
+// @Router /invoices/{id}/send_reminder [post]
+func (server *Server) SendInvoiceReminderApi(ctx *gin.Context) {
+	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", ctx.Param("id"))))
+		return
+	}
+
+	err = server.businessService.InvoiceService.SendInvoiceReminder(ctx, invoiceID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to send invoice reminder: %w", err)))
+		return
+	}
+	ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "Invoice reminder sent successfully"))
+}
+
 // ================== Invoice Logs ==================
 
 // GetInvoiceAuditLogsResponse represents the response body for getting invoice audit logs.

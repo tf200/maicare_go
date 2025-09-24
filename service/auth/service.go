@@ -20,12 +20,12 @@ var (
 //
 //go:generate mockgen -source=service.go -destination=../mocks/mock_auth_service.go -package=mocks
 type AuthService interface {
-	Login(req LoginRequest, ctx context.Context) (*LoginResult, error)
-	RefreshToken(req RefreshTokenRequest, ctx context.Context) (*RefreshTokenResult, error)
-	SetupTwoFA(req SetupTwoFARequest, ctx context.Context) (*SetupTwoFAResult, error)
-	VerifyTwoFAToken(req VerifyTwoFATokenRequest, ctx context.Context) (*LoginResult, error)
+	Login(req LoginUserRequest, clientIP string, userAgent string, ctx context.Context) (*LoginUserResponse, error)
+	RefreshToken(req RefreshTokenRequest, ctx context.Context) (*RefreshTokenResponse, error)
+	SetupTwoFA(userID int64, ctx context.Context) (*Setup2FAResponse, error)
+	VerifyTwoFAToken(req Verify2FARequest, ctx context.Context) (*LoginUserResponse, error)
 	Logout(req LogoutRequest, ctx context.Context) error
-	ChangePassword(req ChangePasswordRequest, ctx context.Context) error
+	ChangePassword(req ChangePasswordRequest, userID int64, ctx context.Context) error
 	EnableTwoFA(req EnableTwoFARequest, ctx context.Context) (*EnableTwoFAResult, error)
 }
 

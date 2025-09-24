@@ -14,6 +14,7 @@ func (server *Server) setupInvoiceRoutes(baseRouter *gin.RouterGroup) {
 		invoiceGroup.DELETE("/:id", server.RBACMiddleware("INVOICE.DELETE"), server.DeleteInvoiceApi)
 		invoiceGroup.POST("/:id/credit", server.RBACMiddleware("INVOICE.UPDATE"), server.CreditInvoiceApi)
 		invoiceGroup.GET("/:id/generate_pdf", server.RBACMiddleware("INVOICE.VIEW"), server.GenerateInvoicePdfApi)
+		invoiceGroup.POST("/:id/send_reminder", server.RBACMiddleware("INVOICE.CREATE"), server.SendInvoiceReminderApi)
 
 		invoiceGroup.POST("/:id/payments", server.RBACMiddleware("INVOICE.PAYMENT.CREATE"), server.CreatePaymentApi)
 		invoiceGroup.GET("/:id/payments", server.RBACMiddleware("INVOICE.PAYMENT.VIEW"), server.ListPaymentsApi)

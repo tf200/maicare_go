@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"log"
-	"maicare_go/bucket"
+	bucketmocks "maicare_go/bucket/mocks"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"maicare_go/hub"
@@ -36,7 +36,11 @@ func TestMain(m *testing.M) {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
 	defer conn.Close()
-	testB2client, err := bucket.NewObjectStorageClient(context.Background(), config)
+
+	ctrl := gomock.NewController(&testing.T{})
+	defer ctrl.Finish()
+
+	testB2client := bucketmocks.NewMockObjectStorageInterface(ctrl)
 	if err != nil {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}
@@ -47,10 +51,10 @@ func TestMain(m *testing.M) {
 	hubInstance := hub.NewHub()
 	testNotifService := notification.NewService(testStore, hubInstance)
 
-	ctrl := gomock.NewController(&testing.T{})
+	ctrl = gomock.NewController(&testing.T{})
 	defer ctrl.Finish()
 
-	buisnessService := service.NewBusinessService(testStore, &token.JWTMaker{}, &logger.LoggerImpl{}, &config)
+	buisnessService := service.NewBusinessService(testStore, &token.JWTMaker{}, &logger.LoggerImpl{}, &config, testB2client)
 
 	testWorker = NewAsynqServer(config.RedisHost, "", config.RedisPassword, testStore, &tls.Config{}, testBrevo, testB2client, testNotifService, buisnessService)
 

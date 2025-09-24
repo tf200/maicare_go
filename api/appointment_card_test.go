@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"fmt"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +30,7 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				appointmentReq := CreateAppointmentCardRequest{
+				appointmentReq := clientp.CreateAppointmentCardRequest{
 					GeneralInformation:     []string{"Client is doing well", "No concerns raised"},
 					ImportantContacts:      []string{"Mother - 555-123-4567", "Case Worker - 555-987-6543"},
 					HouseholdInfo:          []string{"Lives with mother and younger sibling", "Stable home environment"},
@@ -54,7 +55,7 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var appointmentCard Response[CreateAppointmentCardResponse]
+				var appointmentCard Response[clientp.CreateAppointmentCardResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &appointmentCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, appointmentCard.Data)

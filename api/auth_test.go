@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/service/auth"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -65,7 +66,7 @@ func TestLogin(t *testing.T) {
 		{
 			name: "OK",
 			buildRequest: func() (*http.Request, error) {
-				loginReq := LoginUserRequest{
+				loginReq := auth.LoginUserRequest{
 					Email:    user.Email,
 					Password: "t2aha000",
 				}
@@ -84,7 +85,7 @@ func TestLogin(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response LoginUserResponse
+				var response auth.LoginUserResponse
 				res := SuccessResponse(response, "login successful")
 				err := json.NewDecoder(recorder.Body).Decode(&res)
 
@@ -96,7 +97,7 @@ func TestLogin(t *testing.T) {
 		{
 			name: "UserNotFound",
 			buildRequest: func() (*http.Request, error) {
-				loginReq := LoginUserRequest{
+				loginReq := auth.LoginUserRequest{
 					Email:    "nonexistent@email.com",
 					Password: "password123",
 				}
@@ -119,7 +120,7 @@ func TestLogin(t *testing.T) {
 		{
 			name: "WrongPassword",
 			buildRequest: func() (*http.Request, error) {
-				loginReq := LoginUserRequest{
+				loginReq := auth.LoginUserRequest{
 					Email:    user.Email,
 					Password: "wrongpassword",
 				}
@@ -213,8 +214,8 @@ func TestRefreshTokenHandler(t *testing.T) {
 		{
 			name: "OK",
 			buildRequest: func() (*http.Request, error) {
-				RefreshReq := RefreshTokenRequest{
-					Token: token,
+				RefreshReq := auth.RefreshTokenRequest{
+					RefreshToken: token,
 				}
 				data, err := json.Marshal(RefreshReq)
 				if err != nil {
@@ -232,7 +233,7 @@ func TestRefreshTokenHandler(t *testing.T) {
 				t.Log(recorder.Body)
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response RefreshTokenResponse
+				var response auth.RefreshTokenResponse
 				res := SuccessResponse(response, "Refresh token")
 				err := json.NewDecoder(recorder.Body).Decode(&res)
 				require.NoError(t, err)
@@ -242,8 +243,8 @@ func TestRefreshTokenHandler(t *testing.T) {
 		{
 			name: "InvalidToken",
 			buildRequest: func() (*http.Request, error) {
-				RefreshReq := RefreshTokenRequest{
-					Token: "invalid",
+				RefreshReq := auth.RefreshTokenRequest{
+					RefreshToken: "invalid",
 				}
 				data, err := json.Marshal(RefreshReq)
 				if err != nil {
@@ -292,7 +293,7 @@ func TestChangePasswordApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/auth/change_password"
-				changePasswordReq := ChangePasswordRequest{
+				changePasswordReq := auth.ChangePasswordRequest{
 					OldPassword: "t2aha000",
 					NewPassword: "newpassword123",
 				}

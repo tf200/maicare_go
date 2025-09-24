@@ -108,7 +108,7 @@ func main() {
 	}
 
 	// Init the buisness service
-	businessService := service.NewBusinessService(store, tokenMaker, logger, &config)
+	businessService := service.NewBusinessService(store, tokenMaker, logger, &config, b2Client)
 
 	if !config.Remote {
 		redisClient := redis.NewClient(&redis.Options{

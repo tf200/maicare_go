@@ -1,4 +1,4 @@
-package client
+package clientp
 
 import (
 	"context"
@@ -11,24 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
-type CreateAppointmentCardRequest struct {
-	ClientID               int64
-	GeneralInformation     []string
-	ImportantContacts      []string
-	HouseholdInfo          []string
-	OrganizationAgreements []string
-	YouthOfficerAgreements []string
-	TreatmentAgreements    []string
-	SmokingRules           []string
-	Work                   []string
-	SchoolInternship       []string
-	Travel                 []string
-	Leave                  []string
-}
-
-func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, ctx context.Context) (*db.AppointmentCard, error) {
+func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, clientID int64, ctx context.Context) (*CreateAppointmentCardResponse, error) {
 	appointmentCard, err := s.Store.CreateAppointmentCard(ctx, db.CreateAppointmentCardParams{
-		ClientID:               req.ClientID,
+		ClientID:               clientID,
 		GeneralInformation:     req.GeneralInformation,
 		ImportantContacts:      req.ImportantContacts,
 		HouseholdInfo:          req.HouseholdInfo,
@@ -48,10 +33,27 @@ func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, 
 	}
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateAppointmentCard",
 		"Successfully created appointment card", zap.Int64("AppointmentCardID", appointmentCard.ID))
-	return &appointmentCard, nil
+	return &CreateAppointmentCardResponse{
+		ID:                     appointmentCard.ID,
+		ClientID:               appointmentCard.ClientID,
+		GeneralInformation:     appointmentCard.GeneralInformation,
+		ImportantContacts:      appointmentCard.ImportantContacts,
+		HouseholdInfo:          appointmentCard.HouseholdInfo,
+		OrganizationAgreements: appointmentCard.OrganizationAgreements,
+		YouthOfficerAgreements: appointmentCard.YouthOfficerAgreements,
+		TreatmentAgreements:    appointmentCard.TreatmentAgreements,
+		SmokingRules:           appointmentCard.SmokingRules,
+		Work:                   appointmentCard.Work,
+		SchoolInternship:       appointmentCard.SchoolInternship,
+		Travel:                 appointmentCard.Travel,
+		Leave:                  appointmentCard.Leave,
+		CreatedAt:              appointmentCard.CreatedAt.Time,
+		UpdatedAt:              appointmentCard.UpdatedAt.Time,
+		FileUrl:                appointmentCard.FileUrl,
+	}, nil
 }
 
-func (s *clientService) GetAppointmentCard(ctx context.Context, clientID int64) (*db.GetAppointmentCardRow, error) {
+func (s *clientService) GetAppointmentCard(ctx context.Context, clientID int64) (*GetAppointmentCardResponse, error) {
 	appointmentCard, err := s.Store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -65,5 +67,22 @@ func (s *clientService) GetAppointmentCard(ctx context.Context, clientID int64) 
 	}
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetAppointmentCard",
 		"Successfully retrieved appointment card", zap.Int64("AppointmentCardID", appointmentCard.ID))
-	return &appointmentCard, nil
+	return &GetAppointmentCardResponse{
+		ID:                     appointmentCard.ID,
+		ClientID:               appointmentCard.ClientID,
+		GeneralInformation:     appointmentCard.GeneralInformation,
+		ImportantContacts:      appointmentCard.ImportantContacts,
+		HouseholdInfo:          appointmentCard.HouseholdInfo,
+		OrganizationAgreements: appointmentCard.OrganizationAgreements,
+		YouthOfficerAgreements: appointmentCard.YouthOfficerAgreements,
+		TreatmentAgreements:    appointmentCard.TreatmentAgreements,
+		SmokingRules:           appointmentCard.SmokingRules,
+		Work:                   appointmentCard.Work,
+		SchoolInternship:       appointmentCard.SchoolInternship,
+		Travel:                 appointmentCard.Travel,
+		Leave:                  appointmentCard.Leave,
+		CreatedAt:              appointmentCard.CreatedAt.Time,
+		UpdatedAt:              appointmentCard.UpdatedAt.Time,
+		FileUrl:                appointmentCard.FileUrl,
+	}, nil
 }
