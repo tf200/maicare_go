@@ -2666,7 +2666,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateAppointmentCardRequest"
+                            "$ref": "#/definitions/clientp.UpdateAppointmentCardRequest"
                         }
                     }
                 ],
@@ -2674,7 +2674,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateAppointmentCardResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateAppointmentCardResponse"
                         }
                     }
                 }
@@ -2742,7 +2742,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateAppointmentCardResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GenerateAppointmentCardDocumentApiResponse"
                         }
                     }
                 }
@@ -7837,12 +7837,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Client ID",
                         "name": "client_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Sender ID",
                         "name": "sender_id",
                         "in": "query"
@@ -8089,6 +8091,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8143,6 +8146,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8203,6 +8207,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8256,6 +8261,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8309,6 +8315,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8362,6 +8369,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8415,6 +8423,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8469,6 +8478,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8531,6 +8541,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "id",
                         "in": "path",
@@ -8584,6 +8595,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8640,6 +8652,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8647,6 +8660,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -8710,6 +8724,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8717,6 +8732,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -20022,20 +20038,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_UpdateAppointmentCardResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateAppointmentCardResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_UpdateAppointmentResponse": {
             "type": "object",
             "properties": {
@@ -20934,6 +20936,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GenerateAppointmentCardDocumentApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GenerateAppointmentCardDocumentApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_GetAppointmentCardResponse": {
             "type": "object",
             "properties": {
@@ -20995,6 +21011,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.ListClientsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateAppointmentCardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateAppointmentCardResponse"
                 },
                 "message": {
                     "type": "string"
@@ -21458,160 +21488,6 @@ const docTemplate = `{
                 },
                 "urgent_cases_count": {
                     "type": "integer"
-                }
-            }
-        },
-        "api.UpdateAppointmentCardRequest": {
-            "type": "object",
-            "properties": {
-                "general_information": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "household_info": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "important_contacts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "leave": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "organization_agreements": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "school_internship": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "smoking_rules": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "travel": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "treatment_agreements": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "work": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "youth_officer_agreements": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "api.UpdateAppointmentCardResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "general_information": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "household_info": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "important_contacts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "leave": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "organization_agreements": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "school_internship": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "smoking_rules": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "travel": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "treatment_agreements": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "work": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "youth_officer_agreements": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -24506,6 +24382,17 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.GenerateAppointmentCardDocumentApiResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "file_url": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.GetAppointmentCardResponse": {
             "type": "object",
             "properties": {
@@ -24834,6 +24721,160 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateAppointmentCardRequest": {
+            "type": "object",
+            "properties": {
+                "general_information": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "household_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "important_contacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leave": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organization_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "school_internship": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "smoking_rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "travel": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "treatment_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "work": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "youth_officer_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "clientp.UpdateAppointmentCardResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "general_information": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "household_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "important_contacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leave": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organization_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "school_internship": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "smoking_rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "travel": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "treatment_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "youth_officer_agreements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -26078,6 +26119,7 @@ const docTemplate = `{
         },
         "pgtype.InfinityModifier": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 0,

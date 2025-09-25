@@ -20,6 +20,8 @@ type ClientService interface {
 	// Client Appointment Card
 	CreateAppointmentCard(req CreateAppointmentCardRequest, clientID int64, ctx context.Context) (*CreateAppointmentCardResponse, error)
 	GetAppointmentCard(ctx context.Context, clientID int64) (*GetAppointmentCardResponse, error)
+	UpdateAppointmentCard(req UpdateAppointmentCardRequest, clientID int64, ctx context.Context) (*UpdateAppointmentCardResponse, error)
+	GenerateAppointmentCardDocumentApi(ctx context.Context, clientID int64) (*GenerateAppointmentCardDocumentApiResponse, error)
 }
 
 type clientService struct {

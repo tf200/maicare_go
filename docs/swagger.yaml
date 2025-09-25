@@ -5617,15 +5617,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UpdateAppointmentCardResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateAppointmentCardResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_UpdateAppointmentResponse:
     properties:
       data:
@@ -6205,6 +6196,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GenerateAppointmentCardDocumentApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GenerateAppointmentCardDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetAppointmentCardResponse:
     properties:
       data:
@@ -6245,6 +6245,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateAppointmentCardResponse'
       message:
         type: string
       success:
@@ -6545,108 +6554,6 @@ definitions:
         type: integer
       urgent_cases_count:
         type: integer
-    type: object
-  api.UpdateAppointmentCardRequest:
-    properties:
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
-  api.UpdateAppointmentCardResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      id:
-        type: integer
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
     type: object
   api.UpdateAppointmentRequest:
     properties:
@@ -8571,6 +8478,13 @@ definitions:
       work_start_date:
         type: string
     type: object
+  clientp.GenerateAppointmentCardDocumentApiResponse:
+    properties:
+      client_id:
+        type: integer
+      file_url:
+        type: string
+    type: object
   clientp.GetAppointmentCardResponse:
     properties:
       client_id:
@@ -8789,6 +8703,108 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  clientp.UpdateAppointmentCardRequest:
+    properties:
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.UpdateAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
     type: object
   clientp.UpdateClientDetailsRequest:
     properties:
@@ -9617,6 +9633,7 @@ definitions:
     - 1
     - 0
     - -1
+    format: int32
     type: integer
     x-enum-varnames:
     - Infinity
@@ -11398,14 +11415,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateAppointmentCardRequest'
+          $ref: '#/definitions/clientp.UpdateAppointmentCardRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateAppointmentCardResponse'
       summary: Update an appointment card by client ID
       tags:
       - appointment_cards
@@ -11424,7 +11441,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
+            $ref: '#/definitions/api.Response-clientp_GenerateAppointmentCardDocumentApiResponse'
       summary: Generate an appointment card document by client ID
       tags:
       - appointment_cards
@@ -14819,10 +14836,12 @@ paths:
         ID, status, and date range.
       parameters:
       - description: Client ID
+        format: int64
         in: query
         name: client_id
         type: integer
       - description: Sender ID
+        format: int64
         in: query
         name: sender_id
         type: integer
@@ -14915,6 +14934,7 @@ paths:
       description: Delete an invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14949,6 +14969,7 @@ paths:
       description: Get an invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -14985,6 +15006,7 @@ paths:
       description: Update an existing invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15026,6 +15048,7 @@ paths:
       description: Retrieve audit logs for a specific invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15061,6 +15084,7 @@ paths:
       description: Create a credit note for an existing invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15096,6 +15120,7 @@ paths:
       description: Generate an invoice in PDF format by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15131,6 +15156,7 @@ paths:
       description: List all payments for a specific invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15167,6 +15193,7 @@ paths:
       description: Create a payment for an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15208,6 +15235,7 @@ paths:
       description: Get a payment by its ID.
       parameters:
       - description: Payment ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15243,6 +15271,7 @@ paths:
       description: Send a reminder for a specific invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15280,11 +15309,13 @@ paths:
       description: Delete a payment from an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
+        format: int64
         in: path
         name: payment_id
         required: true
@@ -15321,11 +15352,13 @@ paths:
       description: Update a payment for an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
+        format: int64
         in: path
         name: payment_id
         required: true

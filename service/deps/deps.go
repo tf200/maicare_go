@@ -15,7 +15,7 @@ type ServiceDependencies struct {
 	TokenMaker token.Maker
 	Logger     logger.Logger
 	Config     *util.Config
-	b2Client   bucket.ObjectStorageInterface
+	B2Client   bucket.ObjectStorageInterface
 }
 
 func NewServiceDependencies(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface) *ServiceDependencies {
@@ -24,7 +24,7 @@ func NewServiceDependencies(store *db.Store, tokenMaker token.Maker, logger logg
 		TokenMaker: tokenMaker,
 		Logger:     logger,
 		Config:     config,
-		b2Client:   b2Client,
+		B2Client:   b2Client,
 	}
 }
 
@@ -33,7 +33,7 @@ func (d *ServiceDependencies) GenerateResponsePresignedURL(fileKey *string, ctx 
 		return nil
 	}
 
-	url, err := d.b2Client.GeneratePresignedURL(ctx, *fileKey, time.Minute*15)
+	url, err := d.B2Client.GeneratePresignedURL(ctx, *fileKey, time.Minute*15)
 	if err != nil {
 		return nil
 	}
