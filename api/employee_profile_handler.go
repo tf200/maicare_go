@@ -3,15 +3,14 @@ package api
 import (
 	"fmt"
 	"log"
-	"net/http"
-	"strconv"
-	"time"
-
-	"maicare_go/async"
+	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	_ "maicare_go/pagination" // import for pagination.Response used in swagger
 	"maicare_go/service/employees"
 	"maicare_go/util"
+	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/goccy/go-json"
 	"go.uber.org/zap"
@@ -550,7 +549,7 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
+	err = server.asynqClient.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
 		Name:         contractDetails.FirstName + " " + contractDetails.LastName,
 		To:           contractDetails.Email,
 		UserEmail:    user.Email,

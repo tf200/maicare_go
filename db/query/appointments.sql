@@ -171,6 +171,7 @@ LIMIT 1;
 
 -- name: GetAppointmentParticipants :many
 SELECT
+    ap.appointment_id,
     ep.id AS employee_id,
     ep.first_name,
     ep.last_name
@@ -179,7 +180,7 @@ FROM
 JOIN
     employee_profile ep ON ap.employee_id = ep.id
 WHERE
-    ap.appointment_id = $1 -- Filter by appointment ID
+    ap.appointment_id = ANY(@appointment_ids::uuid[]) -- Filter by appointment ID
 ORDER BY
     ep.last_name, ep.first_name; -- Optional ordering
 
@@ -187,6 +188,7 @@ ORDER BY
 
 -- name: GetAppointmentClients :many
 SELECT
+    ac.appointment_id,
     cd.id AS client_id,
     cd.first_name,
     cd.last_name
@@ -195,9 +197,9 @@ FROM
 JOIN
     client_details cd ON ac.client_id = cd.id
 WHERE
-    ac.appointment_id = $1 -- Filter by appointment ID
+    ac.appointment_id = ANY(@appointment_ids::uuid[]) -- Filter by appointment ID
 ORDER BY
-    cd.last_name, cd.first_name; -- Optional ordering
+    cd.last_name, cd.first_name;
 
 
 

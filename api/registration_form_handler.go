@@ -3,7 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
-	"maicare_go/async"
+	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/util"
@@ -1240,7 +1240,7 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 
 	if req.Status == "approved" {
 		// Enqueue the task to create an intake appointment
-		err = server.asynqClient.EnqueueAcceptedRegistration(ctx, async.AcceptedRegistrationFormPayload{
+		err = server.asynqClient.EnqueueAcceptedRegistration(ctx, aclient.AcceptedRegistrationFormPayload{
 			ReferrerName:        registrationForm.ReferrerFirstName + " " + registrationForm.ReferrerLastName,
 			ChildName:           registrationForm.ClientFirstName + " " + registrationForm.ClientLastName,
 			ChildBSN:            registrationForm.ClientBsnNumber,

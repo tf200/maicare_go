@@ -1,4 +1,4 @@
-package async
+package aclient
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-//go:generate mockgen -source=client.go -destination=../async/mocks/mock_asynq_client.go -package=asyncmocks
+//go:generate mockgen -source=service.go -destination=./mocks/mock_asynq_client.go -package=asyncmocks
 type AsynqClientInterface interface {
 	EnqueueEmailDelivery(
 		payload EmailDeliveryPayload,

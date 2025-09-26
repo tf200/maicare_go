@@ -4,23 +4,28 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
+	"maicare_go/notification"
+	"maicare_go/util"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
 func (s *appointmentService) CreateAppointment(req *CreateAppointmentRequest, userID int64, ctx context.Context) (*CreateAppointmentResponse, error) {
+	if req.StartTime.After(req.EndTime) {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Start time is after end time")
+		return nil, fmt.Errorf("start time must be before end time")
+	}
+
 	employee, err := s.Store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to get employee profile", zap.Error(err))
 		return nil, fmt.Errorf("failed to get employee profile")
-	}
-
-	if req.StartTime.After(req.EndTime) {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Start time is after end time")
-		return nil, fmt.Errorf("start time must be before end time")
 	}
 
 	filteredParticipants := req.ParticipantEmployeeIDs[:0] // Reuse the slice's backing array
@@ -30,10 +35,128 @@ func (s *appointmentService) CreateAppointment(req *CreateAppointmentRequest, us
 		}
 	}
 	req.ParticipantEmployeeIDs = filteredParticipants
+	if req.RecurrenceType == "NONE" {
+		return s.createNormalAppointment(req, employee.EmployeeID, employee.FirstName, employee.LastName, ctx)
+	} else {
+		return s.createRecurringAppointment(req, employee.EmployeeID, employee.FirstName, employee.LastName, ctx)
+	}
 
 }
 
-func (s *appointmentService) CreateNormalAppointment(req *CreateAppointmentRequest, employeeID int64, ctx context.Context) (*CreateAppointmentResponse, error) {
+func (s *appointmentService) AddParticipantToAppointment(
+	ctx context.Context,
+	appointmentID uuid.UUID,
+	req AddParticipantToAppointmentRequest) error {
+	err := s.Store.BulkAddAppointmentParticipants(ctx, db.BulkAddAppointmentParticipantsParams{
+		AppointmentID: appointmentID,
+		EmployeeIds:   req.ParticipantEmployeeIDs,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddParticipantToAppointmentApi", "Failed to add appointment participants", zap.Error(err))
+		return fmt.Errorf("failed to add participants to appointment")
+	}
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddParticipantToAppointmentApi", "Participants added to appointment successfully", zap.String("appointment_id", appointmentID.String()))
+	return nil
+}
+
+func (s *appointmentService) AddClientToAppointment(
+	ctx context.Context,
+	appointmentID uuid.UUID,
+	req AddClientToAppointmentRequest) error {
+	err := s.Store.BulkAddAppointmentClients(ctx, db.BulkAddAppointmentClientsParams{
+		AppointmentID: appointmentID,
+		ClientIds:     req.ClientIDs,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddClientToAppointmentApi", "Failed to add appointment clients", zap.Error(err))
+		return fmt.Errorf("failed to add clients to appointment")
+	}
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddClientToAppointmentApi", "Clients added to appointment successfully", zap.String("appointment_id", appointmentID.String()))
+	return nil
+}
+
+func (s *appointmentService) ListAppointmentsForEmployeeInRange(
+	ctx context.Context,
+	employeeID int64,
+	req ListAppointmentsForEmployeeInRangeRequest) ([]ListAppointmentsForEmployeeInRangeResponse, error) {
+	if req.StartDate.After(req.EndDate) {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Start date is after end date")
+		return nil, fmt.Errorf("start date must be before end date")
+	}
+
+	appointments, err := s.Store.ListEmployeeAppointmentsInRange(ctx, db.ListEmployeeAppointmentsInRangeParams{
+		EmployeeID: &employeeID,
+		StartDate:  pgtype.Timestamp{Time: req.StartDate, Valid: true},
+		EndDate:    pgtype.Timestamp{Time: req.EndDate, Valid: true},
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to list appointments", zap.Error(err))
+		return nil, fmt.Errorf("failed to list appointments")
+	}
+
+	if len(appointments) == 0 {
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListAppointmentsForEmployeeInRangeApi", "No appointments found")
+		return []ListAppointmentsForEmployeeInRangeResponse{}, nil
+	}
+
+	var appointmentIDs []uuid.UUID
+	for _, appt := range appointments {
+		appointmentIDs = append(appointmentIDs, appt.AppointmentID)
+	}
+
+	participantsMap := make(map[uuid.UUID][]ParticipantsDetails)
+	participants, err := s.Store.GetAppointmentParticipants(ctx, appointmentIDs)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to get appointment participants", zap.Error(err))
+		return nil, fmt.Errorf("failed to list appointments")
+	}
+	for _, p := range participants {
+		participantsMap[p.AppointmentID] = append(participantsMap[p.AppointmentID], ParticipantsDetails{
+			EmployeeID: p.EmployeeID,
+			FirstName:  p.FirstName,
+			LastName:   p.LastName,
+		})
+	}
+
+	clientsMap := make(map[uuid.UUID][]ClientsDetails)
+	clients, err := s.Store.GetAppointmentClients(ctx, appointmentIDs)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to get appointment clients", zap.Error(err))
+		return nil, fmt.Errorf("failed to list appointments")
+	}
+	for _, c := range clients {
+		clientsMap[c.AppointmentID] = append(clientsMap[c.AppointmentID], ClientsDetails{
+			ClientID:  c.ClientID,
+			FirstName: c.FirstName,
+			LastName:  c.LastName,
+		})
+	}
+
+	var resp []ListAppointmentsForEmployeeInRangeResponse
+	for _, appt := range appointments {
+		resp = append(resp, ListAppointmentsForEmployeeInRangeResponse{
+			ID:                  appt.AppointmentID,
+			CreatorEmployeeID:   appt.CreatorEmployeeID,
+			StartTime:           appt.StartTime.Time,
+			EndTime:             appt.EndTime.Time,
+			Color:               appt.Color,
+			Location:            appt.Location,
+			Description:         appt.Description,
+			ParticipantsDetails: participantsMap[appt.AppointmentID],
+			ClientsDetails:      clientsMap[appt.AppointmentID],
+		})
+	}
+
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListAppointmentsForEmployeeInRangeApi", "Appointments listed successfully", zap.Int("count", len(resp)))
+	return resp, nil
+}
+
+func (s *appointmentService) createNormalAppointment(
+	req *CreateAppointmentRequest,
+	employeeID int64,
+	employeeFirstName string,
+	employeeLastName string,
+	ctx context.Context) (*CreateAppointmentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to begin transaction", zap.Error(err))
@@ -89,6 +212,30 @@ func (s *appointmentService) CreateNormalAppointment(req *CreateAppointmentReque
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
+	if len(req.ParticipantEmployeeIDs) > 0 {
+
+		data := notification.NewAppointmentData{
+			AppointmentID: appointment.ID,
+			CreatedBy:     employeeFirstName + " " + employeeLastName,
+			StartTime:     appointment.StartTime.Time,
+			EndTime:       appointment.EndTime.Time,
+			Location:      util.DerefString(req.Location),
+		}
+
+		err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+			RecipientUserIDs: req.ParticipantEmployeeIDs,
+			Type:             notification.TypeNewAppointment,
+			Data: notification.NotificationData{
+				NewAppointment: &data,
+			},
+			Message:   data.NewAppointmentMessage(),
+			CreatedAt: time.Now(),
+		})
+		if err != nil {
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
+		}
+	}
+
 	resp := &CreateAppointmentResponse{
 		ID:                appointment.ID,
 		CreatorEmployeeID: appointment.CreatorEmployeeID,
@@ -103,9 +250,14 @@ func (s *appointmentService) CreateNormalAppointment(req *CreateAppointmentReque
 	return resp, nil
 }
 
-func (s *appointmentService) CreateRecurringAppointment(req *CreateAppointmentRequest, employeeID int64, ctx context.Context) (*CreateAppointmentResponse, error) {
+func (s *appointmentService) createRecurringAppointment(
+	req *CreateAppointmentRequest,
+	employeeID int64,
+	employeeFirstName string,
+	employeeLastName string,
+	ctx context.Context) (*CreateAppointmentResponse, error) {
 
-	appointmentTemp, err := server.store.CreateAppointmentTemplate(ctx, db.CreateAppointmentTemplateParams{
+	appointmentTemp, err := s.Store.CreateAppointmentTemplate(ctx, db.CreateAppointmentTemplateParams{
 		CreatorEmployeeID:  employeeID,
 		StartTime:          pgtype.Timestamp{Time: req.StartTime, Valid: true},
 		EndTime:            pgtype.Timestamp{Time: req.EndTime, Valid: true},
@@ -121,8 +273,50 @@ func (s *appointmentService) CreateRecurringAppointment(req *CreateAppointmentRe
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
-	err = 
+	err = s.AsynqClient.EnqueueAppointmentTask(ctx, aclient.AppointmentPayload{
+		AppointmentTemplateID:  appointmentTemp.ID,
+		ParticipantEmployeeIDs: req.ParticipantEmployeeIDs,
+		ClientIDs:              req.ClientIDs,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue appointment creation task", zap.Error(err))
+		return nil, fmt.Errorf("failed to create appointment")
+	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Recurring appointments are not yet implemented")
-	return nil, fmt.Errorf("recurring appointments are not yet implemented")
+	if len(req.ParticipantEmployeeIDs) > 0 {
+
+		data := notification.NewAppointmentData{
+			AppointmentID: appointmentTemp.ID,
+			CreatedBy:     employeeFirstName + " " + employeeLastName,
+			StartTime:     appointmentTemp.StartTime.Time,
+			EndTime:       appointmentTemp.EndTime.Time,
+			Location:      util.DerefString(req.Location),
+		}
+
+		err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+			RecipientUserIDs: req.ParticipantEmployeeIDs,
+			Type:             notification.TypeNewAppointment,
+			Data: notification.NotificationData{
+				NewAppointment: &data,
+			},
+			Message:   data.NewAppointmentMessage(),
+			CreatedAt: time.Now(),
+		})
+		if err != nil {
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
+		}
+	}
+
+	resp := &CreateAppointmentResponse{
+		ID:                appointmentTemp.ID,
+		CreatorEmployeeID: &appointmentTemp.CreatorEmployeeID,
+		StartTime:         appointmentTemp.StartTime.Time,
+		EndTime:           appointmentTemp.EndTime.Time,
+		Color:             appointmentTemp.Color,
+		Location:          appointmentTemp.Location,
+		Description:       appointmentTemp.Description,
+	}
+
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateAppointmentApi", "Recurring appointment template created successfully", zap.String("appointment_template_id", appointmentTemp.ID.String()))
+	return resp, nil
 }

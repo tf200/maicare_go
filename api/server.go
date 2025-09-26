@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"maicare_go/ai"
-	"maicare_go/async"
+	"maicare_go/async/aclient"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
@@ -51,7 +51,7 @@ type Server struct {
 	config          util.Config
 	tokenMaker      token.Maker
 	b2Client        bucket.ObjectStorageInterface
-	asynqClient     async.AsynqClientInterface
+	asynqClient     aclient.AsynqClientInterface
 	httpServer      *http.Server
 	aiHandler       *ai.AiHandler
 	hub             *hub.Hub
@@ -62,7 +62,7 @@ type Server struct {
 }
 
 func NewServer(store *db.Store, b2Client bucket.ObjectStorageInterface,
-	asyqClient async.AsynqClientInterface, apiKey string, hubInstance *hub.Hub,
+	asyncClient aclient.AsynqClientInterface, apiKey string, hubInstance *hub.Hub,
 	notifService *notification.Service, grpcClient grpclient.GrpcClientInterface,
 	tokenMaker token.Maker, config util.Config, service *service.BusinessService) (*Server, error) {
 
@@ -78,7 +78,7 @@ func NewServer(store *db.Store, b2Client bucket.ObjectStorageInterface,
 		config:          config,
 		tokenMaker:      tokenMaker,
 		b2Client:        b2Client,
-		asynqClient:     asyqClient,
+		asynqClient:     asyncClient,
 		aiHandler:       aiHandler,
 		hub:             hubInstance,
 		logger:          logger,

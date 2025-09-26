@@ -181,7 +181,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateAppointmentRequest"
+                            "$ref": "#/definitions/appointment.CreateAppointmentRequest"
                         }
                     }
                 ],
@@ -189,7 +189,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateAppointmentResponse"
+                            "$ref": "#/definitions/api.Response-appointment_CreateAppointmentResponse"
                         }
                     },
                     "400": {
@@ -12042,81 +12042,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateAppointmentRequest": {
-            "type": "object",
-            "required": [
-                "end_time",
-                "start_time"
-            ],
-            "properties": {
-                "client_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "color": {
-                    "type": "string",
-                    "example": "#FF5733"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "participant_employee_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "recurrence_end_date": {
-                    "type": "string",
-                    "example": "2025-10-01T10:00:00Z"
-                },
-                "recurrence_interval": {
-                    "type": "integer"
-                },
-                "recurrence_type": {
-                    "type": "string",
-                    "example": "NONE"
-                },
-                "start_time": {
-                    "type": "string",
-                    "example": "2023-10-01T10:00:00Z"
-                }
-            }
-        },
-        "api.CreateAppointmentResponse": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "creator_employee_id": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CreateCarePlanActionsRequest": {
             "type": "object",
             "required": [
@@ -18960,20 +18885,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateAppointmentResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateAppointmentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CreateCarePlanActionsResponse": {
             "type": "object",
             "properties": {
@@ -20449,6 +20360,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UploadHandlerResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-appointment_CreateAppointmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/appointment.CreateAppointmentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -23823,6 +23748,81 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "appointment.CreateAppointmentRequest": {
+            "type": "object",
+            "required": [
+                "end_time",
+                "start_time"
+            ],
+            "properties": {
+                "client_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "color": {
+                    "type": "string",
+                    "example": "#FF5733"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "participant_employee_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "recurrence_end_date": {
+                    "type": "string",
+                    "example": "2025-10-01T10:00:00Z"
+                },
+                "recurrence_interval": {
+                    "type": "integer"
+                },
+                "recurrence_type": {
+                    "type": "string",
+                    "example": "NONE"
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2023-10-01T10:00:00Z"
+                }
+            }
+        },
+        "appointment.CreateAppointmentResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "creator_employee_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "start_time": {
                     "type": "string"
                 }
             }

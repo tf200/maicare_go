@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
-	"maicare_go/async"
+	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/notification"
 	"maicare_go/pagination"
@@ -282,7 +282,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to process succession")))
 		return
 	}
-	err = server.asynqClient.EnqueueIncident(async.IncidentPayload{
+	err = server.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -1061,7 +1061,7 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.asynqClient.EnqueueIncident(async.IncidentPayload{
+	err = server.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 	"maicare_go/api"
-	"maicare_go/async"
+	"maicare_go/async/aclient"
+	"maicare_go/async/processor"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
@@ -68,11 +69,11 @@ func main() {
 		log.Fatalf("unable to create b2 client: %v", err)
 	}
 
-	var asynqClient async.AsynqClientInterface
+	var asynqClient aclient.AsynqClientInterface
 	if !config.Remote {
-		asynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
+		asynqClient = aclient.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
 	} else {
-		asynqClient = async.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
+		asynqClient = aclient.NewAsynqClient(config.RedisHost, "", config.RedisPassword, nil)
 	}
 
 	// Inirialize the SMTP Client for email deleviry
@@ -85,7 +86,7 @@ func main() {
 	notificationService := notification.NewService(store, hubInstance)
 
 	// Initialize Asynq server
-	var asynqServer *async.AsynqServer
+	var asynqServer *processor.AsynqServer
 
 	grpcClient, err := grpclient.NewGrpcClient(config.GrpcUrl)
 	if err != nil {
@@ -142,7 +143,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
+		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
 	} else {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -175,7 +176,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = async.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
+		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
 	}
 
 	// Start the Asynq server in a goroutine

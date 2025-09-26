@@ -133,8 +133,8 @@ type Querier interface {
 	GetAllTemplateItems(ctx context.Context) ([]TemplateItem, error)
 	GetAppointmentCard(ctx context.Context, clientID int64) (GetAppointmentCardRow, error)
 	// Optional ordering
-	GetAppointmentClients(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentClientsRow, error)
-	GetAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentParticipantsRow, error)
+	GetAppointmentClients(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentClientsRow, error)
+	GetAppointmentParticipants(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentParticipantsRow, error)
 	// The array of client_ids
 	GetAppointmentTemplate(ctx context.Context, id uuid.UUID) (AppointmentTemplate, error)
 	GetAssignedEmployee(ctx context.Context, id int64) (GetAssignedEmployeeRow, error)
@@ -284,7 +284,6 @@ type Querier interface {
 	StatusChangeCount(ctx context.Context) (int64, error)
 	TotalActiveClients(ctx context.Context) (int64, error)
 	TotalDischargeCount(ctx context.Context) (int64, error)
-	// Optional ordering
 	UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (ScheduledAppointment, error)
 	UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error)
 	UpdateAppointmentCardUrl(ctx context.Context, arg UpdateAppointmentCardUrlParams) (*string, error)

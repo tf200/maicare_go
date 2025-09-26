@@ -212,6 +212,7 @@ const getAppointmentClients = `-- name: GetAppointmentClients :many
 
 
 SELECT
+    ac.appointment_id,
     cd.id AS client_id,
     cd.first_name,
     cd.last_name
@@ -220,20 +221,21 @@ FROM
 JOIN
     client_details cd ON ac.client_id = cd.id
 WHERE
-    ac.appointment_id = $1 -- Filter by appointment ID
+    ac.appointment_id = ANY($1::uuid[]) -- Filter by appointment ID
 ORDER BY
     cd.last_name, cd.first_name
 `
 
 type GetAppointmentClientsRow struct {
-	ClientID  int64  `json:"client_id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	AppointmentID uuid.UUID `json:"appointment_id"`
+	ClientID      int64     `json:"client_id"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
 }
 
 // Optional ordering
-func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentClientsRow, error) {
-	rows, err := q.db.Query(ctx, getAppointmentClients, appointmentID)
+func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentClientsRow, error) {
+	rows, err := q.db.Query(ctx, getAppointmentClients, appointmentIds)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +243,12 @@ func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID uuid.
 	items := []GetAppointmentClientsRow{}
 	for rows.Next() {
 		var i GetAppointmentClientsRow
-		if err := rows.Scan(&i.ClientID, &i.FirstName, &i.LastName); err != nil {
+		if err := rows.Scan(
+			&i.AppointmentID,
+			&i.ClientID,
+			&i.FirstName,
+			&i.LastName,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -254,6 +261,7 @@ func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentID uuid.
 
 const getAppointmentParticipants = `-- name: GetAppointmentParticipants :many
 SELECT
+    ap.appointment_id,
     ep.id AS employee_id,
     ep.first_name,
     ep.last_name
@@ -262,19 +270,20 @@ FROM
 JOIN
     employee_profile ep ON ap.employee_id = ep.id
 WHERE
-    ap.appointment_id = $1 -- Filter by appointment ID
+    ap.appointment_id = ANY($1::uuid[]) -- Filter by appointment ID
 ORDER BY
     ep.last_name, ep.first_name
 `
 
 type GetAppointmentParticipantsRow struct {
-	EmployeeID int64  `json:"employee_id"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
+	AppointmentID uuid.UUID `json:"appointment_id"`
+	EmployeeID    int64     `json:"employee_id"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
 }
 
-func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentParticipantsRow, error) {
-	rows, err := q.db.Query(ctx, getAppointmentParticipants, appointmentID)
+func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentParticipantsRow, error) {
+	rows, err := q.db.Query(ctx, getAppointmentParticipants, appointmentIds)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +291,12 @@ func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentID 
 	items := []GetAppointmentParticipantsRow{}
 	for rows.Next() {
 		var i GetAppointmentParticipantsRow
-		if err := rows.Scan(&i.EmployeeID, &i.FirstName, &i.LastName); err != nil {
+		if err := rows.Scan(
+			&i.AppointmentID,
+			&i.EmployeeID,
+			&i.FirstName,
+			&i.LastName,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -666,9 +680,6 @@ func (q *Queries) ListEmployeeAppointmentsInRange(ctx context.Context, arg ListE
 }
 
 const updateAppointment = `-- name: UpdateAppointment :one
-
-
-
 UPDATE scheduled_appointments
 SET
     start_time = COALESCE($2, start_time),
@@ -690,7 +701,6 @@ type UpdateAppointmentParams struct {
 	Color       *string          `json:"color"`
 }
 
-// Optional ordering
 func (q *Queries) UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (ScheduledAppointment, error) {
 	row := q.db.QueryRow(ctx, updateAppointment,
 		arg.ID,

@@ -323,57 +323,6 @@ definitions:
       initial_text:
         type: string
     type: object
-  api.CreateAppointmentRequest:
-    properties:
-      client_ids:
-        items:
-          type: integer
-        type: array
-      color:
-        example: '#FF5733'
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      location:
-        type: string
-      participant_employee_ids:
-        items:
-          type: integer
-        type: array
-      recurrence_end_date:
-        example: "2025-10-01T10:00:00Z"
-        type: string
-      recurrence_interval:
-        type: integer
-      recurrence_type:
-        example: NONE
-        type: string
-      start_time:
-        example: "2023-10-01T10:00:00Z"
-        type: string
-    required:
-    - end_time
-    - start_time
-    type: object
-  api.CreateAppointmentResponse:
-    properties:
-      color:
-        type: string
-      creator_employee_id:
-        type: integer
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      location:
-        type: string
-      start_time:
-        type: string
-    type: object
   api.CreateCarePlanActionsRequest:
     properties:
       action_description:
@@ -4924,15 +4873,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateAppointmentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateAppointmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateCarePlanActionsResponse:
     properties:
       data:
@@ -5882,6 +5822,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UploadHandlerResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-appointment_CreateAppointmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/appointment.CreateAppointmentResponse'
       message:
         type: string
       success:
@@ -8103,6 +8052,57 @@ definitions:
       type:
         type: string
     type: object
+  appointment.CreateAppointmentRequest:
+    properties:
+      client_ids:
+        items:
+          type: integer
+        type: array
+      color:
+        example: '#FF5733'
+        type: string
+      description:
+        type: string
+      end_time:
+        type: string
+      location:
+        type: string
+      participant_employee_ids:
+        items:
+          type: integer
+        type: array
+      recurrence_end_date:
+        example: "2025-10-01T10:00:00Z"
+        type: string
+      recurrence_interval:
+        type: integer
+      recurrence_type:
+        example: NONE
+        type: string
+      start_time:
+        example: "2023-10-01T10:00:00Z"
+        type: string
+    required:
+    - end_time
+    - start_time
+    type: object
+  appointment.CreateAppointmentResponse:
+    properties:
+      color:
+        type: string
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      location:
+        type: string
+      start_time:
+        type: string
+    type: object
   auth.ChangePasswordRequest:
     properties:
       new_password:
@@ -9775,14 +9775,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateAppointmentRequest'
+          $ref: '#/definitions/appointment.CreateAppointmentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_CreateAppointmentResponse'
+            $ref: '#/definitions/api.Response-appointment_CreateAppointmentResponse'
         "400":
           description: Bad request - Invalid input
           schema:
