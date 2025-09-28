@@ -12,6 +12,11 @@ type AppointmentService interface {
 	AddParticipantToAppointment(ctx context.Context, appointmentID uuid.UUID, req AddParticipantToAppointmentRequest) error
 	AddClientToAppointment(ctx context.Context, appointmentID uuid.UUID, req AddClientToAppointmentRequest) error
 	ListAppointmentsForEmployeeInRange(ctx context.Context, employeeID int64, req ListAppointmentsForEmployeeInRangeRequest) ([]ListAppointmentsForEmployeeInRangeResponse, error)
+	ListAppointmentsForClientInRange(ctx context.Context, clientID int64, req ListAppointmentsForClientRequest) ([]ListAppointmentsForClientResponse, error)
+	GetAppointment(ctx context.Context, appointmentID uuid.UUID) (*GetAppointmentResponse, error)
+	UpdateAppointment(ctx context.Context, appointmentID uuid.UUID, req *UpdateAppointmentRequest) (*UpdateAppointmentResponse, error)
+	DeleteAppointment(ctx context.Context, appointmentID uuid.UUID) error
+	ConfirmAppointment(ctx context.Context, appointmentID uuid.UUID, employeeID int64) error
 }
 
 type appointmentService struct {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"maicare_go/service/attachment"
 	"maicare_go/token"
 	"mime/multipart"
 	"net/http"
@@ -77,7 +78,7 @@ func TestUploadHandler(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[UploadHandlerResponse]
+				var response Response[attachment.UploadHandlerResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.FileURL)
@@ -183,7 +184,7 @@ func TestGetAttachmentById(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[GetAttachmentByIdResponse]
+				var response Response[attachment.GetAttachmentByIdResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)

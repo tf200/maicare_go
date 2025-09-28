@@ -64,7 +64,7 @@ type ListAllIncidentsRow struct {
 	EmployeeID              int64              `json:"employee_id"`
 	LocationID              int64              `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
-	InformWho               []byte             `json:"inform_who"`
+	InformWho               []string           `json:"inform_who"`
 	IncidentDate            pgtype.Date        `json:"incident_date"`
 	RuntimeIncident         string             `json:"runtime_incident"`
 	IncidentType            string             `json:"incident_type"`
@@ -83,10 +83,10 @@ type ListAllIncidentsRow struct {
 	RecurrenceRisk          string             `json:"recurrence_risk"`
 	IncidentPreventSteps    *string            `json:"incident_prevent_steps"`
 	IncidentTakenMeasures   *string            `json:"incident_taken_measures"`
-	Technical               []byte             `json:"technical"`
-	Organizational          []byte             `json:"organizational"`
-	MeseWorker              []byte             `json:"mese_worker"`
-	ClientOptions           []byte             `json:"client_options"`
+	Technical               []string           `json:"technical"`
+	Organizational          []string           `json:"organizational"`
+	MeseWorker              []string           `json:"mese_worker"`
+	ClientOptions           []string           `json:"client_options"`
 	OtherCause              *string            `json:"other_cause"`
 	CauseExplanation        *string            `json:"cause_explanation"`
 	PhysicalInjury          string             `json:"physical_injury"`
@@ -94,7 +94,7 @@ type ListAllIncidentsRow struct {
 	PsychologicalDamage     string             `json:"psychological_damage"`
 	PsychologicalDamageDesc *string            `json:"psychological_damage_desc"`
 	NeededConsultation      string             `json:"needed_consultation"`
-	Succession              []byte             `json:"succession"`
+	Succession              []string           `json:"succession"`
 	SuccessionDesc          *string            `json:"succession_desc"`
 	Other                   bool               `json:"other"`
 	OtherDesc               *string            `json:"other_desc"`

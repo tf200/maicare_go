@@ -69,7 +69,7 @@ type Querier interface {
 	CreateContractType(ctx context.Context, name string) (ContractType, error)
 	CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error)
 	CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error)
-	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
+	CreateIncident(ctx context.Context, arg CreateIncidentParams) (CreateIncidentRow, error)
 	CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error)
 	CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)

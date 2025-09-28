@@ -2,6 +2,7 @@ package api
 
 import (
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
@@ -38,7 +39,7 @@ func TestListAllIncidentsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListIncidentsResponse]]
+				var response Response[pagination.Response[clientp.ListIncidentsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)

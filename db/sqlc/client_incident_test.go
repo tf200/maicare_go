@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientIncident(t *testing.T, clientID int64) Incident {
+func createRandomClientIncident(t *testing.T, clientID int64) CreateIncidentRow {
 
 	employee, _ := createRandomEmployee(t)
 	location := CreateRandomLocation(t)
@@ -19,7 +19,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) Incident {
 		EmployeeID:              employee.ID,
 		LocationID:              location.ID,
 		ReporterInvolvement:     "directly_involved",
-		InformWho:               []byte("[\"client\"]"),
+		InformWho:               []string{"client"},
 		IncidentDate:            pgtype.Date{Time: time.Now(), Valid: true},
 		RuntimeIncident:         "no",
 		IncidentType:            "accident",
@@ -38,10 +38,10 @@ func createRandomClientIncident(t *testing.T, clientID int64) Incident {
 		RecurrenceRisk:          "high",
 		IncidentPreventSteps:    util.StringPtr("test steps"),
 		IncidentTakenMeasures:   util.StringPtr("test measures"),
-		Technical:               []byte("[\"client\"]"),
-		Organizational:          []byte("[\"client\"]"),
-		MeseWorker:              []byte("[\"client\"]"),
-		ClientOptions:           []byte("[\"client\"]"),
+		Technical:               []string{"client"},
+		Organizational:          []string{"client"},
+		MeseWorker:              []string{"client"},
+		ClientOptions:           []string{"client"},
 		OtherCause:              util.StringPtr("test cause"),
 		CauseExplanation:        util.StringPtr("test cause explanation"),
 		PhysicalInjury:          "no_injuries",
@@ -49,7 +49,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) Incident {
 		PsychologicalDamage:     "other",
 		PsychologicalDamageDesc: util.StringPtr("test damage"),
 		NeededConsultation:      "no",
-		Succession:              []byte("[\"client\"]"),
+		Succession:              []string{"client"},
 		SuccessionDesc:          util.StringPtr("test succession"),
 		Other:                   false,
 		OtherDesc:               util.StringPtr("test other"),

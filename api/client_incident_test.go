@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -20,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
+func createRandomClientIncident(t *testing.T, clientID int64) db.CreateIncidentRow {
 
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
@@ -29,7 +30,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 		EmployeeID:              employee.ID,
 		LocationID:              location.ID,
 		ReporterInvolvement:     "directly_involved",
-		InformWho:               []byte("[\"client\"]"),
+		InformWho:               []string{"client"},
 		IncidentDate:            pgtype.Date{Time: time.Now(), Valid: true},
 		RuntimeIncident:         "no",
 		IncidentType:            "accident",
@@ -48,10 +49,10 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 		RecurrenceRisk:          "high",
 		IncidentPreventSteps:    util.StringPtr("test steps"),
 		IncidentTakenMeasures:   util.StringPtr("test measures"),
-		Technical:               []byte("[\"client\"]"),
-		Organizational:          []byte("[\"client\"]"),
-		MeseWorker:              []byte("[\"client\"]"),
-		ClientOptions:           []byte("[\"client\"]"),
+		Technical:               []string{"client"},
+		Organizational:          []string{"client"},
+		MeseWorker:              []string{"client"},
+		ClientOptions:           []string{"client"},
 		OtherCause:              util.StringPtr("test cause"),
 		CauseExplanation:        util.StringPtr("test cause explanation"),
 		PhysicalInjury:          "no_injuries",
@@ -59,7 +60,7 @@ func createRandomClientIncident(t *testing.T, clientID int64) db.Incident {
 		PsychologicalDamage:     "other",
 		PsychologicalDamageDesc: util.StringPtr("test damage"),
 		NeededConsultation:      "no",
-		Succession:              []byte("[\"client\"]"),
+		Succession:              []string{"client"},
 		SuccessionDesc:          util.StringPtr("test succession"),
 		Other:                   false,
 		OtherDesc:               util.StringPtr("test other"),
@@ -96,7 +97,7 @@ func TestCreateIncident(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				incidentReq := CreateIncidentRequest{
+				incidentReq := clientp.CreateIncidentRequest{
 					EmployeeID:              employee.ID,
 					LocationID:              location.ID,
 					ReporterInvolvement:     "directly_involved",
@@ -150,7 +151,7 @@ func TestCreateIncident(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String(), "<<<<<<<<<<<<", employee.ID, "<<<<<<<<<<<<", user.ID)
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var res Response[CreateIncidentResponse]
+				var res Response[clientp.CreateIncidentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res)
@@ -238,7 +239,7 @@ func TestListIncidentsApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var incidents Response[pagination.Response[ListIncidentsResponse]]
+				var incidents Response[pagination.Response[clientp.ListIncidentsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &incidents)
 				require.NoError(t, err)
 				require.NotEmpty(t, incidents)
@@ -268,24 +269,6 @@ func TestListIncidentsApi(t *testing.T) {
 func TestGetIncidentApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
-	var InformWho []string
-	err := json.Unmarshal(incident.InformWho, &InformWho)
-	require.NoError(t, err)
-	var Technical []string
-	err = json.Unmarshal(incident.Technical, &Technical)
-	require.NoError(t, err)
-	var Organizational []string
-	err = json.Unmarshal(incident.Organizational, &Organizational)
-	require.NoError(t, err)
-	var MeseWorker []string
-	err = json.Unmarshal(incident.MeseWorker, &MeseWorker)
-	require.NoError(t, err)
-	var ClientOptions []string
-	err = json.Unmarshal(incident.ClientOptions, &ClientOptions)
-	require.NoError(t, err)
-	var Succession []string
-	err = json.Unmarshal(incident.Succession, &Succession)
-	require.NoError(t, err)
 
 	testCases := []struct {
 		name          string
@@ -306,7 +289,7 @@ func TestGetIncidentApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[GetIncidentResponse]
+				var res Response[clientp.GetIncidentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res)
@@ -315,7 +298,7 @@ func TestGetIncidentApi(t *testing.T) {
 				require.Equal(t, res.Data.EmployeeID, incident.EmployeeID)
 				require.Equal(t, res.Data.LocationID, incident.LocationID)
 				require.Equal(t, res.Data.ReporterInvolvement, incident.ReporterInvolvement)
-				require.Equal(t, res.Data.InformWho, InformWho)
+				require.Equal(t, res.Data.InformWho, incident.InformWho)
 				require.Equal(t, res.Data.RuntimeIncident, incident.RuntimeIncident)
 				require.Equal(t, res.Data.IncidentType, incident.IncidentType)
 				require.Equal(t, res.Data.PassingAway, incident.PassingAway)
@@ -336,10 +319,10 @@ func TestGetIncidentApi(t *testing.T) {
 				require.Equal(t, *res.Data.IncidentPreventSteps, *incident.IncidentPreventSteps)
 				require.NotNil(t, res.Data.IncidentTakenMeasures)
 				require.Equal(t, *res.Data.IncidentTakenMeasures, *incident.IncidentTakenMeasures)
-				require.Equal(t, res.Data.Technical, Technical)
-				require.Equal(t, res.Data.Organizational, Organizational)
-				require.Equal(t, res.Data.MeseWorker, MeseWorker)
-				require.Equal(t, res.Data.ClientOptions, ClientOptions)
+				require.Equal(t, res.Data.Technical, incident.Technical)
+				require.Equal(t, res.Data.Organizational, incident.Organizational)
+				require.Equal(t, res.Data.MeseWorker, incident.MeseWorker)
+				require.Equal(t, res.Data.ClientOptions, incident.ClientOptions)
 				require.NotNil(t, res.Data.OtherCause)
 				require.Equal(t, *res.Data.OtherCause, *incident.OtherCause)
 				require.Equal(t, res.Data.Emails, incident.Emails)
@@ -381,24 +364,6 @@ func TestUpdateIncidentApi(t *testing.T) {
 	testasynqClient.EXPECT().EnqueueIncident(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
-	var InformWho []string
-	err := json.Unmarshal(incident.InformWho, &InformWho)
-	require.NoError(t, err)
-	var Technical []string
-	err = json.Unmarshal(incident.Technical, &Technical)
-	require.NoError(t, err)
-	var Organizational []string
-	err = json.Unmarshal(incident.Organizational, &Organizational)
-	require.NoError(t, err)
-	var MeseWorker []string
-	err = json.Unmarshal(incident.MeseWorker, &MeseWorker)
-	require.NoError(t, err)
-	var ClientOptions []string
-	err = json.Unmarshal(incident.ClientOptions, &ClientOptions)
-	require.NoError(t, err)
-	var Succession []string
-	err = json.Unmarshal(incident.Succession, &Succession)
-	require.NoError(t, err)
 
 	testCases := []struct {
 		name          string
@@ -412,7 +377,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				incidentReq := UpdateIncidentRequest{
+				incidentReq := clientp.UpdateIncidentRequest{
 					ReporterInvolvement: util.StringPtr("directly_involved"),
 					InformWho:           []string{"updated"},
 					Emails:              []string{"taha@gmail.com"},
@@ -426,7 +391,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[UpdateIncidentResponse]
+				var res Response[clientp.UpdateIncidentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res)
@@ -434,7 +399,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 				require.Equal(t, res.Data.ID, incident.ID)
 				require.Equal(t, res.Data.ReporterInvolvement, "directly_involved")
 				require.Equal(t, res.Data.InformWho, []string{"updated"})
-				require.Equal(t, res.Data.Technical, Technical)
+				require.Equal(t, res.Data.Technical, incident.Technical)
 				require.Equal(t, res.Data.Emails, []string{"taha@gmail.com"})
 			},
 		},
