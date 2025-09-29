@@ -69,7 +69,7 @@ type Querier interface {
 	CreateContractType(ctx context.Context, name string) (ContractType, error)
 	CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error)
 	CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error)
-	CreateIncident(ctx context.Context, arg CreateIncidentParams) (Incident, error)
+	CreateIncident(ctx context.Context, arg CreateIncidentParams) (CreateIncidentRow, error)
 	CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error)
 	CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)
@@ -133,8 +133,8 @@ type Querier interface {
 	GetAllTemplateItems(ctx context.Context) ([]TemplateItem, error)
 	GetAppointmentCard(ctx context.Context, clientID int64) (GetAppointmentCardRow, error)
 	// Optional ordering
-	GetAppointmentClients(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentClientsRow, error)
-	GetAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) ([]GetAppointmentParticipantsRow, error)
+	GetAppointmentClients(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentClientsRow, error)
+	GetAppointmentParticipants(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentParticipantsRow, error)
 	// The array of client_ids
 	GetAppointmentTemplate(ctx context.Context, id uuid.UUID) (AppointmentTemplate, error)
 	GetAssignedEmployee(ctx context.Context, id int64) (GetAssignedEmployeeRow, error)
@@ -158,6 +158,7 @@ type Querier interface {
 	GetClientMaturityMatrixAssessment(ctx context.Context, id int64) (GetClientMaturityMatrixAssessmentRow, error)
 	GetClientRelatedEmails(ctx context.Context, clientID int64) ([]string, error)
 	GetClientSender(ctx context.Context, id int64) (Sender, error)
+	GetCompletedPaymentSum(ctx context.Context, invoiceID int64) (float64, error)
 	GetContractAudit(ctx context.Context, contractID int64) ([]GetContractAuditRow, error)
 	GetDailySchedulesByLocation(ctx context.Context, arg GetDailySchedulesByLocationParams) ([]GetDailySchedulesByLocationRow, error)
 	GetEmergencyContact(ctx context.Context, id int64) (ClientEmergencyContact, error)
@@ -283,7 +284,6 @@ type Querier interface {
 	StatusChangeCount(ctx context.Context) (int64, error)
 	TotalActiveClients(ctx context.Context) (int64, error)
 	TotalDischargeCount(ctx context.Context) (int64, error)
-	// Optional ordering
 	UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (ScheduledAppointment, error)
 	UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error)
 	UpdateAppointmentCardUrl(ctx context.Context, arg UpdateAppointmentCardUrlParams) (*string, error)

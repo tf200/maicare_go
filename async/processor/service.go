@@ -1,13 +1,14 @@
-package async
+package processor
 
 import (
 	"crypto/tls"
+	"maicare_go/async/aclient"
+	"maicare_go/async/scheduler"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"maicare_go/notification"
 	"maicare_go/service"
-
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -59,12 +60,12 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string,
 
 func (a *AsynqServer) Start() error {
 	mux := asynq.NewServeMux()
-	mux.HandleFunc(TypeEmailDelivery, a.ProcessEmailTask)
-	mux.HandleFunc(TypeIncidentProcess, a.ProcessIncidentTask)
-	mux.HandleFunc(TypeNotificationSend, a.ProcessNotificationTask)
-	mux.HandleFunc(TypeAppointmentCreate, a.ProcessAppointmentTask)
-	mux.HandleFunc(TypeAcceptedRegistration, a.ProcessRegistrationFormTask)
-	mux.HandleFunc(TypeContractReminder, a.ProcessContractRemiderTask)
+	mux.HandleFunc(aclient.TypeEmailDelivery, a.ProcessEmailTask)
+	mux.HandleFunc(aclient.TypeIncidentProcess, a.ProcessIncidentTask)
+	mux.HandleFunc(aclient.TypeNotificationSend, a.ProcessNotificationTask)
+	mux.HandleFunc(aclient.TypeAppointmentCreate, a.ProcessAppointmentTask)
+	mux.HandleFunc(aclient.TypeAcceptedRegistration, a.ProcessRegistrationFormTask)
+	mux.HandleFunc(scheduler.TypeContractReminder, a.ProcessContractRemiderTask)
 
 	return a.server.Start(mux)
 }

@@ -1,12 +1,11 @@
-package async
+package aclient
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"maicare_go/notification"
-
-	"github.com/goccy/go-json"
 
 	"github.com/hibiken/asynq"
 )

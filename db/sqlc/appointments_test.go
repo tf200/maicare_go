@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -81,7 +82,7 @@ func TestGetAppointmentParticipants(t *testing.T) {
 	err := testQueries.BulkAddAppointmentParticipants(context.Background(), arg)
 	require.NoError(t, err)
 
-	participants, err := testQueries.GetAppointmentParticipants(context.Background(), appointment.ID)
+	participants, err := testQueries.GetAppointmentParticipants(context.Background(), []uuid.UUID{appointment.ID})
 	require.NoError(t, err)
 	require.NotEmpty(t, participants)
 	require.Len(t, participants, 2)
@@ -100,7 +101,7 @@ func TestGetAppointmentClients(t *testing.T) {
 	err := testQueries.BulkAddAppointmentClients(context.Background(), arg)
 	require.NoError(t, err)
 
-	clients, err := testQueries.GetAppointmentClients(context.Background(), appointment.ID)
+	clients, err := testQueries.GetAppointmentClients(context.Background(), []uuid.UUID{appointment.ID})
 	require.NoError(t, err)
 	require.NotEmpty(t, clients)
 	require.Len(t, clients, 1)

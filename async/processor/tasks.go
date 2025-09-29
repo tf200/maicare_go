@@ -1,26 +1,26 @@
-package async
+package processor
 
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"maicare_go/notification"
 	"maicare_go/pdf"
 	"time"
 
-	"github.com/goccy/go-json"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
-
 	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Task) error {
-	var p EmailDeliveryPayload
+	var p aclient.EmailDeliveryPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		log.Printf("Failed to unmarshal email task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
@@ -43,7 +43,7 @@ func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Tas
 }
 
 func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.Task) error {
-	var p IncidentPayload
+	var p aclient.IncidentPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		log.Printf("Failed to unmarshal incident task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
@@ -149,7 +149,7 @@ func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *asynq.Task
 
 func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task) error {
 	log.Printf("Processing appointment task: %s", t.Type())
-	var p AppointmentPayload
+	var p aclient.AppointmentPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		log.Printf("Failed to unmarshal appointment task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
@@ -265,7 +265,7 @@ func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task)
 }
 
 func (processor *AsynqServer) ProcessRegistrationFormTask(ctx context.Context, t *asynq.Task) error {
-	var p AcceptedRegistrationFormPayload
+	var p aclient.AcceptedRegistrationFormPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		log.Printf("Failed to unmarshal incident task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)

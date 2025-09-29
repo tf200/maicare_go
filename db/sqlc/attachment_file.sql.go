@@ -13,6 +13,7 @@ import (
 
 const createAttachment = `-- name: CreateAttachment :one
 INSERT INTO attachment_file (
+    "uuid",
     "name",
     "file",
     "size",
@@ -21,19 +22,22 @@ INSERT INTO attachment_file (
     $1,
     $2,
     $3,
-    $4
+    $4,
+    $5
 ) RETURNING uuid, name, file, size, is_used, tag, updated, created
 `
 
 type CreateAttachmentParams struct {
-	Name string  `json:"name"`
-	File string  `json:"file"`
-	Size int32   `json:"size"`
-	Tag  *string `json:"tag"`
+	Uuid uuid.UUID `json:"uuid"`
+	Name string    `json:"name"`
+	File string    `json:"file"`
+	Size int32     `json:"size"`
+	Tag  *string   `json:"tag"`
 }
 
 func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (AttachmentFile, error) {
 	row := q.db.QueryRow(ctx, createAttachment,
+		arg.Uuid,
 		arg.Name,
 		arg.File,
 		arg.Size,

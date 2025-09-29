@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
+	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -206,6 +207,7 @@ func TestCreateClientApi(t *testing.T) {
 }
 
 func TestListClient(t *testing.T) {
+	testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("http://example.com", nil).AnyTimes()
 	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomClientDetails(t)
@@ -404,7 +406,7 @@ func TestSetClientProfilePictureApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				reqBody := SetClientProfilePictureRequest{
+				reqBody := clientp.SetClientProfilePictureRequest{
 					AttachmentID: file.Uuid,
 				}
 				data, err := json.Marshal(reqBody)
@@ -417,7 +419,7 @@ func TestSetClientProfilePictureApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[SetClientProfilePictureResponse]
+				var clientRes Response[clientp.SetClientProfilePictureResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -454,7 +456,7 @@ func TestAddClientDocumentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				reqBody := AddClientDocumentApiRequest{
+				reqBody := clientp.AddClientDocumentApiRequest{
 					AttachmentID: file.Uuid,
 					Label:        "other",
 				}
@@ -468,7 +470,7 @@ func TestAddClientDocumentApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var clientRes Response[AddClientDocumentApiResponse]
+				var clientRes Response[clientp.AddClientDocumentApiResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -533,7 +535,7 @@ func TestListClientDocumentsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[pagination.Response[ListClientDocumentsApiResponse]]
+				var clientRes Response[pagination.Response[clientp.ListClientDocumentsApiResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -573,7 +575,7 @@ func TestDeleteClientDocumentApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/documents/%d", cleint.ID, clientDoc.ID)
-				data := DeleteClientDocumentApiRequest{
+				data := clientp.DeleteClientDocumentApiRequest{
 					AttachmentID: *clientDoc.AttachmentUuid,
 				}
 				reqBody, err := json.Marshal(data)
@@ -625,7 +627,7 @@ func TestGetMissingClientDocumentsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[GetMissingClientDocumentsApiResponse]
+				var clientRes Response[clientp.GetMissingClientDocumentsApiResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -664,7 +666,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				reqBody := UpdateClientStatusRequest{
+				reqBody := clientp.UpdateClientStatusRequest{
 					Status:       "In Care",
 					Reason:       "Test Reason",
 					IsSchedueled: false,
@@ -679,7 +681,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[UpdateClientStatusResponse]
+				var clientRes Response[clientp.UpdateClientStatusResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
@@ -694,7 +696,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				scheduledTime := time.Date(2028, 1, 2, 0, 0, 0, 0, time.UTC)
-				reqBody := UpdateClientStatusRequest{
+				reqBody := clientp.UpdateClientStatusRequest{
 					Status:        "In Care",
 					Reason:        "Test Reason",
 					IsSchedueled:  true,
@@ -711,7 +713,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var clientRes Response[UpdateClientStatusResponse]
+				var clientRes Response[clientp.UpdateClientStatusResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&clientRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)

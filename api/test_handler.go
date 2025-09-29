@@ -1,7 +1,7 @@
 package api
 
 import (
-	"maicare_go/async"
+	"maicare_go/async/aclient"
 	"maicare_go/notification"
 	"maicare_go/util"
 	"net/http"
@@ -66,7 +66,7 @@ func (server *Server) handleLatency(c *gin.Context) {
 }
 
 func (server *Server) EmailAndAsynq(c *gin.Context) {
-	server.asynqClient.EnqueueEmailDelivery(async.EmailDeliveryPayload{
+	server.asynqClient.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
 		Name:         "Farjia Taha",
 		To:           "farjiataha@gmail.com",
 		UserEmail:    "farjiataha@gmail.com",

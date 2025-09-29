@@ -1,44 +1,5 @@
 basePath: /
 definitions:
-  api.AddClientDocumentApiRequest:
-    properties:
-      attachmentID:
-        type: string
-      label:
-        type: string
-    type: object
-  api.AddClientDocumentApiResponse:
-    properties:
-      attachment_id:
-        type: string
-      client_id:
-        type: integer
-      created:
-        type: string
-      file:
-        type: string
-      id:
-        type: integer
-      is_used:
-        type: boolean
-      label:
-        type: string
-      name:
-        type: string
-      size:
-        type: integer
-      tag:
-        type: string
-      updated:
-        type: string
-    type: object
-  api.AddClientToAppointmentRequest:
-    properties:
-      client_ids:
-        items:
-          type: integer
-        type: array
-    type: object
   api.AddEducationToEmployeeProfileRequest:
     properties:
       degree:
@@ -164,13 +125,6 @@ definitions:
       start_date:
         type: string
     type: object
-  api.AddParticipantToAppointmentRequest:
-    properties:
-      participant_employee_ids:
-        items:
-          type: integer
-        type: array
-    type: object
   api.AddPermissionsToRoleRequest:
     properties:
       permission_ids:
@@ -267,22 +221,6 @@ definitions:
       title:
         type: string
     type: object
-  api.ClientsDetails:
-    properties:
-      client_id:
-        type: integer
-      first_name:
-        type: string
-      last_name:
-        type: string
-    type: object
-  api.ConfirmIncidentResponse:
-    properties:
-      file_url:
-        type: string
-      id:
-        type: integer
-    type: object
   api.ConfirmProgressReportRequest:
     properties:
       end_date:
@@ -321,57 +259,6 @@ definitions:
       corrected_text:
         type: string
       initial_text:
-        type: string
-    type: object
-  api.CreateAppointmentRequest:
-    properties:
-      client_ids:
-        items:
-          type: integer
-        type: array
-      color:
-        example: '#FF5733'
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      location:
-        type: string
-      participant_employee_ids:
-        items:
-          type: integer
-        type: array
-      recurrence_end_date:
-        example: "2025-10-01T10:00:00Z"
-        type: string
-      recurrence_interval:
-        type: integer
-      recurrence_type:
-        example: NONE
-        type: string
-      start_time:
-        example: "2023-10-01T10:00:00Z"
-        type: string
-    required:
-    - end_time
-    - start_time
-    type: object
-  api.CreateAppointmentResponse:
-    properties:
-      color:
-        type: string
-      creator_employee_id:
-        type: integer
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      location:
-        type: string
-      start_time:
         type: string
     type: object
   api.CreateCarePlanActionsRequest:
@@ -849,359 +736,6 @@ definitions:
         type: integer
       name:
         type: string
-    type: object
-  api.CreateEmployeeProfileRequest:
-    properties:
-      authentication_phone_number:
-        example: "1234567890"
-        type: string
-      date_of_birth:
-        example: "2000-01-01"
-        type: string
-      department:
-        example: IT
-        type: string
-      email:
-        example: emai@exe.com
-        type: string
-      employee_number:
-        example: "123456"
-        type: string
-      employment_number:
-        example: "123456"
-        type: string
-      first_name:
-        example: fara
-        type: string
-      gender:
-        example: man
-        type: string
-      home_telephone_number:
-        example: "1234567890"
-        type: string
-      is_subcontractor:
-        example: false
-        type: boolean
-      last_name:
-        example: joe
-        type: string
-      location_id:
-        example: 1
-        type: integer
-      position:
-        example: developer
-        type: string
-      private_email_address:
-        example: joe@ex.com
-        type: string
-      private_phone_number:
-        example: "1234567890"
-        type: string
-      role_id:
-        example: 1
-        type: integer
-      work_phone_number:
-        example: "1234567890"
-        type: string
-    required:
-    - email
-    - first_name
-    - is_subcontractor
-    - last_name
-    - role_id
-    type: object
-  api.CreateEmployeeProfileResponse:
-    properties:
-      authentication_phone_number:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      department:
-        type: string
-      email:
-        type: string
-      employee_number:
-        type: string
-      employment_number:
-        type: string
-      first_name:
-        type: string
-      gender:
-        enum:
-        - male
-        - female
-        - not_specified
-        type: string
-      has_borrowed:
-        type: boolean
-      home_telephone_number:
-        type: string
-      id:
-        type: integer
-      is_archived:
-        type: boolean
-      is_subcontractor:
-        type: boolean
-      last_name:
-        type: string
-      location_id:
-        type: integer
-      out_of_service:
-        type: boolean
-      position:
-        type: string
-      private_email_address:
-        type: string
-      private_phone_number:
-        type: string
-      user_id:
-        type: integer
-      work_phone_number:
-        type: string
-    type: object
-  api.CreateIncidentRequest:
-    properties:
-      accident:
-        type: boolean
-      additional_appointments:
-        type: string
-      cause_explanation:
-        type: string
-      client_absence:
-        type: boolean
-      client_id:
-        type: integer
-      client_options:
-        items:
-          type: string
-        type: array
-      emails:
-        items:
-          type: string
-        type: array
-      employee_absenteeism:
-        type: string
-      employee_id:
-        type: integer
-      fire_water_damage:
-        type: boolean
-      incident_date:
-        type: string
-      incident_explanation:
-        type: string
-      incident_prevent_steps:
-        type: string
-      incident_taken_measures:
-        type: string
-      incident_type:
-        type: string
-      inform_who:
-        items:
-          type: string
-        type: array
-      location_id:
-        type: integer
-      medicines:
-        type: boolean
-      mese_worker:
-        items:
-          type: string
-        type: array
-      needed_consultation:
-        enum:
-        - "no"
-        - not_clear
-        - hospitalization
-        - consult_gp
-        type: string
-      organization:
-        type: boolean
-      organizational:
-        items:
-          type: string
-        type: array
-      other:
-        type: boolean
-      other_cause:
-        type: string
-      other_desc:
-        type: string
-      other_notifications:
-        type: boolean
-      passing_away:
-        type: boolean
-      physical_injury:
-        enum:
-        - no_injuries
-        - not_noticeable_yet
-        - bruising_swelling
-        - broken_bones
-        - shortness_of_breath
-        - death
-        - other
-        type: string
-      physical_injury_desc:
-        type: string
-      psychological_damage:
-        type: string
-      psychological_damage_desc:
-        type: string
-      recurrence_risk:
-        enum:
-        - high
-        - very_high
-        - means
-        - very_low
-        type: string
-      reporter_involvement:
-        enum:
-        - directly_involved
-        - witness
-        - found_afterwards
-        - alarmed
-        type: string
-      runtime_incident:
-        type: string
-      self_harm:
-        type: boolean
-      severity_of_incident:
-        enum:
-        - fatal
-        - serious
-        - less_serious
-        - near_incident
-        type: string
-      succession:
-        items:
-          type: string
-        type: array
-      succession_desc:
-        type: string
-      technical:
-        items:
-          type: string
-        type: array
-      use_prohibited_substances:
-        type: boolean
-      violence:
-        type: boolean
-    required:
-    - incident_type
-    - needed_consultation
-    - physical_injury
-    - recurrence_risk
-    - reporter_involvement
-    - runtime_incident
-    - severity_of_incident
-    type: object
-  api.CreateIncidentResponse:
-    properties:
-      accident:
-        type: boolean
-      additional_appointments:
-        type: string
-      cause_explanation:
-        type: string
-      client_absence:
-        type: boolean
-      client_id:
-        type: integer
-      client_options:
-        items:
-          type: string
-        type: array
-      created:
-        type: string
-      emails:
-        items:
-          type: string
-        type: array
-      employee_absenteeism:
-        type: string
-      employee_id:
-        type: integer
-      fire_water_damage:
-        type: boolean
-      id:
-        type: integer
-      incident_date:
-        type: string
-      incident_explanation:
-        type: string
-      incident_prevent_steps:
-        type: string
-      incident_taken_measures:
-        type: string
-      incident_type:
-        type: string
-      inform_who:
-        items:
-          type: string
-        type: array
-      location_id:
-        type: integer
-      medicines:
-        type: boolean
-      mese_worker:
-        items:
-          type: string
-        type: array
-      needed_consultation:
-        type: string
-      organization:
-        type: boolean
-      organizational:
-        items:
-          type: string
-        type: array
-      other:
-        type: boolean
-      other_cause:
-        type: string
-      other_desc:
-        type: string
-      other_notifications:
-        type: boolean
-      passing_away:
-        type: boolean
-      physical_injury:
-        type: string
-      physical_injury_desc:
-        type: string
-      psychological_damage:
-        type: string
-      psychological_damage_desc:
-        type: string
-      recurrence_risk:
-        type: string
-      reporter_involvement:
-        type: string
-      runtime_incident:
-        type: string
-      self_harm:
-        type: boolean
-      severity_of_incident:
-        type: string
-      soft_delete:
-        type: boolean
-      succession:
-        items:
-          type: string
-        type: array
-      succession_desc:
-        type: string
-      technical:
-        items:
-          type: string
-        type: array
-      updated:
-        type: string
-      use_prohibited_substances:
-        type: boolean
-      violence:
-        type: boolean
     type: object
   api.CreateIntakeFormRequest:
     properties:
@@ -2184,31 +1718,6 @@ definitions:
       id:
         type: integer
     type: object
-  api.DeleteAttachmentResponse:
-    properties:
-      created_at:
-        type: string
-      file_id:
-        type: string
-      file_url:
-        type: string
-      size:
-        type: integer
-    type: object
-  api.DeleteClientDocumentApiRequest:
-    properties:
-      attachement_id:
-        type: string
-    required:
-    - attachement_id
-    type: object
-  api.DeleteClientDocumentApiResponse:
-    properties:
-      attachment_id:
-        type: string
-      id:
-        type: integer
-    type: object
   api.DeleteClientEmergencyContactResponse:
     properties:
       id:
@@ -2368,13 +1877,6 @@ definitions:
       status_change_reason:
         type: string
     type: object
-  api.Enable2FARequest:
-    properties:
-      validation_code:
-        type: string
-    required:
-    - validation_code
-    type: object
   api.GenerateAutoReportsRequest:
     properties:
       end_date:
@@ -2386,13 +1888,6 @@ definitions:
     properties:
       report:
         type: string
-    type: object
-  api.GenerateIncidentFileResponse:
-    properties:
-      file_url:
-        type: string
-      incident_id:
-        type: integer
     type: object
   api.GenerateInvoicePDFResponse:
     properties:
@@ -2443,53 +1938,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.GetAppointmentResponse:
-    properties:
-      appointment_templates_id:
-        type: integer
-      clients_details:
-        items:
-          $ref: '#/definitions/api.ClientsDetails'
-        type: array
-      color:
-        type: string
-      confirmed_at:
-        type: string
-      confirmed_by_employee_id:
-        type: integer
-      confirmer_first_name:
-        type: string
-      confirmer_last_name:
-        type: string
-      created_at:
-        type: string
-      creator_employee_id:
-        type: integer
-      creator_first_name:
-        type: string
-      creator_last_name:
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      is_confirmed:
-        type: boolean
-      location:
-        type: string
-      participants_details:
-        items:
-          $ref: '#/definitions/api.ParticipantsDetails'
-        type: array
-      start_time:
-        type: string
-      status:
-        type: string
-      updated_at:
-        type: string
-    type: object
   api.GetAssignedEmployeeResponse:
     properties:
       client_id:
@@ -2506,17 +1954,6 @@ definitions:
         type: string
       start_date:
         type: string
-    type: object
-  api.GetAttachmentByIdResponse:
-    properties:
-      created_at:
-        type: string
-      file_id:
-        type: string
-      file_url:
-        type: string
-      size:
-        type: integer
     type: object
   api.GetCarePlanInterventionsResponse:
     properties:
@@ -2961,121 +2398,6 @@ definitions:
       user_id:
         type: integer
     type: object
-  api.GetIncidentResponse:
-    properties:
-      accident:
-        type: boolean
-      additional_appointments:
-        type: string
-      cause_explanation:
-        type: string
-      client_absence:
-        type: boolean
-      client_id:
-        type: integer
-      client_options:
-        items:
-          type: string
-        type: array
-      created_at:
-        type: string
-      emails:
-        items:
-          type: string
-        type: array
-      employee_absenteeism:
-        type: string
-      employee_first_name:
-        type: string
-      employee_id:
-        type: integer
-      employee_last_name:
-        type: string
-      fire_water_damage:
-        type: boolean
-      id:
-        type: integer
-      incident_date:
-        type: string
-      incident_explanation:
-        type: string
-      incident_prevent_steps:
-        type: string
-      incident_taken_measures:
-        type: string
-      incident_type:
-        type: string
-      inform_who:
-        items:
-          type: string
-        type: array
-      is_confirmed:
-        type: boolean
-      location_id:
-        type: integer
-      location_name:
-        type: string
-      medicines:
-        type: boolean
-      mese_worker:
-        items:
-          type: string
-        type: array
-      needed_consultation:
-        type: string
-      organization:
-        type: boolean
-      organizational:
-        items:
-          type: string
-        type: array
-      other:
-        type: boolean
-      other_cause:
-        type: string
-      other_desc:
-        type: string
-      other_notifications:
-        type: boolean
-      passing_away:
-        type: boolean
-      physical_injury:
-        type: string
-      physical_injury_desc:
-        type: string
-      psychological_damage:
-        type: string
-      psychological_damage_desc:
-        type: string
-      recurrence_risk:
-        type: string
-      reporter_involvement:
-        type: string
-      runtime_incident:
-        type: string
-      self_harm:
-        type: boolean
-      severity_of_incident:
-        type: string
-      soft_delete:
-        type: boolean
-      succession:
-        items:
-          type: string
-        type: array
-      succession_desc:
-        type: string
-      technical:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      use_prohibited_substances:
-        type: boolean
-      violence:
-        type: boolean
-    type: object
   api.GetIntakeFormResponse:
     properties:
       addiction_issues:
@@ -3228,51 +2550,6 @@ definitions:
       operation:
         type: string
     type: object
-  api.GetInvoiceByIDResponse:
-    properties:
-      client_first_name:
-        type: string
-      client_id:
-        type: integer
-      client_last_name:
-        type: string
-      created_at:
-        type: string
-      due_date:
-        type: string
-      extra_content:
-        $ref: '#/definitions/util.JSONObject'
-      id:
-        type: integer
-      invoice_details:
-        items:
-          $ref: '#/definitions/maicare_go_invoice.InvoiceDetails'
-        type: array
-      invoice_number:
-        type: string
-      invoice_type:
-        type: string
-      issue_date:
-        type: string
-      original_invoice_id:
-        type: integer
-      pdf_attachment_id:
-        type: string
-      sender_btwnumber:
-        type: string
-      sender_id:
-        type: integer
-      sender_kvknumber:
-        type: string
-      sender_name:
-        type: string
-      status:
-        type: string
-      total_amount:
-        type: number
-      updated_at:
-        type: string
-    type: object
   api.GetInvoiceTemplateItemsResponse:
     properties:
       description:
@@ -3296,13 +2573,6 @@ definitions:
         type: integer
       name:
         type: string
-    type: object
-  api.GetMissingClientDocumentsApiResponse:
-    properties:
-      missing_docs:
-        items:
-          type: string
-        type: array
     type: object
   api.GetMonthlySchedulesByLocationResponse:
     properties:
@@ -3790,100 +3060,6 @@ definitions:
       role_id:
         type: integer
     type: object
-  api.ListAppointmentsForClientRequest:
-    properties:
-      end_date:
-        example: "2025-04-30T23:59:59Z"
-        type: string
-      start_date:
-        example: "2025-04-27T00:00:00Z"
-        type: string
-    required:
-    - end_date
-    - start_date
-    type: object
-  api.ListAppointmentsForClientResponse:
-    properties:
-      clients_details:
-        items:
-          $ref: '#/definitions/api.ClientsDetails'
-        type: array
-      color:
-        type: string
-      confirmed_at:
-        type: string
-      confirmed_by_employee_id:
-        type: integer
-      created_at:
-        type: string
-      creator_employee_id:
-        type: integer
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      location:
-        type: string
-      participants_details:
-        items:
-          $ref: '#/definitions/api.ParticipantsDetails'
-        type: array
-      recurrence_end_date:
-        $ref: '#/definitions/pgtype.Date'
-      recurrence_interval:
-        type: integer
-      recurrence_type:
-        type: string
-      start_time:
-        type: string
-      status:
-        type: string
-    type: object
-  api.ListAppointmentsForEmployeeInRangeRequest:
-    properties:
-      end_date:
-        example: "2025-04-30T23:59:59Z"
-        type: string
-      start_date:
-        example: "2025-04-27T00:00:00Z"
-        type: string
-    required:
-    - end_date
-    - start_date
-    type: object
-  api.ListAppointmentsForEmployeeInRangeResponse:
-    properties:
-      clients_details:
-        items:
-          $ref: '#/definitions/api.ClientsDetails'
-        type: array
-      color:
-        type: string
-      created_at:
-        type: string
-      creator_employee_id:
-        type: integer
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      is_confirmed:
-        type: boolean
-      location:
-        type: string
-      participants_details:
-        items:
-          $ref: '#/definitions/api.ParticipantsDetails'
-        type: array
-      start_time:
-        type: string
-      status:
-        type: string
-    type: object
   api.ListAssignedEmployeesResponse:
     properties:
       client_id:
@@ -4000,33 +3176,6 @@ definitions:
       status:
         type: string
       title:
-        type: string
-    type: object
-  api.ListClientDocumentsApiResponse:
-    properties:
-      attachment_uuid:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      file:
-        type: string
-      id:
-        type: integer
-      is_used:
-        type: boolean
-      label:
-        type: string
-      name:
-        type: string
-      size:
-        type: integer
-      tag:
-        type: string
-      updated_at:
-        type: string
-      uuid:
         type: string
     type: object
   api.ListClientEmergencyContactsResponse:
@@ -4197,61 +3346,6 @@ definitions:
       start_date:
         type: string
     type: object
-  api.ListEmployeeResponse:
-    properties:
-      age:
-        type: integer
-      authentication_phone_number:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      department:
-        type: string
-      email:
-        type: string
-      employee_number:
-        type: string
-      employment_number:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_borrowed:
-        type: boolean
-      home_telephone_number:
-        type: string
-      id:
-        type: integer
-      is_archived:
-        type: boolean
-      is_subcontractor:
-        type: boolean
-      last_name:
-        type: string
-      location_id:
-        type: integer
-      out_of_service:
-        type: boolean
-      position:
-        type: string
-      private_email_address:
-        type: string
-      private_phone_number:
-        type: string
-      profile_picture:
-        type: string
-      role_id:
-        type: integer
-      role_name:
-        type: string
-      user_id:
-        type: integer
-      work_phone_number:
-        type: string
-    type: object
   api.ListEmployeesByContractEndDateResponse:
     properties:
       contract_end_date:
@@ -4276,123 +3370,6 @@ definitions:
         type: string
       position:
         type: string
-    type: object
-  api.ListIncidentsResponse:
-    properties:
-      accident:
-        type: boolean
-      additional_appointments:
-        type: string
-      cause_explanation:
-        type: string
-      client_absence:
-        type: boolean
-      client_id:
-        type: integer
-      client_options:
-        items:
-          type: string
-        type: array
-      created_at:
-        type: string
-      emails:
-        items:
-          type: string
-        type: array
-      employee_absenteeism:
-        type: string
-      employee_first_name:
-        type: string
-      employee_id:
-        type: integer
-      employee_last_name:
-        type: string
-      employee_profile_picture:
-        type: string
-      fire_water_damage:
-        type: boolean
-      id:
-        type: integer
-      incident_date:
-        type: string
-      incident_explanation:
-        type: string
-      incident_prevent_steps:
-        type: string
-      incident_taken_measures:
-        type: string
-      incident_type:
-        type: string
-      inform_who:
-        items:
-          type: string
-        type: array
-      is_confirmed:
-        type: boolean
-      location_id:
-        type: integer
-      location_name:
-        type: string
-      medicines:
-        type: boolean
-      mese_worker:
-        items:
-          type: string
-        type: array
-      needed_consultation:
-        type: string
-      organization:
-        type: boolean
-      organizational:
-        items:
-          type: string
-        type: array
-      other:
-        type: boolean
-      other_cause:
-        type: string
-      other_desc:
-        type: string
-      other_notifications:
-        type: boolean
-      passing_away:
-        type: boolean
-      physical_injury:
-        type: string
-      physical_injury_desc:
-        type: string
-      psychological_damage:
-        type: string
-      psychological_damage_desc:
-        type: string
-      recurrence_risk:
-        type: string
-      reporter_involvement:
-        type: string
-      runtime_incident:
-        type: string
-      self_harm:
-        type: boolean
-      severity_of_incident:
-        type: string
-      soft_delete:
-        type: boolean
-      succession:
-        items:
-          type: string
-        type: array
-      succession_desc:
-        type: string
-      technical:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      use_prohibited_substances:
-        type: boolean
-      violence:
-        type: boolean
     type: object
   api.ListIntakeFormsResponse:
     properties:
@@ -4904,23 +3881,6 @@ definitions:
       start_time:
         type: string
     type: object
-  api.ListStatusHistoryApiResponse:
-    properties:
-      changed_at:
-        type: string
-      changed_by:
-        type: integer
-      client_id:
-        type: integer
-      id:
-        type: integer
-      new_status:
-        type: string
-      old_status:
-        type: string
-      reason:
-        type: string
-    type: object
   api.ListUpcomingAppointmentsResponse:
     properties:
       description:
@@ -4988,15 +3948,6 @@ definitions:
       timestamp:
         type: string
     type: object
-  api.ParticipantsDetails:
-    properties:
-      employee_id:
-        type: integer
-      first_name:
-        type: string
-      last_name:
-        type: string
-    type: object
   api.Period:
     properties:
       Week:
@@ -5029,15 +3980,6 @@ definitions:
   api.Response-any:
     properties:
       data: {}
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_AddClientDocumentApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.AddClientDocumentApiResponse'
       message:
         type: string
       success:
@@ -5115,15 +4057,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ConfirmIncidentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ConfirmIncidentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_ConfirmProgressReportResponse:
     properties:
       data:
@@ -5137,15 +4070,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CorrectSpellingResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_CreateAppointmentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateAppointmentResponse'
       message:
         type: string
       success:
@@ -5259,24 +4183,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateEmployeeProfileResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateEmployeeProfileResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_CreateIncidentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateIncidentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateIntakeFormResponse:
     properties:
       data:
@@ -5385,24 +4291,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_DeleteAttachmentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DeleteAttachmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_DeleteClientDocumentApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DeleteClientDocumentApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_DeleteClientEmergencyContactResponse:
     properties:
       data:
@@ -5475,15 +4363,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GenerateIncidentFileResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GenerateIncidentFileResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GenerateInvoicePDFResponse:
     properties:
       data:
@@ -5502,28 +4381,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetAppointmentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetAppointmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetAssignedEmployeeResponse:
     properties:
       data:
         $ref: '#/definitions/api.GetAssignedEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetAttachmentByIdResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetAttachmentByIdResponse'
       message:
         type: string
       success:
@@ -5655,15 +4516,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetIncidentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetIncidentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetIntakeFormResponse:
     properties:
       data:
@@ -5673,28 +4525,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetInvoiceByIDResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetInvoiceByIDResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetLocationResponse:
     properties:
       data:
         $ref: '#/definitions/api.GetLocationResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetMissingClientDocumentsApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetMissingClientDocumentsApiResponse'
       message:
         type: string
       success:
@@ -5763,24 +4597,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ListAppointmentsForClientResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListAppointmentsForClientResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_ListAppointmentsForEmployeeInRangeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListAppointmentsForEmployeeInRangeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_ListClientEmergencyContactsResponse:
     properties:
       data:
@@ -5826,15 +4642,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_SetClientProfilePictureResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.SetClientProfilePictureResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_SetEmployeeProfilePictureResponse:
     properties:
       data:
@@ -5848,24 +4655,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.TotalDischargeCountResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateAppointmentCardResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateAppointmentCardResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateAppointmentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateAppointmentResponse'
       message:
         type: string
       success:
@@ -5988,15 +4777,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UpdateClientStatusResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientStatusResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_UpdateEmployeeCertificationResponse:
     properties:
       data:
@@ -6024,28 +4804,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UpdateEmployeeIsSubcontractorResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateEmployeeIsSubcontractorResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_UpdateEmployeeProfileResponse:
     properties:
       data:
         $ref: '#/definitions/api.UpdateEmployeeProfileResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateIncidentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateIncidentResponse'
       message:
         type: string
       success:
@@ -6132,10 +4894,46 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UploadHandlerResponse:
+  api.Response-appointment_CreateAppointmentResponse:
     properties:
       data:
-        $ref: '#/definitions/api.UploadHandlerResponse'
+        $ref: '#/definitions/appointment.CreateAppointmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-appointment_GetAppointmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/appointment.GetAppointmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-appointment_ListAppointmentsForClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/appointment.ListAppointmentsForClientResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-appointment_ListAppointmentsForEmployeeInRangeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/appointment.ListAppointmentsForEmployeeInRangeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-appointment_UpdateAppointmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/appointment.UpdateAppointmentResponse'
       message:
         type: string
       success:
@@ -6372,17 +5170,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-array_api_ListStatusHistoryApiResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/api.ListStatusHistoryApiResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-array_api_ListUpcomingAppointmentsResponse:
     properties:
       data:
@@ -6400,6 +5187,44 @@ definitions:
         items:
           $ref: '#/definitions/api.SearchEmployeesByNameOrEmailResponse'
         type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_clientp_ListStatusHistoryApiResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/clientp.ListStatusHistoryApiResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-attachment_DeleteAttachmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/attachment.DeleteAttachmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-attachment_GetAttachmentByIdResponse:
+    properties:
+      data:
+        $ref: '#/definitions/attachment.GetAttachmentByIdResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-attachment_UploadHandlerResponse:
+    properties:
+      data:
+        $ref: '#/definitions/attachment.UploadHandlerResponse'
       message:
         type: string
       success:
@@ -6432,6 +5257,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_AddClientDocumentApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.AddClientDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_ConfirmIncidentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.ConfirmIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_CreateAppointmentCardResponse:
     properties:
       data:
@@ -6445,6 +5288,42 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.CreateClientDetailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_CreateIncidentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_DeleteClientDocumentApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.DeleteClientDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GenerateAppointmentCardDocumentApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GenerateAppointmentCardDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GenerateIncidentFileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GenerateIncidentFileResponse'
       message:
         type: string
       success:
@@ -6486,6 +5365,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetIncidentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetMissingClientDocumentsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetMissingClientDocumentsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_ListClientsApiResponse:
     properties:
       data:
@@ -6495,10 +5392,73 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_SetClientProfilePictureResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.SetClientProfilePictureResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateAppointmentCardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateAppointmentCardResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_UpdateClientDetailsResponse:
     properties:
       data:
         $ref: '#/definitions/clientp.UpdateClientDetailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateClientStatusResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateClientStatusResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateIncidentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-employees_CreateEmployeeProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/employees.CreateEmployeeProfileResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-employees_UpdateEmployeeIsSubcontractorResponse:
+    properties:
+      data:
+        $ref: '#/definitions/employees.UpdateEmployeeIsSubcontractorResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-invoice_GetInvoiceByIDResponse:
+    properties:
+      data:
+        $ref: '#/definitions/invoice.GetInvoiceByIDResponse'
       message:
         type: string
       success:
@@ -6540,15 +5500,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-api_ListClientDocumentsApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListClientDocumentsApiResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse:
     properties:
       data:
@@ -6562,24 +5513,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientMedicationsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListIncidentsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListIncidentsResponse'
       message:
         type: string
       success:
@@ -6639,10 +5572,37 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-clientp_ListClientDocumentsApiResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListClientDocumentsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-clientp_ListClientsApiResponse:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-clientp_ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListIncidentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListIncidentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-employees_ListEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-employees_ListEmployeeResponse'
       message:
         type: string
       success:
@@ -6666,20 +5626,6 @@ definitions:
       name:
         type: string
       phone_number:
-        type: string
-    type: object
-  api.SetClientProfilePictureRequest:
-    properties:
-      attachement_id:
-        type: string
-    required:
-    - attachement_id
-    type: object
-  api.SetClientProfilePictureResponse:
-    properties:
-      id:
-        type: integer
-      profile_picture:
         type: string
     type: object
   api.SetEmployeeProfilePictureRequest:
@@ -6763,165 +5709,6 @@ definitions:
         type: integer
       urgent_cases_count:
         type: integer
-    type: object
-  api.UpdateAppointmentCardRequest:
-    properties:
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
-  api.UpdateAppointmentCardResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      id:
-        type: integer
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
-  api.UpdateAppointmentRequest:
-    properties:
-      client_ids:
-        items:
-          type: integer
-        type: array
-      color:
-        example: '#FF5733'
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      location:
-        type: string
-      participant_employee_ids:
-        items:
-          type: integer
-        type: array
-      start_time:
-        example: "2023-10-01T10:00:00Z"
-        type: string
-    required:
-    - end_time
-    - start_time
-    type: object
-  api.UpdateAppointmentResponse:
-    properties:
-      appointment_templates_id:
-        type: string
-      color:
-        type: string
-      confirmed_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      confirmed_by_employee_id:
-        type: integer
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      creator_employee_id:
-        type: integer
-      description:
-        type: string
-      end_time:
-        $ref: '#/definitions/pgtype.Timestamp'
-      id:
-        type: string
-      is_confirmed:
-        type: boolean
-      location:
-        type: string
-      start_time:
-        $ref: '#/definitions/pgtype.Timestamp'
-      status:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
     type: object
   api.UpdateAssignedEmployeeRequest:
     properties:
@@ -7273,26 +6060,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.UpdateClientStatusRequest:
-    properties:
-      reason:
-        type: string
-      schedueled:
-        type: boolean
-      schedueled_for:
-        type: string
-      status:
-        type: string
-    required:
-    - status
-    type: object
-  api.UpdateClientStatusResponse:
-    properties:
-      id:
-        type: integer
-      status:
-        type: string
-    type: object
   api.UpdateContractRequest:
     properties:
       VAT:
@@ -7484,30 +6251,6 @@ definitions:
       start_date:
         type: string
     type: object
-  api.UpdateEmployeeIsSubcontractorRequest:
-    properties:
-      is_subcontractor:
-        type: boolean
-    required:
-    - is_subcontractor
-    type: object
-  api.UpdateEmployeeIsSubcontractorResponse:
-    properties:
-      contract_end_date:
-        type: string
-      contract_hours:
-        type: number
-      contract_rate:
-        type: number
-      contract_start_date:
-        type: string
-      contract_type:
-        type: string
-      id:
-        type: integer
-      is_subcontractor:
-        type: boolean
-    type: object
   api.UpdateEmployeeProfileResponse:
     properties:
       authentication_phone_number:
@@ -7554,214 +6297,6 @@ definitions:
         type: integer
       work_phone_number:
         type: string
-    type: object
-  api.UpdateIncidentRequest:
-    properties:
-      accident:
-        type: boolean
-      additional_appointments:
-        type: string
-      cause_explanation:
-        type: string
-      client_absence:
-        type: boolean
-      client_options:
-        items:
-          type: string
-        type: array
-      emails:
-        items:
-          type: string
-        type: array
-      employee_absenteeism:
-        type: string
-      employee_id:
-        type: integer
-      fire_water_damage:
-        type: boolean
-      id:
-        type: integer
-      incident_date:
-        type: string
-      incident_explanation:
-        type: string
-      incident_prevent_steps:
-        type: string
-      incident_taken_measures:
-        type: string
-      incident_type:
-        type: string
-      inform_who:
-        items:
-          type: string
-        type: array
-      location_id:
-        type: integer
-      medicines:
-        type: boolean
-      mese_worker:
-        items:
-          type: string
-        type: array
-      needed_consultation:
-        type: string
-      organization:
-        type: boolean
-      organizational:
-        items:
-          type: string
-        type: array
-      other:
-        type: boolean
-      other_cause:
-        type: string
-      other_desc:
-        type: string
-      other_notifications:
-        type: boolean
-      passing_away:
-        type: boolean
-      physical_injury:
-        type: string
-      physical_injury_desc:
-        type: string
-      psychological_damage:
-        type: string
-      psychological_damage_desc:
-        type: string
-      recurrence_risk:
-        type: string
-      reporter_involvement:
-        type: string
-      runtime_incident:
-        type: string
-      self_harm:
-        type: boolean
-      severity_of_incident:
-        type: string
-      succession:
-        items:
-          type: string
-        type: array
-      succession_desc:
-        type: string
-      technical:
-        items:
-          type: string
-        type: array
-      use_prohibited_substances:
-        type: boolean
-      violence:
-        type: boolean
-    type: object
-  api.UpdateIncidentResponse:
-    properties:
-      accident:
-        type: boolean
-      additional_appointments:
-        type: string
-      cause_explanation:
-        type: string
-      client_absence:
-        type: boolean
-      client_id:
-        type: integer
-      client_options:
-        items:
-          type: string
-        type: array
-      created:
-        type: string
-      emails:
-        items:
-          type: string
-        type: array
-      employee_absenteeism:
-        type: string
-      employee_id:
-        type: integer
-      fire_water_damage:
-        type: boolean
-      id:
-        type: integer
-      incident_date:
-        type: string
-      incident_explanation:
-        type: string
-      incident_prevent_steps:
-        type: string
-      incident_taken_measures:
-        type: string
-      incident_type:
-        type: string
-      inform_who:
-        items:
-          type: string
-        type: array
-      is_confirmed:
-        type: boolean
-      location_id:
-        type: integer
-      medicines:
-        type: boolean
-      mese_worker:
-        items:
-          type: string
-        type: array
-      needed_consultation:
-        type: string
-      organization:
-        type: boolean
-      organizational:
-        items:
-          type: string
-        type: array
-      other:
-        type: boolean
-      other_cause:
-        type: string
-      other_desc:
-        type: string
-      other_notifications:
-        type: boolean
-      passing_away:
-        type: boolean
-      physical_injury:
-        type: string
-      physical_injury_desc:
-        type: string
-      psychological_damage:
-        type: string
-      psychological_damage_desc:
-        type: string
-      recurrence_risk:
-        type: string
-      reporter_involvement:
-        type: string
-      runtime_incident:
-        type: string
-      self_harm:
-        type: boolean
-      severity_of_incident:
-        type: string
-      soft_delete:
-        type: boolean
-      succession:
-        items:
-          type: string
-        type: array
-      succession_desc:
-        type: string
-      technical:
-        items:
-          type: string
-        type: array
-      updated:
-        type: string
-      use_prohibited_substances:
-        type: boolean
-      violence:
-        type: boolean
     type: object
   api.UpdateInvoiceRequest:
     properties:
@@ -8404,17 +6939,6 @@ definitions:
       start_time:
         type: string
     type: object
-  api.UploadHandlerResponse:
-    properties:
-      created_at:
-        type: string
-      file_id:
-        type: string
-      file_url:
-        type: string
-      size:
-        type: integer
-    type: object
   api.WorkingHourItem:
     properties:
       color:
@@ -8438,6 +6962,324 @@ definitions:
       type:
         type: string
     type: object
+  appointment.AddClientToAppointmentRequest:
+    properties:
+      client_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - client_ids
+    type: object
+  appointment.AddParticipantToAppointmentRequest:
+    properties:
+      participant_employee_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - participant_employee_ids
+    type: object
+  appointment.ClientsDetails:
+    properties:
+      client_id:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  appointment.CreateAppointmentRequest:
+    properties:
+      client_ids:
+        items:
+          type: integer
+        type: array
+      color:
+        example: '#FF5733'
+        type: string
+      description:
+        type: string
+      end_time:
+        type: string
+      location:
+        type: string
+      participant_employee_ids:
+        items:
+          type: integer
+        type: array
+      recurrence_end_date:
+        example: "2025-10-01T10:00:00Z"
+        type: string
+      recurrence_interval:
+        type: integer
+      recurrence_type:
+        example: NONE
+        type: string
+      start_time:
+        example: "2023-10-01T10:00:00Z"
+        type: string
+    required:
+    - end_time
+    - start_time
+    type: object
+  appointment.CreateAppointmentResponse:
+    properties:
+      color:
+        type: string
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      location:
+        type: string
+      start_time:
+        type: string
+    type: object
+  appointment.GetAppointmentResponse:
+    properties:
+      appointment_templates_id:
+        type: integer
+      clients_details:
+        items:
+          $ref: '#/definitions/appointment.ClientsDetails'
+        type: array
+      color:
+        type: string
+      confirmed_at:
+        type: string
+      confirmed_by_employee_id:
+        type: integer
+      confirmer_first_name:
+        type: string
+      confirmer_last_name:
+        type: string
+      created_at:
+        type: string
+      creator_employee_id:
+        type: integer
+      creator_first_name:
+        type: string
+      creator_last_name:
+        type: string
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      is_confirmed:
+        type: boolean
+      location:
+        type: string
+      participants_details:
+        items:
+          $ref: '#/definitions/appointment.ParticipantsDetails'
+        type: array
+      start_time:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  appointment.ListAppointmentsForClientRequest:
+    properties:
+      end_date:
+        example: "2025-04-30T23:59:59Z"
+        type: string
+      start_date:
+        example: "2025-04-27T00:00:00Z"
+        type: string
+    required:
+    - end_date
+    - start_date
+    type: object
+  appointment.ListAppointmentsForClientResponse:
+    properties:
+      clients_details:
+        items:
+          $ref: '#/definitions/appointment.ClientsDetails'
+        type: array
+      color:
+        type: string
+      confirmed_at:
+        type: string
+      confirmed_by_employee_id:
+        type: integer
+      created_at:
+        type: string
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      location:
+        type: string
+      participants_details:
+        items:
+          $ref: '#/definitions/appointment.ParticipantsDetails'
+        type: array
+      recurrence_end_date:
+        $ref: '#/definitions/pgtype.Date'
+      recurrence_interval:
+        type: integer
+      recurrence_type:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+    type: object
+  appointment.ListAppointmentsForEmployeeInRangeRequest:
+    properties:
+      end_date:
+        example: "2025-04-30T23:59:59Z"
+        type: string
+      start_date:
+        example: "2025-04-27T00:00:00Z"
+        type: string
+    required:
+    - end_date
+    - start_date
+    type: object
+  appointment.ListAppointmentsForEmployeeInRangeResponse:
+    properties:
+      clients_details:
+        items:
+          $ref: '#/definitions/appointment.ClientsDetails'
+        type: array
+      color:
+        type: string
+      created_at:
+        type: string
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      is_confirmed:
+        type: boolean
+      location:
+        type: string
+      participants_details:
+        items:
+          $ref: '#/definitions/appointment.ParticipantsDetails'
+        type: array
+      start_time:
+        type: string
+      status:
+        type: string
+    type: object
+  appointment.ParticipantsDetails:
+    properties:
+      employee_id:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  appointment.UpdateAppointmentRequest:
+    properties:
+      client_ids:
+        items:
+          type: integer
+        type: array
+      color:
+        example: '#FF5733'
+        type: string
+      description:
+        type: string
+      end_time:
+        type: string
+      location:
+        type: string
+      participant_employee_ids:
+        items:
+          type: integer
+        type: array
+      start_time:
+        example: "2023-10-01T10:00:00Z"
+        type: string
+    required:
+    - end_time
+    - start_time
+    type: object
+  appointment.UpdateAppointmentResponse:
+    properties:
+      appointment_templates_id:
+        type: string
+      color:
+        type: string
+      confirmed_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      confirmed_by_employee_id:
+        type: integer
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      creator_employee_id:
+        type: integer
+      description:
+        type: string
+      end_time:
+        $ref: '#/definitions/pgtype.Timestamp'
+      id:
+        type: string
+      is_confirmed:
+        type: boolean
+      location:
+        type: string
+      start_time:
+        $ref: '#/definitions/pgtype.Timestamp'
+      status:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+    type: object
+  attachment.DeleteAttachmentResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
+    type: object
+  attachment.GetAttachmentByIdResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
+    type: object
+  attachment.UploadHandlerResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
+    type: object
   auth.ChangePasswordRequest:
     properties:
       new_password:
@@ -8447,6 +7289,13 @@ definitions:
     required:
     - new_password
     - old_password
+    type: object
+  auth.Enable2FARequest:
+    properties:
+      validation_code:
+        type: string
+    required:
+    - validation_code
     type: object
   auth.LoginUserRequest:
     properties:
@@ -8508,6 +7357,41 @@ definitions:
     - temp_token
     - validation_code
     type: object
+  clientp.AddClientDocumentApiRequest:
+    properties:
+      attachment_id:
+        type: string
+      label:
+        type: string
+    required:
+    - attachment_id
+    - label
+    type: object
+  clientp.AddClientDocumentApiResponse:
+    properties:
+      attachment_id:
+        type: string
+      client_id:
+        type: integer
+      created:
+        type: string
+      file:
+        type: string
+      id:
+        type: integer
+      is_used:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+      tag:
+        type: string
+      updated:
+        type: string
+    type: object
   clientp.Address:
     properties:
       address:
@@ -8520,6 +7404,13 @@ definitions:
         type: string
       zip_code:
         type: string
+    type: object
+  clientp.ConfirmIncidentResponse:
+    properties:
+      file_url:
+        type: string
+      id:
+        type: integer
     type: object
   clientp.CreateAppointmentCardRequest:
     properties:
@@ -8806,6 +7697,276 @@ definitions:
       work_start_date:
         type: string
     type: object
+  clientp.CreateIncidentRequest:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_id:
+        type: integer
+      fire_water_damage:
+        type: boolean
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        enum:
+        - "no"
+        - not_clear
+        - hospitalization
+        - consult_gp
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        enum:
+        - no_injuries
+        - not_noticeable_yet
+        - bruising_swelling
+        - broken_bones
+        - shortness_of_breath
+        - death
+        - other
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        enum:
+        - high
+        - very_high
+        - means
+        - very_low
+        type: string
+      reporter_involvement:
+        enum:
+        - directly_involved
+        - witness
+        - found_afterwards
+        - alarmed
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        enum:
+        - fatal
+        - serious
+        - less_serious
+        - near_incident
+        type: string
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    required:
+    - incident_type
+    - needed_consultation
+    - physical_injury
+    - recurrence_risk
+    - reporter_involvement
+    - runtime_incident
+    - severity_of_incident
+    type: object
+  clientp.CreateIncidentResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      created:
+        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_id:
+        type: integer
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      updated:
+        type: string
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
+  clientp.DeleteClientDocumentApiRequest:
+    properties:
+      attachement_id:
+        type: string
+    required:
+    - attachement_id
+    type: object
+  clientp.DeleteClientDocumentApiResponse:
+    properties:
+      attachment_id:
+        type: string
+      id:
+        type: integer
+    type: object
+  clientp.GenerateAppointmentCardDocumentApiResponse:
+    properties:
+      client_id:
+        type: integer
+      file_url:
+        type: string
+    type: object
+  clientp.GenerateIncidentFileResponse:
+    properties:
+      file_url:
+        type: string
+      incident_id:
+        type: integer
+    type: object
   clientp.GetAppointmentCardResponse:
     properties:
       client_id:
@@ -8970,6 +8131,155 @@ definitions:
       total_clients:
         type: integer
     type: object
+  clientp.GetIncidentResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      is_confirmed:
+        type: boolean
+      location_id:
+        type: integer
+      location_name:
+        type: string
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
+  clientp.GetMissingClientDocumentsApiResponse:
+    properties:
+      missing_docs:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.ListClientDocumentsApiResponse:
+    properties:
+      attachment_uuid:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      file:
+        type: string
+      id:
+        type: integer
+      is_used:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+      tag:
+        type: string
+      updated_at:
+        type: string
+      uuid:
+        type: string
+    type: object
   clientp.ListClientsApiResponse:
     properties:
       addresses:
@@ -9024,6 +8334,256 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  clientp.ListIncidentsResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      employee_profile_picture:
+        type: string
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      is_confirmed:
+        type: boolean
+      location_id:
+        type: integer
+      location_name:
+        type: string
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
+  clientp.ListStatusHistoryApiResponse:
+    properties:
+      changed_at:
+        type: string
+      changed_by:
+        type: integer
+      client_id:
+        type: integer
+      id:
+        type: integer
+      new_status:
+        type: string
+      old_status:
+        type: string
+      reason:
+        type: string
+    type: object
+  clientp.SetClientProfilePictureRequest:
+    properties:
+      attachement_id:
+        type: string
+    required:
+    - attachement_id
+    type: object
+  clientp.SetClientProfilePictureResponse:
+    properties:
+      id:
+        type: integer
+      profile_picture:
+        type: string
+    type: object
+  clientp.UpdateAppointmentCardRequest:
+    properties:
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.UpdateAppointmentCardResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      general_information:
+        items:
+          type: string
+        type: array
+      household_info:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      important_contacts:
+        items:
+          type: string
+        type: array
+      leave:
+        items:
+          type: string
+        type: array
+      organization_agreements:
+        items:
+          type: string
+        type: array
+      school_internship:
+        items:
+          type: string
+        type: array
+      smoking_rules:
+        items:
+          type: string
+        type: array
+      travel:
+        items:
+          type: string
+        type: array
+      treatment_agreements:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      work:
+        items:
+          type: string
+        type: array
+      youth_officer_agreements:
+        items:
+          type: string
+        type: array
     type: object
   clientp.UpdateClientDetailsRequest:
     properties:
@@ -9157,6 +8717,471 @@ definitions:
       source:
         type: string
       status:
+        type: string
+    type: object
+  clientp.UpdateClientStatusRequest:
+    properties:
+      reason:
+        type: string
+      schedueled:
+        type: boolean
+      schedueled_for:
+        type: string
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  clientp.UpdateClientStatusResponse:
+    properties:
+      id:
+        type: integer
+      status:
+        type: string
+    type: object
+  clientp.UpdateIncidentRequest:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_options:
+        items:
+          type: string
+        type: array
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_id:
+        type: integer
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
+  clientp.UpdateIncidentResponse:
+    properties:
+      accident:
+        type: boolean
+      additional_appointments:
+        type: string
+      cause_explanation:
+        type: string
+      client_absence:
+        type: boolean
+      client_id:
+        type: integer
+      client_options:
+        items:
+          type: string
+        type: array
+      created:
+        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      employee_absenteeism:
+        type: string
+      employee_id:
+        type: integer
+      fire_water_damage:
+        type: boolean
+      id:
+        type: integer
+      incident_date:
+        type: string
+      incident_explanation:
+        type: string
+      incident_prevent_steps:
+        type: string
+      incident_taken_measures:
+        type: string
+      incident_type:
+        type: string
+      inform_who:
+        items:
+          type: string
+        type: array
+      is_confirmed:
+        type: boolean
+      location_id:
+        type: integer
+      medicines:
+        type: boolean
+      mese_worker:
+        items:
+          type: string
+        type: array
+      needed_consultation:
+        type: string
+      organization:
+        type: boolean
+      organizational:
+        items:
+          type: string
+        type: array
+      other:
+        type: boolean
+      other_cause:
+        type: string
+      other_desc:
+        type: string
+      other_notifications:
+        type: boolean
+      passing_away:
+        type: boolean
+      physical_injury:
+        type: string
+      physical_injury_desc:
+        type: string
+      psychological_damage:
+        type: string
+      psychological_damage_desc:
+        type: string
+      recurrence_risk:
+        type: string
+      reporter_involvement:
+        type: string
+      runtime_incident:
+        type: string
+      self_harm:
+        type: boolean
+      severity_of_incident:
+        type: string
+      soft_delete:
+        type: boolean
+      succession:
+        items:
+          type: string
+        type: array
+      succession_desc:
+        type: string
+      technical:
+        items:
+          type: string
+        type: array
+      updated:
+        type: string
+      use_prohibited_substances:
+        type: boolean
+      violence:
+        type: boolean
+    type: object
+  employees.CreateEmployeeProfileRequest:
+    properties:
+      authentication_phone_number:
+        example: "1234567890"
+        type: string
+      date_of_birth:
+        example: "2000-01-01"
+        type: string
+      department:
+        example: IT
+        type: string
+      email:
+        example: emai@exe.com
+        type: string
+      employee_number:
+        example: "123456"
+        type: string
+      employment_number:
+        example: "123456"
+        type: string
+      first_name:
+        example: fara
+        type: string
+      gender:
+        example: man
+        type: string
+      home_telephone_number:
+        example: "1234567890"
+        type: string
+      is_subcontractor:
+        example: false
+        type: boolean
+      last_name:
+        example: joe
+        type: string
+      location_id:
+        example: 1
+        type: integer
+      position:
+        example: developer
+        type: string
+      private_email_address:
+        example: joe@ex.com
+        type: string
+      private_phone_number:
+        example: "1234567890"
+        type: string
+      role_id:
+        example: 1
+        type: integer
+      work_phone_number:
+        example: "1234567890"
+        type: string
+    required:
+    - email
+    - first_name
+    - is_subcontractor
+    - last_name
+    - role_id
+    type: object
+  employees.CreateEmployeeProfileResponse:
+    properties:
+      authentication_phone_number:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        - not_specified
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
+        type: string
+    type: object
+  employees.ListEmployeeResponse:
+    properties:
+      age:
+        type: integer
+      authentication_phone_number:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      employee_number:
+        type: string
+      employment_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      has_borrowed:
+        type: boolean
+      home_telephone_number:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      is_subcontractor:
+        type: boolean
+      last_name:
+        type: string
+      location_id:
+        type: integer
+      out_of_service:
+        type: boolean
+      position:
+        type: string
+      private_email_address:
+        type: string
+      private_phone_number:
+        type: string
+      profile_picture:
+        type: string
+      role_id:
+        type: integer
+      role_name:
+        type: string
+      user_id:
+        type: integer
+      work_phone_number:
+        type: string
+    type: object
+  employees.UpdateEmployeeIsSubcontractorRequest:
+    properties:
+      is_subcontractor:
+        type: boolean
+    required:
+    - is_subcontractor
+    type: object
+  employees.UpdateEmployeeIsSubcontractorResponse:
+    properties:
+      contract_end_date:
+        type: string
+      contract_hours:
+        type: number
+      contract_rate:
+        type: number
+      contract_start_date:
+        type: string
+      contract_type:
+        type: string
+      id:
+        type: integer
+      is_subcontractor:
+        type: boolean
+    type: object
+  invoice.GetInvoiceByIDResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      due_date:
+        type: string
+      extra_content:
+        $ref: '#/definitions/util.JSONObject'
+      id:
+        type: integer
+      invoice_details:
+        items:
+          $ref: '#/definitions/maicare_go_service_invoice.InvoiceDetails'
+        type: array
+      invoice_number:
+        type: string
+      invoice_type:
+        type: string
+      issue_date:
+        type: string
+      original_invoice_id:
+        type: integer
+      payment_completion_prc:
+        type: number
+      pdf_attachment_id:
+        type: string
+      sender_btwnumber:
+        type: string
+      sender_id:
+        type: integer
+      sender_kvknumber:
+        type: string
+      sender_name:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
         type: string
     type: object
   maicare_go_invoice.InvoiceDetails:
@@ -9402,21 +9427,6 @@ definitions:
           $ref: '#/definitions/api.ListClientDiagnosesResponse'
         type: array
     type: object
-  pagination.Response-api_ListClientDocumentsApiResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListClientDocumentsApiResponse'
-        type: array
-    type: object
   pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse:
     properties:
       count:
@@ -9460,36 +9470,6 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListContractsResponse'
-        type: array
-    type: object
-  pagination.Response-api_ListEmployeeResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListEmployeeResponse'
-        type: array
-    type: object
-  pagination.Response-api_ListIncidentsResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListIncidentsResponse'
         type: array
     type: object
   pagination.Response-api_ListIntakeFormsResponse:
@@ -9586,6 +9566,21 @@ definitions:
           type: array
         type: array
     type: object
+  pagination.Response-clientp_ListClientDocumentsApiResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListClientDocumentsApiResponse'
+        type: array
+    type: object
   pagination.Response-clientp_ListClientsApiResponse:
     properties:
       count:
@@ -9599,6 +9594,36 @@ definitions:
       results:
         items:
           $ref: '#/definitions/clientp.ListClientsApiResponse'
+        type: array
+    type: object
+  pagination.Response-clientp_ListIncidentsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListIncidentsResponse'
+        type: array
+    type: object
+  pagination.Response-employees_ListEmployeeResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/employees.ListEmployeeResponse'
         type: array
     type: object
   pgtype.Date:
@@ -9756,14 +9781,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateAppointmentRequest'
+          $ref: '#/definitions/appointment.CreateAppointmentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_CreateAppointmentResponse'
+            $ref: '#/definitions/api.Response-appointment_CreateAppointmentResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -9803,7 +9828,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.AddClientToAppointmentRequest'
+          $ref: '#/definitions/appointment.AddClientToAppointmentRequest'
       produces:
       - application/json
       responses:
@@ -9850,7 +9875,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.AddParticipantToAppointmentRequest'
+          $ref: '#/definitions/appointment.AddParticipantToAppointmentRequest'
       produces:
       - application/json
       responses:
@@ -9936,7 +9961,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetAppointmentResponse'
+            $ref: '#/definitions/api.Response-appointment_GetAppointmentResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -9971,14 +9996,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateAppointmentRequest'
+          $ref: '#/definitions/appointment.UpdateAppointmentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAppointmentResponse'
+            $ref: '#/definitions/api.Response-appointment_UpdateAppointmentResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -10056,7 +10081,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DeleteAttachmentResponse'
+            $ref: '#/definitions/api.Response-attachment_DeleteAttachmentResponse'
         "400":
           description: Bad Request
           schema:
@@ -10086,7 +10111,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetAttachmentByIdResponse'
+            $ref: '#/definitions/api.Response-attachment_GetAttachmentByIdResponse'
         "400":
           description: Bad Request
           schema:
@@ -10119,7 +10144,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_UploadHandlerResponse'
+            $ref: '#/definitions/api.Response-attachment_UploadHandlerResponse'
       summary: Upload a file
       tags:
       - attachments
@@ -10176,7 +10201,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.Enable2FARequest'
+          $ref: '#/definitions/auth.Enable2FARequest'
       produces:
       - application/json
       responses:
@@ -11396,14 +11421,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateAppointmentCardRequest'
+          $ref: '#/definitions/clientp.UpdateAppointmentCardRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateAppointmentCardResponse'
       summary: Update an appointment card by client ID
       tags:
       - appointment_cards
@@ -11422,7 +11447,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAppointmentCardResponse'
+            $ref: '#/definitions/api.Response-clientp_GenerateAppointmentCardDocumentApiResponse'
       summary: Generate an appointment card document by client ID
       tags:
       - appointment_cards
@@ -11442,14 +11467,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.ListAppointmentsForClientRequest'
+          $ref: '#/definitions/appointment.ListAppointmentsForClientRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListAppointmentsForClientResponse'
+            $ref: '#/definitions/api.Response-appointment_ListAppointmentsForClientResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -11965,7 +11990,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientDocumentsApiResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListClientDocumentsApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -11995,14 +12020,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.AddClientDocumentApiRequest'
+          $ref: '#/definitions/clientp.AddClientDocumentApiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_AddClientDocumentApiResponse'
+            $ref: '#/definitions/api.Response-clientp_AddClientDocumentApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -12038,14 +12063,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.DeleteClientDocumentApiRequest'
+          $ref: '#/definitions/clientp.DeleteClientDocumentApiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DeleteClientDocumentApiResponse'
+            $ref: '#/definitions/api.Response-clientp_DeleteClientDocumentApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -12253,7 +12278,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListIncidentsResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListIncidentsResponse'
       summary: List all incidents
       tags:
       - incidents
@@ -12271,14 +12296,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateIncidentRequest'
+          $ref: '#/definitions/clientp.CreateIncidentRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateIncidentResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateIncidentResponse'
         "400":
           description: Bad Request
           schema:
@@ -12347,7 +12372,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetIncidentResponse'
+            $ref: '#/definitions/api.Response-clientp_GetIncidentResponse'
         "400":
           description: Bad Request
           schema:
@@ -12380,14 +12405,14 @@ paths:
         name: incident
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateIncidentRequest'
+          $ref: '#/definitions/clientp.UpdateIncidentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateIncidentResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateIncidentResponse'
         "400":
           description: Bad Request
           schema:
@@ -12422,7 +12447,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GenerateIncidentFileResponse'
+            $ref: '#/definitions/api.Response-clientp_GenerateIncidentFileResponse'
         "400":
           description: Bad Request
           schema:
@@ -12690,7 +12715,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetMissingClientDocumentsApiResponse'
+            $ref: '#/definitions/api.Response-clientp_GetMissingClientDocumentsApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -12721,14 +12746,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.SetClientProfilePictureRequest'
+          $ref: '#/definitions/clientp.SetClientProfilePictureRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_SetClientProfilePictureResponse'
+            $ref: '#/definitions/api.Response-clientp_SetClientProfilePictureResponse'
         "400":
           description: Bad Request
           schema:
@@ -12977,14 +13002,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateClientStatusRequest'
+          $ref: '#/definitions/clientp.UpdateClientStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientStatusResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateClientStatusResponse'
         "400":
           description: Bad Request
           schema:
@@ -13014,7 +13039,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-array_api_ListStatusHistoryApiResponse'
+            $ref: '#/definitions/api.Response-array_clientp_ListStatusHistoryApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -13396,7 +13421,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListEmployeeResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-employees_ListEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -13430,14 +13455,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateEmployeeProfileRequest'
+          $ref: '#/definitions/employees.CreateEmployeeProfileRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateEmployeeProfileResponse'
+            $ref: '#/definitions/api.Response-employees_CreateEmployeeProfileResponse'
         "400":
           description: Bad Request
           schema:
@@ -13657,14 +13682,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.ListAppointmentsForEmployeeInRangeRequest'
+          $ref: '#/definitions/appointment.ListAppointmentsForEmployeeInRangeRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListAppointmentsForEmployeeInRangeResponse'
+            $ref: '#/definitions/api.Response-appointment_ListAppointmentsForEmployeeInRangeResponse'
         "400":
           description: Bad request - Invalid input
           schema:
@@ -14316,14 +14341,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateEmployeeIsSubcontractorRequest'
+          $ref: '#/definitions/employees.UpdateEmployeeIsSubcontractorRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateEmployeeIsSubcontractorResponse'
+            $ref: '#/definitions/api.Response-employees_UpdateEmployeeIsSubcontractorResponse'
         "400":
           description: Bad Request
           schema:
@@ -14587,7 +14612,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ConfirmIncidentResponse'
+            $ref: '#/definitions/api.Response-clientp_ConfirmIncidentResponse'
         "400":
           description: Bad Request
           schema:
@@ -14957,7 +14982,7 @@ paths:
         "200":
           description: Successful response with invoice details
           schema:
-            $ref: '#/definitions/api.Response-api_GetInvoiceByIDResponse'
+            $ref: '#/definitions/api.Response-invoice_GetInvoiceByIDResponse'
         "400":
           description: Bad Request
           schema:

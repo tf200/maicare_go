@@ -1423,7 +1423,7 @@ CREATE TABLE incident (
     reporter_involvement VARCHAR(100) NOT NULL CHECK (reporter_involvement IN (
         'directly_involved', 'witness', 'found_afterwards', 'alarmed'
     )),
-    inform_who JSONB NOT NULL DEFAULT '[]',
+    inform_who VARCHAR(255)[] NOT NULL DEFAULT '{}',
     incident_date DATE NOT NULL,
     runtime_incident VARCHAR(100) NOT NULL,
     incident_type VARCHAR(100) NOT NULL,
@@ -1446,10 +1446,10 @@ CREATE TABLE incident (
     )),
     incident_prevent_steps TEXT NULL,
     incident_taken_measures TEXT NULL,
-    technical JSONB NOT NULL DEFAULT '[]',
-    organizational JSONB NOT NULL DEFAULT '[]',
-    mese_worker JSONB NOT NULL DEFAULT '[]',
-    client_options JSONB NOT NULL DEFAULT '[]',
+    technical VARCHAR(255)[] NOT NULL DEFAULT '{}',
+    organizational VARCHAR(255)[] NOT NULL DEFAULT '{}',
+    mese_worker VARCHAR(255)[] NOT NULL DEFAULT '{}',
+    client_options VARCHAR(255)[] NOT NULL DEFAULT '{}',
     other_cause VARCHAR(100) NULL,
     cause_explanation TEXT NULL DEFAULT '',
     physical_injury VARCHAR(100) NOT NULL CHECK (physical_injury IN (
@@ -1464,7 +1464,7 @@ CREATE TABLE incident (
     needed_consultation VARCHAR(100) NOT NULL CHECK (needed_consultation IN (
         'no', 'not_clear', 'hospitalization', 'consult_gp'
     )),
-    succession JSONB NOT NULL DEFAULT '[]',
+    succession VARCHAR(255)[] NOT NULL DEFAULT '{}',
     succession_desc TEXT NULL DEFAULT '',
     other BOOLEAN NOT NULL DEFAULT FALSE,
     other_desc VARCHAR(100) NULL,

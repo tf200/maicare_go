@@ -1,5 +1,6 @@
 -- name: CreateAttachment :one
 INSERT INTO attachment_file (
+    "uuid",
     "name",
     "file",
     "size",
@@ -8,7 +9,8 @@ INSERT INTO attachment_file (
     $1,
     $2,
     $3,
-    $4
+    $4,
+    $5
 ) RETURNING *;
 
 -- name: GetAttachmentById :one

@@ -2,14 +2,17 @@ package clientp
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
+
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -370,4 +373,262 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateClientDetails",
 		"Successfully updated client details", zap.Int64("ClientID", client.ID))
 	return result, nil
+}
+
+func (s *clientService) UpdateClientStatus(ctx context.Context, req UpdateClientStatusRequest, clientID int64) (*UpdateClientStatusResponse, error) {
+	switch req.IsSchedueled {
+	case true:
+		return s.handleSchedueledStatusUpdates(ctx, req, clientID)
+	case false:
+		return s.handleNormalStatusUpdates(ctx, req, clientID)
+	default:
+		return nil, fmt.Errorf("invalid is_schedueled value")
+	}
+}
+
+func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID int64) (*UpdateClientStatusResponse, error) {
+	if req.SchedueledFor.Before(time.Now()) {
+		return nil, fmt.Errorf("scheduled time must be in the future")
+	}
+
+	schedueledChange, err := s.Store.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
+		ClientID:      clientID,
+		NewStatus:     &req.Status,
+		Reason:        &req.Reason,
+		ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+			"Failed to create scheduled status change", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to create scheduled status change")
+	}
+
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateClientStatus",
+		"Successfully created scheduled status change", zap.Int64("ClientID", clientID),
+		zap.String("NewStatus", req.Status), zap.Time("ScheduledFor", req.SchedueledFor))
+
+	return &UpdateClientStatusResponse{
+		ID:     clientID,
+		Status: schedueledChange.NewStatus,
+	}, nil
+
+}
+
+func (s *clientService) ListStatusHistory(ctx context.Context, clientID int64) ([]ListStatusHistoryApiResponse, error) {
+	arg := db.ListClientStatusHistoryParams{
+		ClientID: clientID,
+		Limit:    10,
+		Offset:   0,
+	}
+	histories, err := s.Store.ListClientStatusHistory(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListStatusHistory",
+			"Failed to list status history", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to list status history")
+	}
+	if len(histories) == 0 {
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListStatusHistory",
+			"No status history found", zap.Int64("ClientID", clientID))
+		return []ListStatusHistoryApiResponse{}, nil
+	}
+	var historyList []ListStatusHistoryApiResponse
+	for _, history := range histories {
+		historyList = append(historyList, ListStatusHistoryApiResponse{
+			ID:        history.ID,
+			ClientID:  history.ClientID,
+			OldStatus: history.OldStatus,
+			NewStatus: history.NewStatus,
+			Reason:    history.Reason,
+			ChangedAt: history.ChangedAt.Time,
+			ChangedBy: history.ChangedBy,
+		})
+	}
+	return historyList, nil
+}
+
+func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID int64) (*UpdateClientStatusResponse, error) {
+	tx, err := s.Store.ConnPool.Begin(ctx)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+			"Failed to begin transaction", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to begin transaction")
+	}
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+				"Failed to rollback transaction", zap.Error(rollbackErr), zap.Int64("ClientID", clientID))
+		}
+	}()
+
+	qtx := s.Store.WithTx(tx)
+
+	oldClient, err := qtx.GetClientDetails(ctx, clientID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+			"Failed to get client details", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to get client details")
+	}
+
+	client, err := qtx.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
+		ID:     clientID,
+		Status: &req.Status,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+			"Failed to update client status", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to update client status")
+	}
+
+	_, err = qtx.CreateClientStatusHistory(ctx, db.CreateClientStatusHistoryParams{
+		ClientID:  clientID,
+		OldStatus: oldClient.Status,
+		NewStatus: req.Status,
+		Reason:    &req.Reason,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+			"Failed to create client status history", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to create client status history")
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
+			"Failed to commit transaction", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to commit transaction")
+	}
+
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateClientStatus",
+		"Successfully updated client status", zap.Int64("ClientID", client.ID),
+		zap.String("NewStatus", req.Status))
+
+	return &UpdateClientStatusResponse{
+		ID:     client.ID,
+		Status: client.Status,
+	}, nil
+}
+
+func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClientProfilePictureRequest, clientID int64) (*SetClientProfilePictureResponse, error) {
+	arg := db.SetClientProfilePictureTxParams{
+		ClientID:     clientID,
+		AttachmentID: req.AttachmentID,
+	}
+	client, err := s.Store.SetClientProfilePictureTx(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "SetClientProfilePicture",
+			"Failed to set client profile picture", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to set client profile picture")
+	}
+
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "SetClientProfilePicture",
+		"Successfully set client profile picture", zap.Int64("ClientID", client.User.ID))
+
+	return &SetClientProfilePictureResponse{
+		ID:             client.User.ID,
+		ProfilePicture: client.User.ProfilePicture,
+	}, nil
+}
+
+func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocumentApiRequest, clientID int64) (*AddClientDocumentApiResponse, error) {
+	arg := db.AddClientDocumentTxParams{
+		ClientID:     clientID,
+		AttachmentID: req.AttachmentID,
+		Label:        req.Label,
+	}
+
+	clientDoc, err := s.Store.AddClientDocumentTx(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddClientDocument",
+			"Failed to add client document", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to add client document")
+	}
+
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddClientDocument",
+		"Successfully added client document", zap.Int64("ClientID", clientID),
+		zap.Int64("DocumentID", clientDoc.ClientDocument.ID))
+	return &AddClientDocumentApiResponse{
+		ID:           clientDoc.ClientDocument.ID,
+		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
+		ClientID:     clientDoc.ClientDocument.ClientID,
+		Label:        clientDoc.ClientDocument.Label,
+		Name:         clientDoc.Attachment.Name,
+		File:         clientDoc.Attachment.File,
+		Size:         clientDoc.Attachment.Size,
+		IsUsed:       clientDoc.Attachment.IsUsed,
+		Tag:          clientDoc.Attachment.Tag,
+		UpdatedAt:    clientDoc.Attachment.Updated.Time,
+		CreatedAt:    clientDoc.Attachment.Created.Time,
+	}, nil
+}
+
+func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocumentsApiRequest, clientID int64) (*pagination.Response[ListClientDocumentsApiResponse], error) {
+	params := req.GetParams()
+	clientDocs, err := s.Store.ListClientDocuments(ctx, db.ListClientDocumentsParams{
+		ClientID: clientID,
+		Offset:   params.Offset,
+		Limit:    params.Limit,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDocuments",
+			"Failed to list client documents", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to list client documents")
+	}
+	if len(clientDocs) == 0 {
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListClientDocuments",
+			"No client documents found", zap.Int64("ClientID", clientID))
+		pag := pagination.NewResponse(ctx, req.Request, []ListClientDocumentsApiResponse{}, 0)
+		return &pag, nil
+	}
+
+	totalCount := clientDocs[0].TotalCount
+
+	var docList []ListClientDocumentsApiResponse
+	for _, doc := range clientDocs {
+		docList = append(docList, ListClientDocumentsApiResponse{
+			ID:             doc.ID,
+			AttachmentUuid: doc.AttachmentUuid,
+			ClientID:       doc.ClientID,
+			Label:          doc.Label,
+			Name:           doc.Name,
+			File:           s.GenerateResponsePresignedURL(&doc.File, ctx),
+			Size:           doc.Size,
+			IsUsed:         doc.IsUsed,
+			Tag:            doc.Tag,
+			UpdatedAt:      doc.Updated.Time,
+			CreatedAt:      doc.Created.Time,
+		})
+	}
+	pag := pagination.NewResponse(ctx, req.Request, docList, totalCount)
+	return &pag, nil
+}
+
+func (s *clientService) DeleteClientDocument(ctx context.Context, clientID int64, documentID uuid.UUID) (*DeleteClientDocumentApiResponse, error) {
+	clientDoc, err := s.Store.DeleteClientDocumentTx(ctx, db.DeleteClientDocumentParams{
+		AttachmentID: documentID,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteClientDocument",
+			"Failed to delete client document", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to delete client document")
+	}
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "DeleteClientDocument",
+		"Successfully deleted client document", zap.Int64("ClientID", clientID),
+		zap.String("DocumentID", documentID.String()))
+	return &DeleteClientDocumentApiResponse{
+		ID:           clientDoc.ClientDocument.ID,
+		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
+	}, nil
+}
+
+func (s *clientService) GetMissingClientDocuments(ctx context.Context, clientID int64) (*GetMissingClientDocumentsApiResponse, error) {
+	missingDocs, err := s.Store.GetMissingClientDocuments(ctx, clientID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetMissingClientDocuments",
+			"Failed to get missing client documents", zap.Error(err), zap.Int64("ClientID", clientID))
+		return nil, fmt.Errorf("failed to get missing client documents")
+	}
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetMissingClientDocuments",
+		"Successfully retrieved missing client documents", zap.Int64("ClientID", clientID))
+	return &GetMissingClientDocumentsApiResponse{
+		MissingDocs: missingDocs,
+	}, nil
 }

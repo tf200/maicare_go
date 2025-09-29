@@ -172,6 +172,20 @@ func (q *Queries) DeletePayment(ctx context.Context, id int64) (InvoicePaymentHi
 	return i, err
 }
 
+const getCompletedPaymentSum = `-- name: GetCompletedPaymentSum :one
+SELECT COALESCE(SUM(amount), 0)::DECIMAL as total_completed_amount
+FROM invoice_payment_history
+WHERE invoice_id = $1
+  AND payment_status = 'completed'
+`
+
+func (q *Queries) GetCompletedPaymentSum(ctx context.Context, invoiceID int64) (float64, error) {
+	row := q.db.QueryRow(ctx, getCompletedPaymentSum, invoiceID)
+	var total_completed_amount float64
+	err := row.Scan(&total_completed_amount)
+	return total_completed_amount, err
+}
+
 const getInvoice = `-- name: GetInvoice :one
 SELECT
     i.id, i.invoice_number, i.invoice_sequence, i.issue_date, i.due_date, i.status, i.invoice_type, i.original_invoice_id, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,

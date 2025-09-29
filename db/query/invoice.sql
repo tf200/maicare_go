@@ -212,6 +212,14 @@ SET
     updated_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')
 RETURNING *;
+
+
+-- name: GetCompletedPaymentSum :one
+SELECT COALESCE(SUM(amount), 0)::DECIMAL as total_completed_amount
+FROM invoice_payment_history
+WHERE invoice_id = $1
+  AND payment_status = 'completed';
+
  
 
 -- name: GetPaymentWithInvoice :one

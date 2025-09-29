@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"log"
-	asyncmocks "maicare_go/async/mocks"
+	asyncmocks "maicare_go/async/aclient/mocks"
 	bucketmocks "maicare_go/bucket/mocks"
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"

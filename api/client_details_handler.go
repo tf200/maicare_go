@@ -1,20 +1,13 @@
 package api
 
 import (
-	"database/sql"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
+	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
-	"time"
-
-	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // CreateClientApi creates a new client
@@ -178,28 +171,14 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// UpdateClientStatusRequest represents a request to update a client status
-type UpdateClientStatusRequest struct {
-	Status        string    `json:"status" binding:"required"`
-	Reason        string    `json:"reason"`
-	IsSchedueled  bool      `json:"schedueled"`
-	SchedueledFor time.Time `json:"schedueled_for"`
-}
-
-// UpdateClientStatusResponse represents a response to an update client request
-type UpdateClientStatusResponse struct {
-	ID     int64   `json:"id"`
-	Status *string `json:"status"`
-}
-
 // UpdateClientStatusApi updates a client
 // @Summary Update a client
 // @Tags clients
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body UpdateClientStatusRequest true "Client status"
-// @Success 200 {object} Response[UpdateClientStatusResponse]
+// @Param request body clientp.UpdateClientStatusRequest true "Client status"
+// @Success 200 {object} Response[clientp.UpdateClientStatusResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/status [put]
 func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
@@ -210,100 +189,21 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateClientStatusRequest
+	var req clientp.UpdateClientStatusRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	if req.IsSchedueled {
-		if req.SchedueledFor.Before(time.Now()) {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("schedueled for date must be in the future")))
-			return
-		}
 
-		schedueledChange, err := server.store.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
-			ClientID:      clientID,
-			NewStatus:     &req.Status,
-			Reason:        &req.Reason,
-			ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
-		})
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		res := SuccessResponse(UpdateClientStatusResponse{
-			ID:     schedueledChange.ClientID,
-			Status: schedueledChange.NewStatus,
-		}, "Client status update schedueled successfully")
-		ctx.JSON(http.StatusOK, res)
+	updatedClient, err := server.businessService.ClientService.UpdateClientStatus(ctx, req, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
-	} else {
-
-		tx, err := server.store.ConnPool.Begin(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-		defer func() {
-			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-				server.logBusinessEvent(LogLevelError, "UpdateClientStatus", "Failed to rollback db", zap.Error(rollbackErr))
-			}
-		}()
-
-		qtx := server.store.WithTx(tx)
-
-		oldClient, err := qtx.GetClientDetails(ctx, clientID)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		client, err := qtx.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
-			ID:     clientID,
-			Status: &req.Status,
-		})
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		_, err = qtx.CreateClientStatusHistory(ctx, db.CreateClientStatusHistoryParams{
-			ClientID:  clientID,
-			OldStatus: oldClient.Status,
-			NewStatus: req.Status,
-			Reason:    &req.Reason,
-		})
-
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		err = tx.Commit(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		res := SuccessResponse(UpdateClientStatusResponse{
-			ID:     client.ID,
-			Status: client.Status,
-		}, "Client status updated successfully")
-		ctx.JSON(http.StatusOK, res)
 	}
 
-}
+	res := SuccessResponse(updatedClient, "Client status updated successfully")
+	ctx.JSON(http.StatusOK, res)
 
-// ListStatusHistoryApiResponse represents a response to a list status history request
-type ListStatusHistoryApiResponse struct {
-	ID        int64     `json:"id"`
-	ClientID  int64     `json:"client_id"`
-	OldStatus *string   `json:"old_status"`
-	NewStatus string    `json:"new_status"`
-	ChangedAt time.Time `json:"changed_at"`
-	ChangedBy *int64    `json:"changed_by"`
-	Reason    *string   `json:"reason"`
 }
 
 // ListStatusHistoryApi lists status history of a client
@@ -311,7 +211,7 @@ type ListStatusHistoryApiResponse struct {
 // @Tags clients
 // @Produce json
 // @Param id path int true "Client ID"
-// @Success 200 {object} Response[[]ListStatusHistoryApiResponse]
+// @Success 200 {object} Response[[]clientp.ListStatusHistoryApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/status_history [get]
 func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
@@ -322,50 +222,14 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListClientStatusHistoryParams{
-		ClientID: clientID,
-		Limit:    10,
-		Offset:   0,
-	}
-
-	statusHistory, err := server.store.ListClientStatusHistory(ctx, arg)
+	statusHistoryList, err := server.businessService.ClientService.ListStatusHistory(ctx, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	if len(statusHistory) == 0 {
-		res := SuccessResponse([]string{}, "No status history found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	statusHistoryList := make([]ListStatusHistoryApiResponse, len(statusHistory))
-	for i, status := range statusHistory {
-		statusHistoryList[i] = ListStatusHistoryApiResponse{
-			ID:        status.ID,
-			ClientID:  status.ClientID,
-			OldStatus: status.OldStatus,
-			NewStatus: status.NewStatus,
-			ChangedAt: status.ChangedAt.Time,
-			ChangedBy: status.ChangedBy,
-			Reason:    status.Reason,
-		}
-	}
-
 	res := SuccessResponse(statusHistoryList, "Status history fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// SetClientProfilePictureRequest represents a request to update a client
-type SetClientProfilePictureRequest struct {
-	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
-}
-
-// SetClientProfilePictureResponse represents a response to a set client profile picture request
-type SetClientProfilePictureResponse struct {
-	ID             int64   `json:"id"`
-	ProfilePicture *string `json:"profile_picture"`
 }
 
 // SetClientProfilePictureApi sets a client profile picture
@@ -374,8 +238,8 @@ type SetClientProfilePictureResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body SetClientProfilePictureRequest true "Client profile picture"
-// @Success 200 {object} Response[SetClientProfilePictureResponse]
+// @Param request body clientp.SetClientProfilePictureRequest true "Client profile picture"
+// @Success 200 {object} Response[clientp.SetClientProfilePictureResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/profile_picture [put]
 func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
@@ -385,47 +249,21 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req SetClientProfilePictureRequest
+	var req clientp.SetClientProfilePictureRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	arg := db.SetClientProfilePictureTxParams{
-		ClientID:     clientID,
-		AttachmentID: req.AttachmentID,
-	}
-	client, err := server.store.SetClientProfilePictureTx(ctx, arg)
+
+	response, err := server.businessService.ClientService.SetClientProfilePicture(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(SetClientProfilePictureResponse{
-		ID:             client.User.ID,
-		ProfilePicture: client.User.ProfilePicture,
-	}, "Profile picture set successfully")
+
+	res := SuccessResponse(response, "Profile picture set successfully")
 	ctx.JSON(http.StatusOK, res)
 
-}
-
-// AddClientDocumentApiRequest represents a request to add a document to a client
-type AddClientDocumentApiRequest struct {
-	AttachmentID uuid.UUID
-	Label        string
-}
-
-// AddClientDocumentApiResponse represents a response to an add client document request
-type AddClientDocumentApiResponse struct {
-	ID           int64      `json:"id"`
-	AttachmentID *uuid.UUID `json:"attachment_id"`
-	ClientID     int64      `json:"client_id"`
-	Label        string     `json:"label"`
-	Name         string     `json:"name"`
-	File         string     `json:"file"`
-	Size         int32      `json:"size"`
-	IsUsed       bool       `json:"is_used"`
-	Tag          *string    `json:"tag"`
-	UpdatedAt    time.Time  `json:"updated"`
-	CreatedAt    time.Time  `json:"created"`
 }
 
 // AddClientDocumentApi adds a document to a client
@@ -434,8 +272,8 @@ type AddClientDocumentApiResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body AddClientDocumentApiRequest true "Client document"
-// @Success 201 {object} Response[AddClientDocumentApiResponse]
+// @Param request body clientp.AddClientDocumentApiRequest true "Client document"
+// @Success 201 {object} Response[clientp.AddClientDocumentApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents [post]
 func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
@@ -446,59 +284,20 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	var req AddClientDocumentApiRequest
+	var req clientp.AddClientDocumentApiRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.AddClientDocumentTxParams{
-		ClientID:     clientID,
-		AttachmentID: req.AttachmentID,
-		Label:        req.Label,
-	}
-
-	clientDoc, err := server.store.AddClientDocumentTx(ctx, arg)
+	result, err := server.businessService.ClientService.AddClientDocument(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(AddClientDocumentApiResponse{
-		ID:           clientDoc.ClientDocument.ID,
-		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
-		ClientID:     clientDoc.ClientDocument.ClientID,
-		Label:        clientDoc.ClientDocument.Label,
-		Name:         clientDoc.Attachment.Name,
-		File:         clientDoc.Attachment.File,
-		Size:         clientDoc.Attachment.Size,
-		IsUsed:       clientDoc.Attachment.IsUsed,
-		Tag:          clientDoc.Attachment.Tag,
-		UpdatedAt:    clientDoc.Attachment.Updated.Time,
-		CreatedAt:    clientDoc.Attachment.Created.Time,
-	}, "Client document added successfully")
+	res := SuccessResponse(result, "Client document added successfully")
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// ListClientDocumentsApiRequest represents a request to list client documents
-type ListClientDocumentsApiRequest struct {
-	pagination.Request
-}
-
-// ListClientDocumentsApiResponse represents a response to a list client documents request
-type ListClientDocumentsApiResponse struct {
-	ID             int64      `json:"id"`
-	AttachmentUuid *uuid.UUID `json:"attachment_uuid"`
-	ClientID       int64      `json:"client_id"`
-	Label          string     `json:"label"`
-	Uuid           uuid.UUID  `json:"uuid"`
-	Name           string     `json:"name"`
-	File           *string    `json:"file"`
-	Size           int32      `json:"size"`
-	IsUsed         bool       `json:"is_used"`
-	Tag            *string    `json:"tag"`
-	UpdatedAt      time.Time  `json:"updated_at"`
-	CreatedAt      time.Time  `json:"created_at"`
 }
 
 // ListClientDocumentsApi lists documents of a client
@@ -508,7 +307,7 @@ type ListClientDocumentsApiResponse struct {
 // @Param id path int true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[ListClientDocumentsApiResponse]]
+// @Success 200 {object} Response[pagination.Response[clientp.ListClientDocumentsApiResponse]]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents [get]
 func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
@@ -519,64 +318,20 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 		return
 	}
 
-	var req ListClientDocumentsApiRequest
+	var req clientp.ListClientDocumentsApiRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	params := req.GetParams()
 
-	clientDocs, err := server.store.ListClientDocuments(ctx, db.ListClientDocumentsParams{
-		ClientID: clientID,
-		Offset:   params.Offset,
-		Limit:    params.Limit,
-	})
+	pag, err := server.businessService.ClientService.ListClientDocuments(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	if len(clientDocs) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListClientDocumentsApiResponse{}, 0)
-		res := SuccessResponse(pag, "No client documents found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	totalCount := clientDocs[0].TotalCount
-
-	clientDocList := make([]ListClientDocumentsApiResponse, len(clientDocs))
-	for i, clientDoc := range clientDocs {
-		clientDocList[i] = ListClientDocumentsApiResponse{
-			ID:             clientDoc.ID,
-			AttachmentUuid: clientDoc.AttachmentUuid,
-			ClientID:       clientDoc.ClientID,
-			Label:          clientDoc.Label,
-			Uuid:           clientDoc.Uuid,
-			Name:           clientDoc.Name,
-			File:           server.generateResponsePresignedURL(&clientDoc.File),
-			Size:           clientDoc.Size,
-			IsUsed:         clientDoc.IsUsed,
-			Tag:            clientDoc.Tag,
-			UpdatedAt:      clientDoc.Updated.Time,
-			CreatedAt:      clientDoc.Created.Time,
-		}
-	}
-
-	pag := pagination.NewResponse(ctx, req.Request, clientDocList, totalCount)
 
 	res := SuccessResponse(pag, "Client documents fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// DeleteClientDocumentApiRequest represents a request to delete a client document
-type DeleteClientDocumentApiRequest struct {
-	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
-}
-
-// DeleteClientDocumentApiResponse represents a response to a delete client document request
-type DeleteClientDocumentApiResponse struct {
-	ID           int64      `json:"id"`
-	AttachmentID *uuid.UUID `json:"attachment_id"`
 }
 
 // DeleteClientDocumentApi deletes a client document
@@ -586,38 +341,31 @@ type DeleteClientDocumentApiResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param document_id path int true "Document ID"
-// @Param request body DeleteClientDocumentApiRequest true "Client document"
-// @Success 200 {object} Response[DeleteClientDocumentApiResponse]
+// @Param request body clientp.DeleteClientDocumentApiRequest true "Client document"
+// @Success 200 {object} Response[clientp.DeleteClientDocumentApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents/{document_id} [delete]
 func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
-	var req DeleteClientDocumentApiRequest
+	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req clientp.DeleteClientDocumentApiRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.DeleteClientDocumentParams{
-		AttachmentID: req.AttachmentID,
-	}
-
-	clientDoc, err := server.store.DeleteClientDocumentTx(ctx, arg)
+	result, err := server.businessService.ClientService.DeleteClientDocument(ctx, clientID, req.AttachmentID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(DeleteClientDocumentApiResponse{
-		ID:           clientDoc.ClientDocument.ID,
-		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
-	}, "Client document deleted successfully")
+	res := SuccessResponse(result, "Client document deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 
-}
-
-// GetMissingClientDocumentsApiResponse represents a response to a get missing client documents request
-type GetMissingClientDocumentsApiResponse struct {
-	MissingDocs []string `json:"missing_docs"`
 }
 
 // GetMissingClientDocumentsApi gets missing documents of a client
@@ -625,7 +373,7 @@ type GetMissingClientDocumentsApiResponse struct {
 // @Tags clients
 // @Produce json
 // @Param id path int true "Client ID"
-// @Success 200 {object} Response[GetMissingClientDocumentsApiResponse]
+// @Success 200 {object} Response[clientp.GetMissingClientDocumentsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/missing_documents [get]
 func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
@@ -636,22 +384,12 @@ func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
 		return
 	}
 
-	missingDocs, err := server.store.GetMissingClientDocuments(ctx, clientID)
+	result, err := server.businessService.ClientService.GetMissingClientDocuments(ctx, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	if len(missingDocs) == 0 {
-		res := SuccessResponse(GetMissingClientDocumentsApiResponse{
-			MissingDocs: missingDocs,
-		}, "No missing client documents found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	res := SuccessResponse(GetMissingClientDocumentsApiResponse{
-		MissingDocs: missingDocs,
-	}, "Missing client documents fetched successfully")
+	res := SuccessResponse(result, "Missing client documents fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }

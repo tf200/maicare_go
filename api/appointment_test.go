@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/service/appointment"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -50,7 +51,7 @@ func TestCreateAppointmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				appointReq := CreateAppointmentRequest{
+				appointReq := appointment.CreateAppointmentRequest{
 					StartTime:              time.Now(),
 					EndTime:                time.Now().Add(1 * time.Hour),
 					Location:               util.StringPtr("Test Location"),
@@ -71,7 +72,7 @@ func TestCreateAppointmentApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateAppointmentResponse]
+				var response Response[appointment.CreateAppointmentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)
@@ -96,7 +97,7 @@ func TestCreateAppointmentApi(t *testing.T) {
 func TestAddParticipantToAppointmentApi(t *testing.T) {
 	employee, user := createRandomEmployee(t)
 
-	appointment := createRandomAppointment(t, employee.ID)
+	apntmt := createRandomAppointment(t, employee.ID)
 
 	testCases := []struct {
 		name          string
@@ -110,12 +111,12 @@ func TestAddParticipantToAppointmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				addParticipantReq := AddParticipantToAppointmentRequest{
+				addParticipantReq := appointment.AddParticipantToAppointmentRequest{
 					ParticipantEmployeeIDs: []int64{employee.ID},
 				}
 				reqBody, err := json.Marshal(addParticipantReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/appointments/%s/participants", appointment.ID.String())
+				url := fmt.Sprintf("/appointments/%s/participants", apntmt.ID.String())
 				request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(reqBody))
 				require.NoError(t, err)
 				request.Header.Set("Content-Type", "application/json")
@@ -143,7 +144,7 @@ func TestAddParticipantToAppointmentApi(t *testing.T) {
 
 func TestGetAppointmentApi(t *testing.T) {
 	employee, user := createRandomEmployee(t)
-	appointment := createRandomAppointment(t, employee.ID)
+	aptmt := createRandomAppointment(t, employee.ID)
 
 	testCases := []struct {
 		name          string
@@ -157,7 +158,7 @@ func TestGetAppointmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/appointments/%s", appointment.ID.String())
+				url := fmt.Sprintf("/appointments/%s", aptmt.ID.String())
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return request, nil
@@ -165,7 +166,7 @@ func TestGetAppointmentApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetAppointmentResponse]
+				var response Response[appointment.GetAppointmentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)
@@ -191,7 +192,7 @@ func TestUpdateAppointmentApi(t *testing.T) {
 	employee, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
-	appointment := createRandomAppointment(t, employee.ID)
+	aptmt := createRandomAppointment(t, employee.ID)
 
 	testCases := []struct {
 		name          string
@@ -205,7 +206,7 @@ func TestUpdateAppointmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateAppointmentRequest{
+				updateReq := appointment.UpdateAppointmentRequest{
 					StartTime:   time.Now(),
 					EndTime:     time.Now().Add(1 * time.Hour),
 					Location:    util.StringPtr("Updated Location"),
@@ -216,7 +217,7 @@ func TestUpdateAppointmentApi(t *testing.T) {
 				}
 				reqBody, err := json.Marshal(updateReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/appointments/%s", appointment.ID.String())
+				url := fmt.Sprintf("/appointments/%s", aptmt.ID.String())
 				request, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(reqBody))
 				require.NoError(t, err)
 				request.Header.Set("Content-Type", "application/json")
@@ -225,7 +226,7 @@ func TestUpdateAppointmentApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateAppointmentResponse]
+				var response Response[appointment.UpdateAppointmentResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)
@@ -309,7 +310,7 @@ func TestListAppointmentsForEmployeeApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := ListAppointmentsForEmployeeInRangeRequest{
+				req := appointment.ListAppointmentsForEmployeeInRangeRequest{
 					StartDate: time.Now().Add(-24 * time.Hour),
 					EndDate:   time.Now().Add(24 * time.Hour),
 				}
@@ -361,7 +362,7 @@ func TestListAppointmentsForClientApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := ListAppointmentsForClientRequest{
+				req := appointment.ListAppointmentsForClientRequest{
 					StartDate: time.Now().Add(-24 * time.Hour),
 					EndDate:   time.Now().Add(24 * time.Hour),
 				}

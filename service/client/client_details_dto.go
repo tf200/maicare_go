@@ -3,6 +3,8 @@ package clientp
 import (
 	"maicare_go/pagination"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Address represents a client address
@@ -263,4 +265,98 @@ type UpdateClientDetailsResponse struct {
 	Addresses             []Address `json:"addresses"`
 	LegalMeasure          *string   `json:"legal_measure"`
 	HasUntakenMedications bool      `json:"has_untaken_medications"`
+}
+
+// UpdateClientStatusRequest represents a request to update a client status
+type UpdateClientStatusRequest struct {
+	Status        string    `json:"status" binding:"required"`
+	Reason        string    `json:"reason"`
+	IsSchedueled  bool      `json:"schedueled"`
+	SchedueledFor time.Time `json:"schedueled_for"`
+}
+
+// UpdateClientStatusResponse represents a response to an update client request
+type UpdateClientStatusResponse struct {
+	ID     int64   `json:"id"`
+	Status *string `json:"status"`
+}
+
+// ListStatusHistoryApiResponse represents a response to a list status history request
+type ListStatusHistoryApiResponse struct {
+	ID        int64     `json:"id"`
+	ClientID  int64     `json:"client_id"`
+	OldStatus *string   `json:"old_status"`
+	NewStatus string    `json:"new_status"`
+	ChangedAt time.Time `json:"changed_at"`
+	ChangedBy *int64    `json:"changed_by"`
+	Reason    *string   `json:"reason"`
+}
+
+// SetClientProfilePictureRequest represents a request to update a client
+type SetClientProfilePictureRequest struct {
+	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
+}
+
+// SetClientProfilePictureResponse represents a response to a set client profile picture request
+type SetClientProfilePictureResponse struct {
+	ID             int64   `json:"id"`
+	ProfilePicture *string `json:"profile_picture"`
+}
+
+// AddClientDocumentApiRequest represents a request to add a document to a client
+type AddClientDocumentApiRequest struct {
+	AttachmentID uuid.UUID `json:"attachment_id" binding:"required"`
+	Label        string    `json:"label" binding:"required"`
+}
+
+// AddClientDocumentApiResponse represents a response to an add client document request
+type AddClientDocumentApiResponse struct {
+	ID           int64      `json:"id"`
+	AttachmentID *uuid.UUID `json:"attachment_id"`
+	ClientID     int64      `json:"client_id"`
+	Label        string     `json:"label"`
+	Name         string     `json:"name"`
+	File         string     `json:"file"`
+	Size         int32      `json:"size"`
+	IsUsed       bool       `json:"is_used"`
+	Tag          *string    `json:"tag"`
+	UpdatedAt    time.Time  `json:"updated"`
+	CreatedAt    time.Time  `json:"created"`
+}
+
+// ListClientDocumentsApiRequest represents a request to list client documents
+type ListClientDocumentsApiRequest struct {
+	pagination.Request
+}
+
+// ListClientDocumentsApiResponse represents a response to a list client documents request
+type ListClientDocumentsApiResponse struct {
+	ID             int64      `json:"id"`
+	AttachmentUuid *uuid.UUID `json:"attachment_uuid"`
+	ClientID       int64      `json:"client_id"`
+	Label          string     `json:"label"`
+	Uuid           uuid.UUID  `json:"uuid"`
+	Name           string     `json:"name"`
+	File           *string    `json:"file"`
+	Size           int32      `json:"size"`
+	IsUsed         bool       `json:"is_used"`
+	Tag            *string    `json:"tag"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+	CreatedAt      time.Time  `json:"created_at"`
+}
+
+// DeleteClientDocumentApiRequest represents a request to delete a client document
+type DeleteClientDocumentApiRequest struct {
+	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
+}
+
+// DeleteClientDocumentApiResponse represents a response to a delete client document request
+type DeleteClientDocumentApiResponse struct {
+	ID           int64      `json:"id"`
+	AttachmentID *uuid.UUID `json:"attachment_id"`
+}
+
+// GetMissingClientDocumentsApiResponse represents a response to a get missing client documents request
+type GetMissingClientDocumentsApiResponse struct {
+	MissingDocs []string `json:"missing_docs"`
 }
