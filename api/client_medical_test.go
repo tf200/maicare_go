@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -60,7 +61,7 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				diagnosisReq := CreateClientDiagnosisRequest{
+				diagnosisReq := clientp.CreateClientDiagnosisRequest{
 					Title:               util.StringPtr("test title"),
 					DiagnosisCode:       "test code",
 					Description:         "test description",
@@ -68,7 +69,7 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 					Status:              "Active",
 					DiagnosingClinician: util.StringPtr("test clinician"),
 					Notes:               util.StringPtr("test note"),
-					Medications: []DiagnosisMedicationCreate{
+					Medications: []clientp.DiagnosisMedicationCreate{
 						{
 							Name:             "test medication",
 							Dosage:           "test dosage",
@@ -86,13 +87,13 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 				url := fmt.Sprintf("/clients/%d/diagnosis", client.ID)
 				request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(reqBody))
 				require.NoError(t, err)
-				request.Header.Set("Content-Type", "application/json")
+				request.Header.Set("Content-Type", "application/jsson")
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var diagnosisResp Response[CreateClientDiagnosisResponse]
+				var diagnosisResp Response[clientp.CreateClientDiagnosisResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &diagnosisResp)
 				require.NoError(t, err)
 				require.NotEmpty(t, diagnosisResp.Data.ID)

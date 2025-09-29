@@ -183,6 +183,7 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 			CreatedAt:             client.CreatedAt.Time,
 			SenderID:              client.SenderID,
 			LocationID:            client.LocationID,
+			LocationName:          client.LocationName,
 			DepartureReason:       client.DepartureReason,
 			DepartureReport:       client.DepartureReport,
 			Addresses:             addresses,

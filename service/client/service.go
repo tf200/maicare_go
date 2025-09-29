@@ -40,6 +40,9 @@ type ClientService interface {
 	DeleteIncident(ctx context.Context, incidentID int64) error
 	GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error)
 	ConfirmIncident(ctx context.Context, incidentID int64) (*ConfirmIncidentResponse, error)
+
+	// Client Diagnoses
+	CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID int64) (*CreateClientDiagnosisResponse, error)
 }
 
 type clientService struct {

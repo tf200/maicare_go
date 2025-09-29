@@ -79,17 +79,39 @@ func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateCli
 	return res, nil
 }
 
+// func (s *clientService) ListClientDiagnoses(ctx context.Context, req ListClientDiagnosesRequest, clientID int64) (pagination.Response[ListClientDiagnosesResponse], error) {
+// 	params := req.GetParams()
 
-func (s *clientService) ListClientDiagnoses(ctx context.Context, req ListClientDiagnosesRequest, clientID int64) ([]DiagnosisMedicationList, error) {
-	params := req.GetParams()
+// 	arg := db.ListClientDiagnosesParams{
+// 		ClientID: clientID,
+// 		Limit:    params.Limit,
+// 		Offset:   params.Offset,
+// 	}
+// 	diagnoses, err := s.Store.ListClientDiagnoses(ctx, arg)
+// 	if err != nil {
+// 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list client diagnoses", zap.Error(err), zap.Int64("client_id", clientID))
+// 		return nil, err
+// 	}
 
-	arg := db.ListClientDiagnosesParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
-	}
-	diagnoses, err := s.Store.ListClientDiagnoses(ctx, arg)
-	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list client diagnoses", zap.Error(err), zap.Int64("client_id", clientID))
-		return nil, err
-	}
+// 	if len(diagnoses) == 0 {
+// 		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListClientDiagnoses", "No diagnoses found for client", zap.Int64("client_id", clientID))
+// 		pag := pagination.NewResponse(ctx, req.Request, []ListClientDiagnosesResponse{}, 0)
+// 		return pag, nil
+// 	}
+// 	totalCount := diagnoses[0].TotalDiagnoses
+
+// 	var res []ListClientDiagnosesResponse
+// 	for _, diag := range diagnoses {
+// 		res = append(res, ListClientDiagnosesResponse{
+// 			ID:                  diag.ID,
+// 			ClientID:            diag.ClientID,
+// 			Title:               diag.Title,
+// 			DiagnosisCode:       diag.DiagnosisCode,
+// 			Description:         diag.Description,
+// 			Severity:            diag.Severity,
+// 			Status:              diag.Status,
+// 			DiagnosingClinician: diag.DiagnosingClinician,
+// 			Notes:               diag.Notes,
+// 			CreatedAt:           diag.CreatedAt.Time,
+// 		})
+// 	}

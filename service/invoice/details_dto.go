@@ -31,6 +31,3 @@ type GetInvoiceByIDResponse struct {
 	ClientLastName       string           `json:"client_last_name"`
 	PaymentCompletionPrc float64          `json:"payment_completion_prc"`
 }
-
-
-
