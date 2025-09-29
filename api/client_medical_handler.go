@@ -4,6 +4,7 @@ import (
 	"log"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,32 +22,6 @@ type DiagnosisMedicationCreate struct {
 	SelfAdministered bool      `json:"self_administered"`
 	AdministeredByID *int64    `json:"administered_by_id"`
 	IsCritical       bool      `json:"is_critical"`
-}
-
-// CreateClientDiagnosisRequest defines the request for creating a client diagnosis
-type CreateClientDiagnosisRequest struct {
-	Title               *string                     `json:"title"`
-	DiagnosisCode       string                      `json:"diagnosis_code"`
-	Description         string                      `json:"description"`
-	Severity            *string                     `json:"severity"`
-	Status              string                      `json:"status"`
-	DiagnosingClinician *string                     `json:"diagnosing_clinician"`
-	Notes               *string                     `json:"notes"`
-	Medications         []DiagnosisMedicationCreate `json:"medications"`
-}
-
-// CreateClientDiagnosisResponse defines the response for creating a client diagnosis
-type CreateClientDiagnosisResponse struct {
-	ID                  int64     `json:"id"`
-	Title               *string   `json:"title"`
-	ClientID            int64     `json:"client_id"`
-	DiagnosisCode       string    `json:"diagnosis_code"`
-	Description         string    `json:"description"`
-	Severity            *string   `json:"severity"`
-	Status              string    `json:"status"`
-	DiagnosingClinician *string   `json:"diagnosing_clinician"`
-	Notes               *string   `json:"notes"`
-	CreatedAt           time.Time `json:"created_at"`
 }
 
 // CreateClientDiagnosisApi creates a client diagnosis
@@ -67,77 +42,19 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateClientDiagnosisRequest
+	var req clientp.CreateClientDiagnosisRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.CreateClientDiagnosisParams{
-		ClientID:            clientID,
-		Title:               req.Title,
-		DiagnosisCode:       req.DiagnosisCode,
-		Description:         req.Description,
-		Severity:            req.Severity,
-		Status:              req.Status,
-		DiagnosingClinician: req.DiagnosingClinician,
-		Notes:               req.Notes,
-	}
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
-	
-
-	qtx := server.store.WithTx(tx)
-
-	clientDiagnosis, err := qtx.CreateClientDiagnosis(ctx, arg)
+	result, err := server.businessService.ClientService.CreateClientDiagnosis(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	if len(req.Medications) > 0 {
-		for _, medication := range req.Medications {
-			medicationArg := db.CreateClientMedicationParams{
-				DiagnosisID:      &clientDiagnosis.ID,
-				Name:             medication.Name,
-				Dosage:           medication.Dosage,
-				StartDate:        pgtype.Date{Time: medication.StartDate, Valid: true},
-				EndDate:          pgtype.Date{Time: medication.EndDate, Valid: true},
-				Notes:            medication.Notes,
-				SelfAdministered: medication.SelfAdministered,
-				AdministeredByID: medication.AdministeredByID,
-				IsCritical:       medication.IsCritical,
-			}
-			_, err := qtx.CreateClientMedication(ctx, medicationArg)
-			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-				return
-			}
-		}
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(CreateClientDiagnosisResponse{
-		ID:                  clientDiagnosis.ID,
-		Title:               clientDiagnosis.Title,
-		ClientID:            clientDiagnosis.ClientID,
-		DiagnosisCode:       clientDiagnosis.DiagnosisCode,
-		Description:         clientDiagnosis.Description,
-		Severity:            clientDiagnosis.Severity,
-		Status:              clientDiagnosis.Status,
-		DiagnosingClinician: clientDiagnosis.DiagnosingClinician,
-		Notes:               clientDiagnosis.Notes,
-		CreatedAt:           clientDiagnosis.CreatedAt.Time,
-	}, "Client diagnosis created successfully")
+	res := SuccessResponse(result, "Client diagnosis created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
 }

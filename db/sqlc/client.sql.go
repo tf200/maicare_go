@@ -571,9 +571,11 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID int64)
 
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT 
-    id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, 
+    client_details.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, address, capacity, location_type,
+    location.name AS location_name,
     COUNT(*) OVER() AS total_count
 FROM client_details
+LEFT JOIN location ON client_details.location_id = location.id
 WHERE
     (status = $1 OR $1 IS NULL) AND
     (location_id = $2 OR $2 IS NULL) AND
@@ -653,6 +655,13 @@ type ListClientDetailsRow struct {
 	RiskOther                  *bool              `json:"risk_other"`
 	RiskOtherDescription       *string            `json:"risk_other_description"`
 	RiskAdditionalNotes        *string            `json:"risk_additional_notes"`
+	ID_2                       *int64             `json:"id_2"`
+	OrganisationID             *int64             `json:"organisation_id"`
+	Name                       *string            `json:"name"`
+	Address                    *string            `json:"address"`
+	Capacity                   *int32             `json:"capacity"`
+	LocationType               *string            `json:"location_type"`
+	LocationName               *string            `json:"location_name"`
 	TotalCount                 int64              `json:"total_count"`
 }
 
@@ -729,6 +738,13 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.RiskOther,
 			&i.RiskOtherDescription,
 			&i.RiskAdditionalNotes,
+			&i.ID_2,
+			&i.OrganisationID,
+			&i.Name,
+			&i.Address,
+			&i.Capacity,
+			&i.LocationType,
+			&i.LocationName,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

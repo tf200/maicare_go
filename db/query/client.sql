@@ -47,9 +47,11 @@ INSERT INTO client_details (
 
 -- name: ListClientDetails :many
 SELECT 
-    *, 
+    *,
+    location.name AS location_name,
     COUNT(*) OVER() AS total_count
 FROM client_details
+LEFT JOIN location ON client_details.location_id = location.id
 WHERE
     (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL) AND
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
