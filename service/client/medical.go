@@ -246,3 +246,5 @@ func (s *clientService) DeleteClientDiagnosis(ctx context.Context, diagnosisID i
 	}
 	return res, nil
 }
+
+

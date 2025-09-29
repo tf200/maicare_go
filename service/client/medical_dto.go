@@ -123,3 +123,31 @@ type UpdateClientDiagnosisResponse struct {
 type DeleteClientDiagnosisResponse struct {
 	ID int64 `json:"id"`
 }
+
+// CreateclientMedicationRequest defines the request for creating a client medication
+type CreateclientMedicationRequest struct {
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+}
+
+// CreateClientMedicationResponse defines the response for creating a client medication
+type CreateClientMedicationResponse struct {
+	ID               int64     `json:"id"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+}
