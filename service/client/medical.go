@@ -162,7 +162,11 @@ func (s *clientService) GetClientDiagnosis(ctx context.Context, diagnosisID int6
 		return nil, err
 	}
 
-	medications, err := s.Store.ListMedicationsByDiagnosisID(ctx, &diagnosisID)
+	medications, err := s.Store.ListMedicationsByDiagnosisID(ctx, db.ListMedicationsByDiagnosisIDParams{
+		DiagnosisID: &diagnosisID,
+		Limit:       100, // Arbitrary large limit to fetch all medications
+		Offset:      0,
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientDiagnosis", "Failed to list medications by diagnosis ID", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
 		return nil, err
@@ -247,4 +251,130 @@ func (s *clientService) DeleteClientDiagnosis(ctx context.Context, diagnosisID i
 	return res, nil
 }
 
+func (s *clientService) CreateClientMedication(ctx context.Context, req CreateClientMedicationRequest, diagnosisID *int64) (*CreateClientMedicationResponse, error) {
+	arg := db.CreateClientMedicationParams{
+		DiagnosisID:      diagnosisID,
+		Name:             req.Name,
+		Dosage:           req.Dosage,
+		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
+		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+		Notes:            req.Notes,
+		SelfAdministered: req.SelfAdministered,
+		AdministeredByID: req.AdministeredByID,
+		IsCritical:       req.IsCritical,
+	}
+	medication, err := s.Store.CreateClientMedication(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientMedication", "Failed to create client medication", zap.Error(err))
+		return nil, err
+	}
+	res := &CreateClientMedicationResponse{
+		ID:               medication.ID,
+		DiagnosisID:      medication.DiagnosisID,
+		Name:             medication.Name,
+		Dosage:           medication.Dosage,
+		StartDate:        medication.StartDate.Time,
+		EndDate:          medication.EndDate.Time,
+		Notes:            medication.Notes,
+		SelfAdministered: medication.SelfAdministered,
+		AdministeredByID: medication.AdministeredByID,
+		IsCritical:       medication.IsCritical,
+		UpdatedAt:        medication.UpdatedAt.Time,
+		CreatedAt:        medication.CreatedAt.Time,
+	}
+	return res, nil
+}
 
+func (s *clientService) ListMedicationsByDiagnosisID(ctx *gin.Context, req ListClientMedicationsRequest, diagnosisID *int64) (*pagination.Response[ListClientMedicationsResponse], error) {
+	params := req.GetParams()
+	arg := db.ListMedicationsByDiagnosisIDParams{
+		DiagnosisID: diagnosisID,
+		Limit:       params.Limit,
+		Offset:      params.Offset,
+	}
+	medications, err := s.Store.ListMedicationsByDiagnosisID(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListMedicationsByDiagnosisID", "Failed to list medications by diagnosis ID", zap.Error(err), zap.Int64("diagnosis_id", *diagnosisID))
+		return nil, err
+	}
+	totalCount := medications[0].TotalMedications
+	var res []ListClientMedicationsResponse
+	for _, m := range medications {
+		res = append(res, ListClientMedicationsResponse{
+			ID:               m.ID,
+			Name:             m.Name,
+			Dosage:           m.Dosage,
+			StartDate:        m.StartDate.Time,
+			EndDate:          m.EndDate.Time,
+			Notes:            m.Notes,
+			SelfAdministered: m.SelfAdministered,
+			IsCritical:       m.IsCritical,
+			DiagnosisID:      m.DiagnosisID,
+			AdministeredByID: m.AdministeredByID,
+			UpdatedAt:        m.UpdatedAt.Time,
+			CreatedAt:        m.CreatedAt.Time,
+		})
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, res, totalCount)
+	return &pag, nil
+}
+
+func (s *clientService) GetClientMedication(ctx context.Context, medicationID int64) (*GetClientMedicationResponse, error) {
+	medication, err := s.Store.GetMedication(ctx, medicationID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientMedication", "Failed to get client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
+		return nil, err
+	}
+	res := &GetClientMedicationResponse{
+		ID:                      medication.ID,
+		Name:                    medication.Name,
+		Dosage:                  medication.Dosage,
+		StartDate:               medication.StartDate.Time,
+		EndDate:                 medication.EndDate.Time,
+		Notes:                   medication.Notes,
+		SelfAdministered:        medication.SelfAdministered,
+		DiagnosisID:             medication.DiagnosisID,
+		AdministeredByID:        medication.AdministeredByID,
+		IsCritical:              medication.IsCritical,
+		UpdatedAt:               medication.UpdatedAt.Time,
+		CreatedAt:               medication.CreatedAt.Time,
+		AdministeredByFirstName: medication.AdministeredByFirstName,
+		AdministeredByLastName:  medication.AdministeredByLastName,
+	}
+	return res, nil
+}
+
+func (s *clientService) UpdateClientMedication(ctx context.Context, req UpdateClientMedicationRequest, medicationID int64) (*UpdateClientMedicationResponse, error) {
+	arg := db.UpdateClientMedicationParams{
+		ID:               medicationID,
+		Name:             req.Name,
+		Dosage:           req.Dosage,
+		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
+		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
+		Notes:            req.Notes,
+		SelfAdministered: req.SelfAdministered,
+		AdministeredByID: req.AdministeredByID,
+		IsCritical:       req.IsCritical,
+	}
+	medication, err := s.Store.UpdateClientMedication(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientMedication", "Failed to update client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
+		return nil, err
+	}
+	res := &UpdateClientMedicationResponse{
+		ID:               medication.ID,
+		Name:             medication.Name,
+		Dosage:           medication.Dosage,
+		StartDate:        medication.StartDate.Time,
+		EndDate:          medication.EndDate.Time,
+		Notes:            medication.Notes,
+		SelfAdministered: medication.SelfAdministered,
+		DiagnosisID:      medication.DiagnosisID,
+		AdministeredByID: medication.AdministeredByID,
+		IsCritical:       medication.IsCritical,
+		UpdatedAt:        medication.UpdatedAt.Time,
+		CreatedAt:        medication.CreatedAt.Time,
+	}
+	return res, nil
+}

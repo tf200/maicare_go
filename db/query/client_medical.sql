@@ -87,7 +87,8 @@ SELECT
     (SELECT COUNT(*) FROM client_medication WHERE client_medication.diagnosis_id = $1) AS total_medications
 FROM client_medication m
 WHERE m.diagnosis_id = $1
-ORDER BY m.id ASC;
+ORDER BY m.id
+LIMIT $2 OFFSET $3;
 
 -- name: ListMedicationsByDiagnosisIDs :many
 SELECT *

@@ -603,3 +603,5 @@ func (s *clientService) ConfirmIncident(ctx context.Context, incidentID int64) (
 	// TODO: Send notification to the party responsivle for the client
 
 }
+
+

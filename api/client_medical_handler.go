@@ -1,15 +1,12 @@
 package api
 
 import (
-	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // CreateClientDiagnosisApi creates a client diagnosis
@@ -176,8 +173,6 @@ func (server *Server) DeleteClientDiagnosisApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-
-
 // CreateClientMedicationApi creates a client medication
 // @Summary Create a client medication
 // @Tags client_Medical
@@ -197,51 +192,21 @@ func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateclientMedicationRequest
+	var req clientp.CreateClientMedicationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	arg := db.CreateClientMedicationParams{
-		DiagnosisID:      &diagnosisID,
-		Name:             req.Name,
-		Dosage:           req.Dosage,
-		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
-		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
-		Notes:            req.Notes,
-		SelfAdministered: req.SelfAdministered,
-		AdministeredByID: req.AdministeredByID,
-		IsCritical:       req.IsCritical,
-	}
-
-	clientMedication, err := server.store.CreateClientMedication(ctx, arg)
+	result, err := server.businessService.ClientService.CreateClientMedication(ctx, req, &diagnosisID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(CreateClientMedicationResponse{
-		ID:               clientMedication.ID,
-		DiagnosisID:      clientMedication.DiagnosisID,
-		Name:             clientMedication.Name,
-		Dosage:           clientMedication.Dosage,
-		StartDate:        clientMedication.StartDate.Time,
-		EndDate:          clientMedication.EndDate.Time,
-		Notes:            clientMedication.Notes,
-		SelfAdministered: clientMedication.SelfAdministered,
-		AdministeredByID: clientMedication.AdministeredByID,
-		IsCritical:       clientMedication.IsCritical,
-		UpdatedAt:        clientMedication.UpdatedAt.Time,
-		CreatedAt:        clientMedication.CreatedAt.Time,
-	}, "Client medication created successfully")
+	res := SuccessResponse(result, "Client medication created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
 
-}
-
-type ListClientMedicationsRequest struct {
-	pagination.Request
 }
 
 // ListClientMedicationsResponse defines the response for listing client medications
@@ -280,72 +245,19 @@ func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
 		return
 	}
 
-	var req ListClientMedicationsRequest
+	var req clientp.ListClientMedicationsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	params := req.GetParams()
-	arg := db.ListMedicationsByDiagnosisIDParams{
-		DiagnosisID: &diagnosisID,
-		Limit:       params.Limit,
-		Offset:      params.Offset,
-	}
-
-	clientMedications, err := server.store.ListMedicationsByDiagnosisID(ctx, arg)
+	pag, err := server.businessService.ClientService.ListMedicationsByDiagnosisID(ctx, req, &diagnosisID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	if len(clientMedications) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListClientMedicationsResponse{}, 0)
-		res := SuccessResponse(pag, "No client medications found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	totalCount := clientMedications[0].TotalMedications
-
-	clientMedicationList := make([]ListClientMedicationsResponse, len(clientMedications))
-	for i, medication := range clientMedications {
-		clientMedicationList[i] = ListClientMedicationsResponse{
-			ID:               medication.ID,
-			Name:             medication.Name,
-			Dosage:           medication.Dosage,
-			StartDate:        medication.StartDate.Time,
-			EndDate:          medication.EndDate.Time,
-			Notes:            medication.Notes,
-			SelfAdministered: medication.SelfAdministered,
-			IsCritical:       medication.IsCritical,
-			DiagnosisID:      medication.DiagnosisID,
-			AdministeredByID: medication.AdministeredByID,
-			UpdatedAt:        medication.UpdatedAt.Time,
-			CreatedAt:        medication.CreatedAt.Time,
-		}
-	}
-	pag := pagination.NewResponse(ctx, req.Request, clientMedicationList, totalCount)
 	res := SuccessResponse(pag, "Client medications fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetClientMedicationResponse defines the response for getting a client medication
-type GetClientMedicationResponse struct {
-	ID                      int64     `json:"id"`
-	Name                    string    `json:"name"`
-	Dosage                  string    `json:"dosage"`
-	StartDate               time.Time `json:"start_date"`
-	EndDate                 time.Time `json:"end_date"`
-	Notes                   *string   `json:"notes"`
-	SelfAdministered        bool      `json:"self_administered"`
-	DiagnosisID             *int64    `json:"diagnosis_id"`
-	AdministeredByID        *int64    `json:"administered_by_id"`
-	IsCritical              bool      `json:"is_critical"`
-	UpdatedAt               time.Time `json:"updated_at"`
-	CreatedAt               time.Time `json:"created_at"`
-	AdministeredByFirstName string    `json:"administered_by_first_name"`
-	AdministeredByLastName  string    `json:"administered_by_last_name"`
 }
 
 // GetClientMedicationApi gets a client medication
@@ -365,59 +277,14 @@ func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	medication, err := server.store.GetMedication(ctx, medicationID)
+	medication, err := server.businessService.ClientService.GetClientMedication(ctx, medicationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	res := SuccessResponse(GetClientMedicationResponse{
-		ID:                      medication.ID,
-		Name:                    medication.Name,
-		Dosage:                  medication.Dosage,
-		StartDate:               medication.StartDate.Time,
-		EndDate:                 medication.EndDate.Time,
-		Notes:                   medication.Notes,
-		SelfAdministered:        medication.SelfAdministered,
-		DiagnosisID:             medication.DiagnosisID,
-		AdministeredByID:        medication.AdministeredByID,
-		IsCritical:              medication.IsCritical,
-		UpdatedAt:               medication.UpdatedAt.Time,
-		CreatedAt:               medication.CreatedAt.Time,
-		AdministeredByFirstName: medication.AdministeredByFirstName,
-		AdministeredByLastName:  medication.AdministeredByLastName,
-	}, "Client medication fetched successfully")
+	res := SuccessResponse(medication, "Client medication fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 
-}
-
-// UpdateClientMedicationRequest defines the request for updating a client medication
-type UpdateClientMedicationRequest struct {
-	Name             *string   `json:"name"`
-	Dosage           *string   `json:"dosage"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
-	Notes            *string   `json:"notes"`
-	SelfAdministered *bool     `json:"self_administered"`
-	AdministeredByID *int64    `json:"administered_by_id"`
-	IsCritical       *bool     `json:"is_critical"`
-}
-
-// UpdateClientMedicationResponse defines the response for updating a client medication
-type UpdateClientMedicationResponse struct {
-	ID               int64     `json:"id"`
-	Name             string    `json:"name"`
-	Dosage           string    `json:"dosage"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
-	Notes            *string   `json:"notes"`
-	SelfAdministered bool      `json:"self_administered"`
-	DiagnosisID      *int64    `json:"diagnosis_id"`
-	AdministeredByID *int64    `json:"administered_by_id"`
-	IsCritical       bool      `json:"is_critical"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	CreatedAt        time.Time `json:"created_at"`
 }
 
 // UpdateClientMedicationApi updates a client medication
@@ -440,44 +307,19 @@ func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateClientMedicationRequest
+	var req clientp.UpdateClientMedicationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.UpdateClientMedicationParams{
-		ID:               medicationID,
-		Name:             req.Name,
-		Dosage:           req.Dosage,
-		StartDate:        pgtype.Date{Time: req.StartDate, Valid: true},
-		EndDate:          pgtype.Date{Time: req.EndDate, Valid: true},
-		Notes:            req.Notes,
-		SelfAdministered: req.SelfAdministered,
-		AdministeredByID: req.AdministeredByID,
-		IsCritical:       req.IsCritical,
-	}
-
-	medication, err := server.store.UpdateClientMedication(ctx, arg)
+	result, err := server.businessService.ClientService.UpdateClientMedication(ctx, req, medicationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(UpdateClientMedicationResponse{
-		ID:               medication.ID,
-		Name:             medication.Name,
-		Dosage:           medication.Dosage,
-		StartDate:        medication.StartDate.Time,
-		EndDate:          medication.EndDate.Time,
-		Notes:            medication.Notes,
-		SelfAdministered: medication.SelfAdministered,
-		DiagnosisID:      medication.DiagnosisID,
-		AdministeredByID: medication.AdministeredByID,
-		IsCritical:       medication.IsCritical,
-		UpdatedAt:        medication.UpdatedAt.Time,
-		CreatedAt:        medication.CreatedAt.Time,
-	}, "Client medication updated successfully")
+	res := SuccessResponse(result, "Client medication updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }

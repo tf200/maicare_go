@@ -296,8 +296,15 @@ SELECT
     (SELECT COUNT(*) FROM client_medication WHERE client_medication.diagnosis_id = $1) AS total_medications
 FROM client_medication m
 WHERE m.diagnosis_id = $1
-ORDER BY m.id ASC
+ORDER BY m.id
+LIMIT $2 OFFSET $3
 `
+
+type ListMedicationsByDiagnosisIDParams struct {
+	DiagnosisID *int64 `json:"diagnosis_id"`
+	Limit       int32  `json:"limit"`
+	Offset      int32  `json:"offset"`
+}
 
 type ListMedicationsByDiagnosisIDRow struct {
 	ID               int64              `json:"id"`
@@ -316,8 +323,8 @@ type ListMedicationsByDiagnosisIDRow struct {
 	TotalMedications int64              `json:"total_medications"`
 }
 
-func (q *Queries) ListMedicationsByDiagnosisID(ctx context.Context, diagnosisID *int64) ([]ListMedicationsByDiagnosisIDRow, error) {
-	rows, err := q.db.Query(ctx, listMedicationsByDiagnosisID, diagnosisID)
+func (q *Queries) ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedicationsByDiagnosisIDParams) ([]ListMedicationsByDiagnosisIDRow, error) {
+	rows, err := q.db.Query(ctx, listMedicationsByDiagnosisID, arg.DiagnosisID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

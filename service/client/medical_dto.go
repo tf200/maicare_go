@@ -125,7 +125,7 @@ type DeleteClientDiagnosisResponse struct {
 }
 
 // CreateclientMedicationRequest defines the request for creating a client medication
-type CreateclientMedicationRequest struct {
+type CreateClientMedicationRequest struct {
 	Name             string    `json:"name"`
 	Dosage           string    `json:"dosage"`
 	StartDate        time.Time `json:"start_date"`
@@ -146,6 +146,73 @@ type CreateClientMedicationResponse struct {
 	EndDate          time.Time `json:"end_date"`
 	Notes            *string   `json:"notes"`
 	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+// ListClientMedicationsRequest defines the request for listing client medications
+type ListClientMedicationsRequest struct {
+	pagination.Request
+}
+
+// ListClientMedicationsResponse defines the response for listing client medications
+type ListClientMedicationsResponse struct {
+	ID               int64     `json:"id"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       bool      `json:"is_critical"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+// GetClientMedicationResponse defines the response for getting a client medication
+type GetClientMedicationResponse struct {
+	ID                      int64     `json:"id"`
+	Name                    string    `json:"name"`
+	Dosage                  string    `json:"dosage"`
+	StartDate               time.Time `json:"start_date"`
+	EndDate                 time.Time `json:"end_date"`
+	Notes                   *string   `json:"notes"`
+	SelfAdministered        bool      `json:"self_administered"`
+	DiagnosisID             *int64    `json:"diagnosis_id"`
+	AdministeredByID        *int64    `json:"administered_by_id"`
+	IsCritical              bool      `json:"is_critical"`
+	UpdatedAt               time.Time `json:"updated_at"`
+	CreatedAt               time.Time `json:"created_at"`
+	AdministeredByFirstName string    `json:"administered_by_first_name"`
+	AdministeredByLastName  string    `json:"administered_by_last_name"`
+}
+
+// UpdateClientMedicationRequest defines the request for updating a client medication
+type UpdateClientMedicationRequest struct {
+	Name             *string   `json:"name"`
+	Dosage           *string   `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered *bool     `json:"self_administered"`
+	AdministeredByID *int64    `json:"administered_by_id"`
+	IsCritical       *bool     `json:"is_critical"`
+}
+
+// UpdateClientMedicationResponse defines the response for updating a client medication
+type UpdateClientMedicationResponse struct {
+	ID               int64     `json:"id"`
+	Name             string    `json:"name"`
+	Dosage           string    `json:"dosage"`
+	StartDate        time.Time `json:"start_date"`
+	EndDate          time.Time `json:"end_date"`
+	Notes            *string   `json:"notes"`
+	SelfAdministered bool      `json:"self_administered"`
+	DiagnosisID      *int64    `json:"diagnosis_id"`
 	AdministeredByID *int64    `json:"administered_by_id"`
 	IsCritical       bool      `json:"is_critical"`
 	UpdatedAt        time.Time `json:"updated_at"`
