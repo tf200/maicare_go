@@ -258,7 +258,7 @@ type Querier interface {
 	ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsRow, error)
 	ListLocations(ctx context.Context, organisationID int64) ([]Location, error)
 	ListMaturityMatrix(ctx context.Context) ([]MaturityMatrix, error)
-	ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedicationsByDiagnosisIDParams) ([]ListMedicationsByDiagnosisIDRow, error)
+	ListMedicationsByDiagnosisID(ctx context.Context, diagnosisID *int64) ([]ListMedicationsByDiagnosisIDRow, error)
 	ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []int64) ([]ClientMedication, error)
 	ListNotifications(ctx context.Context, arg ListNotificationsParams) ([]Notification, error)
 	ListOrganisations(ctx context.Context) ([]ListOrganisationsRow, error)

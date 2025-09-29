@@ -43,6 +43,10 @@ type ClientService interface {
 
 	// Client Diagnoses
 	CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID int64) (*CreateClientDiagnosisResponse, error)
+	ListClientDiagnoses(ctx *gin.Context, req ListClientDiagnosesRequest, clientID int64) (*pagination.Response[ListClientDiagnosesResponse], error)
+	GetClientDiagnosis(ctx context.Context, diagnosisID int64) (*GetClientDiagnosisResponse, error)
+	UpdateClientDiagnosis(ctx context.Context, req UpdateClientDiagnosisRequest, diagnosisID int64) (*UpdateClientDiagnosisResponse, error)
+	DeleteClientDiagnosis(ctx context.Context, diagnosisID int64) (*DeleteClientDiagnosisResponse, error)
 }
 
 type clientService struct {

@@ -76,3 +76,50 @@ type ListClientDiagnosesResponse struct {
 	CreatedAt           time.Time                 `json:"created_at"`
 	Medications         []DiagnosisMedicationList `json:"medications"`
 }
+
+// GetClientDiagnosisResponse defines the response for getting a client diagnosis
+type GetClientDiagnosisResponse struct {
+	ID                  int64                     `json:"id"`
+	Title               *string                   `json:"title"`
+	ClientID            int64                     `json:"client_id"`
+	DiagnosisCode       string                    `json:"diagnosis_code"`
+	Description         string                    `json:"description"`
+	DateOfDiagnosis     time.Time                 `json:"date_of_diagnosis"`
+	Severity            *string                   `json:"severity"`
+	Status              string                    `json:"status"`
+	DiagnosingClinician *string                   `json:"diagnosing_clinician"`
+	Notes               *string                   `json:"notes"`
+	CreatedAt           time.Time                 `json:"created_at"`
+	Medications         []DiagnosisMedicationList `json:"medications"`
+}
+
+// UpdateClientDiagnosisApi updates a client diagnosis
+type UpdateClientDiagnosisRequest struct {
+	Title               *string                     `json:"title"`
+	DiagnosisCode       *string                     `json:"diagnosis_code"`
+	Description         *string                     `json:"description"`
+	Severity            *string                     `json:"severity"`
+	Status              *string                     `json:"status"`
+	DiagnosingClinician *string                     `json:"diagnosing_clinician"`
+	Notes               *string                     `json:"notes"`
+	MedicationIDs       []DiagnosisMedicationCreate `json:"medications"`
+}
+
+// UpdateClientDiagnosisApi updates a client diagnosis
+type UpdateClientDiagnosisResponse struct {
+	ID                  int64     `json:"id"`
+	Title               *string   `json:"title"`
+	ClientID            int64     `json:"client_id"`
+	DiagnosisCode       string    `json:"diagnosis_code"`
+	Description         string    `json:"description"`
+	Severity            *string   `json:"severity"`
+	Status              string    `json:"status"`
+	DiagnosingClinician *string   `json:"diagnosing_clinician"`
+	Notes               *string   `json:"notes"`
+	CreatedAt           time.Time `json:"created_at"`
+}
+
+// DeleteClientDiagnosisResponse defines the response for deleting a client diagnosis
+type DeleteClientDiagnosisResponse struct {
+	ID int64 `json:"id"`
+}
