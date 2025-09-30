@@ -63,26 +63,12 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	arg := db.CreateEmemrgencyContactParams{
-		ClientID:         clientID,
-		FirstName:        req.FirstName,
-		LastName:         req.LastName,
-		Email:            req.Email,
-		PhoneNumber:      req.PhoneNumber,
-		Address:          req.Address,
-		Relationship:     req.Relationship,
-		RelationStatus:   req.RelationStatus,
-		MedicalReports:   req.MedicalReports,
-		IncidentsReports: req.IncidentsReports,
-		GoalsReports:     req.GoalsReports,
-	}
-	clientEmergencyContact, err := server.store.CreateEmemrgencyContact(ctx, arg)
+	clientEmergencyContact, err := server.businessService.ClientService.CreateClientEmergencyContact(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	res := SuccessResponse(, "Client emergency contact created successfully")
+	res := SuccessResponse(clientEmergencyContact, "Client emergency contact created successfully")
 	ctx.JSON(http.StatusCreated, res)
 
 }
