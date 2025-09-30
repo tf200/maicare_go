@@ -5,34 +5,14 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/notification"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-// GetClientSenderResponse defines the request for getting a client sender
-type GetClientSenderResponse struct {
-	ID           int64           `json:"id"`
-	Types        string          `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	Kvknumber    *string         `json:"kvknumber"`
-	Btwnumber    *string         `json:"btwnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	EmailAddress *string         `json:"email_address"`
-	Contacts     []SenderContact `json:"contacts"`
-	IsArchived   bool            `json:"is_archived"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
-}
 
 // GetClientSenderApi gets a client sender
 // @Summary Get a client sender
@@ -50,66 +30,14 @@ func (server *Server) GetClientSenderApi(ctx *gin.Context) {
 		return
 	}
 
-	sender, err := server.store.GetClientSender(ctx, clientID)
+	sender, err := server.businessService.ClientService.GetClientSender(ctx, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	var contactsResp []SenderContact
-	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(GetClientSenderResponse{
-		ID:           sender.ID,
-		Types:        sender.Types,
-		Name:         sender.Name,
-		Address:      sender.Address,
-		PostalCode:   sender.PostalCode,
-		Place:        sender.Place,
-		Land:         sender.Land,
-		Kvknumber:    sender.Kvknumber,
-		Btwnumber:    sender.Btwnumber,
-		PhoneNumber:  sender.PhoneNumber,
-		ClientNumber: sender.ClientNumber,
-		IsArchived:   sender.IsArchived,
-		Contacts:     contactsResp,
-	}, "Client Sender fetched successfully")
+	res := SuccessResponse(sender, "Client Sender fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// CreateClientEmergencyContactParams defines the request for creating a client emergency contact
-type CreateClientEmergencyContactParams struct {
-	FirstName        *string `json:"first_name"`
-	LastName         *string `json:"last_name"`
-	Email            *string `json:"email"`
-	PhoneNumber      *string `json:"phone_number"`
-	Address          *string `json:"address"`
-	Relationship     *string `json:"relationship"`
-	RelationStatus   *string `json:"relation_status"`
-	MedicalReports   bool    `json:"medical_reports"`
-	IncidentsReports bool    `json:"incidents_reports"`
-	GoalsReports     bool    `json:"goals_reports"`
-}
-
-// CreateClientEmergencyContactResponse defines the response for creating a client emergency contact
-type CreateClientEmergencyContactResponse struct {
-	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
-	FirstName        *string   `json:"first_name"`
-	LastName         *string   `json:"last_name"`
-	Email            *string   `json:"email"`
-	PhoneNumber      *string   `json:"phone_number"`
-	Address          *string   `json:"address"`
-	Relationship     *string   `json:"relationship"`
-	RelationStatus   *string   `json:"relation_status"`
-	CreatedAt        time.Time `json:"created_at"`
-	IsVerified       bool      `json:"is_verified"`
-	MedicalReports   bool      `json:"medical_reports"`
-	IncidentsReports bool      `json:"incidents_reports"`
-	GoalsReports     bool      `json:"goals_reports"`
 }
 
 // CreateClientEmergencyContactApi creates a client emergency contact
@@ -130,7 +58,7 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateClientEmergencyContactParams
+	var req clientp.CreateClientEmergencyContactParams
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -154,22 +82,7 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(CreateClientEmergencyContactResponse{
-		ID:               clientEmergencyContact.ID,
-		ClientID:         clientEmergencyContact.ClientID,
-		FirstName:        clientEmergencyContact.FirstName,
-		LastName:         clientEmergencyContact.LastName,
-		Email:            clientEmergencyContact.Email,
-		PhoneNumber:      clientEmergencyContact.PhoneNumber,
-		Address:          clientEmergencyContact.Address,
-		Relationship:     clientEmergencyContact.Relationship,
-		RelationStatus:   clientEmergencyContact.RelationStatus,
-		CreatedAt:        clientEmergencyContact.CreatedAt.Time,
-		IsVerified:       clientEmergencyContact.IsVerified,
-		MedicalReports:   clientEmergencyContact.MedicalReports,
-		IncidentsReports: clientEmergencyContact.IncidentsReports,
-		GoalsReports:     clientEmergencyContact.GoalsReports,
-	}, "Client emergency contact created successfully")
+	res := SuccessResponse(, "Client emergency contact created successfully")
 	ctx.JSON(http.StatusCreated, res)
 
 }

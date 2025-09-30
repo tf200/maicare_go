@@ -154,7 +154,7 @@ func TestListClientDiagnoses(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var diagnosisResp Response[pagination.Response[ListClientDiagnosesResponse]]
+				var diagnosisResp Response[pagination.Response[clientp.ListClientDiagnosesResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &diagnosisResp)
 				require.NoError(t, err)
 				require.Len(t, diagnosisResp.Data.Results, 5)
@@ -198,7 +198,7 @@ func TestGetClientDiagnosisApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var diagnosisResp Response[GetClientDiagnosisResponse]
+				var diagnosisResp Response[clientp.GetClientDiagnosisResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &diagnosisResp)
 				require.NoError(t, err)
 				require.Equal(t, diagnosisResp.Data.ID, diagnosis.ID)
@@ -246,7 +246,7 @@ func TestUpdateClientDiagnosisApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				diagnosisReq := UpdateClientDiagnosisRequest{
+				diagnosisReq := clientp.UpdateClientDiagnosisRequest{
 					Title:               util.StringPtr("test title updated"),
 					DiagnosisCode:       util.StringPtr("15235"),
 					Description:         util.StringPtr("test description updated"),
@@ -266,7 +266,7 @@ func TestUpdateClientDiagnosisApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var diagnosisResp Response[UpdateClientDiagnosisResponse]
+				var diagnosisResp Response[clientp.UpdateClientDiagnosisResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &diagnosisResp)
 				require.NoError(t, err)
 				require.Equal(t, diagnosisResp.Data.ID, diagnosis.ID)
@@ -374,7 +374,7 @@ func TestCreateClientMedicationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				medicationReq := CreateclientMedicationRequest{
+				medicationReq := clientp.CreateClientMedicationRequest{
 					Name:             "test medication",
 					Dosage:           "test dosage",
 					StartDate:        time.Now(),
@@ -395,7 +395,7 @@ func TestCreateClientMedicationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var medicationResp Response[CreateClientMedicationResponse]
+				var medicationResp Response[clientp.CreateClientMedicationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &medicationResp)
 				require.NoError(t, err)
 				require.NotEmpty(t, medicationResp.Data.ID)
@@ -492,7 +492,7 @@ func TestGetClientMedicationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var medicationResp Response[GetClientMedicationResponse]
+				var medicationResp Response[clientp.GetClientMedicationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &medicationResp)
 				require.NoError(t, err)
 				require.Equal(t, medicationResp.Data.ID, medication.ID)
@@ -532,7 +532,7 @@ func TestUpdateClientMedicationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				medicationReq := UpdateClientMedicationRequest{
+				medicationReq := clientp.UpdateClientMedicationRequest{
 					Name:             util.StringPtr("test medication updated"),
 					Dosage:           util.StringPtr("test dosage updated"),
 					StartDate:        time.Now(),
@@ -553,7 +553,7 @@ func TestUpdateClientMedicationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var medicationResp Response[UpdateClientMedicationResponse]
+				var medicationResp Response[clientp.UpdateClientMedicationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &medicationResp)
 				require.NoError(t, err)
 				require.Equal(t, medicationResp.Data.ID, medication.ID)

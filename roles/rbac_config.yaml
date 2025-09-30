@@ -51,7 +51,18 @@ permissions:
   - name: CLIENT.STATUS.UPDATE
     resource: /clients/status
     method: [PUT]
-  
+
+    # Client Documents
+  - name: CLIENT.DOCUMENTS.VIEW
+    resource: /clients/documents
+    method: [GET]
+  - name: CLIENT.DOCUMENTS.UPLOAD
+    resource: /clients/documents
+    method: [POST]
+  - name: CLIENT.DOCUMENTS.DELETE
+    resource: /clients/documents
+    method: [DELETE]
+
   # Client Incidents
   - name: CLIENT.INCIDENT.CREATE
     resource: /clients/incidents
@@ -174,16 +185,16 @@ permissions:
     method: [GET]
 
   # Care Plans & Maturity Matrix
-  - name: CARE_PLAN.CREATE
+  - name: CLIENT.CARE_PLAN.CREATE
     resource: /care_plans
     method: [POST]
-  - name: CARE_PLAN.DELETE
+  - name: CLIENT.CARE_PLAN.DELETE
     resource: /care_plans
     method: [DELETE]
-  - name: CARE_PLAN.UPDATE
+  - name: CLIENT.CARE_PLAN.UPDATE
     resource: /care_plans
     method: [PUT]
-  - name: CARE_PLAN.VIEW
+  - name: CLIENT.CARE_PLAN.VIEW
     resource: /care_plans
     method: [GET]
 
@@ -208,7 +219,16 @@ permissions:
   - name: EMPLOYEE.VIEW
     resource: /employees
     method: [GET]
-  
+  - name: EMPLOYEE.WORKING_HOURS.VIEW
+    resource: /employees/working_hours
+    method: [GET]
+  - name: EMPLOYEE.CONTRACT.VIEW
+    resource: /employees/contracts
+    method: [GET]
+  - name: EMPLOYEE.CONTRACT.UPDATE
+    resource: /employees/contracts
+    method: [PUT]
+
   # Incidents
   - name: INCIDENT.VIEW
     resource: /incidents
@@ -244,6 +264,17 @@ permissions:
   - name: INVOICE.PAYMENT.VIEW
     resource: /invoices/payments
     method: [GET]
+
+  # Organisation
+  - name: ORGANISATION.VIEW
+    resource: /organisation
+    method: [GET]
+  - name: ORGANISATION.CREATE
+    resource: /organisation
+    method: [POST]
+  - name: ORGANISATION.UPDATE
+    resource: /organisation 
+    method: [PUT]
 
   # Locations
   - name: LOCATION.CREATE

@@ -43,6 +43,22 @@ type ClientService interface {
 
 	// Client Diagnoses
 	CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID int64) (*CreateClientDiagnosisResponse, error)
+	ListClientDiagnoses(ctx *gin.Context, req ListClientDiagnosesRequest, clientID int64) (*pagination.Response[ListClientDiagnosesResponse], error)
+	GetClientDiagnosis(ctx context.Context, diagnosisID int64) (*GetClientDiagnosisResponse, error)
+	UpdateClientDiagnosis(ctx context.Context, req UpdateClientDiagnosisRequest, diagnosisID int64) (*UpdateClientDiagnosisResponse, error)
+	DeleteClientDiagnosis(ctx context.Context, diagnosisID int64) (*DeleteClientDiagnosisResponse, error)
+	// Client Medications
+	CreateClientMedication(ctx context.Context, req CreateClientMedicationRequest, diagnosisID *int64) (*CreateClientMedicationResponse, error)
+	ListMedicationsByDiagnosisID(ctx *gin.Context, req ListClientMedicationsRequest, diagnosisID *int64) (*pagination.Response[ListClientMedicationsResponse], error)
+	GetClientMedication(ctx context.Context, medicationID int64) (*GetClientMedicationResponse, error)
+	UpdateClientMedication(ctx context.Context, req UpdateClientMedicationRequest, medicationID int64) (*UpdateClientMedicationResponse, error)
+	DeleteClientMedication(ctx context.Context, medicationID int64) error
+
+	// Client Sender
+	GetClientSender(ctx context.Context, clientID int64) (*GetClientSenderResponse, error)
+
+	// Client Emergency Contacts
+	CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID int64) (*CreateClientEmergencyContactResponse, error)
 }
 
 type clientService struct {

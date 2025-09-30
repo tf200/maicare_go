@@ -26,7 +26,7 @@ type CreateClientDetailsRequest struct {
 	LegalMeasure               *string   `json:"legal_measure"`
 	Birthplace                 *string   `json:"birthplace"`
 	Departement                *string   `json:"departement"`
-	Gender                     string    `json:"gender" binding:"required oneof=male female other"`
+	Gender                     string    `json:"gender" binding:"required,oneof=male female other"`
 	Filenumber                 string    `json:"filenumber" binding:"required"`
 	DateOfBirth                string    `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
 	PhoneNumber                *string   `json:"phone_number" binding:"required"`
