@@ -185,6 +185,49 @@ func (server *Server) GetOrganisationApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+type GetOrganisationCountResponse struct {
+	OrganisationID   int64  `json:"organisation_id"`
+	OrganisationName string `json:"organisation_name"`
+	LocationCount    int64  `json:"location_count"`
+	ClientCount      int64  `json:"client_count"`
+	EmployeeCount    int64  `json:"employee_count"`
+}
+
+// @Summary Get organisation counts
+// @Description Get counts of locations, clients, and employees for an organisation by ID
+// @Tags organisations
+// @Accept json
+// @Produce json
+// @Param id path int true "Organisation ID"
+// @Success 200 {object} Response[GetOrganisationCountResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /organisations/{id}/counts [get]
+func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	organisationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GetOrganisationCountApi", "Invalid organisation ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
+		return
+	}
+
+	count, err := server.store.GetOrganisationCounts(ctx, organisationID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GetOrganisationCountApi", "Failed to get organisation location count", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to get organisation location count"))
+		return
+	}
+	res := SuccessResponse(GetOrganisationCountResponse{
+		OrganisationID:   count.OrganisationID,
+		OrganisationName: count.OrganisationName,
+		LocationCount:    count.LocationCount,
+		ClientCount:      count.ClientCount,
+		EmployeeCount:    count.EmployeeCount,
+	}, "Organisation counts retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
 // UpdateOrganisationRequest represents a request to update an organisation
 type UpdateOrganisationRequest struct {
 	Name       *string `json:"name"`
