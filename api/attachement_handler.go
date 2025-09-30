@@ -32,11 +32,13 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 		return
 	}
 
-	res, err := server.businessService.AttachmentService.UploadAttachment(ctx, file, header)
+	result, err := server.businessService.AttachmentService.UploadAttachment(ctx, file, header)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to upload attachment: %v", err)))
 		return
 	}
+
+	res := SuccessResponse(result, "File uploaded successfully")
 
 	ctx.JSON(http.StatusCreated, res)
 }
