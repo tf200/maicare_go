@@ -378,3 +378,12 @@ func (s *clientService) UpdateClientMedication(ctx context.Context, req UpdateCl
 	}
 	return res, nil
 }
+
+func (s *clientService) DeleteClientMedication(ctx context.Context, medicationID int64) error {
+	err := s.Store.DeleteClientMedication(ctx, medicationID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteClientMedication", "Failed to delete client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
+		return err
+	}
+	return nil
+}

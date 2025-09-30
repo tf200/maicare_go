@@ -52,6 +52,13 @@ type ClientService interface {
 	ListMedicationsByDiagnosisID(ctx *gin.Context, req ListClientMedicationsRequest, diagnosisID *int64) (*pagination.Response[ListClientMedicationsResponse], error)
 	GetClientMedication(ctx context.Context, medicationID int64) (*GetClientMedicationResponse, error)
 	UpdateClientMedication(ctx context.Context, req UpdateClientMedicationRequest, medicationID int64) (*UpdateClientMedicationResponse, error)
+	DeleteClientMedication(ctx context.Context, medicationID int64) error
+
+	// Client Sender
+	GetClientSender(ctx context.Context, clientID int64) (*GetClientSenderResponse, error)
+
+	// Client Emergency Contacts
+	CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID int64) (*CreateClientEmergencyContactResponse, error)
 }
 
 type clientService struct {

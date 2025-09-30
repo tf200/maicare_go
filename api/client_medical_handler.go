@@ -342,7 +342,7 @@ func (server *Server) DeleteClientMedicationApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.store.DeleteClientMedication(ctx, medicationID)
+	err = server.businessService.ClientService.DeleteClientMedication(ctx, medicationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

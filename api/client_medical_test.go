@@ -492,7 +492,7 @@ func TestGetClientMedicationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var medicationResp Response[GetClientMedicationResponse]
+				var medicationResp Response[clientp.GetClientMedicationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &medicationResp)
 				require.NoError(t, err)
 				require.Equal(t, medicationResp.Data.ID, medication.ID)
@@ -532,7 +532,7 @@ func TestUpdateClientMedicationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				medicationReq := UpdateClientMedicationRequest{
+				medicationReq := clientp.UpdateClientMedicationRequest{
 					Name:             util.StringPtr("test medication updated"),
 					Dosage:           util.StringPtr("test dosage updated"),
 					StartDate:        time.Now(),
@@ -553,7 +553,7 @@ func TestUpdateClientMedicationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var medicationResp Response[UpdateClientMedicationResponse]
+				var medicationResp Response[clientp.UpdateClientMedicationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &medicationResp)
 				require.NoError(t, err)
 				require.Equal(t, medicationResp.Data.ID, medication.ID)
