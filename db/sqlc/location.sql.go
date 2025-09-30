@@ -210,6 +210,45 @@ func (q *Queries) GetOrganisation(ctx context.Context, id int64) (GetOrganisatio
 	return i, err
 }
 
+const getOrganisationCounts = `-- name: GetOrganisationCounts :one
+SELECT 
+    o.id AS organisation_id,
+    o.name AS organisation_name,
+    COALESCE(COUNT(DISTINCT l.id), 0)::BIGINT AS location_count,
+    COALESCE(COUNT(DISTINCT c.id), 0)::BIGINT AS client_count,
+    COALESCE(COUNT(DISTINCT e.id), 0)::BIGINT AS employee_count
+FROM 
+    organisations o
+    LEFT JOIN location l ON o.id = l.organisation_id
+    LEFT JOIN client_details c ON l.id = c.location_id
+    LEFT JOIN employee_profile e ON l.id = e.location_id
+WHERE 
+    o.id = $1
+GROUP BY 
+    o.id, o.name
+`
+
+type GetOrganisationCountsRow struct {
+	OrganisationID   int64  `json:"organisation_id"`
+	OrganisationName string `json:"organisation_name"`
+	LocationCount    int64  `json:"location_count"`
+	ClientCount      int64  `json:"client_count"`
+	EmployeeCount    int64  `json:"employee_count"`
+}
+
+func (q *Queries) GetOrganisationCounts(ctx context.Context, id int64) (GetOrganisationCountsRow, error) {
+	row := q.db.QueryRow(ctx, getOrganisationCounts, id)
+	var i GetOrganisationCountsRow
+	err := row.Scan(
+		&i.OrganisationID,
+		&i.OrganisationName,
+		&i.LocationCount,
+		&i.ClientCount,
+		&i.EmployeeCount,
+	)
+	return i, err
+}
+
 const listAllLocations = `-- name: ListAllLocations :many
 SELECT id, organisation_id, name, address, capacity, location_type FROM location
 ORDER BY name
