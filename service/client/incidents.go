@@ -223,7 +223,8 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 
 	if len(incidents) == 0 {
 		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.Int64("ClientID", clientID))
-		return nil, nil
+		pag := pagination.NewResponse(ctx, req.Request, []ListIncidentsResponse{}, 0)
+		return &pag, nil
 	}
 	totalCount := incidents[0].TotalCount
 
@@ -603,5 +604,3 @@ func (s *clientService) ConfirmIncident(ctx context.Context, incidentID int64) (
 	// TODO: Send notification to the party responsivle for the client
 
 }
-
-
