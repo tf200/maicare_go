@@ -170,6 +170,7 @@ type GetClientApiResponse struct {
 	CreatedAt                  time.Time `json:"created_at"`
 	SenderID                   *int64    `json:"sender_id"`
 	LocationID                 *int64    `json:"location_id"`
+	LocationName               *string   `json:"location_name"`
 	DepartureReason            *string   `json:"departure_reason"`
 	DepartureReport            *string   `json:"departure_report"`
 	LegalMeasure               *string   `json:"legal_measure"`

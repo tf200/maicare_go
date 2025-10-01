@@ -5,6 +5,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -135,15 +136,17 @@ func (server *Server) ListOrganisationsApi(ctx *gin.Context) {
 
 // GetOrganisationResponse represents a response for GetOrganisationApi
 type GetOrganisationResponse struct {
-	ID            int64   `json:"id"`
-	Name          string  `json:"name"`
-	Address       string  `json:"address"`
-	PostalCode    string  `json:"postal_code"`
-	City          string  `json:"city"`
-	Email         *string `json:"email"`
-	KvkNumber     *string `json:"kvk_number"`
-	BtwNumber     *string `json:"btw_number"`
-	LocationCount int64   `json:"location_count"`
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Address       string    `json:"address"`
+	PostalCode    string    `json:"postal_code"`
+	City          string    `json:"city"`
+	Email         *string   `json:"email"`
+	KvkNumber     *string   `json:"kvk_number"`
+	BtwNumber     *string   `json:"btw_number"`
+	LocationCount int64     `json:"location_count"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // @Summary Get an organisation
@@ -181,8 +184,53 @@ func (server *Server) GetOrganisationApi(ctx *gin.Context) {
 		KvkNumber:     organisation.KvkNumber,
 		BtwNumber:     organisation.BtwNumber,
 		LocationCount: organisation.LocationCount,
+		CreatedAt:     organisation.CreatedAt.Time,
+		UpdatedAt:     organisation.UpdatedAt.Time,
 	}, "Organisation retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
+}
+
+type GetOrganisationCountResponse struct {
+	OrganisationID   int64  `json:"organisation_id"`
+	OrganisationName string `json:"organisation_name"`
+	LocationCount    int64  `json:"location_count"`
+	ClientCount      int64  `json:"client_count"`
+	EmployeeCount    int64  `json:"employee_count"`
+}
+
+// @Summary Get organisation counts
+// @Description Get counts of locations, clients, and employees for an organisation by ID
+// @Tags organisations
+// @Accept json
+// @Produce json
+// @Param id path int true "Organisation ID"
+// @Success 200 {object} Response[GetOrganisationCountResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /organisations/{id}/counts [get]
+func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	organisationID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GetOrganisationCountApi", "Invalid organisation ID", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
+		return
+	}
+
+	count, err := server.store.GetOrganisationCounts(ctx, organisationID)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "GetOrganisationCountApi", "Failed to get organisation location count", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to get organisation location count"))
+		return
+	}
+	res := SuccessResponse(GetOrganisationCountResponse{
+		OrganisationID:   count.OrganisationID,
+		OrganisationName: count.OrganisationName,
+		LocationCount:    count.LocationCount,
+		ClientCount:      count.ClientCount,
+		EmployeeCount:    count.EmployeeCount,
+	}, "Organisation counts retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+
 }
 
 // UpdateOrganisationRequest represents a request to update an organisation
@@ -301,10 +349,12 @@ func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
 
 // ListLocationsResponse represents a location in the list
 type ListLocationsResponse struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	Address   string    `json:"address"`
+	Capacity  *int32    `json:"capacity"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // @Summary List all locations
@@ -337,10 +387,12 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 	responseLocations := make([]ListLocationsResponse, len(locations))
 	for i, location := range locations {
 		responseLocations[i] = ListLocationsResponse{
-			ID:       location.ID,
-			Name:     location.Name,
-			Address:  location.Address,
-			Capacity: location.Capacity,
+			ID:        location.ID,
+			Name:      location.Name,
+			Address:   location.Address,
+			Capacity:  location.Capacity,
+			CreatedAt: location.CreatedAt.Time,
+			UpdatedAt: location.UpdatedAt.Time,
 		}
 	}
 

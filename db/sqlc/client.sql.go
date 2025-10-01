@@ -571,11 +571,11 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID int64)
 
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT 
-    client_details.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, address, capacity, location_type,
+    c.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organisation, departement, gender, filenumber, profile_picture, infix, c.created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, address, capacity, location_type, location.created_at, updated_at,
     location.name AS location_name,
     COUNT(*) OVER() AS total_count
-FROM client_details
-LEFT JOIN location ON client_details.location_id = location.id
+FROM client_details c
+LEFT JOIN location ON c.location_id = location.id
 WHERE
     (status = $1 OR $1 IS NULL) AND
     (location_id = $2 OR $2 IS NULL) AND
@@ -585,7 +585,7 @@ WHERE
         filenumber ILIKE '%' || $3 || '%' OR
         email ILIKE '%' || $3 || '%' OR
         phone_number ILIKE '%' || $3 || '%')
-ORDER BY created_at DESC
+ORDER BY c.created_at DESC
 LIMIT $5 OFFSET $4
 `
 
@@ -661,6 +661,8 @@ type ListClientDetailsRow struct {
 	Address                    *string            `json:"address"`
 	Capacity                   *int32             `json:"capacity"`
 	LocationType               *string            `json:"location_type"`
+	CreatedAt_2                pgtype.Timestamptz `json:"created_at_2"`
+	UpdatedAt                  pgtype.Timestamptz `json:"updated_at"`
 	LocationName               *string            `json:"location_name"`
 	TotalCount                 int64              `json:"total_count"`
 }
@@ -744,6 +746,8 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.Address,
 			&i.Capacity,
 			&i.LocationType,
+			&i.CreatedAt_2,
+			&i.UpdatedAt,
 			&i.LocationName,
 			&i.TotalCount,
 		); err != nil {

@@ -3075,7 +3075,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientDiagnosesResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListClientDiagnosesResponse"
                         }
                     },
                     "400": {
@@ -3117,7 +3117,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateClientDiagnosisRequest"
+                            "$ref": "#/definitions/clientp.CreateClientDiagnosisRequest"
                         }
                     }
                 ],
@@ -3125,7 +3125,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateClientDiagnosisResponse"
+                            "$ref": "#/definitions/api.Response-clientp_CreateClientDiagnosisResponse"
                         }
                     },
                     "400": {
@@ -3172,7 +3172,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientDiagnosisResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetClientDiagnosisResponse"
                         }
                     },
                     "400": {
@@ -3221,7 +3221,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateClientDiagnosisRequest"
+                            "$ref": "#/definitions/clientp.UpdateClientDiagnosisRequest"
                         }
                     }
                 ],
@@ -3229,7 +3229,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateClientDiagnosisResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateClientDiagnosisResponse"
                         }
                     },
                     "400": {
@@ -3336,7 +3336,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListClientMedicationsResponse"
                         }
                     },
                     "400": {
@@ -3385,7 +3385,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateclientMedicationRequest"
+                            "$ref": "#/definitions/clientp.CreateClientMedicationRequest"
                         }
                     }
                 ],
@@ -3393,7 +3393,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateClientMedicationResponse"
+                            "$ref": "#/definitions/api.Response-clientp_CreateClientMedicationResponse"
                         }
                     },
                     "400": {
@@ -3447,7 +3447,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientMedicationResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetClientMedicationResponse"
                         }
                     },
                     "400": {
@@ -3503,7 +3503,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateClientMedicationRequest"
+                            "$ref": "#/definitions/clientp.UpdateClientMedicationRequest"
                         }
                     }
                 ],
@@ -3511,7 +3511,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateClientMedicationResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateClientMedicationResponse"
                         }
                     },
                     "400": {
@@ -3790,7 +3790,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateClientEmergencyContactParams"
+                            "$ref": "#/definitions/clientp.CreateClientEmergencyContactParams"
                         }
                     }
                 ],
@@ -3798,7 +3798,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateClientEmergencyContactResponse"
+                            "$ref": "#/definitions/api.Response-clientp_CreateClientEmergencyContactResponse"
                         }
                     },
                     "400": {
@@ -5054,7 +5054,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientSenderResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetClientSenderResponse"
                         }
                     },
                     "400": {
@@ -9818,6 +9818,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/organisations/{id}/counts": {
+            "get": {
+                "description": "Get counts of locations, clients, and employees for an organisation by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organisations"
+                ],
+                "summary": "Get organisation counts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organisation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-api_GetOrganisationCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/organisations/{id}/locations": {
             "get": {
                 "description": "Get a list of all locations",
@@ -12235,155 +12285,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateClientDiagnosisRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.DiagnosisMedicationCreate"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateClientEmergencyContactParams": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "goals_reports": {
-                    "type": "boolean"
-                },
-                "incidents_reports": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "medical_reports": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "relation_status": {
-                    "type": "string"
-                },
-                "relationship": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "goals_reports": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "incidents_reports": {
-                    "type": "boolean"
-                },
-                "is_verified": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "medical_reports": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "relation_status": {
-                    "type": "string"
-                },
-                "relationship": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CreateClientMaturityMatrixAssessmentRequest": {
             "type": "object",
             "properties": {
@@ -12406,47 +12307,6 @@ const docTemplate = `{
                 },
                 "client_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "api.CreateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         },
@@ -14047,35 +13907,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateclientMedicationRequest": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CreditInvoiceResponse": {
             "type": "object",
             "properties": {
@@ -14221,76 +14052,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "previous_invoice_status": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.DiagnosisMedicationCreate": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.DiagnosisMedicationList": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -14684,50 +14445,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date_of_diagnosis": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.DiagnosisMedicationList"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetClientEmergencyContactResponse": {
             "type": "object",
             "properties": {
@@ -14807,53 +14524,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "administered_by_first_name": {
-                    "type": "string"
-                },
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "administered_by_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetClientRelatedEmailsResponse": {
             "type": "object",
             "properties": {
@@ -14862,62 +14532,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "api.GetClientSenderResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btwnumber": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email_address": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "kvknumber": {
-                    "type": "string"
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         },
@@ -15409,6 +15023,26 @@ const docTemplate = `{
                 }
             }
         },
+        "api.GetOrganisationCountResponse": {
+            "type": "object",
+            "properties": {
+                "client_count": {
+                    "type": "integer"
+                },
+                "employee_count": {
+                    "type": "integer"
+                },
+                "location_count": {
+                    "type": "integer"
+                },
+                "organisation_id": {
+                    "type": "integer"
+                },
+                "organisation_name": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetOrganisationResponse": {
             "type": "object",
             "properties": {
@@ -15419,6 +15053,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "city": {
+                    "type": "string"
+                },
+                "created_at": {
                     "type": "string"
                 },
                 "email": {
@@ -15437,6 +15074,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -16267,47 +15907,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ListClientDiagnosesResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.DiagnosisMedicationList"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "api.ListClientEmergencyContactsResponse": {
             "type": "object",
             "properties": {
@@ -16380,47 +15979,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Date"
                 },
                 "topic_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListClientMedicationsResponse": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -16893,10 +16451,16 @@ const docTemplate = `{
                 "capacity": {
                     "type": "integer"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -17786,53 +17350,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateClientDiagnosisResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateClientEmergencyContactResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CreateClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CreateClientMaturityMatrixAssessmentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateClientMedicationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18206,20 +17728,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_GetClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientDiagnosisResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GetClientEmergencyContactResponse": {
             "type": "object",
             "properties": {
@@ -18248,39 +17756,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_GetClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientMedicationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GetClientRelatedEmailsResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetClientRelatedEmailsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetClientSenderResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientSenderResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18379,6 +17859,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-api_GetOrganisationCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/api.GetOrganisationCountResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18724,39 +18218,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_UpdateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateClientDiagnosisResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_UpdateClientEmergencyContactResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UpdateClientEmergencyContactResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateClientMedicationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19566,6 +19032,48 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_CreateClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.CreateClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_CreateClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.CreateClientEmergencyContactResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_CreateClientMedicationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.CreateClientMedicationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_CreateIncidentResponse": {
             "type": "object",
             "properties": {
@@ -19664,6 +19172,48 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GetClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_GetClientMedicationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetClientMedicationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_GetClientSenderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetClientSenderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_GetClientsCountResponse": {
             "type": "object",
             "properties": {
@@ -19753,6 +19303,34 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.UpdateClientDetailsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateClientMedicationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateClientMedicationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19874,39 +19452,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListClientDiagnosesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListClientDiagnosesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-pagination_Response-api_ListClientMedicationsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListClientMedicationsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -20000,11 +19550,39 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-clientp_ListClientDiagnosesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListClientDiagnosesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-clientp_ListClientDocumentsApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-clientp_ListClientDocumentsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-clientp_ListClientMedicationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListClientMedicationsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -20526,73 +20104,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.UpdateClientDiagnosisRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.DiagnosisMedicationCreate"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "api.UpdateClientEmergencyContactParams": {
             "type": "object",
             "properties": {
@@ -20671,76 +20182,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "relationship": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateClientMedicationRequest": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "integer"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -22940,6 +22381,7 @@ const docTemplate = `{
                 "email",
                 "filenumber",
                 "first_name",
+                "gender",
                 "last_name",
                 "phone_number",
                 "sender_id",
@@ -23005,7 +22447,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other"
+                    ]
                 },
                 "infix": {
                     "type": "string"
@@ -23194,6 +22641,225 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateClientDiagnosisRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "medications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.DiagnosisMedicationCreate"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateClientEmergencyContactParams": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "goals_reports": {
+                    "type": "boolean"
+                },
+                "incidents_reports": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "medical_reports": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "type": "string"
+                },
+                "relationship": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "goals_reports": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incidents_reports": {
+                    "type": "boolean"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "medical_reports": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "type": "string"
+                },
+                "relationship": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateClientMedicationRequest": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateClientMedicationResponse": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -23572,6 +23238,76 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.DiagnosisMedicationCreate": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.DiagnosisMedicationList": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.GenerateAppointmentCardDocumentApiResponse": {
             "type": "object",
             "properties": {
@@ -23784,6 +23520,9 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer"
                 },
+                "location_name": {
+                    "type": "string"
+                },
                 "organisation": {
                     "type": "string"
                 },
@@ -23821,6 +23560,153 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.GetClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date_of_diagnosis": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "medications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.DiagnosisMedicationList"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.GetClientMedicationResponse": {
+            "type": "object",
+            "properties": {
+                "administered_by_first_name": {
+                    "type": "string"
+                },
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "administered_by_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.GetClientSenderResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btwnumber": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.SenderContact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "kvknumber": {
+                    "type": "string"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -24026,6 +23912,47 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ListClientDiagnosesResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "medications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.DiagnosisMedicationList"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ListClientDocumentsApiResponse": {
             "type": "object",
             "properties": {
@@ -24063,6 +23990,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ListClientMedicationsResponse": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -24129,6 +24097,9 @@ const docTemplate = `{
                 },
                 "location_id": {
                     "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
                 },
                 "organisation": {
                     "type": "string"
@@ -24348,6 +24319,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.SenderContact": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
                     "type": "string"
                 }
             }
@@ -24726,6 +24711,143 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateClientDiagnosisRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "medications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.DiagnosisMedicationCreate"
+                    }
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateClientMedicationRequest": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateClientMedicationResponse": {
+            "type": "object",
+            "properties": {
+                "administered_by_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "self_administered": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -25769,29 +25891,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-api_ListClientDiagnosesResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListClientDiagnosesResponse"
-                    }
-                }
-            }
-        },
         "pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse": {
             "type": "object",
             "properties": {
@@ -25811,29 +25910,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListClientMaturityMatrixAssessmentsResponse"
-                    }
-                }
-            }
-        },
-        "pagination.Response-api_ListClientMedicationsResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListClientMedicationsResponse"
                     }
                 }
             }
@@ -26005,6 +26081,29 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-clientp_ListClientDiagnosesResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListClientDiagnosesResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-clientp_ListClientDocumentsApiResponse": {
             "type": "object",
             "properties": {
@@ -26024,6 +26123,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/clientp.ListClientDocumentsApiResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-clientp_ListClientMedicationsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListClientMedicationsResponse"
                     }
                 }
             }
