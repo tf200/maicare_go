@@ -15055,6 +15055,9 @@ const docTemplate = `{
                 "city": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -15071,6 +15074,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
