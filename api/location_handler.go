@@ -5,6 +5,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -135,15 +136,17 @@ func (server *Server) ListOrganisationsApi(ctx *gin.Context) {
 
 // GetOrganisationResponse represents a response for GetOrganisationApi
 type GetOrganisationResponse struct {
-	ID            int64   `json:"id"`
-	Name          string  `json:"name"`
-	Address       string  `json:"address"`
-	PostalCode    string  `json:"postal_code"`
-	City          string  `json:"city"`
-	Email         *string `json:"email"`
-	KvkNumber     *string `json:"kvk_number"`
-	BtwNumber     *string `json:"btw_number"`
-	LocationCount int64   `json:"location_count"`
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Address       string    `json:"address"`
+	PostalCode    string    `json:"postal_code"`
+	City          string    `json:"city"`
+	Email         *string   `json:"email"`
+	KvkNumber     *string   `json:"kvk_number"`
+	BtwNumber     *string   `json:"btw_number"`
+	LocationCount int64     `json:"location_count"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // @Summary Get an organisation
@@ -181,6 +184,8 @@ func (server *Server) GetOrganisationApi(ctx *gin.Context) {
 		KvkNumber:     organisation.KvkNumber,
 		BtwNumber:     organisation.BtwNumber,
 		LocationCount: organisation.LocationCount,
+		CreatedAt:     organisation.CreatedAt.Time,
+		UpdatedAt:     organisation.UpdatedAt.Time,
 	}, "Organisation retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

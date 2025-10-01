@@ -2317,6 +2317,8 @@ definitions:
         type: string
       city:
         type: string
+      created_at:
+        type: string
       email:
         type: string
       id:
@@ -2328,6 +2330,8 @@ definitions:
       name:
         type: string
       postal_code:
+        type: string
+      updated_at:
         type: string
     type: object
   api.GetPaymentByIDResponse:

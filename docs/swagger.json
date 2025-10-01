@@ -15048,6 +15048,9 @@
                 "city": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -15064,6 +15067,9 @@
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
