@@ -5,7 +5,7 @@ on:
     branches: [ main ]  # Change to your main branch name if different
 
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/maicare-prod
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/maicare
   VPS_APP_DIR: /opt/maicare  # Directory on your VPS where app will run
 
 jobs:
@@ -68,7 +68,7 @@ jobs:
             
             # Create environment file
             echo "Creating environment file..."
-            cat <<EOF > /opt/maicare/prod.env
+            cat <<EOF > /opt/maicare/app.env
             DB_SOURCE=${{ secrets.DB_SOURCE }}
             SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}
             ACCESS_TOKEN_SECRET_KEY=${{ secrets.ACCESS_TOKEN_SECRET_KEY }}
@@ -94,7 +94,7 @@ jobs:
             BREVO_SENDER_NAME=${{ secrets.BREVO_SENDER_NAME }}
             BREVO_SENDER_EMAIL=${{ secrets.BREVO_SENDER_EMAIL }}
             BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
-            ENVIRONMENT=${{ secrets.ENVIRONMENT }}
+            ENVIRONMENT=production
             GRPC_URL=${{ secrets.GRPC_URL }}
             EOF
             

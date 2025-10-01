@@ -2,6 +2,8 @@ package logger
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.uber.org/zap"
@@ -28,22 +30,14 @@ type LoggerImpl struct {
 
 func SetupLogger(environment string) (Logger, error) {
 	var config zap.Config
-
 	if environment == "production" {
 		config = zap.NewProductionConfig()
-
 		config.DisableCaller = true
 		config.DisableStacktrace = true
-
-		config.OutputPaths = []string{
-			"stdout",
-			"/var/log/maicare/app.log",
-		}
+		config.OutputPaths = []string{"stdout"}
 	} else {
 		config = zap.NewDevelopmentConfig()
-		config.OutputPaths = []string{
-			"stdout",
-		}
+		config.OutputPaths = []string{"stdout"}
 	}
 
 	logger, err := config.Build()
@@ -52,27 +46,53 @@ func SetupLogger(environment string) (Logger, error) {
 	}
 
 	if environment == "production" {
-		fileWritter := &lumberjack.Logger{
-			Filename:   "/var/log/maicare/app.log",
-			MaxSize:    100, // megabytes
-			MaxBackups: 3,
-			MaxAge:     28,   // days
-			Compress:   true, // compress log files
+		logDir := "/var/log/maicare"
+		if err := os.MkdirAll(logDir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create log directory: %v", err)
 		}
 
-		core := zapcore.NewTee(
-			zapcore.NewCore(
-				zapcore.NewJSONEncoder(config.EncoderConfig),
-				zapcore.AddSync(fileWritter),
-				zap.InfoLevel,
-			),
-			logger.Core(),
+		// All logs file
+		allLogsWriter := &lumberjack.Logger{
+			Filename:   filepath.Join(logDir, "app.log"),
+			MaxSize:    100, // MB
+			MaxBackups: 3,
+			MaxAge:     7, // days - shorter for all logs
+			Compress:   true,
+		}
+
+		// Error logs file (separate)
+		errorLogsWriter := &lumberjack.Logger{
+			Filename:   filepath.Join(logDir, "error.log"),
+			MaxSize:    50, // MB - smaller, errors are less frequent
+			MaxBackups: 10, // keep more error log backups
+			MaxAge:     30, // days - keep errors longer
+			Compress:   true,
+		}
+
+		// Create cores with different level filters
+		allLogsCore := zapcore.NewCore(
+			zapcore.NewJSONEncoder(config.EncoderConfig),
+			zapcore.AddSync(allLogsWriter),
+			zap.InfoLevel, // All levels >= Info
 		)
+
+		errorLogsCore := zapcore.NewCore(
+			zapcore.NewJSONEncoder(config.EncoderConfig),
+			zapcore.AddSync(errorLogsWriter),
+			zap.ErrorLevel, // Only Error and above
+		)
+
+		// Combine: stdout + all.log + error.log
+		core := zapcore.NewTee(
+			logger.Core(), // stdout
+			allLogsCore,   // app.log (all logs)
+			errorLogsCore, // error.log (errors only)
+		)
+
 		logger = zap.New(core)
 	}
 
 	return &LoggerImpl{logger: logger}, nil
-
 }
 
 func (l *LoggerImpl) LogBusinessEvent(level LogLevel, operation, message string, fields ...zap.Field) {

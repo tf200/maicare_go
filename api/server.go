@@ -115,6 +115,7 @@ func (server *Server) setupRoutes() {
 	corsConf.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 
 	router.Use(cors.New(corsConf))
+	router.Use(server.recoveryLogger())
 	router.Use(server.requestLogger())
 	router.Use(gin.Recovery())
 	// Add swagger endpoint
