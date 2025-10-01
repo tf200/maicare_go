@@ -3240,9 +3240,13 @@ definitions:
         type: string
       capacity:
         type: integer
+      created_at:
+        type: string
       id:
         type: integer
       name:
+        type: string
+      updated_at:
         type: string
     type: object
   api.ListMaturityMatrixResponse:
@@ -7883,6 +7887,8 @@ definitions:
         type: string
       location_id:
         type: integer
+      location_name:
+        type: string
       organisation:
         type: string
       phone_number:
