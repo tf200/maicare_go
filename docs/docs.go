@@ -16451,10 +16451,16 @@ const docTemplate = `{
                 "capacity": {
                     "type": "integer"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -23513,6 +23519,9 @@ const docTemplate = `{
                 },
                 "location_id": {
                     "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
                 },
                 "organisation": {
                     "type": "string"

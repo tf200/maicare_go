@@ -765,12 +765,14 @@ type LevelHistory struct {
 }
 
 type Location struct {
-	ID             int64  `json:"id"`
-	OrganisationID int64  `json:"organisation_id"`
-	Name           string `json:"name"`
-	Address        string `json:"address"`
-	Capacity       *int32 `json:"capacity"`
-	LocationType   string `json:"location_type"`
+	ID             int64              `json:"id"`
+	OrganisationID int64              `json:"organisation_id"`
+	Name           string             `json:"name"`
+	Address        string             `json:"address"`
+	Capacity       *int32             `json:"capacity"`
+	LocationType   string             `json:"location_type"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type LocationShift struct {
