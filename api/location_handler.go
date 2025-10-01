@@ -349,10 +349,12 @@ func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
 
 // ListLocationsResponse represents a location in the list
 type ListLocationsResponse struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	Address   string    `json:"address"`
+	Capacity  *int32    `json:"capacity"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // @Summary List all locations
@@ -385,10 +387,12 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 	responseLocations := make([]ListLocationsResponse, len(locations))
 	for i, location := range locations {
 		responseLocations[i] = ListLocationsResponse{
-			ID:       location.ID,
-			Name:     location.Name,
-			Address:  location.Address,
-			Capacity: location.Capacity,
+			ID:        location.ID,
+			Name:      location.Name,
+			Address:   location.Address,
+			Capacity:  location.Capacity,
+			CreatedAt: location.CreatedAt.Time,
+			UpdatedAt: location.UpdatedAt.Time,
 		}
 	}
 

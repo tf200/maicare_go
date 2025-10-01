@@ -19,7 +19,7 @@ INSERT INTO location (
     capacity
 ) VALUES (
     $1, $2, $3, $4
-) RETURNING id, organisation_id, name, address, capacity, location_type
+) RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
 `
 
 type CreateLocationParams struct {
@@ -44,6 +44,8 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 		&i.Address,
 		&i.Capacity,
 		&i.LocationType,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -105,7 +107,7 @@ func (q *Queries) CreateOrganisation(ctx context.Context, arg CreateOrganisation
 const deleteLocation = `-- name: DeleteLocation :one
 DELETE FROM location
 WHERE id = $1
-RETURNING id, organisation_id, name, address, capacity, location_type
+RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
 `
 
 func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error) {
@@ -118,6 +120,8 @@ func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error
 		&i.Address,
 		&i.Capacity,
 		&i.LocationType,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -148,7 +152,7 @@ func (q *Queries) DeleteOrganisation(ctx context.Context, id int64) (Organisatio
 }
 
 const getLocation = `-- name: GetLocation :one
-SELECT id, organisation_id, name, address, capacity, location_type FROM location
+SELECT id, organisation_id, name, address, capacity, location_type, created_at, updated_at FROM location
 WHERE id = $1
 `
 
@@ -162,6 +166,8 @@ func (q *Queries) GetLocation(ctx context.Context, id int64) (Location, error) {
 		&i.Address,
 		&i.Capacity,
 		&i.LocationType,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -250,7 +256,7 @@ func (q *Queries) GetOrganisationCounts(ctx context.Context, id int64) (GetOrgan
 }
 
 const listAllLocations = `-- name: ListAllLocations :many
-SELECT id, organisation_id, name, address, capacity, location_type FROM location
+SELECT id, organisation_id, name, address, capacity, location_type, created_at, updated_at FROM location
 ORDER BY name
 `
 
@@ -270,6 +276,8 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
 			&i.Address,
 			&i.Capacity,
 			&i.LocationType,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -282,7 +290,7 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
 }
 
 const listLocations = `-- name: ListLocations :many
-SELECT id, organisation_id, name, address, capacity, location_type FROM location 
+SELECT id, organisation_id, name, address, capacity, location_type, created_at, updated_at FROM location 
 WHERE organisation_id = $1
 `
 
@@ -302,6 +310,8 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]Lo
 			&i.Address,
 			&i.Capacity,
 			&i.LocationType,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -377,7 +387,7 @@ SET
     address = COALESCE($3, address),
     capacity = COALESCE($4, capacity)
 WHERE id = $1
-RETURNING id, organisation_id, name, address, capacity, location_type
+RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
 `
 
 type UpdateLocationParams struct {
@@ -402,6 +412,8 @@ func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) 
 		&i.Address,
 		&i.Capacity,
 		&i.LocationType,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
