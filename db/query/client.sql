@@ -50,8 +50,8 @@ SELECT
     *,
     location.name AS location_name,
     COUNT(*) OVER() AS total_count
-FROM client_details
-LEFT JOIN location ON client_details.location_id = location.id
+FROM client_details c
+LEFT JOIN location ON c.location_id = location.id
 WHERE
     (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL) AND
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
@@ -61,7 +61,7 @@ WHERE
         filenumber ILIKE '%' || sqlc.narg('search') || '%' OR
         email ILIKE '%' || sqlc.narg('search') || '%' OR
         phone_number ILIKE '%' || sqlc.narg('search') || '%')
-ORDER BY created_at DESC
+ORDER BY c.created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: GetClientCounts :one

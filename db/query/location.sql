@@ -30,6 +30,23 @@ LEFT JOIN location l ON o.id = l.organisation_id
 WHERE o.id = $1
 GROUP BY o.id;
 
+-- name: GetOrganisationCounts :one
+SELECT 
+    o.id AS organisation_id,
+    o.name AS organisation_name,
+    COALESCE(COUNT(DISTINCT l.id), 0)::BIGINT AS location_count,
+    COALESCE(COUNT(DISTINCT c.id), 0)::BIGINT AS client_count,
+    COALESCE(COUNT(DISTINCT e.id), 0)::BIGINT AS employee_count
+FROM 
+    organisations o
+    LEFT JOIN location l ON o.id = l.organisation_id
+    LEFT JOIN client_details c ON l.id = c.location_id
+    LEFT JOIN employee_profile e ON l.id = e.location_id
+WHERE 
+    o.id = $1
+GROUP BY 
+    o.id, o.name;
+
 
 -- name: UpdateOrganisation :one
 UPDATE organisations

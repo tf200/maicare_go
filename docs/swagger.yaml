@@ -463,104 +463,6 @@ definitions:
       support_network_id:
         type: integer
     type: object
-  api.CreateClientDiagnosisRequest:
-    properties:
-      description:
-        type: string
-      diagnosing_clinician:
-        type: string
-      diagnosis_code:
-        type: string
-      medications:
-        items:
-          $ref: '#/definitions/api.DiagnosisMedicationCreate'
-        type: array
-      notes:
-        type: string
-      severity:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
-  api.CreateClientDiagnosisResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      description:
-        type: string
-      diagnosing_clinician:
-        type: string
-      diagnosis_code:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      severity:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
-  api.CreateClientEmergencyContactParams:
-    properties:
-      address:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      incidents_reports:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
-  api.CreateClientEmergencyContactResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
   api.CreateClientMaturityMatrixAssessmentRequest:
     properties:
       initial_level:
@@ -576,33 +478,6 @@ definitions:
         type: integer
       client_id:
         type: integer
-    type: object
-  api.CreateClientMedicationResponse:
-    properties:
-      administered_by_id:
-        type: integer
-      created_at:
-        type: string
-      diagnosis_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-      updated_at:
-        type: string
     type: object
   api.CreateContractRequest:
     properties:
@@ -1689,25 +1564,6 @@ definitions:
       start_time:
         type: string
     type: object
-  api.CreateclientMedicationRequest:
-    properties:
-      administered_by_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-    type: object
   api.CreditInvoiceResponse:
     properties:
       id:
@@ -1802,52 +1658,6 @@ definitions:
       invoice_status_changed:
         type: boolean
       previous_invoice_status:
-        type: string
-    type: object
-  api.DiagnosisMedicationCreate:
-    properties:
-      administered_by_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-    type: object
-  api.DiagnosisMedicationList:
-    properties:
-      administered_by_id:
-        type: integer
-      created_at:
-        type: string
-      diagnosis_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-      updated_at:
         type: string
     type: object
   api.DischargeOverviewResponse:
@@ -2105,35 +1915,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.GetClientDiagnosisResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      date_of_diagnosis:
-        type: string
-      description:
-        type: string
-      diagnosing_clinician:
-        type: string
-      diagnosis_code:
-        type: string
-      id:
-        type: integer
-      medications:
-        items:
-          $ref: '#/definitions/api.DiagnosisMedicationList'
-        type: array
-      notes:
-        type: string
-      severity:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
   api.GetClientEmergencyContactResponse:
     properties:
       address:
@@ -2186,80 +1967,12 @@ definitions:
       topic_name:
         type: string
     type: object
-  api.GetClientMedicationResponse:
-    properties:
-      administered_by_first_name:
-        type: string
-      administered_by_id:
-        type: integer
-      administered_by_last_name:
-        type: string
-      created_at:
-        type: string
-      diagnosis_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-      updated_at:
-        type: string
-    type: object
   api.GetClientRelatedEmailsResponse:
     properties:
       emails:
         items:
           type: string
         type: array
-    type: object
-  api.GetClientSenderResponse:
-    properties:
-      address:
-        type: string
-      btwnumber:
-        type: string
-      client_number:
-        type: string
-      contacts:
-        items:
-          $ref: '#/definitions/api.SenderContact'
-        type: array
-      created_at:
-        type: string
-      email_address:
-        type: string
-      id:
-        type: integer
-      is_archived:
-        type: boolean
-      kvknumber:
-        type: string
-      land:
-        type: string
-      name:
-        type: string
-      phone_number:
-        type: string
-      place:
-        type: string
-      postal_code:
-        type: string
-      types:
-        type: string
-      updated_at:
-        type: string
     type: object
   api.GetContractAuditLogResponse:
     properties:
@@ -2583,6 +2296,19 @@ definitions:
           $ref: '#/definitions/api.Shift'
         type: array
     type: object
+  api.GetOrganisationCountResponse:
+    properties:
+      client_count:
+        type: integer
+      employee_count:
+        type: integer
+      location_count:
+        type: integer
+      organisation_id:
+        type: integer
+      organisation_name:
+        type: string
+    type: object
   api.GetOrganisationResponse:
     properties:
       address:
@@ -2590,6 +2316,8 @@ definitions:
       btw_number:
         type: string
       city:
+        type: string
+      created_at:
         type: string
       email:
         type: string
@@ -2602,6 +2330,8 @@ definitions:
       name:
         type: string
       postal_code:
+        type: string
+      updated_at:
         type: string
     type: object
   api.GetPaymentByIDResponse:
@@ -3151,33 +2881,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.ListClientDiagnosesResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      description:
-        type: string
-      diagnosing_clinician:
-        type: string
-      diagnosis_code:
-        type: string
-      id:
-        type: integer
-      medications:
-        items:
-          $ref: '#/definitions/api.DiagnosisMedicationList'
-        type: array
-      notes:
-        type: string
-      severity:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
   api.ListClientEmergencyContactsResponse:
     properties:
       address:
@@ -3226,33 +2929,6 @@ definitions:
       start_date:
         $ref: '#/definitions/pgtype.Date'
       topic_name:
-        type: string
-    type: object
-  api.ListClientMedicationsResponse:
-    properties:
-      administered_by_id:
-        type: integer
-      created_at:
-        type: string
-      diagnosis_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-      updated_at:
         type: string
     type: object
   api.ListContractTypesResponse:
@@ -3564,9 +3240,13 @@ definitions:
         type: string
       capacity:
         type: integer
+      created_at:
+        type: string
       id:
         type: integer
       name:
+        type: string
+      updated_at:
         type: string
     type: object
   api.ListMaturityMatrixResponse:
@@ -4147,37 +3827,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateClientDiagnosisResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateClientDiagnosisResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_CreateClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateClientMaturityMatrixAssessmentResponse:
     properties:
       data:
         $ref: '#/definitions/api.CreateClientMaturityMatrixAssessmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_CreateClientMedicationResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateClientMedicationResponse'
       message:
         type: string
       success:
@@ -4417,15 +4070,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetClientDiagnosisResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientDiagnosisResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetClientEmergencyContactResponse:
     properties:
       data:
@@ -4444,28 +4088,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetClientMedicationResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientMedicationResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetClientRelatedEmailsResponse:
     properties:
       data:
         $ref: '#/definitions/api.GetClientRelatedEmailsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetClientSenderResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientSenderResponse'
       message:
         type: string
       success:
@@ -4529,6 +4155,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GetLocationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-api_GetOrganisationCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/api.GetOrganisationCountResponse'
       message:
         type: string
       success:
@@ -4750,28 +4385,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UpdateClientDiagnosisResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientDiagnosisResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_UpdateClientEmergencyContactResponse:
     properties:
       data:
         $ref: '#/definitions/api.UpdateClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateClientMedicationResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientMedicationResponse'
       message:
         type: string
       success:
@@ -5293,6 +4910,33 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_CreateClientDiagnosisResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateClientDiagnosisResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_CreateClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_CreateClientMedicationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateClientMedicationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_CreateIncidentResponse:
     properties:
       data:
@@ -5356,6 +5000,33 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetClientDiagnosisResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientDiagnosisResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientMedicationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientMedicationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientSenderResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientSenderResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetClientsCountResponse:
     properties:
       data:
@@ -5414,6 +5085,24 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.UpdateClientDetailsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateClientDiagnosisResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateClientDiagnosisResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateClientMedicationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateClientMedicationResponse'
       message:
         type: string
       success:
@@ -5491,28 +5180,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-api_ListClientDiagnosesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListClientDiagnosesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListClientMedicationsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListClientMedicationsResponse'
       message:
         type: string
       success:
@@ -5572,10 +5243,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-clientp_ListClientDiagnosesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListClientDiagnosesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-clientp_ListClientDocumentsApiResponse:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-clientp_ListClientDocumentsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListClientMedicationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListClientMedicationsResponse'
       message:
         type: string
       success:
@@ -5916,50 +5605,6 @@ definitions:
       support_network_id:
         type: integer
     type: object
-  api.UpdateClientDiagnosisRequest:
-    properties:
-      description:
-        type: string
-      diagnosing_clinician:
-        type: string
-      diagnosis_code:
-        type: string
-      medications:
-        items:
-          $ref: '#/definitions/api.DiagnosisMedicationCreate'
-        type: array
-      notes:
-        type: string
-      severity:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
-  api.UpdateClientDiagnosisResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      description:
-        type: string
-      diagnosing_clinician:
-        type: string
-      diagnosis_code:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      severity:
-        type: string
-      status:
-        type: string
-      title:
-        type: string
-    type: object
   api.UpdateClientEmergencyContactParams:
     properties:
       address:
@@ -6012,52 +5657,6 @@ definitions:
       relation_status:
         type: string
       relationship:
-        type: string
-    type: object
-  api.UpdateClientMedicationRequest:
-    properties:
-      administered_by_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-    type: object
-  api.UpdateClientMedicationResponse:
-    properties:
-      administered_by_id:
-        type: integer
-      created_at:
-        type: string
-      diagnosis_id:
-        type: integer
-      dosage:
-        type: string
-      end_date:
-        type: string
-      id:
-        type: integer
-      is_critical:
-        type: boolean
-      name:
-        type: string
-      notes:
-        type: string
-      self_administered:
-        type: boolean
-      start_date:
-        type: string
-      updated_at:
         type: string
     type: object
   api.UpdateContractRequest:
@@ -7559,6 +7158,10 @@ definitions:
       first_name:
         type: string
       gender:
+        enum:
+        - male
+        - female
+        - other
         type: string
       infix:
         type: string
@@ -7604,6 +7207,7 @@ definitions:
     - email
     - filenumber
     - first_name
+    - gender
     - last_name
     - phone_number
     - sender_id
@@ -7695,6 +7299,150 @@ definitions:
       work_employer_phone:
         type: string
       work_start_date:
+        type: string
+    type: object
+  clientp.CreateClientDiagnosisRequest:
+    properties:
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      medications:
+        items:
+          $ref: '#/definitions/clientp.DiagnosisMedicationCreate'
+        type: array
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  clientp.CreateClientDiagnosisResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  clientp.CreateClientEmergencyContactParams:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      incidents_reports:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
+  clientp.CreateClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
+  clientp.CreateClientMedicationRequest:
+    properties:
+      administered_by_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+    type: object
+  clientp.CreateClientMedicationResponse:
+    properties:
+      administered_by_id:
+        type: integer
+      created_at:
+        type: string
+      diagnosis_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   clientp.CreateIncidentRequest:
@@ -7953,6 +7701,52 @@ definitions:
       id:
         type: integer
     type: object
+  clientp.DiagnosisMedicationCreate:
+    properties:
+      administered_by_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+    type: object
+  clientp.DiagnosisMedicationList:
+    properties:
+      administered_by_id:
+        type: integer
+      created_at:
+        type: string
+      diagnosis_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
+        type: string
+    type: object
   clientp.GenerateAppointmentCardDocumentApiResponse:
     properties:
       client_id:
@@ -8093,6 +7887,8 @@ definitions:
         type: string
       location_id:
         type: integer
+      location_name:
+        type: string
       organisation:
         type: string
       phone_number:
@@ -8118,6 +7914,103 @@ definitions:
       work_employer_phone:
         type: string
       work_start_date:
+        type: string
+    type: object
+  clientp.GetClientDiagnosisResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date_of_diagnosis:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      medications:
+        items:
+          $ref: '#/definitions/clientp.DiagnosisMedicationList'
+        type: array
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  clientp.GetClientMedicationResponse:
+    properties:
+      administered_by_first_name:
+        type: string
+      administered_by_id:
+        type: integer
+      administered_by_last_name:
+        type: string
+      created_at:
+        type: string
+      diagnosis_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  clientp.GetClientSenderResponse:
+    properties:
+      address:
+        type: string
+      btwnumber:
+        type: string
+      client_number:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/clientp.SenderContact'
+        type: array
+      created_at:
+        type: string
+      email_address:
+        type: string
+      id:
+        type: integer
+      is_archived:
+        type: boolean
+      kvknumber:
+        type: string
+      land:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+      place:
+        type: string
+      postal_code:
+        type: string
+      types:
+        type: string
+      updated_at:
         type: string
     type: object
   clientp.GetClientsCountResponse:
@@ -8253,6 +8146,33 @@ definitions:
           type: string
         type: array
     type: object
+  clientp.ListClientDiagnosesResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      medications:
+        items:
+          $ref: '#/definitions/clientp.DiagnosisMedicationList'
+        type: array
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
   clientp.ListClientDocumentsApiResponse:
     properties:
       attachment_uuid:
@@ -8278,6 +8198,33 @@ definitions:
       updated_at:
         type: string
       uuid:
+        type: string
+    type: object
+  clientp.ListClientMedicationsResponse:
+    properties:
+      administered_by_id:
+        type: integer
+      created_at:
+        type: string
+      diagnosis_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   clientp.ListClientsApiResponse:
@@ -8322,6 +8269,8 @@ definitions:
         type: string
       location_id:
         type: integer
+      location_name:
+        type: string
       organisation:
         type: string
       phone_number:
@@ -8467,6 +8416,15 @@ definitions:
       old_status:
         type: string
       reason:
+        type: string
+    type: object
+  clientp.SenderContact:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
         type: string
     type: object
   clientp.SetClientProfilePictureRequest:
@@ -8717,6 +8675,96 @@ definitions:
       source:
         type: string
       status:
+        type: string
+    type: object
+  clientp.UpdateClientDiagnosisRequest:
+    properties:
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      medications:
+        items:
+          $ref: '#/definitions/clientp.DiagnosisMedicationCreate'
+        type: array
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  clientp.UpdateClientDiagnosisResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      diagnosing_clinician:
+        type: string
+      diagnosis_code:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  clientp.UpdateClientMedicationRequest:
+    properties:
+      administered_by_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+    type: object
+  clientp.UpdateClientMedicationResponse:
+    properties:
+      administered_by_id:
+        type: integer
+      created_at:
+        type: string
+      diagnosis_id:
+        type: integer
+      dosage:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_critical:
+        type: boolean
+      name:
+        type: string
+      notes:
+        type: string
+      self_administered:
+        type: boolean
+      start_date:
+        type: string
+      updated_at:
         type: string
     type: object
   clientp.UpdateClientStatusRequest:
@@ -9412,21 +9460,6 @@ definitions:
           $ref: '#/definitions/api.ListClientContractsResponse'
         type: array
     type: object
-  pagination.Response-api_ListClientDiagnosesResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListClientDiagnosesResponse'
-        type: array
-    type: object
   pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse:
     properties:
       count:
@@ -9440,21 +9473,6 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListClientMaturityMatrixAssessmentsResponse'
-        type: array
-    type: object
-  pagination.Response-api_ListClientMedicationsResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListClientMedicationsResponse'
         type: array
     type: object
   pagination.Response-api_ListContractsResponse:
@@ -9566,6 +9584,21 @@ definitions:
           type: array
         type: array
     type: object
+  pagination.Response-clientp_ListClientDiagnosesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListClientDiagnosesResponse'
+        type: array
+    type: object
   pagination.Response-clientp_ListClientDocumentsApiResponse:
     properties:
       count:
@@ -9579,6 +9612,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/clientp.ListClientDocumentsApiResponse'
+        type: array
+    type: object
+  pagination.Response-clientp_ListClientMedicationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListClientMedicationsResponse'
         type: array
     type: object
   pagination.Response-clientp_ListClientsApiResponse:
@@ -11666,7 +11714,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientDiagnosesResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListClientDiagnosesResponse'
         "400":
           description: Bad Request
           schema:
@@ -11692,14 +11740,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateClientDiagnosisRequest'
+          $ref: '#/definitions/clientp.CreateClientDiagnosisRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateClientDiagnosisResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateClientDiagnosisResponse'
         "400":
           description: Bad Request
           schema:
@@ -11760,7 +11808,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientDiagnosisResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientDiagnosisResponse'
         "400":
           description: Bad Request
           schema:
@@ -11791,14 +11839,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateClientDiagnosisRequest'
+          $ref: '#/definitions/clientp.UpdateClientDiagnosisRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientDiagnosisResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateClientDiagnosisResponse'
         "400":
           description: Bad Request
           schema:
@@ -11839,7 +11887,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListClientMedicationsResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListClientMedicationsResponse'
         "400":
           description: Bad Request
           schema:
@@ -11870,14 +11918,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateclientMedicationRequest'
+          $ref: '#/definitions/clientp.CreateClientMedicationRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateClientMedicationResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateClientMedicationResponse'
         "400":
           description: Bad Request
           schema:
@@ -11913,7 +11961,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientMedicationResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientMedicationResponse'
         "400":
           description: Bad Request
           schema:
@@ -11949,14 +11997,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateClientMedicationRequest'
+          $ref: '#/definitions/clientp.UpdateClientMedicationRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientMedicationResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateClientMedicationResponse'
         "400":
           description: Bad Request
           schema:
@@ -12138,14 +12186,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateClientEmergencyContactParams'
+          $ref: '#/definitions/clientp.CreateClientEmergencyContactParams'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12975,7 +13023,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientSenderResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientSenderResponse'
         "400":
           description: Bad Request
           schema:
@@ -16160,6 +16208,40 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update an organisation
+      tags:
+      - organisations
+  /organisations/{id}/counts:
+    get:
+      consumes:
+      - application/json
+      description: Get counts of locations, clients, and employees for an organisation
+        by ID
+      parameters:
+      - description: Organisation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-api_GetOrganisationCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get organisation counts
       tags:
       - organisations
   /organisations/{id}/locations:

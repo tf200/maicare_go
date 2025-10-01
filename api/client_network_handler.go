@@ -19,7 +19,7 @@ import (
 // @Tags client_network
 // @Produce json
 // @Param id path int true "Client ID"
-// @Success 200 {object} Response[GetClientSenderResponse]
+// @Success 200 {object} Response[clientp.GetClientSenderResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/sender [get]
 func (server *Server) GetClientSenderApi(ctx *gin.Context) {
@@ -46,8 +46,8 @@ func (server *Server) GetClientSenderApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body CreateClientEmergencyContactParams true "Client emergency contact data"
-// @Success 201 {object} Response[CreateClientEmergencyContactResponse]
+// @Param request body clientp.CreateClientEmergencyContactParams true "Client emergency contact data"
+// @Success 201 {object} Response[clientp.CreateClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts [post]
 func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -64,7 +65,7 @@ func TestGetClientSenderApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[GetClientSenderResponse]
+				var res Response[clientp.GetClientSenderResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
@@ -101,7 +102,7 @@ func TestCreateEmemrgencyContactApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateClientEmergencyContactParams{
+				createReq := clientp.CreateClientEmergencyContactParams{
 					FirstName:        util.StringPtr(util.RandomString(5)),
 					LastName:         util.StringPtr(util.RandomString(5)),
 					Email:            util.StringPtr(util.RandomEmail()),
@@ -123,7 +124,7 @@ func TestCreateEmemrgencyContactApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var res Response[CreateClientEmergencyContactResponse]
+				var res Response[clientp.CreateClientEmergencyContactResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)

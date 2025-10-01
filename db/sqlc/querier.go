@@ -180,6 +180,7 @@ type Querier interface {
 	GetMissingClientDocuments(ctx context.Context, clientID int64) ([]string, error)
 	GetMonthlySchedulesByLocation(ctx context.Context, arg GetMonthlySchedulesByLocationParams) ([]GetMonthlySchedulesByLocationRow, error)
 	GetOrganisation(ctx context.Context, id int64) (GetOrganisationRow, error)
+	GetOrganisationCounts(ctx context.Context, id int64) (GetOrganisationCountsRow, error)
 	GetPayment(ctx context.Context, id int64) (GetPaymentRow, error)
 	GetPaymentWithInvoice(ctx context.Context, id int64) (GetPaymentWithInvoiceRow, error)
 	GetProgressReport(ctx context.Context, id int64) (GetProgressReportRow, error)

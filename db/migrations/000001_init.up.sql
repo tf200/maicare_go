@@ -24,7 +24,9 @@ CREATE TABLE location (
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100) NOT NULL,
     capacity INTEGER NULL,
-    location_type VARCHAR(50) NOT NULL CHECK (location_type IN ('care_home', 'office', 'other')) DEFAULT 'other'
+    location_type VARCHAR(50) NOT NULL CHECK (location_type IN ('care_home', 'office', 'other')) DEFAULT 'other',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Rooms within a location (studios, apartments, meeting rooms, etc.)
