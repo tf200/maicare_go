@@ -15,14 +15,41 @@ func TestSend(t *testing.T) {
 }
 
 func TestSendCredentials(t *testing.T) {
-
-	err := testBrevo.SendCredentials(context.Background(), []string{"farjiataha@gmail.com"}, Credentials{
-		Name:     "John Doe",
-		Email:    "farjiataha@gmail.com",
-		Password: "password",
+	err := testBrevo.SendCredentials(context.Background(), []string{"g.louz@diversitaszorg.nl"}, Credentials{
+		Name:     "Guila Louz",
+		Email:    "g.louz@diversitaszorg.nl",
+		Password: "Secr3tPass!",
 	})
 	t.Log(err)
 	require.NoError(t, err)
+
+	// err = testBrevo.SendCredentials(context.Background(), []string{"h.belhadj@diversitaszorg.nl"}, Credentials{
+	// 	Name:     "Hamza Belhadj",
+	// 	Email:    "h.belhadj@diversitaszorg.nl",
+	// 	Password: "Secr3tPass!",
+	// })
+	// t.Log(err)
+	// require.NoError(t, err)
+
+	err = testBrevo.SendCredentials(context.Background(), []string{"q.zeeman@diversitaszorg.nl"}, Credentials{
+		Name:     "Quinten Zeeman",
+		Email:    "q.zeeman@diversitaszorg.nl",
+
+
+		
+		Password: "Secr3tPass!",
+	})
+	t.Log(err)
+	require.NoError(t, err)
+
+	// err = testBrevo.SendCredentials(context.Background(), []string{"Q.zeeman@diversitaszorg.nl"}, Credentials{
+	// 	Name:     "Quinten Zeeman",
+	// 	Email:    "Q.zeeman@diversitaszorg.nl",
+	// 	Password: "Secr3tPass!",
+	// })
+	// t.Log(err)
+	// require.NoError(t, err)
+
 }
 
 func TestSendIncident(t *testing.T) {
