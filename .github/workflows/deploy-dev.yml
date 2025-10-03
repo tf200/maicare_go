@@ -11,7 +11,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: maicare-dev
+    environment: maicare-prod
 
     steps:
       - name: Checkout code
