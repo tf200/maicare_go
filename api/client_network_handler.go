@@ -2,16 +2,12 @@ package api
 
 import (
 	"log"
-	db "maicare_go/db/sqlc"
-	"maicare_go/notification"
-	"maicare_go/pagination"
+	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // GetClientSenderApi gets a client sender
@@ -73,30 +69,6 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 
 }
 
-// ListClientEmergencyContactsRequest defines the request for listing client emergency contacts
-type ListClientEmergencyContactsRequest struct {
-	pagination.Request
-	Search string `form:"search"`
-}
-
-// ListClientEmergencyContactsResponse defines the response for listing client emergency contacts
-type ListClientEmergencyContactsResponse struct {
-	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
-	FirstName        *string   `json:"first_name"`
-	LastName         *string   `json:"last_name"`
-	Email            *string   `json:"email"`
-	PhoneNumber      *string   `json:"phone_number"`
-	Address          *string   `json:"address"`
-	Relationship     *string   `json:"relationship"`
-	RelationStatus   *string   `json:"relation_status"`
-	CreatedAt        time.Time `json:"created_at"`
-	IsVerified       bool      `json:"is_verified"`
-	MedicalReports   bool      `json:"medical_reports"`
-	IncidentsReports bool      `json:"incidents_reports"`
-	GoalsReports     bool      `json:"goals_reports"`
-}
-
 // ListClientEmergencyContactsApi lists all client emergency contacts
 // @Summary List all client emergency contacts
 // @Tags client_network
@@ -105,7 +77,7 @@ type ListClientEmergencyContactsResponse struct {
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Param search query string false "Search query"
-// @Success 200 {object} Response[ListClientEmergencyContactsResponse]
+// @Success 200 {object} Response[clientp.ListClientEmergencyContactsResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts [get]
 func (server *Server) ListClientEmergencyContactsApi(ctx *gin.Context) {
@@ -118,74 +90,19 @@ func (server *Server) ListClientEmergencyContactsApi(ctx *gin.Context) {
 		return
 	}
 
-	var req ListClientEmergencyContactsRequest
+	var req clientp.ListClientEmergencyContactsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	params := req.GetParams()
-
-	contacts, err := server.store.ListEmergencyContacts(ctx, db.ListEmergencyContactsParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
-		Search:   req.Search,
-	})
+	result, err := server.businessService.ClientService.ListClientEmergencyContacts(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	if len(contacts) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListClientEmergencyContactsResponse{}, 0)
-		res := SuccessResponse(pag, "No emergency contacts found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	contactsRes := make([]ListClientEmergencyContactsResponse, len(contacts))
-	for i, contact := range contacts {
-		contactsRes[i] = ListClientEmergencyContactsResponse{
-			ID:               contact.ID,
-			ClientID:         contact.ClientID,
-			FirstName:        contact.FirstName,
-			LastName:         contact.LastName,
-			Email:            contact.Email,
-			PhoneNumber:      contact.PhoneNumber,
-			Address:          contact.Address,
-			Relationship:     contact.Relationship,
-			RelationStatus:   contact.RelationStatus,
-			CreatedAt:        contact.CreatedAt.Time,
-			IsVerified:       contact.IsVerified,
-			MedicalReports:   contact.MedicalReports,
-			IncidentsReports: contact.IncidentsReports,
-			GoalsReports:     contact.GoalsReports,
-		}
-	}
-
-	pag := pagination.NewResponse(ctx, req.Request, contactsRes, contacts[0].TotalCount)
-	res := SuccessResponse(pag, "Client emergency contacts fetched successfully")
+	res := SuccessResponse(result, "Client emergency contacts fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetClientEmergencyContactResponse defines the response for getting a client emergency contact
-type GetClientEmergencyContactResponse struct {
-	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
-	FirstName        *string   `json:"first_name"`
-	LastName         *string   `json:"last_name"`
-	Email            *string   `json:"email"`
-	PhoneNumber      *string   `json:"phone_number"`
-	Address          *string   `json:"address"`
-	Relationship     *string   `json:"relationship"`
-	RelationStatus   *string   `json:"relation_status"`
-	CreatedAt        time.Time `json:"created_at"`
-	IsVerified       bool      `json:"is_verified"`
-	MedicalReports   bool      `json:"medical_reports"`
-	IncidentsReports bool      `json:"incidents_reports"`
-	GoalsReports     bool      `json:"goals_reports"`
 }
 
 // GetClientEmergencyContactApi gets a client emergency contact
@@ -194,7 +111,7 @@ type GetClientEmergencyContactResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param contact_id path int true "Contact ID"
-// @Success 200 {object} Response[GetClientEmergencyContactResponse]
+// @Success 200 {object} Response[clientp.GetClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts/{contact_id} [get]
 func (server *Server) GetClientEmergencyContactApi(ctx *gin.Context) {
@@ -205,61 +122,14 @@ func (server *Server) GetClientEmergencyContactApi(ctx *gin.Context) {
 		return
 	}
 
-	contact, err := server.store.GetEmergencyContact(ctx, contactID)
+	contact, err := server.businessService.ClientService.GetClientEmergencyContact(ctx, contactID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(GetClientEmergencyContactResponse{
-		ID:               contact.ID,
-		ClientID:         contact.ClientID,
-		FirstName:        contact.FirstName,
-		LastName:         contact.LastName,
-		Email:            contact.Email,
-		PhoneNumber:      contact.PhoneNumber,
-		Address:          contact.Address,
-		Relationship:     contact.Relationship,
-		RelationStatus:   contact.RelationStatus,
-		CreatedAt:        contact.CreatedAt.Time,
-		IsVerified:       contact.IsVerified,
-		MedicalReports:   contact.MedicalReports,
-		IncidentsReports: contact.IncidentsReports,
-		GoalsReports:     contact.GoalsReports,
-	}, "Client emergency contact fetched successfully")
+	res := SuccessResponse(contact, "Client emergency contact fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateClientEmergencyContactParams defines the request for updating a client emergency contact
-type UpdateClientEmergencyContactParams struct {
-	FirstName        *string `json:"first_name"`
-	LastName         *string `json:"last_name"`
-	Email            *string `json:"email"`
-	PhoneNumber      *string `json:"phone_number"`
-	Address          *string `json:"address"`
-	Relationship     *string `json:"relationship"`
-	RelationStatus   *string `json:"relation_status"`
-	MedicalReports   *bool   `json:"medical_reports"`
-	IncidentsReports *bool   `json:"incidents_reports"`
-	GoalsReports     *bool   `json:"goals_reports"`
-}
-
-// UpdateClientEmergencyContactResponse defines the response for updating a client emergency contact
-type UpdateClientEmergencyContactResponse struct {
-	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
-	FirstName        *string   `json:"first_name"`
-	LastName         *string   `json:"last_name"`
-	Email            *string   `json:"email"`
-	PhoneNumber      *string   `json:"phone_number"`
-	Address          *string   `json:"address"`
-	Relationship     *string   `json:"relationship"`
-	RelationStatus   *string   `json:"relation_status"`
-	CreatedAt        time.Time `json:"created_at"`
-	IsVerified       bool      `json:"is_verified"`
-	MedicalReports   bool      `json:"medical_reports"`
-	IncidentsReports bool      `json:"incidents_reports"`
-	GoalsReports     bool      `json:"goals_reports"`
 }
 
 // UpdateClientEmergencyContactApi updates a client emergency contact
@@ -269,8 +139,8 @@ type UpdateClientEmergencyContactResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param contact_id path int true "Contact ID"
-// @Param request body UpdateClientEmergencyContactParams true "Client emergency contact data"
-// @Success 200 {object} Response[UpdateClientEmergencyContactResponse]
+// @Param request body clientp.UpdateClientEmergencyContactParams true "Client emergency contact data"
+// @Success 200 {object} Response[clientp.UpdateClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts/{contact_id} [put]
 func (server *Server) UpdateClientEmergencyContactApi(ctx *gin.Context) {
@@ -281,52 +151,19 @@ func (server *Server) UpdateClientEmergencyContactApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateClientEmergencyContactParams
+	var req clientp.UpdateClientEmergencyContactParams
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	arg := db.UpdateEmergencyContactParams{
-		FirstName:        req.FirstName,
-		LastName:         req.LastName,
-		Email:            req.Email,
-		PhoneNumber:      req.PhoneNumber,
-		Address:          req.Address,
-		Relationship:     req.Relationship,
-		RelationStatus:   req.RelationStatus,
-		MedicalReports:   req.MedicalReports,
-		IncidentsReports: req.IncidentsReports,
-		GoalsReports:     req.GoalsReports,
-		ID:               contactID,
-	}
-	contact, err := server.store.UpdateEmergencyContact(ctx, arg)
+
+	contact, err := server.businessService.ClientService.UpdateClientEmergencyContact(ctx, req, contactID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	res := SuccessResponse(UpdateClientEmergencyContactResponse{
-		ID:               contact.ID,
-		ClientID:         contact.ClientID,
-		FirstName:        contact.FirstName,
-		LastName:         contact.LastName,
-		Email:            contact.Email,
-		PhoneNumber:      contact.PhoneNumber,
-		Address:          contact.Address,
-		Relationship:     contact.Relationship,
-		RelationStatus:   contact.RelationStatus,
-		CreatedAt:        contact.CreatedAt.Time,
-		IsVerified:       contact.IsVerified,
-		MedicalReports:   contact.MedicalReports,
-		IncidentsReports: contact.IncidentsReports,
-		GoalsReports:     contact.GoalsReports,
-	}, "Client emergency contact updated successfully")
+	res := SuccessResponse(contact, "Client emergency contact updated successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// DeleteClientEmergencyContactResponse defines the response for deleting a client emergency contact
-type DeleteClientEmergencyContactResponse struct {
-	ID int64 `json:"id"`
 }
 
 // DeleteClientEmergencyContactApi deletes a client emergency contact
@@ -335,7 +172,7 @@ type DeleteClientEmergencyContactResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param contact_id path int true "Contact ID"
-// @Success 200 {object} Response[DeleteClientEmergencyContactResponse]
+// @Success 200 {object} Response[clientp.DeleteClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts/{contact_id} [delete]
 func (server *Server) DeleteClientEmergencyContactApi(ctx *gin.Context) {
@@ -345,32 +182,13 @@ func (server *Server) DeleteClientEmergencyContactApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	_, err = server.store.DeleteEmergencyContact(ctx, contactID)
+	cid, err := server.businessService.ClientService.DeleteClientEmergencyContact(ctx, contactID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(DeleteClientEmergencyContactResponse{
-		ID: contactID,
-	}, "Client emergency contact deleted successfully")
+	res := SuccessResponse(cid, "Client emergency contact deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// AssignEmployeeRequest defines the request for assigning an employee to a client
-type AssignEmployeeRequest struct {
-	EmployeeID int64     `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       string    `json:"role"`
-}
-
-// AssignEmployeeResponse defines the response for assigning an employee to a client
-type AssignEmployeeResponse struct {
-	ID         int64     `json:"id"`
-	ClientID   int64     `json:"client_id"`
-	EmployeeID int64     `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       string    `json:"role"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 // AssignEmployeeApi assigns an employee to a client
@@ -379,8 +197,8 @@ type AssignEmployeeResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body AssignEmployeeRequest true "Employee assignment data"
-// @Success 201 {object} Response[AssignEmployeeResponse]
+// @Param request body clientp.AssignEmployeeRequest true "Employee assignment data"
+// @Success 201 {object} Response[clientp.AssignEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees [post]
 func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
@@ -390,70 +208,18 @@ func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	var req AssignEmployeeRequest
+	var req clientp.AssignEmployeeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	arg := db.AssignEmployeeParams{
-		ClientID:   clientID,
-		EmployeeID: req.EmployeeID,
-		StartDate:  pgtype.Date{Time: req.StartDate, Valid: true},
-		Role:       req.Role,
-	}
-
-	assign, err := server.store.AssignEmployee(ctx, arg)
+	result, err := server.businessService.ClientService.AssignEmployeeToClient(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	// build the notification payload data safely
-	notificationData := notification.NewClientAssignmentData{
-		ClientID:        assign.ClientID,
-		ClientFirstName: assign.ClientFirstName,
-		ClientLastName:  assign.ClientLastName,
-		ClientLocation:  assign.ClientLocationName,
-	}
-
-	server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
-		RecipientUserIDs: []int64{assign.UserID},
-		Type:             notification.TypeNewClientAssignment,
-		Data: notification.NotificationData{
-			NewClientAssignment: &notificationData,
-		},
-		CreatedAt: time.Now(),
-	})
-
-	res := SuccessResponse(AssignEmployeeResponse{
-		ID:         assign.ID,
-		ClientID:   assign.ClientID,
-		EmployeeID: assign.EmployeeID,
-		StartDate:  assign.StartDate.Time,
-		Role:       assign.Role,
-		CreatedAt:  assign.CreatedAt.Time,
-	}, "Employee assigned successfully")
-
+	res := SuccessResponse(result, "Employee assigned successfully")
 	ctx.JSON(http.StatusCreated, res)
-
-}
-
-// ListAssignedEmployeesRequest defines the request for listing assigned employees
-type ListAssignedEmployeesRequest struct {
-	pagination.Request
-}
-
-// ListAssignedEmployeesResponse defines the response for listing assigned employees
-type ListAssignedEmployeesResponse struct {
-	ID           int64     `json:"id"`
-	ClientID     int64     `json:"client_id"`
-	EmployeeID   int64     `json:"employee_id"`
-	StartDate    time.Time `json:"start_date"`
-	Role         string    `json:"role"`
-	EmployeeName string    `json:"employee_name"`
-	CreatedAt    time.Time `json:"created_at"`
 }
 
 // ListAssignedEmployeesApi lists all assigned employees
@@ -463,7 +229,7 @@ type ListAssignedEmployeesResponse struct {
 // @Param id path int true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[ListAssignedEmployeesResponse]]
+// @Success 200 {object} Response[pagination.Response[clientp.ListAssignedEmployeesResponse]]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees [get]
 func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
@@ -474,59 +240,18 @@ func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
 		return
 	}
 
-	var req ListAssignedEmployeesRequest
+	var req clientp.ListAssignedEmployeesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	params := req.GetParams()
-
-	assigns, err := server.store.ListAssignedEmployees(ctx, db.ListAssignedEmployeesParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
-	})
+	result, err := server.businessService.ClientService.ListAssignedEmployees(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	if len(assigns) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListAssignedEmployeesResponse{}, 0)
-		res := SuccessResponse(pag, "No assigned employees found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	assignsRes := make([]ListAssignedEmployeesResponse, len(assigns))
-	for i, assign := range assigns {
-		assignsRes[i] = ListAssignedEmployeesResponse{
-			ID:           assign.ID,
-			ClientID:     assign.ClientID,
-			EmployeeID:   assign.EmployeeID,
-			StartDate:    assign.StartDate.Time,
-			Role:         assign.Role,
-			EmployeeName: assign.EmployeeFirstName + " " + assign.EmployeeLastName,
-			CreatedAt:    assign.CreatedAt.Time,
-		}
-	}
-
-	pag := pagination.NewResponse(ctx, req.Request, assignsRes, assigns[0].TotalCount)
-	res := SuccessResponse(pag, "Assigned employees fetched successfully")
-
+	res := SuccessResponse(result, "Assigned employees fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetAssignedEmployeeResponse defines the response for getting an assigned employee
-type GetAssignedEmployeeResponse struct {
-	ID           int64     `json:"id"`
-	ClientID     int64     `json:"client_id"`
-	EmployeeID   int64     `json:"employee_id"`
-	StartDate    time.Time `json:"start_date"`
-	Role         string    `json:"role"`
-	EmployeeName string    `json:"employee_name"`
-	CreatedAt    time.Time `json:"created_at"`
 }
 
 // GetAssignedEmployeeApi gets an assigned employee
@@ -535,7 +260,7 @@ type GetAssignedEmployeeResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param assign_id path int true "Assignment ID"
-// @Success 200 {object} Response[GetAssignedEmployeeResponse]
+// @Success 200 {object} Response[clientp.GetAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees/{assign_id} [get]
 func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
@@ -546,39 +271,13 @@ func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
 		return
 	}
 
-	assign, err := server.store.GetAssignedEmployee(ctx, assignID)
+	result, err := server.businessService.ClientService.GetAssignedEmployee(ctx, assignID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	res := SuccessResponse(GetAssignedEmployeeResponse{
-		ID:           assign.ID,
-		ClientID:     assign.ClientID,
-		EmployeeID:   assign.EmployeeID,
-		StartDate:    assign.StartDate.Time,
-		Role:         assign.Role,
-		EmployeeName: assign.EmployeeFirstName + " " + assign.EmployeeLastName,
-		CreatedAt:    assign.CreatedAt.Time,
-	}, "Assigned employee fetched successfully")
+	res := SuccessResponse(result, "Assigned employee fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateAssignedEmployeeRequest defines the request for updating an assigned employee
-type UpdateAssignedEmployeeRequest struct {
-	EmployeeID *int64    `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       *string   `json:"role"`
-}
-
-// UpdateAssignedEmployeeResponse defines the response for updating an assigned employee
-type UpdateAssignedEmployeeResponse struct {
-	ID         int64     `json:"id"`
-	ClientID   int64     `json:"client_id"`
-	EmployeeID int64     `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       string    `json:"role"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 // UpdateAssignedEmployeeApi updates an assigned employee
@@ -588,8 +287,8 @@ type UpdateAssignedEmployeeResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param assign_id path int true "Assignment ID"
-// @Param request body UpdateAssignedEmployeeRequest true "Assigned employee data"
-// @Success 200 {object} Response[UpdateAssignedEmployeeResponse]
+// @Param request body clientp.UpdateAssignedEmployeeRequest true "Assigned employee data"
+// @Success 200 {object} Response[clientp.UpdateAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees/{assign_id} [put]
 func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
@@ -600,40 +299,20 @@ func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateAssignedEmployeeRequest
+	var req clientp.UpdateAssignedEmployeeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.UpdateAssignedEmployeeParams{
-		ID:         assignID,
-		EmployeeID: req.EmployeeID,
-		StartDate:  pgtype.Date{Time: req.StartDate, Valid: true},
-		Role:       req.Role,
-	}
-
-	assign, err := server.store.UpdateAssignedEmployee(ctx, arg)
+	result, err := server.businessService.ClientService.UpdateAssignedEmployee(ctx, req, assignID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(UpdateAssignedEmployeeResponse{
-		ID:         assign.ID,
-		ClientID:   assign.ClientID,
-		EmployeeID: assign.EmployeeID,
-		StartDate:  assign.StartDate.Time,
-		Role:       assign.Role,
-		CreatedAt:  assign.CreatedAt.Time,
-	}, "Assigned employee updated successfully")
-
+	res := SuccessResponse(result, "Assigned employee updated successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// DeleteAssignedEmployeeResponse defines the response for deleting an assigned employee
-type DeleteAssignedEmployeeResponse struct {
-	ID int64 `json:"id"`
 }
 
 // DeleteAssignedEmployeeApi deletes an assigned employee
@@ -642,7 +321,7 @@ type DeleteAssignedEmployeeResponse struct {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param assign_id path int true "Assignment ID"
-// @Success 200 {object} Response[DeleteAssignedEmployeeResponse]
+// @Success 200 {object} Response[clientp.DeleteAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees/{assign_id} [delete]
 func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
@@ -653,22 +332,15 @@ func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = server.store.DeleteAssignedEmployee(ctx, assignID)
+	result, err := server.businessService.ClientService.DeleteAssignedEmployee(ctx, assignID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(DeleteAssignedEmployeeResponse{
-		ID: assignID,
-	}, "Assigned employee deleted successfully")
+	res := SuccessResponse(result, "Assigned employee deleted successfully")
 
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetClientRelatedEmailsResponse defines the response for getting client related emails
-type GetClientRelatedEmailsResponse struct {
-	Emails []string `json:"emails"`
 }
 
 // GetClientRelatedEmailsApi gets client related emails
@@ -676,7 +348,7 @@ type GetClientRelatedEmailsResponse struct {
 // @Tags client_network
 // @Produce json
 // @Param id path int true "Client ID"
-// @Success 200 {object} Response[GetClientRelatedEmailsResponse]
+// @Success 200 {object} Response[clientp.GetClientRelatedEmailsResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/related_emails [get]
 func (server *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
@@ -687,15 +359,12 @@ func (server *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
 		return
 	}
 
-	emails, err := server.store.GetClientRelatedEmails(ctx, clientID)
+	result, err := server.businessService.ClientService.GetClientRelatedEmail(ctx, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	res := SuccessResponse(GetClientRelatedEmailsResponse{
-		Emails: emails,
-	}, "Client related emails fetched successfully")
+	res := SuccessResponse(result, "Client related emails fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 
 }

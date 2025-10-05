@@ -3748,7 +3748,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListClientEmergencyContactsResponse"
+                            "$ref": "#/definitions/api.Response-clientp_ListClientEmergencyContactsResponse"
                         }
                     },
                     "400": {
@@ -3845,7 +3845,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientEmergencyContactResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetClientEmergencyContactResponse"
                         }
                     },
                     "400": {
@@ -3894,7 +3894,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateClientEmergencyContactParams"
+                            "$ref": "#/definitions/clientp.UpdateClientEmergencyContactParams"
                         }
                     }
                 ],
@@ -3902,7 +3902,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateClientEmergencyContactResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateClientEmergencyContactResponse"
                         }
                     },
                     "400": {
@@ -3947,7 +3947,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteClientEmergencyContactResponse"
+                            "$ref": "#/definitions/api.Response-clientp_DeleteClientEmergencyContactResponse"
                         }
                     },
                     "400": {
@@ -4312,7 +4312,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListAssignedEmployeesResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListAssignedEmployeesResponse"
                         }
                     },
                     "400": {
@@ -4354,7 +4354,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AssignEmployeeRequest"
+                            "$ref": "#/definitions/clientp.AssignEmployeeRequest"
                         }
                     }
                 ],
@@ -4362,7 +4362,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AssignEmployeeResponse"
+                            "$ref": "#/definitions/api.Response-clientp_AssignEmployeeResponse"
                         }
                     },
                     "400": {
@@ -4409,7 +4409,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetAssignedEmployeeResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetAssignedEmployeeResponse"
                         }
                     },
                     "400": {
@@ -4458,7 +4458,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateAssignedEmployeeRequest"
+                            "$ref": "#/definitions/clientp.UpdateAssignedEmployeeRequest"
                         }
                     }
                 ],
@@ -4466,7 +4466,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateAssignedEmployeeResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateAssignedEmployeeResponse"
                         }
                     },
                     "400": {
@@ -4511,7 +4511,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteAssignedEmployeeResponse"
+                            "$ref": "#/definitions/api.Response-clientp_DeleteAssignedEmployeeResponse"
                         }
                     },
                     "400": {
@@ -5014,7 +5014,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientRelatedEmailsResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetClientRelatedEmailsResponse"
                         }
                     },
                     "400": {
@@ -11817,43 +11817,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.AssignEmployeeRequest": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AssignEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "api.AssignRoleToUserApiResponse": {
             "type": "object",
             "properties": {
@@ -13915,22 +13878,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.DeleteAssignedEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.DeleteClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
         "api.DeleteContractTypeResponse": {
             "type": "object",
             "properties": {
@@ -14190,32 +14137,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetAssignedEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetCarePlanInterventionsResponse": {
             "type": "object",
             "properties": {
@@ -14445,53 +14366,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "goals_reports": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "incidents_reports": {
-                    "type": "boolean"
-                },
-                "is_verified": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "medical_reports": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "relation_status": {
-                    "type": "string"
-                },
-                "relationship": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
@@ -14521,17 +14395,6 @@ const docTemplate = `{
                 },
                 "topic_name": {
                     "type": "string"
-                }
-            }
-        },
-        "api.GetClientRelatedEmailsResponse": {
-            "type": "object",
-            "properties": {
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -15769,32 +15632,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ListAssignedEmployeesResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "api.ListCarePlanReportsResponse": {
             "type": "object",
             "properties": {
@@ -15903,53 +15740,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListClientEmergencyContactsResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "goals_reports": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "incidents_reports": {
-                    "type": "boolean"
-                },
-                "is_verified": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "medical_reports": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "relation_status": {
-                    "type": "string"
-                },
-                "relationship": {
                     "type": "string"
                 }
             }
@@ -17182,20 +16972,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_AssignEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AssignEmployeeResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_AssignRoleToUserApiResponse": {
             "type": "object",
             "properties": {
@@ -17518,34 +17294,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_DeleteAssignedEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteAssignedEmployeeResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeleteClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteClientEmergencyContactResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_DeleteEmployeeCertificationResponse": {
             "type": "object",
             "properties": {
@@ -17672,20 +17420,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_GetAssignedEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetAssignedEmployeeResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GetCarePlanInterventionsResponse": {
             "type": "object",
             "properties": {
@@ -17728,39 +17462,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_GetClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientEmergencyContactResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_GetClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetClientMaturityMatrixAssessmentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetClientRelatedEmailsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientRelatedEmailsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17980,20 +17686,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_ListClientEmergencyContactsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListClientEmergencyContactsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_ListNotificationsResponse": {
             "type": "object",
             "properties": {
@@ -18069,20 +17761,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.TotalDischargeCountResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateAssignedEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateAssignedEmployeeResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18209,20 +17887,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UpdateCarePlanSupportNetworkResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateClientEmergencyContactResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18990,6 +18654,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_AssignEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.AssignEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_ConfirmIncidentResponse": {
             "type": "object",
             "properties": {
@@ -19088,11 +18766,39 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_DeleteAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.DeleteAssignedEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_DeleteClientDocumentApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.DeleteClientDocumentApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_DeleteClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.DeleteClientEmergencyContactResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19144,6 +18850,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GetAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetAssignedEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_GetClientAddressesApiResponse": {
             "type": "object",
             "properties": {
@@ -19186,11 +18906,39 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GetClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetClientEmergencyContactResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_GetClientMedicationResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.GetClientMedicationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_GetClientRelatedEmailsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetClientRelatedEmailsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19256,6 +19004,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_ListClientEmergencyContactsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.ListClientEmergencyContactsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_ListClientsApiResponse": {
             "type": "object",
             "properties": {
@@ -19298,6 +19060,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_UpdateAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateAssignedEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_UpdateClientDetailsResponse": {
             "type": "object",
             "properties": {
@@ -19317,6 +19093,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.UpdateClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateClientEmergencyContactResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19438,20 +19228,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListAssignedEmployeesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListAssignedEmployeesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse": {
             "type": "object",
             "properties": {
@@ -19541,6 +19317,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-array_api_ListProgressReportsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-clientp_ListAssignedEmployeesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListAssignedEmployeesResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19786,43 +19576,6 @@ const docTemplate = `{
                 },
                 "urgent_cases_count": {
                     "type": "integer"
-                }
-            }
-        },
-        "api.UpdateAssignedEmployeeRequest": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateAssignedEmployeeResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
                 }
             }
         },
@@ -20101,88 +19854,6 @@ const docTemplate = `{
                 },
                 "support_network_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "api.UpdateClientEmergencyContactParams": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "goals_reports": {
-                    "type": "boolean"
-                },
-                "incidents_reports": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "medical_reports": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "relation_status": {
-                    "type": "string"
-                },
-                "relationship": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateClientEmergencyContactResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "goals_reports": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "incidents_reports": {
-                    "type": "boolean"
-                },
-                "is_verified": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "medical_reports": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "relation_status": {
-                    "type": "string"
-                },
-                "relationship": {
-                    "type": "string"
                 }
             }
         },
@@ -22206,6 +21877,43 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.AssignEmployeeRequest": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.AssignEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ConfirmIncidentResponse": {
             "type": "object",
             "properties": {
@@ -23216,6 +22924,14 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.DeleteAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.DeleteClientDocumentApiRequest": {
             "type": "object",
             "required": [
@@ -23233,6 +22949,14 @@ const docTemplate = `{
                 "attachment_id": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "clientp.DeleteClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
                 "id": {
                     "type": "integer"
                 }
@@ -23413,6 +23137,32 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "clientp.GetAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "employee_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -23608,6 +23358,53 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.GetClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "goals_reports": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incidents_reports": {
+                    "type": "boolean"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "medical_reports": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "type": "string"
+                },
+                "relationship": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.GetClientMedicationResponse": {
             "type": "object",
             "properties": {
@@ -23652,6 +23449,17 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "clientp.GetClientRelatedEmailsResponse": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -23912,6 +23720,32 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ListAssignedEmployeesResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "employee_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ListClientDiagnosesResponse": {
             "type": "object",
             "properties": {
@@ -23990,6 +23824,53 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ListClientEmergencyContactsResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "goals_reports": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incidents_reports": {
+                    "type": "boolean"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "medical_reports": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "type": "string"
+                },
+                "relationship": {
                     "type": "string"
                 }
             }
@@ -24513,6 +24394,43 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.UpdateAssignedEmployeeRequest": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateAssignedEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.UpdateClientDetailsRequest": {
             "type": "object",
             "properties": {
@@ -24778,6 +24696,88 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateClientEmergencyContactParams": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "goals_reports": {
+                    "type": "boolean"
+                },
+                "incidents_reports": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "medical_reports": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "type": "string"
+                },
+                "relationship": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateClientEmergencyContactResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "goals_reports": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incidents_reports": {
+                    "type": "boolean"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "medical_reports": {
+                    "type": "boolean"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "type": "string"
+                },
+                "relationship": {
                     "type": "string"
                 }
             }
@@ -25845,29 +25845,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-api_ListAssignedEmployeesResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListAssignedEmployeesResponse"
-                    }
-                }
-            }
-        },
         "pagination.Response-api_ListClientContractsResponse": {
             "type": "object",
             "properties": {
@@ -26077,6 +26054,29 @@ const docTemplate = `{
                         "items": {
                             "$ref": "#/definitions/api.ListProgressReportsResponse"
                         }
+                    }
+                }
+            }
+        },
+        "pagination.Response-clientp_ListAssignedEmployeesResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListAssignedEmployeesResponse"
                     }
                 }
             }

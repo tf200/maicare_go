@@ -155,30 +155,6 @@ definitions:
       urgency_score:
         type: string
     type: object
-  api.AssignEmployeeRequest:
-    properties:
-      employee_id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
-  api.AssignEmployeeResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
   api.AssignRoleToUserApiResponse:
     properties:
       employee_id:
@@ -1569,16 +1545,6 @@ definitions:
       id:
         type: integer
     type: object
-  api.DeleteAssignedEmployeeResponse:
-    properties:
-      id:
-        type: integer
-    type: object
-  api.DeleteClientEmergencyContactResponse:
-    properties:
-      id:
-        type: integer
-    type: object
   api.DeleteContractTypeResponse:
     properties:
       id:
@@ -1748,23 +1714,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.GetAssignedEmployeeResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      employee_name:
-        type: string
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
   api.GetCarePlanInterventionsResponse:
     properties:
       daily_activities:
@@ -1915,37 +1864,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  api.GetClientEmergencyContactResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
   api.GetClientMaturityMatrixAssessmentResponse:
     properties:
       client_id:
@@ -1966,13 +1884,6 @@ definitions:
         type: string
       topic_name:
         type: string
-    type: object
-  api.GetClientRelatedEmailsResponse:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
     type: object
   api.GetContractAuditLogResponse:
     properties:
@@ -2790,23 +2701,6 @@ definitions:
       role_id:
         type: integer
     type: object
-  api.ListAssignedEmployeesResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      employee_name:
-        type: string
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
   api.ListCarePlanReportsResponse:
     properties:
       care_plan_id:
@@ -2879,37 +2773,6 @@ definitions:
       type_id:
         type: integer
       updated_at:
-        type: string
-    type: object
-  api.ListClientEmergencyContactsResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
         type: string
     type: object
   api.ListClientMaturityMatrixAssessmentsResponse:
@@ -3719,15 +3582,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_AssignEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.AssignEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_AssignRoleToUserApiResponse:
     properties:
       data:
@@ -3935,24 +3789,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_DeleteAssignedEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DeleteAssignedEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_DeleteClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DeleteClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_DeleteEmployeeCertificationResponse:
     properties:
       data:
@@ -4034,15 +3870,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetAssignedEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetAssignedEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetCarePlanInterventionsResponse:
     properties:
       data:
@@ -4070,28 +3897,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetClientMaturityMatrixAssessmentResponse:
     properties:
       data:
         $ref: '#/definitions/api.GetClientMaturityMatrixAssessmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetClientRelatedEmailsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientRelatedEmailsResponse'
       message:
         type: string
       success:
@@ -4232,15 +4041,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_ListClientEmergencyContactsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListClientEmergencyContactsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_ListNotificationsResponse:
     properties:
       data:
@@ -4290,15 +4090,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.TotalDischargeCountResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateAssignedEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -4380,15 +4171,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdateCarePlanSupportNetworkResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -4883,6 +4665,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_AssignEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.AssignEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_ConfirmIncidentResponse:
     properties:
       data:
@@ -4946,10 +4737,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_DeleteAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.DeleteAssignedEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_DeleteClientDocumentApiResponse:
     properties:
       data:
         $ref: '#/definitions/clientp.DeleteClientDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_DeleteClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.DeleteClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -4982,6 +4791,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetAssignedEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetClientAddressesApiResponse:
     properties:
       data:
@@ -5009,10 +4827,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetClientMedicationResponse:
     properties:
       data:
         $ref: '#/definitions/clientp.GetClientMedicationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientRelatedEmailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientRelatedEmailsResponse'
       message:
         type: string
       success:
@@ -5054,6 +4890,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_ListClientEmergencyContactsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.ListClientEmergencyContactsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_ListClientsApiResponse:
     properties:
       data:
@@ -5081,6 +4926,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_UpdateAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateAssignedEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_UpdateClientDetailsResponse:
     properties:
       data:
@@ -5094,6 +4948,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.UpdateClientDiagnosisResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -5171,15 +5034,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-api_ListAssignedEmployeesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListAssignedEmployeesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse:
     properties:
       data:
@@ -5238,6 +5092,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-array_api_ListProgressReportsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListAssignedEmployeesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListAssignedEmployeesResponse'
       message:
         type: string
       success:
@@ -5398,30 +5261,6 @@ definitions:
         type: integer
       urgent_cases_count:
         type: integer
-    type: object
-  api.UpdateAssignedEmployeeRequest:
-    properties:
-      employee_id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
-  api.UpdateAssignedEmployeeResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
     type: object
   api.UpdateCarePlanActionsRequest:
     properties:
@@ -5604,60 +5443,6 @@ definitions:
         type: string
       support_network_id:
         type: integer
-    type: object
-  api.UpdateClientEmergencyContactParams:
-    properties:
-      address:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      incidents_reports:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
-  api.UpdateClientEmergencyContactResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
     type: object
   api.UpdateContractRequest:
     properties:
@@ -7004,6 +6789,30 @@ definitions:
       zip_code:
         type: string
     type: object
+  clientp.AssignEmployeeRequest:
+    properties:
+      employee_id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  clientp.AssignEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   clientp.ConfirmIncidentResponse:
     properties:
       file_url:
@@ -7687,6 +7496,11 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.DeleteAssignedEmployeeResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   clientp.DeleteClientDocumentApiRequest:
     properties:
       attachement_id:
@@ -7698,6 +7512,11 @@ definitions:
     properties:
       attachment_id:
         type: string
+      id:
+        type: integer
+    type: object
+  clientp.DeleteClientEmergencyContactResponse:
+    properties:
       id:
         type: integer
     type: object
@@ -7817,6 +7636,23 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  clientp.GetAssignedEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      employee_name:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
     type: object
   clientp.GetClientAddressesApiResponse:
     properties:
@@ -7945,6 +7781,37 @@ definitions:
       title:
         type: string
     type: object
+  clientp.GetClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
   clientp.GetClientMedicationResponse:
     properties:
       administered_by_first_name:
@@ -7975,6 +7842,13 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  clientp.GetClientRelatedEmailsResponse:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
     type: object
   clientp.GetClientSenderResponse:
     properties:
@@ -8146,6 +8020,23 @@ definitions:
           type: string
         type: array
     type: object
+  clientp.ListAssignedEmployeesResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      employee_name:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   clientp.ListClientDiagnosesResponse:
     properties:
       client_id:
@@ -8198,6 +8089,37 @@ definitions:
       updated_at:
         type: string
       uuid:
+        type: string
+    type: object
+  clientp.ListClientEmergencyContactsResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
         type: string
     type: object
   clientp.ListClientMedicationsResponse:
@@ -8543,6 +8465,30 @@ definitions:
           type: string
         type: array
     type: object
+  clientp.UpdateAssignedEmployeeRequest:
+    properties:
+      employee_id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  clientp.UpdateAssignedEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   clientp.UpdateClientDetailsRequest:
     properties:
       birthplace:
@@ -8719,6 +8665,60 @@ definitions:
       status:
         type: string
       title:
+        type: string
+    type: object
+  clientp.UpdateClientEmergencyContactParams:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      incidents_reports:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
+  clientp.UpdateClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
         type: string
     type: object
   clientp.UpdateClientMedicationRequest:
@@ -9430,21 +9430,6 @@ definitions:
           $ref: '#/definitions/api.ListAllIncidentsResponse'
         type: array
     type: object
-  pagination.Response-api_ListAssignedEmployeesResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListAssignedEmployeesResponse'
-        type: array
-    type: object
   pagination.Response-api_ListClientContractsResponse:
     properties:
       count:
@@ -9582,6 +9567,21 @@ definitions:
           items:
             $ref: '#/definitions/api.ListProgressReportsResponse'
           type: array
+        type: array
+    type: object
+  pagination.Response-clientp_ListAssignedEmployeesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListAssignedEmployeesResponse'
         type: array
     type: object
   pagination.Response-clientp_ListClientDiagnosesResponse:
@@ -12160,7 +12160,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListClientEmergencyContactsResponse'
+            $ref: '#/definitions/api.Response-clientp_ListClientEmergencyContactsResponse'
         "400":
           description: Bad Request
           schema:
@@ -12224,7 +12224,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DeleteClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_DeleteClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12254,7 +12254,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12285,14 +12285,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateClientEmergencyContactParams'
+          $ref: '#/definitions/clientp.UpdateClientEmergencyContactParams'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12533,7 +12533,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListAssignedEmployeesResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListAssignedEmployeesResponse'
         "400":
           description: Bad Request
           schema:
@@ -12559,14 +12559,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.AssignEmployeeRequest'
+          $ref: '#/definitions/clientp.AssignEmployeeRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_AssignEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_AssignEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12597,7 +12597,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DeleteAssignedEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_DeleteAssignedEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12627,7 +12627,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetAssignedEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_GetAssignedEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12658,14 +12658,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateAssignedEmployeeRequest'
+          $ref: '#/definitions/clientp.UpdateAssignedEmployeeRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAssignedEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateAssignedEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12997,7 +12997,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientRelatedEmailsResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientRelatedEmailsResponse'
         "400":
           description: Bad Request
           schema:
