@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -49,7 +50,7 @@ func TestCreateProgressReportApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateProgressReportRequest{
+				createReq := clientp.CreateProgressReportRequest{
 					EmployeeID:     &employee.ID,
 					Title:          util.StringPtr("Test Progress Report"),
 					Date:           util.RandomTIme(),
@@ -67,7 +68,7 @@ func TestCreateProgressReportApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateProgressReportResponse]
+				var response Response[clientp.CreateProgressReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -117,7 +118,7 @@ func TestListProgressReportApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListProgressReportsResponse]]
+				var response Response[pagination.Response[clientp.ListProgressReportsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.Results)
@@ -165,7 +166,7 @@ func TestGetProgressReportApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetProgressReportResponse]
+				var response Response[clientp.GetProgressReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -205,7 +206,7 @@ func TestUpdateProgressReportApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateProgressReportRequest{
+				updateReq := clientp.UpdateProgressReportRequest{
 					ReportText:     util.StringPtr("Updated Progress Report"),
 					EmotionalState: util.StringPtr("happy"),
 				}
@@ -219,7 +220,7 @@ func TestUpdateProgressReportApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateProgressReportResponse]
+				var response Response[clientp.UpdateProgressReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)

@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -26,6 +27,7 @@ func createRandomAttachmentFile(t *testing.T) db.AttachmentFile {
 
 	tagvalue := "test"
 	arg := db.CreateAttachmentParams{
+		Uuid: uuid.New(),
 		Name: util.RandomString(5),
 		File: util.GetRandomImageURL(),
 		Size: 23,

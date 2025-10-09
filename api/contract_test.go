@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/service/contract"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -30,6 +31,7 @@ func createRandomContractType(t *testing.T) db.ContractType {
 }
 
 func TestCreateContractTypeApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -39,10 +41,10 @@ func TestCreateContractTypeApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				requestBody := CreateContractTypeRequest{
+				requestBody := contract.CreateContractTypeRequest{
 					Name: "Test Contract Type",
 				}
 				requestBodyBytes, err := json.Marshal(requestBody)
@@ -53,7 +55,7 @@ func TestCreateContractTypeApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[CreateContractTypeResponse]
+				var response Response[contract.CreateContractTypeResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.ID)
@@ -99,7 +101,7 @@ func TestListContractTypeApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]ListContractTypesResponse]
+				var response Response[[]contract.ListContractTypesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -186,7 +188,9 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 func TestCreateClientContractApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	contractType := createRandomContractType(t)
+	
 	attachment := createRandomAttachmentFile(t)
+	_, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -197,10 +201,10 @@ func TestCreateClientContractApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				requestBody := CreateContractRequest{
+				requestBody := contract.CreateContractRequest{
 					TypeID: &contractType.ID,
 
 					StartDate:       time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC),
@@ -227,7 +231,7 @@ func TestCreateClientContractApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[CreateContractResponse]
+				var response Response[contract.CreateContractResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.ID)
@@ -289,7 +293,7 @@ func TestListClientContractsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListClientContractsResponse]]
+				var response Response[pagination.Response[contract.ListClientContractsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.Results)
@@ -313,7 +317,7 @@ func TestListClientContractsApi(t *testing.T) {
 
 func TestGetClientContract(t *testing.T) {
 	client := createRandomClientDetails(t)
-	contract := createRandomContract(t, client.ID, client.SenderID)
+	cont := createRandomContract(t, client.ID, client.SenderID)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -326,19 +330,19 @@ func TestGetClientContract(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/clients/%d/contracts/%d", contract.ClientID, contract.ID)
+				url := fmt.Sprintf("/clients/%d/contracts/%d", cont.ClientID, cont.ID)
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetClientContractResponse]
+				var response Response[contract.GetClientContractResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.ID)
-				require.Equal(t, contract.ID, response.Data.ID)
-				require.Equal(t, contract.TypeID, response.Data.TypeID)
+				require.Equal(t, cont.ID, response.Data.ID)
+				require.Equal(t, cont.TypeID, response.Data.TypeID)
 				require.Equal(t, int32(10), response.Data.ReminderPeriod)
 				require.Equal(t, util.Int32Ptr(15), response.Data.Vat)
 				require.Equal(t, 5.58, response.Data.Price)
@@ -348,8 +352,8 @@ func TestGetClientContract(t *testing.T) {
 				require.Contains(t, HoursType, *response.Data.HoursType)
 				require.Equal(t, "Test Care", response.Data.CareName)
 				require.Contains(t, CareType, response.Data.CareType)
-				require.Equal(t, contract.ClientID, response.Data.ClientID)
-				require.Equal(t, contract.SenderID, response.Data.SenderID)
+				require.Equal(t, cont.ClientID, response.Data.ClientID)
+				require.Equal(t, cont.SenderID, response.Data.SenderID)
 				require.Contains(t, FinancingAct, response.Data.FinancingAct)
 				require.Contains(t, FinancingOption, response.Data.FinancingOption)
 			},
@@ -394,7 +398,7 @@ func TestListContractsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListContractsResponse]]
+				var response Response[pagination.Response[contract.ListContractsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.Results)
@@ -415,7 +419,7 @@ func TestListContractsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListContractsResponse]]
+				var response Response[pagination.Response[contract.ListContractsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
