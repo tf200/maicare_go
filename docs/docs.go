@@ -2546,7 +2546,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.GenerateAutoReportsRequest"
+                            "$ref": "#/definitions/clientp.GenerateAutoReportsRequest"
                         }
                     }
                 ],
@@ -2554,7 +2554,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GenerateAutoReportsResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GenerateAutoReportsResponse"
                         }
                     }
                 }
@@ -2963,7 +2963,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pagination.Response-api_ListClientContractsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-array_contract_ListClientContractsResponse"
                         }
                     }
                 }
@@ -2993,7 +2993,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateContractRequest"
+                            "$ref": "#/definitions/contract.CreateContractRequest"
                         }
                     }
                 ],
@@ -3001,7 +3001,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.CreateContractResponse"
+                            "$ref": "#/definitions/api.Response-contract_CreateContractResponse"
                         }
                     }
                 }
@@ -3032,7 +3032,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.GetClientContractResponse"
+                            "$ref": "#/definitions/api.Response-contract_GetClientContractResponse"
                         }
                     }
                 }
@@ -4775,7 +4775,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-array_api_ListProgressReportsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-array_clientp_ListProgressReportsResponse"
                         }
                     },
                     "400": {
@@ -4817,7 +4817,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateProgressReportRequest"
+                            "$ref": "#/definitions/clientp.CreateProgressReportRequest"
                         }
                     }
                 ],
@@ -4825,7 +4825,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateProgressReportResponse"
+                            "$ref": "#/definitions/api.Response-clientp_CreateProgressReportResponse"
                         }
                     },
                     "400": {
@@ -4872,7 +4872,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetProgressReportResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetProgressReportResponse"
                         }
                     },
                     "400": {
@@ -4921,7 +4921,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateProgressReportRequest"
+                            "$ref": "#/definitions/clientp.UpdateProgressReportRequest"
                         }
                     }
                 ],
@@ -4929,7 +4929,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateProgressReportResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateProgressReportResponse"
                         }
                     },
                     "400": {
@@ -5194,7 +5194,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/api.ListContractTypesResponse"
+                                "$ref": "#/definitions/api.Response-array_contract_ListContractTypesResponse"
                             }
                         }
                     }
@@ -5218,7 +5218,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateContractTypeRequest"
+                            "$ref": "#/definitions/contract.CreateContractTypeRequest"
                         }
                     }
                 ],
@@ -5226,7 +5226,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.CreateContractTypeResponse"
+                            "$ref": "#/definitions/api.Response-contract_CreateContractTypeResponse"
                         }
                     }
                 }
@@ -5254,7 +5254,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.DeleteContractTypeResponse"
+                            "$ref": "#/definitions/api.Response-contract_DeleteContractTypeResponse"
                         }
                     }
                 }
@@ -5354,7 +5354,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pagination.Response-api_ListContractsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-array_contract_ListContractsResponse"
                         }
                     }
                 }
@@ -5386,7 +5386,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateContractRequest"
+                            "$ref": "#/definitions/contract.UpdateContractRequest"
                         }
                     }
                 ],
@@ -5394,7 +5394,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateContractResponse"
+                            "$ref": "#/definitions/api.Response-contract_UpdateContractResponse"
                         }
                     }
                 }
@@ -5427,7 +5427,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/api.GetContractAuditLogResponse"
+                                "$ref": "#/definitions/api.Response-array_contract_GetContractAuditLogResponse"
                             }
                         }
                     }
@@ -5460,7 +5460,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateContractStatusRequest"
+                            "$ref": "#/definitions/contract.UpdateContractStatusRequest"
                         }
                     }
                 ],
@@ -5468,7 +5468,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateContractStatusResponse"
+                            "$ref": "#/definitions/api.Response-contract_UpdateContractStatusResponse"
                         }
                     }
                 }
@@ -7837,12 +7837,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Client ID",
                         "name": "client_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Sender ID",
                         "name": "sender_id",
                         "in": "query"
@@ -8089,6 +8091,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8143,6 +8146,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8203,6 +8207,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8256,6 +8261,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8309,6 +8315,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8362,6 +8369,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8415,6 +8423,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8469,6 +8478,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8531,6 +8541,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "id",
                         "in": "path",
@@ -8584,6 +8595,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "id",
                         "in": "path",
@@ -8640,6 +8652,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8647,6 +8660,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -8710,6 +8724,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Invoice ID",
                         "name": "invoice_id",
                         "in": "path",
@@ -8717,6 +8732,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Payment ID",
                         "name": "payment_id",
                         "in": "path",
@@ -12273,194 +12289,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateContractRequest": {
-            "type": "object",
-            "required": [
-                "care_type",
-                "financing_act",
-                "financing_option",
-                "price_time_unit"
-            ],
-            "properties": {
-                "VAT": {
-                    "type": "integer",
-                    "example": 21
-                },
-                "attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "care_name": {
-                    "type": "string",
-                    "example": "Home Care"
-                },
-                "care_type": {
-                    "type": "string",
-                    "enum": [
-                        "ambulante",
-                        "accommodation"
-                    ],
-                    "example": "ambulante"
-                },
-                "end_date": {
-                    "type": "string",
-                    "example": "2023-12-31T00:00:00Z"
-                },
-                "financing_act": {
-                    "type": "string",
-                    "enum": [
-                        "WMO",
-                        "ZVW",
-                        "WLZ",
-                        "JW",
-                        "WPG"
-                    ],
-                    "example": "WMO"
-                },
-                "financing_option": {
-                    "type": "string",
-                    "enum": [
-                        "ZIN",
-                        "PGB"
-                    ],
-                    "example": "ZIN"
-                },
-                "hours": {
-                    "type": "number",
-                    "example": 40
-                },
-                "hours_type": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number",
-                    "example": 100.5
-                },
-                "price_time_unit": {
-                    "type": "string",
-                    "enum": [
-                        "minute",
-                        "hourly",
-                        "daily",
-                        "weekly",
-                        "monthly",
-                        "yearly"
-                    ],
-                    "example": "monthly"
-                },
-                "reminder_period": {
-                    "type": "integer",
-                    "example": 30
-                },
-                "sender_id": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "start_date": {
-                    "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
-                },
-                "type_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "api.CreateContractResponse": {
-            "type": "object",
-            "properties": {
-                "VAT": {
-                    "type": "integer"
-                },
-                "attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "care_name": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "departure_reason": {
-                    "type": "string"
-                },
-                "departure_report": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "financing_act": {
-                    "type": "string"
-                },
-                "financing_option": {
-                    "type": "string"
-                },
-                "hours": {
-                    "type": "number"
-                },
-                "hours_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
-                    "type": "string"
-                },
-                "reminder_period": {
-                    "type": "integer"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type_id": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                }
-            }
-        },
-        "api.CreateContractTypeRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateContractTypeResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CreateIntakeFormRequest": {
             "type": "object",
             "properties": {
@@ -13119,85 +12947,6 @@ const docTemplate = `{
                 },
                 "recorded_by": {
                     "type": "integer"
-                }
-            }
-        },
-        "api.CreateProgressReportRequest": {
-            "type": "object",
-            "required": [
-                "emotional_state",
-                "report_text",
-                "type"
-            ],
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "emotional_state": {
-                    "type": "string",
-                    "enum": [
-                        "normal",
-                        "excited",
-                        "happy",
-                        "sad",
-                        "angry",
-                        "anxious",
-                        "depressed"
-                    ]
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "morning_report",
-                        "evening_report",
-                        "night_report",
-                        "shift_report",
-                        "one_to_one_report",
-                        "process_report",
-                        "contact_journal",
-                        "other"
-                    ]
-                }
-            }
-        },
-        "api.CreateProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "emotional_state": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
                 }
             }
         },
@@ -13878,14 +13627,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.DeleteContractTypeResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
         "api.DeleteEmployeeCertificationResponse": {
             "type": "object",
             "properties": {
@@ -14040,25 +13781,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status_change_reason": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GenerateAutoReportsRequest": {
-            "type": "object",
-            "properties": {
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GenerateAutoReportsResponse": {
-            "type": "object",
-            "properties": {
-                "report": {
                     "type": "string"
                 }
             }
@@ -14280,92 +14002,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GetClientContractResponse": {
-            "type": "object",
-            "properties": {
-                "VAT": {
-                    "type": "integer"
-                },
-                "attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "care_name": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "departure_reason": {
-                    "type": "string"
-                },
-                "departure_report": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "financing_act": {
-                    "type": "string"
-                },
-                "financing_option": {
-                    "type": "string"
-                },
-                "hours": {
-                    "type": "number"
-                },
-                "hours_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
-                    "type": "string"
-                },
-                "reminder_period": {
-                    "type": "integer"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "sender_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type_id": {
-                    "type": "integer"
-                },
-                "type_name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GetClientMaturityMatrixAssessmentResponse": {
             "type": "object",
             "properties": {
@@ -14394,44 +14030,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "topic_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetContractAuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "audit_id": {
-                    "type": "integer"
-                },
-                "changed_at": {
-                    "$ref": "#/definitions/pgtype.Timestamptz"
-                },
-                "changed_by": {
-                    "type": "integer"
-                },
-                "changed_by_first_name": {
-                    "type": "string"
-                },
-                "changed_by_last_name": {
-                    "type": "string"
-                },
-                "changed_fields": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "contract_id": {
-                    "type": "integer"
-                },
-                "new_values": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "old_values": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "operation": {
                     "type": "string"
                 }
             }
@@ -14984,47 +14582,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "emotional_state": {
-                    "type": "string"
-                },
-                "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_last_name": {
-                    "type": "string"
-                },
-                "employee_profile_picture": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -15661,89 +15218,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ListClientContractsResponse": {
-            "type": "object",
-            "properties": {
-                "VAT": {
-                    "type": "integer"
-                },
-                "attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "care_name": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "departure_reason": {
-                    "type": "string"
-                },
-                "departure_report": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "financing_act": {
-                    "type": "string"
-                },
-                "financing_option": {
-                    "type": "string"
-                },
-                "hours": {
-                    "type": "number"
-                },
-                "hours_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
-                    "type": "string"
-                },
-                "reminder_period": {
-                    "type": "integer"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "sender_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type_id": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "api.ListClientMaturityMatrixAssessmentsResponse": {
             "type": "object",
             "properties": {
@@ -15769,70 +15243,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Date"
                 },
                 "topic_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListContractTypesResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListContractsResponse": {
-            "type": "object",
-            "properties": {
-                "care_name": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "financing_act": {
-                    "type": "string"
-                },
-                "financing_option": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "sender_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 }
             }
@@ -16361,47 +15771,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListProgressReportsResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "emotional_state": {
-                    "type": "string"
-                },
-                "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_last_name": {
-                    "type": "string"
-                },
-                "employee_profile_picture": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -17210,20 +16579,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_CreateProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateProgressReportResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CreateRoleResponse": {
             "type": "object",
             "properties": {
@@ -17369,20 +16724,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.DeletePaymentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GenerateAutoReportsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GenerateAutoReportsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17607,20 +16948,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.GetPaymentByIDResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetProgressReportResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17999,20 +17326,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.UpdatePaymentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateProgressReportResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18556,6 +17869,40 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_contract_GetContractAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/contract.GetContractAuditLogResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_contract_ListContractTypesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/contract.ListContractTypesResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-attachment_DeleteAttachmentResponse": {
             "type": "object",
             "properties": {
@@ -18766,6 +18113,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_CreateProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.CreateProgressReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_DeleteAssignedEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -18813,6 +18174,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.GenerateAppointmentCardDocumentApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_GenerateAutoReportsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GenerateAutoReportsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19004,6 +18379,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GetProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetProgressReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_ListClientEmergencyContactsResponse": {
             "type": "object",
             "properties": {
@@ -19149,6 +18538,104 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.UpdateIncidentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateProgressReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-contract_CreateContractResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/contract.CreateContractResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-contract_CreateContractTypeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/contract.CreateContractTypeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-contract_DeleteContractTypeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/contract.DeleteContractTypeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-contract_GetClientContractResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/contract.GetClientContractResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-contract_UpdateContractResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/contract.UpdateContractResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-contract_UpdateContractStatusResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/contract.UpdateContractStatusResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19312,11 +18799,39 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-array_api_ListProgressReportsResponse": {
+        "api.Response-pagination_Response-array_clientp_ListProgressReportsResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-array_api_ListProgressReportsResponse"
+                    "$ref": "#/definitions/pagination.Response-array_clientp_ListProgressReportsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-array_contract_ListClientContractsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-array_contract_ListClientContractsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-array_contract_ListContractsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-array_contract_ListContractsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -19857,166 +19372,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.UpdateContractRequest": {
-            "type": "object",
-            "properties": {
-                "VAT": {
-                    "type": "integer"
-                },
-                "attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "care_name": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "financing_act": {
-                    "type": "string"
-                },
-                "financing_option": {
-                    "type": "string"
-                },
-                "hours": {
-                    "type": "number"
-                },
-                "hours_type": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
-                    "type": "string"
-                },
-                "reminder_period": {
-                    "type": "integer"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateContractResponse": {
-            "type": "object",
-            "properties": {
-                "VAT": {
-                    "type": "integer"
-                },
-                "attachment_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "care_name": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "departure_reason": {
-                    "type": "string"
-                },
-                "departure_report": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "financing_act": {
-                    "type": "string"
-                },
-                "financing_option": {
-                    "type": "string"
-                },
-                "hours": {
-                    "type": "number"
-                },
-                "hours_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_frequency": {
-                    "type": "string"
-                },
-                "reminder_period": {
-                    "type": "integer"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type_id": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateContractStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "approved",
-                        "draft",
-                        "terminated",
-                        "stopped",
-                        "expired"
-                    ],
-                    "example": "approved"
-                }
-            }
-        },
-        "api.UpdateContractStatusResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "api.UpdateEmployeeCertificationRequest": {
             "type": "object",
             "properties": {
@@ -20440,64 +19795,6 @@ const docTemplate = `{
                 },
                 "recorded_by": {
                     "type": "integer"
-                }
-            }
-        },
-        "api.UpdateProgressReportRequest": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "emotional_state": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "emotional_state": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
                 }
             }
         },
@@ -21869,6 +21166,9 @@ const docTemplate = `{
                 "city": {
                     "type": "string"
                 },
+                "house_number": {
+                    "type": "string"
+                },
                 "phone_number": {
                     "type": "string"
                 },
@@ -22924,6 +22224,85 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.CreateProgressReportRequest": {
+            "type": "object",
+            "required": [
+                "emotional_state",
+                "report_text",
+                "type"
+            ],
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "emotional_state": {
+                    "type": "string",
+                    "enum": [
+                        "normal",
+                        "excited",
+                        "happy",
+                        "sad",
+                        "angry",
+                        "anxious",
+                        "depressed"
+                    ]
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "morning_report",
+                        "evening_report",
+                        "night_report",
+                        "shift_report",
+                        "one_to_one_report",
+                        "process_report",
+                        "contact_journal",
+                        "other"
+                    ]
+                }
+            }
+        },
+        "clientp.CreateProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "emotional_state": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.DeleteAssignedEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -23039,6 +22418,29 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "file_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.GenerateAutoReportsRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.GenerateAutoReportsResponse": {
+            "type": "object",
+            "properties": {
+                "report": {
                     "type": "string"
                 }
             }
@@ -23720,6 +23122,47 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.GetProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "emotional_state": {
+                    "type": "string"
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "employee_profile_picture": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ListAssignedEmployeesResponse": {
             "type": "object",
             "properties": {
@@ -24175,6 +23618,47 @@ const docTemplate = `{
                 },
                 "violence": {
                     "type": "boolean"
+                }
+            }
+        },
+        "clientp.ListProgressReportsResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "emotional_state": {
+                    "type": "string"
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "employee_profile_picture": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -25196,6 +24680,687 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.UpdateProgressReportRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "emotional_state": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "emotional_state": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.CreateContractRequest": {
+            "type": "object",
+            "required": [
+                "care_type",
+                "financing_act",
+                "financing_option",
+                "price_time_unit"
+            ],
+            "properties": {
+                "VAT": {
+                    "type": "integer",
+                    "example": 21
+                },
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string",
+                    "example": "Home Care"
+                },
+                "care_type": {
+                    "type": "string",
+                    "enum": [
+                        "ambulante",
+                        "accommodation"
+                    ],
+                    "example": "ambulante"
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2023-12-31T00:00:00Z"
+                },
+                "financing_act": {
+                    "type": "string",
+                    "enum": [
+                        "WMO",
+                        "ZVW",
+                        "WLZ",
+                        "JW",
+                        "WPG"
+                    ],
+                    "example": "WMO"
+                },
+                "financing_option": {
+                    "type": "string",
+                    "enum": [
+                        "ZIN",
+                        "PGB"
+                    ],
+                    "example": "ZIN"
+                },
+                "hours": {
+                    "type": "number",
+                    "example": 40
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 100.5
+                },
+                "price_time_unit": {
+                    "type": "string",
+                    "enum": [
+                        "minute",
+                        "hourly",
+                        "daily",
+                        "weekly",
+                        "monthly",
+                        "yearly"
+                    ],
+                    "example": "monthly"
+                },
+                "reminder_period": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "sender_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "type_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "contract.CreateContractResponse": {
+            "type": "object",
+            "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "number"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_time_unit": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
+        "contract.CreateContractTypeRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.CreateContractTypeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.DeleteContractTypeResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "contract.GetClientContractResponse": {
+            "type": "object",
+            "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "number"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_time_unit": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "type_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.GetContractAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "audit_id": {
+                    "type": "integer"
+                },
+                "changed_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "changed_by": {
+                    "type": "integer"
+                },
+                "changed_by_first_name": {
+                    "type": "string"
+                },
+                "changed_by_last_name": {
+                    "type": "string"
+                },
+                "changed_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "contract_id": {
+                    "type": "integer"
+                },
+                "new_values": {},
+                "old_values": {},
+                "operation": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.ListClientContractsResponse": {
+            "type": "object",
+            "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "number"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_time_unit": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.ListContractTypesResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.ListContractsResponse": {
+            "type": "object",
+            "properties": {
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_time_unit": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.UpdateContractRequest": {
+            "type": "object",
+            "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "number"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_time_unit": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "contract.UpdateContractResponse": {
+            "type": "object",
+            "properties": {
+                "VAT": {
+                    "type": "integer"
+                },
+                "attachment_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "care_name": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "departure_report": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "financing_act": {
+                    "type": "string"
+                },
+                "financing_option": {
+                    "type": "string"
+                },
+                "hours": {
+                    "type": "number"
+                },
+                "hours_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_frequency": {
+                    "type": "string"
+                },
+                "reminder_period": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "contract.UpdateContractStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "approved",
+                        "draft",
+                        "terminated",
+                        "stopped",
+                        "expired"
+                    ],
+                    "example": "approved"
+                }
+            }
+        },
+        "contract.UpdateContractStatusResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "employees.CreateEmployeeProfileRequest": {
             "type": "object",
             "required": [
@@ -25845,29 +26010,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-api_ListClientContractsResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListClientContractsResponse"
-                    }
-                }
-            }
-        },
         "pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse": {
             "type": "object",
             "properties": {
@@ -25887,29 +26029,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.ListClientMaturityMatrixAssessmentsResponse"
-                    }
-                }
-            }
-        },
-        "pagination.Response-api_ListContractsResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListContractsResponse"
                     }
                 }
             }
@@ -26032,7 +26151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-array_api_ListProgressReportsResponse": {
+        "pagination.Response-array_clientp_ListProgressReportsResponse": {
             "type": "object",
             "properties": {
                 "count": {
@@ -26052,7 +26171,59 @@ const docTemplate = `{
                     "items": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/definitions/api.ListProgressReportsResponse"
+                            "$ref": "#/definitions/clientp.ListProgressReportsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "pagination.Response-array_contract_ListClientContractsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/contract.ListClientContractsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "pagination.Response-array_contract_ListContractsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/contract.ListContractsResponse"
                         }
                     }
                 }
@@ -26235,6 +26406,7 @@ const docTemplate = `{
         },
         "pgtype.InfinityModifier": {
             "type": "integer",
+            "format": "int32",
             "enum": [
                 1,
                 0,
