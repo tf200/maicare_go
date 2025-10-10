@@ -1,6 +1,7 @@
 package api
 
 import (
+	_ "maicare_go/pagination" // for swagger documentation
 	"maicare_go/service/contract"
 	"net/http"
 	"strconv"
@@ -13,8 +14,8 @@ import (
 // @Tags contracts
 // @Accept json
 // @Produce json
-// @Param request body contractp.CreateContractTypeRequest true "Create Contract Type Request"
-// @Success 200 {object} Response[contractp.CreateContractTypeResponse]
+// @Param request body contract.CreateContractTypeRequest true "Create Contract Type Request"
+// @Success 200 {object} Response[contract.CreateContractTypeResponse]
 // @Router /contract_types [post]
 func (server *Server) CreateContractTypeApi(ctx *gin.Context) {
 	var req contract.CreateContractTypeRequest
@@ -38,7 +39,7 @@ func (server *Server) CreateContractTypeApi(ctx *gin.Context) {
 // @Tags contracts
 // @Accept json
 // @Produce json
-// @Success 200 {array} Response[[]contractp.ListContractTypesResponse]
+// @Success 200 {array} Response[[]contract.ListContractTypesResponse]
 // @Router /contract_types [get]
 func (server *Server) ListContractTypesApi(ctx *gin.Context) {
 	contractTypes, err := server.businessService.ContractService.ListContractTypes(ctx)
@@ -56,7 +57,7 @@ func (server *Server) ListContractTypesApi(ctx *gin.Context) {
 // @Tags contracts
 // @Produce json
 // @Param id path string true "Contract Type ID"
-// @Success 200 {object} Response[contractp.DeleteContractTypeResponse]
+// @Success 200 {object} Response[contract.DeleteContractTypeResponse]
 // @Router /contract_types/{id} [delete]
 func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -82,8 +83,8 @@ func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Client ID"
-// @Param request body contractp.CreateContractRequest true "Create Contract Request"
-// @Success 200 {object} Response[contractp.CreateContractResponse]
+// @Param request body contract.CreateContractRequest true "Create Contract Request"
+// @Success 200 {object} Response[contract.CreateContractResponse]
 // @Router /clients/{id}/contracts [post]
 func (server *Server) CreateContractApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -116,7 +117,7 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 // @Param id path string true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[[]contractp.ListClientContractsResponse]]
+// @Success 200 {object} Response[pagination.Response[[]contract.ListClientContractsResponse]]
 // @Router /clients/{id}/contracts [get]
 func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -148,8 +149,8 @@ func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Contract ID"
-// @Param request body contractp.UpdateContractRequest true "Update Contract Request"
-// @Success 200 {object} Response[contractp.UpdateContractResponse]
+// @Param request body contract.UpdateContractRequest true "Update Contract Request"
+// @Success 200 {object} Response[contract.UpdateContractResponse]
 // @Router /contracts/{id} [put]
 func (server *Server) UpdateContractApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -187,8 +188,8 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Contract ID"
-// @Param request body contractp.UpdateContractStatusRequest true "Update Contract Status Request"
-// @Success 200 {object} Response[contractp.UpdateContractStatusResponse]
+// @Param request body contract.UpdateContractStatusRequest true "Update Contract Status Request"
+// @Success 200 {object} Response[contract.UpdateContractStatusResponse]
 // @Router /contracts/{id}/status [put]
 func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -226,7 +227,7 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Contract ID"
-// @Success 200 {object} Response[contractp.GetClientContractResponse]
+// @Success 200 {object} Response[contract.GetClientContractResponse]
 // @Router /clients/{id}/contracts/{contract_id} [get]
 func (server *Server) GetClientContractApi(ctx *gin.Context) {
 	id := ctx.Param("contract_id")
@@ -257,7 +258,7 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 // @Param care_type query []string false "Care type" Enums(ambulante, accommodation)
 // @Param financing_act query []string false "Financing act" Enums(WMO, ZVW, WLZ, JW, WPG)
 // @Param financing_option query []string false "Financing option" Enums(ZIN, PGB)
-// @Success 200 {object} Response[pagination.Response[[]contractp.ListContractsResponse]]
+// @Success 200 {object} Response[pagination.Response[[]contract.ListContractsResponse]]
 // @Router /contracts [get]
 func (server *Server) ListContractsApi(ctx *gin.Context) {
 	var req contract.ListContractsRequest
@@ -282,7 +283,7 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Contract ID"
-// @Success 200 {array} Response[[]contractp.GetContractAuditLogResponse]
+// @Success 200 {array} Response[[]contract.GetContractAuditLogResponse]
 // @Router /contracts/{id}/audit [get]
 func (server *Server) GetContractAuditLogApi(ctx *gin.Context) {
 	id := ctx.Param("id")

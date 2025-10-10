@@ -86,7 +86,7 @@ func (server *Server) ListProgressReportsApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param report_id path int true "Progress Report ID"
-// @Success 200 {object} Response[GetProgressReportResponse]
+// @Success 200 {object} Response[clientp.GetProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/progress_reports/{report_id} [get]
 func (server *Server) GetProgressReportApi(ctx *gin.Context) {
@@ -115,8 +115,8 @@ func (server *Server) GetProgressReportApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Client ID"
 // @Param report_id path int true "Progress Report ID"
-// @Param request body UpdateProgressReportRequest true "Progress Report Request"
-// @Success 200 {object} Response[UpdateProgressReportResponse]
+// @Param request body clientp.UpdateProgressReportRequest true "Progress Report Request"
+// @Success 200 {object} Response[clientp.UpdateProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/progress_reports/{report_id} [put]
 func (server *Server) UpdateProgressReportApi(ctx *gin.Context) {
@@ -187,8 +187,8 @@ type GenerateAutoReportsResponse struct {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body GenerateAutoReportsRequest true "Request body"
-// @Success 200 {object} Response[GenerateAutoReportsResponse]
+// @Param request body clientp.GenerateAutoReportsRequest true "Request body"
+// @Success 200 {object} Response[clientp.GenerateAutoReportsResponse]
 // @Router /clients/{id}/ai_progress_reports [post]
 func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
