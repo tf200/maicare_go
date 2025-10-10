@@ -13,6 +13,7 @@ type Address struct {
 	Address     *string `json:"address"`
 	City        *string `json:"city"`
 	ZipCode     *string `json:"zip_code"`
+	HouseNumber *string `json:"house_number"`
 	PhoneNumber *string `json:"phone_number"`
 }
 

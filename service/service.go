@@ -8,6 +8,7 @@ import (
 	"maicare_go/service/attachment"
 	"maicare_go/service/auth"
 	clientp "maicare_go/service/client"
+	contractp "maicare_go/service/contract"
 	"maicare_go/service/deps"
 	"maicare_go/service/employees"
 	"maicare_go/service/invoice"
@@ -23,6 +24,7 @@ type BusinessService struct {
 	InvoiceService     invoice.InvoiceService
 	AppointmentService appointment.AppointmentService
 	AttachmentService  attachment.AttachmentService
+	ContractService    contractp.ContractService
 }
 
 func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface) *BusinessService {
@@ -33,6 +35,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 	invoiceService := invoice.NewInvoiceService(deps)
 	appointmentService := appointment.NewAppointmentService(deps)
 	attachmentService := attachment.NewAttachmentService(deps)
+	contractService := contractp.NewContractService(deps)
 	return &BusinessService{
 		ServiceDependencies: deps,
 		AuthService:         authService,
@@ -41,6 +44,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 		InvoiceService:      invoiceService,
 		AppointmentService:  appointmentService,
 		AttachmentService:   attachmentService,
+		ContractService:     contractService,
 	}
 }
 

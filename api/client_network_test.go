@@ -172,7 +172,7 @@ func TestListClientEmergencyContactsApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[pagination.Response[ListClientEmergencyContactsResponse]]
+				var res Response[pagination.Response[clientp.ListClientEmergencyContactsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				t.Log(res)
@@ -220,7 +220,7 @@ func TestGetEmergencyContactApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[GetClientEmergencyContactResponse]
+				var res Response[clientp.GetClientEmergencyContactResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
@@ -258,7 +258,7 @@ func TestUpdateEmergencyContactApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateClientEmergencyContactParams{
+				updateReq := clientp.UpdateClientEmergencyContactParams{
 					FirstName: util.StringPtr(util.RandomString(5)),
 					LastName:  util.StringPtr(util.RandomString(5)),
 					Email:     util.StringPtr(util.RandomEmail()),
@@ -273,7 +273,7 @@ func TestUpdateEmergencyContactApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[UpdateClientEmergencyContactResponse]
+				var res Response[clientp.UpdateClientEmergencyContactResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
@@ -368,7 +368,7 @@ func TestAssignEmployeeApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				assignReq := AssignEmployeeRequest{
+				assignReq := clientp.AssignEmployeeRequest{
 					EmployeeID: employee.ID,
 					StartDate:  time.Now(),
 					Role:       "Primary Caregiver",
@@ -383,7 +383,7 @@ func TestAssignEmployeeApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var res Response[AssignEmployeeResponse]
+				var res Response[clientp.AssignEmployeeResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
@@ -432,7 +432,7 @@ func TestListAssignedEmployeesApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[pagination.Response[ListAssignedEmployeesResponse]]
+				var res Response[pagination.Response[clientp.ListAssignedEmployeesResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				t.Log(res)
@@ -481,7 +481,7 @@ func TestGetAssignedEmployeeApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[GetAssignedEmployeeResponse]
+				var res Response[clientp.GetAssignedEmployeeResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
@@ -518,7 +518,7 @@ func TestUpdateAssignedEmployeeApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateAssignedEmployeeRequest{
+				updateReq := clientp.UpdateAssignedEmployeeRequest{
 					Role: util.StringPtr("Secondary Caregiver"),
 				}
 				reqBody, err := json.Marshal(updateReq)
@@ -531,7 +531,7 @@ func TestUpdateAssignedEmployeeApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[UpdateAssignedEmployeeResponse]
+				var res Response[clientp.UpdateAssignedEmployeeResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
@@ -580,7 +580,7 @@ func TestGetClientRelatedEmailsApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var res Response[GetClientRelatedEmailsResponse]
+				var res Response[clientp.GetClientRelatedEmailsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				require.NotEmpty(t, res.Data)
