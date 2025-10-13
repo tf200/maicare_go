@@ -21486,8 +21486,8 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer"
                 },
-                "organisation": {
-                    "type": "string"
+                "organization_id": {
+                    "type": "integer"
                 },
                 "phone_number": {
                     "type": "string"
@@ -21612,8 +21612,8 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer"
                 },
-                "organisation": {
-                    "type": "string"
+                "organization_id": {
+                    "type": "integer"
                 },
                 "phone_number": {
                     "type": "string"
@@ -22675,8 +22675,8 @@ const docTemplate = `{
                 "location_name": {
                     "type": "string"
                 },
-                "organisation": {
-                    "type": "string"
+                "organization_id": {
+                    "type": "integer"
                 },
                 "phone_number": {
                     "type": "string"
@@ -23425,8 +23425,8 @@ const docTemplate = `{
                 "location_name": {
                     "type": "string"
                 },
-                "organisation": {
-                    "type": "string"
+                "organization_id": {
+                    "type": "integer"
                 },
                 "phone_number": {
                     "type": "string"
@@ -23993,8 +23993,8 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer"
                 },
-                "organisation": {
-                    "type": "string"
+                "organization_id": {
+                    "type": "integer"
                 },
                 "phone_number": {
                     "type": "string"
@@ -24097,8 +24097,8 @@ const docTemplate = `{
                 "location_id": {
                     "type": "integer"
                 },
-                "organisation": {
-                    "type": "string"
+                "organization_id": {
+                    "type": "integer"
                 },
                 "phone_number": {
                     "type": "string"

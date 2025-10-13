@@ -237,7 +237,6 @@ type ClientDetail struct {
 	Birthplace                 *string            `json:"birthplace"`
 	Email                      string             `json:"email"`
 	PhoneNumber                *string            `json:"phone_number"`
-	Organisation               *string            `json:"organisation"`
 	Departement                *string            `json:"departement"`
 	Gender                     string             `json:"gender"`
 	Filenumber                 string             `json:"filenumber"`
@@ -281,6 +280,7 @@ type ClientDetail struct {
 	RiskOther                  *bool              `json:"risk_other"`
 	RiskOtherDescription       *string            `json:"risk_other_description"`
 	RiskAdditionalNotes        *string            `json:"risk_additional_notes"`
+	OrganizationID             *int64             `json:"organization_id"`
 }
 
 type ClientDiagnosis struct {

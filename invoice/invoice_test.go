@@ -177,7 +177,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		BsnVerifiedBy:   nil, // Assuming employee is created and has an ID
 		Source:          util.StringPtr("Test Source"),
 		Birthplace:      util.StringPtr("test city"),
-		Organisation:    util.StringPtr("test org"),
+		OrganizationID:  nil,
 		Departement:     util.StringPtr("test dep"),
 		Gender:          "male", // or "Female" or other values as per your requirements
 		Filenumber:      "testfile",
