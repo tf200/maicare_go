@@ -6500,8 +6500,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       sender_id:
@@ -6594,8 +6594,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -7308,8 +7308,8 @@ definitions:
         type: integer
       location_name:
         type: string
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -7803,8 +7803,8 @@ definitions:
         type: integer
       location_name:
         type: string
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -8178,8 +8178,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -8247,8 +8247,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
