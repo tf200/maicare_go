@@ -2,6 +2,7 @@ package api
 
 import (
 	"maicare_go/pagination"
+	"maicare_go/service/ecr"
 	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
@@ -37,7 +38,7 @@ func TestDischargeOverviewApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[DischargeOverviewResponse]]
+				var response Response[pagination.Response[ecr.DischargeOverviewResponse]]
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 				require.NotEmpty(t, response.Data)
 			},
@@ -82,7 +83,7 @@ func TestListEmployeesByContractEndDateApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]ListEmployeesByContractEndDateResponse]
+				var response Response[[]ecr.ListEmployeesByContractEndDateResponse]
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 				require.NotEmpty(t, response.Data)
 			},
@@ -126,7 +127,7 @@ func TestListUpcomingAppointmentsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]ListUpcomingAppointmentsResponse]
+				var response Response[[]ecr.ListUpcomingAppointmentsResponse]
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 				require.NotEmpty(t, response.Data)
 			},

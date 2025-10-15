@@ -10,6 +10,7 @@ import (
 	clientp "maicare_go/service/client"
 	contractp "maicare_go/service/contract"
 	"maicare_go/service/deps"
+	"maicare_go/service/ecr"
 	"maicare_go/service/employees"
 	"maicare_go/service/invoice"
 	"maicare_go/token"
@@ -25,6 +26,7 @@ type BusinessService struct {
 	AppointmentService appointment.AppointmentService
 	AttachmentService  attachment.AttachmentService
 	ContractService    contractp.ContractService
+	ECRService         ecr.ECRService
 }
 
 func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface) *BusinessService {
