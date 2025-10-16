@@ -89,7 +89,7 @@ jobs:
             BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
             ENVIRONMENT=production
             GRPC_URL=${{ secrets.GRPC_URL }}
-            MIGRATIONS_PATH={{ secrets.MIGRATIONS_PATH }}
+            MIGRATIONS_PATH=${{ secrets.MIGRATIONS_PATH }}
             EOF
             
             chmod 644 /opt/maicare/app.env
