@@ -23,10 +23,37 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
+
+func runMigrations(dbSource string, migrationsPath string) error {
+	log.Println("Running database migrations...")
+
+	m, err := migrate.New(
+		migrationsPath,
+		dbSource,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create migrate instance: %w", err)
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil {
+		if err == migrate.ErrNoChange {
+			log.Println("No new migrations to apply")
+			return nil
+		}
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	log.Println("✅ Migrations applied successfully")
+	return nil
+}
 
 func main() {
 	// Add context for graceful shutdown
@@ -36,6 +63,11 @@ func main() {
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("cannot load config:", err)
+	}
+
+	// Run migrations before starting the application
+	if err := runMigrations(config.DbSource, config.MigrationsPath); err != nil {
+		log.Fatalf("Migration failed: %v", err)
 	}
 
 	poolConfig, err := pgxpool.ParseConfig(config.DbSource)
