@@ -43,6 +43,8 @@ WORKDIR /app
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/main .
 
+COPY db/migrations /app/db/migrations
+
 # Copy the entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
 

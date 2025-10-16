@@ -112,22 +112,6 @@ jobs:
             # Keep only last 7 backups
             cd /opt/maicare/backups && ls -t | tail -n +8 | xargs -r rm
             
-            echo "=== Running Database Migrations ==="
-            # Run migrations using migrate container
-            docker run --rm \
-              --network maicare-network \
-              -v $(pwd)/db/migrations:/migrations \
-              migrate/migrate:latest \
-              -path=/migrations \
-              -database "${{ secrets.DB_SOURCE }}" \
-              -verbose up || {
-                echo "ERROR: Migration failed!"
-                echo "Deployment aborted. Please check the migration logs."
-                echo "To rollback, run: make migrate-down-one"
-                exit 1
-              }
-            
-            echo "Migrations completed successfully"
             
             # Stop and remove existing container if running
             if [ "$(docker ps -aq -f name=maicare-backend)" ]; then
