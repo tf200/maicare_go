@@ -103,12 +103,8 @@ jobs:
             
             docker run --rm \
               --network maicare-network \
-              -e PGPASSWORD='${{ secrets.DB_PASSWORD }}' \
               postgres:15-alpine \
-              pg_dump -h ${{ secrets.DB_HOST }} \
-              -p ${{ secrets.DB_PORT }} \
-              -U ${{ secrets.DB_USER }} \
-              -d ${{ secrets.DB_NAME }} \
+              pg_dump "${{ secrets.DB_SOURCE }}" \
               -F c -b -v > "$BACKUP_FILE" 2>&1 || {
                 echo "Warning: Database backup failed. Continuing with deployment..."
               }
@@ -123,7 +119,7 @@ jobs:
               -v $(pwd)/db/migrations:/migrations \
               migrate/migrate:latest \
               -path=/migrations \
-              -database "postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?sslmode=disable" \
+              -database "${{ secrets.DB_SOURCE }}" \
               -verbose up || {
                 echo "ERROR: Migration failed!"
                 echo "Deployment aborted. Please check the migration logs."
