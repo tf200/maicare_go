@@ -59,6 +59,27 @@ type ClientService interface {
 
 	// Client Emergency Contacts
 	CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID int64) (*CreateClientEmergencyContactResponse, error)
+	ListClientEmergencyContacts(ctx *gin.Context, req ListClientEmergencyContactsRequest, clientID int64) (*pagination.Response[ListClientEmergencyContactsResponse], error)
+	GetClientEmergencyContact(ctx context.Context, contactID int64) (*GetClientEmergencyContactResponse, error)
+	UpdateClientEmergencyContact(ctx context.Context, req UpdateClientEmergencyContactParams, contactID int64) (*UpdateClientEmergencyContactResponse, error)
+	DeleteClientEmergencyContact(ctx context.Context, contactID int64) (*DeleteClientEmergencyContactResponse, error)
+
+	// Client Involved employees
+	AssignEmployeeToClient(ctx context.Context, req AssignEmployeeRequest, clientID int64) (*AssignEmployeeResponse, error)
+	ListAssignedEmployees(ctx *gin.Context, req ListAssignedEmployeesRequest, clientID int64) (*pagination.Response[ListAssignedEmployeesResponse], error)
+	GetAssignedEmployee(ctx context.Context, assignmentID int64) (*GetAssignedEmployeeResponse, error)
+	UpdateAssignedEmployee(ctx context.Context, req UpdateAssignedEmployeeRequest, assignmentID int64) (*UpdateAssignedEmployeeResponse, error)
+	DeleteAssignedEmployee(ctx context.Context, assignmentID int64) (*DeleteAssignedEmployeeResponse, error)
+
+	// Client Network Emails
+	GetClientRelatedEmail(ctx context.Context, clientID int64) (*GetClientRelatedEmailsResponse, error)
+
+	// Client Progress Reports
+	CreateProgressReport(ctx context.Context, req *CreateProgressReportRequest, clientID int64) (*CreateProgressReportResponse, error)
+	ListProgressReports(ctx *gin.Context, req *ListProgressReportsRequest, clientID int64) (*pagination.Response[ListProgressReportsResponse], error)
+	GetProgressReport(ctx context.Context, reportID int64) (*GetProgressReportResponse, error)
+	UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error)
+	DeleteProgressReport(ctx context.Context, reportID int64) error
 }
 
 type clientService struct {

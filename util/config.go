@@ -36,6 +36,7 @@ type Config struct {
 	BrevoApiKey           string        `mapstructure:"BREVO_API_KEY"`
 	Environment           string        `mapstructure:"ENVIRONMENT"`
 	GrpcUrl               string        `mapstructure:"GRPC_URL"`
+	MigrationsPath        string        `mapstructure:"MIGRATIONS_PATH"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -57,6 +58,7 @@ func LoadConfig(path string) (config Config, err error) {
 		"OPEN_ROUTER_API_KEY", "SMTP_NAME", "SMTP_ADDRESS",
 		"SMTP_AUTH", "SMTP_HOST", "SMTP_PORT", "BREVO_SENDER_NAME",
 		"BREVO_SENDER_EMAIL", "BREVO_API_KEY", "ENVIRONMENT", "GRPC_URL",
+		"MIGRATIONS_PATH",
 	}
 
 	for _, envVar := range envVars {
@@ -103,11 +105,10 @@ func validateConfig(config *Config) error {
 		"HOST":                     config.Host,
 		"ENVIRONMENT":              config.Environment,
 		"GRPC_URL":                 config.GrpcUrl,
+		"MIGRATIONS_PATH":          config.MigrationsPath,
 	}
 
 	var missingVars []string
-
-	fmt.Printf("TWO_FA_TOKEN_SECRET_KEY loaded value: '%s'\n", config.TwoFATokenSecretKey)
 
 	// Check if crucial variables are empty
 	for varName, varValue := range crucialVars {

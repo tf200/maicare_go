@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -26,6 +27,7 @@ func createRandomAttachmentFile(t *testing.T) db.AttachmentFile {
 
 	tagvalue := "test"
 	arg := db.CreateAttachmentParams{
+		Uuid: uuid.New(),
 		Name: util.RandomString(5),
 		File: util.GetRandomImageURL(),
 		Size: 23,
@@ -62,7 +64,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		BsnVerifiedBy:              &employee.ID,
 		Source:                     util.StringPtr("Test Source"),
 		Birthplace:                 util.StringPtr("test city"),
-		Organisation:               util.StringPtr("test org"),
+		OrganizationID:             nil,
 		Departement:                util.StringPtr("test dep"),
 		Gender:                     "male",
 		Filenumber:                 "testfile",
@@ -130,22 +132,22 @@ func TestCreateClientApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				clientReq := clientp.CreateClientDetailsRequest{
-					FirstName:     faker.FirstName(),
-					LastName:      faker.LastName(),
-					Email:         faker.Email(),
-					Organisation:  util.StringPtr("Test Organisation"),
-					LocationID:    &location.ID,
-					LegalMeasure:  util.StringPtr("Test Legal Measure"),
-					Birthplace:    util.StringPtr("Test Birthplace"),
-					Departement:   util.StringPtr("Test Departement"),
-					Gender:        "male",
-					Filenumber:    util.RandomString(5),
-					DateOfBirth:   "2006-01-02",
-					PhoneNumber:   util.StringPtr("1234567890"),
-					Infix:         util.StringPtr("Test Infix"),
-					Source:        util.StringPtr("Test Sources"),
-					Bsn:           util.StringPtr("Test Bsn"),
-					BsnVerifiedBy: &employee.ID,
+					FirstName:      faker.FirstName(),
+					LastName:       faker.LastName(),
+					Email:          faker.Email(),
+					OrganizationID: nil,
+					LocationID:     &location.ID,
+					LegalMeasure:   util.StringPtr("Test Legal Measure"),
+					Birthplace:     util.StringPtr("Test Birthplace"),
+					Departement:    util.StringPtr("Test Departement"),
+					Gender:         "male",
+					Filenumber:     util.RandomString(5),
+					DateOfBirth:    "2006-01-02",
+					PhoneNumber:    util.StringPtr("1234567890"),
+					Infix:          util.StringPtr("Test Infix"),
+					Source:         util.StringPtr("Test Sources"),
+					Bsn:            util.StringPtr("Test Bsn"),
+					BsnVerifiedBy:  &employee.ID,
 					Addresses: []clientp.Address{
 						{
 							BelongsTo:   util.StringPtr("Test Belongs To"),
@@ -351,7 +353,6 @@ func TestUpdateClientDetailsApi(t *testing.T) {
 					FirstName:    util.StringPtr(faker.FirstName()),
 					LastName:     util.StringPtr(faker.LastName()),
 					Email:        util.StringPtr(faker.Email()),
-					Organisation: util.StringPtr("Test Organisation"),
 					LocationID:   &location.ID,
 					LegalMeasure: util.StringPtr("Test Legal Measure"),
 					Birthplace:   util.StringPtr("Test Birthplace"),

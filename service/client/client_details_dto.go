@@ -13,6 +13,7 @@ type Address struct {
 	Address     *string `json:"address"`
 	City        *string `json:"city"`
 	ZipCode     *string `json:"zip_code"`
+	HouseNumber *string `json:"house_number"`
 	PhoneNumber *string `json:"phone_number"`
 }
 
@@ -21,7 +22,7 @@ type CreateClientDetailsRequest struct {
 	FirstName                  string    `json:"first_name" binding:"required"`
 	LastName                   string    `json:"last_name" binding:"required"`
 	Email                      string    `json:"email" binding:"required,email"`
-	Organisation               *string   `json:"organisation"`
+	OrganizationID             *int64    `json:"organization_id"`
 	LocationID                 *int64    `json:"location_id"`
 	LegalMeasure               *string   `json:"legal_measure"`
 	Birthplace                 *string   `json:"birthplace"`
@@ -68,7 +69,7 @@ type CreateClientDetailsResponse struct {
 	Birthplace                 *string   `json:"birthplace"`
 	Email                      string    `json:"email"`
 	PhoneNumber                *string   `json:"phone_number"`
-	Organisation               *string   `json:"organisation"`
+	OrganizationID             *int64    `json:"organization_id"`
 	Departement                *string   `json:"departement"`
 	Gender                     string    `json:"gender"`
 	Filenumber                 string    `json:"filenumber"`
@@ -120,7 +121,7 @@ type ListClientsApiResponse struct {
 	Birthplace            *string   `json:"birthplace"`
 	Email                 string    `json:"email"`
 	PhoneNumber           *string   `json:"phone_number"`
-	Organisation          *string   `json:"organisation"`
+	OrganizationID        *int64    `json:"organization_id"`
 	Departement           *string   `json:"departement"`
 	Gender                string    `json:"gender"`
 	Filenumber            string    `json:"filenumber"`
@@ -161,7 +162,7 @@ type GetClientApiResponse struct {
 	Birthplace                 *string   `json:"birthplace"`
 	Email                      string    `json:"email"`
 	PhoneNumber                *string   `json:"phone_number"`
-	Organisation               *string   `json:"organisation"`
+	OrganizationID             *int64    `json:"organization_id"`
 	Departement                *string   `json:"departement"`
 	Gender                     string    `json:"gender"`
 	Filenumber                 string    `json:"filenumber"`
@@ -210,7 +211,7 @@ type UpdateClientDetailsRequest struct {
 	Birthplace                 *string   `json:"birthplace"`
 	Email                      *string   `json:"email"`
 	PhoneNumber                *string   `json:"phone_number"`
-	Organisation               *string   `json:"organisation"`
+	OrganizationID             *int64    `json:"organization_id"`
 	Departement                *string   `json:"departement"`
 	Gender                     *string   `json:"gender"`
 	Filenumber                 *string   `json:"filenumber"`
@@ -253,7 +254,7 @@ type UpdateClientDetailsResponse struct {
 	Birthplace            *string   `json:"birthplace"`
 	Email                 string    `json:"email"`
 	PhoneNumber           *string   `json:"phone_number"`
-	Organisation          *string   `json:"organisation"`
+	OrganizationID        *int64    `json:"organization_id"`
 	Departement           *string   `json:"departement"`
 	Gender                string    `json:"gender"`
 	Filenumber            string    `json:"filenumber"`

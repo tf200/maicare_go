@@ -155,30 +155,6 @@ definitions:
       urgency_score:
         type: string
     type: object
-  api.AssignEmployeeRequest:
-    properties:
-      employee_id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
-  api.AssignEmployeeResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
   api.AssignRoleToUserApiResponse:
     properties:
       employee_id:
@@ -478,139 +454,6 @@ definitions:
         type: integer
       client_id:
         type: integer
-    type: object
-  api.CreateContractRequest:
-    properties:
-      VAT:
-        example: 21
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
-      care_name:
-        example: Home Care
-        type: string
-      care_type:
-        enum:
-        - ambulante
-        - accommodation
-        example: ambulante
-        type: string
-      end_date:
-        example: "2023-12-31T00:00:00Z"
-        type: string
-      financing_act:
-        enum:
-        - WMO
-        - ZVW
-        - WLZ
-        - JW
-        - WPG
-        example: WMO
-        type: string
-      financing_option:
-        enum:
-        - ZIN
-        - PGB
-        example: ZIN
-        type: string
-      hours:
-        example: 40
-        type: number
-      hours_type:
-        type: string
-      price:
-        example: 100.5
-        type: number
-      price_time_unit:
-        enum:
-        - minute
-        - hourly
-        - daily
-        - weekly
-        - monthly
-        - yearly
-        example: monthly
-        type: string
-      reminder_period:
-        example: 30
-        type: integer
-      sender_id:
-        example: 2
-        type: integer
-      start_date:
-        example: "2023-01-01T00:00:00Z"
-        type: string
-      type_id:
-        example: 1
-        type: integer
-    required:
-    - care_type
-    - financing_act
-    - financing_option
-    - price_time_unit
-    type: object
-  api.CreateContractResponse:
-    properties:
-      VAT:
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
-      care_name:
-        type: string
-      care_type:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      hours:
-        type: number
-      hours_type:
-        type: string
-      id:
-        type: integer
-      price:
-        type: number
-      price_time_unit:
-        type: string
-      reminder_period:
-        type: integer
-      sender_id:
-        type: integer
-      start_date:
-        type: string
-      status:
-        type: string
-      type_id:
-        type: integer
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-    type: object
-  api.CreateContractTypeRequest:
-    properties:
-      name:
-        type: string
-    type: object
-  api.CreateContractTypeResponse:
-    properties:
-      id:
-        type: integer
-      name:
-        type: string
     type: object
   api.CreateIntakeFormRequest:
     properties:
@@ -1059,63 +902,6 @@ definitions:
         type: string
       recorded_by:
         type: integer
-    type: object
-  api.CreateProgressReportRequest:
-    properties:
-      date:
-        type: string
-      emotional_state:
-        enum:
-        - normal
-        - excited
-        - happy
-        - sad
-        - angry
-        - anxious
-        - depressed
-        type: string
-      employee_id:
-        type: integer
-      report_text:
-        type: string
-      title:
-        type: string
-      type:
-        enum:
-        - morning_report
-        - evening_report
-        - night_report
-        - shift_report
-        - one_to_one_report
-        - process_report
-        - contact_journal
-        - other
-        type: string
-    required:
-    - emotional_state
-    - report_text
-    - type
-    type: object
-  api.CreateProgressReportResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      date:
-        type: string
-      emotional_state:
-        type: string
-      employee_id:
-        type: integer
-      id:
-        type: integer
-      report_text:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
     type: object
   api.CreateRegistrationFormRequest:
     properties:
@@ -1569,21 +1355,6 @@ definitions:
       id:
         type: integer
     type: object
-  api.DeleteAssignedEmployeeResponse:
-    properties:
-      id:
-        type: integer
-    type: object
-  api.DeleteClientEmergencyContactResponse:
-    properties:
-      id:
-        type: integer
-    type: object
-  api.DeleteContractTypeResponse:
-    properties:
-      id:
-        type: integer
-    type: object
   api.DeleteEmployeeCertificationResponse:
     properties:
       created_at:
@@ -1687,18 +1458,6 @@ definitions:
       status_change_reason:
         type: string
     type: object
-  api.GenerateAutoReportsRequest:
-    properties:
-      end_date:
-        type: string
-      start_date:
-        type: string
-    type: object
-  api.GenerateAutoReportsResponse:
-    properties:
-      report:
-        type: string
-    type: object
   api.GenerateInvoicePDFResponse:
     properties:
       file_url:
@@ -1746,23 +1505,6 @@ definitions:
       total_amount:
         type: number
       updated_at:
-        type: string
-    type: object
-  api.GetAssignedEmployeeResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      employee_name:
-        type: string
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
         type: string
     type: object
   api.GetCarePlanInterventionsResponse:
@@ -1858,94 +1600,6 @@ definitions:
       support_network_id:
         type: integer
     type: object
-  api.GetClientContractResponse:
-    properties:
-      VAT:
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
-      care_name:
-        type: string
-      care_type:
-        type: string
-      client_first_name:
-        type: string
-      client_id:
-        type: integer
-      client_last_name:
-        type: string
-      created_at:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      hours:
-        type: number
-      hours_type:
-        type: string
-      id:
-        type: integer
-      price:
-        type: number
-      price_time_unit:
-        type: string
-      reminder_period:
-        type: integer
-      sender_id:
-        type: integer
-      sender_name:
-        type: string
-      start_date:
-        type: string
-      status:
-        type: string
-      type_id:
-        type: integer
-      type_name:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  api.GetClientEmergencyContactResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
   api.GetClientMaturityMatrixAssessmentResponse:
     properties:
       client_id:
@@ -1965,38 +1619,6 @@ definitions:
       start_date:
         type: string
       topic_name:
-        type: string
-    type: object
-  api.GetClientRelatedEmailsResponse:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
-    type: object
-  api.GetContractAuditLogResponse:
-    properties:
-      audit_id:
-        type: integer
-      changed_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      changed_by:
-        type: integer
-      changed_by_first_name:
-        type: string
-      changed_by_last_name:
-        type: string
-      changed_fields:
-        items:
-          type: string
-        type: array
-      contract_id:
-        type: integer
-      new_values:
-        $ref: '#/definitions/util.JSONObject'
-      old_values:
-        $ref: '#/definitions/util.JSONObject'
-      operation:
         type: string
     type: object
   api.GetDailySchedulesByLocationResponse:
@@ -2361,33 +1983,6 @@ definitions:
       recorded_by_last_name:
         type: string
       updated_at:
-        type: string
-    type: object
-  api.GetProgressReportResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      date:
-        type: string
-      emotional_state:
-        type: string
-      employee_first_name:
-        type: string
-      employee_id:
-        type: integer
-      employee_last_name:
-        type: string
-      employee_profile_picture:
-        type: string
-      id:
-        type: integer
-      report_text:
-        type: string
-      title:
-        type: string
-      type:
         type: string
     type: object
   api.GetRegistrationFormResponse:
@@ -2790,23 +2385,6 @@ definitions:
       role_id:
         type: integer
     type: object
-  api.ListAssignedEmployeesResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      employee_name:
-        type: string
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
   api.ListCarePlanReportsResponse:
     properties:
       care_plan_id:
@@ -2826,92 +2404,6 @@ definitions:
       report_type:
         type: string
     type: object
-  api.ListClientContractsResponse:
-    properties:
-      VAT:
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
-      care_name:
-        type: string
-      care_type:
-        type: string
-      client_first_name:
-        type: string
-      client_id:
-        type: integer
-      client_last_name:
-        type: string
-      created_at:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      hours:
-        type: number
-      hours_type:
-        type: string
-      id:
-        type: integer
-      price:
-        type: number
-      price_time_unit:
-        type: string
-      reminder_period:
-        type: integer
-      sender_id:
-        type: integer
-      sender_name:
-        type: string
-      start_date:
-        type: string
-      status:
-        type: string
-      type_id:
-        type: integer
-      updated_at:
-        type: string
-    type: object
-  api.ListClientEmergencyContactsResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
   api.ListClientMaturityMatrixAssessmentsResponse:
     properties:
       care_plan_id:
@@ -2929,48 +2421,6 @@ definitions:
       start_date:
         $ref: '#/definitions/pgtype.Date'
       topic_name:
-        type: string
-    type: object
-  api.ListContractTypesResponse:
-    properties:
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  api.ListContractsResponse:
-    properties:
-      care_name:
-        type: string
-      care_type:
-        type: string
-      client_first_name:
-        type: string
-      client_id:
-        type: integer
-      client_last_name:
-        type: string
-      created_at:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      id:
-        type: integer
-      price:
-        type: number
-      price_time_unit:
-        type: string
-      sender_id:
-        type: integer
-      sender_name:
-        type: string
-      start_date:
-        type: string
-      status:
         type: string
     type: object
   api.ListEmployeeCertificationResponse:
@@ -3319,33 +2769,6 @@ definitions:
       recorded_by_last_name:
         type: string
       updated_at:
-        type: string
-    type: object
-  api.ListProgressReportsResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      date:
-        type: string
-      emotional_state:
-        type: string
-      employee_first_name:
-        type: string
-      employee_id:
-        type: integer
-      employee_last_name:
-        type: string
-      employee_profile_picture:
-        type: string
-      id:
-        type: integer
-      report_text:
-        type: string
-      title:
-        type: string
-      type:
         type: string
     type: object
   api.ListRegistrationFormsResponse:
@@ -3719,15 +3142,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_AssignEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.AssignEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_AssignRoleToUserApiResponse:
     properties:
       data:
@@ -3881,15 +3295,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_CreateProgressReportResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.CreateProgressReportResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_CreateRoleResponse:
     properties:
       data:
@@ -3930,24 +3335,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.CreditInvoiceResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_DeleteAssignedEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DeleteAssignedEmployeeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_DeleteClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.DeleteClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -4007,15 +3394,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GenerateAutoReportsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GenerateAutoReportsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GenerateInvoicePDFResponse:
     properties:
       data:
@@ -4029,15 +3407,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GenerateInvoiceResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetAssignedEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -4070,28 +3439,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetClientMaturityMatrixAssessmentResponse:
     properties:
       data:
         $ref: '#/definitions/api.GetClientMaturityMatrixAssessmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_GetClientRelatedEmailsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetClientRelatedEmailsResponse'
       message:
         type: string
       success:
@@ -4187,15 +3538,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_GetProgressReportResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.GetProgressReportResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_GetRegistrationFormResponse:
     properties:
       data:
@@ -4227,15 +3569,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.GrantUserPermissionsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_ListClientEmergencyContactsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.ListClientEmergencyContactsResponse'
       message:
         type: string
       success:
@@ -4290,15 +3623,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.TotalDischargeCountResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateAssignedEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -4385,15 +3709,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-api_UpdateClientEmergencyContactResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-api_UpdateEmployeeCertificationResponse:
     properties:
       data:
@@ -4461,15 +3776,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/api.UpdatePaymentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-api_UpdateProgressReportResponse:
-    properties:
-      data:
-        $ref: '#/definitions/api.UpdateProgressReportResponse'
       message:
         type: string
       success:
@@ -4820,6 +4126,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-array_contract_GetContractAuditLogResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/contract.GetContractAuditLogResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-array_contract_ListContractTypesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/contract.ListContractTypesResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-attachment_DeleteAttachmentResponse:
     properties:
       data:
@@ -4878,6 +4206,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.AddClientDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_AssignEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.AssignEmployeeResponse'
       message:
         type: string
       success:
@@ -4946,6 +4283,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_CreateProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateProgressReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_DeleteAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.DeleteAssignedEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_DeleteClientDocumentApiResponse:
     properties:
       data:
@@ -4955,10 +4310,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_DeleteClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.DeleteClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GenerateAppointmentCardDocumentApiResponse:
     properties:
       data:
         $ref: '#/definitions/clientp.GenerateAppointmentCardDocumentApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GenerateAutoReportsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GenerateAutoReportsResponse'
       message:
         type: string
       success:
@@ -4977,6 +4350,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.GetAppointmentCardResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetAssignedEmployeeResponse'
       message:
         type: string
       success:
@@ -5009,10 +4391,28 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientEmergencyContactResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetClientMedicationResponse:
     properties:
       data:
         $ref: '#/definitions/clientp.GetClientMedicationResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GetClientRelatedEmailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetClientRelatedEmailsResponse'
       message:
         type: string
       success:
@@ -5054,6 +4454,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetProgressReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_ListClientEmergencyContactsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.ListClientEmergencyContactsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_ListClientsApiResponse:
     properties:
       data:
@@ -5081,6 +4499,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_UpdateAssignedEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateAssignedEmployeeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_UpdateClientDetailsResponse:
     properties:
       data:
@@ -5094,6 +4521,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.UpdateClientDiagnosisResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateClientEmergencyContactResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateClientEmergencyContactResponse'
       message:
         type: string
       success:
@@ -5121,6 +4557,69 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.UpdateIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateProgressReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateProgressReportResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-contract_CreateContractResponse:
+    properties:
+      data:
+        $ref: '#/definitions/contract.CreateContractResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-contract_CreateContractTypeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/contract.CreateContractTypeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-contract_DeleteContractTypeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/contract.DeleteContractTypeResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-contract_GetClientContractResponse:
+    properties:
+      data:
+        $ref: '#/definitions/contract.GetClientContractResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-contract_UpdateContractResponse:
+    properties:
+      data:
+        $ref: '#/definitions/contract.UpdateContractResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-contract_UpdateContractStatusResponse:
+    properties:
+      data:
+        $ref: '#/definitions/contract.UpdateContractStatusResponse'
       message:
         type: string
       success:
@@ -5166,15 +4665,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-api_ListAllIncidentsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-pagination_Response-api_ListAssignedEmployeesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-api_ListAssignedEmployeesResponse'
       message:
         type: string
       success:
@@ -5234,10 +4724,37 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-array_api_ListProgressReportsResponse:
+  api.Response-pagination_Response-array_clientp_ListProgressReportsResponse:
     properties:
       data:
-        $ref: '#/definitions/pagination.Response-array_api_ListProgressReportsResponse'
+        $ref: '#/definitions/pagination.Response-array_clientp_ListProgressReportsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-array_contract_ListClientContractsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-array_contract_ListClientContractsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-array_contract_ListContractsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-array_contract_ListContractsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListAssignedEmployeesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListAssignedEmployeesResponse'
       message:
         type: string
       success:
@@ -5398,30 +4915,6 @@ definitions:
         type: integer
       urgent_cases_count:
         type: integer
-    type: object
-  api.UpdateAssignedEmployeeRequest:
-    properties:
-      employee_id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
-    type: object
-  api.UpdateAssignedEmployeeResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      employee_id:
-        type: integer
-      id:
-        type: integer
-      role:
-        type: string
-      start_date:
-        type: string
     type: object
   api.UpdateCarePlanActionsRequest:
     properties:
@@ -5604,167 +5097,6 @@ definitions:
         type: string
       support_network_id:
         type: integer
-    type: object
-  api.UpdateClientEmergencyContactParams:
-    properties:
-      address:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      incidents_reports:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
-  api.UpdateClientEmergencyContactResponse:
-    properties:
-      address:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      goals_reports:
-        type: boolean
-      id:
-        type: integer
-      incidents_reports:
-        type: boolean
-      is_verified:
-        type: boolean
-      last_name:
-        type: string
-      medical_reports:
-        type: boolean
-      phone_number:
-        type: string
-      relation_status:
-        type: string
-      relationship:
-        type: string
-    type: object
-  api.UpdateContractRequest:
-    properties:
-      VAT:
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
-      care_name:
-        type: string
-      care_type:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      hours:
-        type: number
-      hours_type:
-        type: string
-      price:
-        type: number
-      price_time_unit:
-        type: string
-      reminder_period:
-        type: integer
-      sender_id:
-        type: integer
-      start_date:
-        type: string
-      status:
-        type: string
-      type_id:
-        type: integer
-    type: object
-  api.UpdateContractResponse:
-    properties:
-      VAT:
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
-      care_name:
-        type: string
-      care_type:
-        type: string
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      hours:
-        type: number
-      hours_type:
-        type: string
-      id:
-        type: integer
-      price:
-        type: number
-      price_frequency:
-        type: string
-      reminder_period:
-        type: integer
-      sender_id:
-        type: integer
-      start_date:
-        type: string
-      status:
-        type: string
-      type_id:
-        type: integer
-      updated_at:
-        type: string
-    type: object
-  api.UpdateContractStatusRequest:
-    properties:
-      status:
-        enum:
-        - approved
-        - draft
-        - terminated
-        - stopped
-        - expired
-        example: approved
-        type: string
-    required:
-    - status
-    type: object
-  api.UpdateContractStatusResponse:
-    properties:
-      id:
-        type: integer
-      status:
-        type: string
     type: object
   api.UpdateEmployeeCertificationRequest:
     properties:
@@ -6044,44 +5376,6 @@ definitions:
         type: string
       recorded_by:
         type: integer
-    type: object
-  api.UpdateProgressReportRequest:
-    properties:
-      client_id:
-        type: integer
-      date:
-        type: string
-      emotional_state:
-        type: string
-      employee_id:
-        type: integer
-      report_text:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
-    type: object
-  api.UpdateProgressReportResponse:
-    properties:
-      client_id:
-        type: integer
-      created_at:
-        type: string
-      date:
-        type: string
-      emotional_state:
-        type: string
-      employee_id:
-        type: integer
-      id:
-        type: integer
-      report_text:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
     type: object
   api.UpdateRegistrationFormRequest:
     properties:
@@ -6999,9 +6293,35 @@ definitions:
         type: string
       city:
         type: string
+      house_number:
+        type: string
       phone_number:
         type: string
       zip_code:
+        type: string
+    type: object
+  clientp.AssignEmployeeRequest:
+    properties:
+      employee_id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  clientp.AssignEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
         type: string
     type: object
   clientp.ConfirmIncidentResponse:
@@ -7180,8 +6500,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       sender_id:
@@ -7274,8 +6594,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -7687,6 +7007,68 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.CreateProgressReportRequest:
+    properties:
+      date:
+        type: string
+      emotional_state:
+        enum:
+        - normal
+        - excited
+        - happy
+        - sad
+        - angry
+        - anxious
+        - depressed
+        type: string
+      employee_id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        enum:
+        - morning_report
+        - evening_report
+        - night_report
+        - shift_report
+        - one_to_one_report
+        - process_report
+        - contact_journal
+        - other
+        type: string
+    required:
+    - emotional_state
+    - report_text
+    - type
+    type: object
+  clientp.CreateProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  clientp.DeleteAssignedEmployeeResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   clientp.DeleteClientDocumentApiRequest:
     properties:
       attachement_id:
@@ -7698,6 +7080,11 @@ definitions:
     properties:
       attachment_id:
         type: string
+      id:
+        type: integer
+    type: object
+  clientp.DeleteClientEmergencyContactResponse:
+    properties:
       id:
         type: integer
     type: object
@@ -7752,6 +7139,21 @@ definitions:
       client_id:
         type: integer
       file_url:
+        type: string
+    type: object
+  clientp.GenerateAutoReportsRequest:
+    properties:
+      end_date:
+        type: string
+      start_date:
+        type: string
+    required:
+    - end_date
+    - start_date
+    type: object
+  clientp.GenerateAutoReportsResponse:
+    properties:
+      report:
         type: string
     type: object
   clientp.GenerateIncidentFileResponse:
@@ -7817,6 +7219,23 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  clientp.GetAssignedEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      employee_name:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
     type: object
   clientp.GetClientAddressesApiResponse:
     properties:
@@ -7889,8 +7308,8 @@ definitions:
         type: integer
       location_name:
         type: string
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -7945,6 +7364,37 @@ definitions:
       title:
         type: string
     type: object
+  clientp.GetClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
   clientp.GetClientMedicationResponse:
     properties:
       administered_by_first_name:
@@ -7975,6 +7425,13 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  clientp.GetClientRelatedEmailsResponse:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
     type: object
   clientp.GetClientSenderResponse:
     properties:
@@ -8146,6 +7603,50 @@ definitions:
           type: string
         type: array
     type: object
+  clientp.GetProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      employee_profile_picture:
+        type: string
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  clientp.ListAssignedEmployeesResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      employee_name:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   clientp.ListClientDiagnosesResponse:
     properties:
       client_id:
@@ -8198,6 +7699,37 @@ definitions:
       updated_at:
         type: string
       uuid:
+        type: string
+    type: object
+  clientp.ListClientEmergencyContactsResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
         type: string
     type: object
   clientp.ListClientMedicationsResponse:
@@ -8271,8 +7803,8 @@ definitions:
         type: integer
       location_name:
         type: string
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -8400,6 +7932,33 @@ definitions:
         type: boolean
       violence:
         type: boolean
+    type: object
+  clientp.ListProgressReportsResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_first_name:
+        type: string
+      employee_id:
+        type: integer
+      employee_last_name:
+        type: string
+      employee_profile_picture:
+        type: string
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
     type: object
   clientp.ListStatusHistoryApiResponse:
     properties:
@@ -8543,6 +8102,30 @@ definitions:
           type: string
         type: array
     type: object
+  clientp.UpdateAssignedEmployeeRequest:
+    properties:
+      employee_id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
+  clientp.UpdateAssignedEmployeeResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        type: string
+      start_date:
+        type: string
+    type: object
   clientp.UpdateClientDetailsRequest:
     properties:
       birthplace:
@@ -8595,8 +8178,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -8664,8 +8247,8 @@ definitions:
         type: string
       location_id:
         type: integer
-      organisation:
-        type: string
+      organization_id:
+        type: integer
       phone_number:
         type: string
       profile_picture:
@@ -8719,6 +8302,60 @@ definitions:
       status:
         type: string
       title:
+        type: string
+    type: object
+  clientp.UpdateClientEmergencyContactParams:
+    properties:
+      address:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      incidents_reports:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
+        type: string
+    type: object
+  clientp.UpdateClientEmergencyContactResponse:
+    properties:
+      address:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      goals_reports:
+        type: boolean
+      id:
+        type: integer
+      incidents_reports:
+        type: boolean
+      is_verified:
+        type: boolean
+      last_name:
+        type: string
+      medical_reports:
+        type: boolean
+      phone_number:
+        type: string
+      relation_status:
+        type: string
+      relationship:
         type: string
     type: object
   clientp.UpdateClientMedicationRequest:
@@ -8994,6 +8631,466 @@ definitions:
         type: boolean
       violence:
         type: boolean
+    type: object
+  clientp.UpdateProgressReportRequest:
+    properties:
+      client_id:
+        type: integer
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  clientp.UpdateProgressReportResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      date:
+        type: string
+      emotional_state:
+        type: string
+      employee_id:
+        type: integer
+      id:
+        type: integer
+      report_text:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  contract.CreateContractRequest:
+    properties:
+      VAT:
+        example: 21
+        type: integer
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        example: Home Care
+        type: string
+      care_type:
+        enum:
+        - ambulante
+        - accommodation
+        example: ambulante
+        type: string
+      end_date:
+        example: "2023-12-31T00:00:00Z"
+        type: string
+      financing_act:
+        enum:
+        - WMO
+        - ZVW
+        - WLZ
+        - JW
+        - WPG
+        example: WMO
+        type: string
+      financing_option:
+        enum:
+        - ZIN
+        - PGB
+        example: ZIN
+        type: string
+      hours:
+        example: 40
+        type: number
+      hours_type:
+        type: string
+      price:
+        example: 100.5
+        type: number
+      price_time_unit:
+        enum:
+        - minute
+        - hourly
+        - daily
+        - weekly
+        - monthly
+        - yearly
+        example: monthly
+        type: string
+      reminder_period:
+        example: 30
+        type: integer
+      sender_id:
+        example: 2
+        type: integer
+      start_date:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      type_id:
+        example: 1
+        type: integer
+    required:
+    - care_type
+    - financing_act
+    - financing_option
+    - price_time_unit
+    type: object
+  contract.CreateContractResponse:
+    properties:
+      VAT:
+        type: integer
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: number
+      hours_type:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      type_id:
+        type: integer
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
+  contract.CreateContractTypeRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  contract.CreateContractTypeResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  contract.DeleteContractTypeResponse:
+    properties:
+      id:
+        type: integer
+    type: object
+  contract.GetClientContractResponse:
+    properties:
+      VAT:
+        type: integer
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: number
+      hours_type:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      sender_name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      type_id:
+        type: integer
+      type_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  contract.GetContractAuditLogResponse:
+    properties:
+      audit_id:
+        type: integer
+      changed_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      changed_by:
+        type: integer
+      changed_by_first_name:
+        type: string
+      changed_by_last_name:
+        type: string
+      changed_fields:
+        items:
+          type: string
+        type: array
+      contract_id:
+        type: integer
+      new_values: {}
+      old_values: {}
+      operation:
+        type: string
+    type: object
+  contract.ListClientContractsResponse:
+    properties:
+      VAT:
+        type: integer
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: number
+      hours_type:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      sender_name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      type_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  contract.ListContractTypesResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  contract.ListContractsResponse:
+    properties:
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_first_name:
+        type: string
+      client_id:
+        type: integer
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      sender_id:
+        type: integer
+      sender_name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+    type: object
+  contract.UpdateContractRequest:
+    properties:
+      VAT:
+        type: integer
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: number
+      hours_type:
+        type: string
+      price:
+        type: number
+      price_time_unit:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      type_id:
+        type: integer
+    type: object
+  contract.UpdateContractResponse:
+    properties:
+      VAT:
+        type: integer
+      attachment_ids:
+        items:
+          type: string
+        type: array
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      departure_reason:
+        type: string
+      departure_report:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      hours:
+        type: number
+      hours_type:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      price_frequency:
+        type: string
+      reminder_period:
+        type: integer
+      sender_id:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      type_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  contract.UpdateContractStatusRequest:
+    properties:
+      status:
+        enum:
+        - approved
+        - draft
+        - terminated
+        - stopped
+        - expired
+        example: approved
+        type: string
+    required:
+    - status
+    type: object
+  contract.UpdateContractStatusResponse:
+    properties:
+      id:
+        type: integer
+      status:
+        type: string
     type: object
   employees.CreateEmployeeProfileRequest:
     properties:
@@ -9430,36 +9527,6 @@ definitions:
           $ref: '#/definitions/api.ListAllIncidentsResponse'
         type: array
     type: object
-  pagination.Response-api_ListAssignedEmployeesResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListAssignedEmployeesResponse'
-        type: array
-    type: object
-  pagination.Response-api_ListClientContractsResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListClientContractsResponse'
-        type: array
-    type: object
   pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse:
     properties:
       count:
@@ -9473,21 +9540,6 @@ definitions:
       results:
         items:
           $ref: '#/definitions/api.ListClientMaturityMatrixAssessmentsResponse'
-        type: array
-    type: object
-  pagination.Response-api_ListContractsResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/api.ListContractsResponse'
         type: array
     type: object
   pagination.Response-api_ListIntakeFormsResponse:
@@ -9567,7 +9619,7 @@ definitions:
           type: array
         type: array
     type: object
-  pagination.Response-array_api_ListProgressReportsResponse:
+  pagination.Response-array_clientp_ListProgressReportsResponse:
     properties:
       count:
         type: integer
@@ -9580,8 +9632,57 @@ definitions:
       results:
         items:
           items:
-            $ref: '#/definitions/api.ListProgressReportsResponse'
+            $ref: '#/definitions/clientp.ListProgressReportsResponse'
           type: array
+        type: array
+    type: object
+  pagination.Response-array_contract_ListClientContractsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          items:
+            $ref: '#/definitions/contract.ListClientContractsResponse'
+          type: array
+        type: array
+    type: object
+  pagination.Response-array_contract_ListContractsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          items:
+            $ref: '#/definitions/contract.ListContractsResponse'
+          type: array
+        type: array
+    type: object
+  pagination.Response-clientp_ListAssignedEmployeesResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListAssignedEmployeesResponse'
         type: array
     type: object
   pagination.Response-clientp_ListClientDiagnosesResponse:
@@ -9688,6 +9789,7 @@ definitions:
     - 1
     - 0
     - -1
+    format: int32
     type: integer
     x-enum-varnames:
     - Infinity
@@ -11364,14 +11466,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.GenerateAutoReportsRequest'
+          $ref: '#/definitions/clientp.GenerateAutoReportsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GenerateAutoReportsResponse'
+            $ref: '#/definitions/api.Response-clientp_GenerateAutoReportsResponse'
       summary: Generate auto reports
       tags:
       - progress_reports
@@ -11641,7 +11743,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pagination.Response-api_ListClientContractsResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-array_contract_ListClientContractsResponse'
       summary: List contracts for a client
       tags:
       - contracts
@@ -11659,14 +11761,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateContractRequest'
+          $ref: '#/definitions/contract.CreateContractRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.CreateContractResponse'
+            $ref: '#/definitions/api.Response-contract_CreateContractResponse'
       summary: Create a new contract
       tags:
       - contracts
@@ -11686,7 +11788,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.GetClientContractResponse'
+            $ref: '#/definitions/api.Response-contract_GetClientContractResponse'
       summary: Get a contract by ID
       tags:
       - contracts
@@ -12160,7 +12262,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_ListClientEmergencyContactsResponse'
+            $ref: '#/definitions/api.Response-clientp_ListClientEmergencyContactsResponse'
         "400":
           description: Bad Request
           schema:
@@ -12224,7 +12326,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DeleteClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_DeleteClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12254,7 +12356,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12285,14 +12387,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateClientEmergencyContactParams'
+          $ref: '#/definitions/clientp.UpdateClientEmergencyContactParams'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateClientEmergencyContactResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateClientEmergencyContactResponse'
         "400":
           description: Bad Request
           schema:
@@ -12533,7 +12635,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-api_ListAssignedEmployeesResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListAssignedEmployeesResponse'
         "400":
           description: Bad Request
           schema:
@@ -12559,14 +12661,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.AssignEmployeeRequest'
+          $ref: '#/definitions/clientp.AssignEmployeeRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_AssignEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_AssignEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12597,7 +12699,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_DeleteAssignedEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_DeleteAssignedEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12627,7 +12729,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetAssignedEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_GetAssignedEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12658,14 +12760,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateAssignedEmployeeRequest'
+          $ref: '#/definitions/clientp.UpdateAssignedEmployeeRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateAssignedEmployeeResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateAssignedEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -12839,7 +12941,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-array_api_ListProgressReportsResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-array_clientp_ListProgressReportsResponse'
         "400":
           description: Bad Request
           schema:
@@ -12865,14 +12967,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateProgressReportRequest'
+          $ref: '#/definitions/clientp.CreateProgressReportRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/api.Response-api_CreateProgressReportResponse'
+            $ref: '#/definitions/api.Response-clientp_CreateProgressReportResponse'
         "400":
           description: Bad Request
           schema:
@@ -12933,7 +13035,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetProgressReportResponse'
+            $ref: '#/definitions/api.Response-clientp_GetProgressReportResponse'
         "400":
           description: Bad Request
           schema:
@@ -12964,14 +13066,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateProgressReportRequest'
+          $ref: '#/definitions/clientp.UpdateProgressReportRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_UpdateProgressReportResponse'
+            $ref: '#/definitions/api.Response-clientp_UpdateProgressReportResponse'
         "400":
           description: Bad Request
           schema:
@@ -12997,7 +13099,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-api_GetClientRelatedEmailsResponse'
+            $ref: '#/definitions/api.Response-clientp_GetClientRelatedEmailsResponse'
         "400":
           description: Bad Request
           schema:
@@ -13138,7 +13240,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/api.ListContractTypesResponse'
+              $ref: '#/definitions/api.Response-array_contract_ListContractTypesResponse'
             type: array
       summary: List contract types
       tags:
@@ -13152,14 +13254,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateContractTypeRequest'
+          $ref: '#/definitions/contract.CreateContractTypeRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.CreateContractTypeResponse'
+            $ref: '#/definitions/api.Response-contract_CreateContractTypeResponse'
       summary: Create a new contract type
       tags:
       - contracts
@@ -13177,7 +13279,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.DeleteContractTypeResponse'
+            $ref: '#/definitions/api.Response-contract_DeleteContractTypeResponse'
       summary: Delete a contract type
       tags:
       - contracts
@@ -13247,7 +13349,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pagination.Response-api_ListContractsResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-array_contract_ListContractsResponse'
       summary: List contracts
       tags:
       - contracts
@@ -13266,14 +13368,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateContractRequest'
+          $ref: '#/definitions/contract.UpdateContractRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.UpdateContractResponse'
+            $ref: '#/definitions/api.Response-contract_UpdateContractResponse'
       summary: Update a contract
       tags:
       - contracts
@@ -13294,7 +13396,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/api.GetContractAuditLogResponse'
+              $ref: '#/definitions/api.Response-array_contract_GetContractAuditLogResponse'
             type: array
       summary: Get audit logs for a contract
       tags:
@@ -13314,14 +13416,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UpdateContractStatusRequest'
+          $ref: '#/definitions/contract.UpdateContractStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.UpdateContractStatusResponse'
+            $ref: '#/definitions/api.Response-contract_UpdateContractStatusResponse'
       summary: Update the status of a contract
       tags:
       - contracts
@@ -14890,10 +14992,12 @@ paths:
         ID, status, and date range.
       parameters:
       - description: Client ID
+        format: int64
         in: query
         name: client_id
         type: integer
       - description: Sender ID
+        format: int64
         in: query
         name: sender_id
         type: integer
@@ -14986,6 +15090,7 @@ paths:
       description: Delete an invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15020,6 +15125,7 @@ paths:
       description: Get an invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15056,6 +15162,7 @@ paths:
       description: Update an existing invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15097,6 +15204,7 @@ paths:
       description: Retrieve audit logs for a specific invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15132,6 +15240,7 @@ paths:
       description: Create a credit note for an existing invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15167,6 +15276,7 @@ paths:
       description: Generate an invoice in PDF format by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15202,6 +15312,7 @@ paths:
       description: List all payments for a specific invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15238,6 +15349,7 @@ paths:
       description: Create a payment for an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15279,6 +15391,7 @@ paths:
       description: Get a payment by its ID.
       parameters:
       - description: Payment ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15314,6 +15427,7 @@ paths:
       description: Send a reminder for a specific invoice by its ID.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: id
         required: true
@@ -15351,11 +15465,13 @@ paths:
       description: Delete a payment from an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
+        format: int64
         in: path
         name: payment_id
         required: true
@@ -15392,11 +15508,13 @@ paths:
       description: Update a payment for an invoice.
       parameters:
       - description: Invoice ID
+        format: int64
         in: path
         name: invoice_id
         required: true
         type: integer
       - description: Payment ID
+        format: int64
         in: path
         name: payment_id
         required: true

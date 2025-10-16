@@ -29,7 +29,7 @@ func createRandomClientDetails(t *testing.T) ClientDetail {
 		BsnVerifiedBy:   &employee.ID, // Assuming employee is created and has an ID
 		Source:          util.StringPtr("Test Source"),
 		Birthplace:      util.StringPtr("test city"),
-		Organisation:    util.StringPtr("test org"),
+		OrganizationID:  nil,
 		Departement:     util.StringPtr("test dep"),
 		Gender:          "male", // or "Female" or other values as per your requirements
 		Filenumber:      "testfile",
@@ -151,7 +151,6 @@ func TestGetClientDetails(t *testing.T) {
 	require.Equal(t, client.Bsn, client1.Bsn)
 	require.Equal(t, client.Source, client1.Source)
 	require.Equal(t, client.Birthplace, client1.Birthplace)
-	require.Equal(t, client.Organisation, client1.Organisation)
 	require.Equal(t, client.Departement, client1.Departement)
 }
 

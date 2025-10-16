@@ -2,16 +2,16 @@ name: Deploy Backend to VPS
 
 on:
   push:
-    branches: [ main ]  # Change to your main branch name if different
+    branches: [ main ]
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/maicare
-  VPS_APP_DIR: /opt/maicare  # Directory on your VPS where app will run
+  VPS_APP_DIR: /opt/maicare
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: maicare-prod   # Set this up in GitHub repo settings
+    environment: maicare-prod
 
     steps:
       - name: Checkout code
@@ -55,13 +55,6 @@ jobs:
             # Login to Docker Hub
             echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
             
-            # Stop and remove existing container if running
-            if [ "$(docker ps -aq -f name=maicare-backend)" ]; then
-              echo "Stopping and removing existing container..."
-              docker stop maicare-backend
-              docker rm maicare-backend
-            fi
-            
             # Pull the new image
             echo "Pulling new image..."
             docker pull ${{ env.DOCKER_IMAGE }}:back
@@ -98,57 +91,81 @@ jobs:
             GRPC_URL=${{ secrets.GRPC_URL }}
             EOF
             
-            # Set proper permissions for env file
             chmod 644 /opt/maicare/app.env
             
-            # Verify the file was created and check permissions
-            echo "Verifying environment file..."
-            ls -la /opt/maicare/app.env
-            echo "Current user: $(whoami)"
-            echo "Docker version: $(docker --version)"
-            echo "Testing file access:"
-            cat /opt/maicare/app.env | head -3
+            echo "=== Database Backup ==="
+            # Create backup directory
+            mkdir -p /opt/maicare/backups
+            
+            # Backup database before migration
+            BACKUP_FILE="/opt/maicare/backups/backup_$(date +%Y%m%d_%H%M%S).sql"
+            echo "Creating database backup: $BACKUP_FILE"
+            
+            docker run --rm \
+              --network maicare-network \
+              postgres:15-alpine \
+              pg_dump "${{ secrets.DB_SOURCE }}" \
+              -F c -b -v > "$BACKUP_FILE" 2>&1 || {
+                echo "Warning: Database backup failed. Continuing with deployment..."
+              }
+            
+            # Keep only last 7 backups
+            cd /opt/maicare/backups && ls -t | tail -n +8 | xargs -r rm
+            
+            
+            # Stop and remove existing container if running
+            if [ "$(docker ps -aq -f name=maicare-backend)" ]; then
+              echo "Stopping existing container..."
+              docker stop maicare-backend || true
+              docker rm maicare-backend || true
+            fi
             
             # Run the new container
             echo "Starting new container..."
-            echo "Using env file: /opt/maicare/app.env"
             docker run -d \
-            --name maicare-backend \
-            --network maicare-network \
-            -p 8080:8080 \
-            --restart unless-stopped \
-            --env-file /opt/maicare/app.env \
-            ${{ env.DOCKER_IMAGE }}:back
+              --name maicare-backend \
+              --network maicare-network \
+              -p 8080:8080 \
+              --restart unless-stopped \
+              --env-file /opt/maicare/app.env \
+              ${{ env.DOCKER_IMAGE }}:back
             
             echo "=== Deployment Complete ==="
-            # Check if the container is running
-            echo "Checking if the container is running..."
-            sleep 10  # Wait for a few seconds to allow the container to start
+            
+            # Wait and verify container is running
+            echo "Waiting for container to start..."
+            sleep 10
+            
             if [ "$(docker ps -q -f name=maicare-backend)" ]; then
-              echo "Container is running successfully."
+              echo "✓ Container is running successfully"
             else
-              echo "Container failed to start."
+              echo "✗ Container failed to start"
+              echo "Checking logs..."
+              docker logs maicare-backend --tail 50
               exit 1
             fi
 
-            # Health check with 2 retries and a 5-second delay
+            # Health check with retries
             echo "Performing health check..."
-            for i in {1..2}; do
-              if curl -s http://localhost:8080/test/health | grep -q "healthy"; then
-                echo "Health check passed."
+            for i in {1..6}; do
+              if curl -sf http://localhost:8080/test/health | grep -q "healthy"; then
+                echo "✓ Health check passed"
                 break
               else
-                echo "Health check failed."
+                echo "Attempt $i/6: Health check failed, retrying in 5s..."
                 sleep 5
               fi
+              
+              if [ $i -eq 6 ]; then
+                echo "✗ Health check failed after 6 attempts"
+                echo "Application logs:"
+                docker logs maicare-backend --tail 100
+                exit 1
+              fi
             done
-            if [ $i -eq 2 ]; then
-              exit 1
-            fi
             
+            # Clean up old images
+            echo "Cleaning up old images..."
+            docker image prune -af --filter "until=24h"
             
-
-            
-            # Clean up unused images
-            echo "Cleaning up..."
-            docker image prune -af
+            echo "=== Deployment Successful ==="

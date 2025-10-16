@@ -5,3 +5,5 @@ dev.env
 prod.env
 entrypoint.sh
 /admin
+*.env
+

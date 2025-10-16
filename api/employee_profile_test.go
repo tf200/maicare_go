@@ -322,7 +322,7 @@ func TestGetEmployeeProfileByIDApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[GetEmployeeProfileByIDApiResponse]
+				var response Response[employees.GetEmployeeProfileByIDResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -363,7 +363,7 @@ func TestUpdateEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updatereq := UpdateEmployeeProfileRequest{
+				updatereq := employees.UpdateEmployeeProfileRequest{
 					EmployeeNumber:   nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
 					EmploymentNumber: util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999)))}
 				data, err := json.Marshal(updatereq)
@@ -377,7 +377,7 @@ func TestUpdateEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[UpdateEmployeeProfileResponse]
+				var response Response[employees.UpdateEmployeeProfileResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -428,7 +428,7 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[GetEmployeeProfileResponse]
+				var response Response[employees.GetEmployeeProfileResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.Equal(t, employee.ID, response.Data.EmployeeID)
@@ -471,8 +471,8 @@ func TestSetEmployeeProfilePictureApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/employees/%d/profile_picture", employee.ID)
-				setReq := SetEmployeeProfilePictureRequest{
-					AttachmentID: attachement.Uuid,
+				setReq := employees.SetEmployeeProfilePictureRequest{
+					AttachmentID: attachement.Uuid.String(),
 				}
 				data, err := json.Marshal(setReq)
 				require.NoError(t, err)
@@ -484,7 +484,7 @@ func TestSetEmployeeProfilePictureApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[SetEmployeeProfilePictureResponse]
+				var response Response[employees.SetEmployeeProfilePictureResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 			},
@@ -519,7 +519,7 @@ func createRandomEducation(t *testing.T) (int64, int64) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				addEducationReq := AddEducationToEmployeeProfileRequest{
+				addEducationReq := employees.AddEducationToEmployeeProfileRequest{
 					Degree:          "BsC",
 					FieldOfStudy:    "Computer Science",
 					InstitutionName: "University of Ghana",
@@ -537,7 +537,7 @@ func createRandomEducation(t *testing.T) (int64, int64) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) int64 {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[AddEducationToEmployeeProfileResponse]
+				var response Response[employees.AddEducationToEmployeeProfileResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -593,7 +593,7 @@ func TestListEmployeeEducationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[[]ListEmployeeEducationResponse]
+				var response Response[[]employees.ListEmployeeEducationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -633,7 +633,7 @@ func TestAddEmployeeExperienceApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				addExperienceReq := AddEmployeeExperienceRequest{
+				addExperienceReq := employees.AddEmployeeExperienceRequest{
 					CompanyName: "Google",
 					JobTitle:    "Software Engineer",
 					StartDate:   "2018-01-01",
@@ -651,7 +651,7 @@ func TestAddEmployeeExperienceApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[AddEmployeeExperienceResponse]
+				var response Response[employees.AddEmployeeExperienceResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -695,7 +695,7 @@ func TestAddEmployeeCertificationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				addCertificationReq := AddEmployeeCertificationRequest{
+				addCertificationReq := employees.AddEmployeeCertificationRequest{
 					Name:       "AWS Certified Developer",
 					IssuedBy:   "AWS",
 					DateIssued: "2022-01-01",
@@ -711,7 +711,7 @@ func TestAddEmployeeCertificationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[AddEmployeeCertificationResponse]
+				var response Response[employees.AddEmployeeCertificationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -762,7 +762,7 @@ func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
 				t.Log(recorder.Body)
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[[]SearchEmployeesByNameOrEmailResponse]
+				var response Response[[]employees.SearchEmployeesByNameOrEmailResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -799,7 +799,7 @@ func TestAddEmployeeContractDetailsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				addContractReq := AddEmployeeContractDetailsRequest{
+				addContractReq := employees.AddEmployeeContractDetailsRequest{
 					ContractHours:     util.Float64Ptr(40),
 					ContractStartDate: time.Now().AddDate(-1, 0, 0),
 					ContractEndDate:   time.Now().AddDate(1, 0, 0),
@@ -816,7 +816,7 @@ func TestAddEmployeeContractDetailsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[AddEmployeeContractDetailsResponse]
+				var response Response[employees.AddEmployeeContractDetailsResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 			},
