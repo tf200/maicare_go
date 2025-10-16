@@ -38,6 +38,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 	appointmentService := appointment.NewAppointmentService(deps)
 	attachmentService := attachment.NewAttachmentService(deps)
 	contractService := contractp.NewContractService(deps)
+	ecrService := ecr.NewECRService(deps)
 	return &BusinessService{
 		ServiceDependencies: deps,
 		AuthService:         authService,
@@ -47,6 +48,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 		AppointmentService:  appointmentService,
 		AttachmentService:   attachmentService,
 		ContractService:     contractService,
+		ECRService:          ecrService,
 	}
 }
 
