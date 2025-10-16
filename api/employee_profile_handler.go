@@ -2,43 +2,13 @@ package api
 
 import (
 	"fmt"
-	"log"
-	"maicare_go/async/aclient"
-	db "maicare_go/db/sqlc"
 	_ "maicare_go/pagination" // import for pagination.Response used in swagger
 	"maicare_go/service/employees"
-	"maicare_go/util"
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/goccy/go-json"
-	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
-
-type Permission struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Resource string `json:"resource"`
-	Method   string `json:"method"`
-}
-
-// GetEmployeeProfileResponse represents the response for GetEmployeeProfileApi
-type GetEmployeeProfileResponse struct {
-	UserID      int64        `json:"user_id"`
-	Email       string       `json:"email"`
-	EmployeeID  int64        `json:"employee_id"`
-	FirstName   string       `json:"first_name"`
-	LastName    string       `json:"last_name"`
-	TwoFactor   bool         `json:"two_factor_enabled"`
-	LastLogin   time.Time    `json:"last_login"`
-	RoleID      int32        `json:"role_id"`
-	Permissions []Permission `json:"permissions"`
-}
 
 // @Summary Get employee profile by user ID
 // @Description Get employee profile by user ID
@@ -49,33 +19,18 @@ type GetEmployeeProfileResponse struct {
 // @Router /employees/profile [get]
 func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)
-	log.Printf("Payload: %v", payload)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err)) // comment gere
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
-	log.Print("here: ")
-	profile, err := server.store.GetEmployeeProfileByUserID(ctx, payload.UserId)
+
+	profile, err := server.businessService.EmployeeService.GetEmployeeProfile(payload.UserId, ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	var permissions []Permission
-	if err := json.Unmarshal(profile.Permissions, &permissions); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(GetEmployeeProfileResponse{
-		UserID:      profile.UserID,
-		EmployeeID:  profile.EmployeeID,
-		FirstName:   profile.FirstName,
-		LastName:    profile.LastName,
-		Email:       profile.Email,
-		TwoFactor:   profile.TwoFactorEnabled,
-		LastLogin:   profile.LastLogin.Time,
-		Permissions: permissions,
-	}, "Employee profile retrieved successfully")
+	res := SuccessResponse(profile, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -154,48 +109,14 @@ type GetEmployeeCountsResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/counts [get]
 func (server *Server) GetEmployeeCountsApi(ctx *gin.Context) {
-	counts, err := server.store.GetEmployeeCounts(ctx)
+	counts, err := server.businessService.EmployeeService.GetEmployeeCounts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(GetEmployeeCountsResponse{
-		TotalEmployees:      counts.TotalEmployees,
-		TotalSubcontractors: counts.TotalSubcontractors,
-		TotalArchived:       counts.TotalArchived,
-		TotalOutOfService:   counts.TotalOutOfService,
-	}, "Employee counts retrieved successfully")
+	res := SuccessResponse(counts, "Employee counts retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetEmployeeProfileByIDApiResponse represents the response for GetEmployeeProfileByIDApi
-type GetEmployeeProfileByIDApiResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
-	FirstName                 string    `json:"first_name"`
-	LastName                  string    `json:"last_name"`
-	Position                  *string   `json:"position"`
-	Department                *string   `json:"department"`
-	EmployeeNumber            *string   `json:"employee_number"`
-	EmploymentNumber          *string   `json:"employment_number"`
-	PrivateEmailAddress       *string   `json:"private_email_address"`
-	Email                     string    `json:"email"`
-	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string   `json:"private_phone_number"`
-	WorkPhoneNumber           *string   `json:"work_phone_number"`
-	DateOfBirth               time.Time `json:"date_of_birth"`
-	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
-	CreatedAt                 time.Time `json:"created_at"`
-	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
-	LocationID                *int64    `json:"location_id"`
-	HasBorrowed               bool      `json:"has_borrowed"`
-	OutOfService              *bool     `json:"out_of_service"`
-	IsArchived                bool      `json:"is_archived"`
-	ProfilePicture            *string   `json:"profile_picture"`
-	RoleID                    int32     `json:"role_id"`
-	IsLoggedInUser            bool      `json:"is_logged_in_user"`
 }
 
 // @Summary Get employee profile by  ID
@@ -219,89 +140,18 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	employee, err := server.store.GetEmployeeProfileByID(ctx, employeeID)
+
+	profile, err := server.businessService.EmployeeService.GetEmployeeProfileByID(employeeID, currentUserID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(GetEmployeeProfileByIDApiResponse{
-		ID:                        employee.ID,
-		UserID:                    employee.UserID,
-		FirstName:                 employee.FirstName,
-		LastName:                  employee.LastName,
-		Position:                  employee.Position,
-		Department:                employee.Department,
-		EmployeeNumber:            employee.EmployeeNumber,
-		EmploymentNumber:          employee.EmploymentNumber,
-		PrivateEmailAddress:       employee.PrivateEmailAddress,
-		Email:                     employee.Email,
-		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		DateOfBirth:               employee.DateOfBirth.Time,
-		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		CreatedAt:                 employee.CreatedAt.Time,
-		IsSubcontractor:           employee.IsSubcontractor,
-		Gender:                    employee.Gender,
-		LocationID:                employee.LocationID,
-		HasBorrowed:               employee.HasBorrowed,
-		OutOfService:              employee.OutOfService,
-		IsArchived:                employee.IsArchived,
-		ProfilePicture:            server.generateResponsePresignedURL(employee.ProfilePicture),
-		// to do list all roles
-		IsLoggedInUser: employee.UserID == currentUserID,
-	}, "Employee profile retrieved successfully")
+
+	// Generate presigned URL for profile picture
+	profile.ProfilePicture = server.generateResponsePresignedURL(profile.ProfilePicture)
+
+	res := SuccessResponse(profile, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateEmployeeProfileRequest represents the request for UpdateEmployeeProfileApi
-type UpdateEmployeeProfileRequest struct {
-	FirstName                 *string `json:"first_name"`
-	LastName                  *string `json:"last_name"`
-	Position                  *string `json:"position"`
-	Department                *string `json:"department"`
-	EmployeeNumber            *string `json:"employee_number"`
-	EmploymentNumber          *string `json:"employment_number"`
-	PrivateEmailAddress       *string `json:"private_email_address"`
-	Email                     *string `json:"email"`
-	AuthenticationPhoneNumber *string `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string `json:"private_phone_number"`
-	WorkPhoneNumber           *string `json:"work_phone_number"`
-	DateOfBirth               *string `json:"date_of_birth"`
-	HomeTelephoneNumber       *string `json:"home_telephone_number"`
-	IsSubcontractor           *bool   `json:"is_subcontractor"`
-	Gender                    *string `json:"gender"`
-	LocationID                *int64  `json:"location_id"`
-	HasBorrowed               *bool   `json:"has_borrowed"`
-	OutOfService              *bool   `json:"out_of_service"`
-	IsArchived                *bool   `json:"is_archived"`
-}
-
-// UpdateEmployeeProfileResponse represents the response for UpdateEmployeeProfileApi
-
-type UpdateEmployeeProfileResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
-	FirstName                 string    `json:"first_name"`
-	LastName                  string    `json:"last_name"`
-	Position                  *string   `json:"position"`
-	Department                *string   `json:"department"`
-	EmployeeNumber            *string   `json:"employee_number"`
-	EmploymentNumber          *string   `json:"employment_number"`
-	PrivateEmailAddress       *string   `json:"private_email_address"`
-	Email                     string    `json:"email"`
-	AuthenticationPhoneNumber *string   `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string   `json:"private_phone_number"`
-	WorkPhoneNumber           *string   `json:"work_phone_number"`
-	DateOfBirth               time.Time `json:"date_of_birth"`
-	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
-	CreatedAt                 time.Time `json:"created_at"`
-	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
-	LocationID                *int64    `json:"location_id"`
-	HasBorrowed               bool      `json:"has_borrowed"`
-	OutOfService              *bool     `json:"out_of_service"`
-	IsArchived                bool      `json:"is_archived"`
 }
 
 // @Summary Update employee profile by ID
@@ -319,83 +169,21 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req UpdateEmployeeProfileRequest
+
+	var req employees.UpdateEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var parsedDate time.Time
-	if req.DateOfBirth != nil {
-		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-	employee, err := server.store.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
-		ID:                        employeeID,
-		FirstName:                 req.FirstName,
-		LastName:                  req.LastName,
-		Position:                  req.Position,
-		Department:                req.Department,
-		EmployeeNumber:            req.EmployeeNumber,
-		EmploymentNumber:          req.EmploymentNumber,
-		PrivateEmailAddress:       req.PrivateEmailAddress,
-		Email:                     req.Email,
-		AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
-		PrivatePhoneNumber:        req.PrivatePhoneNumber,
-		WorkPhoneNumber:           req.WorkPhoneNumber,
-		DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
-		HomeTelephoneNumber:       req.HomeTelephoneNumber,
-		IsSubcontractor:           req.IsSubcontractor,
-		Gender:                    req.Gender,
-		LocationID:                req.LocationID,
-		HasBorrowed:               req.HasBorrowed,
-		OutOfService:              req.OutOfService,
-		IsArchived:                req.IsArchived,
-	})
+
+	profile, err := server.businessService.EmployeeService.UpdateEmployeeProfile(req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(UpdateEmployeeProfileResponse{
-		ID:                        employee.ID,
-		UserID:                    employee.UserID,
-		FirstName:                 employee.FirstName,
-		LastName:                  employee.LastName,
-		Position:                  employee.Position,
-		Department:                employee.Department,
-		EmployeeNumber:            employee.EmployeeNumber,
-		EmploymentNumber:          employee.EmploymentNumber,
-		PrivateEmailAddress:       employee.PrivateEmailAddress,
-		Email:                     employee.Email,
-		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		DateOfBirth:               employee.DateOfBirth.Time,
-		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		CreatedAt:                 employee.CreatedAt.Time,
-		IsSubcontractor:           employee.IsSubcontractor,
-		Gender:                    employee.Gender,
-		LocationID:                employee.LocationID,
-		HasBorrowed:               employee.HasBorrowed,
-		OutOfService:              employee.OutOfService,
-		IsArchived:                employee.IsArchived,
-	}, "Employee profile updated successfully")
+
+	res := SuccessResponse(profile, "Employee profile updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
-}
-
-// SetEmployeeProfilePictureRequest represents the request for SetEmployeeProfilePictureApi
-type SetEmployeeProfilePictureRequest struct {
-	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
-}
-
-// SetEmployeeProfilePictureResponse represents the response for SetEmployeeProfilePictureApi
-type SetEmployeeProfilePictureResponse struct {
-	ID             int64   `json:"id"`
-	Email          string  `json:"email"`
-	ProfilePicture *string `json:"profile_picture"`
 }
 
 // @Summary Set employee profile picture by ID
@@ -415,28 +203,21 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req SetEmployeeProfilePictureRequest
+
+	var req employees.SetEmployeeProfilePictureRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	arg := db.SetEmployeeProfilePictureTxParams{
-		EmployeeID:    employeeID,
-		AttachementID: req.AttachmentID,
-	}
-	user, err := server.store.SetEmployeeProfilePictureTx(ctx, arg)
+
+	result, err := server.businessService.EmployeeService.SetEmployeeProfilePicture(req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(SetEmployeeProfilePictureResponse{
-		ID:             user.User.ID,
-		Email:          user.User.Email,
-		ProfilePicture: user.User.ProfilePicture,
-	}, "Employee profile picture updated successfully")
 
+	res := SuccessResponse(result, "Employee profile picture updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary Update employee's subcontractor status
@@ -473,23 +254,6 @@ func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// AddEmployeeContractDetailsRequest represents the request for AddEmployeeContractDetailsApi
-type AddEmployeeContractDetailsRequest struct {
-	ContractHours     *float64  `json:"contract_hours" binding:"required"`
-	ContractStartDate time.Time `json:"contract_start_date"`
-	ContractEndDate   time.Time `json:"contract_end_date"`
-	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
-}
-
-// AddEmployeeContractDetailsResponse represents the response for AddEmployeeContractDetailsApi
-type AddEmployeeContractDetailsResponse struct {
-	ID                int64     `json:"id"`
-	ContractHours     *float64  `json:"contract_hours"`
-	ContractStartDate time.Time `json:"contract_start_date"`
-	ContractEndDate   time.Time `json:"contract_end_date"`
-	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
-}
-
 // @Summary Add contract details to employee profile
 // @Description Add contract details to employee profile
 // @Tags employees
@@ -507,75 +271,21 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req AddEmployeeContractDetailsRequest
+
+	var req employees.AddEmployeeContractDetailsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	arg := db.AddEmployeeContractDetailsParams{
-		ID:                employeeID,
-		ContractHours:     req.ContractHours,
-		ContractStartDate: pgtype.Date{Time: req.ContractStartDate, Valid: true},
-		ContractEndDate:   pgtype.Date{Time: req.ContractEndDate, Valid: true},
-		ContractRate:      req.ContractRate, // Optional field, can be set later if needed
-	}
-	contractDetails, err := server.store.AddEmployeeContractDetails(ctx, arg)
+	result, err := server.businessService.EmployeeService.AddEmployeeContractDetails(req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	user, err := server.store.GetUserByID(ctx, contractDetails.UserID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	password := util.RandomString(8)
-	hashedPassword, err := util.HashPassword(password)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	err = server.store.UpdatePassword(ctx, db.UpdatePasswordParams{
-		ID:       user.ID,
-		Password: hashedPassword,
-	})
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	err = server.asynqClient.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
-		Name:         contractDetails.FirstName + " " + contractDetails.LastName,
-		To:           contractDetails.Email,
-		UserEmail:    user.Email,
-		UserPassword: password,
-	}, ctx)
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "AddEmployeeContractDetailsApi", "Failed to enqueue email delivery", zap.Error(err))
-		return
-	}
-	res := SuccessResponse(AddEmployeeContractDetailsResponse{
-		ID:                contractDetails.ID,
-		ContractHours:     contractDetails.ContractHours,
-		ContractStartDate: contractDetails.ContractStartDate.Time,
-		ContractEndDate:   contractDetails.ContractEndDate.Time,
-	}, "Contract details added to employee profile successfully")
+	res := SuccessResponse(result, "Contract details added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// GetEmployeeContractDetailsResponse represents the response for GetEmployeeContractDetailsApi
-type GetEmployeeContractDetailsResponse struct {
-	ContractHours     *float64  `json:"contract_hours"`
-	ContractStartDate time.Time `json:"contract_start_date"`
-	ContractEndDate   time.Time `json:"contract_end_date"`
-	ContractType      *string   `json:"contract_type"`
-	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
-	IsSubcontractor   *bool     `json:"is_subcontractor"`
 }
 
 // @Summary Get employee contract details by ID
@@ -593,41 +303,15 @@ func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	contractDetails, err := server.store.GetEmployeeContractDetails(ctx, employeeID)
+
+	contractDetails, err := server.businessService.EmployeeService.GetEmployeeContractDetails(employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(GetEmployeeContractDetailsResponse{
-		ContractHours:     contractDetails.ContractHours,
-		ContractStartDate: contractDetails.ContractStartDate.Time,
-		ContractEndDate:   contractDetails.ContractEndDate.Time,
-		ContractType:      contractDetails.ContractType,
-		ContractRate:      contractDetails.ContractRate, // Optional field for contract rate
-		IsSubcontractor:   contractDetails.IsSubcontractor,
-	}, "Employee contract details retrieved successfully")
+	res := SuccessResponse(contractDetails, "Employee contract details retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// AddEducationToEmployeeProfileRequest represents the request for AddEducationToEmployeeProfileApi
-type AddEducationToEmployeeProfileRequest struct {
-	InstitutionName string `json:"institution_name" binding:"required"`
-	Degree          string `json:"degree" binding:"required"`
-	FieldOfStudy    string `json:"field_of_study" binding:"required"`
-	StartDate       string `json:"start_date" binding:"required" time_format:"2006-01-02"`
-	EndDate         string `json:"end_date" binding:"required" time_format:"2006-01-02"`
-}
-
-// AddEducationToEmployeeProfileResponse represents the response for AddEducationToEmployeeProfileApi
-type AddEducationToEmployeeProfileResponse struct {
-	ID              int64     `json:"id"`
-	EmployeeID      int64     `json:"employee_id"`
-	InstitutionName string    `json:"institution_name"`
-	Degree          string    `json:"degree"`
-	FieldOfStudy    string    `json:"field_of_study"`
-	StartDate       time.Time `json:"start_date"`
-	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary Add education to employee profile
@@ -647,58 +331,21 @@ func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req AddEducationToEmployeeProfileRequest
+
+	var req employees.AddEducationToEmployeeProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	parsedStartDate, err := time.Parse("2006-01-02", req.StartDate)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	parsedEndDate, err := time.Parse("2006-01-02", req.EndDate)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	arg := db.AddEducationToEmployeeProfileParams{
-		EmployeeID:      employeeID,
-		InstitutionName: req.InstitutionName,
-		Degree:          req.Degree,
-		FieldOfStudy:    req.FieldOfStudy,
-		StartDate:       pgtype.Date{Time: parsedStartDate, Valid: true},
-		EndDate:         pgtype.Date{Time: parsedEndDate, Valid: true},
-	}
-	education, err := server.store.AddEducationToEmployeeProfile(ctx, arg)
+	result, err := server.businessService.EmployeeService.AddEducationToEmployeeProfile(req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(AddEducationToEmployeeProfileResponse{
-		ID:              education.ID,
-		EmployeeID:      education.EmployeeID,
-		InstitutionName: education.InstitutionName,
-		Degree:          education.Degree,
-		FieldOfStudy:    education.FieldOfStudy,
-		StartDate:       education.StartDate.Time,
-		EndDate:         education.EndDate.Time,
-	}, "Education added to employee profile successfully")
+
+	res := SuccessResponse(result, "Education added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
-
-}
-
-// ListEmployeeEducationResponse represents the response for ListEmployeeEducationApi
-type ListEmployeeEducationResponse struct {
-	ID              int64     `json:"id"`
-	EmployeeID      int64     `json:"employee_id"`
-	InstitutionName string    `json:"institution_name"`
-	Degree          string    `json:"degree"`
-	FieldOfStudy    string    `json:"field_of_study"`
-	StartDate       time.Time `json:"start_date"`
-	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary List education for employee profile
@@ -716,44 +363,15 @@ func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	educations, err := server.store.ListEducations(ctx, employeeID)
+
+	educations, err := server.businessService.EmployeeService.ListEmployeeEducation(employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseEducations := make([]ListEmployeeEducationResponse, len(educations))
-	for i, education := range educations {
-		responseEducations[i] = ListEmployeeEducationResponse{
-			ID:              education.ID,
-			EmployeeID:      education.EmployeeID,
-			InstitutionName: education.InstitutionName,
-			Degree:          education.Degree,
-			FieldOfStudy:    education.FieldOfStudy,
-			StartDate:       education.StartDate.Time,
-			EndDate:         education.EndDate.Time,
-		}
-	}
-	res := SuccessResponse(responseEducations, "Employee education retrieved successfully")
+
+	res := SuccessResponse(educations, "Employee education retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateEmployeeEducationRequest represents the request for UpdateEmployeeEducationApi
-type UpdateEmployeeEducationRequest struct {
-	InstitutionName *string `json:"institution_name"`
-	Degree          *string `json:"degree"`
-	FieldOfStudy    *string `json:"field_of_study"`
-	StartDate       *string `json:"start_date" time_format:"2006-01-02"`
-	EndDate         *string `json:"end_date" time_format:"2006-01-02"`
-}
-
-// UpdateEmployeeEducationResponse represents the response for UpdateEmployeeEducationApi
-type UpdateEmployeeEducationResponse struct {
-	ID              int64     `json:"id"`
-	InstitutionName string    `json:"institution_name"`
-	Degree          string    `json:"degree"`
-	FieldOfStudy    string    `json:"field_of_study"`
-	StartDate       time.Time `json:"start_date"`
-	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary Update education for employee profile
@@ -773,59 +391,21 @@ func (server *Server) UpdateEmployeeEducationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req UpdateEmployeeEducationRequest
+
+	var req employees.UpdateEmployeeEducationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var parsedStartDate time.Time
-	if req.StartDate != nil {
-		parsedStartDate, err = time.Parse("2006-01-02", *req.StartDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-	var parsedEndDate time.Time
-	if req.EndDate != nil {
-		parsedEndDate, err = time.Parse("2006-01-02", *req.EndDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-	education, err := server.store.UpdateEmployeeEducation(ctx, db.UpdateEmployeeEducationParams{
-		ID:              educationID,
-		InstitutionName: req.InstitutionName,
-		Degree:          req.Degree,
-		FieldOfStudy:    req.FieldOfStudy,
-		StartDate:       pgtype.Date{Time: parsedStartDate, Valid: true},
-		EndDate:         pgtype.Date{Time: parsedEndDate, Valid: true},
-	})
+
+	education, err := server.businessService.EmployeeService.UpdateEmployeeEducation(req, educationID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(UpdateEmployeeEducationResponse{
-		ID:              education.ID,
-		InstitutionName: education.InstitutionName,
-		Degree:          education.Degree,
-		FieldOfStudy:    education.FieldOfStudy,
-		StartDate:       education.StartDate.Time,
-		EndDate:         education.EndDate.Time,
-	}, "Education updated successfully")
+
+	res := SuccessResponse(education, "Education updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
-}
-
-// DeleteEmployeeEducationResponse represents the response for DeleteEmployeeEducationApi
-type DeleteEmployeeEducationResponse struct {
-	ID              int64     `json:"id"`
-	InstitutionName string    `json:"institution_name"`
-	Degree          string    `json:"degree"`
-	FieldOfStudy    string    `json:"field_of_study"`
-	StartDate       time.Time `json:"start_date"`
-	EndDate         time.Time `json:"end_date"`
 }
 
 // @Summary Delete education for employee profile
@@ -844,41 +424,15 @@ func (server *Server) DeleteEmployeeEducationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	education, err := server.store.DeleteEmployeeEducation(ctx, educationID)
+
+	education, err := server.businessService.EmployeeService.DeleteEmployeeEducation(educationID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(DeleteEmployeeEducationResponse{
-		ID:              education.ID,
-		InstitutionName: education.InstitutionName,
-		Degree:          education.Degree,
-		FieldOfStudy:    education.FieldOfStudy,
-		StartDate:       education.StartDate.Time,
-		EndDate:         education.EndDate.Time,
-	}, "Education deleted successfully")
+
+	res := SuccessResponse(education, "Education deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// AddEmployeeExperienceRequest represents the request for AddEmployeeExperienceApi
-type AddEmployeeExperienceRequest struct {
-	JobTitle    string  `json:"job_title" binding:"required"`
-	CompanyName string  `json:"company_name" binding:"required"`
-	StartDate   string  `json:"start_date" binding:"required" time_format:"2006-01-02"`
-	EndDate     string  `json:"end_date" binding:"required" time_format:"2006-01-02"`
-	Description *string `json:"description"`
-}
-
-// AddEmployeeExperienceResponse represents the response for AddEmployeeExperienceApi
-type AddEmployeeExperienceResponse struct {
-	ID          int64   `json:"id"`
-	EmployeeID  int64   `json:"employee_id"`
-	JobTitle    string  `json:"job_title"`
-	CompanyName string  `json:"company_name"`
-	StartDate   string  `json:"start_date"`
-	EndDate     string  `json:"end_date"`
-	Description *string `json:"description"`
-	CreatedAt   string  `json:"created_at"`
 }
 
 // @Summary Add experience to employee profile
@@ -897,59 +451,20 @@ func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req AddEmployeeExperienceRequest
+	var req employees.AddEmployeeExperienceRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	parsedStartDate, err := time.Parse("2006-01-02", req.StartDate)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	parsedEndDate, err := time.Parse("2006-01-02", req.EndDate)
-
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	arg := db.AddEmployeeExperienceParams{
-		EmployeeID:  employeeID,
-		JobTitle:    req.JobTitle,
-		CompanyName: req.CompanyName,
-		StartDate:   pgtype.Date{Time: parsedStartDate, Valid: true},
-		EndDate:     pgtype.Date{Time: parsedEndDate, Valid: true},
-		Description: req.Description,
-	}
-	experience, err := server.store.AddEmployeeExperience(ctx, arg)
+	result, err := server.businessService.EmployeeService.AddEmployeeExperience(req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(AddEmployeeExperienceResponse{
-		ID:          experience.ID,
-		EmployeeID:  experience.EmployeeID,
-		JobTitle:    experience.JobTitle,
-		CompanyName: experience.CompanyName,
-		StartDate:   experience.StartDate.Time.Format(time.RFC3339),
-		EndDate:     experience.EndDate.Time.Format(time.RFC3339),
-		Description: experience.Description,
-		CreatedAt:   experience.CreatedAt.Time.Format(time.RFC3339),
-	}, "Experience added to employee profile successfully")
+
+	res := SuccessResponse(result, "Experience added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
 
-}
-
-// ListEmployeeExperienceResponse represents the response for ListEmployeeExperienceApi
-type ListEmployeeExperienceResponse struct {
-	ID          int64   `json:"id"`
-	EmployeeID  int64   `json:"employee_id"`
-	JobTitle    string  `json:"job_title"`
-	CompanyName string  `json:"company_name"`
-	StartDate   string  `json:"start_date"`
-	EndDate     string  `json:"end_date"`
-	Description *string `json:"description"`
-	CreatedAt   string  `json:"created_at"`
 }
 
 // @Summary List experience for employee profile
@@ -967,47 +482,13 @@ func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	experiences, err := server.store.ListEmployeeExperience(ctx, employeeID)
+	responseExperiences, err := server.businessService.EmployeeService.ListEmployeeExperience(employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseExperiences := make([]ListEmployeeExperienceResponse, len(experiences))
-	for i, experience := range experiences {
-		responseExperiences[i] = ListEmployeeExperienceResponse{
-			ID:          experience.ID,
-			EmployeeID:  experience.EmployeeID,
-			JobTitle:    experience.JobTitle,
-			CompanyName: experience.CompanyName,
-			StartDate:   experience.StartDate.Time.Format(time.RFC3339),
-			EndDate:     experience.EndDate.Time.Format(time.RFC3339),
-			Description: experience.Description,
-			CreatedAt:   experience.CreatedAt.Time.Format(time.RFC3339),
-		}
-	}
 	res := SuccessResponse(responseExperiences, "Employee experience retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateEmployeeExperienceRequest represents the request for UpdateEmployeeExperienceApi
-type UpdateEmployeeExperienceRequest struct {
-	JobTitle    *string `json:"job_title"`
-	CompanyName *string `json:"company_name"`
-	StartDate   *string `json:"start_date" time_format:"2006-01-02"`
-	EndDate     *string `json:"end_date" time_format:"2006-01-02"`
-	Description *string `json:"description"`
-}
-
-// UpdateEmployeeExperienceResponse represents the response for UpdateEmployeeExperienceApi
-type UpdateEmployeeExperienceResponse struct {
-	ID          int64     `json:"id"`
-	EmployeeID  int64     `json:"employee_id"`
-	JobTitle    string    `json:"job_title"`
-	CompanyName string    `json:"company_name"`
-	StartDate   time.Time `json:"start_date"`
-	EndDate     time.Time `json:"end_date"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
 }
 
 // @Summary Update experience for employee profile
@@ -1027,62 +508,18 @@ func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req UpdateEmployeeExperienceRequest
+	var req employees.UpdateEmployeeExperienceRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var parsedStartDate time.Time
-	if req.StartDate != nil {
-		parsedStartDate, err = time.Parse("2006-01-02", *req.StartDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-	var parsedEndDate time.Time
-	if req.EndDate != nil {
-		parsedEndDate, err = time.Parse("2006-01-02", *req.EndDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-	experience, err := server.store.UpdateEmployeeExperience(ctx, db.UpdateEmployeeExperienceParams{
-		ID:          experienceID,
-		JobTitle:    req.JobTitle,
-		CompanyName: req.CompanyName,
-		StartDate:   pgtype.Date{Time: parsedStartDate, Valid: true},
-		EndDate:     pgtype.Date{Time: parsedEndDate, Valid: true},
-		Description: req.Description,
-	})
+	experience, err := server.businessService.EmployeeService.UpdateEmployeeExperience(req, experienceID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(UpdateEmployeeExperienceResponse{
-		ID:          experience.ID,
-		EmployeeID:  experience.EmployeeID,
-		JobTitle:    experience.JobTitle,
-		CompanyName: experience.CompanyName,
-		StartDate:   experience.StartDate.Time,
-		EndDate:     experience.EndDate.Time,
-		Description: experience.Description,
-		CreatedAt:   experience.CreatedAt.Time,
-	}, "Experience updated successfully")
+	res := SuccessResponse(experience, "Experience updated successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// DeleteEmployeeExperienceResponse represents the response for DeleteEmployeeExperienceApi
-type DeleteEmployeeExperienceResponse struct {
-	ID          int64     `json:"id"`
-	EmployeeID  int64     `json:"employee_id"`
-	JobTitle    string    `json:"job_title"`
-	CompanyName string    `json:"company_name"`
-	StartDate   time.Time `json:"start_date"`
-	EndDate     time.Time `json:"end_date"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
 }
 
 // @Summary Delete experience for employee profile
@@ -1101,39 +538,13 @@ func (server *Server) DeleteEmployeeExperienceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	experience, err := server.store.DeleteEmployeeExperience(ctx, experienceID)
+	result, err := server.businessService.EmployeeService.DeleteEmployeeExperience(experienceID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(DeleteEmployeeExperienceResponse{
-		ID:          experience.ID,
-		EmployeeID:  experience.EmployeeID,
-		JobTitle:    experience.JobTitle,
-		CompanyName: experience.CompanyName,
-		StartDate:   experience.StartDate.Time,
-		EndDate:     experience.EndDate.Time,
-		Description: experience.Description,
-		CreatedAt:   experience.CreatedAt.Time,
-	}, "Experience deleted successfully")
+	res := SuccessResponse(result, "Experience deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// AddEmployeeCertificationRequest represents the request for AddEmployeeCertificationApi
-type AddEmployeeCertificationRequest struct {
-	Name       string `json:"name"`
-	IssuedBy   string `json:"issued_by"`
-	DateIssued string `json:"date_issued" time_format:"2006-01-02"`
-}
-
-// AddEmployeeCertificationResponse represents the response for AddEmployeeCertificationApi
-type AddEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
-	Name       string    `json:"name"`
-	IssuedBy   string    `json:"issued_by"`
-	DateIssued time.Time `json:"date_issued"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 // @Summary Add certification to employee profile
@@ -1152,45 +563,18 @@ func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req AddEmployeeCertificationRequest
+	var req employees.AddEmployeeCertificationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	parsedDate, err := time.Parse("2006-01-02", req.DateIssued)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	arg := db.AddEmployeeCertificationParams{
-		EmployeeID: employeeID,
-		Name:       req.Name,
-		IssuedBy:   req.IssuedBy,
-		DateIssued: pgtype.Date{Time: parsedDate, Valid: true},
-	}
-	certification, err := server.store.AddEmployeeCertification(ctx, arg)
+	result, err := server.businessService.EmployeeService.AddEmployeeCertification(req, employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(AddEmployeeCertificationResponse{
-		ID:         certification.ID,
-		EmployeeID: certification.EmployeeID,
-		Name:       certification.Name,
-		IssuedBy:   certification.IssuedBy,
-		DateIssued: certification.DateIssued.Time,
-		CreatedAt:  certification.CreatedAt.Time,
-	}, "Certification added to employee profile successfully")
+	res := SuccessResponse(result, "Certification added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// ListEmployeeCertificationResponse represents the response for ListEmployeeCertificationApi
-type ListEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
-	Name       string    `json:"name"`
-	IssuedBy   string    `json:"issued_by"`
-	DateIssued time.Time `json:"date_issued"`
 }
 
 // @Summary List certifications for employee profile
@@ -1208,40 +592,15 @@ func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	certifications, err := server.store.ListEmployeeCertifications(ctx, employeeID)
+
+	result, err := server.businessService.EmployeeService.ListEmployeeCertification(employeeID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseCertifications := make([]ListEmployeeCertificationResponse, len(certifications))
-	for i, certification := range certifications {
-		responseCertifications[i] = ListEmployeeCertificationResponse{
-			ID:         certification.ID,
-			EmployeeID: certification.EmployeeID,
-			Name:       certification.Name,
-			IssuedBy:   certification.IssuedBy,
-			DateIssued: certification.DateIssued.Time,
-		}
-	}
-	res := SuccessResponse(responseCertifications, "Employee certifications retrieved successfully")
+
+	res := SuccessResponse(result, "Employee certifications retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateEmployeeCertificationRequest represents the request for UpdateEmployeeCertificationApi
-type UpdateEmployeeCertificationRequest struct {
-	Name       *string `json:"name"`
-	IssuedBy   *string `json:"issued_by"`
-	DateIssued *string `json:"date_issued" time_format:"2006-01-02"`
-}
-
-// UpdateEmployeeCertificationResponse represents the response for UpdateEmployeeCertificationApi
-type UpdateEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
-	Name       string    `json:"name"`
-	IssuedBy   string    `json:"issued_by"`
-	DateIssued time.Time `json:"date_issued"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 // @Summary Update certification for employee profile
@@ -1261,49 +620,18 @@ func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req UpdateEmployeeCertificationRequest
+	var req employees.UpdateEmployeeCertificationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var parsedDate time.Time
-	if req.DateIssued != nil {
-		parsedDate, err = time.Parse("2006-01-02", *req.DateIssued)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return
-		}
-	}
-
-	certification, err := server.store.UpdateEmployeeCertification(ctx, db.UpdateEmployeeCertificationParams{
-		ID:         certificationID,
-		Name:       req.Name,
-		IssuedBy:   req.IssuedBy,
-		DateIssued: pgtype.Date{Time: parsedDate, Valid: true},
-	})
+	certification, err := server.businessService.EmployeeService.UpdateEmployeeCertification(req, certificationID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(UpdateEmployeeCertificationResponse{
-		ID:         certification.ID,
-		EmployeeID: certification.EmployeeID,
-		Name:       certification.Name,
-		IssuedBy:   certification.IssuedBy,
-		DateIssued: certification.DateIssued.Time,
-		CreatedAt:  certification.CreatedAt.Time,
-	}, "Certification updated successfully")
+	res := SuccessResponse(certification, "Certification updated successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// DeleteEmployeeEducationResponse represents the response for DeleteEmployeeEducationApi
-type DeleteEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
-	Name       string    `json:"name"`
-	IssuedBy   string    `json:"issued_by"`
-	DateIssued time.Time `json:"date_issued"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 // @Summary Delete certification for employee profile
@@ -1322,31 +650,13 @@ func (server *Server) DeleteEmployeeCertificationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	certification, err := server.store.DeleteEmployeeCertification(ctx, certificationID)
+	result, err := server.businessService.EmployeeService.DeleteEmployeeCertification(certificationID, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(DeleteEmployeeCertificationResponse{
-		ID:         certification.ID,
-		EmployeeID: certification.EmployeeID,
-		Name:       certification.Name,
-		IssuedBy:   certification.IssuedBy,
-		DateIssued: certification.DateIssued.Time,
-		CreatedAt:  certification.CreatedAt.Time,
-	}, "Certification deleted successfully")
+	res := SuccessResponse(result, "Certification deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-type SearchEmployeesByNameOrEmailRequest struct {
-	Search *string `form:"search" binding:"required"`
-}
-
-type SearchEmployeesByNameOrEmailResponse struct {
-	ID        int64  `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
 }
 
 // @Summary Search employees by name or email
@@ -1358,25 +668,17 @@ type SearchEmployeesByNameOrEmailResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/emails [get]
 func (server *Server) SearchEmployeesByNameOrEmailApi(ctx *gin.Context) {
-	var req SearchEmployeesByNameOrEmailRequest
+	var req employees.SearchEmployeesByNameOrEmailRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	employees, err := server.store.SearchEmployeesByNameOrEmail(ctx, req.Search)
+
+	employees, err := server.businessService.EmployeeService.SearchEmployeesByNameOrEmail(req, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	responseEmployees := make([]SearchEmployeesByNameOrEmailResponse, len(employees))
-	for i, employee := range employees {
-		responseEmployees[i] = SearchEmployeesByNameOrEmailResponse{
-			ID:        employee.ID,
-			FirstName: employee.FirstName,
-			LastName:  employee.LastName,
-			Email:     employee.Email,
-		}
-	}
-	res := SuccessResponse(responseEmployees, "Employees retrieved successfully")
+	res := SuccessResponse(employees, "Employees retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
