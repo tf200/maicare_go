@@ -3,10 +3,8 @@ package api
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	db "maicare_go/db/sqlc"
 	"maicare_go/invoice"
-	"maicare_go/pagination"
 	"maicare_go/pdf"
 	invserv "maicare_go/service/invoice"
 	"maicare_go/util"
@@ -16,40 +14,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
-
-// CreateInvoiceRequest represents the request body for creating an invoice.
-type CreateInvoiceRequest struct {
-	ClientID       int64                    `json:"client_id" binding:"required"`
-	InvoiceType    string                   `json:"invoice_type" binding:"required,oneof=standard credit_note"`
-	IssueDate      time.Time                `json:"issue_date" binding:"required"`
-	DueDate        time.Time                `json:"due_date" binding:"required"`
-	InvoiceDetails []invoice.InvoiceDetails `json:"invoice_details" binding:"required"`
-	TotalAmount    float64                  `json:"total_amount" binding:"required"`
-	ExtraContent   util.JSONObject          `json:"extra_content" binding:"required"`
-	Status         string                   `json:"status" binding:"required,oneof=outstanding partially_paid paid expired overpaid imported concept"`
-}
-
-// CreateInvoiceResponse represents the response body for creating an invoice.
-type CreateInvoiceResponse struct {
-	ID              int64                    `json:"id"`
-	InvoiceNumber   string                   `json:"invoice_number"`
-	IssueDate       time.Time                `json:"issue_date"`
-	DueDate         time.Time                `json:"due_date"`
-	Status          string                   `json:"status"`
-	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
-	TotalAmount     float64                  `json:"total_amount"`
-	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    util.JSONObject          `json:"extra_content"`
-	ClientID        int64                    `json:"client_id"`
-	SenderID        *int64                   `json:"sender_id"`
-	InvoiceType     string                   `json:"invoice_type"`
-	UpdatedAt       time.Time                `json:"updated_at"`
-	CreatedAt       time.Time                `json:"created_at"`
-}
 
 // @Summary Create Invoice
 // @Description Create a new invoice with the provided details.
@@ -61,121 +28,25 @@ type CreateInvoiceResponse struct {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices [post]
 func (server *Server) CreateInvoiceApi(ctx *gin.Context) {
-	var req CreateInvoiceRequest
+	var req invserv.CreateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	_, err := invoice.VerifyTotalAmount(req.InvoiceDetails, req.TotalAmount)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
 	payload, err := GetAuthPayload(ctx)
-
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
-
-	tx, err := server.store.ConnPool.Begin(ctx)
+	response, err := server.businessService.InvoiceService.CreateInvoice(ctx.Request.Context(), req, payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	defer tx.Rollback(ctx)
-
-	qtx := server.store.WithTx(tx)
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	sender, err := qtx.GetClientSender(ctx.Request.Context(), req.ClientID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	invoiceNumber, invoiceSequence, err := invoice.GenerateInvoiceNumber(ctx, time.Now(), server.store)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	invoiceDetailsBytes, err := json.Marshal(req.InvoiceDetails)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	invoiceData := db.CreateInvoiceParams{
-		InvoiceNumber:   invoiceNumber,
-		InvoiceSequence: invoiceSequence,
-		DueDate:         pgtype.Date{Time: req.DueDate, Valid: true},
-		IssueDate:       pgtype.Date{Time: req.IssueDate, Valid: true},
-		InvoiceDetails:  invoiceDetailsBytes,
-		TotalAmount:     req.TotalAmount,
-		ExtraContent:    util.ParseObjectToJSON(req.ExtraContent),
-		ClientID:        req.ClientID,
-		SenderID:        &sender.ID,
-		WarningCount:    0,
-		InvoiceType:     req.InvoiceType,
-	}
-	invoice, err := qtx.CreateInvoice(ctx.Request.Context(), invoiceData)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	if err := tx.Commit(ctx); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	response := CreateInvoiceResponse{
-		ID:              invoice.ID,
-		InvoiceNumber:   invoice.InvoiceNumber,
-		IssueDate:       invoice.IssueDate.Time,
-		DueDate:         invoice.DueDate.Time,
-		Status:          invoice.Status,
-		InvoiceDetails:  req.InvoiceDetails,
-		TotalAmount:     req.TotalAmount,
-		PdfAttachmentID: invoice.PdfAttachmentID,
-		ExtraContent:    util.ParseJSONToObject(invoice.ExtraContent),
-		ClientID:        invoice.ClientID,
-		SenderID:        invoice.SenderID,
-		UpdatedAt:       invoice.UpdatedAt.Time,
-		CreatedAt:       invoice.CreatedAt.Time,
-	}
 	res := SuccessResponse(response, "Invoice created successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GenerateInvoiceRequest represents the request body for generating an invoice.
-type GenerateInvoiceRequest struct {
-	ClientID  int64     `json:"client_id" binding:"required"`
-	StartDate time.Time `json:"start_date" binding:"required"`
-	EndDate   time.Time `json:"end_date" binding:"required"`
-}
-
-// GenerateInvoiceResponse represents the response body for generating an invoice.
-type GenerateInvoiceResponse struct {
-	ID              int64                    `json:"id"`
-	InvoiceNumber   string                   `json:"invoice_number"`
-	IssueDate       time.Time                `json:"issue_date"`
-	DueDate         time.Time                `json:"due_date"`
-	Status          string                   `json:"status"`
-	InvoiceDetails  []invserv.InvoiceDetails `json:"invoice_details"`
-	TotalAmount     float64                  `json:"total_amount"`
-	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    util.JSONObject          `json:"extra_content"`
-	ClientID        int64                    `json:"client_id"`
-	SenderID        *int64                   `json:"sender_id"`
-	UpdatedAt       time.Time                `json:"updated_at"`
-	CreatedAt       time.Time                `json:"created_at"`
 }
 
 // @Summary Generate Invoice
@@ -188,45 +59,21 @@ type GenerateInvoiceResponse struct {
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /invoices/generate [post]
 func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
-	var req GenerateInvoiceRequest
+	var req invserv.GenerateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.logBusinessEvent(LogLevelWarn, "GenerateInvoiceApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
-	inv, _, err := server.businessService.InvoiceService.GenerateInvoice(invserv.GenerateInvoiceRequest{
-		ClientID:  req.ClientID,
-		StartDate: req.StartDate,
-		EndDate:   req.EndDate,
-	}, ctx)
+	inv, _, err := server.businessService.InvoiceService.GenerateInvoice(req, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	response := GenerateInvoiceResponse{
-		ID:              inv.ID,
-		InvoiceNumber:   inv.InvoiceNumber,
-		IssueDate:       inv.IssueDate,
-		DueDate:         inv.DueDate,
-		Status:          inv.Status,
-		InvoiceDetails:  inv.InvoiceDetails,
-		TotalAmount:     inv.TotalAmount,
-		PdfAttachmentID: inv.PdfAttachmentID,
-		ExtraContent:    util.ParseJSONToObject(inv.ExtraContent),
-		ClientID:        inv.ClientID,
-		SenderID:        inv.SenderID,
-		UpdatedAt:       inv.UpdatedAt,
-		CreatedAt:       inv.CreatedAt,
-	}
 
-	res := SuccessResponse(response, "Invoice generated successfully")
+	res := SuccessResponse(inv, "Invoice generated successfully")
 	ctx.JSON(http.StatusOK, res)
 
-}
-
-// CreditInvoiceResponse represents the response body for crediting an invoice.
-type CreditInvoiceResponse struct {
-	ID int64 `json:"id"`
 }
 
 // @Summary Credit Invoice
@@ -248,131 +95,13 @@ func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
-
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
-	qtx := server.store.WithTx(tx)
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
+	creditNoteInvoice, err := server.businessService.InvoiceService.CreditInvoice(ctx.Request.Context(), invoiceID, payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	originalInvoice, err := qtx.GetInvoice(ctx.Request.Context(), invoiceID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("invoice with ID %d not found", invoiceID)))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	// Check if the invoice is already a credit note
-	if originalInvoice.InvoiceType == "credit_note" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invoice with ID %d is already a credit note", invoiceID)))
-		return
-	}
-	// Get the original invoice details
-	var invoiceDetails []invoice.InvoiceDetails
-	if err := json.Unmarshal(originalInvoice.InvoiceDetails, &invoiceDetails); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	// Create a new credit note invoice
-	creditNoteInvoicedetails := make([]invoice.InvoiceDetails, len(invoiceDetails))
-	for i, detail := range invoiceDetails {
-		creditNoteInvoicedetails[i] = invoice.InvoiceDetails{
-			ContractID:    detail.ContractID,
-			ContractType:  detail.ContractType,
-			Price:         -detail.Price, // Negate the price for credit note
-			PriceTimeUnit: detail.PriceTimeUnit,
-			PreVatTotal:   -detail.PreVatTotal, // Negate the pre-VAT total for credit note
-			Total:         -detail.Total,       // Negate the total for credit note
-			Periods:       detail.Periods,
-		}
-	}
-	invoiceDetailsBytes, err := json.Marshal(creditNoteInvoicedetails)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	invoiceNumber, invoiceSequence, err := invoice.GenerateInvoiceNumber(ctx, time.Now(), server.store)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	creditNoteInvoice, err := server.store.CreateInvoice(ctx.Request.Context(), db.CreateInvoiceParams{
-		ClientID:        originalInvoice.ClientID,
-		SenderID:        &originalInvoice.ID,
-		DueDate:         pgtype.Date{Time: time.Now().Add(30 * 24 * time.Hour), Valid: true},
-		TotalAmount:     -originalInvoice.TotalAmount,
-		InvoiceDetails:  invoiceDetailsBytes,
-		InvoiceNumber:   invoiceNumber,
-		InvoiceSequence: invoiceSequence,
-		InvoiceType:     "credit_note",
-		ExtraContent:    []byte("{}"), // Assuming no extra content for credit notes
-		WarningCount:    0,
-		IssueDate:       pgtype.Date{Time: time.Now(), Valid: true},
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	// update the original invoice status to 'canceled'
-	_, err = qtx.UpdateInvoiceStatus(ctx.Request.Context(), db.UpdateInvoiceStatusParams{
-		ID:     originalInvoice.ID,
-		Status: "canceled",
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	// Commit the transaction
-	if err := tx.Commit(ctx); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	ctx.JSON(http.StatusOK, SuccessResponse(CreditInvoiceResponse{ID: creditNoteInvoice.ID}, "Credit note created successfully"))
-}
-
-// ListInvoicesRequest represents the request parameters for listing invoices.
-type ListInvoicesRequest struct {
-	ClientID  *int64    `form:"client_id"`
-	SenderID  *int64    `form:"sender_id"`
-	Status    *string   `form:"status" binding:"omitempty,oneof=outstanding partially_paid paid expired overpaid imported concept"`
-	StartDate time.Time `form:"start_date"`
-	EndDate   time.Time `form:"end_date"`
-	pagination.Request
-}
-
-// ListInvoicesResponse represents the response body for listing invoices.
-type ListInvoicesResponse struct {
-	ID                int64                    `json:"id"`
-	InvoiceNumber     string                   `json:"invoice_number"`
-	IssueDate         time.Time                `json:"issue_date"`
-	DueDate           time.Time                `json:"due_date"`
-	Status            string                   `json:"status"`
-	InvoiceDetails    []invoice.InvoiceDetails `json:"invoice_details"`
-	TotalAmount       float64                  `json:"total_amount"`
-	PdfAttachmentID   *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent      util.JSONObject          `json:"extra_content"`
-	ClientID          int64                    `json:"client_id"`
-	SenderID          *int64                   `json:"sender_id"`
-	InvoiceType       string                   `json:"invoice_type"`
-	OriginalInvoiceID *int64                   `json:"original_invoice_id"`
-	UpdatedAt         time.Time                `json:"updated_at"`
-	CreatedAt         time.Time                `json:"created_at"`
-	SenderName        *string                  `json:"sender_name"`
-	ClientFirstName   string                   `json:"client_first_name"`
-	ClientLastName    string                   `json:"client_last_name"`
-	WarningCount      int32                    `json:"warning_count"`
+	ctx.JSON(http.StatusOK, SuccessResponse(creditNoteInvoice, "Credit note created successfully"))
 }
 
 // @Summary List Invoices
@@ -390,64 +119,17 @@ type ListInvoicesResponse struct {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices [get]
 func (server *Server) ListInvoicesApi(ctx *gin.Context) {
-	var req ListInvoicesRequest
+	var req invserv.ListInvoicesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	params := req.GetParams()
-
-	invoices, err := server.store.ListInvoices(ctx.Request.Context(), db.ListInvoicesParams{
-		ClientID:  req.ClientID,
-		SenderID:  req.SenderID,
-		Status:    req.Status,
-		StartDate: pgtype.Date{Time: req.StartDate},
-		EndDate:   pgtype.Date{Time: req.EndDate},
-		Offset:    params.Offset,
-		Limit:     params.Limit,
-	})
+	pag, err := server.businessService.InvoiceService.ListInvoices(ctx, req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	invoicesRes := make([]ListInvoicesResponse, len(invoices))
-
-	if len(invoices) == 0 {
-		ctx.JSON(http.StatusOK, SuccessResponse(invoicesRes, "No invoices found"))
-		return
-	}
-
-	for i, items := range invoices {
-		var invoiceDetails []invoice.InvoiceDetails
-		if err := json.Unmarshal(items.InvoiceDetails, &invoiceDetails); err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-		invoicesRes[i] = ListInvoicesResponse{
-			ID:                items.ID,
-			InvoiceNumber:     items.InvoiceNumber,
-			IssueDate:         items.IssueDate.Time,
-			DueDate:           items.DueDate.Time,
-			Status:            items.Status,
-			InvoiceDetails:    invoiceDetails,
-			TotalAmount:       items.TotalAmount,
-			PdfAttachmentID:   items.PdfAttachmentID,
-			ExtraContent:      util.ParseJSONToObject(items.ExtraContent),
-			ClientID:          items.ClientID,
-			SenderID:          items.SenderID,
-			InvoiceType:       items.InvoiceType,
-			OriginalInvoiceID: items.OriginalInvoiceID,
-			UpdatedAt:         items.UpdatedAt.Time,
-			CreatedAt:         items.CreatedAt.Time,
-			SenderName:        items.SenderName,
-			ClientFirstName:   items.ClientFirstName,
-			ClientLastName:    items.ClientLastName,
-			WarningCount:      items.WarningCount,
-		}
-	}
-	pag := pagination.NewResponse(ctx, req.Request, invoicesRes, invoices[0].TotalCount)
 	res := SuccessResponse(pag, "Invoices retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 
@@ -478,34 +160,6 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 
 }
 
-// UpdateInvoiceRequest represents the request body for updating an invoice.
-type UpdateInvoiceRequest struct {
-	IssueDate      time.Time                `json:"issue_date"`
-	DueDate        time.Time                `json:"due_date"`
-	InvoiceDetails []invoice.InvoiceDetails `json:"invoice_details"`
-	TotalAmount    float64                  `json:"total_amount"`
-	ExtraContent   util.JSONObject          `json:"extra_content"`
-	Status         string                   `json:"status"`
-	WarningCount   int32                    `json:"warning_count"`
-}
-
-// UpdateInvoiceResponse represents the response body for updating an invoice.
-type UpdateInvoiceResponse struct {
-	ID              int64                    `json:"id"`
-	InvoiceNumber   string                   `json:"invoice_number"`
-	IssueDate       time.Time                `json:"issue_date"`
-	DueDate         time.Time                `json:"due_date"`
-	Status          string                   `json:"status"`
-	InvoiceDetails  []invoice.InvoiceDetails `json:"invoice_details"`
-	TotalAmount     float64                  `json:"total_amount"`
-	PdfAttachmentID *uuid.UUID               `json:"pdf_attachment_id"`
-	ExtraContent    util.JSONObject          `json:"extra_content"`
-	ClientID        int64                    `json:"client_id"`
-	SenderID        *int64                   `json:"sender_id"`
-	UpdatedAt       time.Time                `json:"updated_at"`
-	CreatedAt       time.Time                `json:"created_at"`
-}
-
 // @Summary Update Invoice
 // @Description Update an existing invoice by its ID.
 // @Tags Invoice
@@ -523,7 +177,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateInvoiceRequest
+	var req invserv.UpdateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -535,74 +189,10 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	_, err = invoice.VerifyTotalAmount(req.InvoiceDetails, req.TotalAmount)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	tx, err := server.store.ConnPool.Begin(ctx)
+	response, err := server.businessService.InvoiceService.UpdateInvoice(ctx, invoiceID, req, payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
-	}
-	defer tx.Rollback(ctx)
-
-	qtx := server.store.WithTx(tx)
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	invoiceDetailsBytes, err := json.Marshal(req.InvoiceDetails)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	updatedInvoice, err := qtx.UpdateInvoice(ctx.Request.Context(), db.UpdateInvoiceParams{
-		ID:             invoiceID,
-		IssueDate:      pgtype.Date{Time: req.IssueDate},
-		DueDate:        pgtype.Date{Time: req.DueDate},
-		InvoiceDetails: invoiceDetailsBytes,
-		TotalAmount:    &req.TotalAmount,
-		ExtraContent:   util.ParseObjectToJSON(req.ExtraContent),
-		Status:         &req.Status,
-		WarningCount:   &req.WarningCount,
-	})
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	var invoiceDetailsResp []invoice.InvoiceDetails
-
-	err = json.Unmarshal(updatedInvoice.InvoiceDetails, &invoiceDetailsResp)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	response := UpdateInvoiceResponse{
-		ID:              updatedInvoice.ID,
-		InvoiceNumber:   updatedInvoice.InvoiceNumber,
-		IssueDate:       updatedInvoice.IssueDate.Time,
-		DueDate:         updatedInvoice.DueDate.Time,
-		Status:          updatedInvoice.Status,
-		InvoiceDetails:  invoiceDetailsResp,
-		TotalAmount:     updatedInvoice.TotalAmount,
-		PdfAttachmentID: updatedInvoice.PdfAttachmentID,
-		ExtraContent:    util.ParseJSONToObject(updatedInvoice.ExtraContent),
-		ClientID:        updatedInvoice.ClientID,
-		SenderID:        updatedInvoice.SenderID,
-		UpdatedAt:       updatedInvoice.UpdatedAt.Time,
-		CreatedAt:       updatedInvoice.CreatedAt.Time,
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Invoice updated successfully"))
 
@@ -625,62 +215,13 @@ func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.store.DeleteInvoice(ctx.Request.Context(), invoiceID)
+	err = server.businessService.InvoiceService.DeleteInvoice(ctx.Request.Context(), invoiceID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "Invoice deleted successfully"))
-}
-
-type GetInvoiceAuditLogResponse struct {
-	AuditID            int64           `json:"audit_id"`
-	InvoiceID          int64           `json:"invoice_id"`
-	Operation          string          `json:"operation"`
-	ChangedBy          *int64          `json:"changed_by"`
-	ChangedAt          time.Time       `json:"changed_at"`
-	OldValues          util.JSONObject `json:"old_values"`
-	NewValues          util.JSONObject `json:"new_values"`
-	ChangedFields      []string        `json:"changed_fields"`
-	ChangedByFirstName *string         `json:"changed_by_first_name"`
-	ChangedByLastName  *string         `json:"changed_by_last_name"`
-}
-
-func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	logs, err := server.store.GetInvoiceAuditLogs(ctx.Request.Context(), invoiceID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	if len(logs) == 0 {
-		ctx.JSON(http.StatusNotFound, SuccessResponse[any](nil, "No audit logs found for this invoice"))
-		return
-	}
-
-	response := make([]GetInvoiceAuditLogResponse, len(logs))
-	for i, log := range logs {
-		response[i] = GetInvoiceAuditLogResponse{
-			AuditID:            log.AuditID,
-			InvoiceID:          log.InvoiceID,
-			Operation:          log.Operation,
-			ChangedBy:          log.ChangedBy,
-			ChangedAt:          log.ChangedAt.Time,
-			OldValues:          util.ParseJSONToObject(log.OldValues),
-			NewValues:          util.ParseJSONToObject(log.NewValues),
-			ChangedFields:      log.ChangedFields,
-			ChangedByFirstName: log.ChangedByFirstName,
-			ChangedByLastName:  log.ChangedByLastName,
-		}
-	}
-	ctx.JSON(http.StatusOK, SuccessResponse(response, "Audit logs retrieved successfully"))
-
 }
 
 // GenerateInvoicePDFResponse represents the response body for generating an invoice PDF.
@@ -799,15 +340,6 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 
 }
 
-// GetInvoiceTemplateItemsResponse represents the response body for getting invoice template items.
-type GetInvoiceTemplateItemsResponse struct {
-	ID           int64  `json:"id"`
-	ItemTag      string `json:"item_tag"`
-	Description  string `json:"description"`
-	SourceTable  string `json:"source_table"`
-	SourceColumn string `json:"source_column"`
-}
-
 // GetInvoiceTemplateItemsApi handles the retrieval of all invoice template items.
 // @Summary Get Invoice Template Items
 // @Description Retrieve all invoice template items.
@@ -818,25 +350,10 @@ type GetInvoiceTemplateItemsResponse struct {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/template_items [get]
 func (server *Server) GetInvoiceTemplateItemsApi(ctx *gin.Context) {
-	log.Output(2, "GetInvoiceTemplateItemsApi called")
-	templateItems, err := server.store.GetAllTemplateItems(ctx)
+	response, err := server.businessService.InvoiceService.GetInvoiceTemplateItemsApi(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
-	}
-	if len(templateItems) == 0 {
-		ctx.JSON(http.StatusNotFound, SuccessResponse[any](nil, "No template items found"))
-		return
-	}
-	response := make([]GetInvoiceTemplateItemsResponse, len(templateItems))
-	for i, item := range templateItems {
-		response[i] = GetInvoiceTemplateItemsResponse{
-			ID:           item.ID,
-			ItemTag:      item.ItemTag,
-			Description:  item.Description,
-			SourceTable:  item.SourceTable,
-			SourceColumn: item.SourceColumn,
-		}
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Template items retrieved successfully"))
 
@@ -868,20 +385,6 @@ func (server *Server) SendInvoiceReminderApi(ctx *gin.Context) {
 
 // ================== Invoice Logs ==================
 
-// GetInvoiceAuditLogsResponse represents the response body for getting invoice audit logs.
-type GetInvoiceAuditLogsResponse struct {
-	AuditID            int64           `json:"audit_id"`
-	InvoiceID          int64           `json:"invoice_id"`
-	Operation          string          `json:"operation"`
-	ChangedBy          *int64          `json:"changed_by"`
-	ChangedAt          time.Time       `json:"changed_at"`
-	OldValues          util.JSONObject `json:"old_values"`
-	NewValues          util.JSONObject `json:"new_values"`
-	ChangedFields      []string        `json:"changed_fields"`
-	ChangedByFirstName *string         `json:"changed_by_first_name"`
-	ChangedByLastName  *string         `json:"changed_by_last_name"`
-}
-
 // GetInvoiceAuditLogsApi handles the retrieval of audit logs for a specific invoice.
 // @Summary Get Invoice Audit Logs
 // @Description Retrieve audit logs for a specific invoice by its ID.
@@ -892,14 +395,14 @@ type GetInvoiceAuditLogsResponse struct {
 // response with audit logs"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/audit [get]
-func (server *Server) GetInvoiceAuditLogsApi(ctx *gin.Context) {
+func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	logs, err := server.store.GetInvoiceAuditLogs(ctx.Request.Context(), invoiceID)
+	logs, err := server.businessService.InvoiceService.GetInvoiceAuditLogs(ctx.Request.Context(), invoiceID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -909,51 +412,11 @@ func (server *Server) GetInvoiceAuditLogsApi(ctx *gin.Context) {
 		return
 	}
 
-	response := make([]GetInvoiceAuditLogsResponse, len(logs))
-	for i, log := range logs {
-		response[i] = GetInvoiceAuditLogsResponse{
-			AuditID:            log.AuditID,
-			InvoiceID:          log.InvoiceID,
-			Operation:          log.Operation,
-			ChangedBy:          log.ChangedBy,
-			ChangedAt:          log.ChangedAt.Time,
-			OldValues:          util.ParseJSONToObject(log.OldValues),
-			NewValues:          util.ParseJSONToObject(log.NewValues),
-			ChangedFields:      log.ChangedFields,
-			ChangedByFirstName: log.ChangedByFirstName,
-			ChangedByLastName:  log.ChangedByLastName,
-		}
-	}
-	ctx.JSON(http.StatusOK, SuccessResponse(response, "Audit logs retrieved successfully"))
+	ctx.JSON(http.StatusOK, SuccessResponse(logs, "Audit logs retrieved successfully"))
 
 }
 
 // ================== Payment Api ==================
-
-// CreatePaymentRequest represents the request body for creating a payment.
-type CreatePaymentRequest struct {
-	PaymentMethod    *string   `json:"payment_method" binding:"oneof=credit_card bank_transfer cash check other"`
-	PaymentStatus    string    `json:"payment_status" binding:"required,oneof=pending completed failed refunded reversed"`
-	Amount           float64   `json:"amount" binding:"required,min=0"`
-	PaymentDate      time.Time `json:"payment_date" binding:"required" example:"2023-10-01T00:00:00Z"`
-	PaymentReference *string   `json:"payment_reference"`
-	Notes            *string   `json:"notes"`
-}
-
-// CreatePaymentResponse represents the response body for creating a payment.
-type CreatePaymentResponse struct {
-	PaymentID            int64     `json:"payment_id"`
-	InvoiceID            int64     `json:"invoice_id"`
-	PaymentMethod        *string   `json:"payment_method"`
-	PaymentStatus        string    `json:"payment_status"`
-	Amount               float64   `json:"amount"`
-	PaymentDate          time.Time `json:"payment_date"`
-	PaymentReference     *string   `json:"payment_reference"`
-	Notes                *string   `json:"notes"`
-	InvoiceStatusChanged bool      `json:"invoice_status_changed"`
-	CurrentInvoiceStatus string    `json:"current_invoice_status"`
-	RecordedBy           *int64    `json:"recorded_by"`
-}
 
 // @Summary Create Payment
 // @Description Create a payment for an invoice.
@@ -972,7 +435,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", id)))
 		return
 	}
-	var req CreatePaymentRequest
+	var req invserv.CreatePaymentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -983,92 +446,12 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
-
-	tx, err := server.store.ConnPool.Begin(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	defer tx.Rollback(ctx)
-	qtx := server.store.WithTx(tx)
-
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", payload.EmployeeID))
+	response, err := server.businessService.InvoiceService.CreatePayment(ctx, invoiceID, req, payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	getInvoice, err := qtx.GetInvoice(ctx.Request.Context(), invoiceID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	payment, err := qtx.CreatePayment(ctx, db.CreatePaymentParams{
-		InvoiceID:        invoiceID,
-		PaymentMethod:    req.PaymentMethod,
-		PaymentStatus:    req.PaymentStatus,
-		Amount:           req.Amount,
-		PaymentDate:      pgtype.Date{Time: req.PaymentDate, Valid: true},
-		PaymentReference: req.PaymentReference,
-		Notes:            req.Notes,
-		RecordedBy:       &payload.EmployeeID,
-	})
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	var newInvoiceStatus string
-	var statusChanged bool = false
-
-	if req.PaymentStatus == string(invoice.PaymentStatusCompleted) {
-		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx.Request.Context(), invoiceID)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		newStatus, err := invoice.DetermineInvoiceStatus(getInvoice.TotalAmount, totalPaid)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-
-		if string(newStatus) != getInvoice.Status {
-			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
-				ID:     invoiceID,
-				Status: util.StringPtr(string(newStatus)),
-			})
-			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-				return
-			}
-			newInvoiceStatus = updatedInvoice.Status
-			statusChanged = true
-		} else {
-			newInvoiceStatus = getInvoice.Status
-		}
-	}
-	if err := tx.Commit(ctx); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	response := CreatePaymentResponse{
-		PaymentID:            payment.ID,
-		InvoiceID:            payment.InvoiceID,
-		PaymentMethod:        payment.PaymentMethod,
-		PaymentStatus:        payment.PaymentStatus,
-		Amount:               payment.Amount,
-		PaymentDate:          payment.PaymentDate.Time,
-		PaymentReference:     payment.PaymentReference,
-		Notes:                payment.Notes,
-		RecordedBy:           payment.RecordedBy,
-		InvoiceStatusChanged: statusChanged,
-		CurrentInvoiceStatus: newInvoiceStatus,
-	}
-	fmt.Printf("Payment created successfully for invoice ID %d with status %s\n", invoiceID, newInvoiceStatus)
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment created successfully"))
 }
 

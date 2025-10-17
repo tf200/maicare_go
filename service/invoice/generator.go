@@ -8,19 +8,13 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
+	"maicare_go/util"
 	"time"
 
 	"github.com/goccy/go-json"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
-
-type InvoiceParams struct {
-	ClientID  int64     `json:"client_id"`
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
-}
 
 type InvoiceData struct {
 	ClientID          int64            `json:"client_id"`
@@ -31,19 +25,6 @@ type InvoiceData struct {
 	PreVatTotalAmount float64          `json:"pre_vat_total"` // Total before VAT
 	TotalAmount       float64          `json:"total_amount"`  // Total amount for the invoice
 	InvoiceDetails    []InvoiceDetails `json:"invoice_details"`
-}
-
-// InvoiceDetails contains details for each contract in the invoice
-type InvoiceDetails struct {
-	ContractID    int64           `json:"contract_id"`
-	ContractType  string          `json:"contract_name"`
-	Periods       []InvoicePeriod `json:"periods"`
-	PreVatTotal   float64         `json:"pre_vat_total_price"`
-	Total         float64         `json:"total_price"`
-	Vat           float64         `json:"vat"`
-	Price         float64         `json:"price"`
-	PriceTimeUnit string          `json:"price_time_unit"`
-	Warnings      []string        `json:"warnings"`
 }
 
 type InvoicePeriod struct {
@@ -69,29 +50,7 @@ func (s *invoiceService) GenerateInvoiceNumber(ctx context.Context) (string, int
 	return invoiceNumber, nextSeq, nil
 }
 
-type GenerateInvoiceRequest struct {
-	ClientID  int64
-	StartDate time.Time
-	EndDate   time.Time
-}
-
-type GenerateInvoiceResult struct {
-	ID              int64
-	InvoiceNumber   string
-	IssueDate       time.Time
-	DueDate         time.Time
-	Status          string
-	InvoiceDetails  []InvoiceDetails
-	TotalAmount     float64
-	PdfAttachmentID *uuid.UUID
-	ExtraContent    []byte
-	ClientID        int64
-	SenderID        *int64
-	UpdatedAt       time.Time
-	CreatedAt       time.Time
-}
-
-func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResult, int64, error) {
+func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResponse, int64, error) {
 
 	clientSender, err := s.Store.GetClientSender(ctx, req.ClientID)
 	if err != nil {
@@ -327,15 +286,16 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 		return nil, 0, fmt.Errorf("failed to create invoice in database: %v", err)
 	}
 
-	result := &GenerateInvoiceResult{
+	result := &GenerateInvoiceResponse{
 		ID:              createdInv.ID,
 		InvoiceNumber:   createdInv.InvoiceNumber,
 		IssueDate:       createdInv.IssueDate.Time,
+		DueDate:         createdInv.DueDate.Time,
 		Status:          createdInv.Status,
 		InvoiceDetails:  finalInvoice.InvoiceDetails,
 		TotalAmount:     createdInv.TotalAmount,
 		PdfAttachmentID: createdInv.PdfAttachmentID,
-		ExtraContent:    createdInv.ExtraContent,
+		ExtraContent:    util.ParseJSONToObject(createdInv.ExtraContent),
 		ClientID:        createdInv.ClientID,
 		SenderID:        createdInv.SenderID,
 		UpdatedAt:       createdInv.UpdatedAt.Time,
