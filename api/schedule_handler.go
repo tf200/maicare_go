@@ -5,6 +5,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/notification"
+	"maicare_go/service/schedule"
 	"maicare_go/util"
 	"net/http"
 	"strconv"
@@ -15,37 +16,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
-
-// CreateScheduleRequest represents the request body for creating a schedule.
-type CreateScheduleRequest struct {
-	EmployeeID int64 `json:"employee_id"`
-	LocationID int64 `json:"location_id"`
-	IsCustom   bool  `json:"is_custom" example:"true"` // true for custom schedule, false for preset shift
-
-	// For custom schedules (required when is_custom = true)
-	StartDatetime *time.Time `json:"start_datetime,omitempty" example:"2023-10-01T09:00:00Z"`
-	EndDatetime   *time.Time `json:"end_datetime,omitempty" example:"2023-10-01T17:00:00Z"`
-
-	// For preset shift-based schedules (required when is_custom = false)
-	LocationShiftID *int64  `json:"location_shift_id,omitempty" example:"1"`
-	ShiftDate       *string `json:"shift_date,omitempty" example:"2023-10-01"` // Date to apply the shift
-}
-
-// CreateScheduleResponse represents the response body after creating a schedule.
-type CreateScheduleResponse struct {
-	ID            uuid.UUID `json:"id"`
-	EmployeeID    int64     `json:"employee_id"`
-	LocationID    int64     `json:"location_id"`
-	StartDatetime time.Time `json:"start_datetime"`
-	EndDatetime   time.Time `json:"end_datetime"`
-	Color         *string   `json:"color"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-
-	// Additional info if created from preset shift
-	LocationShiftID *int64  `json:"location_shift_id,omitempty"`
-	ShiftName       *string `json:"shift_name,omitempty"`
-}
 
 // @Summary Create a new schedule
 // @Description Create a new schedule for an employee at a specific location. Supports both custom schedules and preset shifts.
@@ -60,7 +30,7 @@ type CreateScheduleResponse struct {
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules [post]
 func (server *Server) CreateScheduleApi(ctx *gin.Context) {
-	var req CreateScheduleRequest
+	var req schedule.CreateScheduleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -68,171 +38,21 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateScheduleApi", "Failed to get auth payload", zap.Error(err))
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized")))
 		return
 	}
 
-	// Validate request based on is_custom flag
-	if req.IsCustom {
-		// Custom schedule validation
-		if req.StartDatetime == nil || req.EndDatetime == nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start_datetime and end_datetime are required for custom schedules")))
-			return
-		}
-		if req.LocationShiftID != nil || req.ShiftDate != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id and shift_date should not be provided for custom schedules")))
-			return
-		}
-	} else {
-		// Preset shift validation
-		if req.LocationShiftID == nil || req.ShiftDate == nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id and shift_date are required for preset shift schedules")))
-			return
-		}
-		if req.StartDatetime != nil || req.EndDatetime != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start_datetime and end_datetime should not be provided for preset shift schedules")))
-			return
-		}
-	}
-
-	var startDatetime, endDatetime time.Time
-	var locationShiftID *int64
-	var shiftName *string
-
-	if req.IsCustom {
-		// Handle custom schedule
-		if req.StartDatetime.After(*req.EndDatetime) {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start_datetime must be before end_datetime")))
-			return
-		}
-		startDatetime = *req.StartDatetime
-		endDatetime = *req.EndDatetime
-	} else {
-		// Handle preset shift
-		// First, get the location_shift details
-		locationShift, err := server.store.GetShiftByID(ctx, *req.LocationShiftID)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid location_shift_id: %v", err)))
-			return
-		}
-
-		// Verify the shift belongs to the specified location
-		if locationShift.LocationID != req.LocationID {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id does not belong to the specified location")))
-			return
-		}
-
-		// Parse the shift date
-		shiftDate, err := time.Parse("2006-01-02", *req.ShiftDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid shift_date format, expected YYYY-MM-DD: %v", err)))
-			return
-		}
-
-		// Convert pgtype.Time (microseconds since midnight) to time components
-		startHour, startMin, startSec, startNano := util.MicrosecondsToTimeComponents(locationShift.StartTime.Microseconds)
-		endHour, endMin, endSec, endNano := util.MicrosecondsToTimeComponents(locationShift.EndTime.Microseconds)
-
-		// Combine date with shift times to create full datetime
-		startDatetime = time.Date(
-			shiftDate.Year(), shiftDate.Month(), shiftDate.Day(),
-			startHour, startMin, startSec, startNano,
-			shiftDate.Location(),
-		)
-
-		endDatetime = time.Date(
-			shiftDate.Year(), shiftDate.Month(), shiftDate.Day(),
-			endHour, endMin, endSec, endNano,
-			shiftDate.Location(),
-		)
-
-		// Handle shifts that cross midnight (end time is before start time)
-		if locationShift.EndTime.Microseconds < locationShift.StartTime.Microseconds {
-			endDatetime = endDatetime.AddDate(0, 0, 1)
-		}
-
-		locationShiftID = req.LocationShiftID
-		shiftName = &locationShift.ShiftName
-	}
-
-	// Create the schedule
-	arg := db.CreateScheduleParams{
-		EmployeeID:          req.EmployeeID,
-		LocationID:          req.LocationID,
-		LocationShiftID:     locationShiftID,
-		IsCustom:            req.IsCustom,
-		CreatedByEmployeeID: payload.EmployeeID,
-		StartDatetime:       pgtype.Timestamp{Time: startDatetime, Valid: true},
-		EndDatetime:         pgtype.Timestamp{Time: endDatetime, Valid: true},
-	}
-
-	schedule, err := server.store.CreateSchedule(ctx, arg)
+	schedule, err := server.businessService.ScheduleService.CreateSchedule(ctx, payload.EmployeeID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create schedule: %w", err)))
 		return
 	}
 
-	notifData := &notification.NewScheduleNotificationData{
-		ScheduleID: schedule.ID,
-		CreatedBy:  payload.EmployeeID,
-		StartTime:  startDatetime,
-		EndTime:    endDatetime,
-		Location:   schedule.LocationName,
-	}
-
-	err = server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
-		RecipientUserIDs: []int64{req.EmployeeID},
-		Type:             notification.TypeNewScheduleNotification,
-		Data:             notification.NotificationData{NewScheduleNotification: notifData},
-		CreatedAt:        time.Now(),
-		Message:          notifData.NewScheduleMessage(),
-	})
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateScheduleApi", "Failed to enqueue notification task", zap.Error(err))
-	}
-
-	res := SuccessResponse(CreateScheduleResponse{
-		ID:              schedule.ID,
-		EmployeeID:      schedule.EmployeeID,
-		LocationID:      schedule.LocationID,
-		StartDatetime:   schedule.StartDatetime.Time,
-		EndDatetime:     schedule.EndDatetime.Time,
-		Color:           schedule.Color,
-		CreatedAt:       schedule.CreatedAt.Time,
-		UpdatedAt:       schedule.UpdatedAt.Time,
-		LocationShiftID: locationShiftID,
-		ShiftName:       shiftName,
-	}, "Schedule created successfully")
+	res := SuccessResponse(schedule, "Schedule created successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
-// GetMonthlySchedulesByLocationApi retrieves the monthly schedules for a specific location.
-type GetMonthlySchedulesByLocationRequest struct {
-	Year  int32 `form:"year"`
-	Month int32 `form:"month"`
-}
 
-// Shift represents a work shift for an employee.
-type Shift struct {
-	ShiftID           uuid.UUID `json:"shift_id"`
-	EmployeeID        int64     `json:"employee_id"`
-	EmployeeFirstName string    `json:"employee_first_name"`
-	EmployeeLastName  string    `json:"employee_last_name"`
-	StartTime         time.Time `json:"start_time"`
-	EndTime           time.Time `json:"end_time"`
-	LocationID        int64     `json:"location_id"`
-	Color             *string   `json:"color"` // Optional field for color coding
-	ShiftName         *string   `json:"shift_name,omitempty"`
-	LocationShiftID   *int64    `json:"location_shift_id,omitempty"` // Optional field for preset shift
-	IsCustom          bool      `json:"is_custom"`                   // Indicates if this is a custom schedule
-}
-
-// GetMonthlySchedulesByLocationResponse represents the response body for monthly schedules.
-type GetMonthlySchedulesByLocationResponse struct {
-	Date   string  `json:"date"`
-	Shifts []Shift `json:"shifts"`
-}
 
 // @Summary Get monthly schedules by location
 // @Description Get all schedules for a specific location for a given month and year

@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+	"maicare_go/async/aclient"
 	"maicare_go/service/deps"
 
 	"github.com/google/uuid"
@@ -21,10 +22,12 @@ type AppointmentService interface {
 
 type appointmentService struct {
 	*deps.ServiceDependencies
+	asynqClient aclient.AsynqClientInterface
 }
 
-func NewAppointmentService(deps *deps.ServiceDependencies) AppointmentService {
+func NewAppointmentService(deps *deps.ServiceDependencies, asynqClient aclient.AsynqClientInterface) AppointmentService {
 	return &appointmentService{
 		ServiceDependencies: deps,
+		asynqClient:         asynqClient,
 	}
 }

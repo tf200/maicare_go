@@ -2,33 +2,32 @@ package notification
 
 import (
 	"context"
-
+	"encoding/json"
 	"fmt"
-	"log" // Use a structured logger in a real app
+	"log"
+	db "maicare_go/db/sqlc"
+	"maicare_go/logger"
+	"maicare_go/service/deps"
 	"time"
 
-	db "maicare_go/db/sqlc"
-	"maicare_go/hub"
-
-	"github.com/goccy/go-json"
 	"github.com/google/uuid"
-	// "your_project_root/websocket" // Import when ready
+	"go.uber.org/zap"
 )
 
-// Service handles notification business logic.
-type Service struct {
-	store *db.Store
-	wsHub *hub.Hub
+type NotificationService interface {
+	CreateAndDeliver(ctx context.Context, payload NotificationPayload) error
+	ListNotifications(ctx context.Context, req *ListNotificationsRequest, userID int64) ([]ListNotificationsResponse, error)
+	MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID, userID int64) (*MarkNotificationAsReadResponse, error)
 }
 
-// NewService creates a new notification service.
-func NewService(store *db.Store, wsHub *hub.Hub) *Service {
-	service := &Service{
-		store: store,
-		wsHub: wsHub,
-	}
+type notificationService struct {
+	*deps.ServiceDependencies
+}
 
-	return service
+func NewNotificationService(deps *deps.ServiceDependencies) NotificationService {
+	return &notificationService{
+		ServiceDependencies: deps,
+	}
 }
 
 type WebSocketMessage struct {
@@ -40,27 +39,24 @@ type WebSocketMessage struct {
 	CreatedAt        time.Time        `json:"created_at"`
 }
 
-func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
+func (s *notificationService) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
 
-	// --- End Prepare WebSocket Message ---
-
-	var firstError error // Keep track of the first error for potential return
+	var firstError error
 
 	dataBytes, err := json.Marshal(payload.Data)
 	if err != nil {
-		log.Printf("Error marshalling notification data (Type: %s): %v", payload.Type, err)
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAndDeliver", "Failed to marshal notification data", zap.Error(err))
 		return fmt.Errorf("failed to marshal notification data: %w", err)
 	}
-	log.Printf("Notification data marshalled successfully for type: %s", payload.Type)
 
 	for _, recipientID := range payload.RecipientUserIDs {
 		log.Printf("Processing notification for recipient ID: %d", recipientID)
 		// 1. Save to Database
-		notif, dbErr := s.store.CreateNotification(ctx, db.CreateNotificationParams{
+		notif, dbErr := s.Store.CreateNotification(ctx, db.CreateNotificationParams{
 			UserID:  recipientID,
 			Type:    payload.Type,
 			Data:    dataBytes,
-			Message: "", // Use the original data bytes
+			Message: payload.Message, // Use the original data bytes
 			// You might want to store CreatedAt from the payload too,
 			// ensure your DB schema/params support this if needed.
 		})
@@ -88,7 +84,7 @@ func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayl
 
 		wsPayload, err := json.Marshal(wsMsg)
 		if err != nil {
-			log.Printf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err)
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAndDeliver", fmt.Sprintf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err))
 			// If we can't marshal this, we can't send it via WS.
 			// Depending on requirements, you might still want to proceed with DB saves,
 			// or return an error here. Let's log and proceed with DB saves for now.
@@ -96,17 +92,17 @@ func (s *Service) CreateAndDeliver(ctx context.Context, payload NotificationPayl
 		}
 
 		// 2. Deliver via WebSocket (if marshalling succeeded)
-		if s.wsHub != nil { // Check if marshalling failed earlier and hub exists
+		if s.WsHub != nil { // Check if marshalling failed earlier and hub exists
 			// The hub's SendToUser handles checking if the user is actually connected.
 			// It iterates through all connections for that user ID.
-			s.wsHub.SendToUser(recipientID, wsPayload)
+			s.WsHub.SendToUser(recipientID, wsPayload)
 			// Log the *attempt* to send. The hub logs success/failure per connection.
-			log.Printf("Attempted WebSocket delivery to user %d.", recipientID)
-		} else if s.wsHub == nil {
-			log.Printf("WebSocket Hub is nil, skipping WS delivery for user %d.", recipientID)
+			s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateAndDeliver", fmt.Sprintf("Attempted WebSocket delivery to user %d.", recipientID))
+		} else if s.WsHub == nil {
+			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "CreateAndDeliver", fmt.Sprintf("WebSocket Hub is nil, skipping WS delivery for user %d.", recipientID))
 		} else {
 			// This means json.Marshal(wsMsg) failed earlier
-			log.Printf("Skipping WebSocket delivery for user %d due to prior marshalling error.", recipientID)
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAndDeliver", "Failed to marshal WebSocket message", zap.Error(err))
 		}
 	}
 

@@ -30,6 +30,10 @@ type InvoiceService interface {
 
 	// Payment methods
 	CreatePayment(ctx context.Context, invoiceID int64, req CreatePaymentRequest, employeeID int64) (*CreatePaymentResponse, error)
+	ListPayments(ctx context.Context, invoiceID int64) ([]ListPaymentsResponse, error)
+	GetPaymentByID(ctx context.Context, paymentID int64) (*GetPaymentByIDResponse, error)
+	UpdatePayment(ctx context.Context, invoiceID, employeeID, paymentID int64, req UpdatePaymentRequest) (*UpdatePaymentResponse, error)
+	DeletePayment(ctx context.Context, invoiceID, paymentID, employeeID int64) (*DeletePaymentResponse, error)
 }
 
 type invoiceService struct {

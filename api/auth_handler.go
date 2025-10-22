@@ -43,7 +43,6 @@ func (server *Server) Login(ctx *gin.Context) {
 }
 
 // @Summary Refresh access token
-
 // @Description Refresh access token using refresh token“
 // @Tags authentication
 // @Accept json

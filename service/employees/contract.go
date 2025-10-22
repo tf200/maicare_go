@@ -55,7 +55,7 @@ func (s *employeeService) AddEmployeeContractDetails(req AddEmployeeContractDeta
 		return nil, fmt.Errorf("failed to update password: %w", err)
 	}
 
-	err = s.AsynqClient.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
+	err = s.asynqClient.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
 		Name:         contractDetails.FirstName + " " + contractDetails.LastName,
 		To:           contractDetails.Email,
 		UserEmail:    user.Email,

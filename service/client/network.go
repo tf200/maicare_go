@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"maicare_go/notification"
 	"maicare_go/pagination"
+	"maicare_go/service/notification"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -220,7 +220,7 @@ func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEm
 		ClientLocation:  assign.ClientLocationName,
 	}
 
-	err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+	err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 		RecipientUserIDs: []int64{assign.UserID},
 		Type:             notification.TypeNewClientAssignment,
 		Data: notification.NotificationData{

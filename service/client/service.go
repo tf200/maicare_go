@@ -2,6 +2,7 @@ package clientp
 
 import (
 	"context"
+	"maicare_go/async/aclient"
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
 
@@ -80,14 +81,24 @@ type ClientService interface {
 	GetProgressReport(ctx context.Context, reportID int64) (*GetProgressReportResponse, error)
 	UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error)
 	DeleteProgressReport(ctx context.Context, reportID int64) error
+
+	// Registration Form
+	CreateRegistrationForm(ctx context.Context, req *CreateRegistrationFormRequest) (*CreateRegistrationFormResponse, error)
+	ListRegistrationForms(ctx *gin.Context, req *ListRegistrationFormsRequest) (*pagination.Response[ListRegistrationFormsResponse], error)
+	GetRegistrationFormB(tx context.Context, formID int64) (*GetRegistrationFormResponse, error)
+	UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID int64) (*UpdateRegistrationFormResponse, error)
+	DeleteRegistrationForm(ctx context.Context, formID int64) error
+	UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID, employeeID int64) error
 }
 
 type clientService struct {
 	*deps.ServiceDependencies
+	asynqClient aclient.AsynqClientInterface
 }
 
-func NewClientService(deps *deps.ServiceDependencies) ClientService {
+func NewClientService(deps *deps.ServiceDependencies, asynqClient aclient.AsynqClientInterface) ClientService {
 	return &clientService{
 		ServiceDependencies: deps,
+		asynqClient:         asynqClient,
 	}
 }

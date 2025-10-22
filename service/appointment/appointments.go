@@ -7,7 +7,7 @@ import (
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"maicare_go/notification"
+	"maicare_go/service/notification"
 	"maicare_go/util"
 	"time"
 
@@ -481,7 +481,7 @@ func (s *appointmentService) createNormalAppointment(
 			Location:      util.DerefString(req.Location),
 		}
 
-		err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+		err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 			RecipientUserIDs: req.ParticipantEmployeeIDs,
 			Type:             notification.TypeNewAppointment,
 			Data: notification.NotificationData{
@@ -532,7 +532,7 @@ func (s *appointmentService) createRecurringAppointment(
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
-	err = s.AsynqClient.EnqueueAppointmentTask(ctx, aclient.AppointmentPayload{
+	err = s.asynqClient.EnqueueAppointmentTask(ctx, aclient.AppointmentPayload{
 		AppointmentTemplateID:  appointmentTemp.ID,
 		ParticipantEmployeeIDs: req.ParticipantEmployeeIDs,
 		ClientIDs:              req.ClientIDs,
@@ -552,7 +552,7 @@ func (s *appointmentService) createRecurringAppointment(
 			Location:      util.DerefString(req.Location),
 		}
 
-		err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+		err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 			RecipientUserIDs: req.ParticipantEmployeeIDs,
 			Type:             notification.TypeNewAppointment,
 			Data: notification.NotificationData{

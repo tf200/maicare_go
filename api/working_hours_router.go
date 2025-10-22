@@ -10,3 +10,4 @@ func (server *Server) setupWorkingHours(baseRouter *gin.RouterGroup) {
 	}
 
 }
+ 

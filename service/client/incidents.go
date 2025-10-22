@@ -5,9 +5,9 @@ import (
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"maicare_go/notification"
 	"maicare_go/pagination"
 	"maicare_go/pdf"
+	"maicare_go/service/notification"
 	"maicare_go/util"
 	"time"
 
@@ -70,7 +70,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.Int64("IncidentID", incident.ID))
 
-	err = s.AsynqClient.EnqueueIncident(aclient.IncidentPayload{
+	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -143,7 +143,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 				ClientLastName:     util.DerefString(incident.ClientLastName),
 				SeverityOfIncident: incident.SeverityOfIncident,
 			}
-			err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+			err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 				RecipientUserIDs: recipientUserIDs,
 				Type:             notification.TypeNewClientAssignment,
 				Data: notification.NotificationData{
@@ -400,7 +400,7 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.Int64("IncidentID", incident.ID))
-	err = s.AsynqClient.EnqueueIncident(aclient.IncidentPayload{
+	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",

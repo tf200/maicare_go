@@ -2,9 +2,10 @@ package deps
 
 import (
 	"context"
-	"maicare_go/async/aclient"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
+	grpclient "maicare_go/grpclient/proto"
+	"maicare_go/hub"
 	"maicare_go/logger"
 	"maicare_go/token"
 	"maicare_go/util"
@@ -12,21 +13,24 @@ import (
 )
 
 type ServiceDependencies struct {
-	Store       *db.Store
-	TokenMaker  token.Maker
-	Logger      logger.Logger
-	Config      *util.Config
-	B2Client    bucket.ObjectStorageInterface
-	AsynqClient aclient.AsynqClientInterface
+	Store      *db.Store
+	TokenMaker token.Maker
+	Logger     logger.Logger
+	Config     *util.Config
+	B2Client   bucket.ObjectStorageInterface
+	GrpcClient grpclient.GrpcClientInterface
+	WsHub      *hub.Hub
 }
 
-func NewServiceDependencies(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface) *ServiceDependencies {
+func NewServiceDependencies(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface, grpcClient grpclient.GrpcClientInterface, wsHub *hub.Hub) *ServiceDependencies {
 	return &ServiceDependencies{
 		Store:      store,
 		TokenMaker: tokenMaker,
 		Logger:     logger,
 		Config:     config,
 		B2Client:   b2Client,
+		GrpcClient: grpcClient,
+		WsHub:      wsHub,
 	}
 }
 

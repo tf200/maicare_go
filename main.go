@@ -13,7 +13,6 @@ import (
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/logger"
-	"maicare_go/notification"
 	"maicare_go/service"
 	"maicare_go/token"
 	"maicare_go/util"
@@ -114,9 +113,6 @@ func main() {
 	// Initialize the ws Hub
 	hubInstance := hub.NewHub()
 
-	// Initialize the notification service
-	notificationService := notification.NewService(store, hubInstance)
-
 	// Initialize Asynq server
 	var asynqServer *processor.AsynqServer
 
@@ -141,7 +137,7 @@ func main() {
 	}
 
 	// Init the buisness service
-	businessService := service.NewBusinessService(store, tokenMaker, logger, &config, b2Client)
+	businessService := service.NewBusinessService(store, tokenMaker, logger, &config, b2Client, grpcClient, hubInstance, asynqClient)
 
 	if !config.Remote {
 		redisClient := redis.NewClient(&redis.Options{
@@ -175,7 +171,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
+		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, businessService)
 	} else {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -208,7 +204,7 @@ func main() {
 		if pingErr != nil {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
-		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, notificationService, businessService)
+		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, businessService)
 	}
 
 	// Start the Asynq server in a goroutine
@@ -225,7 +221,7 @@ func main() {
 
 	// Start your main server
 	server, err := api.NewServer(store, b2Client, asynqClient,
-		config.OpenRouterAPIKey, hubInstance, notificationService,
+		config.OpenRouterAPIKey, hubInstance,
 		grpcClient, tokenMaker, config, businessService)
 	if err != nil {
 		log.Fatal("cannot create server:", err)

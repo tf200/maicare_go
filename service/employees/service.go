@@ -3,6 +3,7 @@ package employees
 import (
 	"context"
 	"fmt"
+	"maicare_go/async/aclient"
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
 
@@ -58,10 +59,12 @@ type EmployeeService interface {
 
 type employeeService struct {
 	*deps.ServiceDependencies
+	asynqClient aclient.AsynqClientInterface
 }
 
-func NewEmployeeService(deps *deps.ServiceDependencies) EmployeeService {
+func NewEmployeeService(deps *deps.ServiceDependencies, asynqClient aclient.AsynqClientInterface) EmployeeService {
 	return &employeeService{
 		ServiceDependencies: deps,
+		asynqClient:         asynqClient,
 	}
 }

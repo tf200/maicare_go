@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"maicare_go/notification"
+	"maicare_go/service/notification"
 
 	"github.com/hibiken/asynq"
 )
