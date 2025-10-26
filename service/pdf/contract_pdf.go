@@ -58,7 +58,7 @@ type ContractData struct {
 }
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
-func GenerateContractPDF(contractData ContractData) (multipart.File, error) {
+func (s *pdfService) generateContractPDF(contractData ContractData) (multipart.File, error) {
 
 	// Parse and execute HTML template
 	templ, err := template.ParseFS(contractTemplateFS, "templates/contract.html")
@@ -108,13 +108,13 @@ func GenerateContractPDF(contractData ContractData) (multipart.File, error) {
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID int64, b2Client bucket.ObjectStorageInterface) (string, error) {
+func (s *pdfService) uploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID int64) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("contract/%s/contract-%d.pdf", timestamp, contractID)
 
 	// Upload to B2
-	key, _, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
+	key, _, err := s.bucketClient.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
@@ -122,15 +122,15 @@ func UploadContractPDF(ctx context.Context, pdfFile multipart.File, contractID i
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData, b2Client bucket.ObjectStorageInterface) (string, error) {
+func (s *pdfService) GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData) (string, error) {
 	// Generate PDF
-	pdfFile, err := GenerateContractPDF(contractData)
+	pdfFile, err := s.generateContractPDF(contractData)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	fileURL, err := UploadContractPDF(ctx, pdfFile, contractData.ID, b2Client)
+	fileURL, err := s.uploadContractPDF(ctx, pdfFile, contractData.ID)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/service/auth"
 	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
@@ -48,7 +49,7 @@ func TestCreateRoleApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				name := faker.Word()
 				t.Log(name)
-				req := CreateRoleRequest{
+				req := auth.CreateRoleRequest{
 					Name: name,
 				}
 
@@ -61,7 +62,7 @@ func TestCreateRoleApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[CreateRoleResponse]
+				var response Response[auth.CreateRoleResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -104,7 +105,7 @@ func TestListRolesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]ListRolesApiResponse]
+				var response Response[[]auth.ListRolesApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -149,7 +150,7 @@ func TestListAllRolePermissionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]ListAllRolePermissionsApiResponse]
+				var response Response[[]auth.ListAllRolePermissionsApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -185,7 +186,7 @@ func TestAddPermissionsToRoleApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := AddPermissionsToRoleRequest{
+				req := auth.AddPermissionsToRoleRequest{
 					PermissionIDs: []int32{3, 4},
 				}
 
@@ -201,7 +202,7 @@ func TestAddPermissionsToRoleApi(t *testing.T) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
 				t.Log(recorder.Body.String())
-				var response Response[AddPermissionsToRoleResponse]
+				var response Response[auth.AddPermissionsToRoleResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -244,7 +245,7 @@ func TestListAllPermissionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]ListAllPermissionsApiResponse]
+				var response Response[[]auth.ListAllPermissionsApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -281,7 +282,7 @@ func TestAssignRoleToEmployeeApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := AssignRoleToUserParams{
+				req := auth.AssignRoleToEmployeeParams{
 					RoleID: roleID,
 				}
 
@@ -296,7 +297,7 @@ func TestAssignRoleToEmployeeApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[AssignRoleToUserApiResponse]
+				var response Response[auth.AssignRoleToEmployeeApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -342,7 +343,7 @@ func TestListUserRolesAndPermissionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[ListUserRolesAndPermissionsApiResponse]
+				var response Response[auth.ListUserRolesAndPermissionsApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)

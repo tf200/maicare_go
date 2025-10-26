@@ -7,7 +7,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"maicare_go/pdf"
+	"maicare_go/service/pdf"
 
 	"go.uber.org/zap"
 )
@@ -169,7 +169,7 @@ func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, 
 		Leave:                  appointmentCard.Leave,
 	}
 
-	pdfUrl, err := pdf.GenerateAndUploadAppointmentCardPDF(ctx, pdfArg, s.B2Client)
+	pdfUrl, err := s.PDFService.GenerateAndUploadAppointmentCardPDF(ctx, pdfArg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateAppointmentCardDocumentApi",
 			"Failed to generate and upload appointment card PDF", zap.Error(err))

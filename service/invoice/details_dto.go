@@ -146,3 +146,15 @@ type GetInvoiceTemplateItemsResponse struct {
 	SourceTable  string `json:"source_table"`
 	SourceColumn string `json:"source_column"`
 }
+
+// GenerateInvoicePDFResponse represents the response body for generating an invoice PDF.
+type GenerateInvoicePDFResponse struct {
+	FileUrl string `json:"file_url"`
+}
+
+// Contact represents a contact information.
+type SenderContact struct {
+	Name        *string `json:"name"`
+	Email       *string `json:"email" binding:"email"`
+	PhoneNumber *string `json:"phone_number"`
+}

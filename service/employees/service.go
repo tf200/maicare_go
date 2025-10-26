@@ -55,6 +55,9 @@ type EmployeeService interface {
 	ListEmployeeCertification(employeeID int64, ctx context.Context) ([]ListEmployeeCertificationResponse, error)
 	UpdateEmployeeCertification(req UpdateEmployeeCertificationRequest, certificationID int64, ctx context.Context) (*UpdateEmployeeCertificationResponse, error)
 	DeleteEmployeeCertification(certificationID int64, ctx context.Context) (*DeleteEmployeeCertificationResponse, error)
+
+	// Working hours methods
+	ListWorkingHours(ctx context.Context, employeeID int64, req *ListWorkingHoursRequest) (*ListWorkingHoursResponse, error)
 }
 
 type employeeService struct {

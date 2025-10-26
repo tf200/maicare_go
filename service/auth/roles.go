@@ -265,3 +265,10 @@ func (s *authService) CreateRole(ctx context.Context, req *CreateRoleRequest) (*
 		Name:   role.Name,
 	}, nil
 }
+
+func (s *authService) HasPermission(ctx context.Context, userID int64, permission string) (bool, error) {
+	return s.Store.CheckUserPermission(ctx, db.CheckUserPermissionParams{
+		UserID: userID,
+		Name:   permission,
+	})
+}

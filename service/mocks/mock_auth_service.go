@@ -41,6 +41,36 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 	return m.recorder
 }
 
+// AddPermissionsToRole mocks base method.
+func (m *MockAuthService) AddPermissionsToRole(ctx context.Context, roleID int32, req *auth.AddPermissionsToRoleRequest) (*auth.AddPermissionsToRoleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddPermissionsToRole", ctx, roleID, req)
+	ret0, _ := ret[0].(*auth.AddPermissionsToRoleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddPermissionsToRole indicates an expected call of AddPermissionsToRole.
+func (mr *MockAuthServiceMockRecorder) AddPermissionsToRole(ctx, roleID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPermissionsToRole", reflect.TypeOf((*MockAuthService)(nil).AddPermissionsToRole), ctx, roleID, req)
+}
+
+// AssignRoleToEmployee mocks base method.
+func (m *MockAuthService) AssignRoleToEmployee(ctx context.Context, employeeID int64, req *auth.AssignRoleToEmployeeParams) (*auth.AssignRoleToEmployeeApiResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AssignRoleToEmployee", ctx, employeeID, req)
+	ret0, _ := ret[0].(*auth.AssignRoleToEmployeeApiResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AssignRoleToEmployee indicates an expected call of AssignRoleToEmployee.
+func (mr *MockAuthServiceMockRecorder) AssignRoleToEmployee(ctx, employeeID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AssignRoleToEmployee", reflect.TypeOf((*MockAuthService)(nil).AssignRoleToEmployee), ctx, employeeID, req)
+}
+
 // ChangePassword mocks base method.
 func (m *MockAuthService) ChangePassword(req auth.ChangePasswordRequest, userID int64, ctx context.Context) error {
 	m.ctrl.T.Helper()
@@ -53,6 +83,21 @@ func (m *MockAuthService) ChangePassword(req auth.ChangePasswordRequest, userID 
 func (mr *MockAuthServiceMockRecorder) ChangePassword(req, userID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAuthService)(nil).ChangePassword), req, userID, ctx)
+}
+
+// CreateRole mocks base method.
+func (m *MockAuthService) CreateRole(ctx context.Context, req *auth.CreateRoleRequest) (*auth.CreateRoleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRole", ctx, req)
+	ret0, _ := ret[0].(*auth.CreateRoleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRole indicates an expected call of CreateRole.
+func (mr *MockAuthServiceMockRecorder) CreateRole(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRole", reflect.TypeOf((*MockAuthService)(nil).CreateRole), ctx, req)
 }
 
 // EnableTwoFA mocks base method.
@@ -68,6 +113,96 @@ func (m *MockAuthService) EnableTwoFA(req auth.Enable2FARequest, userID int64, c
 func (mr *MockAuthServiceMockRecorder) EnableTwoFA(req, userID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableTwoFA", reflect.TypeOf((*MockAuthService)(nil).EnableTwoFA), req, userID, ctx)
+}
+
+// GrantUserPermission mocks base method.
+func (m *MockAuthService) GrantUserPermission(ctx context.Context, employeeID int64, req *auth.GrantUserPermissionsRequest) (*auth.GrantUserPermissionsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GrantUserPermission", ctx, employeeID, req)
+	ret0, _ := ret[0].(*auth.GrantUserPermissionsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GrantUserPermission indicates an expected call of GrantUserPermission.
+func (mr *MockAuthServiceMockRecorder) GrantUserPermission(ctx, employeeID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GrantUserPermission", reflect.TypeOf((*MockAuthService)(nil).GrantUserPermission), ctx, employeeID, req)
+}
+
+// HasPermission mocks base method.
+func (m *MockAuthService) HasPermission(ctx context.Context, userID int64, permission string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasPermission", ctx, userID, permission)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasPermission indicates an expected call of HasPermission.
+func (mr *MockAuthServiceMockRecorder) HasPermission(ctx, userID, permission any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasPermission", reflect.TypeOf((*MockAuthService)(nil).HasPermission), ctx, userID, permission)
+}
+
+// ListAllPermissions mocks base method.
+func (m *MockAuthService) ListAllPermissions(ctx context.Context) ([]auth.ListAllPermissionsApiResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllPermissions", ctx)
+	ret0, _ := ret[0].([]auth.ListAllPermissionsApiResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllPermissions indicates an expected call of ListAllPermissions.
+func (mr *MockAuthServiceMockRecorder) ListAllPermissions(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllPermissions", reflect.TypeOf((*MockAuthService)(nil).ListAllPermissions), ctx)
+}
+
+// ListAllRolePermissions mocks base method.
+func (m *MockAuthService) ListAllRolePermissions(ctx context.Context, roleID int32) ([]auth.ListAllRolePermissionsApiResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllRolePermissions", ctx, roleID)
+	ret0, _ := ret[0].([]auth.ListAllRolePermissionsApiResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllRolePermissions indicates an expected call of ListAllRolePermissions.
+func (mr *MockAuthServiceMockRecorder) ListAllRolePermissions(ctx, roleID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllRolePermissions", reflect.TypeOf((*MockAuthService)(nil).ListAllRolePermissions), ctx, roleID)
+}
+
+// ListRoles mocks base method.
+func (m *MockAuthService) ListRoles(ctx context.Context) ([]auth.ListRolesApiResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListRoles", ctx)
+	ret0, _ := ret[0].([]auth.ListRolesApiResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListRoles indicates an expected call of ListRoles.
+func (mr *MockAuthServiceMockRecorder) ListRoles(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRoles", reflect.TypeOf((*MockAuthService)(nil).ListRoles), ctx)
+}
+
+// ListUserRolesAndPermissionsApi mocks base method.
+func (m *MockAuthService) ListUserRolesAndPermissionsApi(ctx context.Context, employeeID int64) (*auth.ListUserRolesAndPermissionsApiResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListUserRolesAndPermissionsApi", ctx, employeeID)
+	ret0, _ := ret[0].(*auth.ListUserRolesAndPermissionsApiResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListUserRolesAndPermissionsApi indicates an expected call of ListUserRolesAndPermissionsApi.
+func (mr *MockAuthServiceMockRecorder) ListUserRolesAndPermissionsApi(ctx, employeeID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserRolesAndPermissionsApi", reflect.TypeOf((*MockAuthService)(nil).ListUserRolesAndPermissionsApi), ctx, employeeID)
 }
 
 // Login mocks base method.

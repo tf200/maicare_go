@@ -37,6 +37,7 @@ type AuthService interface {
 	GrantUserPermission(ctx context.Context, employeeID int64, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error)
 	AddPermissionsToRole(ctx context.Context, roleID int32, req *AddPermissionsToRoleRequest) (*AddPermissionsToRoleResponse, error)
 	CreateRole(ctx context.Context, req *CreateRoleRequest) (*CreateRoleResponse, error)
+	HasPermission(ctx context.Context, userID int64, permission string) (bool, error)
 }
 
 type authService struct {

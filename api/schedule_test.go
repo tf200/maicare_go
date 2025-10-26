@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/service/schedule"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -54,7 +55,7 @@ func TestCreateScheduleApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now()
 				endTime := time.Now().Add(1 * time.Hour)
-				createScheduleReq := CreateScheduleRequest{
+				createScheduleReq := schedule.CreateScheduleRequest{
 					EmployeeID:    employee.ID,
 					LocationID:    location.ID,
 					IsCustom:      true,
@@ -71,7 +72,7 @@ func TestCreateScheduleApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[CreateScheduleResponse]
+				var response Response[schedule.CreateScheduleResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -85,7 +86,7 @@ func TestCreateScheduleApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now().Format("2006-01-02")
-				createScheduleReq := CreateScheduleRequest{
+				createScheduleReq := schedule.CreateScheduleRequest{
 					EmployeeID:      1,
 					LocationID:      1,
 					IsCustom:        false,
@@ -104,7 +105,7 @@ func TestCreateScheduleApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[CreateScheduleResponse]
+				var response Response[schedule.CreateScheduleResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -132,7 +133,7 @@ func TestCreateScheduleApi(t *testing.T) {
 func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 
 	employee, _ := createRandomEmployee(t)
-	schedule := createRandomSchedule(t, employee.ID)
+	createdSchedule := createRandomSchedule(t, employee.ID)
 
 	testCases := []struct {
 		name          string
@@ -146,7 +147,7 @@ func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/locations/%d/monthly_schedules?year=%d&month=%d", schedule.LocationID, schedule.StartDatetime.Time.Year(), schedule.StartDatetime.Time.Month())
+				url := fmt.Sprintf("/locations/%d/monthly_schedules?year=%d&month=%d", createdSchedule.LocationID, createdSchedule.StartDatetime.Time.Year(), createdSchedule.StartDatetime.Time.Month())
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return request, nil
@@ -154,7 +155,7 @@ func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetMonthlySchedulesByLocationResponse]
+				var response Response[[]schedule.GetMonthlySchedulesByLocationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -179,7 +180,7 @@ func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 
 func TestGetDailySchedulesByLocationApi(t *testing.T) {
 	employee, _ := createRandomEmployee(t)
-	schedule := createRandomSchedule(t, employee.ID)
+	createdSchedule := createRandomSchedule(t, employee.ID)
 
 	testCases := []struct {
 		name          string
@@ -193,10 +194,10 @@ func TestGetDailySchedulesByLocationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/locations/%d/daily_schedules?year=%d&month=%d&day=%d", schedule.LocationID,
-					schedule.StartDatetime.Time.Year(),
-					schedule.StartDatetime.Time.Month(),
-					schedule.StartDatetime.Time.Day())
+				url := fmt.Sprintf("/locations/%d/daily_schedules?year=%d&month=%d&day=%d", createdSchedule.LocationID,
+					createdSchedule.StartDatetime.Time.Year(),
+					createdSchedule.StartDatetime.Time.Month(),
+					createdSchedule.StartDatetime.Time.Day())
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return request, nil
@@ -204,7 +205,7 @@ func TestGetDailySchedulesByLocationApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetDailySchedulesByLocationResponse]
+				var response Response[schedule.GetDailySchedulesByLocationResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)

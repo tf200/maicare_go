@@ -162,7 +162,11 @@ func TestListMedicationsByDiagnosisID(t *testing.T) {
 	employee, _ := createRandomEmployee(t)
 	medication1 := createRandomClientMedication(t, diagnosis.ID, employee.ID)
 
-	medication2, err := testQueries.ListMedicationsByDiagnosisID(context.Background(), &diagnosis.ID)
+	medication2, err := testQueries.ListMedicationsByDiagnosisID(context.Background(), ListMedicationsByDiagnosisIDParams{
+		DiagnosisID: &diagnosis.ID,
+		Limit:       5,
+		Offset:      0,
+	})
 	require.NoError(t, err)
 	require.NotEmpty(t, medication2)
 	require.Equal(t, medication1.ID, medication2[0].ID)

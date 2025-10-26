@@ -330,7 +330,7 @@ func TestGenerateAutoReportsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := GenerateAutoReportsRequest{
+				req := clientp.GenerateAutoReportsRequest{
 					StartDate: startDate,
 					EndDate:   endDate,
 				}
@@ -344,7 +344,7 @@ func TestGenerateAutoReportsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GenerateAutoReportsResponse]
+				var response Response[clientp.GenerateAutoReportsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -383,7 +383,7 @@ func TestConfirmProgressReportApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := ConfirmProgressReportRequest{
+				req := clientp.ConfirmProgressReportRequest{
 					ReportText: "Test Progress Report",
 					Startdate:  util.RandomTIme(),
 					Enddate:    util.RandomTIme(),
@@ -397,7 +397,7 @@ func TestConfirmProgressReportApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[ConfirmProgressReportResponse]
+				var response Response[clientp.ConfirmProgressReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -447,7 +447,7 @@ func TestListAiGeneratedReportsApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListAiGeneratedReportsResponse]]
+				var response Response[pagination.Response[clientp.ListAiGeneratedReportsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.Results)

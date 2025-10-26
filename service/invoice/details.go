@@ -7,6 +7,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
+	"maicare_go/service/pdf"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -306,4 +307,88 @@ func (s *invoiceService) GetInvoiceTemplateItemsApi(ctx context.Context) ([]GetI
 		})
 	}
 	return response, nil
+}
+
+func (s *invoiceService) GenerateInvoicePdf(ctx context.Context, invoiceID int64) (*GenerateInvoicePDFResponse, error) {
+	invoiceData, err := s.Store.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoicePdf", "Failed to get invoice data", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		return nil, fmt.Errorf("failed to get invoice data: %v", err)
+	}
+
+	var invoiceDetails []InvoiceDetails
+	if err := json.Unmarshal(invoiceData.InvoiceDetails, &invoiceDetails); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal invoice details: %v", err)
+	}
+
+	var senderContacts []SenderContact
+	err = json.Unmarshal(invoiceData.SenderContacts, &senderContacts)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoicePdf", "Failed to unmarshal sender contacts", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		return nil, fmt.Errorf("failed to unmarshal sender contacts: %v", err)
+	}
+
+	var pdfInvoiceDetails []pdf.InvoiceDetail
+	for _, detail := range invoiceDetails {
+		var pdfInvoicePeriods []pdf.InvoicePeriod
+		for _, period := range detail.Periods {
+			pdfInvoicePeriods = append(pdfInvoicePeriods, pdf.InvoicePeriod{
+				StartDate:             period.StartDate,
+				EndDate:               period.EndDate,
+				AcommodationTimeFrame: util.DerefString(period.AcommodationTimeFrame),
+				AmbulanteTotalMinutes: util.DerefFloat64(period.AmbulanteTotalMinutes),
+			})
+		}
+		pdfInvoiceDetails = append(pdfInvoiceDetails, pdf.InvoiceDetail{
+			CareType:      detail.ContractType,
+			Periods:       pdfInvoicePeriods,
+			Price:         detail.Price,
+			PriceTimeUnit: detail.PriceTimeUnit,
+			PreVatTotal:   detail.PreVatTotal,
+			Total:         detail.Total,
+		})
+	}
+
+	var extraItems map[string]string
+	if err := json.Unmarshal(invoiceData.ExtraContent, &extraItems); err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoicePdf", "Failed to unmarshal extra content", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		return nil, fmt.Errorf("failed to unmarshal extra content: %v", err)
+	}
+
+	pdfData := pdf.InvoicePDFData{
+		ID:                   invoiceData.ID,
+		SenderName:           util.DerefString(invoiceData.SenderName),
+		SenderContactPerson:  util.DerefString(senderContacts[0].Name),
+		SenderAddressLine1:   util.DerefString(invoiceData.SenderAddress),
+		SenderPostalCodeCity: util.DerefString(invoiceData.SenderPostalCode),
+		InvoiceNumber:        invoiceData.InvoiceNumber,
+		InvoiceDate:          invoiceData.IssueDate.Time,
+		DueDate:              invoiceData.DueDate.Time,
+		InvoiceDetails:       pdfInvoiceDetails,
+		ExtraItems:           extraItems,
+	}
+	key, size, err := s.PDFService.GenerateAndUploadInvoicePDF(ctx, pdfData)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoicePdf", "Failed to generate and upload invoice PDF", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		return nil, fmt.Errorf("failed to generate and upload invoice PDF: %v", err)
+	}
+
+	fileArg := db.CreateAttachmentParams{
+		Name: "Invoice_" + invoiceData.InvoiceNumber + ".pdf",
+		File: key,
+		Size: int32(size),
+		Tag:  util.StringPtr("invoice_pdf"),
+	}
+
+	attachment, err := s.Store.CreateAttachment(ctx, fileArg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoicePdf", "Failed to create attachment", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		return nil, fmt.Errorf("failed to create attachment: %v", err)
+	}
+
+	url := s.GenerateResponsePresignedURL(&attachment.File, ctx)
+
+	return &GenerateInvoicePDFResponse{
+		FileUrl: *url,
+	}, nil
 }

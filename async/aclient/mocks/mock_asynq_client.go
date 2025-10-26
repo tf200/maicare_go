@@ -12,7 +12,7 @@ package asyncmocks
 import (
 	context "context"
 	aclient "maicare_go/async/aclient"
-	notification "maicare_go/notification"
+	notification "maicare_go/service/notification"
 	reflect "reflect"
 
 	asynq "github.com/hibiken/asynq"

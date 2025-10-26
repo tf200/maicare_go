@@ -16,6 +16,7 @@ import (
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/service/sender"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -24,7 +25,7 @@ import (
 
 func createRandomSender(t *testing.T) db.Sender {
 	// Define a slice of Contact structs
-	contacts := []SenderContact{
+	contacts := []sender.SenderContact{
 		{
 			Name:        util.StringPtr(faker.Name()),
 			Email:       util.StringPtr(faker.Email()),
@@ -53,43 +54,43 @@ func createRandomSender(t *testing.T) db.Sender {
 	}
 
 	// Create the sender in the database
-	sender, err := testStore.CreateSender(context.Background(), arg)
+	createdSender, err := testStore.CreateSender(context.Background(), arg)
 	require.NoError(t, err)
-	require.NotEmpty(t, sender)
+	require.NotEmpty(t, createdSender)
 
 	templateItems, err := testStore.CreateSenderInvoiceTemplate(context.Background(), db.CreateSenderInvoiceTemplateParams{
-		ID:              sender.ID,
+		ID:              createdSender.ID,
 		InvoiceTemplate: []int64{1, 2, 3},
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, templateItems)
 
 	// Verify the fields
-	require.Equal(t, arg.Types, sender.Types)
-	require.Equal(t, arg.Name, sender.Name)
-	require.Equal(t, arg.Address, sender.Address)
-	require.Equal(t, arg.PostalCode, sender.PostalCode)
-	require.Equal(t, arg.Place, sender.Place)
-	require.Equal(t, arg.Land, sender.Land)
-	require.Equal(t, arg.Kvknumber, sender.Kvknumber)
-	require.Equal(t, arg.Btwnumber, sender.Btwnumber)
-	require.Equal(t, arg.PhoneNumber, sender.PhoneNumber)
-	require.Equal(t, arg.ClientNumber, sender.ClientNumber)
-	require.Equal(t, arg.EmailAddress, sender.EmailAddress)
+	require.Equal(t, arg.Types, createdSender.Types)
+	require.Equal(t, arg.Name, createdSender.Name)
+	require.Equal(t, arg.Address, createdSender.Address)
+	require.Equal(t, arg.PostalCode, createdSender.PostalCode)
+	require.Equal(t, arg.Place, createdSender.Place)
+	require.Equal(t, arg.Land, createdSender.Land)
+	require.Equal(t, arg.Kvknumber, createdSender.Kvknumber)
+	require.Equal(t, arg.Btwnumber, createdSender.Btwnumber)
+	require.Equal(t, arg.PhoneNumber, createdSender.PhoneNumber)
+	require.Equal(t, arg.ClientNumber, createdSender.ClientNumber)
+	require.Equal(t, arg.EmailAddress, createdSender.EmailAddress)
 
 	// Unmarshal the expected and actual Contacts fields for comparison
-	var expectedContacts []SenderContact
+	var expectedContacts []sender.SenderContact
 	err = json.Unmarshal(arg.Contacts, &expectedContacts)
 	require.NoError(t, err)
 
-	var actualContacts []SenderContact
-	err = json.Unmarshal(sender.Contacts, &actualContacts)
+	var actualContacts []sender.SenderContact
+	err = json.Unmarshal(createdSender.Contacts, &actualContacts)
 	require.NoError(t, err)
 
 	// Compare the unmarshaled Contacts
 	require.Equal(t, expectedContacts, actualContacts)
 
-	return sender
+	return createdSender
 }
 func TestCreateSenderApi(t *testing.T) {
 	userID := rand.Int63()
@@ -105,7 +106,7 @@ func TestCreateSenderApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createSenderReq := CreateSenderRequest{
+				createSenderReq := sender.CreateSenderRequest{
 					Types:        "main_provider",
 					Name:         "Test Company",
 					Address:      nil,
@@ -116,7 +117,7 @@ func TestCreateSenderApi(t *testing.T) {
 					BTWNumber:    util.StringPtr("NL123456789B01"),
 					PhoneNumber:  util.StringPtr("+31612345678"),
 					ClientNumber: util.StringPtr("CLI123"),
-					Contacts: []SenderContact{
+					Contacts: []sender.SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("john@example.com"),
@@ -138,7 +139,7 @@ func TestCreateSenderApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
-				var response Response[CreateSenderResponse]
+				var response Response[sender.CreateSenderResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.ID)
@@ -151,10 +152,10 @@ func TestCreateSenderApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createSenderReq := CreateSenderRequest{
+				createSenderReq := sender.CreateSenderRequest{
 					Types: "invalid_type",
 					Name:  "Test Company",
-					Contacts: []SenderContact{
+					Contacts: []sender.SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("john@example.com"),
@@ -185,7 +186,7 @@ func TestCreateSenderApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createSenderReq := CreateSenderRequest{
+				createSenderReq := sender.CreateSenderRequest{
 					Types:        "main_provider",
 					Name:         "Test Company",
 					Address:      util.StringPtr("Test Street 123"),
@@ -196,7 +197,7 @@ func TestCreateSenderApi(t *testing.T) {
 					BTWNumber:    util.StringPtr("NL123456789B01"),
 					PhoneNumber:  util.StringPtr("+31612345678"),
 					ClientNumber: util.StringPtr("CLI123"),
-					Contacts: []SenderContact{
+					Contacts: []sender.SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("invalid-email"),
@@ -227,10 +228,10 @@ func TestCreateSenderApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createSenderReq := CreateSenderRequest{
+				createSenderReq := sender.CreateSenderRequest{
 					Types: "main_provider",
 					Name:  "", // Required field is empty
-					Contacts: []SenderContact{
+					Contacts: []sender.SenderContact{
 						{
 							Name:        util.StringPtr("John Doe"),
 							Email:       util.StringPtr("john@example.com"),
@@ -305,7 +306,7 @@ func TestListSendersAPI(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				var response Response[pagination.Response[ListSendersResponse]]
+				var response Response[pagination.Response[sender.ListSendersResponse]]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 
@@ -398,9 +399,9 @@ func TestListSendersAPI(t *testing.T) {
 }
 
 func TestUpdateSenderApi(t *testing.T) {
-	sender := createRandomSender(t)
-	contacts := make([]SenderContact, 0)
-	err := json.Unmarshal(sender.Contacts, &contacts)
+	createdSender := createRandomSender(t)
+	contacts := make([]sender.SenderContact, 0)
+	err := json.Unmarshal(createdSender.Contacts, &contacts)
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -412,15 +413,15 @@ func TestUpdateSenderApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, sender.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, createdSender.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateSenderReq := UpdateSenderRequest{
+				updateSenderReq := sender.UpdateSenderRequest{
 					Name: util.StringPtr("Updated Company2"),
 				}
 				data, err := json.Marshal(updateSenderReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/senders/%d", sender.ID)
+				url := fmt.Sprintf("/senders/%d", createdSender.ID)
 				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
@@ -428,12 +429,12 @@ func TestUpdateSenderApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateSenderResponse]
+				var response Response[sender.UpdateSenderResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
-				require.Equal(t, sender.ID, response.Data.ID)
+				require.Equal(t, createdSender.ID, response.Data.ID)
 				require.Equal(t, "Updated Company2", response.Data.Name)
-				require.Equal(t, sender.Types, response.Data.Types)
+				require.Equal(t, createdSender.Types, response.Data.Types)
 
 				require.Equal(t, contacts, response.Data.Contacts)
 			},
@@ -453,9 +454,9 @@ func TestUpdateSenderApi(t *testing.T) {
 }
 
 func TestGetSenderByIdAPI(t *testing.T) {
-	sender := createRandomSender(t)
-	contacts := make([]SenderContact, 0)
-	err := json.Unmarshal(sender.Contacts, &contacts)
+	createdSender := createRandomSender(t)
+	contacts := make([]sender.SenderContact, 0)
+	err := json.Unmarshal(createdSender.Contacts, &contacts)
 	require.NoError(t, err)
 	testCases := []struct {
 		name          string
@@ -466,21 +467,21 @@ func TestGetSenderByIdAPI(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, sender.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, createdSender.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := fmt.Sprintf("/senders/%d", sender.ID)
+				url := fmt.Sprintf("/senders/%d", createdSender.ID)
 				return http.NewRequest(http.MethodGet, url, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetSenderByIdResponse]
+				var response Response[sender.GetSenderByIdResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
-				require.Equal(t, sender.ID, response.Data.ID)
-				require.Equal(t, sender.Name, response.Data.Name)
-				require.Equal(t, sender.Types, response.Data.Types)
+				require.Equal(t, createdSender.ID, response.Data.ID)
+				require.Equal(t, createdSender.Name, response.Data.Name)
+				require.Equal(t, createdSender.Types, response.Data.Types)
 			},
 		},
 	}

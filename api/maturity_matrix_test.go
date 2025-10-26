@@ -6,6 +6,7 @@ import (
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
+	"maicare_go/service/care"
 	"maicare_go/token"
 	"maicare_go/util"
 	"net/http"
@@ -217,7 +218,7 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				assessmentReq := CreateClientMaturityMatrixAssessmentRequest{
+				assessmentReq := care.CreateClientCarePlanRequest{
 					MaturityMatrixID: 1,
 					InitialLevel:     1,
 					TargetLevel:      3,
@@ -235,7 +236,7 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var assessmentCard Response[CreateClientMaturityMatrixAssessmentResponse]
+				var assessmentCard Response[care.CreateClientCarePlanResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &assessmentCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, assessmentCard.Data)
@@ -286,7 +287,7 @@ func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListClientMaturityMatrixAssessmentsResponse]]
+				var response Response[pagination.Response[care.ListClientCarePlansResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -329,7 +330,7 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetCarePlanOverviewResponse]
+				var response Response[care.GetCarePlanOverviewResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -367,7 +368,7 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanOverviewRequest{
+				updateReq := care.UpdateCarePlanOverviewRequest{
 					AssessmentSummary: util.StringPtr("Updated assessment summary"),
 				}
 				data, err := json.Marshal(updateReq)
@@ -381,7 +382,7 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanOverviewResponse]
+				var response Response[care.UpdateCarePlanOverviewResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -462,7 +463,7 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanObjectiveRequest{
+				createReq := care.CreateCarePlanObjectiveRequest{
 					TimeFrame:   "short_term",
 					GoalTitle:   "New Objective",
 					Description: "This is a new objective for the care plan.",
@@ -478,7 +479,7 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanObjectiveResponse]
+				var response Response[care.CreateCarePlanObjectiveResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -526,7 +527,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetCarePlanObjectivesResponse]
+				var response Response[care.GetCarePlanObjectivesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 
 				require.NoError(t, err)
@@ -565,7 +566,7 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanObjectiveRequest{
+				updateReq := care.UpdateCarePlanObjectiveRequest{
 					TimeFrame:   util.StringPtr("short_term"),
 					GoalTitle:   util.StringPtr("Updated Objective"),
 					Description: util.StringPtr("This is an updated objective for the care plan."),
@@ -582,7 +583,7 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanObjectiveResponse]
+				var response Response[care.UpdateCarePlanObjectiveResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -661,7 +662,7 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanActionsRequest{
+				createReq := care.CreateCarePlanActionsRequest{
 					ActionDescription: "New action for care plan objective",
 				}
 				data, err := json.Marshal(createReq)
@@ -675,7 +676,7 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanActionsResponse]
+				var response Response[care.CreateCarePlanActionsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -713,7 +714,7 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanActionsRequest{
+				updateReq := care.UpdateCarePlanActionsRequest{
 					ActionDescription: util.StringPtr("Updated action description for care plan objective"),
 				}
 				data, err := json.Marshal(updateReq)
@@ -727,7 +728,7 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanActionsResponse]
+				var response Response[care.UpdateCarePlanActionsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -806,7 +807,7 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanInterventionRequest{
+				createReq := care.CreateCarePlanInterventionRequest{
 					Frequency:               "daily",
 					InterventionDescription: "New daily intervention for care plan",
 				}
@@ -821,7 +822,7 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanInterventionResponse]
+				var response Response[care.CreateCarePlanInterventionResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -867,7 +868,7 @@ func TestGetCarePlanInterventionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetCarePlanInterventionsResponse]
+				var response Response[care.GetCarePlanInterventionsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -905,7 +906,7 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanInterventionRequest{
+				updateReq := care.UpdateCarePlanInterventionRequest{
 					Frequency:               util.StringPtr("weekly"),
 					InterventionDescription: util.StringPtr("Updated intervention description for care plan"),
 				}
@@ -920,7 +921,7 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanInterventionResponse]
+				var response Response[care.UpdateCarePlanInterventionResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -999,7 +1000,7 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanSuccessMetricsRequest{
+				createReq := care.CreateCarePlanSuccessMetricsRequest{
 					MetricName:        "Weight Loss",
 					TargetValue:       "10",
 					MeasurementMethod: "kg",
@@ -1016,7 +1017,7 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanSuccessMetricsResponse]
+				var response Response[care.CreateCarePlanSuccessMetricsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1065,7 +1066,7 @@ func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanSuccessMetricsResponse]
+				var response Response[[]care.GetCarePlanSuccessMetricsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1102,7 +1103,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanSuccessMetricsRequest{
+				updateReq := care.UpdateCarePlanSuccessMetricsRequest{
 					MetricName:        util.StringPtr("Updated Weight Loss"),
 					TargetValue:       util.StringPtr("15"),
 					MeasurementMethod: util.StringPtr("kg"),
@@ -1119,7 +1120,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanSuccessMetricsResponse]
+				var response Response[care.UpdateCarePlanSuccessMetricsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1198,7 +1199,7 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanRisksRequest{
+				createReq := care.CreateCarePlanRisksRequest{
 					RiskDescription:    "High risk of falls",
 					RiskLevel:          util.StringPtr("high"),
 					MitigationStrategy: "Implement fall prevention measures",
@@ -1214,7 +1215,7 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanRisksResponse]
+				var response Response[care.CreateCarePlanRisksResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1259,7 +1260,7 @@ func TestGetCarePlanRisksApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanRisksResponse]
+				var response Response[[]care.GetCarePlanRisksResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1296,7 +1297,7 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanRisksRequest{
+				updateReq := care.UpdateCarePlanRisksRequest{
 					RiskDescription:    util.StringPtr("Updated risk description for care plan"),
 					RiskLevel:          util.StringPtr("medium"),
 					MitigationStrategy: util.StringPtr("Implement updated mitigation strategy"),
@@ -1312,7 +1313,7 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanRisksResponse]
+				var response Response[care.UpdateCarePlanRisksResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1391,7 +1392,7 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanSupportNetworkRequest{
+				createReq := care.CreateCarePlanSupportNetworkRequest{
 					RoleTitle:                 "Caregiver",
 					ResponsibilityDescription: "Assist with daily activities and provide emotional support.",
 				}
@@ -1406,7 +1407,7 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanSupportNetworkResponse]
+				var response Response[care.CreateCarePlanSupportNetworkResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1451,7 +1452,7 @@ func TestGetCarePlanSupportNetworkApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanSupportNetworkResponse]
+				var response Response[[]care.GetCarePlanSupportNetworkResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1488,7 +1489,7 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanSupportNetworkRequest{
+				updateReq := care.UpdateCarePlanSupportNetworkRequest{
 					RoleTitle:                 util.StringPtr("Updated Caregiver"),
 					ResponsibilityDescription: util.StringPtr("Updated responsibilities for caregiver."),
 				}
@@ -1503,7 +1504,7 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanSupportNetworkResponse]
+				var response Response[care.UpdateCarePlanSupportNetworkResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1582,7 +1583,7 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanResourcesRequest{
+				createReq := care.CreateCarePlanResourcesRequest{
 
 					ResourceDescription: "A comprehensive guide to nutrition for better health.",
 					IsObtained:          util.BoolPtr(true),
@@ -1599,7 +1600,7 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanResourcesResponse]
+				var response Response[care.CreateCarePlanResourcesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1644,7 +1645,7 @@ func TestGetCarePlanResourcesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanResourcesResponse]
+				var response Response[[]care.GetCarePlanResourcesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1681,7 +1682,7 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanResourcesRequest{
+				updateReq := care.UpdateCarePlanResourcesRequest{
 					ResourceDescription: util.StringPtr("Updated resource description for care plan"),
 					IsObtained:          util.BoolPtr(false),
 					ObtainedDate:        time.Now().AddDate(0, 0, 1),
@@ -1697,7 +1698,7 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanResourcesResponse]
+				var response Response[care.UpdateCarePlanResourcesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1774,7 +1775,7 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanReportRequest{
+				createReq := care.CreateCarePlanReportRequest{
 					ReportType:    "progress",
 					ReportContent: "Client has shown significant improvement in mobility and daily activities.",
 					IsCritical:    false,
@@ -1790,7 +1791,7 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanReportResponse]
+				var response Response[care.CreateCarePlanReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1835,7 +1836,7 @@ func TestListCarePlanReportsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListCarePlanReportsResponse]]
+				var response Response[pagination.Response[care.ListCarePlanReportsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1872,7 +1873,7 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanReportRequest{
+				updateReq := care.UpdateCarePlanReportRequest{
 					ReportType:    util.StringPtr("updated progress"),
 					ReportContent: util.StringPtr("Client has shown significant improvement in mobility and daily activities."),
 					IsCritical:    util.BoolPtr(false),
@@ -1888,7 +1889,7 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanReportResponse]
+				var response Response[care.UpdateCarePlanReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)

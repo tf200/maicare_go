@@ -2,16 +2,11 @@ package api
 
 import (
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/invoice"
-	"maicare_go/pdf"
 	invserv "maicare_go/service/invoice"
-	"maicare_go/util"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
 	"go.uber.org/zap"
 )
 
@@ -221,11 +216,6 @@ func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "Invoice deleted successfully"))
 }
 
-// GenerateInvoicePDFResponse represents the response body for generating an invoice PDF.
-type GenerateInvoicePDFResponse struct {
-	FileUrl string `json:"file_url"`
-}
-
 // GenerateInvoicePdfApi handles generation of invoice in pdf format
 // @Summary Generate InvoicePdf
 // @Description Generate an invoice in PDF format by its ID.
@@ -243,96 +233,13 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 		return
 	}
 
-	invoiceData, err := server.store.GetInvoice(ctx.Request.Context(), invoiceID)
+	response, err := server.businessService.InvoiceService.GenerateInvoicePdf(ctx.Request.Context(), invoiceID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	var invoiceDetails []invoice.InvoiceDetails
-	if err := json.Unmarshal(invoiceData.InvoiceDetails, &invoiceDetails); err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	var senderContacts []SenderContact
-
-	err = json.Unmarshal(invoiceData.SenderContacts, &senderContacts)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	var pdfInvoiceDetails []pdf.InvoiceDetail
-
-	for _, value := range invoiceDetails {
-		var pdfInvoicePeriods []pdf.InvoicePeriod
-		for _, period := range value.Periods {
-			pdfInvoicePeriods = append(pdfInvoicePeriods, pdf.InvoicePeriod{
-				StartDate:             period.StartDate,
-				EndDate:               period.EndDate,
-				AcommodationTimeFrame: util.DerefString(period.AcommodationTimeFrame),
-				AmbulanteTotalMinutes: util.DerefFloat64(period.AmbulanteTotalMinutes),
-			})
-
-		}
-		pdfInvoiceDetails = append(pdfInvoiceDetails, pdf.InvoiceDetail{
-			CareType:      value.ContractType,
-			Price:         value.Price,
-			PriceTimeUnit: value.PriceTimeUnit,
-			PreVatTotal:   value.PreVatTotal,
-			Total:         value.Total,
-			Periods:       pdfInvoicePeriods,
-		})
-	}
-
-	var extraItems map[string]string
-	if invoiceData.ExtraContent != nil {
-		if err := json.Unmarshal(invoiceData.ExtraContent, &extraItems); err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-	}
-
-	arg := pdf.InvoicePDFData{
-		ID:                   invoiceData.ID,
-		SenderName:           util.DerefString(invoiceData.SenderName),
-		SenderContactPerson:  util.DerefString(senderContacts[0].Name),
-		SenderAddressLine1:   util.DerefString(invoiceData.SenderAddress),
-		SenderPostalCodeCity: util.DerefString(invoiceData.SenderPostalCode),
-		InvoiceNumber:        invoiceData.InvoiceNumber,
-		InvoiceDate:          invoiceData.IssueDate.Time,
-		DueDate:              invoiceData.DueDate.Time,
-		InvoiceDetails:       pdfInvoiceDetails,
-		ExtraItems:           extraItems,
-	}
-
-	fileKey, filesize, err := pdf.GenerateAndUploadInvoicePDF(ctx, arg, server.b2Client)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate invoice PDF: %w", err)))
-		return
-	}
-
-	fileArgs := db.CreateAttachmentParams{
-		Name: "Invoice_" + invoiceData.InvoiceNumber + ".pdf",
-		File: fileKey,
-		Size: int32(filesize),
-		Tag:  util.StringPtr(""),
-	}
-	attachment, err := server.store.CreateAttachment(ctx, fileArgs)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	url := server.generateResponsePresignedURL(&attachment.File)
-	if url == nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate presigned url")))
-		return
-	}
-	res := SuccessResponse(GenerateInvoicePDFResponse{
-		FileUrl: *url,
-	}, "Invoice Pdf generated")
+	res := SuccessResponse(response, "Invoice Pdf generated")
 	ctx.JSON(http.StatusCreated, res)
 
 }

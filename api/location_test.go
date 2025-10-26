@@ -13,6 +13,7 @@ import (
 	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/service/organization"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -67,7 +68,7 @@ func createRandomLocation(t *testing.T) *db.Location {
 
 func TestCreateLocationApi(t *testing.T) {
 	user := createRandomUser(t)
-	organization := createRandomOrganisation(t)
+	org := createRandomOrganisation(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -80,14 +81,14 @@ func TestCreateLocationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				locationReq := CreateLocationRequest{
+				locationReq := organization.CreateLocationRequest{
 					Name:     "Test Location",
 					Address:  "Test Address",
 					Capacity: util.Int32Ptr(52),
 				}
 				reqBody, err := json.Marshal(locationReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/organisations/%d/locations", organization.ID)
+				url := fmt.Sprintf("/organisations/%d/locations", org.ID)
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
@@ -95,7 +96,7 @@ func TestCreateLocationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var locationRes Response[CreateLocationResponse]
+				var locationRes Response[organization.CreateLocationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&locationRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, locationRes.Data)
@@ -135,7 +136,7 @@ func TestUpdateLocationApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				locationReq := UpdateLocationRequest{
+				locationReq := organization.UpdateLocationRequest{
 					Name: util.StringPtr("Updated Name"),
 				}
 				reqBody, err := json.Marshal(locationReq)
@@ -148,7 +149,7 @@ func TestUpdateLocationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var locationRes Response[UpdateLocationResponse]
+				var locationRes Response[organization.UpdateLocationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&locationRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, locationRes.Data)
@@ -196,7 +197,7 @@ func TestDeleteLocationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var locationRes Response[DeleteLocationResponse]
+				var locationRes Response[organization.DeleteLocationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&locationRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, locationRes.Data)
@@ -242,7 +243,7 @@ func TestGetLocationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var locationRes Response[GetLocationResponse]
+				var locationRes Response[organization.GetLocationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&locationRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, locationRes.Data)
@@ -290,7 +291,7 @@ func TestGetOrganisationApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var orgRes Response[GetOrganisationResponse]
+				var orgRes Response[organization.GetOrganisationResponse]
 				err := json.NewDecoder(recorder.Body).Decode(&orgRes)
 				require.NoError(t, err)
 				require.NotEmpty(t, orgRes.Data)

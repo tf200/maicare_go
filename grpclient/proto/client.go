@@ -7,9 +7,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+//go:generate mockgen -package grpclientmocks -destination=../proto/mocks/grpc_client_mock.go "maicare_go/grpclient/proto" GrpcClientInterface
 type GrpcClientInterface interface {
 	GenerateCarePlan(ctx context.Context, req *PersonalizedCarePlanRequest) (*PersonalizedCarePlanResponse, error)
 	CorrectSpelling(ctx context.Context, req *CorrectSpellingRequest) (*CorrectSpellingResponse, error)
+	GenerateAutoReports(ctx context.Context, req *PastReports) (*GeneratedReports, error)
 	Close() error
 }
 
@@ -18,6 +20,7 @@ type GrpcClient struct {
 	conn                *grpc.ClientConn
 	carePlanClient      CarePlannerClient
 	spellingCheckClient SpellingCorrectionClient
+	reportsClient       ReportGeneratorClient
 }
 
 func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
@@ -29,6 +32,7 @@ func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
 		conn:                conn,
 		carePlanClient:      NewCarePlannerClient(conn),
 		spellingCheckClient: NewSpellingCorrectionClient(conn),
+		reportsClient:       NewReportGeneratorClient(conn),
 	}, nil
 }
 func (c *GrpcClient) Close() error {

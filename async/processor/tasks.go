@@ -10,8 +10,8 @@ import (
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
-	"maicare_go/pdf"
 	"maicare_go/service/notification"
+	"maicare_go/service/pdf"
 	"time"
 
 	"github.com/google/uuid"
@@ -95,7 +95,7 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.
 		LocationName:            p.LocationName,
 	}
 
-	pdfName, err := pdf.GenerateAndUploadIncidentPDF(ctx, incidentData, processor.b2Bucket)
+	pdfName, err := processor.businessService.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
 	if err != nil {
 		log.Printf("Failed to generate and upload incident PDF: %v", err)
 		return fmt.Errorf("failed to generate and upload incident PDF: %v: %w", err, asynq.SkipRetry)

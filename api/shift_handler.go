@@ -1,29 +1,12 @@
 package api
 
 import (
-	db "maicare_go/db/sqlc"
-	"maicare_go/util"
+	"maicare_go/service/organization"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
-
-// CreateShiftApi creates a new shift for a specific location
-type CreateShiftApiRequest struct {
-	ShiftName string `json:"shift"`
-	StartTime string `json:"start_time"`
-	EndTime   string `json:"end_time"`
-}
-
-// CreateShiftApiResponse represents the response structure for creating a shift
-type CreateShiftApiResponse struct {
-	ID         int64  `json:"id"`
-	LocationID int64  `json:"location_id"`
-	ShiftName  string `json:"shift"`
-	StartTime  string `json:"start_time"`
-	EndTime    string `json:"end_time"`
-}
 
 // CreateShiftApi handles the creation of a new shift for a specific location
 // @Summary Create a new shift
@@ -44,60 +27,21 @@ func (server *Server) CreateShiftApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateShiftApiRequest
+	var req organization.CreateShiftApiRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	startTime, err := util.StringToPgTime(req.StartTime)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	endTime, err := util.StringToPgTime(req.EndTime)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	shift, err := server.store.CreateShift(ctx, db.CreateShiftParams{
-		LocationID: locationID,
-		ShiftName:  req.ShiftName,
-		StartTime:  startTime,
-		EndTime:    endTime,
-	})
+	shift, err := server.businessService.OrganizationService.CreateShift(ctx, &req, locationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(CreateShiftApiResponse{
-		ID:         shift.ID,
-		LocationID: shift.LocationID,
-		ShiftName:  shift.ShiftName,
-		StartTime:  util.PgTimeToString(shift.StartTime), // Convert here
-		EndTime:    util.PgTimeToString(shift.EndTime),   // Convert here
-	}, "Shift Created Successfully")
+	res := SuccessResponse(shift, "Shift Created Successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// UpdateShiftApiRequest represents the request structure for updating a shift
-type UpdateShiftApiRequest struct {
-	ShiftName string `json:"shift"`
-	StartTime string `json:"start_time"`
-	EndTime   string `json:"end_time"`
-}
-
-// UpdateShiftApiResponse represents the response structure for updating a shift
-type UpdateShiftApiResponse struct {
-	ID         int64  `json:"id"`
-	LocationID int64  `json:"location_id"`
-	ShiftName  string `json:"shift"`
-	StartTime  string `json:"start_time"`
-	EndTime    string `json:"end_time"`
 }
 
 // UpdateShiftApi handles the update of an existing shift
@@ -121,42 +65,19 @@ func (server *Server) UpdateShiftApi(ctx *gin.Context) {
 		return
 	}
 
-	var req UpdateShiftApiRequest
+	var req organization.UpdateShiftApiRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	startTime, err := util.StringToPgTime(req.StartTime)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	endTime, err := util.StringToPgTime(req.EndTime)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	shift, err := server.store.UpdateShift(ctx, db.UpdateShiftParams{
-		ID:        shiftID,
-		ShiftName: req.ShiftName,
-		StartTime: startTime,
-		EndTime:   endTime,
-	})
+	shift, err := server.businessService.OrganizationService.UpdateShift(ctx, shiftID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(UpdateShiftApiResponse{
-		ID:         shift.ID,
-		LocationID: shift.LocationID,
-		ShiftName:  shift.ShiftName,
-		StartTime:  util.PgTimeToString(shift.StartTime), // Convert here
-		EndTime:    util.PgTimeToString(shift.EndTime),   // Convert here
-	}, "Shift Updated Successfully")
+	res := SuccessResponse(shift, "Shift Updated Successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -179,7 +100,7 @@ func (server *Server) DeleteShiftApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.store.DeleteShift(ctx, shiftID)
+	err = server.businessService.OrganizationService.DeleteShift(ctx, shiftID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -187,15 +108,6 @@ func (server *Server) DeleteShiftApi(ctx *gin.Context) {
 
 	res := SuccessResponse[any](nil, "Shift Deleted Successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// ListShiftsByLocationIDResponse represents the response structure for listing shifts by location ID
-type ListShiftsByLocationIDResponse struct {
-	ID         int64  `json:"id"`
-	LocationID int64  `json:"location_id"`
-	ShiftName  string `json:"shift"`
-	StartTime  string `json:"start_time"`
-	EndTime    string `json:"end_time"`
 }
 
 // ListShiftByLocationID handles the retrieval of shifts for a specific location
@@ -216,22 +128,11 @@ func (server *Server) ListShiftByLocationID(ctx *gin.Context) {
 		return
 	}
 
-	shifts, err := server.store.GetShiftsByLocationID(ctx, locationID)
+	shifts, err := server.businessService.OrganizationService.ListShiftsByLocationID(ctx, locationID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	response := make([]ListShiftsByLocationIDResponse, len(shifts))
-	for i, shift := range shifts {
-		response[i] = ListShiftsByLocationIDResponse{
-			ID:         shift.ID,
-			LocationID: shift.LocationID,
-			ShiftName:  shift.ShiftName,
-			StartTime:  util.PgTimeToString(shift.StartTime), // Convert here
-			EndTime:    util.PgTimeToString(shift.EndTime),   // Convert here
-		}
-	}
-	res := SuccessResponse(response, "Shifts retrieved successfully")
+	res := SuccessResponse(shifts, "Shifts retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

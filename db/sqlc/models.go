@@ -5,6 +5,8 @@
 package db
 
 import (
+	"net/netip"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -94,6 +96,26 @@ type AttachmentFile struct {
 	Tag     *string            `json:"tag"`
 	Updated pgtype.Timestamptz `json:"updated"`
 	Created pgtype.Timestamptz `json:"created"`
+}
+
+type Audit struct {
+	EventID      uuid.UUID          `json:"event_id"`
+	EventType    string             `json:"event_type"`
+	OccuredAt    pgtype.Timestamptz `json:"occured_at"`
+	ActorRole    string             `json:"actor_role"`
+	ActorID      int64              `json:"actor_id"`
+	SubjectType  string             `json:"subject_type"`
+	SubjectID    int64              `json:"subject_id"`
+	AccessReason string             `json:"access_reason"`
+	Action       string             `json:"action"`
+	Result       string             `json:"result"`
+	Module       string             `json:"module"`
+	TenantID     string             `json:"tenant_id"`
+	Details      []byte             `json:"details"`
+	Ip           *netip.Addr        `json:"ip"`
+	UserAgent    *string            `json:"user_agent"`
+	HashPrev     string             `json:"hash_prev"`
+	HashSelf     string             `json:"hash_self"`
 }
 
 type CarePlan struct {

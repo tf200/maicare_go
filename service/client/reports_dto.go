@@ -99,3 +99,35 @@ type GenerateAutoReportsRequest struct {
 type GenerateAutoReportsResponse struct {
 	Report string `json:"report"`
 }
+
+// ConfirmProgressReportRequest defines the request payload for ConfirmProgressReport API
+type ConfirmProgressReportRequest struct {
+	ReportText string    `json:"report_text" binding:"required"`
+	Startdate  time.Time `json:"start_date" binding:"required"`
+	Enddate    time.Time `json:"end_date" binding:"required"`
+}
+
+// ConfirmProgressReportResponse defines the response payload for ConfirmProgressReport API
+type ConfirmProgressReportResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+	ReportText string    `json:"report_text"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// ListAiGeneratedReportsRequest defines the request payload for ListAiGeneratedReports API
+type ListAiGeneratedReportsRequest struct {
+	pagination.Request
+}
+
+// ListAiGeneratedReportsResponse defines the response payload for ListAiGeneratedReports API
+type ListAiGeneratedReportsResponse struct {
+	ID         int64     `json:"id"`
+	ClientID   int64     `json:"client_id"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+	ReportText string    `json:"report_text"`
+	CreatedAt  time.Time `json:"created_at"`
+}

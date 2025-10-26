@@ -261,7 +261,7 @@ func (s *employeeService) GetEmployeeProfileByID(employeeID, currentUserID int64
 		HasBorrowed:               employee.HasBorrowed,
 		OutOfService:              employee.OutOfService,
 		IsArchived:                employee.IsArchived,
-		ProfilePicture:            employee.ProfilePicture,
+		ProfilePicture:            s.GenerateResponsePresignedURL(employee.ProfilePicture, ctx),
 		IsLoggedInUser:            employee.UserID == currentUserID,
 	}
 

@@ -41,6 +41,7 @@ type ClientService interface {
 	DeleteIncident(ctx context.Context, incidentID int64) error
 	GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error)
 	ConfirmIncident(ctx context.Context, incidentID int64) (*ConfirmIncidentResponse, error)
+	ListAllIncidents(ctx *gin.Context, req *ListAllIncidentsRequest) (*pagination.Response[ListAllIncidentsResponse], error)
 
 	// Client Diagnoses
 	CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID int64) (*CreateClientDiagnosisResponse, error)
@@ -81,6 +82,9 @@ type ClientService interface {
 	GetProgressReport(ctx context.Context, reportID int64) (*GetProgressReportResponse, error)
 	UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error)
 	DeleteProgressReport(ctx context.Context, reportID int64) error
+	GenerateAutoReports(ctx context.Context, req *GenerateAutoReportsRequest, clientID int64) (*GenerateAutoReportsResponse, error)
+	ConfirmAiProgressReport(ctx context.Context, clientID int64, req *ConfirmProgressReportRequest, reportID int64) (*ConfirmProgressReportResponse, error)
+	ListAiGeneratedReports(ctx *gin.Context, req *ListAiGeneratedReportsRequest, clientID int64) (*pagination.Response[ListAiGeneratedReportsResponse], error)
 
 	// Registration Form
 	CreateRegistrationForm(ctx context.Context, req *CreateRegistrationFormRequest) (*CreateRegistrationFormResponse, error)

@@ -147,9 +147,6 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 		return
 	}
 
-	// Generate presigned URL for profile picture
-	profile.ProfilePicture = server.generateResponsePresignedURL(profile.ProfilePicture)
-
 	res := SuccessResponse(profile, "Employee profile retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

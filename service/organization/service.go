@@ -20,6 +20,13 @@ type OrganizationService interface {
 	UpdateLocation(ctx context.Context, locationID int64, req UpdateLocationRequest) (*UpdateLocationResponse, error)
 	DeleteLocation(ctx context.Context, locationID int64) (*DeleteLocationResponse, error)
 	GetLocationByID(ctx context.Context, locationID int64) (*GetLocationResponse, error)
+
+	// Location Shift methods
+	CreateShift(ctx context.Context, req *CreateShiftApiRequest, locationID int64) (*CreateShiftApiResponse, error)
+	UpdateShift(ctx context.Context, shiftID int64, req *UpdateShiftApiRequest) (*UpdateShiftApiResponse, error)
+	DeleteShift(ctx context.Context, shiftID int64) error
+	ListShiftsByLocationID(ctx context.Context, locationID int64) ([]ListShiftsByLocationIDResponse, error)
+	
 }
 
 type organizationService struct {

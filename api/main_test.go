@@ -7,9 +7,9 @@ import (
 	bucketmocks "maicare_go/bucket/mocks"
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
+	grpclientmocks "maicare_go/grpclient/proto/mocks"
 	"maicare_go/hub"
 	"maicare_go/logger"
-	"maicare_go/notification"
 	"maicare_go/service"
 	"maicare_go/token"
 
@@ -27,13 +27,13 @@ var testStore *db.Store
 var testServer *Server
 var testb2Client *bucketmocks.MockObjectStorageInterface
 var testasynqClient *asyncmocks.MockAsynqClientInterface
-var testGrpcClient grpclient.GrpcClientInterface
-var testNotifService *notification.Service
+var testGrpcClient *grpclient.GrpcClientInterface
 var testMockCtrl *gomock.Controller
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
 	if err != nil {
+		
 		log.Fatalf("Could not load conf %v", err)
 	}
 	gin.SetMode(gin.TestMode)
@@ -55,8 +55,7 @@ func TestMain(m *testing.M) {
 
 	hubInstance := hub.NewHub()
 
-	testGrpcClient := CreateMockGrpcClient()
-	testNotifService = notification.NewService(testStore, hubInstance)
+	testGrpcClient := grpclientmocks.NewMockGrpcClientInterface(testMockCtrl)
 
 	tokenMaker, err := token.NewJWTMaker(config.AccessTokenSecretKey, config.RefreshTokenSecretKey, config.TwoFATokenSecretKey)
 	if err != nil {
@@ -68,10 +67,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("cannot setup logger: %v", err)
 	}
 
-	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config, testb2Client)
+	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config, testb2Client, testGrpcClient, hubInstance, testasynqClient)
 
-	testServer, err = NewServer(testStore, testb2Client, testasynqClient, config.OpenRouterAPIKey,
-		hubInstance, testNotifService, testGrpcClient,
+	testServer, err = NewServer(
+		hubInstance, testGrpcClient,
 		tokenMaker, config, businessService)
 	if err != nil {
 		log.Fatal("cannot create server:", err)

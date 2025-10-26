@@ -20,6 +20,8 @@ type InvoiceService interface {
 	UpdateInvoice(ctx context.Context, invoiceID int64, payload UpdateInvoiceRequest, employeeID int64) (*UpdateInvoiceResponse, error)
 	DeleteInvoice(ctx context.Context, invoiceID int64) error
 
+	GenerateInvoicePdf(ctx context.Context, invoiceID int64) (*GenerateInvoicePDFResponse, error)
+
 	GetInvoiceTemplateItemsApi(ctx context.Context) ([]GetInvoiceTemplateItemsResponse, error)
 
 	// Invoice Audit Log methods

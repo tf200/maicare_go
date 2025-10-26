@@ -34,7 +34,7 @@ type AppointmentCard struct {
 	Leave                  []string
 }
 
-func GenerateAppointmentCardPDF(appointmentCardData AppointmentCard) (multipart.File, error) {
+func (s *pdfService) generateAppointmentCardPDF(appointmentCardData AppointmentCard) (multipart.File, error) {
 	// Parse and execute HTML template
 	templ, err := template.ParseFS(appointmentCardTemplateFS, "templates/appointment_card.html")
 	if err != nil {
@@ -85,13 +85,13 @@ func GenerateAppointmentCardPDF(appointmentCardData AppointmentCard) (multipart.
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID int64, b2Client bucket.ObjectStorageInterface) (string, error) {
+func (s *pdfService) uploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID int64) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("appointment_cards/%s/appointment_card_%d.pdf", timestamp, appointmentCardID)
 
 	// Upload to B2
-	key, _, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
+	key, _, err := s.bucketClient.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
@@ -100,15 +100,15 @@ func UploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appoi
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard, b2Client bucket.ObjectStorageInterface) (string, error) {
+func (s *pdfService) GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard) (string, error) {
 	// Generate PDF
-	pdfFile, err := GenerateAppointmentCardPDF(cardData)
+	pdfFile, err := s.generateAppointmentCardPDF(cardData)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	fileURL, err := UploadAppointmentCardPDF(ctx, pdfFile, cardData.ID, b2Client)
+	fileURL, err := s.uploadAppointmentCardPDF(ctx, pdfFile, cardData.ID)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF: %w", err)
 	}

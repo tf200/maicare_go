@@ -62,7 +62,7 @@ func sumVat(details []InvoiceDetail) float64 {
 //go:embed templates/invoice.html
 var invoiceTemplateFS embed.FS
 
-func GenerateInvoicePDF(invoiceData InvoicePDFData) (multipart.File, error) {
+func (s *pdfService) generateInvoicePDF(invoiceData InvoicePDFData) (multipart.File, error) {
 	funcMap := template.FuncMap{
 		"sumPreVat": sumPreVat,
 		"sumVat":    sumVat,
@@ -116,13 +116,13 @@ func GenerateInvoicePDF(invoiceData InvoicePDFData) (multipart.File, error) {
 }
 
 // UploadInvoicePDF uploads a PDF to B2 with a generated filename
-func UploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int64, b2Client bucket.ObjectStorageInterface) (string, int64, error) {
+func (s *pdfService) uploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int64) (string, int64, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("invoice_reports/%s/invoice_report_%d.pdf", timestamp, invoiceID)
 
 	// Upload to B2
-	key, size, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
+	key, size, err := s.bucketClient.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
@@ -130,15 +130,15 @@ func UploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData, b2Client bucket.ObjectStorageInterface) (string, int64, error) {
+func (s *pdfService) GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData) (string, int64, error) {
 	// Generate PDF
-	pdfFile, err := GenerateInvoicePDF(invoiceData)
+	pdfFile, err := s.generateInvoicePDF(invoiceData)
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	fileURL, size, err := UploadInvoicePDF(ctx, pdfFile, invoiceData.ID, b2Client)
+	fileURL, size, err := s.uploadInvoicePDF(ctx, pdfFile, invoiceData.ID)
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to upload PDF: %w", err)
 	}

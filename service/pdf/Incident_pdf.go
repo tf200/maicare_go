@@ -67,7 +67,7 @@ type IncidentReportData struct {
 }
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
-func GenerateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
+func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
 
 	funcMap := template.FuncMap{
 		"lower": strings.ToLower,
@@ -124,13 +124,13 @@ func GenerateIncidentPDF(incidentData IncidentReportData) (multipart.File, error
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func UploadIncidentPDF(ctx context.Context, pdfFile multipart.File, incidentID int64, b2Client bucket.ObjectStorageInterface) (string, error) {
+func (s *pdfService) uploadIncidentPDF(ctx context.Context, pdfFile multipart.File, incidentID int64) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("incident_reports/%s/incident_report_%d.pdf", timestamp, incidentID)
 
 	// Upload to B2
-	key, _, err := b2Client.Upload(ctx, pdfFile, filename, "application/pdf")
+	key, _, err := s.bucketClient.Upload(ctx, pdfFile, filename, "application/pdf")
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF to B2: %w", err)
 	}
@@ -138,15 +138,15 @@ func UploadIncidentPDF(ctx context.Context, pdfFile multipart.File, incidentID i
 }
 
 // Helper function to do both operations if needed
-func GenerateAndUploadIncidentPDF(ctx context.Context, incidentData IncidentReportData, b2Client bucket.ObjectStorageInterface) (string, error) {
+func (s *pdfService) GenerateAndUploadIncidentPDF(ctx context.Context, incidentData IncidentReportData) (string, error) {
 	// Generate PDF
-	pdfFile, err := GenerateIncidentPDF(incidentData)
+	pdfFile, err := s.generateIncidentPDF(incidentData)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate PDF: %w", err)
 	}
 
 	// Upload PDF
-	filename, err := UploadIncidentPDF(ctx, pdfFile, incidentData.ID, b2Client)
+	filename, err := s.uploadIncidentPDF(ctx, pdfFile, incidentData.ID)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload PDF: %w", err)
 	}

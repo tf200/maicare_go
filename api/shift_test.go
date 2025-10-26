@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	db "maicare_go/db/sqlc"
+	"maicare_go/service/organization"
 	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
@@ -20,8 +21,8 @@ func createRandomShift(t *testing.T, locationID int64) db.LocationShift {
 	arg := db.CreateShiftParams{
 		LocationID: locationID,
 		ShiftName:  "Slaapdienst of Waakdienst",
-		StartTime:  pgtype.Time{Microseconds: 23 * 3600 * 1000000, Valid: true},  // 23:00:00
-		EndTime:    pgtype.Time{Microseconds: 7 * 3600 * 1000000, Valid: true}, // 07:00:00
+		StartTime:  pgtype.Time{Microseconds: 23 * 3600 * 1000000, Valid: true}, // 23:00:00
+		EndTime:    pgtype.Time{Microseconds: 7 * 3600 * 1000000, Valid: true},  // 07:00:00
 	}
 	shift, err := testStore.CreateShift(context.Background(), arg)
 	require.NoError(t, err)
@@ -44,7 +45,7 @@ func TestCreateShiftsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createShiftReq := CreateShiftApiRequest{
+				createShiftReq := organization.CreateShiftApiRequest{
 					ShiftName: "Morning Shift",
 					StartTime: "08:00",
 					EndTime:   "16:00",
@@ -172,7 +173,7 @@ func TestUpdateShiftApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateShiftReq := UpdateShiftApiRequest{
+				updateShiftReq := organization.UpdateShiftApiRequest{
 					ShiftName: "Updated Shift",
 					StartTime: "09:00",
 					EndTime:   "17:00",

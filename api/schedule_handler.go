@@ -1,20 +1,13 @@
 package api
 
 import (
-	"database/sql"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/notification"
 	"maicare_go/service/schedule"
-	"maicare_go/util"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
-	"go.uber.org/zap"
 )
 
 // @Summary Create a new schedule
@@ -52,8 +45,6 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-
-
 // @Summary Get monthly schedules by location
 // @Description Get all schedules for a specific location for a given month and year
 // @Tags Schedule
@@ -71,74 +62,19 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req GetMonthlySchedulesByLocationRequest
+	var req schedule.GetMonthlySchedulesByLocationRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	arg := db.GetMonthlySchedulesByLocationParams{
-		Year:       req.Year,
-		Month:      req.Month,
-		LocationID: locationID,
-	}
-
-	schedules, err := server.store.GetMonthlySchedulesByLocation(ctx, arg)
+	response, err := server.businessService.ScheduleService.GetMonthlySchedulesByLocation(ctx, locationID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get monthly schedules: %w", err)))
 		return
 	}
 
-	calendar := make(map[string][]Shift)
-
-	for _, schedule := range schedules {
-		day := schedule.Day.Time.Format("2006-01-02")
-		shift := Shift{
-			ShiftID:           schedule.ShiftID,
-			EmployeeID:        schedule.EmployeeID,
-			EmployeeFirstName: schedule.EmployeeFirstName,
-			EmployeeLastName:  schedule.EmployeeLastName,
-			StartTime:         schedule.StartDatetime.Time,
-			EndTime:           schedule.EndDatetime.Time,
-			LocationID:        schedule.LocationID,
-			Color:             schedule.Color,
-			ShiftName:         schedule.ShiftName,
-			LocationShiftID:   schedule.LocationShiftID,
-			IsCustom:          schedule.IsCustom,
-		}
-		if schedule.ShiftName != nil {
-			// If shift name is provided, add it to the shift
-			shift.ShiftName = schedule.ShiftName
-		} else {
-
-			shift.ShiftName = util.StringPtr("Custom Shift")
-		}
-		calendar[day] = append(calendar[day], shift)
-
-	}
-
-	var response []GetMonthlySchedulesByLocationResponse
-	for date, shifts := range calendar {
-		response = append(response, GetMonthlySchedulesByLocationResponse{
-			Date:   date,
-			Shifts: shifts,
-		})
-	}
 	res := SuccessResponse(response, "Schedules retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetDailySchedulesByLocationApi retrieves the daily schedules for a specific location.
-type GetDailySchedulesByLocationRequest struct {
-	Year  int32 `form:"year" binding:"required"`
-	Month int32 `form:"month" binding:"required"`
-	Day   int32 `form:"day" binding:"required"`
-}
-
-// GetDailySchedulesByLocationResponse represents the response body for daily schedules.
-type GetDailySchedulesByLocationResponse struct {
-	Date   string  `json:"date"`
-	Shifts []Shift `json:"shifts"`
 }
 
 // @Summary Get daily schedules by location
@@ -160,85 +96,19 @@ func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
 		return
 	}
 
-	var req GetDailySchedulesByLocationRequest
+	var req schedule.GetDailySchedulesByLocationRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	arg := db.GetDailySchedulesByLocationParams{
-		Year:       req.Year,
-		Month:      req.Month,
-		Day:        req.Day,
-		LocationID: locationID,
-	}
-
-	schedules, err := server.store.GetDailySchedulesByLocation(ctx, arg)
+	response, err := server.businessService.ScheduleService.GetDailySchedulesByLocation(ctx, locationID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get daily schedules: %w", err)))
 		return
-	}
-
-	var shifts []Shift
-	var targetDate string
-
-	for _, schedule := range schedules {
-		if targetDate == "" {
-			targetDate = schedule.Day.Time.Format("2006-01-02")
-		}
-		shift := Shift{
-			ShiftID:           schedule.ShiftID,
-			EmployeeID:        schedule.EmployeeID,
-			EmployeeFirstName: schedule.EmployeeFirstName,
-			EmployeeLastName:  schedule.EmployeeLastName,
-			StartTime:         schedule.StartDatetime.Time,
-			EndTime:           schedule.EndDatetime.Time,
-			LocationID:        schedule.LocationID,
-			Color:             schedule.Color,
-			LocationShiftID:   schedule.LocationShiftID,
-			ShiftName:         schedule.ShiftName,
-			IsCustom:          schedule.IsCustom,
-		}
-		if schedule.ShiftName != nil {
-			// If shift name is provided, add it to the shift
-			shift.ShiftName = schedule.ShiftName
-		} else {
-
-			shift.ShiftName = util.StringPtr("Custom Shift")
-		}
-		shifts = append(shifts, shift)
-	}
-
-	// If no schedules found, still create the target date
-	if targetDate == "" {
-		targetDate = time.Date(int(req.Year), time.Month(req.Month), int(req.Day), 0, 0, 0, 0, time.UTC).Format("2006-01-02")
-	}
-
-	response := GetDailySchedulesByLocationResponse{
-		Date:   targetDate,
-		Shifts: shifts,
 	}
 
 	res := SuccessResponse(response, "Daily schedules retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// GetScheduleByIdResponse represents the response body for retrieving a schedule by ID.
-type GetScheduleByIdResponse struct {
-	ID                uuid.UUID `json:"id"`
-	EmployeeID        int64     `json:"employee_id"`
-	EmployeeFirstName string    `json:"employee_first_name"`
-	EmployeeLastName  string    `json:"employee_last_name"`
-	LocationID        int64     `json:"location_id"`
-	LocationName      string    `json:"location_name"`
-	LocationShiftID   *int64    `json:"location_shift_id,omitempty"` // Optional field for preset shift
-	LocationShiftName *string   `json:"shift_name,omitempty"`        // Optional field for shift name
-	Color             *string   `json:"color"`                       // Optional field for color coding
-	StartDatetime     time.Time `json:"start_datetime"`
-	EndDatetime       time.Time `json:"end_datetime"`
-	IsCustom          bool      `json:"is_custom"` // Indicates if this is a custom schedule
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 // @Summary Get schedule by ID
@@ -257,62 +127,14 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 		return
 	}
 
-	schedule, err := server.store.GetScheduleById(ctx, scheduleID)
+	schedule, err := server.businessService.ScheduleService.GetScheduleByID(ctx, scheduleID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get schedule: %w", err)))
 		return
 	}
 
-	res := SuccessResponse(GetScheduleByIdResponse{
-		ID:                schedule.ID,
-		EmployeeID:        schedule.EmployeeID,
-		EmployeeFirstName: schedule.EmployeeFirstName,
-		EmployeeLastName:  schedule.EmployeeLastName,
-		LocationID:        schedule.LocationID,
-		LocationName:      schedule.LocationName,
-		StartDatetime:     schedule.StartDatetime.Time,
-		EndDatetime:       schedule.EndDatetime.Time,
-		CreatedAt:         schedule.CreatedAt.Time,
-		UpdatedAt:         schedule.UpdatedAt.Time,
-		Color:             schedule.Color,
-		LocationShiftID:   schedule.LocationShiftID,
-		LocationShiftName: schedule.LocationShiftName,
-		IsCustom:          schedule.IsCustom,
-	}, "Schedule retrieved successfully")
+	res := SuccessResponse(schedule, "Schedule retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateScheduleRequest represents the request body for updating a schedule.
-type UpdateScheduleRequest struct {
-	EmployeeID *int64 `json:"employee_id,omitempty"`
-	LocationID *int64 `json:"location_id,omitempty"`
-	IsCustom   *bool  `json:"is_custom,omitempty" example:"true"` // true for custom schedule, false for preset shift
-
-	// For custom schedules (required when is_custom = true)
-	StartDatetime *time.Time `json:"start_datetime,omitempty" example:"2023-10-01T09:00:00Z"`
-	EndDatetime   *time.Time `json:"end_datetime,omitempty" example:"2023-10-01T17:00:00Z"`
-
-	// For preset shift-based schedules (required when is_custom = false)
-	LocationShiftID *int64  `json:"location_shift_id,omitempty" example:"1"`
-	ShiftDate       *string `json:"shift_date,omitempty" example:"2023-10-01"` // Date to apply the shift
-
-	Color *string `json:"color,omitempty" example:"#FF5733"`
-}
-
-// UpdateScheduleResponse represents the response body after updating a schedule.
-type UpdateScheduleResponse struct {
-	ID            uuid.UUID `json:"id"`
-	EmployeeID    int64     `json:"employee_id"`
-	LocationID    int64     `json:"location_id"`
-	StartDatetime time.Time `json:"start_datetime"`
-	EndDatetime   time.Time `json:"end_datetime"`
-	Color         *string   `json:"color"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-
-	// Additional info if updated from preset shift
-	LocationShiftID *int64  `json:"location_shift_id,omitempty"`
-	ShiftName       *string `json:"shift_name,omitempty"`
 }
 
 // @Summary Update an existing schedule
@@ -337,210 +159,25 @@ func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
 		return
 	}
 
-	existingSchedule, err := server.store.GetScheduleById(ctx, scheduleID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("schedule not found")))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	var req UpdateScheduleRequest
+	var req schedule.UpdateScheduleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	// Determine if this is a custom schedule update
-	// is_custom must be explicitly provided to use start_datetime and end_datetime
-	isCustom := req.IsCustom != nil && *req.IsCustom
-
-	// If is_custom is not provided or false, ignore start_datetime and end_datetime
-	if req.IsCustom == nil || !*req.IsCustom {
-		req.StartDatetime = nil
-		req.EndDatetime = nil
-
-		// Determine schedule type based on other fields or existing schedule
-		if req.IsCustom == nil {
-			if req.LocationShiftID != nil || req.ShiftDate != nil {
-				isCustom = false
-			} else {
-				// If no schedule type fields are provided, keep existing type
-				// Check if existing schedule has location_shift_id to determine type
-				isCustom = existingSchedule.LocationShiftID == nil
-			}
-		}
-	}
-
-	// Validate request based on schedule type
-	if isCustom {
-		// Custom schedule validation
-		if req.LocationShiftID != nil || req.ShiftDate != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id and shift_date should not be provided for custom schedules")))
-			return
-		}
-	} else {
-		// For preset shift schedules, ignore start_datetime and end_datetime if provided
-		// No validation error, just ignore these fields
-		req.StartDatetime = nil
-		req.EndDatetime = nil
-	}
-
-	// Prepare update parameters with existing values as defaults
-	var startDatetime, endDatetime time.Time
-	var locationShiftID *int64
-	var shiftName *string
-	var employeeID int64 = existingSchedule.EmployeeID
-	var locationID int64 = existingSchedule.LocationID
-	var color *string = existingSchedule.Color
-
-	// Update fields if provided
-	if req.EmployeeID != nil {
-		employeeID = *req.EmployeeID
-	}
-	if req.LocationID != nil {
-		locationID = *req.LocationID
-	}
-	if req.Color != nil {
-		color = req.Color
-	}
-
-	if isCustom {
-		// Handle custom schedule
-		startDatetime = existingSchedule.StartDatetime.Time
-		endDatetime = existingSchedule.EndDatetime.Time
-
-		if req.StartDatetime != nil {
-			startDatetime = *req.StartDatetime
-		}
-		if req.EndDatetime != nil {
-			endDatetime = *req.EndDatetime
-		}
-
-		// Validate datetime order
-		if startDatetime.After(endDatetime) {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("start_datetime must be before end_datetime")))
-			return
-		}
-
-		locationShiftID = nil // Clear location_shift_id for custom schedules
-	} else {
-		// Handle preset shift
-		var shiftIDToUse int64
-		var shiftDateToUse string
-
-		// Use existing values if not provided
-		if req.LocationShiftID != nil {
-			shiftIDToUse = *req.LocationShiftID
-		} else if existingSchedule.LocationShiftID != nil {
-			shiftIDToUse = *existingSchedule.LocationShiftID
-		} else {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id is required for preset shift schedules")))
-			return
-		}
-
-		if req.ShiftDate != nil {
-			shiftDateToUse = *req.ShiftDate
-		} else {
-			// Extract date from existing start_datetime
-			shiftDateToUse = existingSchedule.StartDatetime.Time.Format("2006-01-02")
-		}
-
-		// Get the location_shift details
-		locationShift, err := server.store.GetShiftByID(ctx, shiftIDToUse)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid location_shift_id: %v", err)))
-			return
-		}
-
-		// Verify the shift belongs to the specified location
-		if locationShift.LocationID != locationID {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("location_shift_id does not belong to the specified location")))
-			return
-		}
-
-		// Parse the shift date
-		shiftDate, err := time.Parse("2006-01-02", shiftDateToUse)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid shift_date format, expected YYYY-MM-DD: %v", err)))
-			return
-		}
-
-		// Convert pgtype.Time (microseconds since midnight) to time components
-		startHour, startMin, startSec, startNano := util.MicrosecondsToTimeComponents(locationShift.StartTime.Microseconds)
-		endHour, endMin, endSec, endNano := util.MicrosecondsToTimeComponents(locationShift.EndTime.Microseconds)
-
-		// Combine date with shift times to create full datetime
-		startDatetime = time.Date(
-			shiftDate.Year(), shiftDate.Month(), shiftDate.Day(),
-			startHour, startMin, startSec, startNano,
-			shiftDate.Location(),
-		)
-
-		endDatetime = time.Date(
-			shiftDate.Year(), shiftDate.Month(), shiftDate.Day(),
-			endHour, endMin, endSec, endNano,
-			shiftDate.Location(),
-		)
-
-		// Handle shifts that cross midnight (end time is before start time)
-		if locationShift.EndTime.Microseconds < locationShift.StartTime.Microseconds {
-			endDatetime = endDatetime.AddDate(0, 0, 1)
-		}
-
-		locationShiftID = &shiftIDToUse
-		shiftName = &locationShift.ShiftName
-	}
-
-	// Update the schedule
-	arg := db.UpdateScheduleParams{
-		ID:              scheduleID,
-		EmployeeID:      employeeID,
-		LocationID:      locationID,
-		LocationShiftID: locationShiftID,
-		StartDatetime:   pgtype.Timestamp{Time: startDatetime, Valid: true},
-		EndDatetime:     pgtype.Timestamp{Time: endDatetime, Valid: true},
-		Color:           color,
-	}
-
-	schedule, err := server.store.UpdateSchedule(ctx, arg)
+	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized")))
 		return
 	}
 
-	notifData := &notification.NewScheduleNotificationData{
-		ScheduleID: schedule.ID,
-		CreatedBy:  existingSchedule.EmployeeID,
-		StartTime:  startDatetime,
-		EndTime:    endDatetime,
-		Location:   schedule.LocationName,
-	}
-	err = server.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
-		RecipientUserIDs: []int64{employeeID},
-		Type:             notification.TypeNewScheduleNotification,
-		Data:             notification.NotificationData{NewScheduleNotification: notifData},
-		CreatedAt:        time.Now(),
-		Message:          notifData.UpdatedScheduleMessage(),
-	})
+	schedule, err := server.businessService.ScheduleService.UpdateSchedule(ctx, scheduleID, payload.EmployeeID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateScheduleApi", "Failed to enqueue notification task", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update schedule: %w", err)))
+		return
 	}
 
-	res := SuccessResponse(UpdateScheduleResponse{
-		ID:              schedule.ID,
-		EmployeeID:      schedule.EmployeeID,
-		LocationID:      schedule.LocationID,
-		StartDatetime:   schedule.StartDatetime.Time,
-		EndDatetime:     schedule.EndDatetime.Time,
-		Color:           schedule.Color,
-		CreatedAt:       schedule.CreatedAt.Time,
-		UpdatedAt:       schedule.UpdatedAt.Time,
-		LocationShiftID: locationShiftID,
-		ShiftName:       shiftName,
-	}, "Schedule updated successfully")
+	res := SuccessResponse(schedule, "Schedule updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -561,9 +198,9 @@ func (server *Server) DeleteScheduleApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.store.DeleteSchedule(ctx, scheduleID)
+	err = server.businessService.ScheduleService.DeleteSchedule(ctx, scheduleID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete schedule: %w", err)))
 		return
 	}
 
