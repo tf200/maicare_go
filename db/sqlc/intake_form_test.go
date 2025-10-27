@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -113,7 +114,6 @@ func createRandomIntakeForm(t *testing.T) IntakeForm {
 	require.Equal(t, arg.LastName, form.LastName)
 	require.Equal(t, arg.Email, form.Email)
 	return form
-
 }
 
 func TestCreateIntakeForm(t *testing.T) {
@@ -239,6 +239,7 @@ func TestListIntakeForms(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, paginatedForms, 5)
 }
+
 func TestGetIntakeForm(t *testing.T) {
 	form1 := createRandomIntakeForm(t)
 	form2, err := testQueries.GetIntakeForm(context.Background(), form1.ID)

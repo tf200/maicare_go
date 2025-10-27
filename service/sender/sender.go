@@ -2,10 +2,11 @@ package sender
 
 import (
 	"context"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"

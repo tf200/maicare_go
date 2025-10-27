@@ -1,9 +1,10 @@
 package api
 
 import (
-	"maicare_go/service/employees"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/employees"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,5 +41,4 @@ func (server *Server) ListWorkingHours(ctx *gin.Context) {
 	}
 	res := SuccessResponse(workingHoursResponse, "List working hours successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

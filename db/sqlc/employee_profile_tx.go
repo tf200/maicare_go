@@ -3,13 +3,14 @@ package db
 import (
 	"context"
 	"fmt"
+
 	"maicare_go/util"
 
 	"github.com/google/uuid"
 )
 
 type SetEmployeeProfilePictureTxParams struct {
-	EmployeeID    int64
+	EmployeeID    uuid.UUID
 	AttachementID uuid.UUID
 }
 
@@ -21,7 +22,6 @@ func (store *Store) SetEmployeeProfilePictureTx(ctx context.Context, arg SetEmpl
 	var result SetEmployeeProfilePictureTxResult
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
-
 		attachement, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
 			Uuid:   arg.AttachementID,
 			IsUsed: true,

@@ -2,6 +2,8 @@ package invoice
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // CreatePaymentRequest represents the request body for creating a payment.
@@ -16,51 +18,51 @@ type CreatePaymentRequest struct {
 
 // CreatePaymentResponse represents the response body for creating a payment.
 type CreatePaymentResponse struct {
-	PaymentID            int64     `json:"payment_id"`
-	InvoiceID            int64     `json:"invoice_id"`
-	PaymentMethod        *string   `json:"payment_method"`
-	PaymentStatus        string    `json:"payment_status"`
-	Amount               float64   `json:"amount"`
-	PaymentDate          time.Time `json:"payment_date"`
-	PaymentReference     *string   `json:"payment_reference"`
-	Notes                *string   `json:"notes"`
-	InvoiceStatusChanged bool      `json:"invoice_status_changed"`
-	CurrentInvoiceStatus string    `json:"current_invoice_status"`
-	RecordedBy           *int64    `json:"recorded_by"`
+	PaymentID            int64      `json:"payment_id"`
+	InvoiceID            int64      `json:"invoice_id"`
+	PaymentMethod        *string    `json:"payment_method"`
+	PaymentStatus        string     `json:"payment_status"`
+	Amount               float64    `json:"amount"`
+	PaymentDate          time.Time  `json:"payment_date"`
+	PaymentReference     *string    `json:"payment_reference"`
+	Notes                *string    `json:"notes"`
+	InvoiceStatusChanged bool       `json:"invoice_status_changed"`
+	CurrentInvoiceStatus string     `json:"current_invoice_status"`
+	RecordedBy           *uuid.UUID `json:"recorded_by"`
 }
 
 // ListPaymentsResponse represents the response body for listing payments.
 type ListPaymentsResponse struct {
-	PaymentID           int64     `json:"payment_id"`
-	InvoiceID           int64     `json:"invoice_id"`
-	PaymentMethod       *string   `json:"payment_method"`
-	PaymentStatus       string    `json:"payment_status"`
-	Amount              float64   `json:"amount"`
-	PaymentDate         time.Time `json:"payment_date"`
-	PaymentReference    *string   `json:"payment_reference"`
-	Notes               *string   `json:"notes"`
-	RecordedBy          *int64    `json:"recorded_by"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
-	RecordedByFirstName *string   `json:"recorded_by_first_name"`
-	RecordedByLastName  *string   `json:"recorded_by_last_name"`
+	PaymentID           int64      `json:"payment_id"`
+	InvoiceID           int64      `json:"invoice_id"`
+	PaymentMethod       *string    `json:"payment_method"`
+	PaymentStatus       string     `json:"payment_status"`
+	Amount              float64    `json:"amount"`
+	PaymentDate         time.Time  `json:"payment_date"`
+	PaymentReference    *string    `json:"payment_reference"`
+	Notes               *string    `json:"notes"`
+	RecordedBy          *uuid.UUID `json:"recorded_by"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+	RecordedByFirstName *string    `json:"recorded_by_first_name"`
+	RecordedByLastName  *string    `json:"recorded_by_last_name"`
 }
 
 // GetPaymentByIDResponse represents the response body for getting a payment by ID.
 type GetPaymentByIDResponse struct {
-	PaymentID           int64     `json:"payment_id"`
-	InvoiceID           int64     `json:"invoice_id"`
-	PaymentMethod       *string   `json:"payment_method"`
-	PaymentStatus       string    `json:"payment_status"`
-	Amount              float64   `json:"amount"`
-	PaymentDate         time.Time `json:"payment_date"`
-	PaymentReference    *string   `json:"payment_reference"`
-	Notes               *string   `json:"notes"`
-	RecordedBy          *int64    `json:"recorded_by"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
-	RecordedByFirstName *string   `json:"recorded_by_first_name"`
-	RecordedByLastName  *string   `json:"recorded_by_last_name"`
+	PaymentID           int64      `json:"payment_id"`
+	InvoiceID           int64      `json:"invoice_id"`
+	PaymentMethod       *string    `json:"payment_method"`
+	PaymentStatus       string     `json:"payment_status"`
+	Amount              float64    `json:"amount"`
+	PaymentDate         time.Time  `json:"payment_date"`
+	PaymentReference    *string    `json:"payment_reference"`
+	Notes               *string    `json:"notes"`
+	RecordedBy          *uuid.UUID `json:"recorded_by"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+	RecordedByFirstName *string    `json:"recorded_by_first_name"`
+	RecordedByLastName  *string    `json:"recorded_by_last_name"`
 }
 
 // UpdatePaymentRequest represents the request body for updating a payment.
@@ -75,20 +77,19 @@ type UpdatePaymentRequest struct {
 
 // UpdatePaymentResponse represents the response body for updating a payment.
 type UpdatePaymentResponse struct {
-	PaymentID             int64     `json:"payment_id"`
-	InvoiceID             int64     `json:"invoice_id"`
-	PaymentMethod         *string   `json:"payment_method"`
-	PaymentStatus         string    `json:"payment_status"`
-	Amount                float64   `json:"amount"`
-	PaymentDate           time.Time `json:"payment_date"`
-	PaymentReference      *string   `json:"payment_reference"`
-	Notes                 *string   `json:"notes"`
-	RecordedBy            *int64    `json:"recorded_by"`
-	InvoiceStatusChanged  bool      `json:"invoice_status_changed"`
-	CurrentInvoiceStatus  string    `json:"current_invoice_status"`
-	PreviousInvoiceStatus string    `json:"previous_invoice_status"`
+	PaymentID             int64      `json:"payment_id"`
+	InvoiceID             int64      `json:"invoice_id"`
+	PaymentMethod         *string    `json:"payment_method"`
+	PaymentStatus         string     `json:"payment_status"`
+	Amount                float64    `json:"amount"`
+	PaymentDate           time.Time  `json:"payment_date"`
+	PaymentReference      *string    `json:"payment_reference"`
+	Notes                 *string    `json:"notes"`
+	RecordedBy            *uuid.UUID `json:"recorded_by"`
+	InvoiceStatusChanged  bool       `json:"invoice_status_changed"`
+	CurrentInvoiceStatus  string     `json:"current_invoice_status"`
+	PreviousInvoiceStatus string     `json:"previous_invoice_status"`
 }
-
 
 // DeletePaymentResponse represents the response body for deleting a payment.
 type DeletePaymentResponse struct {

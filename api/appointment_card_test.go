@@ -3,12 +3,13 @@ package api
 import (
 	"bytes"
 	"fmt"
-	clientp "maicare_go/service/client"
-	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	clientp "maicare_go/service/client"
+	"maicare_go/token"
 
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/require"
@@ -51,7 +52,6 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
-
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)

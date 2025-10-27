@@ -8,10 +8,10 @@ import (
 
 // CreateScheduleRequest represents the request body for creating a schedule.
 type CreateScheduleRequest struct {
-	EmployeeID int64   `json:"employee_id"`
-	LocationID int64   `json:"location_id"`
-	IsCustom   bool    `json:"is_custom" example:"true"`          // true for custom schedule, false for preset shift
-	Color      *string `json:"color,omitempty" example:"#FF5733"` // Optional color for the schedule
+	EmployeeID uuid.UUID `json:"employee_id"`
+	LocationID int64     `json:"location_id"`
+	IsCustom   bool      `json:"is_custom" example:"true"`          // true for custom schedule, false for preset shift
+	Color      *string   `json:"color,omitempty" example:"#FF5733"` // Optional color for the schedule
 
 	// For custom schedules (required when is_custom = true)
 	StartDatetime *time.Time `json:"start_datetime,omitempty" example:"2023-10-01T09:00:00Z"`
@@ -25,7 +25,7 @@ type CreateScheduleRequest struct {
 // CreateScheduleResponse represents the response body after creating a schedule.
 type CreateScheduleResponse struct {
 	ID            uuid.UUID `json:"id"`
-	EmployeeID    int64     `json:"employee_id"`
+	EmployeeID    uuid.UUID `json:"employee_id"`
 	LocationID    int64     `json:"location_id"`
 	LocationName  string    `json:"location_name"`
 	StartDatetime time.Time `json:"start_datetime"`
@@ -48,7 +48,7 @@ type GetMonthlySchedulesByLocationRequest struct {
 // Shift represents a work shift for an employee.
 type Shift struct {
 	ShiftID           uuid.UUID `json:"shift_id"`
-	EmployeeID        int64     `json:"employee_id"`
+	EmployeeID        uuid.UUID `json:"employee_id"`
 	EmployeeFirstName string    `json:"employee_first_name"`
 	EmployeeLastName  string    `json:"employee_last_name"`
 	StartTime         time.Time `json:"start_time"`
@@ -82,7 +82,7 @@ type GetDailySchedulesByLocationResponse struct {
 // GetScheduleByIdResponse represents the response body for retrieving a schedule by ID.
 type GetScheduleByIdResponse struct {
 	ID                uuid.UUID `json:"id"`
-	EmployeeID        int64     `json:"employee_id"`
+	EmployeeID        uuid.UUID `json:"employee_id"`
 	EmployeeFirstName string    `json:"employee_first_name"`
 	EmployeeLastName  string    `json:"employee_last_name"`
 	LocationID        int64     `json:"location_id"`
@@ -99,9 +99,9 @@ type GetScheduleByIdResponse struct {
 
 // UpdateScheduleRequest represents the request body for updating a schedule.
 type UpdateScheduleRequest struct {
-	EmployeeID *int64 `json:"employee_id,omitempty"`
-	LocationID *int64 `json:"location_id,omitempty"`
-	IsCustom   *bool  `json:"is_custom,omitempty" example:"true"` // true for custom schedule, false for preset shift
+	EmployeeID *uuid.UUID `json:"employee_id,omitempty"`
+	LocationID *int64     `json:"location_id,omitempty"`
+	IsCustom   *bool      `json:"is_custom,omitempty" example:"true"` // true for custom schedule, false for preset shift
 
 	// For custom schedules (required when is_custom = true)
 	StartDatetime *time.Time `json:"start_datetime,omitempty" example:"2023-10-01T09:00:00Z"`
@@ -117,7 +117,7 @@ type UpdateScheduleRequest struct {
 // UpdateScheduleResponse represents the response body after updating a schedule.
 type UpdateScheduleResponse struct {
 	ID            uuid.UUID `json:"id"`
-	EmployeeID    int64     `json:"employee_id"`
+	EmployeeID    uuid.UUID `json:"employee_id"`
 	LocationID    int64     `json:"location_id"`
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`

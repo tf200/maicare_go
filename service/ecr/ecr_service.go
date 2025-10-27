@@ -3,10 +3,11 @@ package ecr
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

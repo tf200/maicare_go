@@ -3,9 +3,10 @@ package bucket
 import (
 	"context"
 	"log"
-	"maicare_go/util"
 	"os"
 	"testing"
+
+	"maicare_go/util"
 )
 
 var testBucketClient ObjectStorageInterface

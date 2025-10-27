@@ -28,7 +28,6 @@ func NewScheduler(redisHost, redisUser, redisPassword string, tls *tls.Config) *
 			WriteTimeout: 3 * time.Second,
 		}, nil)
 	return &Scheduler{Scheduler: sch}
-
 }
 
 func (s *Scheduler) ScheduleContractReminder() error {
@@ -47,7 +46,6 @@ func (s *Scheduler) ScheduleContractReminder() error {
 // func (s *)
 
 func (s *Scheduler) Start() error {
-
 	if err := s.ScheduleContractReminder(); err != nil {
 		return err
 	}

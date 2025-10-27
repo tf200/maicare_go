@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
-	_ "maicare_go/pagination" // for swagger
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
+
+	_ "maicare_go/pagination" // for swagger
+	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +35,6 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 
 	res := SuccessResponse(client, "Client created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // ListClientsApi lists clients
@@ -64,7 +64,6 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 
 	res := SuccessResponse(result, "Clients fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // GetClientsCountApi gets the count of clients
@@ -75,7 +74,6 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/counts [get]
 func (server *Server) GetClientsCountApi(ctx *gin.Context) {
-
 	clientCount, err := server.businessService.ClientService.GetClientsCount(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -203,7 +201,6 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 
 	res := SuccessResponse(updatedClient, "Client status updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // ListStatusHistoryApi lists status history of a client
@@ -263,7 +260,6 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Profile picture set successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // AddClientDocumentApi adds a document to a client
@@ -365,7 +361,6 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(result, "Client document deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // GetMissingClientDocumentsApi gets missing documents of a client

@@ -3,20 +3,32 @@ package employees
 import (
 	"context"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/util"
-	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *employeeService) ListWorkingHours(ctx context.Context, employeeID int64, req *ListWorkingHoursRequest) (*ListWorkingHoursResponse, error) {
+func (s *employeeService) ListWorkingHours(
+	ctx context.Context,
+	employeeID uuid.UUID,
+	req *ListWorkingHoursRequest,
+) (*ListWorkingHoursResponse, error) {
 	// Get period start and end dates
 	periodStart, periodEnd, err := util.GetStartAndEndOfISOWeek(int(req.Year), int(req.Week))
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListWorkingHours", "Failed to get ISO week dates", zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"ListWorkingHours",
+			"Failed to get ISO week dates",
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("failed to get ISO week dates: %w", err)
 	}
 
@@ -32,7 +44,12 @@ func (s *employeeService) ListWorkingHours(ctx context.Context, employeeID int64
 	// Calculate overtime
 	err = s.calculateOvertime(ctx, employeeID, &summary)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListWorkingHours", "Failed to calculate overtime", zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"ListWorkingHours",
+			"Failed to calculate overtime",
+			zap.Error(err),
+		)
 		// Don't fail the entire request, just log the error
 	}
 
@@ -47,21 +64,34 @@ func (s *employeeService) ListWorkingHours(ctx context.Context, employeeID int64
 	}, nil
 }
 
-func (s *employeeService) fetchWorkingHoursData(ctx context.Context, employeeID int64, periodStart, periodEnd time.Time) ([]db.ListEmployeeAppointmentsInRangeRow, []db.GetEmployeeSchedulesRow, error) {
+func (s *employeeService) fetchWorkingHoursData(
+	ctx context.Context,
+	employeeID uuid.UUID,
+	periodStart, periodEnd time.Time,
+) ([]db.ListEmployeeAppointmentsInRangeRow, []db.GetEmployeeSchedulesRow, error) {
 	// Fetch employee appointments
-	appointments, err := s.Store.ListEmployeeAppointmentsInRange(ctx, db.ListEmployeeAppointmentsInRangeParams{
-		StartDate: pgtype.Timestamp{
-			Time:  periodStart,
-			Valid: true,
+	appointments, err := s.Store.ListEmployeeAppointmentsInRange(
+		ctx,
+		db.ListEmployeeAppointmentsInRangeParams{
+			StartDate: pgtype.Timestamp{
+				Time:  periodStart,
+				Valid: true,
+			},
+			EndDate: pgtype.Timestamp{
+				Time:  periodEnd,
+				Valid: true,
+			},
+			EmployeeID: &employeeID,
 		},
-		EndDate: pgtype.Timestamp{
-			Time:  periodEnd,
-			Valid: true,
-		},
-		EmployeeID: &employeeID,
-	})
+	)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "fetchWorkingHoursData", "Failed to fetch employee appointments", zap.Int64("employee_id", employeeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"fetchWorkingHoursData",
+			"Failed to fetch employee appointments",
+			zap.String("employee_id", employeeID.String()),
+			zap.Error(err),
+		)
 		return nil, nil, fmt.Errorf("failed to fetch employee appointments: %w", err)
 	}
 
@@ -78,14 +108,23 @@ func (s *employeeService) fetchWorkingHoursData(ctx context.Context, employeeID 
 		EmployeeID: employeeID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "fetchWorkingHoursData", "Failed to fetch employee schedules", zap.Int64("employee_id", employeeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"fetchWorkingHoursData",
+			"Failed to fetch employee schedules",
+			zap.String("employee_id", employeeID.String()),
+			zap.Error(err),
+		)
 		return nil, nil, fmt.Errorf("failed to fetch employee schedules: %w", err)
 	}
 
 	return appointments, schedules, nil
 }
 
-func (s *employeeService) buildWorkingHoursItems(appointments []db.ListEmployeeAppointmentsInRangeRow, schedules []db.GetEmployeeSchedulesRow) ([]WorkingHourItem, Summary) {
+func (s *employeeService) buildWorkingHoursItems(
+	appointments []db.ListEmployeeAppointmentsInRangeRow,
+	schedules []db.GetEmployeeSchedulesRow,
+) ([]WorkingHourItem, Summary) {
 	workingHours := make([]WorkingHourItem, len(schedules)+len(appointments))
 	var appointmentHours, shiftHours float64
 	uniqueDays := make(map[string]bool)
@@ -141,7 +180,11 @@ func (s *employeeService) buildWorkingHoursItems(appointments []db.ListEmployeeA
 	return workingHours, summary
 }
 
-func (s *employeeService) calculateOvertime(ctx context.Context, employeeID int64, summary *Summary) error {
+func (s *employeeService) calculateOvertime(
+	ctx context.Context,
+	employeeID uuid.UUID,
+	summary *Summary,
+) error {
 	// Fetch employee contract details
 	contractDetails, err := s.Store.GetEmployeeContractDetails(ctx, employeeID)
 	if err != nil {
@@ -159,7 +202,10 @@ func (s *employeeService) calculateOvertime(ctx context.Context, employeeID int6
 	return nil
 }
 
-func (s *employeeService) buildPeriodInfo(year, week int32, periodStart, periodEnd time.Time) Period {
+func (s *employeeService) buildPeriodInfo(
+	year, week int32,
+	periodStart, periodEnd time.Time,
+) Period {
 	currentYear, currentWeek := time.Now().ISOWeek()
 
 	return Period{

@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
-	_ "maicare_go/pagination" // import for pagination.Response used in swagger
-	"maicare_go/service/employees"
 	"net/http"
 	"strconv"
+
+	_ "maicare_go/pagination" // import for pagination.Response used in swagger
+	"maicare_go/service/employees"
 
 	"github.com/gin-gonic/gin"
 )
@@ -83,7 +84,6 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 		return
 	}
 	response, err := server.businessService.EmployeeService.ListEmployees(req, ctx)
-
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list employee profiles")))
 		return
@@ -461,7 +461,6 @@ func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
 
 	res := SuccessResponse(result, "Experience added to employee profile successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // @Summary List experience for employee profile

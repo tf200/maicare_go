@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/appointment"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/appointment"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -46,7 +47,6 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Appointment created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // AddParticipantToAppointment adds participants to an existing appointment
@@ -160,7 +160,6 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary List appointments for a client in a date range
@@ -276,7 +275,6 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Appointment updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // DeleteAppointmentApi deletes an appointment

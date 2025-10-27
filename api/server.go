@@ -52,8 +52,8 @@ type Server struct {
 
 func NewServer(hubInstance *hub.Hub,
 	grpcClient grpclient.GrpcClientInterface,
-	tokenMaker token.Maker, config util.Config, service *service.BusinessService) (*Server, error) {
-
+	tokenMaker token.Maker, config util.Config, service *service.BusinessService,
+) (*Server, error) {
 	logger, err := setupLogger(config.Environment)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create logger %v", err)
@@ -255,5 +255,4 @@ func setupLogger(environment string) (*zap.Logger, error) {
 	}
 
 	return logger, nil
-
 }

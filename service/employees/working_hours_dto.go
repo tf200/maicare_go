@@ -49,7 +49,7 @@ type ListWorkingHoursRequest struct {
 
 // ListWorkingHoursResponse represents the response structure for listing working hours.
 type ListWorkingHoursResponse struct {
-	EmployeeID   int64             `json:"employee_id"`
+	EmployeeID   uuid.UUID         `json:"employee_id"`
 	Period       Period            `json:"period"`
 	Summary      Summary           `json:"summary"`
 	WorkingHours []WorkingHourItem `json:"working_hours"`

@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
+
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -11,7 +12,6 @@ import (
 )
 
 func createRandomClientDiagnosis(t *testing.T, clientID uuid.UUID) ClientDiagnosis {
-
 	arg := CreateClientDiagnosisParams{
 		ClientID:            clientID,
 		Title:               util.StringPtr("test title"),
@@ -105,7 +105,6 @@ func TestUpdateClientDiagnosis(t *testing.T) {
 	require.NotEmpty(t, diagnosis2)
 	require.Equal(t, diagnosis1.ID, diagnosis2.ID)
 	require.NotEqual(t, diagnosis1.Severity, diagnosis2.Severity)
-
 }
 
 func TestDeleteClientDiagnosis(t *testing.T) {
@@ -114,11 +113,9 @@ func TestDeleteClientDiagnosis(t *testing.T) {
 
 	_, err := testQueries.DeleteClientDiagnosis(context.Background(), diagnosis1.ID)
 	require.NoError(t, err)
-
 }
 
 func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID uuid.UUID) ClientMedication {
-
 	arg := CreateClientMedicationParams{
 		DiagnosisID:      &diagnosisID,
 		Name:             "test name",
@@ -191,7 +188,6 @@ func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 	require.Len(t, medications, 2)
 	require.Equal(t, medication1.ID, medications[0].ID)
 	require.Equal(t, medication2.ID, medications[1].ID)
-
 }
 
 func TestUpdateClientMedication(t *testing.T) {
@@ -209,7 +205,6 @@ func TestUpdateClientMedication(t *testing.T) {
 	require.NotEmpty(t, medication2)
 	require.Equal(t, medication1.ID, medication2.ID)
 	require.NotEqual(t, medication1.IsCritical, medication2.IsCritical)
-
 }
 
 func TestDeleteClientMedication(t *testing.T) {
@@ -219,5 +214,4 @@ func TestDeleteClientMedication(t *testing.T) {
 
 	err := testQueries.DeleteClientMedication(context.Background(), medication1.ID)
 	require.NoError(t, err)
-
 }

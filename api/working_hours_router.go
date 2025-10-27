@@ -8,6 +8,4 @@ func (server *Server) setupWorkingHours(baseRouter *gin.RouterGroup) {
 	{
 		workingHours.GET("/:id/working_hours", server.RBACMiddleware("EMPLOYEE.VIEW"), server.ListWorkingHours)
 	}
-
 }
- 

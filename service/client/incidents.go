@@ -2,6 +2,8 @@ package clientp
 
 import (
 	"context"
+	"time"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
@@ -9,7 +11,6 @@ import (
 	"maicare_go/service/notification"
 	"maicare_go/service/pdf"
 	"maicare_go/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,7 +19,6 @@ import (
 )
 
 func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID uuid.UUID) (*CreateIncidentResponse, error) {
-
 	arg := db.CreateIncidentParams{
 		EmployeeID:              req.EmployeeID,
 		LocationID:              req.LocationID,
@@ -125,7 +125,6 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 	receipients, err := s.Store.GetAllAdminUsers(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to get admin users for incident notification", zap.Error(err))
-
 	} else {
 		var recipientUserIDs []uuid.UUID
 		for _, user := range receipients {
@@ -514,7 +513,6 @@ func (s *clientService) DeleteIncident(ctx context.Context, incidentID int64) er
 }
 
 func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error) {
-
 	incident, err := s.Store.GetIncident(ctx, incidentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
@@ -603,7 +601,6 @@ func (s *clientService) ConfirmIncident(ctx context.Context, incidentID int64) (
 		ID:      incident.ID,
 	}, nil
 	// TODO: Send notification to the party responsivle for the client
-
 }
 
 func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidentsRequest) (*pagination.Response[ListAllIncidentsResponse], error) {

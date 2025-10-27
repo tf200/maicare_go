@@ -4,7 +4,6 @@ package api
 import "github.com/gin-gonic/gin"
 
 func (server *Server) setupECRRoutes(baseRouter *gin.RouterGroup) {
-
 	ECRGroup := baseRouter.Group("/ecr")
 	ECRGroup.Use(server.AuthMiddleware())
 	{
@@ -15,5 +14,4 @@ func (server *Server) setupECRRoutes(baseRouter *gin.RouterGroup) {
 		ECRGroup.GET("/upcoming_appointments", server.ListUpcomingAppointmentsApi)
 
 	}
-
 }

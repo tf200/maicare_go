@@ -1,9 +1,10 @@
 package api
 
 import (
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
+
+	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 )
@@ -196,7 +197,6 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 	res := SuccessResponse(autoReports, "Auto reports generated successfully")
 
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // ConfirmProgressReportApi creates a new progress report for a client
@@ -265,5 +265,4 @@ func (server *Server) ListAiGeneratedReportsApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(pag, "Progress reports retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

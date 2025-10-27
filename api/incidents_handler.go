@@ -1,8 +1,9 @@
 package api
 
 import (
-	clientp "maicare_go/service/client"
 	"net/http"
+
+	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 )

@@ -7,12 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
 	"maicare_go/service/notification"
 	"maicare_go/service/pdf"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
@@ -28,7 +29,6 @@ func (processor *AsynqServer) ProcessEmailTask(ctx context.Context, t *asynq.Tas
 
 	if p.To == "" || p.UserEmail == "" || p.UserPassword == "" {
 		return fmt.Errorf("invalid email payload: missing required fields: %w", asynq.SkipRetry)
-
 	}
 
 	log.Printf("Sending email to %s", p.To)
@@ -308,7 +308,6 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 			ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		},
 		)
-
 		if err != nil {
 			log.Printf("Failed to create contract reminder for contract ID %d: %v", contract.ID, err)
 			return fmt.Errorf("failed to create contract reminder for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)
@@ -362,5 +361,4 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 
 	log.Println("All contract reminders processed successfully")
 	return nil
-
 }

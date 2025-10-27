@@ -29,7 +29,6 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 
 	q := New(tx)
 	err = fn(q)
-
 	if err != nil {
 		if rbErr := tx.Rollback(ctx); rbErr != nil {
 			return rbErr

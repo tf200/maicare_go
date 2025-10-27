@@ -3,9 +3,10 @@ package api
 import (
 	"errors"
 	"fmt"
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
+
+	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -40,7 +41,6 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(appointmentCard, "Appointment card created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // GetAppointmentCardApi retrieves an appointment card by client ID
@@ -136,5 +136,4 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Appointment card document generated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

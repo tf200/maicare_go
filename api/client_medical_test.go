@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -25,7 +26,6 @@ import (
 // }
 
 func createRandomClientDiagnosis(t *testing.T, clientID int64) db.ClientDiagnosis {
-
 	arg := db.CreateClientDiagnosisParams{
 		ClientID:            clientID,
 		Title:               util.StringPtr("test title"),
@@ -124,7 +124,6 @@ func TestCreateClientDiagnosisApi(t *testing.T) {
 		})
 
 	}
-
 }
 
 func TestListClientDiagnoses(t *testing.T) {
@@ -336,7 +335,6 @@ func TestDeleteClientDiagnosisApi(t *testing.T) {
 }
 
 func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID int64) db.ClientMedication {
-
 	arg := db.CreateClientMedicationParams{
 		DiagnosisID:      &diagnosisID,
 		Name:             "test name",

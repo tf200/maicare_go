@@ -2,6 +2,8 @@ package employees
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // AddEmployeeExperienceRequest represents the request for AddEmployeeExperience
@@ -15,26 +17,26 @@ type AddEmployeeExperienceRequest struct {
 
 // AddEmployeeExperienceResponse represents the response for AddEmployeeExperience
 type AddEmployeeExperienceResponse struct {
-	ID          int64   `json:"id"`
-	EmployeeID  int64   `json:"employee_id"`
-	JobTitle    string  `json:"job_title"`
-	CompanyName string  `json:"company_name"`
-	StartDate   string  `json:"start_date"`
-	EndDate     string  `json:"end_date"`
-	Description *string `json:"description"`
-	CreatedAt   string  `json:"created_at"`
+	ID          int64     `json:"id"`
+	EmployeeID  uuid.UUID `json:"employee_id"`
+	JobTitle    string    `json:"job_title"`
+	CompanyName string    `json:"company_name"`
+	StartDate   string    `json:"start_date"`
+	EndDate     string    `json:"end_date"`
+	Description *string   `json:"description"`
+	CreatedAt   string    `json:"created_at"`
 }
 
 // ListEmployeeExperienceResponse represents the response for ListEmployeeExperience
 type ListEmployeeExperienceResponse struct {
-	ID          int64   `json:"id"`
-	EmployeeID  int64   `json:"employee_id"`
-	JobTitle    string  `json:"job_title"`
-	CompanyName string  `json:"company_name"`
-	StartDate   string  `json:"start_date"`
-	EndDate     string  `json:"end_date"`
-	Description *string `json:"description"`
-	CreatedAt   string  `json:"created_at"`
+	ID          int64     `json:"id"`
+	EmployeeID  uuid.UUID `json:"employee_id"`
+	JobTitle    string    `json:"job_title"`
+	CompanyName string    `json:"company_name"`
+	StartDate   string    `json:"start_date"`
+	EndDate     string    `json:"end_date"`
+	Description *string   `json:"description"`
+	CreatedAt   string    `json:"created_at"`
 }
 
 // UpdateEmployeeExperienceRequest represents the request for UpdateEmployeeExperience
@@ -49,7 +51,7 @@ type UpdateEmployeeExperienceRequest struct {
 // UpdateEmployeeExperienceResponse represents the response for UpdateEmployeeExperience
 type UpdateEmployeeExperienceResponse struct {
 	ID          int64     `json:"id"`
-	EmployeeID  int64     `json:"employee_id"`
+	EmployeeID  uuid.UUID `json:"employee_id"`
 	JobTitle    string    `json:"job_title"`
 	CompanyName string    `json:"company_name"`
 	StartDate   time.Time `json:"start_date"`
@@ -61,7 +63,7 @@ type UpdateEmployeeExperienceResponse struct {
 // DeleteEmployeeExperienceResponse represents the response for DeleteEmployeeExperience
 type DeleteEmployeeExperienceResponse struct {
 	ID          int64     `json:"id"`
-	EmployeeID  int64     `json:"employee_id"`
+	EmployeeID  uuid.UUID `json:"employee_id"`
 	JobTitle    string    `json:"job_title"`
 	CompanyName string    `json:"company_name"`
 	StartDate   time.Time `json:"start_date"`

@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/schedule"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/schedule"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -152,7 +153,6 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules/{id} [put]
 func (server *Server) UpdateScheduleApi(ctx *gin.Context) {
-
 	scheduleID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid schedule ID format")))

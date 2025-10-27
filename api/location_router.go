@@ -4,7 +4,6 @@ package api
 import "github.com/gin-gonic/gin"
 
 func (server *Server) setupLocationRoutes(baseRouter *gin.RouterGroup) {
-
 	organisationGroup := baseRouter.Group("")
 	organisationGroup.Use(server.AuthMiddleware())
 	{
@@ -22,5 +21,4 @@ func (server *Server) setupLocationRoutes(baseRouter *gin.RouterGroup) {
 		organisationGroup.PUT("/locations/:id", server.RBACMiddleware("LOCATION.UPDATE"), server.UpdateLocationApi)
 		organisationGroup.DELETE("/locations/:id", server.RBACMiddleware("LOCATION.DELETE"), server.DeleteLocationApi)
 	}
-
 }

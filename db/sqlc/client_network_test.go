@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -24,6 +25,7 @@ func TestAssignSender(t *testing.T) {
 	require.Equal(t, client.ID, newClient.ID)
 	require.Equal(t, &sender.ID, newClient.SenderID)
 }
+
 func TestGetClientSender(t *testing.T) {
 	client := createRandomClientDetails(t)
 
@@ -34,7 +36,6 @@ func TestGetClientSender(t *testing.T) {
 }
 
 func createRandomEmergencyContact(t *testing.T, clientID int64) ClientEmergencyContact {
-
 	arg := CreateEmemrgencyContactParams{
 		ClientID:         clientID,
 		FirstName:        util.StringPtr(util.RandomString(5)),
@@ -139,7 +140,6 @@ func TestAssignEmployee(t *testing.T) {
 	client := createRandomClientDetails(t)
 	employee, _ := createRandomEmployee(t)
 	assignRandomEmployee(t, client.ID, employee.ID)
-
 }
 
 func TestListAssignedEmployees(t *testing.T) {

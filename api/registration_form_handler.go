@@ -1,9 +1,10 @@
 package api
 
 import (
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
+
+	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,6 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Registration form created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // @Summary List Registration Forms
@@ -197,5 +197,4 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 
 	res := SuccessResponse[any](nil, "Registration form status updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

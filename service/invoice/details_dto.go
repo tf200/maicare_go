@@ -1,9 +1,10 @@
 package invoice
 
 import (
+	"time"
+
 	"maicare_go/pagination"
 	"maicare_go/util"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -31,7 +32,7 @@ type CreateInvoiceResponse struct {
 	TotalAmount     float64          `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject  `json:"extra_content"`
-	ClientID        int64            `json:"client_id"`
+	ClientID        uuid.UUID        `json:"client_id"`
 	SenderID        *int64           `json:"sender_id"`
 	InvoiceType     string           `json:"invoice_type"`
 	UpdatedAt       time.Time        `json:"updated_at"`
@@ -49,7 +50,7 @@ type GetInvoiceByIDResponse struct {
 	TotalAmount          float64          `json:"total_amount"`
 	PdfAttachmentID      *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent         util.JSONObject  `json:"extra_content"`
-	ClientID             int64            `json:"client_id"`
+	ClientID             uuid.UUID        `json:"client_id"`
 	SenderID             *int64           `json:"sender_id"`
 	InvoiceType          string           `json:"invoice_type"`
 	OriginalInvoiceID    *int64           `json:"original_invoice_id"`
@@ -65,11 +66,11 @@ type GetInvoiceByIDResponse struct {
 
 // ListInvoicesRequest represents the request parameters for listing invoices.
 type ListInvoicesRequest struct {
-	ClientID  *int64    `form:"client_id"`
-	SenderID  *int64    `form:"sender_id"`
-	Status    *string   `form:"status" binding:"omitempty,oneof=outstanding partially_paid paid expired overpaid imported concept"`
-	StartDate time.Time `form:"start_date"`
-	EndDate   time.Time `form:"end_date"`
+	ClientID  *uuid.UUID `form:"client_id"`
+	SenderID  *int64     `form:"sender_id"`
+	Status    *string    `form:"status" binding:"omitempty,oneof=outstanding partially_paid paid expired overpaid imported concept"`
+	StartDate time.Time  `form:"start_date"`
+	EndDate   time.Time  `form:"end_date"`
 	pagination.Request
 }
 
@@ -84,7 +85,7 @@ type ListInvoicesResponse struct {
 	TotalAmount       float64          `json:"total_amount"`
 	PdfAttachmentID   *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent      util.JSONObject  `json:"extra_content"`
-	ClientID          int64            `json:"client_id"`
+	ClientID          uuid.UUID        `json:"client_id"`
 	SenderID          *int64           `json:"sender_id"`
 	InvoiceType       string           `json:"invoice_type"`
 	OriginalInvoiceID *int64           `json:"original_invoice_id"`
@@ -118,7 +119,7 @@ type UpdateInvoiceResponse struct {
 	TotalAmount     float64          `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject  `json:"extra_content"`
-	ClientID        int64            `json:"client_id"`
+	ClientID        uuid.UUID        `json:"client_id"`
 	SenderID        *int64           `json:"sender_id"`
 	UpdatedAt       time.Time        `json:"updated_at"`
 	CreatedAt       time.Time        `json:"created_at"`
@@ -129,7 +130,7 @@ type GetInvoiceAuditLogResponse struct {
 	AuditID            int64           `json:"audit_id"`
 	InvoiceID          int64           `json:"invoice_id"`
 	Operation          string          `json:"operation"`
-	ChangedBy          *int64          `json:"changed_by"`
+	ChangedBy          *uuid.UUID      `json:"changed_by"`
 	ChangedAt          time.Time       `json:"changed_at"`
 	OldValues          util.JSONObject `json:"old_values"`
 	NewValues          util.JSONObject `json:"new_values"`

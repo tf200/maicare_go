@@ -47,7 +47,7 @@ func SetupLogger(environment string) (Logger, error) {
 
 	if environment == "production" {
 		logDir := "/var/log/maicare"
-		if err := os.MkdirAll(logDir, 0755); err != nil {
+		if err := os.MkdirAll(logDir, 0o755); err != nil {
 			return nil, fmt.Errorf("failed to create log directory: %v", err)
 		}
 

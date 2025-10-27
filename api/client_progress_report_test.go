@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -89,7 +90,6 @@ func TestCreateProgressReportApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListProgressReportApi(t *testing.T) {
@@ -139,7 +139,6 @@ func TestListProgressReportApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGetProgressReportApi(t *testing.T) {

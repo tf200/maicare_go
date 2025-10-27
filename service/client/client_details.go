@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
-
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -265,7 +265,6 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		LivingSituation:            client.LivingSituation,
 		LivingSituationNotes:       client.LivingSituationNotes,
 	}, nil
-
 }
 
 func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error) {
@@ -412,7 +411,6 @@ func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req U
 		ID:     clientID,
 		Status: schedueledChange.NewStatus,
 	}, nil
-
 }
 
 func (s *clientService) ListStatusHistory(ctx context.Context, clientID uuid.UUID) ([]ListStatusHistoryApiResponse, error) {

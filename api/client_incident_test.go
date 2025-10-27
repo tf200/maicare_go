@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"go.uber.org/mock/gomock"
@@ -22,7 +23,6 @@ import (
 )
 
 func createRandomClientIncident(t *testing.T, clientID int64) db.CreateIncidentRow {
-
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
 
@@ -146,7 +146,6 @@ func TestCreateIncident(t *testing.T) {
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				return req, nil
-
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String(), "<<<<<<<<<<<<", employee.ID, "<<<<<<<<<<<<", user.ID)
@@ -210,7 +209,6 @@ func TestCreateIncident(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListIncidentsApi(t *testing.T) {
@@ -246,7 +244,6 @@ func TestListIncidentsApi(t *testing.T) {
 				require.NotEmpty(t, incidents.Data.Results)
 				require.Len(t, incidents.Data.Results, 10)
 				require.NotEmpty(t, incidents.Data.Results[0].Emails)
-
 			},
 		},
 	}
@@ -263,7 +260,6 @@ func TestListIncidentsApi(t *testing.T) {
 		})
 
 	}
-
 }
 
 func TestGetIncidentApi(t *testing.T) {
@@ -357,7 +353,6 @@ func TestGetIncidentApi(t *testing.T) {
 		})
 
 	}
-
 }
 
 func TestUpdateIncidentApi(t *testing.T) {
@@ -442,7 +437,6 @@ func TestDeleteIncidentApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-
 			},
 		},
 	}
@@ -459,5 +453,4 @@ func TestDeleteIncidentApi(t *testing.T) {
 		})
 
 	}
-
 }

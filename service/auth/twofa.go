@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/util"
@@ -72,7 +73,6 @@ func (s *authService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2
 		QrCode: qrCodeBase64,
 		Secret: secret,
 	}, nil
-
 }
 
 func (s *authService) EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx context.Context) (*Enable2FAResponse, error) {

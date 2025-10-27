@@ -330,7 +330,6 @@ func TestGetEmployeeProfileByIDApi(t *testing.T) {
 				require.Equal(t, employee.UserID, response.Data.UserID)
 				require.Equal(t, employee.FirstName, response.Data.FirstName)
 				require.Equal(t, employee.LastName, response.Data.LastName)
-
 			},
 		},
 	}
@@ -365,7 +364,8 @@ func TestUpdateEmployeeProfileApi(t *testing.T) {
 			buildRequest: func() (*http.Request, error) {
 				updatereq := employees.UpdateEmployeeProfileRequest{
 					EmployeeNumber:   nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
-					EmploymentNumber: util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999)))}
+					EmploymentNumber: util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
+				}
 				data, err := json.Marshal(updatereq)
 				require.NoError(t, err)
 				url := fmt.Sprintf("/employees/%d", employee.ID)
@@ -386,7 +386,6 @@ func TestUpdateEmployeeProfileApi(t *testing.T) {
 				require.Equal(t, employee.FirstName, response.Data.FirstName)
 				require.Equal(t, employee.LastName, response.Data.LastName)
 				require.NotEqual(t, employee.EmploymentNumber, response.Data.EmploymentNumber)
-
 			},
 		},
 	}
@@ -423,7 +422,6 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
-
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -436,7 +434,6 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 				require.Equal(t, employee.FirstName, response.Data.FirstName)
 				require.Equal(t, employee.LastName, response.Data.LastName)
 				require.NotEmpty(t, response.Data.Permissions)
-
 			},
 		},
 	}
@@ -452,7 +449,6 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestSetEmployeeProfilePictureApi(t *testing.T) {
@@ -502,7 +498,6 @@ func TestSetEmployeeProfilePictureApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func createRandomEducation(t *testing.T) (int64, int64) {
@@ -545,7 +540,6 @@ func createRandomEducation(t *testing.T) (int64, int64) {
 				require.Equal(t, "Computer Science", response.Data.FieldOfStudy)
 				require.Equal(t, "University of Ghana", response.Data.InstitutionName)
 				return response.Data.ID
-
 			},
 		},
 	}
@@ -560,7 +554,6 @@ func createRandomEducation(t *testing.T) (int64, int64) {
 			tc.setupAuth(t, request, testServer.tokenMaker)
 			testServer.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
-
 		})
 	}
 	return employee.ID, user.ID
@@ -598,7 +591,6 @@ func TestListEmployeeEducationApi(t *testing.T) {
 				require.NoError(t, err)
 
 				require.NotEmpty(t, response.Data)
-
 			},
 		},
 	}
@@ -660,7 +652,6 @@ func TestAddEmployeeExperienceApi(t *testing.T) {
 				require.Equal(t, "2018-01-01T00:00:00Z", response.Data.StartDate)
 				require.Equal(t, "2022-01-01T00:00:00Z", response.Data.EndDate)
 				require.Equal(t, util.StringPtr("Worked on the search engine"), response.Data.Description)
-
 			},
 		},
 	}
@@ -675,10 +666,8 @@ func TestAddEmployeeExperienceApi(t *testing.T) {
 			tc.setupAuth(t, request, testServer.tokenMaker)
 			testServer.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
-
 		})
 	}
-
 }
 
 func TestAddEmployeeCertificationApi(t *testing.T) {
@@ -781,7 +770,6 @@ func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestAddEmployeeContractDetailsApi(t *testing.T) {

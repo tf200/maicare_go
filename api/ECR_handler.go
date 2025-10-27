@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	_"maicare_go/pagination"
-	"maicare_go/service/ecr"
 	"net/http"
+
+	_ "maicare_go/pagination"
+	"maicare_go/service/ecr"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

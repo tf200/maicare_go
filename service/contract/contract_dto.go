@@ -1,8 +1,9 @@
 package contract
 
 import (
-	"maicare_go/pagination"
 	"time"
+
+	"maicare_go/pagination"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

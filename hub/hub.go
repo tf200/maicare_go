@@ -4,17 +4,18 @@ import (
 	"log"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type UserMessage struct {
-	UserID  int64
+	UserID  uuid.UUID
 	Message []byte
 }
 
 type Hub struct {
 	// Registered clients. Maps userID to a set of client pointers.
-	clients map[int64]map[*Client]bool // Keep unexported
+	clients map[uuid.UUID]map[*Client]bool // Keep unexported
 
 	// Inbound messages from the clients (optional).
 	// broadcast chan []byte
@@ -35,7 +36,7 @@ type Hub struct {
 // NewHub creates and returns a new Hub instance.
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[int64]map[*Client]bool),
+		clients:    make(map[uuid.UUID]map[*Client]bool),
 		register:   make(chan *Client), // Buffered or unbuffered? Unbuffered is fine.
 		unregister: make(chan *Client),
 		sendToUser: make(chan *UserMessage),
@@ -46,7 +47,6 @@ func NewHub() *Hub {
 // Run starts the hub's processing loop. It should be run in a separate goroutine.
 func (h *Hub) Run() {
 	// ... (Run method remains the same as before) ...
-	log.Println("Hub started running")
 	for {
 		select {
 		case client := <-h.register:
@@ -119,7 +119,7 @@ func (h *Hub) Run() {
 				delete(h.clients, userID)
 			}
 			// Ensure map is fully cleared
-			h.clients = make(map[int64]map[*Client]bool)
+			h.clients = make(map[uuid.UUID]map[*Client]bool)
 			return // Exit the Run loop
 			// --- End Shutdown Case ---
 		}
@@ -147,7 +147,7 @@ func (h *Hub) Register(client *Client) {
 // Let's keep it internal for now, triggered by client.readPump sending to h.unregister.
 
 // SendToUser sends a message to all active connections for a specific user ID.
-func (h *Hub) SendToUser(userID int64, message []byte) {
+func (h *Hub) SendToUser(userID uuid.UUID, message []byte) {
 	// ... (SendToUser method remains the same as before) ...
 	msg := &UserMessage{
 		UserID:  userID,

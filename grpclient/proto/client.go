@@ -35,6 +35,7 @@ func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
 		reportsClient:       NewReportGeneratorClient(conn),
 	}, nil
 }
+
 func (c *GrpcClient) Close() error {
 	if c.conn != nil {
 		return c.conn.Close()

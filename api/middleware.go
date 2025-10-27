@@ -3,9 +3,10 @@ package api
 import (
 	"errors"
 	"fmt"
-	"maicare_go/token"
 	"net/http"
 	"strings"
+
+	"maicare_go/token"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,9 +26,8 @@ var (
 
 	ErrMissingToken = errors.New("missing access token in header and query parameter") // New error for clarity
 )
-var (
-	ErrUnauthorizedRole = errors.New("role is not authorized to access this resource")
-)
+
+var ErrUnauthorizedRole = errors.New("role is not authorized to access this resource")
 
 type RoleID int32
 

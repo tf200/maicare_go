@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/service/care"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -231,7 +232,6 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
-
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
@@ -257,7 +257,6 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
@@ -352,6 +351,7 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 		})
 	}
 }
+
 func TestUpdateCarePlanOverviewApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
@@ -1024,7 +1024,6 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 				require.Equal(t, carePlan.SuccessMetricID, response.Data.MetricID)
 				require.NotNil(t, response.Data.CurrentValue)
 				require.Equal(t, "5", *response.Data.CurrentValue)
-
 			},
 		},
 	}
@@ -1584,7 +1583,6 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanResourcesRequest{
-
 					ResourceDescription: "A comprehensive guide to nutrition for better health.",
 					IsObtained:          util.BoolPtr(true),
 					ObtainedDate:        util.TimePtr(time.Now()),

@@ -6,9 +6,10 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"maicare_go/bucket"
 	"mime/multipart"
 	"time"
+
+	"maicare_go/bucket"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )

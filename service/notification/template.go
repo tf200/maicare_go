@@ -92,7 +92,7 @@ type NewIncidentReportData struct {
 
 type NewScheduleNotificationData struct {
 	ScheduleID uuid.UUID `json:"schedule_id"`
-	CreatedBy  int64     `json:"created_by"`
+	CreatedBy  uuid.UUID `json:"created_by"`
 	StartTime  time.Time `json:"start_time"`
 	EndTime    time.Time `json:"end_time"`
 	Location   string    `json:"location"`

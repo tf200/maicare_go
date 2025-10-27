@@ -3,9 +3,10 @@ package bucket
 import (
 	"context"
 	"fmt"
-	"maicare_go/util"
 	"mime/multipart"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"

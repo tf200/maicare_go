@@ -5,7 +5,6 @@ import (
 )
 
 func TestGenerateIncidentPDF(t *testing.T) {
-
 	// config, err := util.LoadConfig("../")
 	// if err != nil {
 	// 	log.Fatalf("Could not load conf %v", err)
@@ -88,5 +87,4 @@ func TestGenerateIncidentPDF(t *testing.T) {
 	// pdfBytes, err := GenerateAndUploadIncidentPDF(context.Background(), mockIncident, testb2Client)
 	// require.NoError(t, err)
 	// require.NotEmpty(t, pdfBytes)
-
 }

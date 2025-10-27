@@ -70,7 +70,6 @@ func CalculateAccomodationInvoiceTotal(params AccommodationInvoiceParams) (*Acco
 	}
 
 	return nil, fmt.Errorf("unsupported price time unit: %s", params.PriceTimeUnit)
-
 }
 
 type AmbulanteInvoiceParams struct {
@@ -136,5 +135,4 @@ func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) (bo
 		return false, fmt.Errorf("total amount does not match the sum of invoice details: expected %.2f, got %.2f", totalAmount, calculatedTotal)
 	}
 	return true, nil
-
 }

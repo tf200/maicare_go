@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -30,7 +31,6 @@ func TestDischargeOverview(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, overview)
-
 }
 
 func TestTotalDischargeCount(t *testing.T) {

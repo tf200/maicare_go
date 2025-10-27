@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+
 	"maicare_go/async/aclient"
 	"maicare_go/service/deps"
 

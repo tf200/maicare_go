@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/jackc/pgx/v5/pgtype"

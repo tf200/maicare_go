@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/auth"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/auth"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

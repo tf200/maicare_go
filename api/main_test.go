@@ -3,6 +3,10 @@ package api
 import (
 	"context"
 	"log"
+	"net/http"
+	"os"
+	"testing"
+
 	asyncmocks "maicare_go/async/aclient/mocks"
 	bucketmocks "maicare_go/bucket/mocks"
 	db "maicare_go/db/sqlc"
@@ -14,26 +18,24 @@ import (
 	"maicare_go/token"
 
 	"maicare_go/util"
-	"net/http"
-	"os"
-	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/mock/gomock"
 )
 
-var testStore *db.Store
-var testServer *Server
-var testb2Client *bucketmocks.MockObjectStorageInterface
-var testasynqClient *asyncmocks.MockAsynqClientInterface
-var testGrpcClient *grpclient.GrpcClientInterface
-var testMockCtrl *gomock.Controller
+var (
+	testStore       *db.Store
+	testServer      *Server
+	testb2Client    *bucketmocks.MockObjectStorageInterface
+	testasynqClient *asyncmocks.MockAsynqClientInterface
+	testGrpcClient  *grpclient.GrpcClientInterface
+	testMockCtrl    *gomock.Controller
+)
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../")
 	if err != nil {
-		
 		log.Fatalf("Could not load conf %v", err)
 	}
 	gin.SetMode(gin.TestMode)

@@ -2,6 +2,8 @@ package employees
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // AddEducationToEmployeeProfileRequest represents the request for AddEducationToEmployeeProfile
@@ -16,7 +18,7 @@ type AddEducationToEmployeeProfileRequest struct {
 // AddEducationToEmployeeProfileResponse represents the response for AddEducationToEmployeeProfile
 type AddEducationToEmployeeProfileResponse struct {
 	ID              int64     `json:"id"`
-	EmployeeID      int64     `json:"employee_id"`
+	EmployeeID      uuid.UUID `json:"employee_id"`
 	InstitutionName string    `json:"institution_name"`
 	Degree          string    `json:"degree"`
 	FieldOfStudy    string    `json:"field_of_study"`
@@ -27,7 +29,7 @@ type AddEducationToEmployeeProfileResponse struct {
 // ListEmployeeEducationResponse represents the response for ListEmployeeEducation
 type ListEmployeeEducationResponse struct {
 	ID              int64     `json:"id"`
-	EmployeeID      int64     `json:"employee_id"`
+	EmployeeID      uuid.UUID `json:"employee_id"`
 	InstitutionName string    `json:"institution_name"`
 	Degree          string    `json:"degree"`
 	FieldOfStudy    string    `json:"field_of_study"`

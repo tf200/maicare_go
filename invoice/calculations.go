@@ -70,7 +70,6 @@ func CalculateAccomodationInvoiceTotal(params AccommodationInvoiceParams) (*Acco
 	}
 
 	return nil, fmt.Errorf("unsupported price time unit: %s", params.PriceTimeUnit)
-
 }
 
 type AmbulanteInvoiceParams struct {

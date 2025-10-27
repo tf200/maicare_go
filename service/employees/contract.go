@@ -3,23 +3,22 @@ package employees
 import (
 	"context"
 	"fmt"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-type UpdateContractHoursRequest struct{}
-
-type UpdateContractHoursResponse struct{}
-
-// func (server *employeeService) UpdateContractHours(req UpdateContractHoursRequest) (*UpdateContractHoursResponse, error) {
-// }
-
-func (s *employeeService) AddEmployeeContractDetails(req AddEmployeeContractDetailsRequest, employeeID int64, ctx context.Context) (*AddEmployeeContractDetailsResponse, error) {
+func (s *employeeService) AddEmployeeContractDetails(
+	req AddEmployeeContractDetailsRequest,
+	employeeID uuid.UUID,
+	ctx context.Context,
+) (*AddEmployeeContractDetailsResponse, error) {
 	arg := db.AddEmployeeContractDetailsParams{
 		ID:                employeeID,
 		ContractHours:     req.ContractHours,
@@ -29,20 +28,38 @@ func (s *employeeService) AddEmployeeContractDetails(req AddEmployeeContractDeta
 	}
 	contractDetails, err := s.Store.AddEmployeeContractDetails(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeContractDetails", "Failed to add contract details to employee profile", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeContractDetails",
+			"Failed to add contract details to employee profile",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to add contract details: %w", err)
 	}
 
 	user, err := s.Store.GetUserByID(ctx, contractDetails.UserID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeContractDetails", "Failed to get user by ID", zap.Error(err), zap.Int64("UserID", contractDetails.UserID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeContractDetails",
+			"Failed to get user by ID",
+			zap.Error(err),
+			zap.String("UserID", contractDetails.UserID.String()),
+		)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	password := util.RandomString(8)
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeContractDetails", "Failed to hash password", zap.Error(err), zap.Int64("UserID", user.ID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeContractDetails",
+			"Failed to hash password",
+			zap.Error(err),
+			zap.String("UserID", user.ID.String()),
+		)
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
@@ -51,7 +68,13 @@ func (s *employeeService) AddEmployeeContractDetails(req AddEmployeeContractDeta
 		Password: hashedPassword,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeContractDetails", "Failed to update password", zap.Error(err), zap.Int64("UserID", user.ID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeContractDetails",
+			"Failed to update password",
+			zap.Error(err),
+			zap.String("UserID", user.ID.String()),
+		)
 		return nil, fmt.Errorf("failed to update password: %w", err)
 	}
 
@@ -62,7 +85,12 @@ func (s *employeeService) AddEmployeeContractDetails(req AddEmployeeContractDeta
 		UserPassword: password,
 	}, ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeContractDetails", "Failed to enqueue email delivery", zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeContractDetails",
+			"Failed to enqueue email delivery",
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
 
@@ -74,14 +102,28 @@ func (s *employeeService) AddEmployeeContractDetails(req AddEmployeeContractDeta
 		ContractRate:      contractDetails.ContractRate,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddEmployeeContractDetails", "Successfully added contract details to employee profile", zap.Int64("EmployeeID", employeeID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"AddEmployeeContractDetails",
+		"Successfully added contract details to employee profile",
+		zap.String("EmployeeID", employeeID.String()),
+	)
 	return res, nil
 }
 
-func (s *employeeService) GetEmployeeContractDetails(employeeID int64, ctx context.Context) (*GetEmployeeContractDetailsResponse, error) {
+func (s *employeeService) GetEmployeeContractDetails(
+	employeeID uuid.UUID,
+	ctx context.Context,
+) (*GetEmployeeContractDetailsResponse, error) {
 	contractDetails, err := s.Store.GetEmployeeContractDetails(ctx, employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetEmployeeContractDetails", "Failed to get employee contract details", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"GetEmployeeContractDetails",
+			"Failed to get employee contract details",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to get contract details: %w", err)
 	}
 
@@ -94,6 +136,11 @@ func (s *employeeService) GetEmployeeContractDetails(employeeID int64, ctx conte
 		IsSubcontractor:   contractDetails.IsSubcontractor,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetEmployeeContractDetails", "Successfully retrieved employee contract details", zap.Int64("EmployeeID", employeeID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"GetEmployeeContractDetails",
+		"Successfully retrieved employee contract details",
+		zap.String("EmployeeID", employeeID.String()),
+	)
 	return res, nil
 }

@@ -4,18 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/service/notification"
 	"maicare_go/util"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *scheduleService) CreateSchedule(ctx context.Context, employeeID int64, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
+func (s *scheduleService) CreateSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
 	res := &CreateScheduleResponse{}
 	var err error
 	if req.IsCustom {
@@ -119,7 +120,6 @@ func (s *scheduleService) GetDailySchedulesByLocation(ctx context.Context, locat
 			// If shift name is provided, add it to the shift
 			shift.ShiftName = schedule.ShiftName
 		} else {
-
 			shift.ShiftName = util.StringPtr("Custom Shift")
 		}
 		shifts = append(shifts, shift)
@@ -157,7 +157,7 @@ func (s *scheduleService) GetScheduleByID(ctx context.Context, scheduleID uuid.U
 	}, nil
 }
 
-func (s *scheduleService) UpdateSchedule(ctx context.Context, scheduleID uuid.UUID, updaterEmployeeID int64, req *UpdateScheduleRequest) (*UpdateScheduleResponse, error) {
+func (s *scheduleService) UpdateSchedule(ctx context.Context, scheduleID uuid.UUID, updaterEmployeeID uuid.UUID, req *UpdateScheduleRequest) (*UpdateScheduleResponse, error) {
 	// Get existing schedule
 	existingSchedule, err := s.Store.GetScheduleById(ctx, scheduleID)
 	if err != nil {
@@ -224,7 +224,7 @@ func (s *scheduleService) validatePresetSchedule(req *CreateScheduleRequest) err
 	return nil
 }
 
-func (s *scheduleService) createCustomSchedule(ctx context.Context, employeeID int64, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
+func (s *scheduleService) createCustomSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
 	err := s.validateCustomSchedule(req)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "createCustomSchedule", "Custom schedule validation failed", zap.Error(err))
@@ -259,7 +259,7 @@ func (s *scheduleService) createCustomSchedule(ctx context.Context, employeeID i
 	}, nil
 }
 
-func (s *scheduleService) createPresetSchedule(ctx context.Context, employeeID int64, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
+func (s *scheduleService) createPresetSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
 	err := s.validatePresetSchedule(req)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "createPresetSchedule", "Preset schedule validation failed", zap.Error(err))
@@ -333,7 +333,7 @@ func (s *scheduleService) createPresetSchedule(ctx context.Context, employeeID i
 	}, nil
 }
 
-func (s *scheduleService) sendNotificationForNewSchedule(ctx context.Context, scheduleID uuid.UUID, creatorID, recipientID int64, startTime, endTime time.Time, locationName string) {
+func (s *scheduleService) sendNotificationForNewSchedule(ctx context.Context, scheduleID uuid.UUID, creatorID, recipientID uuid.UUID, startTime, endTime time.Time, locationName string) {
 	notifData := &notification.NewScheduleNotificationData{
 		ScheduleID: scheduleID,
 		CreatedBy:  creatorID,
@@ -342,7 +342,7 @@ func (s *scheduleService) sendNotificationForNewSchedule(ctx context.Context, sc
 		Location:   locationName,
 	}
 	err := s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
-		RecipientUserIDs: []int64{recipientID},
+		RecipientUserIDs: []uuid.UUID{recipientID},
 		Type:             notification.TypeNewScheduleNotification,
 		Data:             notification.NotificationData{NewScheduleNotification: notifData},
 		CreatedAt:        time.Now(),
@@ -567,7 +567,7 @@ func (s *scheduleService) validateCustomScheduleUpdate(req *UpdateScheduleReques
 	return nil
 }
 
-func (s *scheduleService) sendNotificationForUpdatedSchedule(ctx context.Context, scheduleID uuid.UUID, updaterEmployeeID, recipientEmployeeID int64, startTime, endTime time.Time, locationName string) {
+func (s *scheduleService) sendNotificationForUpdatedSchedule(ctx context.Context, scheduleID uuid.UUID, updaterEmployeeID, recipientEmployeeID uuid.UUID, startTime, endTime time.Time, locationName string) {
 	notifData := &notification.NewScheduleNotificationData{
 		ScheduleID: scheduleID,
 		CreatedBy:  updaterEmployeeID,
@@ -576,7 +576,7 @@ func (s *scheduleService) sendNotificationForUpdatedSchedule(ctx context.Context
 		Location:   locationName,
 	}
 	err := s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
-		RecipientUserIDs: []int64{recipientEmployeeID},
+		RecipientUserIDs: []uuid.UUID{recipientEmployeeID},
 		Type:             notification.TypeNewScheduleNotification,
 		Data:             notification.NotificationData{NewScheduleNotification: notifData},
 		CreatedAt:        time.Now(),

@@ -2,10 +2,11 @@ package api
 
 import (
 	"log"
-	_ "maicare_go/pagination" // for swagger
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
+
+	_ "maicare_go/pagination" // for swagger
+	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 )
@@ -66,7 +67,6 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(clientEmergencyContact, "Client emergency contact created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // ListClientEmergencyContactsApi lists all client emergency contacts
@@ -366,5 +366,4 @@ func (server *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(result, "Client related emails fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

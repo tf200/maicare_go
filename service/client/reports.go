@@ -3,11 +3,12 @@ package clientp
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/logger"
 	"maicare_go/pagination"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -181,7 +182,6 @@ func (s *clientService) GenerateAutoReports(ctx context.Context, req *GenerateAu
 	return &GenerateAutoReportsResponse{
 		Report: autoRep.GetReport(),
 	}, nil
-
 }
 
 func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest, reportID int64) (*ConfirmProgressReportResponse, error) {

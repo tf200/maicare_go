@@ -118,7 +118,6 @@ func TestCreateLocationApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestUpdateLocationApi(t *testing.T) {
@@ -171,7 +170,6 @@ func TestUpdateLocationApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestDeleteLocationApi(t *testing.T) {

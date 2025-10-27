@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/service/schedule"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/service/schedule"
+	"maicare_go/token"
+	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -127,11 +128,9 @@ func TestCreateScheduleApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
-
 	employee, _ := createRandomEmployee(t)
 	createdSchedule := createRandomSchedule(t, employee.ID)
 

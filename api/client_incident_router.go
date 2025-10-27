@@ -16,5 +16,4 @@ func (server *Server) setupClientIncidentRoutes(baseRouter *gin.RouterGroup) {
 		ClientIncident.GET("/:id/incidents/:incident_id/file", server.RBACMiddleware("CLIENT.INCIDENT.VIEW"), server.GenerateIncidentFileApi)
 		ClientIncident.PUT("/:id/incidents/:incident_id/confirm", server.RBACMiddleware("CLIENT.INCIDENT.CONFIRM"), server.ConfirmIncidentApi)
 	}
-
 }

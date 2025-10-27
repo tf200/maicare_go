@@ -57,12 +57,10 @@ func (store *Store) SetClientProfilePictureTx(ctx context.Context, arg SetClient
 	var result SetClientProfilePictureTxResult
 
 	err := store.ExecTx(ctx, func(q *Queries) error {
-
 		attachement, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
 			Uuid:   arg.AttachmentID,
 			IsUsed: true,
 		})
-
 		if err != nil {
 			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
 		}

@@ -2,6 +2,7 @@ package organization
 
 import (
 	"context"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/util"

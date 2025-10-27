@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/util"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
@@ -35,6 +36,7 @@ func createRandomLocation(t *testing.T) *db.Location {
 	require.NotZero(t, location.ID)
 	return &location
 }
+
 func CreateRandomUser(t *testing.T) *db.CustomUser {
 	hashedPassword, err := util.HashPassword("t2aha000")
 	require.NoError(t, err)
@@ -128,6 +130,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 
 	return employee, user
 }
+
 func createRandomSenders(t *testing.T) db.Sender {
 	arg := db.CreateSenderParams{
 		Types:        "main_provider",
@@ -335,5 +338,4 @@ func TestGenerateInvoice(t *testing.T) {
 // To do other methods
 
 func TestCreatePaymentApi(t *testing.T) {
-
 }

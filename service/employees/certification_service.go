@@ -3,18 +3,30 @@ package employees
 import (
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/logger"
 	"time"
 
+	db "maicare_go/db/sqlc"
+	"maicare_go/logger"
+
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *employeeService) AddEmployeeCertification(req AddEmployeeCertificationRequest, employeeID int64, ctx context.Context) (*AddEmployeeCertificationResponse, error) {
+func (s *employeeService) AddEmployeeCertification(
+	req AddEmployeeCertificationRequest,
+	employeeID uuid.UUID,
+	ctx context.Context,
+) (*AddEmployeeCertificationResponse, error) {
 	parsedDate, err := time.Parse("2006-01-02", req.DateIssued)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeCertification", "Failed to parse date issued", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeCertification",
+			"Failed to parse date issued",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("invalid date issued format: %w", err)
 	}
 
@@ -26,7 +38,13 @@ func (s *employeeService) AddEmployeeCertification(req AddEmployeeCertificationR
 	}
 	certification, err := s.Store.AddEmployeeCertification(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddEmployeeCertification", "Failed to add certification to employee profile", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"AddEmployeeCertification",
+			"Failed to add certification to employee profile",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to add certification: %w", err)
 	}
 
@@ -39,14 +57,29 @@ func (s *employeeService) AddEmployeeCertification(req AddEmployeeCertificationR
 		CreatedAt:  certification.CreatedAt.Time,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddEmployeeCertification", "Successfully added certification to employee profile", zap.Int64("EmployeeID", employeeID), zap.Int64("CertificationID", certification.ID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"AddEmployeeCertification",
+		"Successfully added certification to employee profile",
+		zap.String("EmployeeID", employeeID.String()),
+		zap.Int64("CertificationID", certification.ID),
+	)
 	return res, nil
 }
 
-func (s *employeeService) ListEmployeeCertification(employeeID int64, ctx context.Context) ([]ListEmployeeCertificationResponse, error) {
+func (s *employeeService) ListEmployeeCertification(
+	employeeID uuid.UUID,
+	ctx context.Context,
+) ([]ListEmployeeCertificationResponse, error) {
 	certifications, err := s.Store.ListEmployeeCertifications(ctx, employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListEmployeeCertification", "Failed to list employee certifications", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"ListEmployeeCertification",
+			"Failed to list employee certifications",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to list certifications: %w", err)
 	}
 
@@ -61,29 +94,54 @@ func (s *employeeService) ListEmployeeCertification(employeeID int64, ctx contex
 		}
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListEmployeeCertification", "Successfully listed employee certifications", zap.Int64("EmployeeID", employeeID), zap.Int("Count", len(certifications)))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"ListEmployeeCertification",
+		"Successfully listed employee certifications",
+		zap.String("EmployeeID", employeeID.String()),
+		zap.Int("Count", len(certifications)),
+	)
 	return responseCertifications, nil
 }
 
-func (s *employeeService) UpdateEmployeeCertification(req UpdateEmployeeCertificationRequest, certificationID int64, ctx context.Context) (*UpdateEmployeeCertificationResponse, error) {
+func (s *employeeService) UpdateEmployeeCertification(
+	req UpdateEmployeeCertificationRequest,
+	certificationID int64,
+	ctx context.Context,
+) (*UpdateEmployeeCertificationResponse, error) {
 	var parsedDate time.Time
 	var err error
 	if req.DateIssued != nil {
 		parsedDate, err = time.Parse("2006-01-02", *req.DateIssued)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeCertification", "Failed to parse date issued", zap.Error(err), zap.Int64("CertificationID", certificationID))
+			s.Logger.LogBusinessEvent(
+				logger.LogLevelError,
+				"UpdateEmployeeCertification",
+				"Failed to parse date issued",
+				zap.Error(err),
+				zap.Int64("CertificationID", certificationID),
+			)
 			return nil, fmt.Errorf("invalid date issued format: %w", err)
 		}
 	}
 
-	certification, err := s.Store.UpdateEmployeeCertification(ctx, db.UpdateEmployeeCertificationParams{
-		ID:         certificationID,
-		Name:       req.Name,
-		IssuedBy:   req.IssuedBy,
-		DateIssued: pgtype.Date{Time: parsedDate, Valid: true},
-	})
+	certification, err := s.Store.UpdateEmployeeCertification(
+		ctx,
+		db.UpdateEmployeeCertificationParams{
+			ID:         certificationID,
+			Name:       req.Name,
+			IssuedBy:   req.IssuedBy,
+			DateIssued: pgtype.Date{Time: parsedDate, Valid: true},
+		},
+	)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeCertification", "Failed to update employee certification", zap.Error(err), zap.Int64("CertificationID", certificationID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"UpdateEmployeeCertification",
+			"Failed to update employee certification",
+			zap.Error(err),
+			zap.Int64("CertificationID", certificationID),
+		)
 		return nil, fmt.Errorf("failed to update certification: %w", err)
 	}
 
@@ -96,14 +154,28 @@ func (s *employeeService) UpdateEmployeeCertification(req UpdateEmployeeCertific
 		CreatedAt:  certification.CreatedAt.Time,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateEmployeeCertification", "Successfully updated employee certification", zap.Int64("CertificationID", certificationID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"UpdateEmployeeCertification",
+		"Successfully updated employee certification",
+		zap.Int64("CertificationID", certificationID),
+	)
 	return res, nil
 }
 
-func (s *employeeService) DeleteEmployeeCertification(certificationID int64, ctx context.Context) (*DeleteEmployeeCertificationResponse, error) {
+func (s *employeeService) DeleteEmployeeCertification(
+	certificationID int64,
+	ctx context.Context,
+) (*DeleteEmployeeCertificationResponse, error) {
 	certification, err := s.Store.DeleteEmployeeCertification(ctx, certificationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteEmployeeCertification", "Failed to delete employee certification", zap.Error(err), zap.Int64("CertificationID", certificationID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"DeleteEmployeeCertification",
+			"Failed to delete employee certification",
+			zap.Error(err),
+			zap.Int64("CertificationID", certificationID),
+		)
 		return nil, fmt.Errorf("failed to delete certification: %w", err)
 	}
 
@@ -116,6 +188,11 @@ func (s *employeeService) DeleteEmployeeCertification(certificationID int64, ctx
 		CreatedAt:  certification.CreatedAt.Time,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "DeleteEmployeeCertification", "Successfully deleted employee certification", zap.Int64("CertificationID", certificationID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"DeleteEmployeeCertification",
+		"Successfully deleted employee certification",
+		zap.Int64("CertificationID", certificationID),
+	)
 	return res, nil
 }

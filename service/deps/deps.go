@@ -2,6 +2,8 @@ package deps
 
 import (
 	"context"
+	"time"
+
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
@@ -10,7 +12,6 @@ import (
 	"maicare_go/service/pdf"
 	"maicare_go/token"
 	"maicare_go/util"
-	"time"
 )
 
 type ServiceDependencies struct {

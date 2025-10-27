@@ -56,3 +56,5 @@ func (s *AuditService) CreateAuditRecord(ctx context.Context, record *AuditRecor
 
 func (s *AuditService) GetLatestAuditRecordHash(ctx context.Context, subjectID int64) (string, error) {
 	return s.Store.GetLatestAuditHashBySubject(ctx, subjectID)
+
+	

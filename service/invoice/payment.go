@@ -3,11 +3,13 @@ package invoice
 import (
 	"context"
 	"fmt"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -16,7 +18,7 @@ const (
 	PAYMENT_TOLERANCE float64 = 50
 )
 
-func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req CreatePaymentRequest, employeeID int64) (*CreatePaymentResponse, error) {
+func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req CreatePaymentRequest, employeeID uuid.UUID) (*CreatePaymentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreatePayment", "Failed to begin transaction", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -161,7 +163,7 @@ func (s *invoiceService) GetPaymentByID(ctx context.Context, paymentID int64) (*
 	return response, nil
 }
 
-func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID, employeeID, paymentID int64, req UpdatePaymentRequest) (*UpdatePaymentResponse, error) {
+func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, employeeID uuid.UUID, paymentID int64, req UpdatePaymentRequest) (*UpdatePaymentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdatePayment", "Failed to begin transaction", zap.Error(err), zap.Int64("payment_id", paymentID))
@@ -264,7 +266,7 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID, employeeI
 	return response, nil
 }
 
-func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID, employeeID int64) (*DeletePaymentResponse, error) {
+func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID int64, employeeID uuid.UUID) (*DeletePaymentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeletePayment", "Failed to begin transaction", zap.Error(err), zap.Int64("payment_id", paymentID))
@@ -367,7 +369,6 @@ func DetermineInvoiceStatus(invoiceTotal, totalPaid float64) (InvoiceStatus, err
 	}
 
 	return "", fmt.Errorf("could not determine invoice status for totalPaid: %f, invoiceTotal: %f", totalPaid, invoiceTotal)
-
 }
 
 func (s *invoiceService) calculatePaymentCompletionPercentage(ctx context.Context, totalAmount float64, invoiceID int64) float64 {

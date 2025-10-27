@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	invserv "maicare_go/service/invoice"
 	"net/http"
 	"strconv"
+
+	invserv "maicare_go/service/invoice"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -65,7 +66,6 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 
 	res := SuccessResponse(inv, "Invoice generated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary Credit Invoice
@@ -124,7 +124,6 @@ func (server *Server) ListInvoicesApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(pag, "Invoices retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary Get Invoice by ID
@@ -149,7 +148,6 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Invoice retrieved successfully"))
-
 }
 
 // @Summary Update Invoice
@@ -187,7 +185,6 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Invoice updated successfully"))
-
 }
 
 // DeleteInvoiceApi handles the deletion of an invoice by its ID.
@@ -201,7 +198,6 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 // @Router /invoices/{id} [delete]
 func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
 	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
-
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -241,7 +237,6 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Invoice Pdf generated")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // GetInvoiceTemplateItemsApi handles the retrieval of all invoice template items.
@@ -260,7 +255,6 @@ func (server *Server) GetInvoiceTemplateItemsApi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Template items retrieved successfully"))
-
 }
 
 // SendInvoiceReminderApi handles sending a reminder for a specific invoice.
@@ -317,7 +311,6 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse(logs, "Audit logs retrieved successfully"))
-
 }
 
 // ================== Payment Api ==================
@@ -404,7 +397,6 @@ func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment retrieved successfully"))
-
 }
 
 // @Summary Update Payment
@@ -493,5 +485,4 @@ func (server *Server) DeletePaymentApi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Payment deleted successfully"))
-
 }

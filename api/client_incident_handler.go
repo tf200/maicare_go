@@ -3,10 +3,11 @@ package api
 import (
 	"errors"
 	"fmt"
-	_ "maicare_go/pagination" // for swagger
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
+
+	_ "maicare_go/pagination" // for swagger
+	clientp "maicare_go/service/client"
 
 	"go.uber.org/zap"
 
@@ -49,7 +50,6 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 	res := SuccessResponse(incident, "Incident created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // ListIncidentsApi lists all incidents
@@ -149,7 +149,6 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	res := SuccessResponse(result, "Incident updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // DeleteIncidentApi deletes an incident

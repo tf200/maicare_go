@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/care"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/care"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,7 +21,6 @@ import (
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /maturity_matrix [get]
 func (server *Server) ListMaturityMatrixApi(ctx *gin.Context) {
-
 	result, err := server.businessService.CarePlanService.ListCarePlanTopics(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -111,7 +111,6 @@ func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 	res := SuccessResponse(result, "Client maturity matrix assessments retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // ============================ CarePlan Overview ===========================

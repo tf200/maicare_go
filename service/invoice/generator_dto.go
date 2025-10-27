@@ -1,8 +1,9 @@
 package invoice
 
 import (
-	"maicare_go/util"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 )
@@ -21,7 +22,7 @@ type InvoiceDetails struct {
 }
 
 type GenerateInvoiceRequest struct {
-	ClientID  int64     `json:"client_id" binding:"required"`
+	ClientID  uuid.UUID `json:"client_id" binding:"required"`
 	StartDate time.Time `json:"start_date" binding:"required"`
 	EndDate   time.Time `json:"end_date" binding:"required"`
 }
@@ -37,7 +38,7 @@ type GenerateInvoiceResponse struct {
 	TotalAmount     float64          `json:"total_amount"`
 	PdfAttachmentID *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject  `json:"extra_content"`
-	ClientID        int64            `json:"client_id"`
+	ClientID        uuid.UUID        `json:"client_id"`
 	SenderID        *int64           `json:"sender_id"`
 	UpdatedAt       time.Time        `json:"updated_at"`
 	CreatedAt       time.Time        `json:"created_at"`

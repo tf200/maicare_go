@@ -1,10 +1,11 @@
 package api
 
 import (
-	_ "maicare_go/pagination" // for swagger documentation
-	"maicare_go/service/contract"
 	"net/http"
 	"strconv"
+
+	_ "maicare_go/pagination" // for swagger documentation
+	"maicare_go/service/contract"
 
 	"github.com/gin-gonic/gin"
 )

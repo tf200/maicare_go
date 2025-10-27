@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/service/auth"
-	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/service/auth"
+	"maicare_go/token"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
@@ -60,7 +61,6 @@ func TestCreateRoleApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[auth.CreateRoleResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -103,7 +103,6 @@ func TestListRolesApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[[]auth.ListRolesApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -148,7 +147,6 @@ func TestListAllRolePermissionsApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[[]auth.ListAllRolePermissionsApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -199,7 +197,6 @@ func TestAddPermissionsToRoleApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				t.Log(recorder.Body.String())
 				var response Response[auth.AddPermissionsToRoleResponse]
@@ -243,7 +240,6 @@ func TestListAllPermissionsApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[[]auth.ListAllPermissionsApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -295,7 +291,6 @@ func TestAssignRoleToEmployeeApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[auth.AssignRoleToEmployeeApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -341,7 +336,6 @@ func TestListUserRolesAndPermissionsApi(t *testing.T) {
 				return request, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-
 				require.Equal(t, http.StatusOK, recorder.Code)
 				var response Response[auth.ListUserRolesAndPermissionsApiResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)

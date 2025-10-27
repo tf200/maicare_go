@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
@@ -12,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *notificationService) ListNotifications(ctx context.Context, req *ListNotificationsRequest, userID int64) ([]ListNotificationsResponse, error) {
+func (s *notificationService) ListNotifications(ctx context.Context, req *ListNotificationsRequest, userID uuid.UUID) ([]ListNotificationsResponse, error) {
 	params := req.GetParams()
 	notifs, err := s.Store.ListNotifications(ctx, db.ListNotificationsParams{
 		UserID: userID,
@@ -20,7 +21,7 @@ func (s *notificationService) ListNotifications(ctx context.Context, req *ListNo
 		Offset: params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListNotifications", "Failed to list notifications", zap.Error(err), zap.Int64("user_id", userID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListNotifications", "Failed to list notifications", zap.Error(err), zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to list notifications: %w", err)
 	}
 
@@ -41,11 +42,11 @@ func (s *notificationService) ListNotifications(ctx context.Context, req *ListNo
 			CreatedAT:        notif.CreatedAt.Time,
 		})
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListNotifications", "Successfully retrieved notifications", zap.Int("count", len(response)), zap.Int64("user_id", userID))
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListNotifications", "Successfully retrieved notifications", zap.Int("count", len(response)), zap.String("user_id", userID.String()))
 	return response, nil
 }
 
-func (s *notificationService) MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID, userID int64) (*MarkNotificationAsReadResponse, error) {
+func (s *notificationService) MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID, userID uuid.UUID) (*MarkNotificationAsReadResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "MarkNotificationAsRead", "Failed to begin transaction", zap.Error(err))
@@ -65,7 +66,7 @@ func (s *notificationService) MarkNotificationAsRead(ctx context.Context, notifi
 	}
 
 	if updatedNotif.UserID != userID {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "MarkNotificationAsRead", "Notification does not belong to user", zap.Int64("user_id", userID), zap.String("notification_id", notificationID.String()))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "MarkNotificationAsRead", "Notification does not belong to user", zap.String("user_id", userID.String()), zap.String("notification_id", notificationID.String()))
 		return nil, fmt.Errorf("notification does not belong to user")
 	}
 
@@ -80,6 +81,6 @@ func (s *notificationService) MarkNotificationAsRead(ctx context.Context, notifi
 		IsRead:           updatedNotif.IsRead,
 		CreatedAT:        updatedNotif.CreatedAt.Time,
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "MarkNotificationAsRead", "Notification marked as read successfully", zap.String("notification_id", notificationID.String()), zap.Int64("user_id", userID))
+	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "MarkNotificationAsRead", "Notification marked as read successfully", zap.String("notification_id", notificationID.String()), zap.String("user_id", userID.String()))
 	return &response, nil
 }

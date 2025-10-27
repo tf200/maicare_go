@@ -3,14 +3,15 @@ package api
 import (
 	"bytes"
 	"context"
-	db "maicare_go/db/sqlc"
-	invserv "maicare_go/service/invoice"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	invserv "maicare_go/service/invoice"
+	"maicare_go/token"
+	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -165,7 +166,6 @@ func TestCreateInvoiceApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGenerateInvoiceApi(t *testing.T) {
@@ -204,7 +204,6 @@ func TestGenerateInvoiceApi(t *testing.T) {
 				require.NotEmpty(t, response.Data)
 				require.NotEmpty(t, response.Data.InvoiceNumber)
 				require.NotEmpty(t, response.Data.InvoiceDetails)
-
 			},
 		},
 	}
@@ -220,5 +219,4 @@ func TestGenerateInvoiceApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }

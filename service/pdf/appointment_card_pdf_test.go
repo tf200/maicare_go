@@ -5,7 +5,6 @@ import (
 )
 
 func TestGenerateAppointmentcardPDF(t *testing.T) {
-
 	// config, err := util.LoadConfig("../")
 	// if err != nil {
 	// 	log.Fatalf("Could not load conf %v", err)
@@ -74,5 +73,4 @@ func TestGenerateAppointmentcardPDF(t *testing.T) {
 	// pdfBytes, err := GenerateAndUploadAppointmentCardPDF(context.Background(), testCard, testb2Client)
 	// require.NoError(t, err)
 	// require.NotEmpty(t, pdfBytes)
-
 }

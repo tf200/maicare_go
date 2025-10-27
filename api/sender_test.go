@@ -92,6 +92,7 @@ func createRandomSender(t *testing.T) db.Sender {
 
 	return createdSender
 }
+
 func TestCreateSenderApi(t *testing.T) {
 	userID := rand.Int63()
 	testCases := []struct {
@@ -450,7 +451,6 @@ func TestUpdateSenderApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGetSenderByIdAPI(t *testing.T) {
@@ -495,5 +495,4 @@ func TestGetSenderByIdAPI(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }

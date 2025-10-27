@@ -27,7 +27,6 @@ func BoolPtr(b bool) *bool {
 
 func Float64Ptr(f float64) *float64 {
 	return &f
-
 }
 
 func TimePtr(t time.Time) *time.Time {
@@ -105,6 +104,7 @@ func DerefString(s *string) string {
 	}
 	return *s
 }
+
 func DerefFloat64(f *float64) float64 {
 	if f == nil {
 		return 0
@@ -126,6 +126,7 @@ func DerefInt64(i *int64) int64 {
 	}
 	return *i
 }
+
 func DerefInt32(i *int32) int32 {
 	if i == nil {
 		return 0

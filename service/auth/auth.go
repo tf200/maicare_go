@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/token"
 	"maicare_go/util"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -20,8 +21,8 @@ import (
 // Methods and types for AuthService
 
 func (s *authService) Login(req LoginUserRequest, clientIP string,
-	userAgent string, ctx context.Context) (*LoginUserResponse, error) {
-
+	userAgent string, ctx context.Context,
+) (*LoginUserResponse, error) {
 	email := strings.ToLower(req.Email)
 
 	user, err := s.Store.GetUserByEmail(ctx, email)

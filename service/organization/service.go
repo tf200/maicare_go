@@ -2,6 +2,7 @@ package organization
 
 import (
 	"context"
+
 	"maicare_go/service/deps"
 )
 
@@ -26,7 +27,6 @@ type OrganizationService interface {
 	UpdateShift(ctx context.Context, shiftID int64, req *UpdateShiftApiRequest) (*UpdateShiftApiResponse, error)
 	DeleteShift(ctx context.Context, shiftID int64) error
 	ListShiftsByLocationID(ctx context.Context, locationID int64) ([]ListShiftsByLocationIDResponse, error)
-	
 }
 
 type organizationService struct {

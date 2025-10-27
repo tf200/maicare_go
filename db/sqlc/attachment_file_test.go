@@ -10,7 +10,6 @@ import (
 )
 
 func createRandomAttachmentFile(t *testing.T) AttachmentFile {
-
 	tagvalue := "test"
 	arg := CreateAttachmentParams{
 		Name: util.RandomString(5),
@@ -34,7 +33,6 @@ func createRandomAttachmentFile(t *testing.T) AttachmentFile {
 }
 
 func createRandomAttachmentImage(t *testing.T) AttachmentFile {
-
 	tagvalue := "test"
 	arg := CreateAttachmentParams{
 		Name: util.RandomString(5),
@@ -73,7 +71,6 @@ func TestGetAttachmentById(t *testing.T) {
 	require.Equal(t, attachment1.Tag, attachment2.Tag)
 	require.Equal(t, attachment1.Uuid, attachment2.Uuid)
 	require.Equal(t, attachment1.Created, attachment2.Created)
-
 }
 
 func TestDeleteAttachement(t *testing.T) {

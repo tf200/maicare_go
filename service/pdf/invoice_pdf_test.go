@@ -5,7 +5,6 @@ import (
 )
 
 func TestGenerateInvoicePDF(t *testing.T) {
-
 	// config, err := util.LoadConfig("../")
 	// if err != nil {
 	// 	log.Fatalf("Could not load conf %v", err)
@@ -53,5 +52,4 @@ func TestGenerateInvoicePDF(t *testing.T) {
 	// pdfBytes, _, err := GenerateAndUploadInvoicePDF(context.Background(), data, testb2Client)
 	// require.NoError(t, err)
 	// require.NotEmpty(t, pdfBytes)
-
 }

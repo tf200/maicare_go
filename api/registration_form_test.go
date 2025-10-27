@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
@@ -93,7 +94,6 @@ func createRandomRegistrationForm(t *testing.T) db.RegistrationForm {
 }
 
 func TestCreateRegistrationFormApi(t *testing.T) {
-
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -204,7 +204,6 @@ func TestCreateRegistrationFormApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListRegistrationFormsApi(t *testing.T) {

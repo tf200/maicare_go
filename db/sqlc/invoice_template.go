@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type Table[T any] struct {
@@ -38,7 +40,7 @@ var (
 )
 
 type FetchQueryData struct {
-	ClientID   int64
+	ClientID   uuid.UUID
 	ContractID int64
 	SenderID   int64
 }
@@ -46,7 +48,6 @@ type FetchQueryData struct {
 func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQueryData) (map[string]string, error) {
 	extraContent := make(map[string]string)
 	templItemsIds, err := store.GetSenderInvoiceTemplate(ctx, data.SenderID)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no invoice template found for sender ID %d", data.SenderID)
@@ -106,7 +107,6 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 				}
 			}
 		}
-
 	}
 
 	// If there are no items for the given template items, return nil

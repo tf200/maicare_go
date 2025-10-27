@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/service/contract"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -21,7 +22,6 @@ import (
 )
 
 func createRandomContractType(t *testing.T) db.ContractType {
-
 	contractType, err := testStore.CreateContractType(context.Background(), "Test Contract Type")
 	require.NoError(t, err)
 	require.NotEmpty(t, contractType)
@@ -141,7 +141,6 @@ var (
 )
 
 func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Contract {
-
 	contractType := createRandomContractType(t)
 	attachment := createRandomAttachmentFile(t)
 
@@ -188,7 +187,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 func TestCreateClientContractApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	contractType := createRandomContractType(t)
-	
+
 	attachment := createRandomAttachmentFile(t)
 	_, user := createRandomEmployee(t)
 
@@ -284,7 +283,6 @@ func TestListClientContractsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				url := fmt.Sprintf("/clients/%d/contracts?page=1&page_size=5", client.ID)
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
@@ -390,7 +388,6 @@ func TestListContractsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5", nil)
 				require.NoError(t, err)
 				return request, nil
@@ -411,7 +408,6 @@ func TestListContractsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5&status=draft", nil)
 				require.NoError(t, err)
 				return request, nil

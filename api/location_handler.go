@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/organization"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/organization"
 
 	"github.com/gin-gonic/gin"
 )
@@ -106,7 +107,6 @@ func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(organisation, "Organisation counts retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary Update an organisation

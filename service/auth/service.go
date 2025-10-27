@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+
 	"maicare_go/service/deps"
 
 	"github.com/google/uuid"

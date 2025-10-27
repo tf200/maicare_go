@@ -6,10 +6,11 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"maicare_go/bucket"
 	"mime/multipart"
 	"strings"
 	"time"
+
+	"maicare_go/bucket"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/google/uuid"
@@ -69,7 +70,6 @@ type IncidentReportData struct {
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
 func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
-
 	funcMap := template.FuncMap{
 		"lower": strings.ToLower,
 		"now": func() time.Time { // You might also need a 'now' function if it's not predefined

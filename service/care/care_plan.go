@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/logger"
 	"maicare_go/pagination"
 	"maicare_go/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -127,7 +128,6 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 		ClientID:   clientID,
 		CarePlanID: carePlanID,
 	}, nil
-
 }
 
 func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID uuid.UUID, req *ListClientCarePlansRequest) (*pagination.Response[ListClientCarePlansResponse], error) {
@@ -433,7 +433,6 @@ func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlan
 		default:
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GetCarePlanInterventions", "Unknown intervention frequency", zap.String("frequency", intervention.Frequency))
 		}
-
 	}
 
 	return response, nil
@@ -567,7 +566,6 @@ func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int
 		RiskLevel:          riskFactor.RiskLevel,
 	}
 	return response, nil
-
 }
 
 func (s *carePlanService) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]GetCarePlanRisksResponse, error) {
@@ -640,6 +638,7 @@ func (s *carePlanService) CreateCarePlanSupportNetwork(ctx context.Context, care
 	}
 	return response, nil
 }
+
 func (s *carePlanService) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int64) ([]GetCarePlanSupportNetworkResponse, error) {
 	supportNetworks, err := s.Store.GetCarePlanSupportNetwork(ctx, carePlanID)
 	if err != nil {
@@ -851,7 +850,6 @@ func (s *carePlanService) getDetails(
 	ctx context.Context,
 	topicID int64,
 	clientID uuid.UUID,
-
 ) (*Details, error) {
 	topicDescription, err := qtx.GetMaturityMatrix(ctx, topicID)
 	if err != nil {

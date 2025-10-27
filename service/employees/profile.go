@@ -2,14 +2,13 @@ package employees
 
 import (
 	"context"
-
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
 	"maicare_go/util"
-
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
@@ -18,11 +17,19 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *employeeService) CreateEmployee(req CreateEmployeeProfileRequest, ctx context.Context) (*CreateEmployeeProfileResponse, error) {
+func (s *employeeService) CreateEmployee(
+	req CreateEmployeeProfileRequest,
+	ctx context.Context,
+) (*CreateEmployeeProfileResponse, error) {
 	password := util.RandomString(12)
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateEmployee", "Failed to hash password", zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"CreateEmployee",
+			"Failed to hash password",
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("failed to hash password")
 	}
 
@@ -30,7 +37,12 @@ func (s *employeeService) CreateEmployee(req CreateEmployeeProfileRequest, ctx c
 	if req.DateOfBirth != nil {
 		parsedDateOfBirth, err = time.Parse("2006-01-02", *req.DateOfBirth)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateEmployee", "Failed to parse date of birth", zap.Error(err))
+			s.Logger.LogBusinessEvent(
+				logger.LogLevelError,
+				"CreateEmployee",
+				"Failed to parse date of birth",
+				zap.Error(err),
+			)
 			return nil, fmt.Errorf("invalid date of birth format")
 		}
 	}
@@ -72,7 +84,12 @@ func (s *employeeService) CreateEmployee(req CreateEmployeeProfileRequest, ctx c
 		},
 	)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateEmployee", "Failed to create employee with account", zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"CreateEmployee",
+			"Failed to create employee with account",
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("failed to create employee with account: %v", err)
 	}
 
@@ -98,11 +115,20 @@ func (s *employeeService) CreateEmployee(req CreateEmployeeProfileRequest, ctx c
 		IsArchived:                employee.Employee.IsArchived,
 		LocationID:                employee.Employee.LocationID,
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateEmployee", "Successfully created employee with account", zap.Int64("EmployeeID", res.ID), zap.Int64("UserID", res.UserID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"CreateEmployee",
+		"Successfully created employee with account",
+		zap.String("EmployeeID", res.ID.String()),
+		zap.String("UserID", res.UserID.String()),
+	)
 	return res, nil
 }
 
-func (s *employeeService) ListEmployees(req ListEmployeeRequest, ctx *gin.Context) (*pagination.Response[ListEmployeeResponse], error) {
+func (s *employeeService) ListEmployees(
+	req ListEmployeeRequest,
+	ctx *gin.Context,
+) (*pagination.Response[ListEmployeeResponse], error) {
 	params := req.GetParams()
 	employees, err := s.Store.ListEmployeeProfile(ctx, db.ListEmployeeProfileParams{
 		Limit:               params.Limit,
@@ -159,9 +185,11 @@ func (s *employeeService) ListEmployees(req ListEmployeeRequest, ctx *gin.Contex
 			OutOfService:              employee.OutOfService,
 			IsArchived:                employee.IsArchived,
 			ProfilePicture:            s.GenerateResponsePresignedURL(employee.ProfilePicture, ctx),
-			Age:                       int64(time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365),
-			RoleID:                    employee.RoleID,
-			RoleName:                  employee.RoleName,
+			Age: int64(
+				time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365,
+			),
+			RoleID:   employee.RoleID,
+			RoleName: employee.RoleName,
 		}
 	}
 
@@ -174,8 +202,9 @@ func (s *employeeService) ListEmployees(req ListEmployeeRequest, ctx *gin.Contex
 
 func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	req UpdateEmployeeIsSubcontractorRequest,
-	employeeID int64,
-	ctx context.Context) (*UpdateEmployeeIsSubcontractorResponse, error) {
+	employeeID uuid.UUID,
+	ctx context.Context,
+) (*UpdateEmployeeIsSubcontractorResponse, error) {
 	contractType := "loondienst"
 	if req.IsSubcontractor != nil && *req.IsSubcontractor {
 		contractType = "ZZP"
@@ -187,7 +216,14 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 		ContractType:    &contractType,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeIsSubcontractor", "Failed to update employee subcontractor status", zap.Error(err), zap.Int64("EmployeeID", employeeID), zap.Bool("IsSubcontractor", *req.IsSubcontractor))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"UpdateEmployeeIsSubcontractor",
+			"Failed to update employee subcontractor status",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+			zap.Bool("IsSubcontractor", *req.IsSubcontractor),
+		)
 		return nil, fmt.Errorf("failed to update employee subcontractor status")
 	}
 	res := &UpdateEmployeeIsSubcontractorResponse{
@@ -199,20 +235,41 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 		ContractEndDate:   emp.ContractEndDate.Time,
 		ContractRate:      emp.ContractRate,
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateEmployeeIsSubcontractor", "Successfully updated employee subcontractor status", zap.Int64("EmployeeID", employeeID), zap.Bool("IsSubcontractor", *req.IsSubcontractor))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"UpdateEmployeeIsSubcontractor",
+		"Successfully updated employee subcontractor status",
+		zap.String("EmployeeID", employeeID.String()),
+		zap.Bool("IsSubcontractor", *req.IsSubcontractor),
+	)
 	return res, nil
 }
 
-func (s *employeeService) GetEmployeeProfile(userID int64, ctx context.Context) (*GetEmployeeProfileResponse, error) {
+func (s *employeeService) GetEmployeeProfile(
+	userID uuid.UUID,
+	ctx context.Context,
+) (*GetEmployeeProfileResponse, error) {
 	profile, err := s.Store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetEmployeeProfile", "Failed to get employee profile by user ID", zap.Error(err), zap.Int64("UserID", userID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"GetEmployeeProfile",
+			"Failed to get employee profile by user ID",
+			zap.Error(err),
+			zap.String("UserID", userID.String()),
+		)
 		return nil, fmt.Errorf("failed to get employee profile: %w", err)
 	}
 
 	var permissions []Permission
 	if err := json.Unmarshal(profile.Permissions, &permissions); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetEmployeeProfile", "Failed to unmarshal permissions", zap.Error(err), zap.Int64("UserID", userID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"GetEmployeeProfile",
+			"Failed to unmarshal permissions",
+			zap.Error(err),
+			zap.String("UserID", userID.String()),
+		)
 		return nil, fmt.Errorf("failed to parse permissions: %w", err)
 	}
 
@@ -227,14 +284,29 @@ func (s *employeeService) GetEmployeeProfile(userID int64, ctx context.Context) 
 		Permissions: permissions,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetEmployeeProfile", "Successfully retrieved employee profile", zap.Int64("UserID", userID), zap.Int64("EmployeeID", profile.EmployeeID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"GetEmployeeProfile",
+		"Successfully retrieved employee profile",
+		zap.String("UserID", userID.String()),
+		zap.String("EmployeeID", profile.EmployeeID.String()),
+	)
 	return res, nil
 }
 
-func (s *employeeService) GetEmployeeProfileByID(employeeID, currentUserID int64, ctx context.Context) (*GetEmployeeProfileByIDResponse, error) {
+func (s *employeeService) GetEmployeeProfileByID(
+	employeeID, currentUserID uuid.UUID,
+	ctx context.Context,
+) (*GetEmployeeProfileByIDResponse, error) {
 	employee, err := s.Store.GetEmployeeProfileByID(ctx, employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetEmployeeProfileByID", "Failed to get employee profile by ID", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"GetEmployeeProfileByID",
+			"Failed to get employee profile by ID",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to get employee profile: %w", err)
 	}
 
@@ -265,17 +337,33 @@ func (s *employeeService) GetEmployeeProfileByID(employeeID, currentUserID int64
 		IsLoggedInUser:            employee.UserID == currentUserID,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetEmployeeProfileByID", "Successfully retrieved employee profile by ID", zap.Int64("EmployeeID", employeeID), zap.Int64("UserID", employee.UserID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"GetEmployeeProfileByID",
+		"Successfully retrieved employee profile by ID",
+		zap.String("EmployeeID", employeeID.String()),
+		zap.String("UserID", employee.UserID.String()),
+	)
 	return res, nil
 }
 
-func (s *employeeService) UpdateEmployeeProfile(req UpdateEmployeeProfileRequest, employeeID int64, ctx context.Context) (*UpdateEmployeeProfileResponse, error) {
+func (s *employeeService) UpdateEmployeeProfile(
+	req UpdateEmployeeProfileRequest,
+	employeeID uuid.UUID,
+	ctx context.Context,
+) (*UpdateEmployeeProfileResponse, error) {
 	var parsedDate time.Time
 	var err error
 	if req.DateOfBirth != nil {
 		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeProfile", "Failed to parse date of birth", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+			s.Logger.LogBusinessEvent(
+				logger.LogLevelError,
+				"UpdateEmployeeProfile",
+				"Failed to parse date of birth",
+				zap.Error(err),
+				zap.String("EmployeeID", employeeID.String()),
+			)
 			return nil, fmt.Errorf("invalid date of birth format: %w", err)
 		}
 	}
@@ -303,7 +391,13 @@ func (s *employeeService) UpdateEmployeeProfile(req UpdateEmployeeProfileRequest
 		IsArchived:                req.IsArchived,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateEmployeeProfile", "Failed to update employee profile", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"UpdateEmployeeProfile",
+			"Failed to update employee profile",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to update employee profile: %w", err)
 	}
 
@@ -332,14 +426,29 @@ func (s *employeeService) UpdateEmployeeProfile(req UpdateEmployeeProfileRequest
 		IsArchived:                employee.IsArchived,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateEmployeeProfile", "Successfully updated employee profile", zap.Int64("EmployeeID", employeeID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"UpdateEmployeeProfile",
+		"Successfully updated employee profile",
+		zap.String("EmployeeID", employeeID.String()),
+	)
 	return res, nil
 }
 
-func (s *employeeService) SetEmployeeProfilePicture(req SetEmployeeProfilePictureRequest, employeeID int64, ctx context.Context) (*SetEmployeeProfilePictureResponse, error) {
+func (s *employeeService) SetEmployeeProfilePicture(
+	req SetEmployeeProfilePictureRequest,
+	employeeID uuid.UUID,
+	ctx context.Context,
+) (*SetEmployeeProfilePictureResponse, error) {
 	attachmentID, err := uuid.Parse(req.AttachmentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "SetEmployeeProfilePicture", "Failed to parse attachment ID", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"SetEmployeeProfilePicture",
+			"Failed to parse attachment ID",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("invalid attachment ID format: %w", err)
 	}
 
@@ -349,7 +458,13 @@ func (s *employeeService) SetEmployeeProfilePicture(req SetEmployeeProfilePictur
 	}
 	user, err := s.Store.SetEmployeeProfilePictureTx(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "SetEmployeeProfilePicture", "Failed to set employee profile picture", zap.Error(err), zap.Int64("EmployeeID", employeeID))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"SetEmployeeProfilePicture",
+			"Failed to set employee profile picture",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
 		return nil, fmt.Errorf("failed to set employee profile picture: %w", err)
 	}
 
@@ -359,14 +474,26 @@ func (s *employeeService) SetEmployeeProfilePicture(req SetEmployeeProfilePictur
 		ProfilePicture: user.User.ProfilePicture,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "SetEmployeeProfilePicture", "Successfully set employee profile picture", zap.Int64("EmployeeID", employeeID))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"SetEmployeeProfilePicture",
+		"Successfully set employee profile picture",
+		zap.String("EmployeeID", employeeID.String()),
+	)
 	return res, nil
 }
 
-func (s *employeeService) GetEmployeeCounts(ctx context.Context) (*GetEmployeeCountsResponse, error) {
+func (s *employeeService) GetEmployeeCounts(
+	ctx context.Context,
+) (*GetEmployeeCountsResponse, error) {
 	counts, err := s.Store.GetEmployeeCounts(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetEmployeeCounts", "Failed to get employee counts", zap.Error(err))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"GetEmployeeCounts",
+			"Failed to get employee counts",
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("failed to get employee counts: %w", err)
 	}
 
@@ -377,14 +504,27 @@ func (s *employeeService) GetEmployeeCounts(ctx context.Context) (*GetEmployeeCo
 		TotalOutOfService:   counts.TotalOutOfService,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetEmployeeCounts", "Successfully retrieved employee counts")
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"GetEmployeeCounts",
+		"Successfully retrieved employee counts",
+	)
 	return res, nil
 }
 
-func (s *employeeService) SearchEmployeesByNameOrEmail(req SearchEmployeesByNameOrEmailRequest, ctx context.Context) ([]SearchEmployeesByNameOrEmailResponse, error) {
+func (s *employeeService) SearchEmployeesByNameOrEmail(
+	req SearchEmployeesByNameOrEmailRequest,
+	ctx context.Context,
+) ([]SearchEmployeesByNameOrEmailResponse, error) {
 	employees, err := s.Store.SearchEmployeesByNameOrEmail(ctx, req.Search)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "SearchEmployeesByNameOrEmail", "Failed to search employees", zap.Error(err), zap.String("Search", *req.Search))
+		s.Logger.LogBusinessEvent(
+			logger.LogLevelError,
+			"SearchEmployeesByNameOrEmail",
+			"Failed to search employees",
+			zap.Error(err),
+			zap.String("Search", *req.Search),
+		)
 		return nil, fmt.Errorf("failed to search employees: %w", err)
 	}
 
@@ -398,6 +538,11 @@ func (s *employeeService) SearchEmployeesByNameOrEmail(req SearchEmployeesByName
 		}
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "SearchEmployeesByNameOrEmail", "Successfully searched employees", zap.Int("Count", len(employees)))
+	s.Logger.LogBusinessEvent(
+		logger.LogLevelInfo,
+		"SearchEmployeesByNameOrEmail",
+		"Successfully searched employees",
+		zap.Int("Count", len(employees)),
+	)
 	return responseEmployees, nil
 }

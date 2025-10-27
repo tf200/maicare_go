@@ -3,12 +3,13 @@ package contract
 import (
 	"context"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
 	"maicare_go/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

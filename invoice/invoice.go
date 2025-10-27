@@ -3,8 +3,9 @@ package invoice
 import (
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
 	"time"
+
+	db "maicare_go/db/sqlc"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -90,7 +91,7 @@ func GenerateInvoice(store *db.Store, invoiceData InvoiceParams, ctx context.Con
 
 	var totalAmount float64
 	var totalPreVat float64
-	var invoice = make([]InvoiceDetails, len(contracts))
+	invoice := make([]InvoiceDetails, len(contracts))
 
 	for i, contract := range contracts {
 		billablePeriods, err := store.GetBillablePeriodsForContract(ctx, db.GetBillablePeriodsForContractParams{
@@ -239,5 +240,4 @@ func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) (bo
 		return false, fmt.Errorf("total amount does not match the sum of invoice details: expected %.2f, got %.2f", totalAmount, calculatedTotal)
 	}
 	return true, nil
-
 }

@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/notification"
 	"net/http"
+
+	"maicare_go/service/notification"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -38,7 +39,6 @@ func (server *Server) ListNotificationsApi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Notifications retrieved successfully"))
-
 }
 
 // MarkNotificationAsReadApi handles marking a notification as read
@@ -76,5 +76,4 @@ func (server *Server) MarkNotificationAsReadApi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Notification marked as read successfully"))
-
 }

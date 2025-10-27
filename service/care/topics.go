@@ -3,6 +3,7 @@ package care
 import (
 	"context"
 	"fmt"
+
 	"maicare_go/logger"
 
 	"go.uber.org/zap"
@@ -26,5 +27,3 @@ func (s *carePlanService) ListCarePlanTopics(ctx context.Context) ([]ListCarePla
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListCarePlanTopics", "Successfully listed care plan topics")
 	return reponse, nil
 }
-
-

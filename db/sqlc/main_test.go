@@ -13,8 +13,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-var testQueries *Queries
-var testDB *pgxpool.Pool
+var (
+	testQueries *Queries
+	testDB      *pgxpool.Pool
+)
 
 func runMigrations(dbSource string, migrationsPath string) error {
 	log.Println("Running database migrations...")

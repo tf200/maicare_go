@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/service/deps"
-	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -16,8 +17,8 @@ import (
 
 type NotificationService interface {
 	CreateAndDeliver(ctx context.Context, payload NotificationPayload) error
-	ListNotifications(ctx context.Context, req *ListNotificationsRequest, userID int64) ([]ListNotificationsResponse, error)
-	MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID, userID int64) (*MarkNotificationAsReadResponse, error)
+	ListNotifications(ctx context.Context, req *ListNotificationsRequest, userID uuid.UUID) ([]ListNotificationsResponse, error)
+	MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID, userID uuid.UUID) (*MarkNotificationAsReadResponse, error)
 }
 
 type notificationService struct {
@@ -40,7 +41,6 @@ type WebSocketMessage struct {
 }
 
 func (s *notificationService) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
-
 	var firstError error
 
 	dataBytes, err := json.Marshal(payload.Data)

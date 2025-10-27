@@ -25,5 +25,4 @@ func DetermineInvoiceStatus(invoiceTotal, totalPaid float64) (InvoiceStatus, err
 	}
 
 	return "", fmt.Errorf("could not determine invoice status for totalPaid: %f, invoiceTotal: %f", totalPaid, invoiceTotal)
-
 }

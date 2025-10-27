@@ -1,8 +1,9 @@
 package sender
 
 import (
-	"maicare_go/pagination"
 	"time"
+
+	"maicare_go/pagination"
 )
 
 // Contact represents a contact information.

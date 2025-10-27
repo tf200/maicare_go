@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
-	"time"
-
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -18,7 +19,7 @@ type CreditInvoiceResponse struct {
 	ID int64 `json:"id"`
 }
 
-func (s *invoiceService) CreditInvoice(ctx context.Context, invoiceID int64, employeeID int64) (*CreditInvoiceResponse, error) {
+func (s *invoiceService) CreditInvoice(ctx context.Context, invoiceID int64, employeeID uuid.UUID) (*CreditInvoiceResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreditInvoice", "Failed to begin transaction", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -110,5 +111,4 @@ func (s *invoiceService) CreditInvoice(ctx context.Context, invoiceID int64, emp
 	return &CreditInvoiceResponse{
 		ID: creditInvoice.ID,
 	}, nil
-
 }

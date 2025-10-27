@@ -23,5 +23,4 @@ func TestMain(m *testing.M) {
 	testClient = client.(*GrpcClient)
 
 	os.Exit(m.Run())
-
 }

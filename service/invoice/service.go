@@ -2,10 +2,12 @@ package invoice
 
 import (
 	"context"
+
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // InvoiceService Interface and implementation
@@ -13,11 +15,11 @@ import (
 //go:generate mockgen -source=service.go -destination=../mocks/mock_invoice_service.go -package=mocks
 type InvoiceService interface {
 	GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResponse, int64, error)
-	CreateInvoice(ctx context.Context, req CreateInvoiceRequest, employeeID int64) (*CreateInvoiceResponse, error)
-	CreditInvoice(ctx context.Context, invoiceID int64, employeeID int64) (*CreditInvoiceResponse, error)
+	CreateInvoice(ctx context.Context, req CreateInvoiceRequest, employeeID uuid.UUID) (*CreateInvoiceResponse, error)
+	CreditInvoice(ctx context.Context, invoiceID int64, employeeID uuid.UUID) (*CreditInvoiceResponse, error)
 	GetInvoiceByID(ctx context.Context, invoiceID int64) (*GetInvoiceByIDResponse, error)
 	ListInvoices(ctx *gin.Context, req ListInvoicesRequest) (*pagination.Response[ListInvoicesResponse], error)
-	UpdateInvoice(ctx context.Context, invoiceID int64, payload UpdateInvoiceRequest, employeeID int64) (*UpdateInvoiceResponse, error)
+	UpdateInvoice(ctx context.Context, invoiceID int64, payload UpdateInvoiceRequest, employeeID uuid.UUID) (*UpdateInvoiceResponse, error)
 	DeleteInvoice(ctx context.Context, invoiceID int64) error
 
 	GenerateInvoicePdf(ctx context.Context, invoiceID int64) (*GenerateInvoicePDFResponse, error)
@@ -31,11 +33,11 @@ type InvoiceService interface {
 	SendInvoiceReminder(ctx context.Context, invoiceID int64) error
 
 	// Payment methods
-	CreatePayment(ctx context.Context, invoiceID int64, req CreatePaymentRequest, employeeID int64) (*CreatePaymentResponse, error)
+	CreatePayment(ctx context.Context, invoiceID int64, req CreatePaymentRequest, employeeID uuid.UUID) (*CreatePaymentResponse, error)
 	ListPayments(ctx context.Context, invoiceID int64) ([]ListPaymentsResponse, error)
 	GetPaymentByID(ctx context.Context, paymentID int64) (*GetPaymentByIDResponse, error)
-	UpdatePayment(ctx context.Context, invoiceID, employeeID, paymentID int64, req UpdatePaymentRequest) (*UpdatePaymentResponse, error)
-	DeletePayment(ctx context.Context, invoiceID, paymentID, employeeID int64) (*DeletePaymentResponse, error)
+	UpdatePayment(ctx context.Context, invoiceID int64, employeeID uuid.UUID, paymentID int64, req UpdatePaymentRequest) (*UpdatePaymentResponse, error)
+	DeletePayment(ctx context.Context, invoiceID, paymentID int64, employeeID uuid.UUID) (*DeletePaymentResponse, error)
 }
 
 type invoiceService struct {

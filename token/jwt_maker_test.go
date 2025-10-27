@@ -1,9 +1,10 @@
 package token
 
 import (
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"

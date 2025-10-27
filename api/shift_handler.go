@@ -1,9 +1,10 @@
 package api
 
 import (
-	"maicare_go/service/organization"
 	"net/http"
 	"strconv"
+
+	"maicare_go/service/organization"
 
 	"github.com/gin-gonic/gin"
 )

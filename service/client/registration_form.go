@@ -3,6 +3,7 @@ package clientp
 import (
 	"context"
 	"fmt"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
@@ -293,7 +294,6 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 
 	paginationResponse := pagination.NewResponse(ctx, req.Request, responseItems, totalCount)
 	return &paginationResponse, nil
-
 }
 
 func (s *clientService) GetRegistrationFormB(tx context.Context, formID int64) (*GetRegistrationFormResponse, error) {

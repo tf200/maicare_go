@@ -9,7 +9,6 @@ import (
 )
 
 func createRandomAppointmentCard(t *testing.T, clientID uuid.UUID) (AppointmentCard, error) {
-
 	arg := CreateAppointmentCardParams{
 		ClientID:               clientID,
 		GeneralInformation:     []string{"Client is doing well", "No concerns raised"},

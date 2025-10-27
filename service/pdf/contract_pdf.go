@@ -6,9 +6,10 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"maicare_go/bucket"
 	"mime/multipart"
 	"time"
+
+	"maicare_go/bucket"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
@@ -54,12 +55,10 @@ type ContractData struct {
 	Vat            float64 `json:"Vat"`            // Corresponds to {.Vat}
 	TypeName       string  `json:"TypeName"`       // Corresponds to {.TypeName}
 	GenerationDate string  `json:"GenerationDate"` // Date when the contract was generated
-
 }
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
 func (s *pdfService) generateContractPDF(contractData ContractData) (multipart.File, error) {
-
 	// Parse and execute HTML template
 	templ, err := template.ParseFS(contractTemplateFS, "templates/contract.html")
 	if err != nil {

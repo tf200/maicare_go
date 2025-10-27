@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -12,7 +13,6 @@ import (
 )
 
 func createRandomClientIncident(t *testing.T, clientID uuid.UUID) CreateIncidentRow {
-
 	employee, _ := createRandomEmployee(t)
 	location := CreateRandomLocation(t)
 
@@ -66,6 +66,7 @@ func createRandomClientIncident(t *testing.T, clientID uuid.UUID) CreateIncident
 	require.Equal(t, arg.ClientID, incident.ClientID)
 	return incident
 }
+
 func TestCreateIncident(t *testing.T) {
 	client := createRandomClientDetails(t)
 	createRandomClientIncident(t, client.ID)

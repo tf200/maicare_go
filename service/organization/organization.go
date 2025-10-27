@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 

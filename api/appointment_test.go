@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/service/appointment"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/service/appointment"
+	"maicare_go/token"
+	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -76,7 +77,6 @@ func TestCreateAppointmentApi(t *testing.T) {
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)
-
 			},
 		},
 	}
@@ -170,7 +170,6 @@ func TestGetAppointmentApi(t *testing.T) {
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)
-
 			},
 		},
 	}
@@ -230,7 +229,6 @@ func TestUpdateAppointmentApi(t *testing.T) {
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response)
-
 			},
 		},
 	}
@@ -273,7 +271,6 @@ func TestDeleteAppointmentApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-
 			},
 		},
 	}
@@ -324,7 +321,6 @@ func TestListAppointmentsForEmployeeApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-
 			},
 		},
 	}
@@ -376,7 +372,6 @@ func TestListAppointmentsForClientApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-
 			},
 		},
 	}

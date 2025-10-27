@@ -13,7 +13,6 @@ import (
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func RandomInt(min, max int64) int64 {
-
 	rangeSize := max - min + 1
 
 	return min + rand.Int63n(rangeSize)

@@ -157,7 +157,6 @@ func TestLogin(t *testing.T) {
 }
 
 func createRandomSession(t *testing.T, token string, payload *token.Payload, userID int64) db.Session {
-
 	// Get current time for timestamps
 	now := time.Now()
 	expireTime := now.Add(24 * time.Hour) // Session expires in 24 hours
@@ -321,7 +320,6 @@ func TestChangePasswordApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestSetup2FAHandler(t *testing.T) {

@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/attachment"
 	"net/http"
 	"strings"
+
+	"maicare_go/service/attachment"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -92,5 +93,4 @@ func (server *Server) DeleteAttachment(ctx *gin.Context) {
 
 	res := SuccessResponse(attachment, "Attachment deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }

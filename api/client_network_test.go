@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"go.uber.org/mock/gomock"
@@ -22,7 +23,6 @@ import (
 )
 
 func createRandomEmergencyContact(t *testing.T, clientID int64) db.ClientEmergencyContact {
-
 	arg := db.CreateEmemrgencyContactParams{
 		ClientID:         clientID,
 		FirstName:        util.StringPtr(util.RandomString(5)),
@@ -193,7 +193,6 @@ func TestListClientEmergencyContactsApi(t *testing.T) {
 		})
 
 	}
-
 }
 
 func TestGetEmergencyContactApi(t *testing.T) {
@@ -472,7 +471,6 @@ func TestGetAssignedEmployeeApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				url := fmt.Sprintf("/clients/%d/involved_employees/%d", client.ID, assign.ID)
 				t.Log(url)
 				req, err := http.NewRequest(http.MethodGet, url, nil)

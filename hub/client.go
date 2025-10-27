@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,7 +33,7 @@ type Client struct {
 	hub *Hub
 
 	// The authenticated user ID associated with this connection.
-	userID int64
+	userID uuid.UUID
 
 	// The websocket connection.
 	conn *websocket.Conn
@@ -43,7 +44,7 @@ type Client struct {
 
 // NewClient creates a new Client instance.
 // This should be called by the HTTP handler after successful upgrade and authentication.
-func NewClient(hub *Hub, userID int64, conn *websocket.Conn) *Client {
+func NewClient(hub *Hub, userID uuid.UUID, conn *websocket.Conn) *Client {
 	return &Client{
 		hub:    hub,
 		userID: userID,

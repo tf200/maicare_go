@@ -24,7 +24,6 @@ var (
 )
 
 func NewPayload(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType) (*Payload, error) {
-
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err

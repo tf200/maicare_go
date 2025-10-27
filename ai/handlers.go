@@ -2,13 +2,12 @@ package ai
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
-
-	"encoding/json"
 )
 
 /*
@@ -285,5 +284,4 @@ func (ai *AiHandler) GenerateObjectives(levelDescription, goal, description, sta
 	}
 
 	return &objectives, nil
-
 }

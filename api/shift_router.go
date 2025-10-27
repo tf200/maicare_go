@@ -12,5 +12,4 @@ func (server *Server) setupShiftsRoutes(baseRouter *gin.RouterGroup) {
 		shifts.PUT("/:id/shifts/:shift_id", server.RBACMiddleware("SHIFT.UPDATE"), server.UpdateShiftApi)    // PUT /locations/:id/shifts/:shift_id
 		shifts.DELETE("/:id/shifts/:shift_id", server.RBACMiddleware("SHIFT.DELETE"), server.DeleteShiftApi) // DELETE /locations/:id/shifts/:shift_id
 	}
-
 }

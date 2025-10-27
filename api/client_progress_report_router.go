@@ -18,5 +18,4 @@ func (server *Server) setupProgressReportsRoutes(baseRouter *gin.RouterGroup) {
 		ProgressReports.GET("/:id/ai_progress_reports", server.RBACMiddleware("CLIENT.AI_PROGRESS_REPORT.VIEW"), server.ListAiGeneratedReportsApi)
 
 	}
-
 }
