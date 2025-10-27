@@ -3,6 +3,8 @@ package clientp
 import (
 	"maicare_go/pagination"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Contact represents a contact information.
@@ -49,7 +51,7 @@ type CreateClientEmergencyContactParams struct {
 // CreateClientEmergencyContactResponse defines the response for creating a client emergency contact
 type CreateClientEmergencyContactResponse struct {
 	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
+	ClientID         uuid.UUID `json:"client_id"`
 	FirstName        *string   `json:"first_name"`
 	LastName         *string   `json:"last_name"`
 	Email            *string   `json:"email"`
@@ -73,7 +75,7 @@ type ListClientEmergencyContactsRequest struct {
 // ListClientEmergencyContactsResponse defines the response for listing client emergency contacts
 type ListClientEmergencyContactsResponse struct {
 	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
+	ClientID         uuid.UUID `json:"client_id"`
 	FirstName        *string   `json:"first_name"`
 	LastName         *string   `json:"last_name"`
 	Email            *string   `json:"email"`
@@ -91,7 +93,7 @@ type ListClientEmergencyContactsResponse struct {
 // GetClientEmergencyContactResponse defines the response for getting a client emergency contact
 type GetClientEmergencyContactResponse struct {
 	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
+	ClientID         uuid.UUID `json:"client_id"`
 	FirstName        *string   `json:"first_name"`
 	LastName         *string   `json:"last_name"`
 	Email            *string   `json:"email"`
@@ -123,7 +125,7 @@ type UpdateClientEmergencyContactParams struct {
 // UpdateClientEmergencyContactResponse defines the response for updating a client emergency contact
 type UpdateClientEmergencyContactResponse struct {
 	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
+	ClientID         uuid.UUID `json:"client_id"`
 	FirstName        *string   `json:"first_name"`
 	LastName         *string   `json:"last_name"`
 	Email            *string   `json:"email"`
@@ -145,7 +147,7 @@ type DeleteClientEmergencyContactResponse struct {
 
 // AssignEmployeeRequest defines the request for assigning an employee to a client
 type AssignEmployeeRequest struct {
-	EmployeeID int64     `json:"employee_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	StartDate  time.Time `json:"start_date"`
 	Role       string    `json:"role"`
 }
@@ -153,8 +155,8 @@ type AssignEmployeeRequest struct {
 // AssignEmployeeResponse defines the response for assigning an employee to a client
 type AssignEmployeeResponse struct {
 	ID         int64     `json:"id"`
-	ClientID   int64     `json:"client_id"`
-	EmployeeID int64     `json:"employee_id"`
+	ClientID   uuid.UUID `json:"client_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	StartDate  time.Time `json:"start_date"`
 	Role       string    `json:"role"`
 	CreatedAt  time.Time `json:"created_at"`
@@ -168,8 +170,8 @@ type ListAssignedEmployeesRequest struct {
 // ListAssignedEmployeesResponse defines the response for listing assigned employees
 type ListAssignedEmployeesResponse struct {
 	ID           int64     `json:"id"`
-	ClientID     int64     `json:"client_id"`
-	EmployeeID   int64     `json:"employee_id"`
+	ClientID     uuid.UUID `json:"client_id"`
+	EmployeeID   uuid.UUID `json:"employee_id"`
 	StartDate    time.Time `json:"start_date"`
 	Role         string    `json:"role"`
 	EmployeeName string    `json:"employee_name"`
@@ -179,8 +181,8 @@ type ListAssignedEmployeesResponse struct {
 // GetAssignedEmployeeResponse defines the response for getting an assigned employee
 type GetAssignedEmployeeResponse struct {
 	ID           int64     `json:"id"`
-	ClientID     int64     `json:"client_id"`
-	EmployeeID   int64     `json:"employee_id"`
+	ClientID     uuid.UUID `json:"client_id"`
+	EmployeeID   uuid.UUID `json:"employee_id"`
 	StartDate    time.Time `json:"start_date"`
 	Role         string    `json:"role"`
 	EmployeeName string    `json:"employee_name"`
@@ -189,16 +191,16 @@ type GetAssignedEmployeeResponse struct {
 
 // UpdateAssignedEmployeeRequest defines the request for updating an assigned employee
 type UpdateAssignedEmployeeRequest struct {
-	EmployeeID *int64    `json:"employee_id"`
-	StartDate  time.Time `json:"start_date"`
-	Role       *string   `json:"role"`
+	EmployeeID *uuid.UUID `json:"employee_id"`
+	StartDate  time.Time  `json:"start_date"`
+	Role       *string    `json:"role"`
 }
 
 // UpdateAssignedEmployeeResponse defines the response for updating an assigned employee
 type UpdateAssignedEmployeeResponse struct {
 	ID         int64     `json:"id"`
-	ClientID   int64     `json:"client_id"`
-	EmployeeID int64     `json:"employee_id"`
+	ClientID   uuid.UUID `json:"client_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	StartDate  time.Time `json:"start_date"`
 	Role       string    `json:"role"`
 	CreatedAt  time.Time `json:"created_at"`

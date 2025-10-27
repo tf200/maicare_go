@@ -4,6 +4,7 @@ import (
 	"maicare_go/pagination"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -16,8 +17,8 @@ type CreateClientCarePlanRequest struct {
 
 // CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
 type CreateClientCarePlanResponse struct {
-	ClientID   int64 `json:"client_id"`
-	CarePlanID int64 `json:"care_plan_id"`
+	ClientID   uuid.UUID `json:"client_id"`
+	CarePlanID int64     `json:"care_plan_id"`
 }
 
 type Level struct {
@@ -42,7 +43,7 @@ type ListClientCarePlansRequest struct {
 // ListClientMaturityMatrixAssessmentsResponse represents a response for ListClientMaturityMatrixAssessmentsApi
 type ListClientCarePlansResponse struct {
 	CarePlanID   int64       `json:"care_plan_id"`
-	ClientID     int64       `json:"client_id"`
+	ClientID     uuid.UUID   `json:"client_id"`
 	StartDate    pgtype.Date `json:"start_date"`
 	EndDate      pgtype.Date `json:"end_date"`
 	InitialLevel int32       `json:"initial_level"`

@@ -12,11 +12,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID int64) (*CreateIncidentResponse, error) {
+func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID uuid.UUID) (*CreateIncidentResponse, error) {
 
 	arg := db.CreateIncidentParams{
 		EmployeeID:              req.EmployeeID,
@@ -126,7 +127,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to get admin users for incident notification", zap.Error(err))
 
 	} else {
-		var recipientUserIDs []int64
+		var recipientUserIDs []uuid.UUID
 		for _, user := range receipients {
 			recipientUserIDs = append(recipientUserIDs, user.ID)
 		}
@@ -208,7 +209,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 	return response, nil
 }
 
-func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest, clientID int64) (*pagination.Response[ListIncidentsResponse], error) {
+func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest, clientID uuid.UUID) (*pagination.Response[ListIncidentsResponse], error) {
 	params := req.GetParams()
 
 	incidents, err := s.Store.ListIncidents(ctx, db.ListIncidentsParams{
@@ -222,7 +223,7 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 	}
 
 	if len(incidents) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.Int64("ClientID", clientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.String("ClientID", clientID.String()))
 		pag := pagination.NewResponse(ctx, req.Request, []ListIncidentsResponse{}, 0)
 		return &pag, nil
 	}

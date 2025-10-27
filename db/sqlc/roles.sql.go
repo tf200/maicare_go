@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const addPermissionsToRole = `-- name: AddPermissionsToRole :exec
@@ -33,8 +35,8 @@ ON CONFLICT (user_id) DO UPDATE SET role_id = $2
 `
 
 type AssignRoleToUserParams struct {
-	UserID int64 `json:"user_id"`
-	RoleID int32 `json:"role_id"`
+	UserID uuid.UUID `json:"user_id"`
+	RoleID int32     `json:"role_id"`
 }
 
 func (q *Queries) AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error {
@@ -54,8 +56,8 @@ SELECT EXISTS (
 `
 
 type CheckUserPermissionParams struct {
-	UserID int64  `json:"user_id"`
-	Name   string `json:"name"`
+	UserID uuid.UUID `json:"user_id"`
+	Name   string    `json:"name"`
 }
 
 // ---------- 6. CHECK UTILITIES ----------
@@ -104,7 +106,7 @@ WHERE user_id = $1
 `
 
 // Removes *all* permissions from the given user.
-func (q *Queries) DeleteUserPermissions(ctx context.Context, userID int64) error {
+func (q *Queries) DeleteUserPermissions(ctx context.Context, userID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteUserPermissions, userID)
 	return err
 }
@@ -120,7 +122,7 @@ LIMIT 1
 
 // ---------- 4. USER-ROLE MAPPING ----------
 // Returns every role granted to a user.
-func (q *Queries) GetUserRoles(ctx context.Context, userID int64) (Role, error) {
+func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) (Role, error) {
 	row := q.db.QueryRow(ctx, getUserRoles, userID)
 	var i Role
 	err := row.Scan(&i.ID, &i.Name)
@@ -135,8 +137,8 @@ WHERE rp.role_id = $2
 `
 
 type GrantRolePermissionsToUserParams struct {
-	UserID int64 `json:"user_id"`
-	RoleID int32 `json:"role_id"`
+	UserID uuid.UUID `json:"user_id"`
+	RoleID int32     `json:"role_id"`
 }
 
 func (q *Queries) GrantRolePermissionsToUser(ctx context.Context, arg GrantRolePermissionsToUserParams) error {
@@ -151,8 +153,8 @@ ON CONFLICT (user_id, permission_id) DO NOTHING
 `
 
 type GrantUserPermissionsParams struct {
-	UserID        int64   `json:"user_id"`
-	PermissionIds []int32 `json:"permission_ids"`
+	UserID        uuid.UUID `json:"user_id"`
+	PermissionIds []int32   `json:"permission_ids"`
 }
 
 // Bulk-insert permission IDs for a user (idempotent).
@@ -290,7 +292,7 @@ type ListUserPermissionsRow struct {
 
 // ---------- 5. USER-PERMISSION MAPPING ----------
 // Returns every permission granted to a user (direct or via roles).
-func (q *Queries) ListUserPermissions(ctx context.Context, userID int64) ([]ListUserPermissionsRow, error) {
+func (q *Queries) ListUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionsRow, error) {
 	rows, err := q.db.Query(ctx, listUserPermissions, userID)
 	if err != nil {
 		return nil, err

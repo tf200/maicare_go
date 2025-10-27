@@ -10,6 +10,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -544,7 +545,7 @@ func (s *clientService) DeleteRegistrationForm(ctx context.Context, formID int64
 	return nil
 }
 
-func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID, employeeID int64) error {
+func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID int64, employeeID uuid.UUID) error {
 	arg := db.UpdateRegistrationFormStatusParams{
 		ID:                        formID,
 		FormStatus:                req.Status,

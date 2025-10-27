@@ -7,6 +7,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -65,7 +66,7 @@ func (s *authService) ListAllRolePermissions(ctx context.Context, roleID int32) 
 	return response, nil
 }
 
-func (s *authService) AssignRoleToEmployee(ctx context.Context, employeeID int64, req *AssignRoleToEmployeeParams) (*AssignRoleToEmployeeApiResponse, error) {
+func (s *authService) AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, req *AssignRoleToEmployeeParams) (*AssignRoleToEmployeeApiResponse, error) {
 	userID, err := s.Store.GetUserIDByEmployeeID(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to get user ID by employee ID", zap.Error(err))
@@ -79,7 +80,7 @@ func (s *authService) AssignRoleToEmployee(ctx context.Context, employeeID int64
 	}
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to rollback transaction", zap.Error(rollbackErr), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to rollback transaction", zap.Error(rollbackErr), zap.String("employee_id", employeeID.String()), zap.Int32("role_id", req.RoleID))
 		}
 	}()
 
@@ -90,13 +91,13 @@ func (s *authService) AssignRoleToEmployee(ctx context.Context, employeeID int64
 		RoleID: req.RoleID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to assign role to user", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to assign role to user", zap.Error(err), zap.String("employee_id", employeeID.String()), zap.Int32("role_id", req.RoleID))
 		return nil, fmt.Errorf("failed to assign role to user: %w", err)
 	}
 
 	err = qtx.DeleteUserPermissions(ctx, userID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to delete user permissions", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to delete user permissions", zap.Error(err), zap.String("employee_id", employeeID.String()), zap.Int32("role_id", req.RoleID))
 		return nil, fmt.Errorf("failed to delete user permissions: %w", err)
 	}
 
@@ -105,12 +106,12 @@ func (s *authService) AssignRoleToEmployee(ctx context.Context, employeeID int64
 		RoleID: req.RoleID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to grant role permissions to user", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to grant role permissions to user", zap.Error(err), zap.String("employee_id", employeeID.String()), zap.Int32("role_id", req.RoleID))
 		return nil, fmt.Errorf("failed to grant role permissions to user: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to commit transaction", zap.Error(err), zap.Int64("employee_id", employeeID), zap.Int32("role_id", req.RoleID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignRoleToEmployee", "Failed to commit transaction", zap.Error(err), zap.String("employee_id", employeeID.String()), zap.Int32("role_id", req.RoleID))
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -120,7 +121,7 @@ func (s *authService) AssignRoleToEmployee(ctx context.Context, employeeID int64
 	}, nil
 }
 
-func (s *authService) ListUserRolesAndPermissionsApi(ctx context.Context, employeeID int64) (*ListUserRolesAndPermissionsApiResponse, error) {
+func (s *authService) ListUserRolesAndPermissionsApi(ctx context.Context, employeeID uuid.UUID) (*ListUserRolesAndPermissionsApiResponse, error) {
 	userID, err := s.Store.GetUserIDByEmployeeID(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListUserRolesAndPermissionsApi", "Failed to get user ID by employee ID", zap.Error(err))
@@ -168,7 +169,7 @@ func (s *authService) ListUserRolesAndPermissionsApi(ctx context.Context, employ
 	return &response, nil
 }
 
-func (s *authService) GrantUserPermission(ctx context.Context, employeeID int64, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error) {
+func (s *authService) GrantUserPermission(ctx context.Context, employeeID uuid.UUID, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error) {
 	userID, err := s.Store.GetUserIDByEmployeeID(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to get user ID by employee ID", zap.Error(err))
@@ -182,7 +183,7 @@ func (s *authService) GrantUserPermission(ctx context.Context, employeeID int64,
 	}
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to rollback transaction", zap.Error(rollbackErr), zap.Int64("employee_id", employeeID))
+			s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to rollback transaction", zap.Error(rollbackErr), zap.String("employee_id", employeeID.String()))
 		}
 	}()
 
@@ -190,7 +191,7 @@ func (s *authService) GrantUserPermission(ctx context.Context, employeeID int64,
 
 	err = qtx.DeleteUserPermissions(ctx, userID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to delete user permissions", zap.Error(err), zap.Int64("employee_id", employeeID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to delete user permissions", zap.Error(err), zap.String("employee_id", employeeID.String()))
 		return nil, fmt.Errorf("failed to delete user permissions: %w", err)
 	}
 
@@ -199,12 +200,12 @@ func (s *authService) GrantUserPermission(ctx context.Context, employeeID int64,
 		PermissionIds: req.PermissionIDs,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to grant user permissions", zap.Error(err), zap.Int64("employee_id", employeeID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to grant user permissions", zap.Error(err), zap.String("employee_id", employeeID.String()))
 		return nil, fmt.Errorf("failed to grant user permissions: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to commit transaction", zap.Error(err), zap.Int64("employee_id", employeeID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GrantUserPermission", "Failed to commit transaction", zap.Error(err), zap.String("employee_id", employeeID.String()))
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return &GrantUserPermissionsResponse{
@@ -266,7 +267,7 @@ func (s *authService) CreateRole(ctx context.Context, req *CreateRoleRequest) (*
 	}, nil
 }
 
-func (s *authService) HasPermission(ctx context.Context, userID int64, permission string) (bool, error) {
+func (s *authService) HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error) {
 	return s.Store.CheckUserPermission(ctx, db.CheckUserPermissionParams{
 		UserID: userID,
 		Name:   permission,

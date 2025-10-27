@@ -8,7 +8,7 @@ import (
 
 type IncidentPayload struct {
 	ID                      int64     `json:"id"`
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
 	LocationID              int64     `json:"location_id"`
@@ -49,7 +49,7 @@ type IncidentPayload struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
+	ClientID                uuid.UUID `json:"client_id"`
 	LocationName            string    `json:"location_name"`
 	To                      []string  `json:"to"`
 }
@@ -71,7 +71,7 @@ type AcceptedRegistrationFormPayload struct {
 }
 
 type AppointmentPayload struct {
-	AppointmentTemplateID  uuid.UUID `json:"appointment_template_id"`
-	ParticipantEmployeeIDs []int64   `json:"participant_employee_ids"`
-	ClientIDs              []int64   `json:"client_ids"`
+	AppointmentTemplateID  uuid.UUID   `json:"appointment_template_id"`
+	ParticipantEmployeeIDs []uuid.UUID `json:"participant_employee_ids"`
+	ClientIDs              []uuid.UUID `json:"client_ids"`
 }

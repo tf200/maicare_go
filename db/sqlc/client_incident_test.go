@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientIncident(t *testing.T, clientID int64) CreateIncidentRow {
+func createRandomClientIncident(t *testing.T, clientID uuid.UUID) CreateIncidentRow {
 
 	employee, _ := createRandomEmployee(t)
 	location := CreateRandomLocation(t)

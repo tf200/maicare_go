@@ -11,14 +11,15 @@ import (
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceRequest, employeeID int64) (*CreateInvoiceResponse, error) {
+func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceRequest, employeeID uuid.UUID) (*CreateInvoiceResponse, error) {
 	_, err := VerifyTotalAmount(req.InvoiceDetails, req.TotalAmount)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateInvoice", "Total amount verification failed", zap.Error(err), zap.Int64("client_id", req.ClientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateInvoice", "Total amount verification failed", zap.Error(err), zap.String("client_id", req.ClientID.String()))
 		return nil, fmt.Errorf("total amount verification failed: %v", err)
 	}
 

@@ -5,11 +5,12 @@ import (
 	"maicare_go/util"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientDiagnosis(t *testing.T, clientID int64) ClientDiagnosis {
+func createRandomClientDiagnosis(t *testing.T, clientID uuid.UUID) ClientDiagnosis {
 
 	arg := CreateClientDiagnosisParams{
 		ClientID:            clientID,
@@ -116,7 +117,7 @@ func TestDeleteClientDiagnosis(t *testing.T) {
 
 }
 
-func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID int64) ClientMedication {
+func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID uuid.UUID) ClientMedication {
 
 	arg := CreateClientMedicationParams{
 		DiagnosisID:      &diagnosisID,
@@ -126,7 +127,7 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID in
 		EndDate:          pgtype.Date{Time: util.RandomTIme(), Valid: true},
 		Notes:            util.StringPtr("test note"),
 		SelfAdministered: true,
-		AdministeredByID: util.IntPtr(employeeID),
+		AdministeredByID: &employeeID,
 		IsCritical:       true,
 	}
 
@@ -140,8 +141,9 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID in
 
 func TestCreateClientMedication(t *testing.T) {
 	client := createRandomClientDetails(t)
+	diagnosis := createRandomClientDiagnosis(t, client.ID)
 	employee, _ := createRandomEmployee(t)
-	createRandomClientMedication(t, client.ID, employee.ID)
+	createRandomClientMedication(t, diagnosis.ID, employee.ID)
 }
 
 func TestGetMedication(t *testing.T) {

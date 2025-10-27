@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 const minSecretKeySize = 32
@@ -26,7 +27,7 @@ func NewJWTMaker(accessTokenKey string, refreshTokenKey string, twoFATokenKey st
 	return &JWTMaker{accessTokenKey, refreshTokenKey, twoFATokenKey}, nil
 }
 
-func (maker *JWTMaker) CreateToken(user_id int64, employee_id int64, duration time.Duration, tokenType TokenType) (string, *Payload, error) {
+func (maker *JWTMaker) CreateToken(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType) (string, *Payload, error) {
 	payload, err := NewPayload(user_id, employee_id, duration, tokenType)
 	if err != nil {
 		return "", payload, err

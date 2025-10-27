@@ -9,11 +9,12 @@ import (
 	"maicare_go/pagination"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID int64) (*CreateClientDiagnosisResponse, error) {
+func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID uuid.UUID) (*CreateClientDiagnosisResponse, error) {
 	arg := db.CreateClientDiagnosisParams{
 		ClientID:            clientID,
 		Title:               req.Title,
@@ -37,7 +38,7 @@ func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateCli
 	qtx := s.Store.WithTx(tx)
 	diagnosis, err := qtx.CreateClientDiagnosis(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to create client diagnosis", zap.Error(err), zap.Int64("client_id", clientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to create client diagnosis", zap.Error(err), zap.String("client_id", clientID.String()))
 		return nil, err
 	}
 
@@ -56,7 +57,7 @@ func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateCli
 			}
 			_, err := qtx.CreateClientMedication(ctx, medArg)
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to create diagnosis medication", zap.Error(err), zap.Int64("client_id", clientID))
+				s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to create diagnosis medication", zap.Error(err), zap.String("client_id", clientID.String()))
 				return nil, err
 			}
 		}
@@ -81,7 +82,7 @@ func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateCli
 	return res, nil
 }
 
-func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiagnosesRequest, clientID int64) (*pagination.Response[ListClientDiagnosesResponse], error) {
+func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiagnosesRequest, clientID uuid.UUID) (*pagination.Response[ListClientDiagnosesResponse], error) {
 	params := req.GetParams()
 
 	arg := db.ListClientDiagnosesParams{
@@ -92,12 +93,12 @@ func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiag
 
 	diagnoses, err := s.Store.ListClientDiagnoses(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list client diagnoses", zap.Error(err), zap.Int64("client_id", clientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list client diagnoses", zap.Error(err), zap.String("client_id", clientID.String()))
 		return nil, err
 	}
 
 	if len(diagnoses) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListClientDiagnoses", "No diagnoses found for client", zap.Int64("client_id", clientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListClientDiagnoses", "No diagnoses found for client", zap.String("client_id", clientID.String()))
 		pag := pagination.NewResponse(ctx, req.Request, []ListClientDiagnosesResponse{}, 0)
 		return &pag, nil
 	}
@@ -129,7 +130,7 @@ func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiag
 	// Fetch all related medications in a single database query.
 	medications, err := s.Store.ListMedicationsByDiagnosisIDs(ctx, diagnosisIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list medications by diagnosis IDs", zap.Error(err), zap.Int64("client_id", clientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list medications by diagnosis IDs", zap.Error(err), zap.String("client_id", clientID.String()))
 		return nil, err
 	}
 

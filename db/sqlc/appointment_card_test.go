@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAppointmentCard(t *testing.T, clientID int64) (AppointmentCard, error) {
+func createRandomAppointmentCard(t *testing.T, clientID uuid.UUID) (AppointmentCard, error) {
 
 	arg := CreateAppointmentCardParams{
 		ClientID:               clientID,

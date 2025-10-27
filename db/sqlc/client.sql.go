@@ -66,7 +66,7 @@ type CreateClientDetailsParams struct {
 	DateOfBirth                pgtype.Date `json:"date_of_birth"`
 	Identity                   bool        `json:"identity"`
 	Bsn                        *string     `json:"bsn"`
-	BsnVerifiedBy              *int64      `json:"bsn_verified_by"`
+	BsnVerifiedBy              *uuid.UUID  `json:"bsn_verified_by"`
 	Source                     *string     `json:"source"`
 	Birthplace                 *string     `json:"birthplace"`
 	Email                      string      `json:"email"`
@@ -217,7 +217,7 @@ INSERT INTO client_documents (
 `
 
 type CreateClientDocumentParams struct {
-	ClientID       int64      `json:"client_id"`
+	ClientID       uuid.UUID  `json:"client_id"`
 	AttachmentUuid *uuid.UUID `json:"attachment_uuid"`
 	Label          string     `json:"label"`
 }
@@ -246,10 +246,10 @@ INSERT INTO client_status_history (
 `
 
 type CreateClientStatusHistoryParams struct {
-	ClientID  int64   `json:"client_id"`
-	OldStatus *string `json:"old_status"`
-	NewStatus string  `json:"new_status"`
-	Reason    *string `json:"reason"`
+	ClientID  uuid.UUID `json:"client_id"`
+	OldStatus *string   `json:"old_status"`
+	NewStatus string    `json:"new_status"`
+	Reason    *string   `json:"reason"`
 }
 
 func (q *Queries) CreateClientStatusHistory(ctx context.Context, arg CreateClientStatusHistoryParams) (ClientStatusHistory, error) {
@@ -284,7 +284,7 @@ INSERT INTO scheduled_status_changes (
 `
 
 type CreateSchedueledClientStatusChangeParams struct {
-	ClientID      int64       `json:"client_id"`
+	ClientID      uuid.UUID   `json:"client_id"`
 	NewStatus     *string     `json:"new_status"`
 	Reason        *string     `json:"reason"`
 	ScheduledDate pgtype.Date `json:"scheduled_date"`
@@ -331,15 +331,15 @@ const getAllClientsIDs = `-- name: GetAllClientsIDs :many
 SELECT id FROM client_details
 `
 
-func (q *Queries) GetAllClientsIDs(ctx context.Context) ([]int64, error) {
+func (q *Queries) GetAllClientsIDs(ctx context.Context) ([]uuid.UUID, error) {
 	rows, err := q.db.Query(ctx, getAllClientsIDs)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []int64{}
+	items := []uuid.UUID{}
 	for rows.Next() {
-		var id int64
+		var id uuid.UUID
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
@@ -357,7 +357,7 @@ FROM client_details
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetClientAddresses(ctx context.Context, id int64) ([]byte, error) {
+func (q *Queries) GetClientAddresses(ctx context.Context, id uuid.UUID) ([]byte, error) {
 	row := q.db.QueryRow(ctx, getClientAddresses, id)
 	var addresses []byte
 	err := row.Scan(&addresses)
@@ -402,7 +402,7 @@ WHERE c.id = $1 LIMIT 1
 `
 
 type GetClientDetailsRow struct {
-	ID                         int64              `json:"id"`
+	ID                         uuid.UUID          `json:"id"`
 	IntakeFormID               *int64             `json:"intake_form_id"`
 	FirstName                  string             `json:"first_name"`
 	LastName                   string             `json:"last_name"`
@@ -410,7 +410,7 @@ type GetClientDetailsRow struct {
 	Identity                   bool               `json:"identity"`
 	Status                     *string            `json:"status"`
 	Bsn                        *string            `json:"bsn"`
-	BsnVerifiedBy              *int64             `json:"bsn_verified_by"`
+	BsnVerifiedBy              *uuid.UUID         `json:"bsn_verified_by"`
 	Source                     *string            `json:"source"`
 	Birthplace                 *string            `json:"birthplace"`
 	Email                      string             `json:"email"`
@@ -463,7 +463,7 @@ type GetClientDetailsRow struct {
 	BsnVerifiedByLastName      *string            `json:"bsn_verified_by_last_name"`
 }
 
-func (q *Queries) GetClientDetails(ctx context.Context, id int64) (GetClientDetailsRow, error) {
+func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error) {
 	row := q.db.QueryRow(ctx, getClientDetails, id)
 	var i GetClientDetailsRow
 	err := row.Scan(
@@ -549,7 +549,7 @@ LEFT JOIN client_labels cl ON al.label = cl.label
 WHERE cl.label IS NULL
 `
 
-func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID int64) ([]string, error) {
+func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error) {
 	rows, err := q.db.Query(ctx, getMissingClientDocuments, clientID)
 	if err != nil {
 		return nil, err
@@ -598,7 +598,7 @@ type ListClientDetailsParams struct {
 }
 
 type ListClientDetailsRow struct {
-	ID                         int64              `json:"id"`
+	ID                         uuid.UUID          `json:"id"`
 	IntakeFormID               *int64             `json:"intake_form_id"`
 	FirstName                  string             `json:"first_name"`
 	LastName                   string             `json:"last_name"`
@@ -606,7 +606,7 @@ type ListClientDetailsRow struct {
 	Identity                   bool               `json:"identity"`
 	Status                     *string            `json:"status"`
 	Bsn                        *string            `json:"bsn"`
-	BsnVerifiedBy              *int64             `json:"bsn_verified_by"`
+	BsnVerifiedBy              *uuid.UUID         `json:"bsn_verified_by"`
 	Source                     *string            `json:"source"`
 	Birthplace                 *string            `json:"birthplace"`
 	Email                      string             `json:"email"`
@@ -773,15 +773,15 @@ LIMIT $2 OFFSET $3
 `
 
 type ListClientDocumentsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListClientDocumentsRow struct {
 	ID             int64              `json:"id"`
 	AttachmentUuid *uuid.UUID         `json:"attachment_uuid"`
-	ClientID       int64              `json:"client_id"`
+	ClientID       uuid.UUID          `json:"client_id"`
 	Label          string             `json:"label"`
 	Uuid           uuid.UUID          `json:"uuid"`
 	Name           string             `json:"name"`
@@ -836,9 +836,9 @@ LIMIT $2 OFFSET $3
 `
 
 type ListClientStatusHistoryParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 func (q *Queries) ListClientStatusHistory(ctx context.Context, arg ListClientStatusHistoryParams) ([]ClientStatusHistory, error) {
@@ -877,8 +877,8 @@ RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, st
 `
 
 type SetClientProfilePictureParams struct {
-	ID             int64   `json:"id"`
-	ProfilePicture *string `json:"profile_picture"`
+	ID             uuid.UUID `json:"id"`
+	ProfilePicture *string   `json:"profile_picture"`
 }
 
 func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProfilePictureParams) (ClientDetail, error) {
@@ -992,13 +992,13 @@ RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, st
 `
 
 type UpdateClientDetailsParams struct {
-	ID                         int64       `json:"id"`
+	ID                         uuid.UUID   `json:"id"`
 	FirstName                  *string     `json:"first_name"`
 	LastName                   *string     `json:"last_name"`
 	DateOfBirth                pgtype.Date `json:"date_of_birth"`
 	Identity                   *bool       `json:"identity"`
 	Bsn                        *string     `json:"bsn"`
-	BsnVerifiedBy              *int64      `json:"bsn_verified_by"`
+	BsnVerifiedBy              *uuid.UUID  `json:"bsn_verified_by"`
 	Source                     *string     `json:"source"`
 	Birthplace                 *string     `json:"birthplace"`
 	Email                      *string     `json:"email"`
@@ -1144,8 +1144,8 @@ RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, st
 `
 
 type UpdateClientStatusParams struct {
-	ID     int64   `json:"id"`
-	Status *string `json:"status"`
+	ID     uuid.UUID `json:"id"`
+	Status *string   `json:"status"`
 }
 
 func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error) {

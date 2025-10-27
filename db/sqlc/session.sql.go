@@ -35,7 +35,7 @@ type CreateSessionParams struct {
 	IsBlocked    bool               `json:"is_blocked"`
 	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UserID       int64              `json:"user_id"`
+	UserID       uuid.UUID          `json:"user_id"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {

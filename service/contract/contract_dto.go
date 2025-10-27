@@ -64,7 +64,7 @@ type CreateContractResponse struct {
 	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
-	ClientID        int64              `json:"client_id"`
+	ClientID        uuid.UUID          `json:"client_id"`
 	SenderID        *int64             `json:"sender_id"`
 	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct    string             `json:"financing_act"`
@@ -95,7 +95,7 @@ type ListClientContractsResponse struct {
 	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
-	ClientID        int64       `json:"client_id"`
+	ClientID        uuid.UUID   `json:"client_id"`
 	ClientFirstName string      `json:"client_first_name"`
 	ClientLastName  string      `json:"client_last_name"`
 	SenderID        *int64      `json:"sender_id"`
@@ -144,7 +144,7 @@ type UpdateContractResponse struct {
 	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
-	ClientID        int64       `json:"client_id"`
+	ClientID        uuid.UUID   `json:"client_id"`
 	SenderID        *int64      `json:"sender_id"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    string      `json:"financing_act"`
@@ -182,7 +182,7 @@ type GetClientContractResponse struct {
 	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
-	ClientID        int64       `json:"client_id"`
+	ClientID        uuid.UUID   `json:"client_id"`
 	ClientFirstName string      `json:"client_first_name"`
 	ClientLastName  string      `json:"client_last_name"`
 	SenderID        *int64      `json:"sender_id"`
@@ -209,7 +209,7 @@ type ListContractsRequest struct {
 // ListContractsResponse defines the response for ListContracts handler
 type ListContractsResponse struct {
 	ID              int64     `json:"id"`
-	ClientID        int64     `json:"client_id"`
+	ClientID        uuid.UUID `json:"client_id"`
 	Status          string    `json:"status"`
 	StartDate       time.Time `json:"start_date"`
 	EndDate         time.Time `json:"end_date"`
@@ -231,7 +231,7 @@ type GetContractAuditLogResponse struct {
 	AuditID            int64              `json:"audit_id"`
 	ContractID         int64              `json:"contract_id"`
 	Operation          string             `json:"operation"`
-	ChangedBy          *int64             `json:"changed_by"`
+	ChangedBy          *uuid.UUID         `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
 	OldValues          any                `json:"old_values"`
 	NewValues          any                `json:"new_values"`

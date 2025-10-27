@@ -10,7 +10,7 @@ import (
 
 // CreateInvoiceRequest represents the request body for creating an invoice.
 type CreateInvoiceRequest struct {
-	ClientID       int64            `json:"client_id" binding:"required"`
+	ClientID       uuid.UUID        `json:"client_id" binding:"required"`
 	InvoiceType    string           `json:"invoice_type" binding:"required,oneof=standard credit_note"`
 	IssueDate      time.Time        `json:"issue_date" binding:"required"`
 	DueDate        time.Time        `json:"due_date" binding:"required"`

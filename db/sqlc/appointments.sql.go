@@ -17,12 +17,12 @@ const bulkAddAppointmentClients = `-- name: BulkAddAppointmentClients :exec
 INSERT INTO appointment_clients (appointment_id, client_id)
 SELECT
     $1, -- The single appointment_id
-    unnest($2::bigint[])
+    unnest($2::UUID[])
 `
 
 type BulkAddAppointmentClientsParams struct {
-	AppointmentID uuid.UUID `json:"appointment_id"`
-	ClientIds     []int64   `json:"client_ids"`
+	AppointmentID uuid.UUID   `json:"appointment_id"`
+	ClientIds     []uuid.UUID `json:"client_ids"`
 }
 
 // The array of employee_id
@@ -35,12 +35,12 @@ const bulkAddAppointmentParticipants = `-- name: BulkAddAppointmentParticipants 
 INSERT INTO appointment_participants (appointment_id, employee_id)
 SELECT
     $1, -- The single appointment_id
-    unnest($2::bigint[])
+    unnest($2::UUID[])
 `
 
 type BulkAddAppointmentParticipantsParams struct {
-	AppointmentID uuid.UUID `json:"appointment_id"`
-	EmployeeIds   []int64   `json:"employee_ids"`
+	AppointmentID uuid.UUID   `json:"appointment_id"`
+	EmployeeIds   []uuid.UUID `json:"employee_ids"`
 }
 
 func (q *Queries) BulkAddAppointmentParticipants(ctx context.Context, arg BulkAddAppointmentParticipantsParams) error {
@@ -59,8 +59,8 @@ WHERE id = $1
 `
 
 type ConfirmAppointmentParams struct {
-	ID         uuid.UUID `json:"id"`
-	EmployeeID *int64    `json:"employee_id"`
+	ID         uuid.UUID  `json:"id"`
+	EmployeeID *uuid.UUID `json:"employee_id"`
 }
 
 func (q *Queries) ConfirmAppointment(ctx context.Context, arg ConfirmAppointmentParams) error {
@@ -70,19 +70,19 @@ func (q *Queries) ConfirmAppointment(ctx context.Context, arg ConfirmAppointment
 
 const createAppointment = `-- name: CreateAppointment :one
 INSERT INTO scheduled_appointments (
-    creator_employee_id, 
-    start_time,           
-    end_time,             
+    creator_employee_id,
+    start_time,
+    end_time,
     location,
-    color,             
-    description       
+    color,
+    description
 ) VALUES (
     $1, $2, $3, $4, $5, $6
 ) RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_time, location, description, status, color, is_confirmed, confirmed_by_employee_id, confirmed_at, created_at, updated_at
 `
 
 type CreateAppointmentParams struct {
-	CreatorEmployeeID *int64           `json:"creator_employee_id"`
+	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
 	StartTime         pgtype.Timestamp `json:"start_time"`
 	EndTime           pgtype.Timestamp `json:"end_time"`
 	Location          *string          `json:"location"`
@@ -121,12 +121,12 @@ func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentPa
 
 const createAppointmentTemplate = `-- name: CreateAppointmentTemplate :one
 INSERT INTO appointment_templates (
-    creator_employee_id, 
-    start_time,           
-    end_time,             
-    location,             
-    description,  
-    color,        
+    creator_employee_id,
+    start_time,
+    end_time,
+    location,
+    description,
+    color,
     recurrence_type,
     recurrence_interval,
     recurrence_end_date
@@ -136,7 +136,7 @@ INSERT INTO appointment_templates (
 `
 
 type CreateAppointmentTemplateParams struct {
-	CreatorEmployeeID  int64            `json:"creator_employee_id"`
+	CreatorEmployeeID  uuid.UUID        `json:"creator_employee_id"`
 	StartTime          pgtype.Timestamp `json:"start_time"`
 	EndTime            pgtype.Timestamp `json:"end_time"`
 	Location           *string          `json:"location"`
@@ -228,7 +228,7 @@ ORDER BY
 
 type GetAppointmentClientsRow struct {
 	AppointmentID uuid.UUID `json:"appointment_id"`
-	ClientID      int64     `json:"client_id"`
+	ClientID      uuid.UUID `json:"client_id"`
 	FirstName     string    `json:"first_name"`
 	LastName      string    `json:"last_name"`
 }
@@ -277,7 +277,7 @@ ORDER BY
 
 type GetAppointmentParticipantsRow struct {
 	AppointmentID uuid.UUID `json:"appointment_id"`
-	EmployeeID    int64     `json:"employee_id"`
+	EmployeeID    uuid.UUID `json:"employee_id"`
 	FirstName     string    `json:"first_name"`
 	LastName      string    `json:"last_name"`
 }
@@ -372,7 +372,7 @@ LIMIT 1
 type GetScheduledAppointmentByIDRow struct {
 	ID                     uuid.UUID        `json:"id"`
 	AppointmentTemplatesID *uuid.UUID       `json:"appointment_templates_id"`
-	CreatorEmployeeID      *int64           `json:"creator_employee_id"`
+	CreatorEmployeeID      *uuid.UUID       `json:"creator_employee_id"`
 	CreatorFirstName       *string          `json:"creator_first_name"`
 	CreatorLastName        *string          `json:"creator_last_name"`
 	StartTime              pgtype.Timestamp `json:"start_time"`
@@ -382,7 +382,7 @@ type GetScheduledAppointmentByIDRow struct {
 	Color                  *string          `json:"color"`
 	Status                 string           `json:"status"`
 	IsConfirmed            bool             `json:"is_confirmed"`
-	ConfirmedByEmployeeID  *int64           `json:"confirmed_by_employee_id"`
+	ConfirmedByEmployeeID  *uuid.UUID       `json:"confirmed_by_employee_id"`
 	ConfirmerFirstName     *string          `json:"confirmer_first_name"`
 	ConfirmerLastName      *string          `json:"confirmer_last_name"`
 	ConfirmedAt            pgtype.Timestamp `json:"confirmed_at"`
@@ -443,7 +443,7 @@ ORDER BY
 `
 
 type ListClientAppointmentsInRangeParams struct {
-	ClientID  int64            `json:"client_id"`
+	ClientID  uuid.UUID        `json:"client_id"`
 	EndDate   pgtype.Timestamp `json:"end_date"`
 	StartDate pgtype.Timestamp `json:"start_date"`
 }
@@ -456,7 +456,7 @@ type ListClientAppointmentsInRangeRow struct {
 	Description       *string          `json:"description"`
 	Color             *string          `json:"color"`
 	Status            string           `json:"status"`
-	CreatorEmployeeID *int64           `json:"creator_employee_id"`
+	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
 	CreatedAt         pgtype.Timestamp `json:"created_at"`
 }
 
@@ -521,7 +521,7 @@ ORDER BY
 `
 
 type ListClientAppointmentsStartingInRangeParams struct {
-	ClientID  int64            `json:"client_id"`
+	ClientID  uuid.UUID        `json:"client_id"`
 	StartDate pgtype.Timestamp `json:"start_date"`
 	EndDate   pgtype.Timestamp `json:"end_date"`
 }
@@ -534,7 +534,7 @@ type ListClientAppointmentsStartingInRangeRow struct {
 	Description       *string          `json:"description"`
 	Color             *string          `json:"color"`
 	Status            string           `json:"status"`
-	CreatorEmployeeID *int64           `json:"creator_employee_id"`
+	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
 	CreatedAt         pgtype.Timestamp `json:"created_at"`
 }
 
@@ -623,7 +623,7 @@ ORDER BY
 `
 
 type ListEmployeeAppointmentsInRangeParams struct {
-	EmployeeID *int64           `json:"employee_id"`
+	EmployeeID *uuid.UUID       `json:"employee_id"`
 	EndDate    pgtype.Timestamp `json:"end_date"`
 	StartDate  pgtype.Timestamp `json:"start_date"`
 }
@@ -637,7 +637,7 @@ type ListEmployeeAppointmentsInRangeRow struct {
 	Color             *string          `json:"color"`
 	Status            string           `json:"status"`
 	IsConfirmed       bool             `json:"is_confirmed"`
-	CreatorEmployeeID *int64           `json:"creator_employee_id"`
+	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
 	CreatedAt         pgtype.Timestamp `json:"created_at"`
 	InvolvementType   string           `json:"involvement_type"`
 }

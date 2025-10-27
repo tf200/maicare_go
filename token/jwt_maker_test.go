@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,8 +17,8 @@ func TestJWTMaker(t *testing.T) {
 	maker, err := NewJWTMaker(accessKey, refreshKey, twoFATokenKey)
 	require.NoError(t, err)
 
-	userID := util.RandomInt(9999, 5555)
-	employeeID := util.RandomInt(9999, 5555)
+	userID := uuid.New()
+	employeeID := uuid.New()
 	duration := time.Minute
 
 	testCases := []struct {
@@ -57,7 +58,7 @@ func TestExpiredJWTToken(t *testing.T) {
 	maker, err := NewJWTMaker(util.RandomString(32), util.RandomString(32), util.RandomString(32))
 	require.NoError(t, err)
 
-	token, payload, err := maker.CreateToken(util.RandomInt(9999, 5555), util.RandomInt(9999, 5555), -time.Minute, AccessToken)
+	token, payload, err := maker.CreateToken(uuid.New(), uuid.New(), -time.Minute, AccessToken)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	require.NotNil(t, payload)
@@ -69,7 +70,7 @@ func TestExpiredJWTToken(t *testing.T) {
 }
 
 func TestInvalidJWTTokenAlgNone(t *testing.T) {
-	payload, err := NewPayload(util.RandomInt(9999, 5555), util.RandomInt(9999, 5555), time.Minute, AccessToken)
+	payload, err := NewPayload(uuid.New(), uuid.New(), time.Minute, AccessToken)
 	require.NoError(t, err)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)

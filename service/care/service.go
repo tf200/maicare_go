@@ -6,12 +6,13 @@ import (
 	"maicare_go/service/deps"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CarePlanService interface {
 	ListCarePlanTopics(ctx context.Context) ([]ListCarePlanTopics, error)
-	CreateClientCarePlan(ctx context.Context, clientID, employeeID int64, req *CreateClientCarePlanRequest) (*CreateClientCarePlanResponse, error)
-	ListClientCarePlans(ctx *gin.Context, clientID int64, req *ListClientCarePlansRequest) (*pagination.Response[ListClientCarePlansResponse], error)
+	CreateClientCarePlan(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, req *CreateClientCarePlanRequest) (*CreateClientCarePlanResponse, error)
+	ListClientCarePlans(ctx *gin.Context, clientID uuid.UUID, req *ListClientCarePlansRequest) (*pagination.Response[ListClientCarePlansResponse], error)
 	GetCarePlanOverview(ctx *gin.Context, carePlanID int64) (*GetCarePlanOverviewResponse, error)
 	UpdateCarePlanOverview(ctx context.Context, carePlanID int64, req *UpdateCarePlanOverviewRequest) (*UpdateCarePlanOverviewResponse, error)
 	DeleteCarePlan(ctx context.Context, carePlanID int64) error
@@ -58,7 +59,7 @@ type CarePlanService interface {
 	DeleteCarePlanResource(ctx context.Context, resourceID int64) error
 
 	// Care Plan Reports
-	CreateCarePlanReport(ctx context.Context, carePlanID, employeeID int64, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error)
+	CreateCarePlanReport(ctx context.Context, carePlanID int64, employeeID uuid.UUID, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error)
 	ListCarePlanReports(ctx *gin.Context, carePlanID int64, req *ListCarePlanReportsRequest) (*pagination.Response[ListCarePlanReportsResponse], error)
 	UpdateCarePlanReport(ctx context.Context, reportID int64, req *UpdateCarePlanReportRequest) (*UpdateCarePlanReportResponse, error)
 	DeleteCarePlanReport(ctx context.Context, reportID int64) error

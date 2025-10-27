@@ -38,7 +38,7 @@ type CreateInvoiceParams struct {
 	InvoiceDetails  []byte      `json:"invoice_details"`
 	TotalAmount     float64     `json:"total_amount"`
 	ExtraContent    []byte      `json:"extra_content"`
-	ClientID        int64       `json:"client_id"`
+	ClientID        uuid.UUID   `json:"client_id"`
 	SenderID        *int64      `json:"sender_id"`
 	WarningCount    int32       `json:"warning_count"`
 	InvoiceType     string      `json:"invoice_type"`
@@ -105,7 +105,7 @@ type CreatePaymentParams struct {
 	PaymentDate      pgtype.Date `json:"payment_date"`
 	PaymentReference *string     `json:"payment_reference"`
 	Notes            *string     `json:"notes"`
-	RecordedBy       *int64      `json:"recorded_by"`
+	RecordedBy       *uuid.UUID  `json:"recorded_by"`
 }
 
 // ////////////////////// Payments //////////////////////
@@ -221,7 +221,7 @@ type GetInvoiceRow struct {
 	TotalAmount       float64            `json:"total_amount"`
 	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent      []byte             `json:"extra_content"`
-	ClientID          int64              `json:"client_id"`
+	ClientID          uuid.UUID          `json:"client_id"`
 	SenderID          *int64             `json:"sender_id"`
 	WarningCount      int32              `json:"warning_count"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
@@ -288,7 +288,7 @@ type GetInvoiceAuditLogsRow struct {
 	AuditID            int64              `json:"audit_id"`
 	InvoiceID          int64              `json:"invoice_id"`
 	Operation          string             `json:"operation"`
-	ChangedBy          *int64             `json:"changed_by"`
+	ChangedBy          *uuid.UUID         `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
 	OldValues          []byte             `json:"old_values"`
 	NewValues          []byte             `json:"new_values"`
@@ -377,7 +377,7 @@ type GetPaymentRow struct {
 	PaymentDate         pgtype.Date        `json:"payment_date"`
 	PaymentReference    *string            `json:"payment_reference"`
 	Notes               *string            `json:"notes"`
-	RecordedBy          *int64             `json:"recorded_by"`
+	RecordedBy          *uuid.UUID         `json:"recorded_by"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 	RecordedByFirstName *string            `json:"recorded_by_first_name"`
@@ -424,7 +424,7 @@ type GetPaymentWithInvoiceRow struct {
 	PaymentDate        pgtype.Date        `json:"payment_date"`
 	PaymentReference   *string            `json:"payment_reference"`
 	Notes              *string            `json:"notes"`
-	RecordedBy         *int64             `json:"recorded_by"`
+	RecordedBy         *uuid.UUID         `json:"recorded_by"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
 	InvoiceTotalAmount float64            `json:"invoice_total_amount"`
@@ -528,7 +528,7 @@ OFFSET $6
 `
 
 type ListInvoicesParams struct {
-	ClientID  *int64      `json:"client_id"`
+	ClientID  *uuid.UUID  `json:"client_id"`
 	SenderID  *int64      `json:"sender_id"`
 	Status    *string     `json:"status"`
 	StartDate pgtype.Date `json:"start_date"`
@@ -550,7 +550,7 @@ type ListInvoicesRow struct {
 	TotalAmount       float64            `json:"total_amount"`
 	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent      []byte             `json:"extra_content"`
-	ClientID          int64              `json:"client_id"`
+	ClientID          uuid.UUID          `json:"client_id"`
 	SenderID          *int64             `json:"sender_id"`
 	WarningCount      int32              `json:"warning_count"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
@@ -635,7 +635,7 @@ type ListPaymentsRow struct {
 	PaymentDate         pgtype.Date        `json:"payment_date"`
 	PaymentReference    *string            `json:"payment_reference"`
 	Notes               *string            `json:"notes"`
-	RecordedBy          *int64             `json:"recorded_by"`
+	RecordedBy          *uuid.UUID         `json:"recorded_by"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 	RecordedByFirstName *string            `json:"recorded_by_first_name"`
@@ -796,7 +796,7 @@ type UpdatePaymentParams struct {
 	PaymentDate      pgtype.Date `json:"payment_date"`
 	PaymentReference *string     `json:"payment_reference"`
 	Notes            *string     `json:"notes"`
-	RecordedBy       *int64      `json:"recorded_by"`
+	RecordedBy       *uuid.UUID  `json:"recorded_by"`
 	ID               int64       `json:"id"`
 }
 

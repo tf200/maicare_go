@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"maicare_go/service/deps"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -22,22 +24,22 @@ var (
 type AuthService interface {
 	Login(req LoginUserRequest, clientIP string, userAgent string, ctx context.Context) (*LoginUserResponse, error)
 	RefreshToken(req RefreshTokenRequest, ctx context.Context) (*RefreshTokenResponse, error)
-	SetupTwoFA(userID int64, ctx context.Context) (*Setup2FAResponse, error)
+	SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2FAResponse, error)
 	VerifyTwoFAToken(req Verify2FARequest, ctx context.Context) (*LoginUserResponse, error)
 	Logout(req LogoutRequest, ctx context.Context) error
-	ChangePassword(req ChangePasswordRequest, userID int64, ctx context.Context) error
-	EnableTwoFA(req Enable2FARequest, userID int64, ctx context.Context) (*Enable2FAResponse, error)
+	ChangePassword(req ChangePasswordRequest, userID uuid.UUID, ctx context.Context) error
+	EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx context.Context) (*Enable2FAResponse, error)
 
 	// role methods
 	ListRoles(ctx context.Context) ([]ListRolesApiResponse, error)
 	ListAllPermissions(ctx context.Context) ([]ListAllPermissionsApiResponse, error)
 	ListAllRolePermissions(ctx context.Context, roleID int32) ([]ListAllRolePermissionsApiResponse, error)
-	AssignRoleToEmployee(ctx context.Context, employeeID int64, req *AssignRoleToEmployeeParams) (*AssignRoleToEmployeeApiResponse, error)
-	ListUserRolesAndPermissionsApi(ctx context.Context, employeeID int64) (*ListUserRolesAndPermissionsApiResponse, error)
-	GrantUserPermission(ctx context.Context, employeeID int64, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error)
+	AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, req *AssignRoleToEmployeeParams) (*AssignRoleToEmployeeApiResponse, error)
+	ListUserRolesAndPermissionsApi(ctx context.Context, employeeID uuid.UUID) (*ListUserRolesAndPermissionsApiResponse, error)
+	GrantUserPermission(ctx context.Context, employeeID uuid.UUID, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error)
 	AddPermissionsToRole(ctx context.Context, roleID int32, req *AddPermissionsToRoleRequest) (*AddPermissionsToRoleResponse, error)
 	CreateRole(ctx context.Context, req *CreateRoleRequest) (*CreateRoleResponse, error)
-	HasPermission(ctx context.Context, userID int64, permission string) (bool, error)
+	HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error)
 }
 
 type authService struct {

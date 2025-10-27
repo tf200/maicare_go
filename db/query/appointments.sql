@@ -1,23 +1,23 @@
 -- name: CreateAppointment :one
 INSERT INTO scheduled_appointments (
-    creator_employee_id, 
-    start_time,           
-    end_time,             
+    creator_employee_id,
+    start_time,
+    end_time,
     location,
-    color,             
-    description       
+    color,
+    description
 ) VALUES (
     $1, $2, $3, $4, $5, $6
 ) RETURNING *;
 
 -- name: CreateAppointmentTemplate :one
 INSERT INTO appointment_templates (
-    creator_employee_id, 
-    start_time,           
-    end_time,             
-    location,             
-    description,  
-    color,        
+    creator_employee_id,
+    start_time,
+    end_time,
+    location,
+    description,
+    color,
     recurrence_type,
     recurrence_interval,
     recurrence_end_date
@@ -30,13 +30,13 @@ INSERT INTO appointment_templates (
 INSERT INTO appointment_participants (appointment_id, employee_id)
 SELECT
     $1, -- The single appointment_id
-    unnest(sqlc.arg(employee_ids)::bigint[]); -- The array of employee_id
+    unnest(sqlc.arg(employee_ids)::UUID[]); -- The array of employee_id
 
 -- name: BulkAddAppointmentClients :exec
 INSERT INTO appointment_clients (appointment_id, client_id)
 SELECT
     $1, -- The single appointment_id
-    unnest(sqlc.arg(client_ids)::bigint[]); -- The array of client_ids
+    unnest(sqlc.arg(client_ids)::UUID[]); -- The array of client_ids
 
 
 

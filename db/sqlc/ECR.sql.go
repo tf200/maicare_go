@@ -128,7 +128,7 @@ type DischargeOverviewParams struct {
 }
 
 type DischargeOverviewRow struct {
-	ID                 int64       `json:"id"`
+	ID                 uuid.UUID   `json:"id"`
 	FirstName          string      `json:"first_name"`
 	LastName           string      `json:"last_name"`
 	CurrentStatus      *string     `json:"current_status"`
@@ -197,8 +197,8 @@ LIMIT 10
 `
 
 type ListEmployeesByContractEndDateRow struct {
-	ID                int64       `json:"id"`
-	UserID            int64       `json:"user_id"`
+	ID                uuid.UUID   `json:"id"`
+	UserID            uuid.UUID   `json:"user_id"`
 	FirstName         string      `json:"first_name"`
 	LastName          string      `json:"last_name"`
 	Position          *string     `json:"position"`
@@ -329,7 +329,7 @@ type ListUpcomingAppointmentsRow struct {
 	Description *string          `json:"description"`
 }
 
-func (q *Queries) ListUpcomingAppointments(ctx context.Context, creatorEmployeeID *int64) ([]ListUpcomingAppointmentsRow, error) {
+func (q *Queries) ListUpcomingAppointments(ctx context.Context, creatorEmployeeID *uuid.UUID) ([]ListUpcomingAppointmentsRow, error) {
 	rows, err := q.db.Query(ctx, listUpcomingAppointments, creatorEmployeeID)
 	if err != nil {
 		return nil, err

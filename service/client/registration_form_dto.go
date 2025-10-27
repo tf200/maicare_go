@@ -152,7 +152,7 @@ type CreateRegistrationFormResponse struct {
 	UpdatedAt                     time.Time  `json:"updated_at"`
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
-	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+	ProcessedByEmployeeID         *uuid.UUID `json:"processed_by_employee_id"`
 }
 
 // ListRegistrationFormsRequest represents the request body for listing registration forms
@@ -246,7 +246,7 @@ type ListRegistrationFormsResponse struct {
 	UpdatedAt                     time.Time  `json:"updated_at"`
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
-	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+	ProcessedByEmployeeID         *uuid.UUID `json:"processed_by_employee_id"`
 	IntakeAppointmentDate         time.Time  `json:"intake_appointment_date,omitempty"`
 	AddmissionType                *string    `json:"admission_type"` // "crisis_admission" or "regular_placement"
 }
@@ -326,7 +326,7 @@ type GetRegistrationFormResponse struct {
 	UpdatedAt                     time.Time  `json:"updated_at"`
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
-	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+	ProcessedByEmployeeID         *uuid.UUID `json:"processed_by_employee_id"`
 	IntakeAppointmentDate         time.Time  `json:"intake_appointment_date,omitempty"`
 	AddmissionType                *string    `json:"admission_type"` // "crisis_admission" or "regular_placement"
 }
@@ -475,7 +475,7 @@ type UpdateRegistrationFormResponse struct {
 	UpdatedAt                     time.Time  `json:"updated_at"`
 	SubmittedAt                   time.Time  `json:"submitted_at"`
 	ProcessedAt                   time.Time  `json:"processed_at"`
-	ProcessedByEmployeeID         *int64     `json:"processed_by_employee_id"`
+	ProcessedByEmployeeID         *uuid.UUID `json:"processed_by_employee_id"`
 }
 
 // UpdateRegistrationFormStatusRequest represents the response body for updating a registration form status

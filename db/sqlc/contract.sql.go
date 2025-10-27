@@ -50,7 +50,7 @@ type CreateContractParams struct {
 	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
-	ClientID        int64              `json:"client_id"`
+	ClientID        uuid.UUID          `json:"client_id"`
 	SenderID        *int64             `json:"sender_id"`
 	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct    string             `json:"financing_act"`
@@ -268,7 +268,7 @@ type GetClientContractRow struct {
 	HoursType        *string            `json:"hours_type"`
 	CareName         string             `json:"care_name"`
 	CareType         string             `json:"care_type"`
-	ClientID         int64              `json:"client_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	SenderID         *int64             `json:"sender_id"`
 	AttachmentIds    []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct     string             `json:"financing_act"`
@@ -332,7 +332,7 @@ type GetContractAuditRow struct {
 	AuditID            int64              `json:"audit_id"`
 	ContractID         int64              `json:"contract_id"`
 	Operation          string             `json:"operation"`
-	ChangedBy          *int64             `json:"changed_by"`
+	ChangedBy          *uuid.UUID         `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
 	OldValues          []byte             `json:"old_values"`
 	NewValues          []byte             `json:"new_values"`
@@ -444,9 +444,9 @@ OFFSET $3
 `
 
 type ListClientContractsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListClientContractsRow struct {
@@ -465,7 +465,7 @@ type ListClientContractsRow struct {
 	HoursType        *string            `json:"hours_type"`
 	CareName         string             `json:"care_name"`
 	CareType         string             `json:"care_type"`
-	ClientID         int64              `json:"client_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	SenderID         *int64             `json:"sender_id"`
 	AttachmentIds    []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct     string             `json:"financing_act"`
@@ -627,7 +627,7 @@ type ListContractsRow struct {
 	FinancingOption string             `json:"financing_option"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	SenderName      *string            `json:"sender_name"`
-	ClientID        int64              `json:"client_id"`
+	ClientID        uuid.UUID          `json:"client_id"`
 	SenderID        *int64             `json:"sender_id"`
 	ClientFirstName string             `json:"client_first_name"`
 	ClientLastName  string             `json:"client_last_name"`
@@ -717,12 +717,12 @@ ORDER BY c.end_date ASC
 type ListContractsTobeRemindedRow struct {
 	ID               int64              `json:"id"`
 	CareName         string             `json:"care_name"`
-	ClientID         int64              `json:"client_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	StartDate        pgtype.Timestamptz `json:"start_date"`
 	EndDate          pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod   int32              `json:"reminder_period"`
 	CareType         string             `json:"care_type"`
-	ClientID_2       int64              `json:"client_id_2"`
+	ClientID_2       uuid.UUID          `json:"client_id_2"`
 	ClientFirstName  string             `json:"client_first_name"`
 	ClientLastName   string             `json:"client_last_name"`
 	ReminderDate     int32              `json:"reminder_date"`

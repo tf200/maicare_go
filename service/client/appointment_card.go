@@ -9,10 +9,11 @@ import (
 	"maicare_go/logger"
 	"maicare_go/service/pdf"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, clientID int64, ctx context.Context) (*CreateAppointmentCardResponse, error) {
+func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, clientID uuid.UUID, ctx context.Context) (*CreateAppointmentCardResponse, error) {
 	appointmentCard, err := s.Store.CreateAppointmentCard(ctx, db.CreateAppointmentCardParams{
 		ClientID:               clientID,
 		GeneralInformation:     req.GeneralInformation,
@@ -54,17 +55,19 @@ func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, 
 	}, nil
 }
 
-func (s *clientService) GetAppointmentCard(ctx context.Context, clientID int64) (*GetAppointmentCardResponse, error) {
+func (s *clientService) GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*GetAppointmentCardResponse, error) {
 	appointmentCard, err := s.Store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GetAppointmentCard",
-				"Appointment card not found", zap.Int64("ClientID", clientID))
+				"Appointment card not found", zap.String("ClientID", clientID.String()))
 			return nil, fmt.Errorf("appointment card not found")
 		}
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetAppointmentCard",
 			"Failed to get appointment card", zap.Error(err))
+
 		return nil, fmt.Errorf("failed to get appointment card")
+
 	}
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetAppointmentCard",
 		"Successfully retrieved appointment card", zap.Int64("AppointmentCardID", appointmentCard.ID))
@@ -88,7 +91,7 @@ func (s *clientService) GetAppointmentCard(ctx context.Context, clientID int64) 
 	}, nil
 }
 
-func (s *clientService) UpdateAppointmentCard(req UpdateAppointmentCardRequest, clientID int64, ctx context.Context) (*UpdateAppointmentCardResponse, error) {
+func (s *clientService) UpdateAppointmentCard(req UpdateAppointmentCardRequest, clientID uuid.UUID, ctx context.Context) (*UpdateAppointmentCardResponse, error) {
 	arg := db.UpdateAppointmentCardParams{
 		ClientID:               clientID,
 		GeneralInformation:     req.GeneralInformation,
@@ -130,12 +133,12 @@ func (s *clientService) UpdateAppointmentCard(req UpdateAppointmentCardRequest, 
 	}, nil
 }
 
-func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, clientID int64) (*GenerateAppointmentCardDocumentApiResponse, error) {
+func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, clientID uuid.UUID) (*GenerateAppointmentCardDocumentApiResponse, error) {
 	appointmentCard, err := s.Store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateAppointmentCardDocumentApi",
-				"Appointment card not found", zap.Int64("ClientID", clientID))
+				"Appointment card not found", zap.String("ClientID", clientID.String()))
 			return nil, fmt.Errorf("appointment card not found")
 		}
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateAppointmentCardDocumentApi",
@@ -187,7 +190,7 @@ func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, 
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GenerateAppointmentCardDocumentApi",
-		"Successfully generated appointment card document", zap.Int64("ClientID", clientID))
+		"Successfully generated appointment card document", zap.String("ClientID", clientID.String()))
 	return &GenerateAppointmentCardDocumentApiResponse{
 		FileUrl:  s.GenerateResponsePresignedURL(fileKey, ctx),
 		ClientID: clientID,

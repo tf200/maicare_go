@@ -18,7 +18,7 @@ const (
 )
 
 type NotificationPayload struct {
-	RecipientUserIDs []int64          `json:"recipient_user_ids"`
+	RecipientUserIDs []uuid.UUID      `json:"recipient_user_ids"`
 	Type             string           `json:"type"`
 	Data             NotificationData `json:"data"`
 	CreatedAt        time.Time        `json:"created_at"`
@@ -52,10 +52,10 @@ func (a *NewAppointmentData) NewAppointmentMessage() string {
 }
 
 type NewClientAssignmentData struct {
-	ClientID        int64   `json:"client_id"`
-	ClientFirstName string  `json:"client_first_name"`
-	ClientLastName  string  `json:"client_last_name"`
-	ClientLocation  *string `json:"client_location"`
+	ClientID        uuid.UUID `json:"client_id"`
+	ClientFirstName string    `json:"client_first_name"`
+	ClientLastName  string    `json:"client_last_name"`
+	ClientLocation  *string   `json:"client_location"`
 }
 
 func (n *NewClientAssignmentData) NewClientAssignmentMessage() string {
@@ -78,16 +78,16 @@ type ClientContractReminderData struct {
 }
 
 type NewIncidentReportData struct {
-	ID                 int64  `json:"id"`
-	EmployeeID         int64  `json:"employee_id"`
-	EmployeeFirstName  string `json:"employee_first_name"`
-	EmployeeLastName   string `json:"employee_last_name"`
-	LocationID         int64  `json:"location_id"`
-	LocationName       string `json:"location_name"`
-	ClientID           int64  `json:"client_id"`
-	ClientFirstName    string `json:"client_first_name"`
-	ClientLastName     string `json:"client_last_name"`
-	SeverityOfIncident string `json:"severity_of_incident"`
+	ID                 int64     `json:"id"`
+	EmployeeID         uuid.UUID `json:"employee_id"`
+	EmployeeFirstName  string    `json:"employee_first_name"`
+	EmployeeLastName   string    `json:"employee_last_name"`
+	LocationID         int64     `json:"location_id"`
+	LocationName       string    `json:"location_name"`
+	ClientID           uuid.UUID `json:"client_id"`
+	ClientFirstName    string    `json:"client_first_name"`
+	ClientLastName     string    `json:"client_last_name"`
+	SeverityOfIncident string    `json:"severity_of_incident"`
 }
 
 type NewScheduleNotificationData struct {

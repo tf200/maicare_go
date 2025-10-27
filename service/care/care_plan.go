@@ -12,11 +12,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, employeeID int64, req *CreateClientCarePlanRequest) (*CreateClientCarePlanResponse, error) {
+func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, employeeID uuid.UUID, req *CreateClientCarePlanRequest) (*CreateClientCarePlanResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to begin transaction", zap.Error(err))
@@ -129,7 +130,7 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 
 }
 
-func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID int64, req *ListClientCarePlansRequest) (*pagination.Response[ListClientCarePlansResponse], error) {
+func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID uuid.UUID, req *ListClientCarePlansRequest) (*pagination.Response[ListClientCarePlansResponse], error) {
 	params := req.GetParams()
 	clientAssessments, err := s.Store.ListClientMaturityMatrixAssessments(ctx, db.ListClientMaturityMatrixAssessmentsParams{
 		ClientID: clientID,
@@ -758,7 +759,7 @@ func (s *carePlanService) DeleteCarePlanResource(ctx context.Context, resourceID
 
 // ========================== Care plan Reports ===========================
 
-func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID, employeeID int64, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error) {
+func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID int64, employeeID uuid.UUID, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error) {
 	report, err := s.Store.CreateCarePlanReport(ctx, db.CreateCarePlanReportParams{
 		CarePlanID:          carePlanID,
 		ReportType:          req.ReportType,
@@ -849,7 +850,7 @@ func (s *carePlanService) getDetails(
 	qtx *db.Queries,
 	ctx context.Context,
 	topicID int64,
-	clientID int64,
+	clientID uuid.UUID,
 
 ) (*Details, error) {
 	topicDescription, err := qtx.GetMaturityMatrix(ctx, topicID)
@@ -886,7 +887,7 @@ func (s *carePlanService) insertCarePlan(
 	qtx *db.Queries,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 	assessmentID int64,
-	emplpoyeeID int64,
+	emplpoyeeID uuid.UUID,
 ) (carePlanID int64, err error) {
 	rawllmResp, err := json.Marshal(genCarePlan)
 	if err != nil {

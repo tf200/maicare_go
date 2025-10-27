@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
+	"github.com/google/uuid"
 )
 
 //go:embed templates/incident.html
@@ -19,7 +20,7 @@ var incidentTemplateFS embed.FS
 
 type IncidentReportData struct {
 	ID                      int64     `json:"id"`
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
 	LocationID              int64     `json:"location_id"`
@@ -60,7 +61,7 @@ type IncidentReportData struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
+	ClientID                uuid.UUID `json:"client_id"`
 	ClientFirstName         string    `json:"client_firstname"`
 	ClientLastName          string    `json:"client_lastname"`
 	LocationName            string    `json:"location_name"`

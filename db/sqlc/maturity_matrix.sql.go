@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -25,11 +26,11 @@ INSERT INTO care_plans (
 `
 
 type CreateCarePlanParams struct {
-	AssessmentID          int64  `json:"assessment_id"`
-	GeneratedByEmployeeID *int64 `json:"generated_by_employee_id"`
-	AssessmentSummary     string `json:"assessment_summary"`
-	RawLlmResponse        []byte `json:"raw_llm_response"`
-	Status                string `json:"status"`
+	AssessmentID          int64      `json:"assessment_id"`
+	GeneratedByEmployeeID *uuid.UUID `json:"generated_by_employee_id"`
+	AssessmentSummary     string     `json:"assessment_summary"`
+	RawLlmResponse        []byte     `json:"raw_llm_response"`
+	Status                string     `json:"status"`
 }
 
 // ==================== new code    ====================
@@ -189,11 +190,11 @@ INSERT INTO care_plan_reports (
 `
 
 type CreateCarePlanReportParams struct {
-	CarePlanID          int64  `json:"care_plan_id"`
-	ReportType          string `json:"report_type"`
-	ReportContent       string `json:"report_content"`
-	CreatedByEmployeeID int64  `json:"created_by_employee_id"`
-	IsCritical          bool   `json:"is_critical"`
+	CarePlanID          int64     `json:"care_plan_id"`
+	ReportType          string    `json:"report_type"`
+	ReportContent       string    `json:"report_content"`
+	CreatedByEmployeeID uuid.UUID `json:"created_by_employee_id"`
+	IsCritical          bool      `json:"is_critical"`
 }
 
 // ===================== care plan reports ====================
@@ -410,7 +411,7 @@ JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id
 `
 
 type CreateClientMaturityMatrixAssessmentParams struct {
-	ClientID         int64       `json:"client_id"`
+	ClientID         uuid.UUID   `json:"client_id"`
 	MaturityMatrixID int64       `json:"maturity_matrix_id"`
 	StartDate        pgtype.Date `json:"start_date"`
 	EndDate          pgtype.Date `json:"end_date"`
@@ -421,7 +422,7 @@ type CreateClientMaturityMatrixAssessmentParams struct {
 
 type CreateClientMaturityMatrixAssessmentRow struct {
 	ID                  int64              `json:"id"`
-	ClientID            int64              `json:"client_id"`
+	ClientID            uuid.UUID          `json:"client_id"`
 	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
@@ -694,8 +695,8 @@ type GetCarePlanOverviewRow struct {
 	ID                    int64            `json:"id"`
 	AssessmentID          int64            `json:"assessment_id"`
 	GeneratedAt           pgtype.Timestamp `json:"generated_at"`
-	GeneratedByEmployeeID *int64           `json:"generated_by_employee_id"`
-	ApprovedByEmployeeID  *int64           `json:"approved_by_employee_id"`
+	GeneratedByEmployeeID *uuid.UUID       `json:"generated_by_employee_id"`
+	ApprovedByEmployeeID  *uuid.UUID       `json:"approved_by_employee_id"`
 	ApprovedAt            pgtype.Timestamp `json:"approved_at"`
 	Status                string           `json:"status"`
 	AssessmentSummary     string           `json:"assessment_summary"`
@@ -703,7 +704,7 @@ type GetCarePlanOverviewRow struct {
 	CreatedAt             pgtype.Timestamp `json:"created_at"`
 	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
 	Version               int32            `json:"version"`
-	ClientID              int64            `json:"client_id"`
+	ClientID              uuid.UUID        `json:"client_id"`
 	CurrentLevel          int32            `json:"current_level"`
 	TargetLevel           int32            `json:"target_level"`
 	TopicName             string           `json:"topic_name"`
@@ -752,7 +753,7 @@ type GetCarePlanReportRow struct {
 	CarePlanID          int64              `json:"care_plan_id"`
 	ReportType          string             `json:"report_type"`
 	ReportContent       string             `json:"report_content"`
-	CreatedByEmployeeID int64              `json:"created_by_employee_id"`
+	CreatedByEmployeeID uuid.UUID          `json:"created_by_employee_id"`
 	IsCritical          bool               `json:"is_critical"`
 	CreatedAt           pgtype.Timestamp   `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
@@ -938,7 +939,7 @@ WHERE cma.id = $1
 
 type GetClientMaturityMatrixAssessmentRow struct {
 	ID                  int64              `json:"id"`
-	ClientID            int64              `json:"client_id"`
+	ClientID            uuid.UUID          `json:"client_id"`
 	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
@@ -1031,7 +1032,7 @@ type ListCarePlanReportsRow struct {
 	CarePlanID          int64              `json:"care_plan_id"`
 	ReportType          string             `json:"report_type"`
 	ReportContent       string             `json:"report_content"`
-	CreatedByEmployeeID int64              `json:"created_by_employee_id"`
+	CreatedByEmployeeID uuid.UUID          `json:"created_by_employee_id"`
 	IsCritical          bool               `json:"is_critical"`
 	CreatedAt           pgtype.Timestamp   `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
@@ -1088,14 +1089,14 @@ LIMIT $2 OFFSET $3
 `
 
 type ListClientMaturityMatrixAssessmentsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListClientMaturityMatrixAssessmentsRow struct {
 	ID                  int64              `json:"id"`
-	ClientID            int64              `json:"client_id"`
+	ClientID            uuid.UUID          `json:"client_id"`
 	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`

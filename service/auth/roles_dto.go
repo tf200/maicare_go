@@ -1,5 +1,7 @@
 package auth
 
+import "github.com/google/uuid"
+
 // ListRolesApiResponse represents a response for ListRolesApi
 type ListRolesApiResponse struct {
 	ID              int32  `json:"id"`
@@ -29,8 +31,8 @@ type AssignRoleToEmployeeParams struct {
 
 // AssignRoleToUserApiResponse represents a response for AssignRoleToUserApi
 type AssignRoleToEmployeeApiResponse struct {
-	EmployeeID int64 `json:"employee_id"`
-	RoleID     int32 `json:"role_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+	RoleID     int32     `json:"role_id"`
 }
 
 // ListUserRolesAndPermissionsApiResponse represents a response for ListUserRolesAndPermissionsApi
@@ -53,8 +55,8 @@ type GrantUserPermissionsRequest struct {
 
 // GrantUserPermissionsResponse represents a response for GrantUserPermissionsApi
 type GrantUserPermissionsResponse struct {
-	EmployeeID    int64   `json:"employee_id"`
-	PermissionIDs []int32 `json:"permission_ids"`
+	EmployeeID    uuid.UUID `json:"employee_id"`
+	PermissionIDs []int32   `json:"permission_ids"`
 }
 
 // AddPermissionsToRoleRequest represents a request for AddPermissionsToRoleApi

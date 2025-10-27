@@ -36,26 +36,26 @@ JOIN location l ON s.location_id = l.id
 `
 
 type CreateScheduleParams struct {
-	EmployeeID          int64            `json:"employee_id"`
+	EmployeeID          uuid.UUID        `json:"employee_id"`
 	LocationID          int64            `json:"location_id"`
 	LocationShiftID     *int64           `json:"location_shift_id"`
 	Color               *string          `json:"color"`
 	IsCustom            bool             `json:"is_custom"`
-	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
 	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
 }
 
 type CreateScheduleRow struct {
 	ID                  uuid.UUID        `json:"id"`
-	EmployeeID          int64            `json:"employee_id"`
+	EmployeeID          uuid.UUID        `json:"employee_id"`
 	Color               *string          `json:"color"`
 	LocationID          int64            `json:"location_id"`
 	LocationShiftID     *int64           `json:"location_shift_id"`
 	IsCustom            bool             `json:"is_custom"`
 	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
-	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
 	CreatedAt           pgtype.Timestamp `json:"created_at"`
 	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
 	LocationName        string           `json:"location_name"`
@@ -141,7 +141,7 @@ type GetDailySchedulesByLocationParams struct {
 
 type GetDailySchedulesByLocationRow struct {
 	ShiftID           uuid.UUID        `json:"shift_id"`
-	EmployeeID        int64            `json:"employee_id"`
+	EmployeeID        uuid.UUID        `json:"employee_id"`
 	LocationID        int64            `json:"location_id"`
 	Color             *string          `json:"color"`
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
@@ -210,7 +210,7 @@ ORDER BY s.start_datetime
 `
 
 type GetEmployeeSchedulesParams struct {
-	EmployeeID  int64            `json:"employee_id"`
+	EmployeeID  uuid.UUID        `json:"employee_id"`
 	PeriodStart pgtype.Timestamp `json:"period_start"`
 	PeriodEnd   pgtype.Timestamp `json:"period_end"`
 }
@@ -289,7 +289,7 @@ type GetMonthlySchedulesByLocationParams struct {
 
 type GetMonthlySchedulesByLocationRow struct {
 	ShiftID           uuid.UUID        `json:"shift_id"`
-	EmployeeID        int64            `json:"employee_id"`
+	EmployeeID        uuid.UUID        `json:"employee_id"`
 	LocationID        int64            `json:"location_id"`
 	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
@@ -352,14 +352,14 @@ LIMIT 1
 
 type GetScheduleByIdRow struct {
 	ID                  uuid.UUID        `json:"id"`
-	EmployeeID          int64            `json:"employee_id"`
+	EmployeeID          uuid.UUID        `json:"employee_id"`
 	Color               *string          `json:"color"`
 	LocationID          int64            `json:"location_id"`
 	LocationShiftID     *int64           `json:"location_shift_id"`
 	IsCustom            bool             `json:"is_custom"`
 	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
-	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
 	CreatedAt           pgtype.Timestamp `json:"created_at"`
 	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
 	EmployeeFirstName   string           `json:"employee_first_name"`
@@ -415,7 +415,7 @@ JOIN location l ON s.location_id = l.id
 
 type UpdateScheduleParams struct {
 	ID              uuid.UUID        `json:"id"`
-	EmployeeID      int64            `json:"employee_id"`
+	EmployeeID      uuid.UUID        `json:"employee_id"`
 	LocationID      int64            `json:"location_id"`
 	LocationShiftID *int64           `json:"location_shift_id"`
 	Color           *string          `json:"color"`
@@ -425,14 +425,14 @@ type UpdateScheduleParams struct {
 
 type UpdateScheduleRow struct {
 	ID                  uuid.UUID        `json:"id"`
-	EmployeeID          int64            `json:"employee_id"`
+	EmployeeID          uuid.UUID        `json:"employee_id"`
 	Color               *string          `json:"color"`
 	LocationID          int64            `json:"location_id"`
 	LocationShiftID     *int64           `json:"location_shift_id"`
 	IsCustom            bool             `json:"is_custom"`
 	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
-	CreatedByEmployeeID int64            `json:"created_by_employee_id"`
+	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
 	CreatedAt           pgtype.Timestamp `json:"created_at"`
 	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
 	LocationName        string           `json:"location_name"`

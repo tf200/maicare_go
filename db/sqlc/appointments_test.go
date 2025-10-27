@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAppointment(t *testing.T, employeeID *int64) ScheduledAppointment {
+func createRandomAppointment(t *testing.T, employeeID *uuid.UUID) ScheduledAppointment {
 	arg := CreateAppointmentParams{
 		CreatorEmployeeID: employeeID,
 		StartTime:         pgtype.Timestamp{Time: time.Now(), Valid: true},
@@ -38,7 +38,7 @@ func TestAddAppointmentParticipant(t *testing.T) {
 
 	arg := BulkAddAppointmentParticipantsParams{
 		AppointmentID: appointment.ID,
-		EmployeeIds:   []int64{employee.ID, employee2.ID},
+		EmployeeIds:   []uuid.UUID{employee.ID, employee2.ID},
 	}
 
 	err := testQueries.BulkAddAppointmentParticipants(context.Background(), arg)
@@ -52,7 +52,7 @@ func TestAddAppointmentClient(t *testing.T) {
 
 	arg := BulkAddAppointmentClientsParams{
 		AppointmentID: appointment.ID,
-		ClientIds:     []int64{client.ID},
+		ClientIds:     []uuid.UUID{client.ID},
 	}
 
 	err := testQueries.BulkAddAppointmentClients(context.Background(), arg)
@@ -76,7 +76,7 @@ func TestGetAppointmentParticipants(t *testing.T) {
 
 	arg := BulkAddAppointmentParticipantsParams{
 		AppointmentID: appointment.ID,
-		EmployeeIds:   []int64{employee.ID, employee2.ID},
+		EmployeeIds:   []uuid.UUID{employee.ID, employee2.ID},
 	}
 
 	err := testQueries.BulkAddAppointmentParticipants(context.Background(), arg)
@@ -95,7 +95,7 @@ func TestGetAppointmentClients(t *testing.T) {
 
 	arg := BulkAddAppointmentClientsParams{
 		AppointmentID: appointment.ID,
-		ClientIds:     []int64{client.ID},
+		ClientIds:     []uuid.UUID{client.ID},
 	}
 
 	err := testQueries.BulkAddAppointmentClients(context.Background(), arg)
