@@ -8,6 +8,7 @@ import (
 	"maicare_go/service/auth"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -80,7 +81,7 @@ func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles [post]
 func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	employeeID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
 		return
@@ -108,7 +109,7 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles_permissions [get]
 func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	employeeID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
 		return
@@ -133,7 +134,7 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/permissions [post]
 func (server *Server) GrantUserPermissionsApi(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("employee_id"), 10, 64)
+	employeeID, err := uuid.Parse(ctx.Param("employee_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
 		return

@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
+	"github.com/google/uuid"
 )
 
 // CreateAppointmentCardApi creates a new appointment card
@@ -24,7 +23,7 @@ import (
 // @Router /clients/{id}/appointment_cards [post]
 func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
@@ -53,7 +52,7 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 // @Router /clients/{id}/appointment_cards [get]
 func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
@@ -87,7 +86,7 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 // @Router /clients/{id}/appointment_cards [put]
 func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
@@ -120,16 +119,14 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 // @Router /clients/{id}/appointment_cards/generate_document [post]
 func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Invalid client ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
 	response, err := server.businessService.ClientService.GenerateAppointmentCardDocumentApi(ctx, clientID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GenerateAppointmentCardDocumentApi", "Failed to generate appointment card document", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate appointment card document")))
 		return
 	}

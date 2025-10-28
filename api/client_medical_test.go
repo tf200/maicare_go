@@ -16,6 +16,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,7 @@ import (
 // 	test
 // }
 
-func createRandomClientDiagnosis(t *testing.T, clientID int64) db.ClientDiagnosis {
+func createRandomClientDiagnosis(t *testing.T, clientID uuid.UUID) db.ClientDiagnosis {
 	arg := db.CreateClientDiagnosisParams{
 		ClientID:            clientID,
 		Title:               util.StringPtr("test title"),
@@ -175,6 +176,7 @@ func TestListClientDiagnoses(t *testing.T) {
 }
 
 func TestGetClientDiagnosisApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
 
@@ -187,7 +189,7 @@ func TestGetClientDiagnosisApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/diagnosis/%d", client.ID, diagnosis.ID)
@@ -230,6 +232,7 @@ func TestGetClientDiagnosisApi(t *testing.T) {
 }
 
 func TestUpdateClientDiagnosisApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
 
@@ -242,7 +245,7 @@ func TestUpdateClientDiagnosisApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				diagnosisReq := clientp.UpdateClientDiagnosisRequest{
@@ -296,6 +299,7 @@ func TestUpdateClientDiagnosisApi(t *testing.T) {
 }
 
 func TestDeleteClientDiagnosisApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
 
@@ -308,7 +312,7 @@ func TestDeleteClientDiagnosisApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/diagnosis/%d", client.ID, diagnosis.ID)
@@ -334,7 +338,7 @@ func TestDeleteClientDiagnosisApi(t *testing.T) {
 	}
 }
 
-func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID int64) db.ClientMedication {
+func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID uuid.UUID) db.ClientMedication {
 	arg := db.CreateClientMedicationParams{
 		DiagnosisID:      &diagnosisID,
 		Name:             "test name",
@@ -343,7 +347,7 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID in
 		EndDate:          pgtype.Date{Time: util.RandomTIme(), Valid: true},
 		Notes:            util.StringPtr("test note"),
 		SelfAdministered: true,
-		AdministeredByID: util.IntPtr(employeeID),
+		AdministeredByID: &employeeID,
 		IsCritical:       true,
 	}
 

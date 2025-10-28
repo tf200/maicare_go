@@ -9,6 +9,7 @@ import (
 	"maicare_go/service/employees"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Get employee profile by user ID
@@ -135,7 +136,7 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 	currentUserID := payload.UserId
 
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -161,7 +162,7 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 // @Router /employees/{id} [put]
 func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -195,7 +196,7 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 // @Router /employees/{id}/profile_picture [put]
 func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -229,7 +230,7 @@ func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
 // @Router /employees/{id}/is_subcontractor [put]
 func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee ID: %w", err)))
 		return
@@ -263,7 +264,7 @@ func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {
 // @Router /employees/{id}/contract_details [put]
 func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -295,7 +296,7 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 // @Router /employees/{id}/contract_details [get]
 func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -323,7 +324,7 @@ func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 // @Router /employees/{id}/education [post]
 func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -355,7 +356,7 @@ func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 // @Router /employees/{id}/education [get]
 func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -443,7 +444,7 @@ func (server *Server) DeleteEmployeeEducationApi(ctx *gin.Context) {
 // @Router /employees/{id}/experience [post]
 func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -473,7 +474,7 @@ func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
 // @Router /employees/{id}/experience [get]
 func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -554,7 +555,7 @@ func (server *Server) DeleteEmployeeExperienceApi(ctx *gin.Context) {
 // @Router /employees/{id}/certification [post]
 func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -583,7 +584,7 @@ func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
 // @Router /employees/{id}/certification [get]
 func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

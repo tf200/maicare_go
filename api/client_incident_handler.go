@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateIncidentApi creates an incident
@@ -26,9 +27,8 @@ import (
 // @Router /clients/{id}/incidents [post]
 func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Invalid client ID", zap.String("client_id", id), zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
@@ -36,7 +36,6 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 	var req clientp.CreateIncidentRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateIncidentApi", "Invalid request body", zap.String("client_id", id), zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
@@ -63,16 +62,14 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 // @Router /clients/{id}/incidents [get]
 func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Invalid client ID", zap.String("client_id", id), zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid client ID")))
 		return
 	}
 
 	var req clientp.ListIncidentsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "ListIncidentsApi", "Failed to bind query parameters", zap.String("client_id", id), zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("failed to bind query parameters")))
 		return
 	}

@@ -7,6 +7,7 @@ import (
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateProgressReportApi creates a new progress report for a client
@@ -21,7 +22,7 @@ import (
 // @Router /clients/{id}/progress_reports [post]
 func (server *Server) CreateProgressReportApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -54,7 +55,7 @@ func (server *Server) CreateProgressReportApi(ctx *gin.Context) {
 // @Router /clients/{id}/progress_reports [get]
 func (server *Server) ListProgressReportsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -176,7 +177,7 @@ func (server *Server) DeleteProgressReportApi(ctx *gin.Context) {
 // @Router /clients/{id}/ai_progress_reports [post]
 func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -211,7 +212,7 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 // @Router /clients/{id}/ai_progress_reports/confirm [post]
 func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -246,7 +247,7 @@ func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
 // @Router /clients/{id}/ai_progress_reports [get]
 func (server *Server) ListAiGeneratedReportsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

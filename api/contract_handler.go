@@ -8,6 +8,7 @@ import (
 	"maicare_go/service/contract"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateContractTypeApi creates a new contract type
@@ -89,7 +90,7 @@ func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 // @Router /clients/{id}/contracts [post]
 func (server *Server) CreateContractApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -122,7 +123,7 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 // @Router /clients/{id}/contracts [get]
 func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

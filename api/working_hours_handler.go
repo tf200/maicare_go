@@ -2,11 +2,11 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/employees"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary List working hours for an employee
@@ -23,7 +23,7 @@ import (
 // @Router /employees/{id}/working_hours [get]
 func (server *Server) ListWorkingHours(ctx *gin.Context) {
 	id := ctx.Param("id")
-	employeeID, err := strconv.ParseInt(id, 10, 64)
+	employeeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid employee ID"})
 		return

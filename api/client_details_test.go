@@ -390,6 +390,7 @@ func TestUpdateClientDetailsApi(t *testing.T) {
 }
 
 func TestSetClientProfilePictureApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	file := createRandomAttachmentFile(t)
 	testCases := []struct {
@@ -401,7 +402,7 @@ func TestSetClientProfilePictureApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				reqBody := clientp.SetClientProfilePictureRequest{
@@ -489,7 +490,7 @@ func TestAddClientDocumentApi(t *testing.T) {
 	}
 }
 
-func addRandomClientDocument(t *testing.T, ClientID int64) db.ClientDocument {
+func addRandomClientDocument(t *testing.T, ClientID uuid.UUID) db.ClientDocument {
 	attachment := createRandomAttachmentFile(t)
 
 	arg := db.AddClientDocumentTxParams{
@@ -688,7 +689,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 		{
 			name: "OK With Scheduling",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				scheduledTime := time.Date(2028, 1, 2, 0, 0, 0, 0, time.UTC)

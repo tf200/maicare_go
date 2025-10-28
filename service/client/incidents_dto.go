@@ -49,7 +49,6 @@ type CreateIncidentRequest struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
 	Emails                  []string  `json:"emails"`
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"maicare_go/token"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +19,7 @@ func addAuthorization(
 	request *http.Request,
 	tokenMaker token.Maker,
 	authorizationType string,
-	userID int64,
+	userID uuid.UUID,
 	duration time.Duration,
 ) {
 	employee, err := testStore.GetEmployeeProfileByUserID(context.Background(), userID)

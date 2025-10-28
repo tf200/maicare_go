@@ -16,13 +16,14 @@ import (
 	"maicare_go/util"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomEmergencyContact(t *testing.T, clientID int64) db.ClientEmergencyContact {
+func createRandomEmergencyContact(t *testing.T, clientID uuid.UUID) db.ClientEmergencyContact {
 	arg := db.CreateEmemrgencyContactParams{
 		ClientID:         clientID,
 		FirstName:        util.StringPtr(util.RandomString(5)),
@@ -44,6 +45,7 @@ func createRandomEmergencyContact(t *testing.T, clientID int64) db.ClientEmergen
 }
 
 func TestGetClientSenderApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	testCases := []struct {
@@ -55,7 +57,7 @@ func TestGetClientSenderApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/sender", client.ID)
@@ -88,6 +90,7 @@ func TestGetClientSenderApi(t *testing.T) {
 }
 
 func TestCreateEmemrgencyContactApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	testCases := []struct {
@@ -99,7 +102,7 @@ func TestCreateEmemrgencyContactApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := clientp.CreateClientEmergencyContactParams{
@@ -148,6 +151,7 @@ func TestCreateEmemrgencyContactApi(t *testing.T) {
 }
 
 func TestListClientEmergencyContactsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	for i := 0; i < 20; i++ {
 		createRandomEmergencyContact(t, client.ID)
@@ -162,7 +166,7 @@ func TestListClientEmergencyContactsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/emergency_contacts?page=1&page_size=5", client.ID)
@@ -196,6 +200,7 @@ func TestListClientEmergencyContactsApi(t *testing.T) {
 }
 
 func TestGetEmergencyContactApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	contact := createRandomEmergencyContact(t, client.ID)
 
@@ -208,7 +213,7 @@ func TestGetEmergencyContactApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/emergency_contacts/%d", client.ID, contact.ID)
@@ -242,6 +247,7 @@ func TestGetEmergencyContactApi(t *testing.T) {
 }
 
 func TestUpdateEmergencyContactApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	contact := createRandomEmergencyContact(t, client.ID)
 
@@ -254,7 +260,7 @@ func TestUpdateEmergencyContactApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := clientp.UpdateClientEmergencyContactParams{
@@ -296,6 +302,7 @@ func TestUpdateEmergencyContactApi(t *testing.T) {
 }
 
 func TestDeleteEmergencyContactApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	contact := createRandomEmergencyContact(t, client.ID)
 
@@ -308,7 +315,7 @@ func TestDeleteEmergencyContactApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/emergency_contacts/%d", client.ID, contact.ID)
@@ -334,7 +341,7 @@ func TestDeleteEmergencyContactApi(t *testing.T) {
 	}
 }
 
-func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) db.AssignEmployeeRow {
+func assignRandomEmployee(t *testing.T, clientID uuid.UUID, employeeID uuid.UUID) db.AssignEmployeeRow {
 	arg := db.AssignEmployeeParams{
 		ClientID:   clientID,
 		EmployeeID: employeeID,
@@ -407,7 +414,7 @@ func TestAssignEmployeeApi(t *testing.T) {
 
 func TestListAssignedEmployeesApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		assignRandomEmployee(t, client.ID, employee.ID)
 	}
@@ -421,7 +428,7 @@ func TestListAssignedEmployeesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/involved_employees?page=1&page_size=5", client.ID)
@@ -455,6 +462,7 @@ func TestListAssignedEmployeesApi(t *testing.T) {
 }
 
 func TestGetAssignedEmployeeApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	employee, _ := createRandomEmployee(t)
 	assign := assignRandomEmployee(t, client.ID, employee.ID)
@@ -468,7 +476,7 @@ func TestGetAssignedEmployeeApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/involved_employees/%d", client.ID, assign.ID)
@@ -501,7 +509,7 @@ func TestGetAssignedEmployeeApi(t *testing.T) {
 
 func TestUpdateAssignedEmployeeApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	assign := assignRandomEmployee(t, client.ID, employee.ID)
 
 	testCases := []struct {
@@ -513,7 +521,7 @@ func TestUpdateAssignedEmployeeApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := clientp.UpdateAssignedEmployeeRequest{
@@ -554,7 +562,7 @@ func TestUpdateAssignedEmployeeApi(t *testing.T) {
 
 func TestGetClientRelatedEmailsApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	t.Log(client.ID, employee.ID)
 	_ = assignRandomEmployee(t, client.ID, employee.ID)
 	emergencyContact := createRandomEmergencyContact(t, client.ID)
@@ -568,7 +576,7 @@ func TestGetClientRelatedEmailsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/related_emails", client.ID)

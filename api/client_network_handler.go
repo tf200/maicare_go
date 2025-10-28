@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -9,6 +8,7 @@ import (
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // GetClientSenderApi gets a client sender
@@ -21,7 +21,7 @@ import (
 // @Router /clients/{id}/sender [get]
 func (server *Server) GetClientSenderApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -49,7 +49,7 @@ func (server *Server) GetClientSenderApi(ctx *gin.Context) {
 // @Router /clients/{id}/emergency_contacts [post]
 func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -82,9 +82,7 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 // @Router /clients/{id}/emergency_contacts [get]
 func (server *Server) ListClientEmergencyContactsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	log.Printf("Processing request for client ID: %s", id)
-
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -203,7 +201,7 @@ func (server *Server) DeleteClientEmergencyContactApi(ctx *gin.Context) {
 // @Router /clients/{id}/involved_employees [post]
 func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -234,7 +232,7 @@ func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 // @Router /clients/{id}/involved_employees [get]
 func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -353,7 +351,7 @@ func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
 // @Router /clients/{id}/related_emails [get]
 func (server *Server) GetClientRelatedEmailsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

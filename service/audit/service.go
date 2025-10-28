@@ -25,9 +25,9 @@ type AuditRecord struct {
 	EventType    string
 	OccuredAt    time.Time
 	ActorRole    string
-	ActorID      int64
+	ActorID      uuid.UUID
 	SubjectType  string
-	SubjectID    int64
+	SubjectID    uuid.UUID
 	Action       string
 	Result       string
 	AccessReason string
@@ -56,5 +56,4 @@ func (s *AuditService) CreateAuditRecord(ctx context.Context, record *AuditRecor
 
 func (s *AuditService) GetLatestAuditRecordHash(ctx context.Context, subjectID int64) (string, error) {
 	return s.Store.GetLatestAuditHashBySubject(ctx, subjectID)
-
-	
+}

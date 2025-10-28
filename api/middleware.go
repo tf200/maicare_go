@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
+	"maicare_go/service/audit"
 	"maicare_go/token"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // Authentication related constants
@@ -16,6 +19,7 @@ const (
 	authorizationHeaderKey  = "Authorization" // Changed to proper HTTP header case
 	authorizationTypeBearer = "Bearer"        // Changed to proper case
 	authorizationPayloadKey = "authorization_payload"
+	actorRoleKey            = "actor_role"
 
 	authorizationQueryKey = "access_token" // You can change this query param name if needed (e.g., "token")
 )
@@ -138,5 +142,31 @@ func (s *Server) RBACMiddleware(requiredPermission string) gin.HandlerFunc {
 		}
 
 		ctx.Next()
+	}
+}
+
+func (s *Server) AuditMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		payload, err := GetAuthPayload(ctx)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
+			return
+		}
+		_ = ctx.Param("subject_id")
+		_ = audit.AuditRecord{
+			EventID:      uuid.UUID{}, // Generate or assign event ID
+			EventType:    "",          // Define event type based on context
+			OccuredAt:    time.Now(),
+			ActorRole:    "", // Retrieve actor role from context or token
+			ActorID:      payload.EmployeeID,
+			SubjectType:  "",
+			SubjectID:    uuid.UUID{}, // Define subject ID based on context
+			Action:       "",          // Define action based on context
+			Result:       "",          // Define result based on context``
+			AccessReason: "",
+			Ip:           nil, // Retrieve IP from context if available
+			SelfHash:     "",
+			PreviousHash: "",
+		}
 	}
 }

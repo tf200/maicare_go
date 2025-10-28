@@ -9,6 +9,7 @@ import (
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateClientDiagnosisApi creates a client diagnosis
@@ -23,7 +24,7 @@ import (
 // @Router /clients/{id}/diagnosis [post]
 func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -59,7 +60,7 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 // @Router /clients/{id}/diagnosis [get]
 func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

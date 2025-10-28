@@ -15,12 +15,13 @@ import (
 	"maicare_go/util"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-func createRandomAppointment(t *testing.T, employeeID int64) db.ScheduledAppointment {
+func createRandomAppointment(t *testing.T, employeeID uuid.UUID) db.ScheduledAppointment {
 	arg := db.CreateAppointmentParams{
 		CreatorEmployeeID: &employeeID,
 		StartTime:         pgtype.Timestamp{Time: time.Date(time.Now().Year(), time.August, 25, 12, 0, 0, 0, time.UTC), Valid: true},
@@ -60,8 +61,8 @@ func TestCreateAppointmentApi(t *testing.T) {
 					RecurrenceType:         "NONE",
 					RecurrenceInterval:     util.Int32Ptr(0),
 					RecurrenceEndDate:      time.Date(2006, 1, 1, 0, 0, 0, 0, time.UTC),
-					ParticipantEmployeeIDs: []int64{employee.ID},
-					ClientIDs:              []int64{client.ID},
+					ParticipantEmployeeIDs: []uuid.UUID{employee.ID},
+					ClientIDs:              []uuid.UUID{client.ID},
 				}
 				reqBody, err := json.Marshal(appointReq)
 				require.NoError(t, err)
@@ -112,7 +113,7 @@ func TestAddParticipantToAppointmentApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				addParticipantReq := appointment.AddParticipantToAppointmentRequest{
-					ParticipantEmployeeIDs: []int64{employee.ID},
+					ParticipantEmployeeIDs: []uuid.UUID{employee.ID},
 				}
 				reqBody, err := json.Marshal(addParticipantReq)
 				require.NoError(t, err)
@@ -211,8 +212,8 @@ func TestUpdateAppointmentApi(t *testing.T) {
 					Location:    util.StringPtr("Updated Location"),
 					Description: util.StringPtr("Updated Description"),
 
-					ParticipantEmployeeIDs: &[]int64{employee.ID},
-					ClientIDs:              &[]int64{client.ID},
+					ParticipantEmployeeIDs: &[]uuid.UUID{employee.ID},
+					ClientIDs:              &[]uuid.UUID{client.ID},
 				}
 				reqBody, err := json.Marshal(updateReq)
 				require.NoError(t, err)

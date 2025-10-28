@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/appointment"
 
@@ -140,7 +139,7 @@ func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /employees/{id}/appointments [post]
 func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	employeeID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -176,7 +175,7 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /clients/{id}/appointments [post]
 func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
-	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

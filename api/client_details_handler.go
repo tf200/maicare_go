@@ -3,12 +3,12 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateClientApi creates a new client
@@ -94,7 +94,7 @@ func (server *Server) GetClientsCountApi(ctx *gin.Context) {
 // @Router /clients/{id} [get]
 func (server *Server) GetClientApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID: %v", err)))
 		return
@@ -120,7 +120,7 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 // @Router /clients/{id}/addresses [get]
 func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
@@ -148,7 +148,7 @@ func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
 // @Router /clients/{id} [put]
 func (server *Server) UpdateClientApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID: %v", err)))
 		return
@@ -181,7 +181,7 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 // @Router /clients/{id}/status [put]
 func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -213,7 +213,7 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 // @Router /clients/{id}/status_history [get]
 func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -241,7 +241,7 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 // @Router /clients/{id}/profile_picture [put]
 func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -274,7 +274,7 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 // @Router /clients/{id}/documents [post]
 func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -308,7 +308,7 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 // @Router /clients/{id}/documents [get]
 func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -342,7 +342,7 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents/{document_id} [delete]
 func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
-	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -373,7 +373,7 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 // @Router /clients/{id}/missing_documents [get]
 func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

@@ -8,6 +8,7 @@ import (
 	"maicare_go/service/care"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -46,7 +47,7 @@ func (server *Server) ListMaturityMatrixApi(ctx *gin.Context) {
 // @Router /clients/{id}/assessments [post]
 func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
@@ -90,7 +91,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 // @Router /clients/{id}/assessments [get]
 func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

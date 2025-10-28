@@ -16,13 +16,14 @@ import (
 	"maicare_go/util"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientIncident(t *testing.T, clientID int64) db.CreateIncidentRow {
+func createRandomClientIncident(t *testing.T, clientID uuid.UUID) db.CreateIncidentRow {
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
 
@@ -137,7 +138,6 @@ func TestCreateIncident(t *testing.T) {
 					OtherDesc:               util.StringPtr("test other"),
 					AdditionalAppointments:  util.StringPtr("test appointments"),
 					EmployeeAbsenteeism:     "client",
-					ClientID:                client.ID,
 					Emails:                  []string{"farjiataha@gmail.com", "tahafarjia@gmail.com"},
 				}
 				url := fmt.Sprintf("/clients/%d/incidents", client.ID)
@@ -212,6 +212,7 @@ func TestCreateIncident(t *testing.T) {
 }
 
 func TestListIncidentsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	for i := 0; i < 20; i++ {
@@ -227,7 +228,7 @@ func TestListIncidentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents?page=1&page_size=10", client.ID)
@@ -263,6 +264,7 @@ func TestListIncidentsApi(t *testing.T) {
 }
 
 func TestGetIncidentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 
@@ -275,7 +277,7 @@ func TestGetIncidentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
@@ -327,7 +329,7 @@ func TestGetIncidentApi(t *testing.T) {
 		{
 			name: "Not Found",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, 0)
@@ -357,6 +359,7 @@ func TestGetIncidentApi(t *testing.T) {
 
 func TestUpdateIncidentApi(t *testing.T) {
 	testasynqClient.EXPECT().EnqueueIncident(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 
@@ -369,7 +372,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				incidentReq := clientp.UpdateIncidentRequest{
@@ -415,6 +418,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 }
 
 func TestDeleteIncidentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 
@@ -427,7 +431,7 @@ func TestDeleteIncidentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
