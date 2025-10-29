@@ -65,13 +65,12 @@ WHERE role_id = $1;
 
 /* ---------- 4. USER-ROLE MAPPING ---------- */
 
--- name: GetUserRoles :one
+-- name: GetUserRoles :many
 /* Returns every role granted to a user. */
 SELECT r.id, r.name
 FROM user_roles ur
 JOIN roles r ON r.id = ur.role_id
-WHERE ur.user_id = $1
-LIMIT 1;
+WHERE ur.user_id = $1;
 
 -- name: AssignRoleToUser :exec
 INSERT INTO user_roles (user_id, role_id)

@@ -66,7 +66,7 @@ func (n *NewClientAssignmentData) NewClientAssignmentMessage() string {
 }
 
 type ClientContractReminderData struct {
-	ClientID           int64      `json:"client_id"`
+	ClientID           uuid.UUID  `json:"client_id"`
 	ClientFirstName    string     `json:"client_first_name"`
 	ClientLastName     string     `json:"client_last_name"`
 	ContractID         int64      `json:"contract_id"`

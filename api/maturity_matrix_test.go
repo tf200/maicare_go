@@ -16,6 +16,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -32,7 +33,7 @@ type RandomCarePlan struct {
 	ReportID         int64 `json:"report_id"`
 }
 
-func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
+func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 	clientAssessments, err := testStore.CreateClientMaturityMatrixAssessment(context.Background(), db.CreateClientMaturityMatrixAssessmentParams{
 		ClientID:         clientID,
 		MaturityMatrixID: 1,
@@ -205,6 +206,7 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 }
 
 func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	testCases := []struct {
@@ -216,7 +218,7 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				assessmentReq := care.CreateClientCarePlanRequest{
@@ -260,6 +262,7 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 }
 
 func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	_ = createRandomCarePlan(t, client.ID)
 	testCases := []struct {
@@ -271,7 +274,7 @@ func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/assessments", client.ID)
@@ -307,6 +310,7 @@ func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
 }
 
 func TestGetCarePlanOverviewApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 	testCases := []struct {
@@ -318,7 +322,7 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d", carePlan.CarePlanID)
@@ -353,6 +357,7 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanOverviewApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -365,7 +370,7 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanOverviewRequest{
@@ -406,6 +411,7 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -418,7 +424,7 @@ func TestDeleteCarePlanApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d", carePlan.CarePlanID)
@@ -448,6 +454,7 @@ func TestDeleteCarePlanApi(t *testing.T) {
 }
 
 func TestCreateCarePlanObjectiveApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -460,7 +467,7 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanObjectiveRequest{
@@ -504,6 +511,7 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestGetCarePlanObjectivesApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlanID := createRandomCarePlan(t, client.ID)
 
@@ -516,7 +524,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/objectives", carePlanID)
@@ -551,6 +559,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanObjectiveApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -563,7 +572,7 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanObjectiveRequest{
@@ -606,6 +615,7 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanObjectiveApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -618,7 +628,7 @@ func TestDeleteCarePlanObjectiveApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/objectives/%d", carePlan.ObjectiveID)
@@ -647,6 +657,7 @@ func TestDeleteCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestCreateCarePlanActionsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -659,7 +670,7 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanActionsRequest{
@@ -699,6 +710,7 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanActionsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -711,7 +723,7 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanActionsRequest{
@@ -751,6 +763,7 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanActionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -763,7 +776,7 @@ func TestDeleteCarePlanActionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/actions/%d", carePlan.ActionID)
@@ -792,6 +805,7 @@ func TestDeleteCarePlanActionApi(t *testing.T) {
 }
 
 func TestCreateCarePlanInterventionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -804,7 +818,7 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanInterventionRequest{
@@ -845,6 +859,7 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 }
 
 func TestGetCarePlanInterventionsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -857,7 +872,7 @@ func TestGetCarePlanInterventionsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/interventions", carePlan.CarePlanID)
@@ -891,6 +906,7 @@ func TestGetCarePlanInterventionsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanInterventionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -903,7 +919,7 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanInterventionRequest{
@@ -944,6 +960,7 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanInterventionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -956,7 +973,7 @@ func TestDeleteCarePlanInterventionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/interventions/%d", carePlan.InterventionID)
@@ -985,6 +1002,7 @@ func TestDeleteCarePlanInterventionApi(t *testing.T) {
 }
 
 func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -997,7 +1015,7 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanSuccessMetricsRequest{
@@ -1042,6 +1060,7 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 }
 
 func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1054,7 +1073,7 @@ func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/success_metrics", carePlan.CarePlanID)
@@ -1087,6 +1106,7 @@ func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1099,7 +1119,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanSuccessMetricsRequest{
@@ -1142,6 +1162,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1154,7 +1175,7 @@ func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/success_metrics/%d", carePlan.SuccessMetricID)
@@ -1183,6 +1204,7 @@ func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
 }
 
 func TestCreateCarePlanRisksApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1195,7 +1217,7 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanRisksRequest{
@@ -1236,6 +1258,7 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 }
 
 func TestGetCarePlanRisksApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1248,7 +1271,7 @@ func TestGetCarePlanRisksApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/risks", carePlan.CarePlanID)
@@ -1281,6 +1304,7 @@ func TestGetCarePlanRisksApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanRiskApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1293,7 +1317,7 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanRisksRequest{
@@ -1335,6 +1359,7 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanRiskApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1347,7 +1372,7 @@ func TestDeleteCarePlanRiskApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/risks/%d", carePlan.RiskID)
@@ -1376,6 +1401,7 @@ func TestDeleteCarePlanRiskApi(t *testing.T) {
 }
 
 func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1388,7 +1414,7 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanSupportNetworkRequest{
@@ -1428,6 +1454,7 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestGetCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1440,7 +1467,7 @@ func TestGetCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/support_network", carePlan.CarePlanID)
@@ -1473,6 +1500,7 @@ func TestGetCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1485,7 +1513,7 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanSupportNetworkRequest{
@@ -1526,6 +1554,7 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1538,7 +1567,7 @@ func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/support_network/%d", carePlan.SupportNetworkID)
@@ -1567,6 +1596,7 @@ func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestCreateCarePlanResourcesApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1579,7 +1609,7 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanResourcesRequest{
@@ -1620,6 +1650,7 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 }
 
 func TestGetCarePlanResourcesApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1632,7 +1663,7 @@ func TestGetCarePlanResourcesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/resources", carePlan.CarePlanID)
@@ -1665,6 +1696,7 @@ func TestGetCarePlanResourcesApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanResourceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1677,7 +1709,7 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanResourcesRequest{
@@ -1717,6 +1749,7 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanResourceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1729,7 +1762,7 @@ func TestDeleteCarePlanResourceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/resources/%d", carePlan.ResourceID)
@@ -1758,6 +1791,7 @@ func TestDeleteCarePlanResourceApi(t *testing.T) {
 }
 
 func TestCreateCarePlanReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1770,7 +1804,7 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanReportRequest{
@@ -1811,6 +1845,7 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 }
 
 func TestListCarePlanReportsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1823,7 +1858,7 @@ func TestListCarePlanReportsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/reports?page=1&page_size=10", carePlan.CarePlanID)
@@ -1856,6 +1891,7 @@ func TestListCarePlanReportsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1868,7 +1904,7 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := care.UpdateCarePlanReportRequest{
@@ -1909,6 +1945,7 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1921,7 +1958,7 @@ func TestDeleteCarePlanReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/reports/%d", carePlan.ReportID)

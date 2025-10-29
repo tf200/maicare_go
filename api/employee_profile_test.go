@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	db "maicare_go/db/sqlc"
@@ -500,7 +501,7 @@ func TestSetEmployeeProfilePictureApi(t *testing.T) {
 	}
 }
 
-func createRandomEducation(t *testing.T) (int64, int64) {
+func createRandomEducation(t *testing.T) (uuid.UUID, uuid.UUID) {
 	employee, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
@@ -725,6 +726,7 @@ func TestAddEmployeeCertificationApi(t *testing.T) {
 }
 
 func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomEmployee(t)
 	}
@@ -738,7 +740,7 @@ func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/employees/emails?search=John"

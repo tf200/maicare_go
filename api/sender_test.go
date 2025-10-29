@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -94,7 +93,7 @@ func createRandomSender(t *testing.T) db.Sender {
 }
 
 func TestCreateSenderApi(t *testing.T) {
-	userID := rand.Int63()
+	_, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -104,7 +103,7 @@ func TestCreateSenderApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createSenderReq := sender.CreateSenderRequest{
@@ -150,7 +149,7 @@ func TestCreateSenderApi(t *testing.T) {
 		{
 			name: "InvalidType",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createSenderReq := sender.CreateSenderRequest{
@@ -184,7 +183,7 @@ func TestCreateSenderApi(t *testing.T) {
 		{
 			name: "InvalidEmail",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createSenderReq := sender.CreateSenderRequest{
@@ -226,7 +225,7 @@ func TestCreateSenderApi(t *testing.T) {
 		{
 			name: "MissingRequiredField",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createSenderReq := sender.CreateSenderRequest{
@@ -400,6 +399,7 @@ func TestListSendersAPI(t *testing.T) {
 }
 
 func TestUpdateSenderApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	createdSender := createRandomSender(t)
 	contacts := make([]sender.SenderContact, 0)
 	err := json.Unmarshal(createdSender.Contacts, &contacts)
@@ -414,7 +414,7 @@ func TestUpdateSenderApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, createdSender.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateSenderReq := sender.UpdateSenderRequest{
@@ -454,6 +454,7 @@ func TestUpdateSenderApi(t *testing.T) {
 }
 
 func TestGetSenderByIdAPI(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	createdSender := createRandomSender(t)
 	contacts := make([]sender.SenderContact, 0)
 	err := json.Unmarshal(createdSender.Contacts, &contacts)
@@ -467,7 +468,7 @@ func TestGetSenderByIdAPI(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, createdSender.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/senders/%d", createdSender.ID)

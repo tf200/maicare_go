@@ -111,22 +111,34 @@ func (q *Queries) DeleteUserPermissions(ctx context.Context, userID uuid.UUID) e
 	return err
 }
 
-const getUserRoles = `-- name: GetUserRoles :one
+const getUserRoles = `-- name: GetUserRoles :many
 
 SELECT r.id, r.name
 FROM user_roles ur
 JOIN roles r ON r.id = ur.role_id
 WHERE ur.user_id = $1
-LIMIT 1
 `
 
 // ---------- 4. USER-ROLE MAPPING ----------
 // Returns every role granted to a user.
-func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) (Role, error) {
-	row := q.db.QueryRow(ctx, getUserRoles, userID)
-	var i Role
-	err := row.Scan(&i.ID, &i.Name)
-	return i, err
+func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error) {
+	rows, err := q.db.Query(ctx, getUserRoles, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Role{}
+	for rows.Next() {
+		var i Role
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const grantRolePermissionsToUser = `-- name: GrantRolePermissionsToUser :exec

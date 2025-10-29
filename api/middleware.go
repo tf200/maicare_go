@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -98,6 +99,13 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err)) // Use the error from VerifyToken
 			return
 		}
+		roles, err := s.businessService.AuthService.GetUserRoles(ctx, payload.UserId)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		ctx.Set(actorRoleKey, roles)
 
 		// 5. Store the payload in context and continue
 		ctx.Set(authorizationPayloadKey, payload)
@@ -145,28 +153,124 @@ func (s *Server) RBACMiddleware(requiredPermission string) gin.HandlerFunc {
 	}
 }
 
+// api/middleware.go
 func (s *Server) AuditMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// ===== PRE-REQUEST: Gather information before processing =====
+
+		// Get authenticated user payload
 		payload, err := GetAuthPayload(ctx)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 			return
 		}
-		_ = ctx.Param("subject_id")
-		_ = audit.AuditRecord{
-			EventID:      uuid.UUID{}, // Generate or assign event ID
-			EventType:    "",          // Define event type based on context
-			OccuredAt:    time.Now(),
-			ActorRole:    "", // Retrieve actor role from context or token
-			ActorID:      payload.EmployeeID,
-			SubjectType:  "",
-			SubjectID:    uuid.UUID{}, // Define subject ID based on context
-			Action:       "",          // Define action based on context
-			Result:       "",          // Define result based on context``
-			AccessReason: "",
-			Ip:           nil, // Retrieve IP from context if available
-			SelfHash:     "",
-			PreviousHash: "",
+
+		// Get subject ID from URL parameter
+		id, err := uuid.Parse(ctx.Param("id"))
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, errorResponse(err))
+			return
 		}
+
+		// Get request ID from context
+		key, exists := ctx.Get(requestIDKey)
+		if !exists {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("request ID not found in context")))
+			return
+		}
+		requestID, err := uuid.Parse(key.(string))
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("invalid request ID format")))
+			return
+		}
+
+		// Capture timestamp at request start
+		occurredAt := time.Now()
+
+		// Determine subject type from path (first segment after /clients)
+		subjectType := "client"
+
+		// Build action from method and path
+		action := fmt.Sprintf("%s %s", ctx.Request.Method, ctx.FullPath())
+
+		// Get client IP address
+		var clientIP *netip.Addr
+		if ipStr := ctx.ClientIP(); ipStr != "" {
+			if addr, err := netip.ParseAddr(ipStr); err == nil {
+				clientIP = &addr
+			}
+		}
+
+		// ===== PROCESS REQUEST =====
+		ctx.Next()
+
+		// ===== POST-REQUEST: Complete audit record after processing =====
+
+		// Determine event type based on HTTP method and status
+		statusCode := ctx.Writer.Status()
+		eventType := determineEventType(ctx.Request.Method, statusCode, subjectType)
+
+		// Set result based on status code
+		result := ""
+		if statusCode >= 200 && statusCode < 300 {
+			result = "success"
+		} else {
+			result = fmt.Sprintf("failed_%d", statusCode)
+		}
+
+		// Calculate hash for this audit record
+		actorRoles, exists := ctx.Get(actorRoleKey)
+		if !exists {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("actor roles not found in context")))
+			return
+		}
+
+		// Convert actorRoles to []string
+		rolesSlice, ok := actorRoles.([]string)
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("invalid actor roles type")))
+			return
+		}
+
+		// Build the audit record
+		auditRecord := &audit.AuditRecord{
+			EventID:      requestID,
+			EventType:    eventType,
+			OccuredAt:    occurredAt,
+			ActorRole:    rolesSlice, // TODO: set actor role
+			ActorID:      payload.UserId,
+			SubjectType:  subjectType,
+			SubjectID:    id,
+			Action:       action,
+			Result:       result,
+			AccessReason: "placeholder", // TODO: set access reason
+			Ip:           clientIP,
+		}
+
+		// Save the audit record asynchronously to avoid blocking response
+		go func(record *audit.AuditRecord) {
+			if err := s.businessService.AuditService.CreateAuditRecord(ctx, record); err != nil {
+			}
+		}(auditRecord)
+	}
+}
+
+// determineEventType creates a descriptive event type based on the action
+func determineEventType(method string, statusCode int, subjectType string) string {
+	if statusCode < 200 || statusCode >= 300 {
+		return fmt.Sprintf("%s.failed", subjectType)
+	}
+
+	switch method {
+	case http.MethodGet:
+		return fmt.Sprintf("%s.viewed", subjectType)
+	case http.MethodPost:
+		return fmt.Sprintf("%s.created", subjectType)
+	case http.MethodPut, http.MethodPatch:
+		return fmt.Sprintf("%s.updated", subjectType)
+	case http.MethodDelete:
+		return fmt.Sprintf("%s.deleted", subjectType)
+	default:
+		return fmt.Sprintf("%s.accessed", subjectType)
 	}
 }

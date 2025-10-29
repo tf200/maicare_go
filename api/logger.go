@@ -17,6 +17,8 @@ const (
 	LogLevelInfo  LogLevel = "info"
 	LogLevelWarn  LogLevel = "warn"
 	LogLevelError LogLevel = "error"
+
+	requestIDKey = "request_id"
 )
 
 func (server *Server) requestLogger() gin.HandlerFunc {
@@ -26,7 +28,7 @@ func (server *Server) requestLogger() gin.HandlerFunc {
 		if requestID == "" {
 			requestID = uuid.New().String()
 		}
-		ctx.Set("request_id", requestID)
+		ctx.Set(requestIDKey, requestID)
 		ctx.Header("X-Request-ID", requestID)
 
 		startTime := time.Now()

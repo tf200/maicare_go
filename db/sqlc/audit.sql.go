@@ -59,10 +59,10 @@ type CreateAuditRecordParams struct {
 	EventID      uuid.UUID          `json:"event_id"`
 	EventType    string             `json:"event_type"`
 	OccuredAt    pgtype.Timestamptz `json:"occured_at"`
-	ActorRole    string             `json:"actor_role"`
-	ActorID      int64              `json:"actor_id"`
+	ActorRole    []string           `json:"actor_role"`
+	ActorID      uuid.UUID          `json:"actor_id"`
 	SubjectType  string             `json:"subject_type"`
-	SubjectID    int64              `json:"subject_id"`
+	SubjectID    uuid.UUID          `json:"subject_id"`
 	AccessReason string             `json:"access_reason"`
 	Action       string             `json:"action"`
 	Result       string             `json:"result"`
@@ -99,16 +99,15 @@ func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordPa
 	return err
 }
 
-const getLatestAuditHashBySubject = `-- name: GetLatestAuditHashBySubject :one
+const getLatestAuditHash = `-- name: GetLatestAuditHash :one
 SELECT hash_self
 FROM audit
-WHERE subject_id = $1
 ORDER BY occured_at DESC
 LIMIT 1
 `
 
-func (q *Queries) GetLatestAuditHashBySubject(ctx context.Context, subjectID int64) (string, error) {
-	row := q.db.QueryRow(ctx, getLatestAuditHashBySubject, subjectID)
+func (q *Queries) GetLatestAuditHash(ctx context.Context) (string, error) {
+	row := q.db.QueryRow(ctx, getLatestAuditHash)
 	var hash_self string
 	err := row.Scan(&hash_self)
 	return hash_self, err

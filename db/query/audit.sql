@@ -41,9 +41,8 @@ INSERT INTO audit (
 ) ; 
 
 
--- name: GetLatestAuditHashBySubject :one
+-- name: GetLatestAuditHash :one
 SELECT hash_self
 FROM audit
-WHERE subject_id = $1
 ORDER BY occured_at DESC
 LIMIT 1;

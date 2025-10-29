@@ -2,11 +2,10 @@ package audit
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	db "maicare_go/db/sqlc"
-	"net/netip"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -20,24 +19,22 @@ func NewAuditService(store *db.Store) *AuditService {
 	}
 }
 
-type AuditRecord struct {
-	EventID      uuid.UUID
-	EventType    string
-	OccuredAt    time.Time
-	ActorRole    string
-	ActorID      uuid.UUID
-	SubjectType  string
-	SubjectID    uuid.UUID
-	Action       string
-	Result       string
-	AccessReason string
-	Ip           *netip.Addr
-	SelfHash     string
-	PreviousHash string
-}
-
+// service/audit/service.go
 func (s *AuditService) CreateAuditRecord(ctx context.Context, record *AuditRecord) error {
-	return s.Store.CreateAuditRecord(ctx, db.CreateAuditRecordParams{
+	lastHash, err := s.Store.GetLatestAuditHash(ctx)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	selfHash := record.calculateAuditHash()
+	record.SelfHash = selfHash
+	record.PreviousHash = lastHash
+
+	err = record.validate()
+	if err != nil {
+		return err
+	}
+
+	s.Store.CreateAuditRecord(ctx, db.CreateAuditRecordParams{
 		EventID:      record.EventID,
 		EventType:    record.EventType,
 		OccuredAt:    pgtype.Timestamptz{Time: record.OccuredAt, Valid: true},
@@ -52,8 +49,6 @@ func (s *AuditService) CreateAuditRecord(ctx context.Context, record *AuditRecor
 		HashPrev:     record.PreviousHash,
 		HashSelf:     record.SelfHash,
 	})
-}
 
-func (s *AuditService) GetLatestAuditRecordHash(ctx context.Context, subjectID int64) (string, error) {
-	return s.Store.GetLatestAuditHashBySubject(ctx, subjectID)
+	return nil
 }

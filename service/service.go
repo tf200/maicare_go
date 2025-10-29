@@ -9,6 +9,7 @@ import (
 	"maicare_go/logger"
 	"maicare_go/service/appointment"
 	"maicare_go/service/attachment"
+	"maicare_go/service/audit"
 	"maicare_go/service/auth"
 	"maicare_go/service/care"
 	clientp "maicare_go/service/client"
@@ -40,6 +41,7 @@ type BusinessService struct {
 	NotificationService notification.NotificationService
 	ScheduleService     schedule.ScheduleService
 	SenderService       sender.SenderService
+	AuditService        *audit.AuditService
 }
 
 func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface, grpcClient grpclient.GrpcClientInterface, wsHub *hub.Hub, asynqClient aclient.AsynqClientInterface) *BusinessService {
@@ -57,6 +59,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 	notificationService := notification.NewNotificationService(deps)
 	scheduleService := schedule.NewScheduleService(deps, asynqClient)
 	senderService := sender.NewSenderService(deps)
+	auditService := audit.NewAuditService(store)
 	return &BusinessService{
 		ServiceDependencies: deps,
 		AuthService:         authService,
@@ -72,6 +75,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 		NotificationService: notificationService,
 		ScheduleService:     scheduleService,
 		SenderService:       senderService,
+		AuditService:        auditService,
 	}
 }
 

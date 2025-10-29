@@ -339,7 +339,7 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 		}
 
 		notificationPayload := notification.NotificationPayload{
-			RecipientUserIDs: make([]int64, len(adminUsers)),
+			RecipientUserIDs: make([]uuid.UUID, len(adminUsers)),
 			Type:             notification.TypeClientContractReminder,
 			Data: notification.NotificationData{
 				ClientContractReminder: &notificationData,

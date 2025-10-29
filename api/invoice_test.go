@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomBillableHours(t *testing.T) int64 {
+func createRandomBillableHours(t *testing.T) uuid.UUID {
 	client := createRandomClientDetails(t)
 	employee, _ := createRandomEmployee(t)
 
@@ -80,7 +80,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 	appointement := createRandomAppointment(t, employee.ID)
 	err = testStore.BulkAddAppointmentClients(context.Background(), db.BulkAddAppointmentClientsParams{
 		AppointmentID: appointement.ID,
-		ClientIds:     []int64{client.ID},
+		ClientIds:     []uuid.UUID{client.ID},
 	})
 
 	require.NoError(t, err)
@@ -88,6 +88,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 }
 
 func TestCreateInvoiceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	sender := createRandomSender(t)
 	clientID := createRandomBillableHours(t)
 
@@ -102,7 +103,7 @@ func TestCreateInvoiceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				amblanteTiotalMinutes := 100.0
@@ -169,6 +170,7 @@ func TestCreateInvoiceApi(t *testing.T) {
 }
 
 func TestGenerateInvoiceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	clientID := createRandomBillableHours(t)
 
 	testCases := []struct {
@@ -180,7 +182,7 @@ func TestGenerateInvoiceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				req := invserv.GenerateInvoiceRequest{

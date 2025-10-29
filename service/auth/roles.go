@@ -146,8 +146,8 @@ func (s *authService) ListUserRolesAndPermissionsApi(ctx context.Context, employ
 			RoleID   int32  `json:"id"`
 			RoleName string `json:"name"`
 		}{
-			RoleID:   roles.ID,
-			RoleName: roles.Name,
+			RoleID:   roles[0].ID,
+			RoleName: roles[0].Name,
 		},
 		Permissions: []struct {
 			PermissionID       int32  `json:"id"`
@@ -273,4 +273,17 @@ func (s *authService) HasPermission(ctx context.Context, userID uuid.UUID, permi
 		UserID: userID,
 		Name:   permission,
 	})
+}
+
+func (s *authService) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	roles, err := s.Store.GetUserRoles(ctx, userID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetUserRoles", "Failed to get user roles", zap.Error(err), zap.String("user_id", userID.String()))
+		return nil, fmt.Errorf("failed to get user roles: %w", err)
+	}
+	var roleNames []string
+	for _, role := range roles {
+		roleNames = append(roleNames, role.Name)
+	}
+	return roleNames, nil
 }

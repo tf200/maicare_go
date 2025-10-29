@@ -102,10 +102,10 @@ type Audit struct {
 	EventID      uuid.UUID          `json:"event_id"`
 	EventType    string             `json:"event_type"`
 	OccuredAt    pgtype.Timestamptz `json:"occured_at"`
-	ActorRole    string             `json:"actor_role"`
-	ActorID      int64              `json:"actor_id"`
+	ActorRole    []string           `json:"actor_role"`
+	ActorID      uuid.UUID          `json:"actor_id"`
 	SubjectType  string             `json:"subject_type"`
-	SubjectID    int64              `json:"subject_id"`
+	SubjectID    uuid.UUID          `json:"subject_id"`
 	AccessReason string             `json:"access_reason"`
 	Action       string             `json:"action"`
 	Result       string             `json:"result"`

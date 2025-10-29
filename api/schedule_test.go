@@ -15,12 +15,13 @@ import (
 	"maicare_go/util"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-func createRandomSchedule(t *testing.T, employeeID int64) db.CreateScheduleRow {
+func createRandomSchedule(t *testing.T, employeeID uuid.UUID) db.CreateScheduleRow {
 	location := createRandomLocation(t)
 
 	arg := db.CreateScheduleParams{
@@ -38,7 +39,7 @@ func createRandomSchedule(t *testing.T, employeeID int64) db.CreateScheduleRow {
 
 func TestCreateScheduleApi(t *testing.T) {
 	testasynqClient.EXPECT().EnqueueNotificationTask(gomock.Any(), gomock.Any(), gomock.Any()).Times(2).Return(nil)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	location := createRandomLocation(t)
 	// shift := createRandomShift(t, location.ID)
 
@@ -51,7 +52,7 @@ func TestCreateScheduleApi(t *testing.T) {
 		{
 			name: "OK IS CUSTOM",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now()
@@ -83,13 +84,13 @@ func TestCreateScheduleApi(t *testing.T) {
 		{
 			name: "OK IS NOT CUSTOM",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now().Format("2006-01-02")
 				createScheduleReq := schedule.CreateScheduleRequest{
-					EmployeeID:      1,
-					LocationID:      1,
+					EmployeeID:      employee.ID,
+					LocationID:      location.ID,
 					IsCustom:        false,
 					StartDatetime:   nil,
 					EndDatetime:     nil,
@@ -131,7 +132,7 @@ func TestCreateScheduleApi(t *testing.T) {
 }
 
 func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	createdSchedule := createRandomSchedule(t, employee.ID)
 
 	testCases := []struct {
@@ -143,7 +144,7 @@ func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/locations/%d/monthly_schedules?year=%d&month=%d", createdSchedule.LocationID, createdSchedule.StartDatetime.Time.Year(), createdSchedule.StartDatetime.Time.Month())
@@ -178,7 +179,7 @@ func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 }
 
 func TestGetDailySchedulesByLocationApi(t *testing.T) {
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	createdSchedule := createRandomSchedule(t, employee.ID)
 
 	testCases := []struct {
@@ -190,7 +191,7 @@ func TestGetDailySchedulesByLocationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/locations/%d/daily_schedules?year=%d&month=%d&day=%d", createdSchedule.LocationID,

@@ -79,6 +79,7 @@ func TestCreateContractTypeApi(t *testing.T) {
 }
 
 func TestListContractTypeApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomContractType(t)
 	}
@@ -91,7 +92,7 @@ func TestListContractTypeApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				request, err := http.NewRequest(http.MethodGet, "/contract_types", nil)
@@ -140,7 +141,7 @@ var (
 	FinancingOption = []string{"ZIN", "PGB"}
 )
 
-func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Contract {
+func createRandomContract(t *testing.T, clientID uuid.UUID, senderID *int64) db.Contract {
 	contractType := createRandomContractType(t)
 	attachment := createRandomAttachmentFile(t)
 
@@ -267,6 +268,7 @@ func TestCreateClientContractApi(t *testing.T) {
 }
 
 func TestListClientContractsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	for i := 0; i < 10; i++ {
 		createRandomContract(t, client.ID, client.SenderID)
@@ -280,7 +282,7 @@ func TestListClientContractsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/contracts?page=1&page_size=5", client.ID)
@@ -314,6 +316,7 @@ func TestListClientContractsApi(t *testing.T) {
 }
 
 func TestGetClientContract(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	cont := createRandomContract(t, client.ID, client.SenderID)
 	testCases := []struct {
@@ -325,7 +328,7 @@ func TestGetClientContract(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/contracts/%d", cont.ClientID, cont.ID)
@@ -372,6 +375,7 @@ func TestGetClientContract(t *testing.T) {
 }
 
 func TestListContractsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		client := createRandomClientDetails(t)
 		createRandomContract(t, client.ID, client.SenderID)
@@ -385,7 +389,7 @@ func TestListContractsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5", nil)
@@ -405,7 +409,7 @@ func TestListContractsApi(t *testing.T) {
 		{
 			name: "Filter By Status",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5&status=draft", nil)

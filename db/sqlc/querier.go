@@ -174,7 +174,7 @@ type Querier interface {
 	GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error)
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]GetInvoiceAuditLogsRow, error)
 	GetInvoiceSenderID(ctx context.Context, id int64) (*int64, error)
-	GetLatestAuditHashBySubject(ctx context.Context, subjectID int64) (string, error)
+	GetLatestAuditHash(ctx context.Context) (string, error)
 	GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) (GetLevelDescriptionRow, error)
 	GetLocation(ctx context.Context, id int64) (Location, error)
 	GetMaturityMatrix(ctx context.Context, id int64) (MaturityMatrix, error)
@@ -206,7 +206,7 @@ type Querier interface {
 	GetUserIDByEmployeeID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	// ---------- 4. USER-ROLE MAPPING ----------
 	// Returns every role granted to a user.
-	GetUserRoles(ctx context.Context, userID uuid.UUID) (Role, error)
+	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	GrantRolePermissionsToUser(ctx context.Context, arg GrantRolePermissionsToUserParams) error
 	// Bulk-insert permission IDs for a user (idempotent).
 	GrantUserPermissions(ctx context.Context, arg GrantUserPermissionsParams) error
