@@ -1,8 +1,9 @@
 package ecr
 
 import (
-	"maicare_go/pagination"
 	"time"
+
+	"maicare_go/pagination"
 
 	"github.com/google/uuid"
 )
@@ -15,7 +16,7 @@ type DischargeOverviewRequest struct {
 
 // DischargeOverviewResponse defines the response for the DischargeOverview handler.
 type DischargeOverviewResponse struct {
-	ID                 int64     `json:"id"`
+	ID                 uuid.UUID `json:"id"`
 	FirstName          string    `json:"first_name"`
 	LastName           string    `json:"last_name"`
 	CurrentStatus      *string   `json:"current_status"`
@@ -39,7 +40,7 @@ type TotalDischargeCountResponse struct {
 
 // ListEmployeesByContractEndDateResponse defines the response for the ListEmployeesByContractEndDate handler.
 type ListEmployeesByContractEndDateResponse struct {
-	ID                int64     `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	FirstName         string    `json:"first_name"`
 	LastName          string    `json:"last_name"`
 	Position          *string   `json:"position"`

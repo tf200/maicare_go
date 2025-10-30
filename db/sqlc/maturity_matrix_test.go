@@ -2,18 +2,17 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
+	"math/rand"
 	"strconv"
 	"testing"
 
-	"math/rand"
+	"maicare_go/util"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
 func TestListMaturityMatrix(t *testing.T) {
-
 	matrix, err := testQueries.ListMaturityMatrix(context.Background())
 	require.NoError(t, err)
 	require.NotEmpty(t, matrix)

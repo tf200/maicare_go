@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	db "maicare_go/db/sqlc"
@@ -156,8 +157,7 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func createRandomSession(t *testing.T, token string, payload *token.Payload, userID int64) db.Session {
-
+func createRandomSession(t *testing.T, token string, payload *token.Payload, userID uuid.UUID) db.Session {
 	// Get current time for timestamps
 	now := time.Now()
 	expireTime := now.Add(24 * time.Hour) // Session expires in 24 hours
@@ -321,7 +321,6 @@ func TestChangePasswordApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestSetup2FAHandler(t *testing.T) {

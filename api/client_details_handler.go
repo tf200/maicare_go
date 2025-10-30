@@ -2,12 +2,13 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+
 	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateClientApi creates a new client
@@ -34,7 +35,6 @@ func (server *Server) CreateClientApi(ctx *gin.Context) {
 
 	res := SuccessResponse(client, "Client created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // ListClientsApi lists clients
@@ -64,7 +64,6 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 
 	res := SuccessResponse(result, "Clients fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // GetClientsCountApi gets the count of clients
@@ -75,7 +74,6 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/counts [get]
 func (server *Server) GetClientsCountApi(ctx *gin.Context) {
-
 	clientCount, err := server.businessService.ClientService.GetClientsCount(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -96,7 +94,7 @@ func (server *Server) GetClientsCountApi(ctx *gin.Context) {
 // @Router /clients/{id} [get]
 func (server *Server) GetClientApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID: %v", err)))
 		return
@@ -122,7 +120,7 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 // @Router /clients/{id}/addresses [get]
 func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
@@ -150,7 +148,7 @@ func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
 // @Router /clients/{id} [put]
 func (server *Server) UpdateClientApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID: %v", err)))
 		return
@@ -183,7 +181,7 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 // @Router /clients/{id}/status [put]
 func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -203,7 +201,6 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 
 	res := SuccessResponse(updatedClient, "Client status updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // ListStatusHistoryApi lists status history of a client
@@ -216,7 +213,7 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 // @Router /clients/{id}/status_history [get]
 func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -244,7 +241,7 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 // @Router /clients/{id}/profile_picture [put]
 func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -263,7 +260,6 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Profile picture set successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // AddClientDocumentApi adds a document to a client
@@ -278,7 +274,7 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 // @Router /clients/{id}/documents [post]
 func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -312,7 +308,7 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 // @Router /clients/{id}/documents [get]
 func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -346,7 +342,7 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents/{document_id} [delete]
 func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
-	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -365,7 +361,6 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(result, "Client document deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // GetMissingClientDocumentsApi gets missing documents of a client
@@ -378,7 +373,7 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 // @Router /clients/{id}/missing_documents [get]
 func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

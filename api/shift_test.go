@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/service/organization"
+	"maicare_go/token"
 
 	"github.com/goccy/go-json"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -20,8 +22,8 @@ func createRandomShift(t *testing.T, locationID int64) db.LocationShift {
 	arg := db.CreateShiftParams{
 		LocationID: locationID,
 		ShiftName:  "Slaapdienst of Waakdienst",
-		StartTime:  pgtype.Time{Microseconds: 23 * 3600 * 1000000, Valid: true},  // 23:00:00
-		EndTime:    pgtype.Time{Microseconds: 7 * 3600 * 1000000, Valid: true}, // 07:00:00
+		StartTime:  pgtype.Time{Microseconds: 23 * 3600 * 1000000, Valid: true}, // 23:00:00
+		EndTime:    pgtype.Time{Microseconds: 7 * 3600 * 1000000, Valid: true},  // 07:00:00
 	}
 	shift, err := testStore.CreateShift(context.Background(), arg)
 	require.NoError(t, err)
@@ -31,6 +33,7 @@ func createRandomShift(t *testing.T, locationID int64) db.LocationShift {
 }
 
 func TestCreateShiftsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	location := createRandomLocation(t)
 	testCases := []struct {
 		name          string
@@ -41,10 +44,10 @@ func TestCreateShiftsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createShiftReq := CreateShiftApiRequest{
+				createShiftReq := organization.CreateShiftApiRequest{
 					ShiftName: "Morning Shift",
 					StartTime: "08:00",
 					EndTime:   "16:00",
@@ -72,10 +75,10 @@ func TestCreateShiftsApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGetShiftsByLocationApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	location := createRandomLocation(t)
 	createRandomShift(t, location.ID)
 
@@ -88,7 +91,7 @@ func TestGetShiftsByLocationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/locations/%d/shifts", location.ID), nil)
@@ -117,6 +120,7 @@ func TestGetShiftsByLocationApi(t *testing.T) {
 }
 
 func TestDeleteShiftApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	location := createRandomLocation(t)
 	shift := createRandomShift(t, location.ID)
 
@@ -129,7 +133,7 @@ func TestDeleteShiftApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				request, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("/locations/%d/shifts/%d", location.ID, shift.ID), nil)
@@ -157,6 +161,7 @@ func TestDeleteShiftApi(t *testing.T) {
 }
 
 func TestUpdateShiftApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	location := createRandomLocation(t)
 	shift := createRandomShift(t, location.ID)
 
@@ -169,10 +174,10 @@ func TestUpdateShiftApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateShiftReq := UpdateShiftApiRequest{
+				updateShiftReq := organization.UpdateShiftApiRequest{
 					ShiftName: "Updated Shift",
 					StartTime: "09:00",
 					EndTime:   "17:00",

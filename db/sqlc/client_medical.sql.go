@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -27,14 +28,14 @@ INSERT INTO client_diagnosis (
 `
 
 type CreateClientDiagnosisParams struct {
-	ClientID            int64   `json:"client_id"`
-	Title               *string `json:"title"`
-	DiagnosisCode       string  `json:"diagnosis_code"`
-	Description         string  `json:"description"`
-	Severity            *string `json:"severity"`
-	Status              string  `json:"status"`
-	DiagnosingClinician *string `json:"diagnosing_clinician"`
-	Notes               *string `json:"notes"`
+	ClientID            uuid.UUID `json:"client_id"`
+	Title               *string   `json:"title"`
+	DiagnosisCode       string    `json:"diagnosis_code"`
+	Description         string    `json:"description"`
+	Severity            *string   `json:"severity"`
+	Status              string    `json:"status"`
+	DiagnosingClinician *string   `json:"diagnosing_clinician"`
+	Notes               *string   `json:"notes"`
 }
 
 func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDiagnosisParams) (ClientDiagnosis, error) {
@@ -88,7 +89,7 @@ type CreateClientMedicationParams struct {
 	EndDate          pgtype.Date `json:"end_date"`
 	Notes            *string     `json:"notes"`
 	SelfAdministered bool        `json:"self_administered"`
-	AdministeredByID *int64      `json:"administered_by_id"`
+	AdministeredByID *uuid.UUID  `json:"administered_by_id"`
 	IsCritical       bool        `json:"is_critical"`
 }
 
@@ -198,7 +199,7 @@ type GetMedicationRow struct {
 	Notes                   *string            `json:"notes"`
 	SelfAdministered        bool               `json:"self_administered"`
 	Slots                   []byte             `json:"slots"`
-	AdministeredByID        *int64             `json:"administered_by_id"`
+	AdministeredByID        *uuid.UUID         `json:"administered_by_id"`
 	IsCritical              bool               `json:"is_critical"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
@@ -239,15 +240,15 @@ LIMIT $2 OFFSET $3
 `
 
 type ListClientDiagnosesParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListClientDiagnosesRow struct {
 	ID                  int64              `json:"id"`
 	Title               *string            `json:"title"`
-	ClientID            int64              `json:"client_id"`
+	ClientID            uuid.UUID          `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
 	Description         string             `json:"description"`
 	Severity            *string            `json:"severity"`
@@ -316,7 +317,7 @@ type ListMedicationsByDiagnosisIDRow struct {
 	Notes            *string            `json:"notes"`
 	SelfAdministered bool               `json:"self_administered"`
 	Slots            []byte             `json:"slots"`
-	AdministeredByID *int64             `json:"administered_by_id"`
+	AdministeredByID *uuid.UUID         `json:"administered_by_id"`
 	IsCritical       bool               `json:"is_critical"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
@@ -473,7 +474,7 @@ type UpdateClientMedicationParams struct {
 	EndDate          pgtype.Date `json:"end_date"`
 	Notes            *string     `json:"notes"`
 	SelfAdministered *bool       `json:"self_administered"`
-	AdministeredByID *int64      `json:"administered_by_id"`
+	AdministeredByID *uuid.UUID  `json:"administered_by_id"`
 	IsCritical       *bool       `json:"is_critical"`
 }
 

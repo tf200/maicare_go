@@ -4,22 +4,24 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
-	clientp "maicare_go/service/client"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
+	"maicare_go/token"
+	"maicare_go/util"
+
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomProgressReport(t *testing.T, clientID int64, employeeID int64) db.ProgressReport {
+func createRandomProgressReport(t *testing.T, clientID uuid.UUID, employeeID uuid.UUID) db.ProgressReport {
 	arg := db.CreateProgressReportParams{
 		ClientID:       clientID,
 		EmployeeID:     &employeeID,
@@ -36,7 +38,7 @@ func createRandomProgressReport(t *testing.T, clientID int64, employeeID int64) 
 
 func TestCreateProgressReportApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 
 	testCases := []struct {
 		name          string
@@ -47,7 +49,7 @@ func TestCreateProgressReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := clientp.CreateProgressReportRequest{
@@ -89,12 +91,11 @@ func TestCreateProgressReportApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListProgressReportApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomProgressReport(t, client.ID, employee.ID)
 	}
@@ -108,7 +109,7 @@ func TestListProgressReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/progress_reports?page=1&page_size=10", client.ID)
@@ -139,12 +140,11 @@ func TestListProgressReportApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGetProgressReportApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	progressReport1 := createRandomProgressReport(t, client.ID, employee.ID)
 
 	testCases := []struct {
@@ -156,7 +156,7 @@ func TestGetProgressReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/progress_reports/%d", client.ID, progressReport1.ID)
@@ -191,7 +191,7 @@ func TestGetProgressReportApi(t *testing.T) {
 
 func TestUpdateProgressReportApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	progressReport1 := createRandomProgressReport(t, client.ID, employee.ID)
 
 	testCases := []struct {
@@ -203,7 +203,7 @@ func TestUpdateProgressReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updateReq := clientp.UpdateProgressReportRequest{
@@ -249,7 +249,7 @@ func TestUpdateProgressReportApi(t *testing.T) {
 
 func TestDeleteProgressReportApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	progressReport1 := createRandomProgressReport(t, client.ID, employee.ID)
 
 	testCases := []struct {
@@ -261,7 +261,7 @@ func TestDeleteProgressReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/progress_reports/%d", client.ID, progressReport1.ID)
@@ -289,7 +289,7 @@ func TestDeleteProgressReportApi(t *testing.T) {
 	}
 }
 
-func createRandomAiGeneratedReport(t *testing.T, clientID int64) db.AiGeneratedReport {
+func createRandomAiGeneratedReport(t *testing.T, clientID uuid.UUID) db.AiGeneratedReport {
 	startdate := util.RandomTIme()
 	enddate := startdate.AddDate(0, 0, 7)
 
@@ -310,7 +310,7 @@ func createRandomAiGeneratedReport(t *testing.T, clientID int64) db.AiGeneratedR
 
 func TestGenerateAutoReportsApi(t *testing.T) {
 	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
+	employee, user := createRandomEmployee(t)
 	for i := 0; i < 3; i++ {
 		createRandomProgressReport(t, client.ID, employee.ID)
 	}
@@ -327,10 +327,10 @@ func TestGenerateAutoReportsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := GenerateAutoReportsRequest{
+				req := clientp.GenerateAutoReportsRequest{
 					StartDate: startDate,
 					EndDate:   endDate,
 				}
@@ -344,7 +344,7 @@ func TestGenerateAutoReportsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GenerateAutoReportsResponse]
+				var response Response[clientp.GenerateAutoReportsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -369,6 +369,7 @@ func TestGenerateAutoReportsApi(t *testing.T) {
 }
 
 func TestConfirmProgressReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	testCases := []struct {
@@ -380,10 +381,10 @@ func TestConfirmProgressReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := ConfirmProgressReportRequest{
+				req := clientp.ConfirmProgressReportRequest{
 					ReportText: "Test Progress Report",
 					Startdate:  util.RandomTIme(),
 					Enddate:    util.RandomTIme(),
@@ -397,7 +398,7 @@ func TestConfirmProgressReportApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[ConfirmProgressReportResponse]
+				var response Response[clientp.ConfirmProgressReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -423,6 +424,7 @@ func TestConfirmProgressReportApi(t *testing.T) {
 }
 
 func TestListAiGeneratedReportsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	for i := 0; i < 10; i++ {
 		createRandomAiGeneratedReport(t, client.ID)
@@ -437,7 +439,7 @@ func TestListAiGeneratedReportsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/ai_progress_reports?page=1&page_size=10", client.ID)
@@ -447,7 +449,7 @@ func TestListAiGeneratedReportsApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListAiGeneratedReportsResponse]]
+				var response Response[pagination.Response[clientp.ListAiGeneratedReportsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data.Results)

@@ -2,8 +2,9 @@ package attachment
 
 import (
 	"context"
-	"maicare_go/service/deps"
 	"mime/multipart"
+
+	"maicare_go/service/deps"
 
 	"github.com/google/uuid"
 )

@@ -23,5 +23,4 @@ func (server *Server) setupClientNetworkRoutes(baseRouter *gin.RouterGroup) {
 
 		ClientNetwork.GET("/:id/related_emails", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientRelatedEmailsApi)
 	}
-
 }

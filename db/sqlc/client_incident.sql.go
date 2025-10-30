@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -96,7 +97,7 @@ LEFT JOIN location l ON i.location_id = l.id
 `
 
 type CreateIncidentParams struct {
-	EmployeeID              int64       `json:"employee_id"`
+	EmployeeID              uuid.UUID   `json:"employee_id"`
 	LocationID              int64       `json:"location_id"`
 	ReporterInvolvement     string      `json:"reporter_involvement"`
 	InformWho               []string    `json:"inform_who"`
@@ -135,13 +136,13 @@ type CreateIncidentParams struct {
 	OtherDesc               *string     `json:"other_desc"`
 	AdditionalAppointments  *string     `json:"additional_appointments"`
 	EmployeeAbsenteeism     string      `json:"employee_absenteeism"`
-	ClientID                int64       `json:"client_id"`
+	ClientID                uuid.UUID   `json:"client_id"`
 	Emails                  []string    `json:"emails"`
 }
 
 type CreateIncidentRow struct {
 	ID                      int64              `json:"id"`
-	EmployeeID              int64              `json:"employee_id"`
+	EmployeeID              uuid.UUID          `json:"employee_id"`
 	LocationID              int64              `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []string           `json:"inform_who"`
@@ -180,7 +181,7 @@ type CreateIncidentRow struct {
 	OtherDesc               *string            `json:"other_desc"`
 	AdditionalAppointments  *string            `json:"additional_appointments"`
 	EmployeeAbsenteeism     string             `json:"employee_absenteeism"`
-	ClientID                int64              `json:"client_id"`
+	ClientID                uuid.UUID          `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
@@ -323,7 +324,7 @@ WHERE i.id = $1 LIMIT 1
 
 type GetIncidentRow struct {
 	ID                      int64              `json:"id"`
-	EmployeeID              int64              `json:"employee_id"`
+	EmployeeID              uuid.UUID          `json:"employee_id"`
 	LocationID              int64              `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []string           `json:"inform_who"`
@@ -362,7 +363,7 @@ type GetIncidentRow struct {
 	OtherDesc               *string            `json:"other_desc"`
 	AdditionalAppointments  *string            `json:"additional_appointments"`
 	EmployeeAbsenteeism     string             `json:"employee_absenteeism"`
-	ClientID                int64              `json:"client_id"`
+	ClientID                uuid.UUID          `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
@@ -454,14 +455,14 @@ LIMIT $2 OFFSET $3
 `
 
 type ListIncidentsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListIncidentsRow struct {
 	ID                      int64              `json:"id"`
-	EmployeeID              int64              `json:"employee_id"`
+	EmployeeID              uuid.UUID          `json:"employee_id"`
 	LocationID              int64              `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []string           `json:"inform_who"`
@@ -500,7 +501,7 @@ type ListIncidentsRow struct {
 	OtherDesc               *string            `json:"other_desc"`
 	AdditionalAppointments  *string            `json:"additional_appointments"`
 	EmployeeAbsenteeism     string             `json:"employee_absenteeism"`
-	ClientID                int64              `json:"client_id"`
+	ClientID                uuid.UUID          `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
@@ -636,7 +637,7 @@ RETURNING id, employee_id, location_id, reporter_involvement, inform_who, incide
 
 type UpdateIncidentParams struct {
 	ID                      int64       `json:"id"`
-	EmployeeID              *int64      `json:"employee_id"`
+	EmployeeID              *uuid.UUID  `json:"employee_id"`
 	LocationID              *int64      `json:"location_id"`
 	ReporterInvolvement     *string     `json:"reporter_involvement"`
 	InformWho               []string    `json:"inform_who"`

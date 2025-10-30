@@ -9,6 +9,8 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		clientsGroup.POST("", server.RBACMiddleware("CLIENT.CREATE"), server.CreateClientApi)
 		clientsGroup.GET("", server.RBACMiddleware("CLIENT.VIEW"), server.ListClientsApi)
 		clientsGroup.GET("/counts", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientsCountApi)
+	}
+	{
 		clientsGroup.GET("/:id", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientApi)
 		clientsGroup.PUT("/:id", server.RBACMiddleware("CLIENT.UPDATE"), server.UpdateClientApi)
 

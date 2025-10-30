@@ -3,12 +3,14 @@ package api
 import (
 	"context"
 	"fmt"
-	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"maicare_go/token"
+
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +19,7 @@ func addAuthorization(
 	request *http.Request,
 	tokenMaker token.Maker,
 	authorizationType string,
-	userID int64,
+	userID uuid.UUID,
 	duration time.Duration,
 ) {
 	employee, err := testStore.GetEmployeeProfileByUserID(context.Background(), userID)
@@ -86,7 +88,6 @@ func TestAuthMiddleware(t *testing.T) {
 		tc := testCases[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-
 			recorder := httptest.NewRecorder()
 			request, err := http.NewRequest(http.MethodGet, "/auth", nil)
 			require.NoError(t, err)
@@ -108,7 +109,6 @@ func TestRBACMiddleware(t *testing.T) {
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
-
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -129,7 +129,6 @@ func TestRBACMiddleware(t *testing.T) {
 		tc := testCases[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-
 			recorder := httptest.NewRecorder()
 			request, err := http.NewRequest(http.MethodGet, "/test/health", nil)
 			require.NoError(t, err)

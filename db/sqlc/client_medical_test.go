@@ -2,15 +2,16 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 
+	"maicare_go/util"
+
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientDiagnosis(t *testing.T, clientID int64) ClientDiagnosis {
-
+func createRandomClientDiagnosis(t *testing.T, clientID uuid.UUID) ClientDiagnosis {
 	arg := CreateClientDiagnosisParams{
 		ClientID:            clientID,
 		Title:               util.StringPtr("test title"),
@@ -104,7 +105,6 @@ func TestUpdateClientDiagnosis(t *testing.T) {
 	require.NotEmpty(t, diagnosis2)
 	require.Equal(t, diagnosis1.ID, diagnosis2.ID)
 	require.NotEqual(t, diagnosis1.Severity, diagnosis2.Severity)
-
 }
 
 func TestDeleteClientDiagnosis(t *testing.T) {
@@ -113,11 +113,9 @@ func TestDeleteClientDiagnosis(t *testing.T) {
 
 	_, err := testQueries.DeleteClientDiagnosis(context.Background(), diagnosis1.ID)
 	require.NoError(t, err)
-
 }
 
-func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID int64) ClientMedication {
-
+func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID uuid.UUID) ClientMedication {
 	arg := CreateClientMedicationParams{
 		DiagnosisID:      &diagnosisID,
 		Name:             "test name",
@@ -126,7 +124,7 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID in
 		EndDate:          pgtype.Date{Time: util.RandomTIme(), Valid: true},
 		Notes:            util.StringPtr("test note"),
 		SelfAdministered: true,
-		AdministeredByID: util.IntPtr(employeeID),
+		AdministeredByID: &employeeID,
 		IsCritical:       true,
 	}
 
@@ -140,8 +138,9 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID in
 
 func TestCreateClientMedication(t *testing.T) {
 	client := createRandomClientDetails(t)
+	diagnosis := createRandomClientDiagnosis(t, client.ID)
 	employee, _ := createRandomEmployee(t)
-	createRandomClientMedication(t, client.ID, employee.ID)
+	createRandomClientMedication(t, diagnosis.ID, employee.ID)
 }
 
 func TestGetMedication(t *testing.T) {
@@ -162,7 +161,11 @@ func TestListMedicationsByDiagnosisID(t *testing.T) {
 	employee, _ := createRandomEmployee(t)
 	medication1 := createRandomClientMedication(t, diagnosis.ID, employee.ID)
 
-	medication2, err := testQueries.ListMedicationsByDiagnosisID(context.Background(), &diagnosis.ID)
+	medication2, err := testQueries.ListMedicationsByDiagnosisID(context.Background(), ListMedicationsByDiagnosisIDParams{
+		DiagnosisID: &diagnosis.ID,
+		Limit:       5,
+		Offset:      0,
+	})
 	require.NoError(t, err)
 	require.NotEmpty(t, medication2)
 	require.Equal(t, medication1.ID, medication2[0].ID)
@@ -185,7 +188,6 @@ func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 	require.Len(t, medications, 2)
 	require.Equal(t, medication1.ID, medications[0].ID)
 	require.Equal(t, medication2.ID, medications[1].ID)
-
 }
 
 func TestUpdateClientMedication(t *testing.T) {
@@ -203,7 +205,6 @@ func TestUpdateClientMedication(t *testing.T) {
 	require.NotEmpty(t, medication2)
 	require.Equal(t, medication1.ID, medication2.ID)
 	require.NotEqual(t, medication1.IsCritical, medication2.IsCritical)
-
 }
 
 func TestDeleteClientMedication(t *testing.T) {
@@ -213,5 +214,4 @@ func TestDeleteClientMedication(t *testing.T) {
 
 	err := testQueries.DeleteClientMedication(context.Background(), medication1.ID)
 	require.NoError(t, err)
-
 }

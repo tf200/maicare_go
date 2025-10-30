@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -24,7 +25,6 @@ func createRandomContractType(t *testing.T) ContractType {
 
 func TestCreateContractType(t *testing.T) {
 	createRandomContractType(t)
-
 }
 
 func TestListContractType(t *testing.T) {
@@ -170,7 +170,6 @@ func TestListClientContracts(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, contracts)
 	require.Len(t, contracts, 5)
-
 }
 
 func TestListContracts(t *testing.T) {
@@ -188,5 +187,4 @@ func TestListContracts(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, contracts)
 	require.Len(t, contracts, 5)
-
 }

@@ -1,20 +1,18 @@
 package api
 
-import "github.com/gin-gonic/gin"
+// func (server *Server) setupIntakeFormRoutes(baseRouter *gin.RouterGroup) {
 
-func (server *Server) setupIntakeFormRoutes(baseRouter *gin.RouterGroup) {
+// 	intakeFormGroup := baseRouter.Group("/intake_form")
 
-	intakeFormGroup := baseRouter.Group("/intake_form")
+// 	{
 
-	{
+// 		// intakeFormGroup.POST("/upload", server.IntakeFormUploadHandlerApi)
+// 		// intakeFormGroup.POST("", server.CreateIntakeFormApi)
+// 		// intakeFormGroup.GET("", server.ListIntakeFormsApi)
+// 		// intakeFormGroup.GET("/:id", server.GetIntakeFormApi)
 
-		// intakeFormGroup.POST("/upload", server.IntakeFormUploadHandlerApi)
-		intakeFormGroup.POST("", server.CreateIntakeFormApi)
-		intakeFormGroup.GET("", server.ListIntakeFormsApi)
-		intakeFormGroup.GET("/:id", server.GetIntakeFormApi)
+// 		// intakeFormGroup.POST("/:id/urgency_score", server.AddUrgencyScoreApi)
+// 		// intakeFormGroup.POST("/:id/move_to_waiting_list", server.MoveToWaitingList)
 
-		intakeFormGroup.POST("/:id/urgency_score", server.AddUrgencyScoreApi)
-		// intakeFormGroup.POST("/:id/move_to_waiting_list", server.MoveToWaitingList)
-
-	}
-}
+// 	}
+// }

@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -25,7 +26,7 @@ INSERT INTO employee_education (
 `
 
 type AddEducationToEmployeeProfileParams struct {
-	EmployeeID      int64       `json:"employee_id"`
+	EmployeeID      uuid.UUID   `json:"employee_id"`
 	InstitutionName string      `json:"institution_name"`
 	Degree          string      `json:"degree"`
 	FieldOfStudy    string      `json:"field_of_study"`
@@ -69,7 +70,7 @@ RETURNING id, employee_id, name, issued_by, date_issued, created_at
 `
 
 type AddEmployeeCertificationParams struct {
-	EmployeeID int64       `json:"employee_id"`
+	EmployeeID uuid.UUID   `json:"employee_id"`
 	Name       string      `json:"name"`
 	IssuedBy   string      `json:"issued_by"`
 	DateIssued pgtype.Date `json:"date_issued"`
@@ -107,7 +108,7 @@ RETURNING id, user_id, first_name, last_name, position, department, employee_num
 `
 
 type AddEmployeeContractDetailsParams struct {
-	ID                int64       `json:"id"`
+	ID                uuid.UUID   `json:"id"`
 	ContractHours     *float64    `json:"contract_hours"`
 	ContractStartDate pgtype.Date `json:"contract_start_date"`
 	ContractEndDate   pgtype.Date `json:"contract_end_date"`
@@ -171,7 +172,7 @@ INSERT INTO employee_experience (
 `
 
 type AddEmployeeExperienceParams struct {
-	EmployeeID  int64       `json:"employee_id"`
+	EmployeeID  uuid.UUID   `json:"employee_id"`
 	JobTitle    string      `json:"job_title"`
 	CompanyName string      `json:"company_name"`
 	StartDate   pgtype.Date `json:"start_date"`
@@ -269,7 +270,7 @@ INSERT INTO employee_profile (
 `
 
 type CreateEmployeeProfileParams struct {
-	UserID                    int64       `json:"user_id"`
+	UserID                    uuid.UUID   `json:"user_id"`
 	FirstName                 string      `json:"first_name"`
 	LastName                  string      `json:"last_name"`
 	Position                  *string     `json:"position"`
@@ -422,7 +423,7 @@ type GetEmployeeContractDetailsRow struct {
 	IsSubcontractor   *bool       `json:"is_subcontractor"`
 }
 
-func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id int64) (GetEmployeeContractDetailsRow, error) {
+func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeContractDetails, id)
 	var i GetEmployeeContractDetailsRow
 	err := row.Scan(
@@ -475,8 +476,8 @@ WHERE ep.id = $1
 `
 
 type GetEmployeeProfileByIDRow struct {
-	ID                        int64              `json:"id"`
-	UserID                    int64              `json:"user_id"`
+	ID                        uuid.UUID          `json:"id"`
+	UserID                    uuid.UUID          `json:"user_id"`
 	FirstName                 string             `json:"first_name"`
 	LastName                  string             `json:"last_name"`
 	Position                  *string            `json:"position"`
@@ -505,7 +506,7 @@ type GetEmployeeProfileByIDRow struct {
 	ProfilePicture            *string            `json:"profile_picture"`
 }
 
-func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmployeeProfileByIDRow, error) {
+func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeProfileByID, id)
 	var i GetEmployeeProfileByIDRow
 	err := row.Scan(
@@ -567,17 +568,17 @@ WHERE cu.id = $1
 `
 
 type GetEmployeeProfileByUserIDRow struct {
-	UserID           int64              `json:"user_id"`
+	UserID           uuid.UUID          `json:"user_id"`
 	Email            string             `json:"email"`
 	LastLogin        pgtype.Timestamptz `json:"last_login"`
 	TwoFactorEnabled bool               `json:"two_factor_enabled"`
-	EmployeeID       int64              `json:"employee_id"`
+	EmployeeID       uuid.UUID          `json:"employee_id"`
 	FirstName        string             `json:"first_name"`
 	LastName         string             `json:"last_name"`
 	Permissions      []byte             `json:"permissions"`
 }
 
-func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error) {
+func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeProfileByUserID, id)
 	var i GetEmployeeProfileByUserIDRow
 	err := row.Scan(
@@ -598,9 +599,9 @@ SELECT user_id FROM employee_profile
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserIDByEmployeeID(ctx context.Context, id int64) (int64, error) {
+func (q *Queries) GetUserIDByEmployeeID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, getUserIDByEmployeeID, id)
-	var user_id int64
+	var user_id uuid.UUID
 	err := row.Scan(&user_id)
 	return user_id, err
 }
@@ -609,7 +610,7 @@ const listEducations = `-- name: ListEducations :many
 SELECT id, employee_id, institution_name, degree, field_of_study, start_date, end_date, created_at FROM employee_education WHERE employee_id = $1
 `
 
-func (q *Queries) ListEducations(ctx context.Context, employeeID int64) ([]EmployeeEducation, error) {
+func (q *Queries) ListEducations(ctx context.Context, employeeID uuid.UUID) ([]EmployeeEducation, error) {
 	rows, err := q.db.Query(ctx, listEducations, employeeID)
 	if err != nil {
 		return nil, err
@@ -642,7 +643,7 @@ const listEmployeeCertifications = `-- name: ListEmployeeCertifications :many
 SELECT id, employee_id, name, issued_by, date_issued, created_at FROM certification WHERE employee_id = $1
 `
 
-func (q *Queries) ListEmployeeCertifications(ctx context.Context, employeeID int64) ([]Certification, error) {
+func (q *Queries) ListEmployeeCertifications(ctx context.Context, employeeID uuid.UUID) ([]Certification, error) {
 	rows, err := q.db.Query(ctx, listEmployeeCertifications, employeeID)
 	if err != nil {
 		return nil, err
@@ -673,7 +674,7 @@ const listEmployeeExperience = `-- name: ListEmployeeExperience :many
 SELECT id, employee_id, job_title, company_name, start_date, end_date, description, created_at FROM employee_experience WHERE employee_id = $1
 `
 
-func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID int64) ([]EmployeeExperience, error) {
+func (q *Queries) ListEmployeeExperience(ctx context.Context, employeeID uuid.UUID) ([]EmployeeExperience, error) {
 	rows, err := q.db.Query(ctx, listEmployeeExperience, employeeID)
 	if err != nil {
 		return nil, err
@@ -745,8 +746,8 @@ type ListEmployeeProfileParams struct {
 }
 
 type ListEmployeeProfileRow struct {
-	ID                        int64              `json:"id"`
-	UserID                    int64              `json:"user_id"`
+	ID                        uuid.UUID          `json:"id"`
+	UserID                    uuid.UUID          `json:"user_id"`
 	FirstName                 string             `json:"first_name"`
 	LastName                  string             `json:"last_name"`
 	Position                  *string            `json:"position"`
@@ -852,10 +853,10 @@ LIMIT 10
 `
 
 type SearchEmployeesByNameOrEmailRow struct {
-	ID        int64  `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
 }
 
 func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error) {
@@ -895,8 +896,8 @@ RETURNING id, password, last_login, email, is_active, date_joined, profile_pictu
 `
 
 type SetEmployeeProfilePictureParams struct {
-	ID             int64   `json:"id"`
-	ProfilePicture *string `json:"profile_picture"`
+	ID             uuid.UUID `json:"id"`
+	ProfilePicture *string   `json:"profile_picture"`
 }
 
 func (q *Queries) SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error) {
@@ -1052,9 +1053,9 @@ RETURNING id, user_id, first_name, last_name, position, department, employee_num
 `
 
 type UpdateEmployeeIsSubcontractorParams struct {
-	ID              int64   `json:"id"`
-	IsSubcontractor *bool   `json:"is_subcontractor"`
-	ContractType    *string `json:"contract_type"`
+	ID              uuid.UUID `json:"id"`
+	IsSubcontractor *bool     `json:"is_subcontractor"`
+	ContractType    *string   `json:"contract_type"`
 }
 
 func (q *Queries) UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error) {
@@ -1138,7 +1139,7 @@ type UpdateEmployeeProfileParams struct {
 	HasBorrowed               *bool       `json:"has_borrowed"`
 	OutOfService              *bool       `json:"out_of_service"`
 	IsArchived                *bool       `json:"is_archived"`
-	ID                        int64       `json:"id"`
+	ID                        uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error) {

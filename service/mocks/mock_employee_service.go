@@ -43,6 +43,66 @@ func (m *MockEmployeeService) EXPECT() *MockEmployeeServiceMockRecorder {
 	return m.recorder
 }
 
+// AddEducationToEmployeeProfile mocks base method.
+func (m *MockEmployeeService) AddEducationToEmployeeProfile(req employees.AddEducationToEmployeeProfileRequest, employeeID int64, ctx context.Context) (*employees.AddEducationToEmployeeProfileResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddEducationToEmployeeProfile", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.AddEducationToEmployeeProfileResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddEducationToEmployeeProfile indicates an expected call of AddEducationToEmployeeProfile.
+func (mr *MockEmployeeServiceMockRecorder) AddEducationToEmployeeProfile(req, employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEducationToEmployeeProfile", reflect.TypeOf((*MockEmployeeService)(nil).AddEducationToEmployeeProfile), req, employeeID, ctx)
+}
+
+// AddEmployeeCertification mocks base method.
+func (m *MockEmployeeService) AddEmployeeCertification(req employees.AddEmployeeCertificationRequest, employeeID int64, ctx context.Context) (*employees.AddEmployeeCertificationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddEmployeeCertification", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.AddEmployeeCertificationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddEmployeeCertification indicates an expected call of AddEmployeeCertification.
+func (mr *MockEmployeeServiceMockRecorder) AddEmployeeCertification(req, employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEmployeeCertification", reflect.TypeOf((*MockEmployeeService)(nil).AddEmployeeCertification), req, employeeID, ctx)
+}
+
+// AddEmployeeContractDetails mocks base method.
+func (m *MockEmployeeService) AddEmployeeContractDetails(req employees.AddEmployeeContractDetailsRequest, employeeID int64, ctx context.Context) (*employees.AddEmployeeContractDetailsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddEmployeeContractDetails", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.AddEmployeeContractDetailsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddEmployeeContractDetails indicates an expected call of AddEmployeeContractDetails.
+func (mr *MockEmployeeServiceMockRecorder) AddEmployeeContractDetails(req, employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEmployeeContractDetails", reflect.TypeOf((*MockEmployeeService)(nil).AddEmployeeContractDetails), req, employeeID, ctx)
+}
+
+// AddEmployeeExperience mocks base method.
+func (m *MockEmployeeService) AddEmployeeExperience(req employees.AddEmployeeExperienceRequest, employeeID int64, ctx context.Context) (*employees.AddEmployeeExperienceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddEmployeeExperience", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.AddEmployeeExperienceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddEmployeeExperience indicates an expected call of AddEmployeeExperience.
+func (mr *MockEmployeeServiceMockRecorder) AddEmployeeExperience(req, employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEmployeeExperience", reflect.TypeOf((*MockEmployeeService)(nil).AddEmployeeExperience), req, employeeID, ctx)
+}
+
 // CreateEmployee mocks base method.
 func (m *MockEmployeeService) CreateEmployee(req employees.CreateEmployeeProfileRequest, ctx context.Context) (*employees.CreateEmployeeProfileResponse, error) {
 	m.ctrl.T.Helper()
@@ -56,6 +116,156 @@ func (m *MockEmployeeService) CreateEmployee(req employees.CreateEmployeeProfile
 func (mr *MockEmployeeServiceMockRecorder) CreateEmployee(req, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEmployee", reflect.TypeOf((*MockEmployeeService)(nil).CreateEmployee), req, ctx)
+}
+
+// DeleteEmployeeCertification mocks base method.
+func (m *MockEmployeeService) DeleteEmployeeCertification(certificationID int64, ctx context.Context) (*employees.DeleteEmployeeCertificationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEmployeeCertification", certificationID, ctx)
+	ret0, _ := ret[0].(*employees.DeleteEmployeeCertificationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteEmployeeCertification indicates an expected call of DeleteEmployeeCertification.
+func (mr *MockEmployeeServiceMockRecorder) DeleteEmployeeCertification(certificationID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEmployeeCertification", reflect.TypeOf((*MockEmployeeService)(nil).DeleteEmployeeCertification), certificationID, ctx)
+}
+
+// DeleteEmployeeEducation mocks base method.
+func (m *MockEmployeeService) DeleteEmployeeEducation(educationID int64, ctx context.Context) (*employees.DeleteEmployeeEducationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEmployeeEducation", educationID, ctx)
+	ret0, _ := ret[0].(*employees.DeleteEmployeeEducationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteEmployeeEducation indicates an expected call of DeleteEmployeeEducation.
+func (mr *MockEmployeeServiceMockRecorder) DeleteEmployeeEducation(educationID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEmployeeEducation", reflect.TypeOf((*MockEmployeeService)(nil).DeleteEmployeeEducation), educationID, ctx)
+}
+
+// DeleteEmployeeExperience mocks base method.
+func (m *MockEmployeeService) DeleteEmployeeExperience(experienceID int64, ctx context.Context) (*employees.DeleteEmployeeExperienceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEmployeeExperience", experienceID, ctx)
+	ret0, _ := ret[0].(*employees.DeleteEmployeeExperienceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteEmployeeExperience indicates an expected call of DeleteEmployeeExperience.
+func (mr *MockEmployeeServiceMockRecorder) DeleteEmployeeExperience(experienceID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEmployeeExperience", reflect.TypeOf((*MockEmployeeService)(nil).DeleteEmployeeExperience), experienceID, ctx)
+}
+
+// GetEmployeeContractDetails mocks base method.
+func (m *MockEmployeeService) GetEmployeeContractDetails(employeeID int64, ctx context.Context) (*employees.GetEmployeeContractDetailsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmployeeContractDetails", employeeID, ctx)
+	ret0, _ := ret[0].(*employees.GetEmployeeContractDetailsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmployeeContractDetails indicates an expected call of GetEmployeeContractDetails.
+func (mr *MockEmployeeServiceMockRecorder) GetEmployeeContractDetails(employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmployeeContractDetails", reflect.TypeOf((*MockEmployeeService)(nil).GetEmployeeContractDetails), employeeID, ctx)
+}
+
+// GetEmployeeCounts mocks base method.
+func (m *MockEmployeeService) GetEmployeeCounts(ctx context.Context) (*employees.GetEmployeeCountsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmployeeCounts", ctx)
+	ret0, _ := ret[0].(*employees.GetEmployeeCountsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmployeeCounts indicates an expected call of GetEmployeeCounts.
+func (mr *MockEmployeeServiceMockRecorder) GetEmployeeCounts(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmployeeCounts", reflect.TypeOf((*MockEmployeeService)(nil).GetEmployeeCounts), ctx)
+}
+
+// GetEmployeeProfile mocks base method.
+func (m *MockEmployeeService) GetEmployeeProfile(userID int64, ctx context.Context) (*employees.GetEmployeeProfileResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmployeeProfile", userID, ctx)
+	ret0, _ := ret[0].(*employees.GetEmployeeProfileResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmployeeProfile indicates an expected call of GetEmployeeProfile.
+func (mr *MockEmployeeServiceMockRecorder) GetEmployeeProfile(userID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmployeeProfile", reflect.TypeOf((*MockEmployeeService)(nil).GetEmployeeProfile), userID, ctx)
+}
+
+// GetEmployeeProfileByID mocks base method.
+func (m *MockEmployeeService) GetEmployeeProfileByID(employeeID, currentUserID int64, ctx context.Context) (*employees.GetEmployeeProfileByIDResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmployeeProfileByID", employeeID, currentUserID, ctx)
+	ret0, _ := ret[0].(*employees.GetEmployeeProfileByIDResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmployeeProfileByID indicates an expected call of GetEmployeeProfileByID.
+func (mr *MockEmployeeServiceMockRecorder) GetEmployeeProfileByID(employeeID, currentUserID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmployeeProfileByID", reflect.TypeOf((*MockEmployeeService)(nil).GetEmployeeProfileByID), employeeID, currentUserID, ctx)
+}
+
+// ListEmployeeCertification mocks base method.
+func (m *MockEmployeeService) ListEmployeeCertification(employeeID int64, ctx context.Context) ([]employees.ListEmployeeCertificationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListEmployeeCertification", employeeID, ctx)
+	ret0, _ := ret[0].([]employees.ListEmployeeCertificationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListEmployeeCertification indicates an expected call of ListEmployeeCertification.
+func (mr *MockEmployeeServiceMockRecorder) ListEmployeeCertification(employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEmployeeCertification", reflect.TypeOf((*MockEmployeeService)(nil).ListEmployeeCertification), employeeID, ctx)
+}
+
+// ListEmployeeEducation mocks base method.
+func (m *MockEmployeeService) ListEmployeeEducation(employeeID int64, ctx context.Context) ([]employees.ListEmployeeEducationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListEmployeeEducation", employeeID, ctx)
+	ret0, _ := ret[0].([]employees.ListEmployeeEducationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListEmployeeEducation indicates an expected call of ListEmployeeEducation.
+func (mr *MockEmployeeServiceMockRecorder) ListEmployeeEducation(employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEmployeeEducation", reflect.TypeOf((*MockEmployeeService)(nil).ListEmployeeEducation), employeeID, ctx)
+}
+
+// ListEmployeeExperience mocks base method.
+func (m *MockEmployeeService) ListEmployeeExperience(employeeID int64, ctx context.Context) ([]employees.ListEmployeeExperienceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListEmployeeExperience", employeeID, ctx)
+	ret0, _ := ret[0].([]employees.ListEmployeeExperienceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListEmployeeExperience indicates an expected call of ListEmployeeExperience.
+func (mr *MockEmployeeServiceMockRecorder) ListEmployeeExperience(employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEmployeeExperience", reflect.TypeOf((*MockEmployeeService)(nil).ListEmployeeExperience), employeeID, ctx)
 }
 
 // ListEmployees mocks base method.
@@ -73,6 +283,96 @@ func (mr *MockEmployeeServiceMockRecorder) ListEmployees(req, ctx any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEmployees", reflect.TypeOf((*MockEmployeeService)(nil).ListEmployees), req, ctx)
 }
 
+// ListWorkingHours mocks base method.
+func (m *MockEmployeeService) ListWorkingHours(ctx context.Context, employeeID int64, req *employees.ListWorkingHoursRequest) (*employees.ListWorkingHoursResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListWorkingHours", ctx, employeeID, req)
+	ret0, _ := ret[0].(*employees.ListWorkingHoursResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListWorkingHours indicates an expected call of ListWorkingHours.
+func (mr *MockEmployeeServiceMockRecorder) ListWorkingHours(ctx, employeeID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWorkingHours", reflect.TypeOf((*MockEmployeeService)(nil).ListWorkingHours), ctx, employeeID, req)
+}
+
+// SearchEmployeesByNameOrEmail mocks base method.
+func (m *MockEmployeeService) SearchEmployeesByNameOrEmail(req employees.SearchEmployeesByNameOrEmailRequest, ctx context.Context) ([]employees.SearchEmployeesByNameOrEmailResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchEmployeesByNameOrEmail", req, ctx)
+	ret0, _ := ret[0].([]employees.SearchEmployeesByNameOrEmailResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchEmployeesByNameOrEmail indicates an expected call of SearchEmployeesByNameOrEmail.
+func (mr *MockEmployeeServiceMockRecorder) SearchEmployeesByNameOrEmail(req, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchEmployeesByNameOrEmail", reflect.TypeOf((*MockEmployeeService)(nil).SearchEmployeesByNameOrEmail), req, ctx)
+}
+
+// SetEmployeeProfilePicture mocks base method.
+func (m *MockEmployeeService) SetEmployeeProfilePicture(req employees.SetEmployeeProfilePictureRequest, employeeID int64, ctx context.Context) (*employees.SetEmployeeProfilePictureResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetEmployeeProfilePicture", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.SetEmployeeProfilePictureResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetEmployeeProfilePicture indicates an expected call of SetEmployeeProfilePicture.
+func (mr *MockEmployeeServiceMockRecorder) SetEmployeeProfilePicture(req, employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEmployeeProfilePicture", reflect.TypeOf((*MockEmployeeService)(nil).SetEmployeeProfilePicture), req, employeeID, ctx)
+}
+
+// UpdateEmployeeCertification mocks base method.
+func (m *MockEmployeeService) UpdateEmployeeCertification(req employees.UpdateEmployeeCertificationRequest, certificationID int64, ctx context.Context) (*employees.UpdateEmployeeCertificationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEmployeeCertification", req, certificationID, ctx)
+	ret0, _ := ret[0].(*employees.UpdateEmployeeCertificationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateEmployeeCertification indicates an expected call of UpdateEmployeeCertification.
+func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeCertification(req, certificationID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeCertification", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeCertification), req, certificationID, ctx)
+}
+
+// UpdateEmployeeEducation mocks base method.
+func (m *MockEmployeeService) UpdateEmployeeEducation(req employees.UpdateEmployeeEducationRequest, educationID int64, ctx context.Context) (*employees.UpdateEmployeeEducationResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEmployeeEducation", req, educationID, ctx)
+	ret0, _ := ret[0].(*employees.UpdateEmployeeEducationResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateEmployeeEducation indicates an expected call of UpdateEmployeeEducation.
+func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeEducation(req, educationID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeEducation", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeEducation), req, educationID, ctx)
+}
+
+// UpdateEmployeeExperience mocks base method.
+func (m *MockEmployeeService) UpdateEmployeeExperience(req employees.UpdateEmployeeExperienceRequest, experienceID int64, ctx context.Context) (*employees.UpdateEmployeeExperienceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEmployeeExperience", req, experienceID, ctx)
+	ret0, _ := ret[0].(*employees.UpdateEmployeeExperienceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateEmployeeExperience indicates an expected call of UpdateEmployeeExperience.
+func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeExperience(req, experienceID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeExperience", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeExperience), req, experienceID, ctx)
+}
+
 // UpdateEmployeeIsSubcontractor mocks base method.
 func (m *MockEmployeeService) UpdateEmployeeIsSubcontractor(req employees.UpdateEmployeeIsSubcontractorRequest, employeeID int64, ctx context.Context) (*employees.UpdateEmployeeIsSubcontractorResponse, error) {
 	m.ctrl.T.Helper()
@@ -86,4 +386,19 @@ func (m *MockEmployeeService) UpdateEmployeeIsSubcontractor(req employees.Update
 func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeIsSubcontractor(req, employeeID, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeIsSubcontractor", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeIsSubcontractor), req, employeeID, ctx)
+}
+
+// UpdateEmployeeProfile mocks base method.
+func (m *MockEmployeeService) UpdateEmployeeProfile(req employees.UpdateEmployeeProfileRequest, employeeID int64, ctx context.Context) (*employees.UpdateEmployeeProfileResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEmployeeProfile", req, employeeID, ctx)
+	ret0, _ := ret[0].(*employees.UpdateEmployeeProfileResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateEmployeeProfile indicates an expected call of UpdateEmployeeProfile.
+func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeProfile(req, employeeID, ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEmployeeProfile", reflect.TypeOf((*MockEmployeeService)(nil).UpdateEmployeeProfile), req, employeeID, ctx)
 }

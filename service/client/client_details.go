@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
-
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -125,7 +125,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateClientDetails",
-		"Successfully created client details", zap.Int64("ClientID", client.ID))
+		"Successfully created client details", zap.String("ClientID", client.ID.String()))
 	return result, nil
 }
 
@@ -212,11 +212,11 @@ func (s *clientService) GetClientsCount(ctx context.Context) (*GetClientsCountRe
 	}, nil
 }
 
-func (s *clientService) GetClientDetails(ctx context.Context, clientID int64) (*GetClientApiResponse, error) {
+func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error) {
 	client, err := s.Store.GetClientDetails(ctx, clientID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientDetails",
-			"Failed to get client details", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to get client details", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to get client details")
 	}
 
@@ -265,14 +265,13 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID int64) (*
 		LivingSituation:            client.LivingSituation,
 		LivingSituationNotes:       client.LivingSituationNotes,
 	}, nil
-
 }
 
-func (s *clientService) GetClientAddresses(ctx context.Context, clientID int64) (*GetClientAddressesApiResponse, error) {
+func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error) {
 	address, err := s.Store.GetClientAddresses(ctx, clientID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientAddresses",
-			"Failed to get client addresses", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to get client addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to get client addresses")
 	}
 
@@ -280,7 +279,7 @@ func (s *clientService) GetClientAddresses(ctx context.Context, clientID int64) 
 	err = json.Unmarshal(address, &addresses)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientAddresses",
-			"Failed to unmarshal addresses", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to unmarshal addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to unmarshal addresses")
 	}
 
@@ -289,7 +288,7 @@ func (s *clientService) GetClientAddresses(ctx context.Context, clientID int64) 
 	}, nil
 }
 
-func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID int64) (*UpdateClientDetailsResponse, error) {
+func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error) {
 	client, err := s.Store.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
 		ID:                         clientID,
 		FirstName:                  req.FirstName,
@@ -332,7 +331,7 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientDetails",
-			"Failed to update client details", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to update client details", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to update client details")
 	}
 
@@ -340,7 +339,7 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 	err = json.Unmarshal(client.Addresses, &addresses)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientDetails",
-			"Failed to unmarshal addresses", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to unmarshal addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to unmarshal addresses")
 	}
 
@@ -372,11 +371,11 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 		HasUntakenMedications: client.HasUntakenMedications,
 	}
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateClientDetails",
-		"Successfully updated client details", zap.Int64("ClientID", client.ID))
+		"Successfully updated client details", zap.String("ClientID", client.ID.String()))
 	return result, nil
 }
 
-func (s *clientService) UpdateClientStatus(ctx context.Context, req UpdateClientStatusRequest, clientID int64) (*UpdateClientStatusResponse, error) {
+func (s *clientService) UpdateClientStatus(ctx context.Context, req UpdateClientStatusRequest, clientID uuid.UUID) (*UpdateClientStatusResponse, error) {
 	switch req.IsSchedueled {
 	case true:
 		return s.handleSchedueledStatusUpdates(ctx, req, clientID)
@@ -387,7 +386,7 @@ func (s *clientService) UpdateClientStatus(ctx context.Context, req UpdateClient
 	}
 }
 
-func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID int64) (*UpdateClientStatusResponse, error) {
+func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID uuid.UUID) (*UpdateClientStatusResponse, error) {
 	if req.SchedueledFor.Before(time.Now()) {
 		return nil, fmt.Errorf("scheduled time must be in the future")
 	}
@@ -400,22 +399,21 @@ func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req U
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-			"Failed to create scheduled status change", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to create scheduled status change", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to create scheduled status change")
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateClientStatus",
-		"Successfully created scheduled status change", zap.Int64("ClientID", clientID),
+		"Successfully created scheduled status change", zap.String("ClientID", clientID.String()),
 		zap.String("NewStatus", req.Status), zap.Time("ScheduledFor", req.SchedueledFor))
 
 	return &UpdateClientStatusResponse{
 		ID:     clientID,
 		Status: schedueledChange.NewStatus,
 	}, nil
-
 }
 
-func (s *clientService) ListStatusHistory(ctx context.Context, clientID int64) ([]ListStatusHistoryApiResponse, error) {
+func (s *clientService) ListStatusHistory(ctx context.Context, clientID uuid.UUID) ([]ListStatusHistoryApiResponse, error) {
 	arg := db.ListClientStatusHistoryParams{
 		ClientID: clientID,
 		Limit:    10,
@@ -424,12 +422,12 @@ func (s *clientService) ListStatusHistory(ctx context.Context, clientID int64) (
 	histories, err := s.Store.ListClientStatusHistory(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListStatusHistory",
-			"Failed to list status history", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to list status history", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to list status history")
 	}
 	if len(histories) == 0 {
 		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListStatusHistory",
-			"No status history found", zap.Int64("ClientID", clientID))
+			"No status history found", zap.String("ClientID", clientID.String()))
 		return []ListStatusHistoryApiResponse{}, nil
 	}
 	var historyList []ListStatusHistoryApiResponse
@@ -447,17 +445,17 @@ func (s *clientService) ListStatusHistory(ctx context.Context, clientID int64) (
 	return historyList, nil
 }
 
-func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID int64) (*UpdateClientStatusResponse, error) {
+func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID uuid.UUID) (*UpdateClientStatusResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-			"Failed to begin transaction", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to begin transaction", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to begin transaction")
 	}
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
 			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-				"Failed to rollback transaction", zap.Error(rollbackErr), zap.Int64("ClientID", clientID))
+				"Failed to rollback transaction", zap.Error(rollbackErr), zap.String("ClientID", clientID.String()))
 		}
 	}()
 
@@ -466,7 +464,7 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 	oldClient, err := qtx.GetClientDetails(ctx, clientID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-			"Failed to get client details", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to get client details", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to get client details")
 	}
 
@@ -476,7 +474,7 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-			"Failed to update client status", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to update client status", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to update client status")
 	}
 
@@ -488,18 +486,18 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-			"Failed to create client status history", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to create client status history", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to create client status history")
 	}
 
 	if err = tx.Commit(ctx); err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
-			"Failed to commit transaction", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to commit transaction", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to commit transaction")
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateClientStatus",
-		"Successfully updated client status", zap.Int64("ClientID", client.ID),
+		"Successfully updated client status", zap.String("ClientID", client.ID.String()),
 		zap.String("NewStatus", req.Status))
 
 	return &UpdateClientStatusResponse{
@@ -508,7 +506,7 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 	}, nil
 }
 
-func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClientProfilePictureRequest, clientID int64) (*SetClientProfilePictureResponse, error) {
+func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClientProfilePictureRequest, clientID uuid.UUID) (*SetClientProfilePictureResponse, error) {
 	arg := db.SetClientProfilePictureTxParams{
 		ClientID:     clientID,
 		AttachmentID: req.AttachmentID,
@@ -516,12 +514,12 @@ func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClie
 	client, err := s.Store.SetClientProfilePictureTx(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "SetClientProfilePicture",
-			"Failed to set client profile picture", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to set client profile picture", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to set client profile picture")
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "SetClientProfilePicture",
-		"Successfully set client profile picture", zap.Int64("ClientID", client.User.ID))
+		"Successfully set client profile picture", zap.String("ClientID", client.User.ID.String()))
 
 	return &SetClientProfilePictureResponse{
 		ID:             client.User.ID,
@@ -529,7 +527,7 @@ func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClie
 	}, nil
 }
 
-func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocumentApiRequest, clientID int64) (*AddClientDocumentApiResponse, error) {
+func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocumentApiRequest, clientID uuid.UUID) (*AddClientDocumentApiResponse, error) {
 	arg := db.AddClientDocumentTxParams{
 		ClientID:     clientID,
 		AttachmentID: req.AttachmentID,
@@ -539,12 +537,12 @@ func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocu
 	clientDoc, err := s.Store.AddClientDocumentTx(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddClientDocument",
-			"Failed to add client document", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to add client document", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to add client document")
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddClientDocument",
-		"Successfully added client document", zap.Int64("ClientID", clientID),
+		"Successfully added client document", zap.String("ClientID", clientID.String()),
 		zap.Int64("DocumentID", clientDoc.ClientDocument.ID))
 	return &AddClientDocumentApiResponse{
 		ID:           clientDoc.ClientDocument.ID,
@@ -561,7 +559,7 @@ func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocu
 	}, nil
 }
 
-func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocumentsApiRequest, clientID int64) (*pagination.Response[ListClientDocumentsApiResponse], error) {
+func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocumentsApiRequest, clientID uuid.UUID) (*pagination.Response[ListClientDocumentsApiResponse], error) {
 	params := req.GetParams()
 	clientDocs, err := s.Store.ListClientDocuments(ctx, db.ListClientDocumentsParams{
 		ClientID: clientID,
@@ -570,12 +568,12 @@ func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocu
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDocuments",
-			"Failed to list client documents", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to list client documents", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to list client documents")
 	}
 	if len(clientDocs) == 0 {
 		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListClientDocuments",
-			"No client documents found", zap.Int64("ClientID", clientID))
+			"No client documents found", zap.String("ClientID", clientID.String()))
 		pag := pagination.NewResponse(ctx, req.Request, []ListClientDocumentsApiResponse{}, 0)
 		return &pag, nil
 	}
@@ -602,17 +600,17 @@ func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocu
 	return &pag, nil
 }
 
-func (s *clientService) DeleteClientDocument(ctx context.Context, clientID int64, documentID uuid.UUID) (*DeleteClientDocumentApiResponse, error) {
+func (s *clientService) DeleteClientDocument(ctx context.Context, clientID uuid.UUID, documentID uuid.UUID) (*DeleteClientDocumentApiResponse, error) {
 	clientDoc, err := s.Store.DeleteClientDocumentTx(ctx, db.DeleteClientDocumentParams{
 		AttachmentID: documentID,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteClientDocument",
-			"Failed to delete client document", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to delete client document", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to delete client document")
 	}
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "DeleteClientDocument",
-		"Successfully deleted client document", zap.Int64("ClientID", clientID),
+		"Successfully deleted client document", zap.String("ClientID", clientID.String()),
 		zap.String("DocumentID", documentID.String()))
 	return &DeleteClientDocumentApiResponse{
 		ID:           clientDoc.ClientDocument.ID,
@@ -620,15 +618,15 @@ func (s *clientService) DeleteClientDocument(ctx context.Context, clientID int64
 	}, nil
 }
 
-func (s *clientService) GetMissingClientDocuments(ctx context.Context, clientID int64) (*GetMissingClientDocumentsApiResponse, error) {
+func (s *clientService) GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) (*GetMissingClientDocumentsApiResponse, error) {
 	missingDocs, err := s.Store.GetMissingClientDocuments(ctx, clientID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetMissingClientDocuments",
-			"Failed to get missing client documents", zap.Error(err), zap.Int64("ClientID", clientID))
+			"Failed to get missing client documents", zap.Error(err), zap.String("ClientID", clientID.String()))
 		return nil, fmt.Errorf("failed to get missing client documents")
 	}
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "GetMissingClientDocuments",
-		"Successfully retrieved missing client documents", zap.Int64("ClientID", clientID))
+		"Successfully retrieved missing client documents", zap.String("ClientID", clientID.String()))
 	return &GetMissingClientDocumentsApiResponse{
 		MissingDocs: missingDocs,
 	}, nil

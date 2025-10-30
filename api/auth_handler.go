@@ -31,7 +31,6 @@ func (server *Server) Login(ctx *gin.Context) {
 	}
 
 	loginResult, err := server.businessService.AuthService.Login(req, ctx.ClientIP(), ctx.Request.UserAgent(), ctx)
-
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
@@ -43,7 +42,6 @@ func (server *Server) Login(ctx *gin.Context) {
 }
 
 // @Summary Refresh access token
-
 // @Description Refresh access token using refresh token“
 // @Tags authentication
 // @Accept json
@@ -60,7 +58,6 @@ func (server *Server) RefreshToken(ctx *gin.Context) {
 		return
 	}
 	result, err := server.businessService.AuthService.RefreshToken(req, ctx)
-
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to refresh token: %v", err)))
 		return
@@ -90,14 +87,12 @@ func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 	}
 
 	loginResult, err := server.businessService.AuthService.VerifyTwoFAToken(req, ctx)
-
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA verification failed")))
 		return
 	}
 	res := SuccessResponse(loginResult, "login successful")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary Logout user
@@ -158,7 +153,6 @@ func (server *Server) ChangePasswordApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse[any](nil, "password changed successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary Setup 2FA

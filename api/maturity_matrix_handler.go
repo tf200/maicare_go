@@ -2,25 +2,15 @@ package api
 
 import (
 	"fmt"
-	db "maicare_go/db/sqlc"
-	grpclient "maicare_go/grpclient/proto"
-	"maicare_go/pagination"
-	"maicare_go/util"
 	"net/http"
 	"strconv"
-	"time"
+
+	"maicare_go/service/care"
 
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
-
-// ListMaturityMatrixResponse represents a maturity matrix in the list
-type ListMaturityMatrixResponse struct {
-	ID        int64  `json:"id"`
-	TopicName string `json:"topic_name"`
-}
 
 // @Summary List all maturity matrix
 // @Description Get a list of all maturity matrix
@@ -32,42 +22,15 @@ type ListMaturityMatrixResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /maturity_matrix [get]
 func (server *Server) ListMaturityMatrixApi(ctx *gin.Context) {
-	maturityMatrix, err := server.store.ListMaturityMatrix(ctx)
+	result, err := server.businessService.CarePlanService.ListCarePlanTopics(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	responseMaturityMatrix := make([]ListMaturityMatrixResponse, len(maturityMatrix))
-	for i, matrix := range maturityMatrix {
-		responseMaturityMatrix[i] = ListMaturityMatrixResponse{
-			ID:        matrix.ID,
-			TopicName: matrix.TopicName,
-		}
-	}
-
-	res := SuccessResponse(responseMaturityMatrix, "Maturity matrix retrieved successfully")
+	res := SuccessResponse(result, "Maturity matrix retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
-}
-
-type Level struct {
-	Level       int32  `json:"level"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-// CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
-type CreateClientMaturityMatrixAssessmentRequest struct {
-	MaturityMatrixID int64 `json:"maturity_matrix_id"`
-	InitialLevel     int32 `json:"initial_level"`
-	TargetLevel      int32 `json:"target_level"`
-}
-
-// CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
-type CreateClientMaturityMatrixAssessmentResponse struct {
-	ClientID   int64 `json:"client_id"`
-	CarePlanID int64 `json:"care_plan_id"`
 }
 
 // @Summary Create client maturity matrix assessment
@@ -84,16 +47,14 @@ type CreateClientMaturityMatrixAssessmentResponse struct {
 // @Router /clients/{id}/assessments [post]
 func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
-		server.logger.Error("failed to parse client ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
 		return
 	}
 
-	var req CreateClientMaturityMatrixAssessmentRequest
+	var req care.CreateClientCarePlanRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logger.Error("failed to bind request", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
@@ -104,315 +65,16 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 		return
 	}
 
-	tx, err := server.store.ConnPool.Begin(ctx)
+	carePlan, err := server.businessService.CarePlanService.CreateClientCarePlan(
+		ctx, clientID, payload.EmployeeID, &req,
+	)
 	if err != nil {
-		server.logger.Error("failed to begin transaction", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to begin transaction")))
-		return
-	}
-	defer tx.Rollback(ctx)
-
-	qtx := server.store.WithTx(tx)
-
-	arg := db.CreateClientMaturityMatrixAssessmentParams{
-		ClientID:         clientID,
-		MaturityMatrixID: req.MaturityMatrixID,
-		StartDate:        pgtype.Date{Time: time.Now(), Valid: true},
-		EndDate:          pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
-		InitialLevel:     req.InitialLevel,
-		TargetLevel:      req.TargetLevel,
-		CurrentLevel:     req.InitialLevel,
-	}
-
-	clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
-	if err != nil {
-		server.logger.Error("failed to create client maturity matrix assessment", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create client maturity matrix assessment")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create client care plan")))
 		return
 	}
 
-	topicDescription, err := qtx.GetMaturityMatrix(ctx, req.MaturityMatrixID)
-	if err != nil {
-
-		server.logger.Error("failed to get maturity matrix", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get maturity matrix")))
-
-		return
-	}
-	var levelDescription []Level
-
-	err = json.Unmarshal(topicDescription.LevelDescription, &levelDescription)
-	if err != nil {
-		server.logger.Error("failed to unmarshal level description", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to unmarshal level description")))
-		return
-	}
-
-	clientDetails, err := qtx.GetClientDetails(ctx, clientID)
-	if err != nil {
-		server.logger.Error("failed to get client details", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get client details")))
-		return
-
-	}
-
-	generatedCarePlan, err := server.grpClient.GenerateCarePlan(ctx, &grpclient.PersonalizedCarePlanRequest{
-		ClientData: &grpclient.ClientData{
-			Age:              int32(time.Since(clientDetails.DateOfBirth.Time).Hours() / 24 / 365), // Calculate age from DateOfBirth
-			LivingSituation:  *clientDetails.LivingSituation,
-			EducationLevel:   *clientDetails.EducationLevel,
-			DomainName:       clientAssessments.TopicName,
-			CurrentLevel:     clientAssessments.InitialLevel,                   // Example current level, replace with actual data
-			LevelDescription: levelDescription[req.InitialLevel-1].Description, // Use the description from the level
-		},
-		DomainDefinitions: map[string]*grpclient.DomainLevels{
-			topicDescription.TopicName: {
-				Levels: map[int32]string{
-					levelDescription[0].Level: levelDescription[0].Description,
-					levelDescription[1].Level: levelDescription[1].Description,
-					levelDescription[2].Level: levelDescription[2].Description,
-					levelDescription[3].Level: levelDescription[3].Description,
-					levelDescription[4].Level: levelDescription[4].Description,
-				},
-			},
-		},
-	})
-
-	if err != nil {
-		server.logger.Error("failed to generate care plan", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate care plan")))
-		return
-	}
-	// insert the care plan into the database
-	rawllmResp, err := json.Marshal(generatedCarePlan)
-	if err != nil {
-		server.logger.Error("failed to marshal generated care plan", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to marshal generated care plan")))
-		return
-	}
-
-	carePlan, err := qtx.CreateCarePlan(ctx, db.CreateCarePlanParams{
-		AssessmentID:          clientAssessments.ID,
-		GeneratedByEmployeeID: &payload.EmployeeID,
-		AssessmentSummary:     generatedCarePlan.AssessmentSummary,
-		RawLlmResponse:        rawllmResp,
-		Status:                "draft",
-	})
-	if err != nil {
-		server.logger.Error("failed to create care plan", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan")))
-		return
-	}
-
-	// insert Objectives into the database
-	// starting with short term goals
-
-	for _, objective := range generatedCarePlan.CarePlanObjectives.ShortTermGoals {
-		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
-			CarePlanID:  carePlan.ID,
-			GoalTitle:   objective.GoalTitle,
-			Description: objective.Description,
-			Timeframe:   "short_term",
-			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan objective", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
-			return
-		}
-		for i, action := range objective.SpecificActions {
-
-			_, err := qtx.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
-				ObjectiveID:       createdObj.ID,
-				ActionDescription: action,
-				SortOrder:         int32(i + 1), // Use index + 1 as sort order
-			})
-			if err != nil {
-				server.logger.Error("failed to create care plan action", zap.Error(err))
-				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
-				return
-			}
-
-		}
-	}
-
-	for _, objective := range generatedCarePlan.CarePlanObjectives.MediumTermGoals {
-		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
-			CarePlanID:  carePlan.ID,
-			GoalTitle:   objective.GoalTitle,
-			Description: objective.Description,
-			Timeframe:   "medium_term",
-			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan objective", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
-			return
-		}
-		for i, action := range objective.SpecificActions {
-			_, err := qtx.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
-				ObjectiveID:       createdObj.ID,
-				ActionDescription: action,
-				SortOrder:         int32(i + 1), // Use index + 1 as sort order
-			})
-			if err != nil {
-				server.logger.Error("failed to create care plan action", zap.Error(err))
-				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
-				return
-			}
-		}
-	}
-
-	for _, objective := range generatedCarePlan.CarePlanObjectives.LongTermGoals {
-		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
-			CarePlanID:  carePlan.ID,
-			GoalTitle:   objective.GoalTitle,
-			Description: objective.Description,
-			Timeframe:   "long_term",
-			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true}, // Use current time as target date
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan objective", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
-			return
-		}
-		for i, action := range objective.SpecificActions {
-			_, err := qtx.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
-				ObjectiveID:       createdObj.ID,
-				ActionDescription: action,
-				SortOrder:         int32(i + 1), // Use index + 1 as sort order
-			})
-			if err != nil {
-				server.logger.Error("failed to create care plan action", zap.Error(err))
-				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
-				return
-			}
-		}
-	}
-	// insert interventions into the database
-
-	for _, intervention := range generatedCarePlan.Interventions.DailyActivities {
-		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
-			CarePlanID:              carePlan.ID,
-			Frequency:               "daily",
-			InterventionDescription: intervention,
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan intervention", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
-			return
-		}
-	}
-	for _, intervention := range generatedCarePlan.Interventions.WeeklyActivities {
-		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
-			CarePlanID:              carePlan.ID,
-			Frequency:               "weekly",
-			InterventionDescription: intervention,
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan intervention", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
-			return
-		}
-	}
-
-	for _, intervention := range generatedCarePlan.Interventions.MonthlyActivities {
-		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
-			CarePlanID:              carePlan.ID,
-			Frequency:               "monthly",
-			InterventionDescription: intervention,
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan intervention", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
-			return
-		}
-	}
-
-	for _, successMetric := range generatedCarePlan.SuccessMetrics {
-		_, err := qtx.CreateCarePlanSuccessMetric(ctx, db.CreateCarePlanSuccessMetricParams{
-			CarePlanID:        carePlan.ID,
-			MetricName:        successMetric.Metric,
-			TargetValue:       successMetric.Target,
-			MeasurementMethod: successMetric.MeasurementMethod,
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan success metric", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan success metric")))
-			return
-		}
-	}
-
-	for _, risk := range generatedCarePlan.RiskFactors {
-		_, err := qtx.CreateCarePlanRisk(ctx, db.CreateCarePlanRiskParams{
-			CarePlanID:         carePlan.ID,
-			RiskDescription:    risk.Risk,
-			MitigationStrategy: risk.Mitigation,
-			RiskLevel:          &risk.RiskLevel, // Use pointer to allow NULL values
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan risk", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan risk")))
-			return
-		}
-	}
-
-	for _, supportNetwork := range generatedCarePlan.SupportNetwork {
-		_, err := qtx.CreateCarePlanSupportNetwork(ctx, db.CreateCarePlanSupportNetworkParams{
-			CarePlanID:                carePlan.ID,
-			RoleTitle:                 supportNetwork.Role,
-			ResponsibilityDescription: supportNetwork.Responsibility,
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan support network", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan support network")))
-			return
-		}
-	}
-
-	for _, resource := range generatedCarePlan.ResourcesRequired {
-		_, err := qtx.CreateCarePlanResources(ctx, db.CreateCarePlanResourcesParams{
-			CarePlanID:          carePlan.ID,
-			ResourceDescription: resource,
-			IsObtained:          false,
-			ObtainedDate:        pgtype.Date{Time: time.Now(), Valid: false},
-		})
-		if err != nil {
-			server.logger.Error("failed to create care plan resources", zap.Error(err))
-			ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan resources")))
-			return
-		}
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		server.logger.Error("failed to commit transaction", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to commit transaction")))
-		return
-	}
-
-	res := SuccessResponse(CreateClientMaturityMatrixAssessmentResponse{
-		ClientID:   clientID,
-		CarePlanID: carePlan.ID,
-	}, "Client maturity matrix assessment created successfully")
+	res := SuccessResponse(carePlan, "Client maturity matrix assessment created successfully")
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// ListClientMaturityMatrixAssessmentsRequest represents a request to list client maturity matrix assessments
-type ListClientMaturityMatrixAssessmentsRequest struct {
-	pagination.Request
-}
-
-// ListClientMaturityMatrixAssessmentsResponse represents a response for ListClientMaturityMatrixAssessmentsApi
-type ListClientMaturityMatrixAssessmentsResponse struct {
-	CarePlanID   int64       `json:"care_plan_id"`
-	ClientID     int64       `json:"client_id"`
-	StartDate    pgtype.Date `json:"start_date"`
-	EndDate      pgtype.Date `json:"end_date"`
-	InitialLevel int32       `json:"initial_level"`
-	CurrentLevel int32       `json:"current_level"`
-	IsActive     bool        `json:"is_active"`
-	TopicName    string      `json:"topic_name"`
 }
 
 // @Summary List client maturity matrix assessments
@@ -429,71 +91,30 @@ type ListClientMaturityMatrixAssessmentsResponse struct {
 // @Router /clients/{id}/assessments [get]
 func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	var req ListClientMaturityMatrixAssessmentsRequest
+	var req care.ListClientCarePlansRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	params := req.GetParams()
-
-	clientAssessments, err := server.store.ListClientMaturityMatrixAssessments(ctx, db.ListClientMaturityMatrixAssessmentsParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
-	})
+	result, err := server.businessService.CarePlanService.ListClientCarePlans(ctx, clientID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	if len(clientAssessments) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListClientMaturityMatrixAssessmentsResponse{}, 0)
-		res := SuccessResponse(pag, "No client maturity matrix assessments found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	responseClientAssessments := make([]ListClientMaturityMatrixAssessmentsResponse, len(clientAssessments))
-	for i, assessment := range clientAssessments {
-		responseClientAssessments[i] = ListClientMaturityMatrixAssessmentsResponse{
-			CarePlanID:   util.DerefInt64(assessment.CarePlanID),
-			TopicName:    assessment.TopicName,
-			ClientID:     assessment.ClientID,
-			StartDate:    assessment.StartDate,
-			EndDate:      assessment.EndDate,
-			InitialLevel: assessment.InitialLevel,
-			CurrentLevel: assessment.CurrentLevel,
-			IsActive:     assessment.IsActive,
-		}
-	}
-
-	pag := pagination.NewResponse(ctx, req.Request, responseClientAssessments, clientAssessments[0].TotalCount)
-	res := SuccessResponse(pag, "Client maturity matrix assessments retrieved successfully")
+	res := SuccessResponse(result, "Client maturity matrix assessments retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // ============================ CarePlan Overview ===========================
-
-// care_plan represents the response for the GetCarePlanOverview API
-type GetCarePlanOverviewResponse struct {
-	ID                int64     `json:"id"`
-	Domain            string    `json:"domain"`
-	CurrentLevel      int32     `json:"current_level"`
-	TargetLevel       int32     `json:"target_level"`
-	Status            string    `json:"status"`
-	GeneratedAt       time.Time `json:"generated_at"`
-	AssessmentSummary string    `json:"assessment_summary"`
-	RawLlmResponse    string    `json:"raw_llm_response"`
-}
 
 // GetCarePlanOverviewApi retrieves the care plan overview for a given assessment ID
 // @Summary Get care plan overview
@@ -509,42 +130,19 @@ type GetCarePlanOverviewResponse struct {
 func (server *Server) GetCarePlanOverviewApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanOverviewApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	carePlan, err := server.store.GetCarePlanOverview(ctx, carePlanID)
+	result, err := server.businessService.CarePlanService.GetCarePlanOverview(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanOverviewApi", "Failed to get care plan overview", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan overview")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(GetCarePlanOverviewResponse{
-		ID:                carePlan.ID,
-		Domain:            carePlan.TopicName,
-		CurrentLevel:      carePlan.CurrentLevel,
-		TargetLevel:       carePlan.TargetLevel,
-		Status:            carePlan.Status,
-		GeneratedAt:       carePlan.GeneratedAt.Time,
-		AssessmentSummary: carePlan.AssessmentSummary,
-		RawLlmResponse:    string(carePlan.RawLlmResponse),
-	}, "Care plan overview retrieved successfully")
+	res := SuccessResponse(result, "Care plan overview retrieved successfully")
 
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanOverviewRequest represents the request body for updating the care plan overview
-type UpdateCarePlanOverviewRequest struct {
-	AssessmentSummary *string `json:"assessment_summary"`
-}
-
-// UpdateCarePlanOverviewResponse represents the response for the UpdateCarePlanOverview API
-type UpdateCarePlanOverviewResponse struct {
-	CarePlanID        int64  `json:"care_plan_id"`
-	AssessmentID      int64  `json:"assessment_id"`
-	AssessmentSummary string `json:"assessment_summary"`
 }
 
 // UpdateCarePlanOverviewApi updates the care plan overview for a given care plan ID
@@ -561,35 +159,25 @@ type UpdateCarePlanOverviewResponse struct {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id} [put]
 func (server *Server) UpdateCarePlanOverviewApi(ctx *gin.Context) {
-	CarePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanOverviewApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req UpdateCarePlanOverviewRequest
+	var req care.UpdateCarePlanOverviewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanOverviewApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	carePlan, err := server.store.UpdateCarePlanOverview(ctx, db.UpdateCarePlanOverviewParams{
-		ID:                CarePlanID,
-		AssessmentSummary: req.AssessmentSummary,
-	})
+	result, err := server.businessService.CarePlanService.UpdateCarePlanOverview(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanOverviewApi", "Failed to update care plan overview", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan overview")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanOverviewResponse{
-		CarePlanID:        carePlan.ID,
-		AssessmentID:      carePlan.AssessmentID,
-		AssessmentSummary: carePlan.AssessmentSummary,
-	}, "Care plan overview updated successfully")
+	res := SuccessResponse(result, "Care plan overview updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -608,15 +196,13 @@ func (server *Server) UpdateCarePlanOverviewApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlan(ctx, carePlanID)
+	err = server.businessService.CarePlanService.DeleteCarePlan(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanApi", "Failed to delete care plan", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -625,28 +211,6 @@ func (server *Server) DeleteCarePlanApi(ctx *gin.Context) {
 }
 
 // =========================== Care plan objectives and actions ===========================
-
-// CreateCarePlanObjectiveRequest represents the request body for creating a care plan objective
-type CreateCarePlanObjectiveRequest struct {
-	TimeFrame   string `json:"timeframe" binding:"required,oneof=short_term medium_term long_term"`
-	GoalTitle   string `json:"goal_title" binding:"required"`
-	Description string `json:"description" binding:"required"`
-}
-
-// CreateCarePlanObjectiveResponse represents the response for the CreateCarePlanObjective API
-type CreateCarePlanObjectiveResponse struct {
-	ID              int64     `json:"id"`
-	CarePlanID      int64     `json:"care_plan_id"`
-	Timeframe       string    `json:"timeframe"`
-	GoalTitle       string    `json:"goal_title"`
-	Description     string    `json:"description"`
-	TargetDate      time.Time `json:"target_date"`
-	Status          string    `json:"status"`
-	CompletionDate  time.Time `json:"completion_date"`
-	CompletionNotes *string   `json:"completion_notes"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-}
 
 // CreateCarePlanObjectiveApi creates a new care plan objective
 // @Summary Create care plan objective
@@ -664,71 +228,25 @@ type CreateCarePlanObjectiveResponse struct {
 func (server *Server) CreateCarePlanObjectiveApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanObjectiveApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req CreateCarePlanObjectiveRequest
+	var req care.CreateCarePlanObjectiveRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanObjectiveApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	objective, err := server.store.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
-		CarePlanID:  carePlanID,
-		Description: req.Description,
-		Timeframe:   req.TimeFrame,
-		GoalTitle:   req.GoalTitle,
-	})
+	objective, err := server.businessService.CarePlanService.CreateCarePlanObjective(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanObjectiveApi", "Failed to create care plan objective", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan objective")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanObjectiveResponse{
-		ID:              objective.ID,
-		CarePlanID:      carePlanID,
-		Timeframe:       objective.Timeframe,
-		GoalTitle:       objective.GoalTitle,
-		Description:     objective.Description,
-		TargetDate:      objective.TargetDate.Time,
-		Status:          objective.Status,
-		CompletionDate:  objective.CompletionDate.Time,
-		CompletionNotes: objective.CompletionNotes,
-		CreatedAt:       objective.CreatedAt.Time,
-		UpdatedAt:       objective.UpdatedAt.Time,
-	}, "Care plan objective created successfully")
+	res := SuccessResponse(objective, "Care plan objective created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// CarePlanActions represents the actions in a care plan objective
-type CarePlanActions struct {
-	ActionID          int64  `json:"action_id"`
-	SortOrder         int32  `json:"sort_order"`
-	ActionDescription string `json:"action_description"`
-	IsCompleted       bool   `json:"is_completed"`
-	Notes             string `json:"notes"`
-}
-
-// CarePlanObjectives represents the objectives in a care plan
-type CarePlanObjectives struct {
-	ObjectiveID int64             `json:"objective_id"`
-	Title       string            `json:"title"`
-	Description string            `json:"description"`
-	TimeFrame   string            `json:"timeframe"`
-	Status      string            `json:"status"`
-	Actions     []CarePlanActions `json:"actions"`
-}
-
-// GetCarePlanObjectivesResponse represents the response for the GetCarePlanObjectives API
-type GetCarePlanObjectivesResponse struct {
-	ShortTermGoals  []CarePlanObjectives `json:"short_term_goals"`
-	MediumTermGoals []CarePlanObjectives `json:"medium_term_goals"`
-	LongTermGoals   []CarePlanObjectives `json:"long_term_goals"`
 }
 
 // GetCarePlanObjectivesApi retrieves the care plan objectives for a given care plan ID
@@ -745,77 +263,18 @@ type GetCarePlanObjectivesResponse struct {
 func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanObjectivesApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	rows, err := server.store.GetCarePlanObjectivesWithActions(ctx, carePlanID)
+	response, err := server.businessService.CarePlanService.GetCarePlanObjectivesAndActions(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanObjectivesApi", "Failed to get care plan objectives with actions", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan objectives with actions")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan objectives and actions")))
 		return
-	}
-
-	objectiveMap := make(map[int64]*CarePlanObjectives)
-	for _, row := range rows {
-		objective, exists := objectiveMap[row.ObjectiveID]
-		if !exists {
-			objective = &CarePlanObjectives{
-				ObjectiveID: row.ObjectiveID,
-				Title:       row.ObjectiveTitle,
-				Description: row.ObjectiveDescription,
-				TimeFrame:   row.ObjectiveTimeframe,
-				Status:      row.ObjectiveStatus,
-				Actions:     []CarePlanActions{},
-			}
-			objectiveMap[row.ObjectiveID] = objective
-		}
-		if row.ActionID != nil {
-			action := CarePlanActions{
-				ActionID:          *row.ActionID,
-				SortOrder:         util.DerefInt32(row.SortOrder),
-				ActionDescription: util.DerefString(row.ActionDescription),
-				IsCompleted:       util.DerefBool(row.IsCompleted),
-				Notes:             util.DerefString(row.ActionNotes),
-			}
-			objective.Actions = append(objective.Actions, action)
-		}
-	}
-
-	response := &GetCarePlanObjectivesResponse{
-		ShortTermGoals:  make([]CarePlanObjectives, 0),
-		MediumTermGoals: make([]CarePlanObjectives, 0),
-		LongTermGoals:   make([]CarePlanObjectives, 0),
-	}
-
-	for _, objective := range objectiveMap {
-		switch objective.TimeFrame {
-		case "short_term":
-			response.ShortTermGoals = append(response.ShortTermGoals, *objective)
-		case "medium_term":
-			response.MediumTermGoals = append(response.MediumTermGoals, *objective)
-		case "long_term":
-			response.LongTermGoals = append(response.LongTermGoals, *objective)
-		}
 	}
 
 	res := SuccessResponse(response, "Care plan objectives retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanObjectiveRequest represents the request body for updating a care plan objective
-type UpdateCarePlanObjectiveRequest struct {
-	TimeFrame   *string `json:"timeframe" binding:"oneof=short_term medium_term long_term"`
-	GoalTitle   *string `json:"goal_title"`
-	Description *string `json:"description"`
-	Status      *string `json:"status" binding:"oneof=not_started in_progress completed discontinued"`
-}
-
-// UpdateCarePlanObjectiveResponse represents the response for the UpdateCarePlanObjective API
-type UpdateCarePlanObjectiveResponse struct {
-	ObjectiveID int64 `json:"goal_id"`
-	CarePlanId  int64 `json:"care_plan_id"`
 }
 
 // @Summary Update care plan objective
@@ -833,35 +292,23 @@ type UpdateCarePlanObjectiveResponse struct {
 func (server *Server) UpdateCarePlanObjectiveApi(ctx *gin.Context) {
 	objectiveId, err := strconv.ParseInt(ctx.Param("objective_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanObjectiveApi", "Invalid objective ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid objective ID")))
 		return
 	}
 
-	var req UpdateCarePlanObjectiveRequest
+	var req care.UpdateCarePlanObjectiveRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanObjectiveApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	objective, err := server.store.UpdateCarePlanObjective(ctx, db.UpdateCarePlanObjectiveParams{
-		ID:          objectiveId,
-		Timeframe:   req.TimeFrame,
-		GoalTitle:   req.GoalTitle,
-		Description: req.Description,
-		Status:      req.Status,
-	})
+	response, err := server.businessService.CarePlanService.UpdateCarePlanObjective(ctx, objectiveId, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanObjectiveApi", "Failed to update care plan objective", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan objective")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanObjectiveResponse{
-		ObjectiveID: objective.ID,
-		CarePlanId:  objective.CarePlanID,
-	}, "Care plan objective updated successfully")
+	res := SuccessResponse(response, "Care plan objective updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -880,32 +327,18 @@ func (server *Server) UpdateCarePlanObjectiveApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanObjectiveApi(ctx *gin.Context) {
 	objectiveId, err := strconv.ParseInt(ctx.Param("objective_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanObjectiveApi", "Invalid objective ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid objective ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanObjective(ctx, objectiveId)
+	err = server.businessService.CarePlanService.DeleteCarePlanObjective(ctx, objectiveId)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanObjectiveApi", "Failed to delete care plan objective", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan objective")))
 		return
 	}
 
 	res := SuccessResponse[any](nil, "Care plan objective deleted successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// CreateCarePlanActionsRequest represents the request body for creating a care plan action
-type CreateCarePlanActionsRequest struct {
-	ActionDescription string `json:"action_description" binding:"required"`
-}
-
-// CreateCarePlanActionsResponse represents the response for the CreateCarePlanActions API
-type CreateCarePlanActionsResponse struct {
-	ActionID          int64  `json:"action_id"`
-	ObjectiveID       int64  `json:"objective_id"`
-	ActionDescription string `json:"action_description"`
 }
 
 // CreateCarePlanActionsApi creates a new care plan action
@@ -924,55 +357,25 @@ type CreateCarePlanActionsResponse struct {
 func (server *Server) CreateCarePlanActionsApi(ctx *gin.Context) {
 	objectiveID, err := strconv.ParseInt(ctx.Param("objective_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanActionsApi", "Invalid objective ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid objective ID")))
 		return
 	}
 
-	var req CreateCarePlanActionsRequest
+	var req care.CreateCarePlanActionsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanActionsApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	maxSortOrder, err := server.store.GetCarePlanActionsMaxSortOrder(ctx, objectiveID)
+	action, err := server.businessService.CarePlanService.CreateCarePlanAction(ctx, objectiveID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanActionsApi", "Failed to get max sort order for objective", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get max sort order for objective")))
-		return
-	}
-
-	action, err := server.store.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
-		ObjectiveID:       objectiveID,
-		ActionDescription: req.ActionDescription,
-		SortOrder:         maxSortOrder + 1, // Increment the max sort order by 1
-	})
-	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanActionsApi", "Failed to create care plan action", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan action")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanActionsResponse{
-		ActionID:          action.ID,
-		ObjectiveID:       action.ObjectiveID,
-		ActionDescription: action.ActionDescription,
-	}, "Care plan action created successfully")
+	res := SuccessResponse(action, "Care plan action created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// UpdateCarePlanActionsRequest represents the request body for updating a care plan action
-type UpdateCarePlanActionsRequest struct {
-	ActionDescription *string `json:"action_description"`
-}
-
-// UpdateCarePlanActionsResponse represents the response for the UpdateCarePlanActions API
-type UpdateCarePlanActionsResponse struct {
-	ActionID          int64  `json:"action_id"`
-	ObjectiveID       int64  `json:"objective_id"`
-	ActionDescription string `json:"action_description"`
 }
 
 // UpdateCarePlanActionsApi updates a care plan action by its ID
@@ -991,33 +394,22 @@ type UpdateCarePlanActionsResponse struct {
 func (server *Server) UpdateCarePlanActionsApi(ctx *gin.Context) {
 	actionID, err := strconv.ParseInt(ctx.Param("action_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanActionsApi", "Invalid action ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid action ID")))
 		return
 	}
 
-	var req UpdateCarePlanActionsRequest
+	var req care.UpdateCarePlanActionsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanActionsApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
-
-	action, err := server.store.UpdateCarePlanAction(ctx, db.UpdateCarePlanActionParams{
-		ID:                actionID,
-		ActionDescription: req.ActionDescription,
-	})
+	action, err := server.businessService.CarePlanService.UpdateCarePlanAction(ctx, actionID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanActionsApi", "Failed to update care plan action", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan action")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanActionsResponse{
-		ActionID:          action.ID,
-		ObjectiveID:       action.ObjectiveID,
-		ActionDescription: action.ActionDescription,
-	}, "Care plan action updated successfully")
+	res := SuccessResponse(action, "Care plan action updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -1036,14 +428,12 @@ func (server *Server) UpdateCarePlanActionsApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanActionApi(ctx *gin.Context) {
 	actionID, err := strconv.ParseInt(ctx.Param("action_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanActionApi", "Invalid action ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid action ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanAction(ctx, actionID)
+	err = server.businessService.CarePlanService.DeleteCarePlanAction(ctx, actionID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanActionApi", "Failed to delete care plan action", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan action")))
 		return
 	}
@@ -1053,20 +443,6 @@ func (server *Server) DeleteCarePlanActionApi(ctx *gin.Context) {
 }
 
 // =========================== Care plan interventions ===========================
-
-// CreateCarePlanInterventionRequest represents the request body for creating a care plan intervention
-type CreateCarePlanInterventionRequest struct {
-	Frequency               string `json:"frequency" binding:"required,oneof=daily weekly monthly"`
-	InterventionDescription string `json:"intervention_description" binding:"required"`
-}
-
-// CreateCarePlanInterventionResponse represents the response for the CreateCarePlanIntervention API
-type CreateCarePlanInterventionResponse struct {
-	InterventionID          int64  `json:"intervention_id"`
-	CarePlanID              int64  `json:"care_plan_id"`
-	Frequency               string `json:"frequency"`
-	InterventionDescription string `json:"intervention_description"`
-}
 
 // CreateCarePlanInterventionApi creates a new care plan intervention
 // @Summary Create care plan intervention
@@ -1084,49 +460,25 @@ type CreateCarePlanInterventionResponse struct {
 func (server *Server) CreateCarePlanInterventionApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanInterventionApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req CreateCarePlanInterventionRequest
+	var req care.CreateCarePlanInterventionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanInterventionApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	intervention, err := server.store.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
-		CarePlanID:              carePlanID,
-		Frequency:               req.Frequency,
-		InterventionDescription: req.InterventionDescription,
-	})
+	intervention, err := server.businessService.CarePlanService.CreateCarePlanIntervention(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanInterventionApi", "Failed to create care plan intervention", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan intervention")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanInterventionResponse{
-		InterventionID:          intervention.ID,
-		CarePlanID:              intervention.CarePlanID,
-		Frequency:               intervention.Frequency,
-		InterventionDescription: intervention.InterventionDescription,
-	}, "Care plan intervention created successfully")
+	res := SuccessResponse(intervention, "Care plan intervention created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-type Intervention struct {
-	InterventionID          int64  `json:"intervention_id"`
-	InterventionDescription string `json:"intervention_description"`
-}
-
-// GetCarePlanInterventionsResponse represents the response for the GetCarePlanInterventions API
-type GetCarePlanInterventionsResponse struct {
-	DailyActivities   []Intervention `json:"daily_activities"`
-	WeeklyActivities  []Intervention `json:"weekly_activities"`
-	MonthlyActivities []Intervention `json:"monthly_activities"`
 }
 
 // GetCarePlanInterventionsApi retrieves the care plan interventions for a given care plan ID
@@ -1143,61 +495,18 @@ type GetCarePlanInterventionsResponse struct {
 func (server *Server) GetCarePlanInterventionsApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanInterventionsApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	interventions, err := server.store.GetCarePlanInterventions(ctx, carePlanID)
+	response, err := server.businessService.CarePlanService.GetCarePlanInterventions(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanInterventionsApi", "Failed to get care plan interventions", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan interventions")))
 		return
 	}
 
-	response := &GetCarePlanInterventionsResponse{
-		DailyActivities:   []Intervention{},
-		WeeklyActivities:  []Intervention{},
-		MonthlyActivities: []Intervention{},
-	}
-	for _, intervention := range interventions {
-		switch intervention.Frequency {
-		case "daily":
-			response.DailyActivities = append(response.DailyActivities, Intervention{
-				InterventionID:          intervention.ID,
-				InterventionDescription: intervention.InterventionDescription,
-			})
-		case "weekly":
-			response.WeeklyActivities = append(response.WeeklyActivities, Intervention{
-				InterventionID:          intervention.ID,
-				InterventionDescription: intervention.InterventionDescription,
-			})
-		case "monthly":
-			response.MonthlyActivities = append(response.MonthlyActivities, Intervention{
-				InterventionID:          intervention.ID,
-				InterventionDescription: intervention.InterventionDescription,
-			})
-		default:
-			server.logBusinessEvent(LogLevelError, "GetCarePlanInterventionsApi", "Unknown intervention frequency", zap.String("frequency", intervention.Frequency))
-		}
-
-	}
 	res := SuccessResponse(response, "Care plan interventions retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanInterventionRequest represents the request body for updating a care plan intervention
-type UpdateCarePlanInterventionRequest struct {
-	Frequency               *string `json:"frequency" binding:"oneof=daily weekly monthly"`
-	InterventionDescription *string `json:"intervention_description"`
-}
-
-// UpdateCarePlanInterventionApi updates a care plan intervention by its ID
-type UpdateCarePlanInterventionResponse struct {
-	InterventionID          int64  `json:"intervention_id"`
-	CarePlanID              int64  `json:"care_plan_id"`
-	Frequency               string `json:"frequency"`
-	InterventionDescription string `json:"intervention_description"`
 }
 
 // @Summary Update care plan intervention
@@ -1215,35 +524,24 @@ type UpdateCarePlanInterventionResponse struct {
 func (server *Server) UpdateCarePlanInterventionApi(ctx *gin.Context) {
 	interventionID, err := strconv.ParseInt(ctx.Param("intervention_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanInterventionApi", "Invalid intervention ID", zap.Error(err))
+
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid intervention ID")))
 		return
 	}
 
-	var req UpdateCarePlanInterventionRequest
+	var req care.UpdateCarePlanInterventionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanInterventionApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	intervention, err := server.store.UpdateCarePlanIntervention(ctx, db.UpdateCarePlanInterventionParams{
-		ID:                      interventionID,
-		Frequency:               req.Frequency,
-		InterventionDescription: req.InterventionDescription,
-	})
-
+	intervention, err := server.businessService.CarePlanService.UpdateCarePlanIntervention(ctx, interventionID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanInterventionApi", "Failed to update care plan intervention", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan intervention")))
 		return
 	}
-	res := SuccessResponse(UpdateCarePlanInterventionResponse{
-		InterventionID:          intervention.ID,
-		CarePlanID:              intervention.CarePlanID,
-		Frequency:               intervention.Frequency,
-		InterventionDescription: intervention.InterventionDescription,
-	}, "Care plan intervention updated successfully")
+
+	res := SuccessResponse(intervention, "Care plan intervention updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -1262,14 +560,12 @@ func (server *Server) UpdateCarePlanInterventionApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanInterventionApi(ctx *gin.Context) {
 	interventionID, err := strconv.ParseInt(ctx.Param("intervention_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanInterventionApi", "Invalid intervention ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid intervention ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanIntervention(ctx, interventionID)
+	err = server.businessService.CarePlanService.DeleteCarePlanIntervention(ctx, interventionID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanInterventionApi", "Failed to delete care plan intervention", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan intervention")))
 		return
 	}
@@ -1287,23 +583,6 @@ func (server *Server) DeleteCarePlanInterventionApi(ctx *gin.Context) {
 ///////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
-// CreateCarePlanSuccessMetricsRequest represents the request body for creating a care plan success metric
-type CreateCarePlanSuccessMetricsRequest struct {
-	MetricName        string  `json:"metric_name" binding:"required"`
-	TargetValue       string  `json:"target_value" binding:"required"`
-	MeasurementMethod string  `json:"measurement_method" binding:"required"`
-	CurrentValue      *string `json:"current_value"` // Optional, can be nil if not set
-}
-
-// CreateCarePlanSuccessMetricsResponse represents the response for the CreateCarePlanSuccessMetrics API
-type CreateCarePlanSuccessMetricsResponse struct {
-	MetricID          int64   `json:"metric_id"`
-	MetricName        string  `json:"metric_name"`
-	CurrentValue      *string `json:"current_value"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
-}
-
 // CreateCarePlanSuccessMetricsApi creates a new care plan success metric
 // @Summary Create care plan success metric
 // @Description Create a new care plan success metric
@@ -1320,49 +599,25 @@ type CreateCarePlanSuccessMetricsResponse struct {
 func (server *Server) CreateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanSuccessMetricsApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req CreateCarePlanSuccessMetricsRequest
+	var req care.CreateCarePlanSuccessMetricsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanSuccessMetricsApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	successMetric, err := server.store.CreateCarePlanSuccessMetric(ctx, db.CreateCarePlanSuccessMetricParams{
-		CarePlanID:        carePlanID,
-		MetricName:        req.MetricName,
-		TargetValue:       req.TargetValue,
-		CurrentValue:      req.CurrentValue,
-		MeasurementMethod: req.MeasurementMethod,
-	})
+	successMetric, err := server.businessService.CarePlanService.CreateCarePlanSuccessMetric(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanSuccessMetricsApi", "Failed to create care plan success metric", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan success metric")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanSuccessMetricsResponse{
-		MetricID:          successMetric.ID,
-		MetricName:        successMetric.MetricName,
-		CurrentValue:      successMetric.CurrentValue,
-		TargetValue:       successMetric.TargetValue,
-		MeasurementMethod: successMetric.MeasurementMethod,
-	}, "Care plan success metric created successfully")
+	res := SuccessResponse(successMetric, "Care plan success metric created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// GetCarePlanSuccessMetricsResponse represents the response for the GetCarePlanSuccessMetrics AP
-type GetCarePlanSuccessMetricsResponse struct {
-	MetricID          int64   `json:"metric_id"`
-	MetricName        string  `json:"metric_name"`
-	CurrentValue      *string `json:"current_value"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
 }
 
 // GetCarePlanSuccessMetricsApi retrieves the success metrics for a given care plan ID
@@ -1379,53 +634,18 @@ type GetCarePlanSuccessMetricsResponse struct {
 func (server *Server) GetCarePlanSuccessMetricsApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanSuccessMetricsApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	successMetrics, err := server.store.GetCarePlanSuccessMetrics(ctx, carePlanID)
+	response, err := server.businessService.CarePlanService.GetCarePlanSuccessMetrics(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanSuccessMetricsApi", "Failed to get care plan success metrics", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan success metrics")))
 		return
-	}
-	if len(successMetrics) == 0 {
-		res := SuccessResponse([]GetCarePlanSuccessMetricsResponse{}, "No care plan success metrics found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	response := make([]GetCarePlanSuccessMetricsResponse, len(successMetrics))
-	for i, metric := range successMetrics {
-		response[i] = GetCarePlanSuccessMetricsResponse{
-			MetricID:          metric.ID,
-			MetricName:        metric.MetricName,
-			CurrentValue:      metric.CurrentValue,
-			TargetValue:       metric.TargetValue,
-			MeasurementMethod: metric.MeasurementMethod,
-		}
 	}
 
 	res := SuccessResponse(response, "Care plan success metrics retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanSuccessMetricsRequest represents the request body for updating a care plan success metric
-type UpdateCarePlanSuccessMetricsRequest struct {
-	MetricName        *string `json:"metric_name"`
-	TargetValue       *string `json:"target_value"`
-	MeasurementMethod *string `json:"measurement_method"`
-	CurrentValue      *string `json:"current_value"` // Optional, can be nil if not set
-}
-
-// UpdateCarePlanSuccessMetricsResponse represents the response for the UpdateCarePlanSuccessMetrics API
-type UpdateCarePlanSuccessMetricsResponse struct {
-	MetricID          int64   `json:"metric_id"`
-	MetricName        string  `json:"metric_name"`
-	CurrentValue      *string `json:"current_value"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
 }
 
 // UpdateCarePlanSuccessMetricsApi updates a care plan success metric by its ID
@@ -1444,38 +664,23 @@ type UpdateCarePlanSuccessMetricsResponse struct {
 func (server *Server) UpdateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 	metricID, err := strconv.ParseInt(ctx.Param("metric_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSuccessMetricsApi", "Invalid metric ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid metric ID")))
 		return
 	}
 
-	var req UpdateCarePlanSuccessMetricsRequest
+	var req care.UpdateCarePlanSuccessMetricsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSuccessMetricsApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	successMetric, err := server.store.UpdateCarePlanSuccessMetric(ctx, db.UpdateCarePlanSuccessMetricParams{
-		ID:                metricID,
-		MetricName:        req.MetricName,
-		TargetValue:       req.TargetValue,
-		MeasurementMethod: req.MeasurementMethod,
-		CurrentValue:      req.CurrentValue,
-	})
+	successMetric, err := server.businessService.CarePlanService.UpdateCarePlanSuccessMetric(ctx, metricID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSuccessMetricsApi", "Failed to update care plan success metric", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan success metric")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanSuccessMetricsResponse{
-		MetricID:          successMetric.ID,
-		MetricName:        successMetric.MetricName,
-		CurrentValue:      successMetric.CurrentValue,
-		TargetValue:       successMetric.TargetValue,
-		MeasurementMethod: successMetric.MeasurementMethod,
-	}, "Care plan success metric updated successfully")
+	res := SuccessResponse(successMetric, "Care plan success metric updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -1494,14 +699,12 @@ func (server *Server) UpdateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanSuccessMetricApi(ctx *gin.Context) {
 	metricID, err := strconv.ParseInt(ctx.Param("metric_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanSuccessMetricApi", "Invalid metric ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid metric ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanSuccessMetric(ctx, metricID)
+	err = server.businessService.CarePlanService.DeleteCarePlanSuccessMetric(ctx, metricID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanSuccessMetricApi", "Failed to delete care plan success metric", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan success metric")))
 		return
 	}
@@ -1511,21 +714,6 @@ func (server *Server) DeleteCarePlanSuccessMetricApi(ctx *gin.Context) {
 }
 
 // =========================== Care plan risks ===========================
-
-// CreateCarePlanRisksRequest represents the request body for creating a care plan risk
-type CreateCarePlanRisksRequest struct {
-	RiskDescription    string  `json:"risk_description" binding:"required"`
-	MitigationStrategy string  `json:"mitigation_strategy" binding:"required"`
-	RiskLevel          *string `json:"risk_level"`
-}
-
-// CreateCarePlanRisksResponse represents the response for the CreateCarePlanRisks API
-type CreateCarePlanRisksResponse struct {
-	RiskID             int64   `json:"risk_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
-}
 
 // CreateCarePlanRisksApi creates a new care plan risk
 // @Summary Create care plan risk
@@ -1543,46 +731,25 @@ type CreateCarePlanRisksResponse struct {
 func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanRisksApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req CreateCarePlanRisksRequest
+	var req care.CreateCarePlanRisksRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanRisksApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	risk, err := server.store.CreateCarePlanRisk(ctx, db.CreateCarePlanRiskParams{
-		CarePlanID:         carePlanID,
-		RiskDescription:    req.RiskDescription,
-		MitigationStrategy: req.MitigationStrategy,
-		RiskLevel:          req.RiskLevel,
-	})
+	risk, err := server.businessService.CarePlanService.CreateCarePlanRisk(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanRisksApi", "Failed to create care plan risk", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan risk")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanRisksResponse{
-		RiskID:             risk.ID,
-		RiskDescription:    risk.RiskDescription,
-		MitigationStrategy: risk.MitigationStrategy,
-		RiskLevel:          risk.RiskLevel,
-	}, "Care plan risk created successfully")
+	res := SuccessResponse(risk, "Care plan risk created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// GetCarePlanRisksResponse represents the response for the GetCarePlanRisks API
-type GetCarePlanRisksResponse struct {
-	RiskID             int64   `json:"risk_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
 }
 
 // GetCarePlanRisksApi retrieves the risks associated with a given care plan ID
@@ -1599,51 +766,17 @@ type GetCarePlanRisksResponse struct {
 func (server *Server) GetCarePlanRisksApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanRisksApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
-
-	risks, err := server.store.GetCarePlanRisks(ctx, carePlanID)
+	response, err := server.businessService.CarePlanService.GetCarePlanRisks(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanRisksApi", "Failed to get care plan risks", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan risks")))
 		return
 	}
 
-	if len(risks) == 0 {
-		res := SuccessResponse([]GetCarePlanRisksResponse{}, "No care plan risks found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	response := make([]GetCarePlanRisksResponse, len(risks))
-	for i, risk := range risks {
-		response[i] = GetCarePlanRisksResponse{
-			RiskID:             risk.ID,
-			RiskDescription:    risk.RiskDescription,
-			MitigationStrategy: risk.MitigationStrategy,
-			RiskLevel:          risk.RiskLevel,
-		}
-	}
-
 	res := SuccessResponse(response, "Care plan risks retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanRisksRequest represents the request body for updating a care plan risk
-type UpdateCarePlanRisksRequest struct {
-	RiskDescription    *string `json:"risk_description"`
-	MitigationStrategy *string `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
-}
-
-// UpdateCarePlanRisksResponse represents the response for the UpdateCarePlanRisks API
-type UpdateCarePlanRisksResponse struct {
-	RiskID             int64   `json:"risk_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
 }
 
 // UpdateCarePlanRisksApi updates a care plan risk by its ID
@@ -1662,36 +795,23 @@ type UpdateCarePlanRisksResponse struct {
 func (server *Server) UpdateCarePlanRisksApi(ctx *gin.Context) {
 	riskID, err := strconv.ParseInt(ctx.Param("risk_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanRisksApi", "Invalid risk ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid risk ID")))
 		return
 	}
 
-	var req UpdateCarePlanRisksRequest
+	var req care.UpdateCarePlanRisksRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanRisksApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	risk, err := server.store.UpdateCarePlanRisk(ctx, db.UpdateCarePlanRiskParams{
-		ID:                 riskID,
-		RiskDescription:    req.RiskDescription,
-		MitigationStrategy: req.MitigationStrategy,
-		RiskLevel:          req.RiskLevel,
-	})
+	risk, err := server.businessService.CarePlanService.UpdateCarePlanRisk(ctx, riskID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanRisksApi", "Failed to update care plan risk", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan risk")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanRisksResponse{
-		RiskID:             risk.ID,
-		RiskDescription:    risk.RiskDescription,
-		MitigationStrategy: risk.MitigationStrategy,
-		RiskLevel:          risk.RiskLevel,
-	}, "Care plan risk updated successfully")
+	res := SuccessResponse(risk, "Care plan risk updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -1710,14 +830,12 @@ func (server *Server) UpdateCarePlanRisksApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
 	riskID, err := strconv.ParseInt(ctx.Param("risk_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanRiskApi", "Invalid risk ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid risk ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanRisk(ctx, riskID)
+	err = server.businessService.CarePlanService.DeleteCarePlanRisk(ctx, riskID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanRiskApi", "Failed to delete care plan risk", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan risk")))
 		return
 	}
@@ -1734,19 +852,6 @@ func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
 //////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-
-// CreateCarePlanSupportNetworkRequest represents the request body for creating a care plan support network
-type CreateCarePlanSupportNetworkRequest struct {
-	RoleTitle                 string `json:"role_title" binding:"required"`
-	ResponsibilityDescription string `json:"responsibility_description"`
-}
-
-// CreateCarePlanSupportNetworkResponse represents the response for the CreateCarePlanSupportNetwork API
-type CreateCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64  `json:"support_network_id"`
-	RoleTitle                 string `json:"role_title"`
-	ResponsibilityDescription string `json:"responsibility_description"`
-}
 
 // CreateCareplanSupportNetworkApi creates a new care plan support network
 // @Summary Create care plan support network
@@ -1769,38 +874,21 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 		return
 	}
 
-	var req CreateCarePlanSupportNetworkRequest
+	var req care.CreateCarePlanSupportNetworkRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCareplanSupportNetworkApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	supportNetwork, err := server.store.CreateCarePlanSupportNetwork(ctx, db.CreateCarePlanSupportNetworkParams{
-		CarePlanID:                carePlanID,
-		RoleTitle:                 req.RoleTitle,
-		ResponsibilityDescription: req.ResponsibilityDescription,
-	})
+	result, err := server.businessService.CarePlanService.CreateCarePlanSupportNetwork(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCareplanSupportNetworkApi", "Failed to create care plan support network", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan support network")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanSupportNetworkResponse{
-		SupportNetworkID:          supportNetwork.ID,
-		RoleTitle:                 supportNetwork.RoleTitle,
-		ResponsibilityDescription: supportNetwork.ResponsibilityDescription,
-	}, "Care plan support network created successfully")
+	res := SuccessResponse(result, "Care plan support network created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// GetCarePlanSupportNetworkResponse represents the response for the GetCarePlanSupportNetwork API
-type GetCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64   `json:"support_network_id"`
-	RoleTitle                 string  `json:"role_title"`
-	ResponsibilityDescription *string `json:"responsibility_description"`
 }
 
 // @Summary Get care plan support network
@@ -1816,47 +904,17 @@ type GetCarePlanSupportNetworkResponse struct {
 func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanSupportNetworkApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
-
-	supportNetwork, err := server.store.GetCarePlanSupportNetwork(ctx, carePlanID)
+	response, err := server.businessService.CarePlanService.GetCarePlanSupportNetwork(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCareplanSupportNetworkApi", "Failed to get care plan support network", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan support network")))
 		return
 	}
 
-	if len(supportNetwork) == 0 {
-		res := SuccessResponse([]GetCarePlanSupportNetworkResponse{}, "No care plan support network found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-	response := make([]GetCarePlanSupportNetworkResponse, len(supportNetwork))
-	for i, support := range supportNetwork {
-		response[i] = GetCarePlanSupportNetworkResponse{
-			SupportNetworkID:          support.ID,
-			RoleTitle:                 support.RoleTitle,
-			ResponsibilityDescription: &support.ResponsibilityDescription,
-		}
-	}
-
 	res := SuccessResponse(response, "Care plan support network retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanSupportNetworkRequest represents the request body for updating a care plan support network
-type UpdateCarePlanSupportNetworkRequest struct {
-	RoleTitle                 *string `json:"role_title"`
-	ResponsibilityDescription *string `json:"responsibility_description"`
-}
-
-// UpdateCarePlanSupportNetworkResponse represents the response for the UpdateCarePlanSupportNetwork API
-type UpdateCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64  `json:"support_network_id"`
-	RoleTitle                 string `json:"role_title"`
-	ResponsibilityDescription string `json:"responsibility_description"`
 }
 
 // UpdateCarePlanSupportNetworkApi updates a care plan support network by its ID
@@ -1875,34 +933,23 @@ type UpdateCarePlanSupportNetworkResponse struct {
 func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 	supportNetworkID, err := strconv.ParseInt(ctx.Param("support_network_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSupportNetworkApi", "Invalid support network ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid support network ID")))
 		return
 	}
 
-	var req UpdateCarePlanSupportNetworkRequest
+	var req care.UpdateCarePlanSupportNetworkRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSupportNetworkApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	supportNetwork, err := server.store.UpdateCarePlanSupportNetwork(ctx, db.UpdateCarePlanSupportNetworkParams{
-		ID:                        supportNetworkID,
-		RoleTitle:                 req.RoleTitle,
-		ResponsibilityDescription: req.ResponsibilityDescription,
-	})
+	result, err := server.businessService.CarePlanService.UpdateCarePlanSupportNetwork(ctx, supportNetworkID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanSupportNetworkApi", "Failed to update care plan support network", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan support network")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanSupportNetworkResponse{
-		SupportNetworkID:          supportNetwork.ID,
-		RoleTitle:                 supportNetwork.RoleTitle,
-		ResponsibilityDescription: supportNetwork.ResponsibilityDescription,
-	}, "Care plan support network updated successfully")
+	res := SuccessResponse(result, "Care plan support network updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -1921,14 +968,12 @@ func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 	supportNetworkID, err := strconv.ParseInt(ctx.Param("support_network_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanSupportNetworkApi", "Invalid support network ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid support network ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanSupportNetwork(ctx, supportNetworkID)
+	err = server.businessService.CarePlanService.DeleteCarePlanSupportNetwork(ctx, supportNetworkID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanSupportNetworkApi", "Failed to delete care plan support network", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan support network")))
 		return
 	}
@@ -1946,20 +991,6 @@ func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 /////////////////////////////////////////////
 
 // /////////////////////////////////////////
-// CreateCarePlanResourcesRequest represents the request body for creating a care plan resource
-type CreateCarePlanResourcesRequest struct {
-	ResourceDescription string     `json:"resource_description" binding:"required"`
-	IsObtained          *bool      `json:"is_obtained"`
-	ObtainedDate        *time.Time `json:"obtained_date"`
-}
-
-// CreateCarePlanResourcesResponse represents the response for the CreateCarePlanResources API
-type CreateCarePlanResourcesResponse struct {
-	ID                  int64      `json:"id"`
-	ResourceDescription string     `json:"resource_description"`
-	IsObtained          bool       `json:"is_obtained"`
-	ObtainedDate        *time.Time `json:"obtained_date"`
-}
 
 // CreateCarePlanResourcesApi creates a new care plan resource
 // @Summary Create care plan resource
@@ -1977,44 +1008,25 @@ type CreateCarePlanResourcesResponse struct {
 func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanResourcesApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req CreateCarePlanResourcesRequest
+	var req care.CreateCarePlanResourcesRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanResourcesApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	resource, err := server.store.CreateCarePlanResources(ctx, db.CreateCarePlanResourcesParams{
-		CarePlanID:          carePlanID,
-		ResourceDescription: req.ResourceDescription,
-	})
+	result, err := server.businessService.CarePlanService.CreateCarePlanResource(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanResourcesApi", "Failed to create care plan resource", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan resource")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanResourcesResponse{
-		ID:                  resource.ID,
-		ResourceDescription: resource.ResourceDescription,
-		IsObtained:          resource.IsObtained,
-		ObtainedDate:        &resource.ObtainedDate.Time,
-	}, "Care plan resource created successfully")
+	res := SuccessResponse(result, "Care plan resource created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// GetCarePlanResourcesResponse represents the response for the GetCarePlanResources API
-type GetCarePlanResourcesResponse struct {
-	ID                  int64      `json:"id"`
-	ResourceDescription string     `json:"resource_description"`
-	IsObtained          bool       `json:"is_obtained"`
-	ObtainedDate        *time.Time `json:"obtained_date"`
 }
 
 // GetCarePlanResourcesApi retrieves the resources for a given care plan ID
@@ -2031,51 +1043,18 @@ type GetCarePlanResourcesResponse struct {
 func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanResourcesApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	resources, err := server.store.GetCarePlanResources(ctx, carePlanID)
+	response, err := server.businessService.CarePlanService.GetCarePlanResources(ctx, carePlanID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "GetCarePlanResourcesApi", "Failed to get care plan resources", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get care plan resources")))
 		return
 	}
 
-	if len(resources) == 0 {
-		res := SuccessResponse([]GetCarePlanResourcesResponse{}, "No care plan resources found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	response := make([]GetCarePlanResourcesResponse, len(resources))
-	for i, resource := range resources {
-		response[i] = GetCarePlanResourcesResponse{
-			ID:                  resource.ID,
-			ResourceDescription: resource.ResourceDescription,
-			IsObtained:          resource.IsObtained,
-			ObtainedDate:        &resource.ObtainedDate.Time,
-		}
-	}
-
 	res := SuccessResponse(response, "Care plan resources retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanResourcesRequest represents the request body for updating a care plan resource
-type UpdateCarePlanResourcesRequest struct {
-	ResourceDescription *string   `json:"resource_description"`
-	IsObtained          *bool     `json:"is_obtained"`
-	ObtainedDate        time.Time `json:"obtained_date"`
-}
-
-// UpdateCarePlanResourcesResponse represents the response for the UpdateCarePlanResources API
-type UpdateCarePlanResourcesResponse struct {
-	ID                  int64     `json:"id"`
-	ResourceDescription string    `json:"resource_description"`
-	IsObtained          bool      `json:"is_obtained"`
-	ObtainedDate        time.Time `json:"obtained_date"`
 }
 
 // UpdateCarePlanResourcesApi updates a care plan resource by its ID
@@ -2094,36 +1073,23 @@ type UpdateCarePlanResourcesResponse struct {
 func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanResourcesApi", "Invalid resource ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid resource ID")))
 		return
 	}
 
-	var req UpdateCarePlanResourcesRequest
+	var req care.UpdateCarePlanResourcesRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanResourcesApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	resource, err := server.store.UpdateCarePlanResource(ctx, db.UpdateCarePlanResourceParams{
-		ID:                  resourceID,
-		ResourceDescription: req.ResourceDescription,
-		IsObtained:          req.IsObtained,
-		ObtainedDate:        pgtype.Date{Time: req.ObtainedDate, Valid: true},
-	})
+	result, err := server.businessService.CarePlanService.UpdateCarePlanResource(ctx, resourceID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanResourcesApi", "Failed to update care plan resource", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan resource")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanResourcesResponse{
-		ID:                  resource.ID,
-		ResourceDescription: resource.ResourceDescription,
-		IsObtained:          resource.IsObtained,
-		ObtainedDate:        resource.ObtainedDate.Time,
-	}, "Care plan resource updated successfully")
+	res := SuccessResponse(result, "Care plan resource updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -2142,14 +1108,12 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
 	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Invalid resource ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid resource ID")))
 		return
 	}
 
-	err = server.store.DeleteCarePlanResource(ctx, resourceID)
+	err = server.businessService.CarePlanService.DeleteCarePlanResource(ctx, resourceID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanResourcesApi", "Failed to delete care plan resources", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan resources")))
 		return
 	}
@@ -2163,23 +1127,6 @@ func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
 ////////////////////// Care Plan Reports /////////
 
 ////////////////////////////
-
-// CreateCarePlanReportRequest represents the request body for creating a care plan report
-type CreateCarePlanReportRequest struct {
-	ReportType    string `json:"report_type" binding:"required" oneof:"progress concern achievement modification"`
-	ReportContent string `json:"report_content" binding:"required"`
-	IsCritical    bool   `json:"is_critical"`
-}
-
-// CreateCarePlanReportResponse represents the response for the CreateCarePlanReport API
-type CreateCarePlanReportResponse struct {
-	ID            int64     `json:"id"`
-	CarePlanID    int64     `json:"care_plan_id"`
-	ReportType    string    `json:"report_type"`
-	ReportContent string    `json:"report_content"`
-	IsCritical    bool      `json:"is_critical"`
-	CreatedAt     time.Time `json:"created_at"`
-}
 
 // CreateCarePlanReportApi creates a new care plan report
 // @Summary Create care plan report
@@ -2197,67 +1144,31 @@ type CreateCarePlanReportResponse struct {
 func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req CreateCarePlanReportRequest
+	var req care.CreateCarePlanReportRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
 	payload, err := GetAuthPayload(ctx)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Unauthorized access", zap.Error(err))
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
 		return
 	}
 
-	arg := db.CreateCarePlanReportParams{
-		CarePlanID:          carePlanID,
-		ReportType:          req.ReportType,
-		ReportContent:       req.ReportContent,
-		IsCritical:          req.IsCritical,
-		CreatedByEmployeeID: payload.EmployeeID,
-	}
-
-	report, err := server.store.CreateCarePlanReport(ctx, arg)
+	report, err := server.businessService.CarePlanService.CreateCarePlanReport(ctx, carePlanID, payload.EmployeeID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "CreateCarePlanReportApi", "Failed to create care plan report", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create care plan report")))
 		return
 	}
 
-	res := SuccessResponse(CreateCarePlanReportResponse{
-		ID:            report.ID,
-		CarePlanID:    report.CarePlanID,
-		ReportType:    report.ReportType,
-		ReportContent: report.ReportContent,
-		IsCritical:    report.IsCritical,
-		CreatedAt:     report.CreatedAt.Time,
-	}, "Care plan report created successfully")
+	res := SuccessResponse(report, "Care plan report created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-}
-
-// ListCarePlanReportsRequest represents the request body for listing care plan reports
-type ListCarePlanReportsRequest struct {
-	pagination.Request
-}
-
-// CarePlanReportsResponse represents the response for the ListCarePlanReports API
-type ListCarePlanReportsResponse struct {
-	ID                 int64     `json:"id"`
-	CarePlanID         int64     `json:"care_plan_id"`
-	ReportType         string    `json:"report_type"`
-	ReportContent      string    `json:"report_content"`
-	CreatedByFirstName string    `json:"created_by_first_name"`
-	CreatedByLastName  string    `json:"created_by_last_name"`
-	IsCritical         bool      `json:"is_critical"`
-	CreatedAt          time.Time `json:"created_at"`
 }
 
 // ListCarePlanReportsApi retrieves the reports for a given care plan ID
@@ -2275,71 +1186,24 @@ type ListCarePlanReportsResponse struct {
 func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
 	}
 
-	var req ListCarePlanReportsRequest
+	var req care.ListCarePlanReportsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Invalid request query", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request query")))
 		return
 	}
 
-	params := req.GetParams()
-
-	reports, err := server.store.ListCarePlanReports(ctx, db.ListCarePlanReportsParams{
-		CarePlanID: carePlanID,
-		Limit:      params.Limit,
-		Offset:     params.Offset,
-	})
+	result, err := server.businessService.CarePlanService.ListCarePlanReports(ctx, carePlanID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "ListCarePlanReportsApi", "Failed to list care plan reports", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list care plan reports")))
 		return
 	}
 
-	if len(reports) == 0 {
-		pag := pagination.NewResponse(ctx, req.Request, []ListCarePlanReportsResponse{}, 0)
-		res := SuccessResponse(pag, "No care plan reports found")
-		ctx.JSON(http.StatusOK, res)
-		return
-	}
-
-	response := make([]ListCarePlanReportsResponse, len(reports))
-	for i, report := range reports {
-		response[i] = ListCarePlanReportsResponse{
-			ID:                 report.ID,
-			CarePlanID:         report.CarePlanID,
-			ReportType:         report.ReportType,
-			ReportContent:      report.ReportContent,
-			CreatedByFirstName: report.CreatedByFirstName,
-			CreatedByLastName:  report.CreatedByLastName,
-			IsCritical:         report.IsCritical,
-			CreatedAt:          report.CreatedAt.Time,
-		}
-	}
-	pag := pagination.NewResponse(ctx, req.Request, response, reports[0].TotalCount)
-	res := SuccessResponse(pag, "Care plan reports retrieved successfully")
+	res := SuccessResponse(result, "Care plan reports retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-}
-
-// UpdateCarePlanReportRequest represents the request body for updating a care plan report
-type UpdateCarePlanReportRequest struct {
-	ReportType    *string `json:"report_type"`
-	ReportContent *string `json:"report_content"`
-	IsCritical    *bool   `json:"is_critical"`
-}
-
-// UpdateCarePlanReportResponse represents the response for the UpdateCarePlanReport API
-type UpdateCarePlanReportResponse struct {
-	ID            int64     `json:"id"`
-	CarePlanID    int64     `json:"care_plan_id"`
-	ReportType    string    `json:"report_type"`
-	ReportContent string    `json:"report_content"`
-	IsCritical    bool      `json:"is_critical"`
-	CreatedAt     time.Time `json:"created_at"`
 }
 
 // UpdateCarePlanReportApi updates a care plan report by its ID
@@ -2358,39 +1222,23 @@ type UpdateCarePlanReportResponse struct {
 func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
 	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanReportApi", "Invalid report ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid report ID")))
 		return
 	}
 
-	var req UpdateCarePlanReportRequest
+	var req care.UpdateCarePlanReportRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanReportApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	arg := db.UpdateCarePlanReportParams{
-		ID:            reportID,
-		ReportType:    req.ReportType,
-		ReportContent: req.ReportContent,
-		IsCritical:    req.IsCritical,
-	}
-	report, err := server.store.UpdateCarePlanReport(ctx, arg)
+	report, err := server.businessService.CarePlanService.UpdateCarePlanReport(ctx, reportID, &req)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "UpdateCarePlanReportApi", "Failed to update care plan report", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to update care plan report")))
 		return
 	}
 
-	res := SuccessResponse(UpdateCarePlanReportResponse{
-		ID:            report.ID,
-		CarePlanID:    report.CarePlanID,
-		ReportType:    report.ReportType,
-		ReportContent: report.ReportContent,
-		IsCritical:    report.IsCritical,
-		CreatedAt:     report.CreatedAt.Time,
-	}, "Care plan report updated successfully")
+	res := SuccessResponse(report, "Care plan report updated successfully")
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -2409,77 +1257,15 @@ func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
 func (server *Server) DeleteCarePlanReportApi(ctx *gin.Context) {
 	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanReportApi", "Invalid report ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid report ID")))
 		return
 	}
-
-	err = server.store.DeleteCarePlanReport(ctx, reportID)
+	err = server.businessService.CarePlanService.DeleteCarePlanReport(ctx, reportID)
 	if err != nil {
-		server.logBusinessEvent(LogLevelError, "DeleteCarePlanReportApi", "Failed to delete care plan report", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to delete care plan report")))
 		return
 	}
 
 	res := SuccessResponse[any](nil, "Care plan report deleted successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
-///////////////////////////////////////////////////////////
-
-// OLD CODE BELOW IS FOR MATURITY MATRIX ASSESSMENT
-
-///////////////////////////////////////////////////////////////////////
-
-// GetClientMaturityMatrixAssessmentResponse represents a response for GetClientMaturityMatrixAssessmentApi
-type GetClientMaturityMatrixAssessmentResponse struct {
-	ID               int64     `json:"id"`
-	ClientID         int64     `json:"client_id"`
-	MaturityMatrixID int64     `json:"maturity_matrix_id"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
-	InitialLevel     int32     `json:"initial_level"`
-	CurrentLevel     int32     `json:"current_level"`
-	IsActive         bool      `json:"is_active"`
-	TopicName        string    `json:"topic_name"`
-}
-
-// @Summary Get client maturity matrix assessment
-// @Description Get a client maturity matrix assessment
-// @Tags maturity_matrix
-// @Produce json
-// @Param id path int true "Client ID"
-// @Param assessment_id path int true "Client maturity matrix assessment ID"
-// @Success 200 {object} Response[GetClientMaturityMatrixAssessmentResponse]
-// @Failure 400 {object} Response[any] "Bad request"
-// @Failure 401 {object} Response[any] "Unauthorized"
-// @Failure 500 {object} Response[any] "Internal server error"
-// @Router /clients/{id}/maturity_matrix_assessment/{mma_id} [get]
-func (server *Server) GetClientMaturityMatrixAssessmentApi(ctx *gin.Context) {
-	mmaID := ctx.Param("assessment_id")
-	clientMaturityMatrixAssessmentID, err := strconv.ParseInt(mmaID, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	clientMaturityMatrixAssessment, err := server.store.GetClientMaturityMatrixAssessment(ctx, clientMaturityMatrixAssessmentID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(GetClientMaturityMatrixAssessmentResponse{
-		ID:               clientMaturityMatrixAssessment.ID,
-		ClientID:         clientMaturityMatrixAssessment.ClientID,
-		MaturityMatrixID: clientMaturityMatrixAssessment.MaturityMatrixID,
-		StartDate:        clientMaturityMatrixAssessment.StartDate.Time,
-		EndDate:          clientMaturityMatrixAssessment.EndDate.Time,
-		InitialLevel:     clientMaturityMatrixAssessment.InitialLevel,
-		CurrentLevel:     clientMaturityMatrixAssessment.CurrentLevel,
-		IsActive:         clientMaturityMatrixAssessment.IsActive,
-		TopicName:        clientMaturityMatrixAssessment.TopicName,
-	}, "Client maturity matrix assessment retrieved successfully")
-
 	ctx.JSON(http.StatusOK, res)
 }

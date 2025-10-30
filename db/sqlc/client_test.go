@@ -108,7 +108,6 @@ func TestListClientDetails(t *testing.T) {
 			},
 			check: func(t *testing.T, clients []ListClientDetailsRow) {
 				require.NotEmpty(t, clients)
-
 			},
 		},
 		{
@@ -132,7 +131,6 @@ func TestListClientDetails(t *testing.T) {
 			tc.check(t, clients)
 		})
 	}
-
 }
 
 func TestGetClientDetails(t *testing.T) {
@@ -166,8 +164,8 @@ func TestUpdateClientDetails(t *testing.T) {
 	require.NotEmpty(t, clientUp)
 	require.Equal(t, arg.ID, clientUp.ID)
 	require.Equal(t, arg.FirstName, &clientUp.FirstName)
-
 }
+
 func TestUpdateClientStatus(t *testing.T) {
 	client := createRandomClientDetails(t)
 	arg := UpdateClientStatusParams{

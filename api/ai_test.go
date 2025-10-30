@@ -2,11 +2,12 @@ package api
 
 import (
 	"bytes"
-	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"maicare_go/token"
 
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/require"
@@ -58,5 +59,4 @@ func TestSpellCheckApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }

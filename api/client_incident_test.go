@@ -4,25 +4,26 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
-	clientp "maicare_go/service/client"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
+	"maicare_go/token"
+	"maicare_go/util"
+
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/mock/gomock"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClientIncident(t *testing.T, clientID int64) db.CreateIncidentRow {
-
+func createRandomClientIncident(t *testing.T, clientID uuid.UUID) db.CreateIncidentRow {
 	employee, _ := createRandomEmployee(t)
 	location := createRandomLocation(t)
 
@@ -137,7 +138,6 @@ func TestCreateIncident(t *testing.T) {
 					OtherDesc:               util.StringPtr("test other"),
 					AdditionalAppointments:  util.StringPtr("test appointments"),
 					EmployeeAbsenteeism:     "client",
-					ClientID:                client.ID,
 					Emails:                  []string{"farjiataha@gmail.com", "tahafarjia@gmail.com"},
 				}
 				url := fmt.Sprintf("/clients/%d/incidents", client.ID)
@@ -146,7 +146,6 @@ func TestCreateIncident(t *testing.T) {
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				return req, nil
-
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String(), "<<<<<<<<<<<<", employee.ID, "<<<<<<<<<<<<", user.ID)
@@ -210,10 +209,10 @@ func TestCreateIncident(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListIncidentsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	for i := 0; i < 20; i++ {
@@ -229,7 +228,7 @@ func TestListIncidentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents?page=1&page_size=10", client.ID)
@@ -246,7 +245,6 @@ func TestListIncidentsApi(t *testing.T) {
 				require.NotEmpty(t, incidents.Data.Results)
 				require.Len(t, incidents.Data.Results, 10)
 				require.NotEmpty(t, incidents.Data.Results[0].Emails)
-
 			},
 		},
 	}
@@ -263,10 +261,10 @@ func TestListIncidentsApi(t *testing.T) {
 		})
 
 	}
-
 }
 
 func TestGetIncidentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 
@@ -279,7 +277,7 @@ func TestGetIncidentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
@@ -331,7 +329,7 @@ func TestGetIncidentApi(t *testing.T) {
 		{
 			name: "Not Found",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, 0)
@@ -357,11 +355,11 @@ func TestGetIncidentApi(t *testing.T) {
 		})
 
 	}
-
 }
 
 func TestUpdateIncidentApi(t *testing.T) {
 	testasynqClient.EXPECT().EnqueueIncident(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 
@@ -374,7 +372,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				incidentReq := clientp.UpdateIncidentRequest{
@@ -420,6 +418,7 @@ func TestUpdateIncidentApi(t *testing.T) {
 }
 
 func TestDeleteIncidentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	incident := createRandomClientIncident(t, client.ID)
 
@@ -432,7 +431,7 @@ func TestDeleteIncidentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/incidents/%d", client.ID, incident.ID)
@@ -442,7 +441,6 @@ func TestDeleteIncidentApi(t *testing.T) {
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-
 			},
 		},
 	}
@@ -459,5 +457,4 @@ func TestDeleteIncidentApi(t *testing.T) {
 		})
 
 	}
-
 }

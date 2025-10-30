@@ -18,5 +18,4 @@ func (server *Server) setupRolesRoutes(baseRouter *gin.RouterGroup) {
 		rolesgroup.POST("/employees/:id/permissions", server.RBACMiddleware("PERMISSIONS.GRANT"), server.GrantUserPermissionsApi)
 
 	}
-
 }

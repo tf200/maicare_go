@@ -9,8 +9,8 @@ import (
 
 type Payload struct {
 	ID         uuid.UUID
-	UserId     int64     `json:"user_id"`
-	EmployeeID int64     `json:"employee_id"`
+	UserId     uuid.UUID `json:"user_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	TokenType  TokenType `json:"token_type"`
 	IssuedAt   time.Time `json:"issued_at"`
 	ExpiresAt  time.Time `json:"expires_at"`
@@ -23,8 +23,7 @@ var (
 	ErrExpiredToken = errors.New("token has expired")
 )
 
-func NewPayload(user_id int64, employee_id int64, duration time.Duration, tokenType TokenType) (*Payload, error) {
-
+func NewPayload(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType) (*Payload, error) {
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err

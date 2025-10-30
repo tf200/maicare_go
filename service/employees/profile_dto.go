@@ -1,8 +1,11 @@
 package employees
 
 import (
-	"maicare_go/pagination"
 	"time"
+
+	"maicare_go/pagination"
+
+	"github.com/google/uuid"
 )
 
 // CreateEmployeeProfileRequest represents the request for CreateEmployeeProfileApi
@@ -28,8 +31,8 @@ type CreateEmployeeProfileRequest struct {
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
 type CreateEmployeeProfileResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
 	FirstName                 string    `json:"first_name"`
 	LastName                  string    `json:"last_name"`
 	Position                  *string   `json:"position"`
@@ -65,8 +68,8 @@ type ListEmployeeRequest struct {
 
 // ListEmployeeResponse represents the response for ListEmployeeProfileApi
 type ListEmployeeResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
 	FirstName                 string    `json:"first_name"`
 	LastName                  string    `json:"last_name"`
 	Position                  *string   `json:"position"`
@@ -100,7 +103,7 @@ type UpdateEmployeeIsSubcontractorRequest struct {
 
 // UpdateEmployeeIsSubcontractorResponse represents the response for UpdateEmployeeIsSubcontractorApi
 type UpdateEmployeeIsSubcontractorResponse struct {
-	ID                int64     `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	IsSubcontractor   *bool     `json:"is_subcontractor"`
 	ContractType      *string   `json:"contract_type"`
 	ContractHours     *float64  `json:"contract_hours"`
@@ -111,9 +114,9 @@ type UpdateEmployeeIsSubcontractorResponse struct {
 
 // GetEmployeeProfileResponse represents the response for GetEmployeeProfile
 type GetEmployeeProfileResponse struct {
-	UserID      int64        `json:"user_id"`
+	UserID      uuid.UUID    `json:"user_id"`
 	Email       string       `json:"email"`
-	EmployeeID  int64        `json:"employee_id"`
+	EmployeeID  uuid.UUID    `json:"employee_id"`
 	FirstName   string       `json:"first_name"`
 	LastName    string       `json:"last_name"`
 	TwoFactor   bool         `json:"two_factor_enabled"`
@@ -132,8 +135,8 @@ type Permission struct {
 
 // GetEmployeeProfileByIDResponse represents the response for GetEmployeeProfileByID
 type GetEmployeeProfileByIDResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
 	FirstName                 string    `json:"first_name"`
 	LastName                  string    `json:"last_name"`
 	Position                  *string   `json:"position"`
@@ -184,8 +187,8 @@ type UpdateEmployeeProfileRequest struct {
 
 // UpdateEmployeeProfileResponse represents the response for UpdateEmployeeProfile
 type UpdateEmployeeProfileResponse struct {
-	ID                        int64     `json:"id"`
-	UserID                    int64     `json:"user_id"`
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
 	FirstName                 string    `json:"first_name"`
 	LastName                  string    `json:"last_name"`
 	Position                  *string   `json:"position"`
@@ -215,9 +218,9 @@ type SetEmployeeProfilePictureRequest struct {
 
 // SetEmployeeProfilePictureResponse represents the response for SetEmployeeProfilePicture
 type SetEmployeeProfilePictureResponse struct {
-	ID             int64   `json:"id"`
-	Email          string  `json:"email"`
-	ProfilePicture *string `json:"profile_picture"`
+	ID             uuid.UUID `json:"id"`
+	Email          string    `json:"email"`
+	ProfilePicture *string   `json:"profile_picture"`
 }
 
 // GetEmployeeCountsResponse represents the response for GetEmployeeCounts
@@ -235,10 +238,10 @@ type SearchEmployeesByNameOrEmailRequest struct {
 
 // SearchEmployeesByNameOrEmailResponse represents the response for SearchEmployeesByNameOrEmail
 type SearchEmployeesByNameOrEmailResponse struct {
-	ID        int64  `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
 }
 
 // AddEmployeeContractDetailsRequest represents the request for AddEmployeeContractDetails
@@ -251,7 +254,7 @@ type AddEmployeeContractDetailsRequest struct {
 
 // AddEmployeeContractDetailsResponse represents the response for AddEmployeeContractDetails
 type AddEmployeeContractDetailsResponse struct {
-	ID                int64     `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	ContractHours     *float64  `json:"contract_hours"`
 	ContractStartDate time.Time `json:"contract_start_date"`
 	ContractEndDate   time.Time `json:"contract_end_date"`

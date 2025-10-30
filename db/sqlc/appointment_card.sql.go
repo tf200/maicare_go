@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -31,18 +32,18 @@ INSERT INTO appointment_card (
 `
 
 type CreateAppointmentCardParams struct {
-	ClientID               int64    `json:"client_id"`
-	GeneralInformation     []string `json:"general_information"`
-	ImportantContacts      []string `json:"important_contacts"`
-	HouseholdInfo          []string `json:"household_info"`
-	OrganizationAgreements []string `json:"organization_agreements"`
-	YouthOfficerAgreements []string `json:"youth_officer_agreements"`
-	TreatmentAgreements    []string `json:"treatment_agreements"`
-	SmokingRules           []string `json:"smoking_rules"`
-	Work                   []string `json:"work"`
-	SchoolInternship       []string `json:"school_internship"`
-	Travel                 []string `json:"travel"`
-	Leave                  []string `json:"leave"`
+	ClientID               uuid.UUID `json:"client_id"`
+	GeneralInformation     []string  `json:"general_information"`
+	ImportantContacts      []string  `json:"important_contacts"`
+	HouseholdInfo          []string  `json:"household_info"`
+	OrganizationAgreements []string  `json:"organization_agreements"`
+	YouthOfficerAgreements []string  `json:"youth_officer_agreements"`
+	TreatmentAgreements    []string  `json:"treatment_agreements"`
+	SmokingRules           []string  `json:"smoking_rules"`
+	Work                   []string  `json:"work"`
+	SchoolInternship       []string  `json:"school_internship"`
+	Travel                 []string  `json:"travel"`
+	Leave                  []string  `json:"leave"`
 }
 
 func (q *Queries) CreateAppointmentCard(ctx context.Context, arg CreateAppointmentCardParams) (AppointmentCard, error) {
@@ -95,7 +96,7 @@ LIMIT 1
 
 type GetAppointmentCardRow struct {
 	ID                     int64              `json:"id"`
-	ClientID               int64              `json:"client_id"`
+	ClientID               uuid.UUID          `json:"client_id"`
 	GeneralInformation     []string           `json:"general_information"`
 	ImportantContacts      []string           `json:"important_contacts"`
 	HouseholdInfo          []string           `json:"household_info"`
@@ -114,7 +115,7 @@ type GetAppointmentCardRow struct {
 	LastName               string             `json:"last_name"`
 }
 
-func (q *Queries) GetAppointmentCard(ctx context.Context, clientID int64) (GetAppointmentCardRow, error) {
+func (q *Queries) GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (GetAppointmentCardRow, error) {
 	row := q.db.QueryRow(ctx, getAppointmentCard, clientID)
 	var i GetAppointmentCardRow
 	err := row.Scan(
@@ -159,18 +160,18 @@ RETURNING id, client_id, general_information, important_contacts, household_info
 `
 
 type UpdateAppointmentCardParams struct {
-	ClientID               int64    `json:"client_id"`
-	GeneralInformation     []string `json:"general_information"`
-	ImportantContacts      []string `json:"important_contacts"`
-	HouseholdInfo          []string `json:"household_info"`
-	OrganizationAgreements []string `json:"organization_agreements"`
-	YouthOfficerAgreements []string `json:"youth_officer_agreements"`
-	TreatmentAgreements    []string `json:"treatment_agreements"`
-	SmokingRules           []string `json:"smoking_rules"`
-	Work                   []string `json:"work"`
-	SchoolInternship       []string `json:"school_internship"`
-	Travel                 []string `json:"travel"`
-	Leave                  []string `json:"leave"`
+	ClientID               uuid.UUID `json:"client_id"`
+	GeneralInformation     []string  `json:"general_information"`
+	ImportantContacts      []string  `json:"important_contacts"`
+	HouseholdInfo          []string  `json:"household_info"`
+	OrganizationAgreements []string  `json:"organization_agreements"`
+	YouthOfficerAgreements []string  `json:"youth_officer_agreements"`
+	TreatmentAgreements    []string  `json:"treatment_agreements"`
+	SmokingRules           []string  `json:"smoking_rules"`
+	Work                   []string  `json:"work"`
+	SchoolInternship       []string  `json:"school_internship"`
+	Travel                 []string  `json:"travel"`
+	Leave                  []string  `json:"leave"`
 }
 
 func (q *Queries) UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error) {
@@ -219,8 +220,8 @@ RETURNING file_url
 `
 
 type UpdateAppointmentCardUrlParams struct {
-	ClientID int64   `json:"client_id"`
-	FileUrl  *string `json:"file_url"`
+	ClientID uuid.UUID `json:"client_id"`
+	FileUrl  *string   `json:"file_url"`
 }
 
 func (q *Queries) UpdateAppointmentCardUrl(ctx context.Context, arg UpdateAppointmentCardUrlParams) (*string, error) {

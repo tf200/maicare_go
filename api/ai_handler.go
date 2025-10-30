@@ -1,8 +1,9 @@
 package api
 
 import (
-	grpclient "maicare_go/grpclient/proto"
 	"net/http"
+
+	grpclient "maicare_go/grpclient/proto"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

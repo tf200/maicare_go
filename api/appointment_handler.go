@@ -2,9 +2,9 @@ package api
 
 import (
 	"fmt"
-	"maicare_go/service/appointment"
 	"net/http"
-	"strconv"
+
+	"maicare_go/service/appointment"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -46,7 +46,6 @@ func (server *Server) CreateAppointmentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Appointment created successfully")
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // AddParticipantToAppointment adds participants to an existing appointment
@@ -140,7 +139,7 @@ func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /employees/{id}/appointments [post]
 func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
-	employeeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	employeeID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -160,7 +159,6 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 
 	res := SuccessResponse(appointmentList, "Appointments retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // @Summary List appointments for a client in a date range
@@ -177,7 +175,7 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /clients/{id}/appointments [post]
 func (server *Server) ListAppointmentsForClientApi(ctx *gin.Context) {
-	clientID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -276,7 +274,6 @@ func (server *Server) UpdateAppointmentApi(ctx *gin.Context) {
 
 	res := SuccessResponse(response, "Appointment updated successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // DeleteAppointmentApi deletes an appointment

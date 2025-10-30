@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/token"
 	"maicare_go/util"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -20,8 +21,8 @@ import (
 // Methods and types for AuthService
 
 func (s *authService) Login(req LoginUserRequest, clientIP string,
-	userAgent string, ctx context.Context) (*LoginUserResponse, error) {
-
+	userAgent string, ctx context.Context,
+) (*LoginUserResponse, error) {
 	email := strings.ToLower(req.Email)
 
 	user, err := s.Store.GetUserByEmail(ctx, email)
@@ -116,35 +117,35 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Session not found",
-				zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()))
+				zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 			return nil, ErrSessionNotFound
 		}
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "RefreshToken", "Database error during session retrieval",
-			zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()),
+			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()),
 			zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to get session: %v", err)
 	}
 
 	if session.IsBlocked {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Blocked session attempt",
-			zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()))
+			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	if session.UserID != payload.UserId {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Session user mismatch",
-			zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()))
+			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	if session.RefreshToken != req.RefreshToken {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Refresh token mismatch",
-			zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()))
+			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 	if time.Now().After(session.ExpiresAt.Time) {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Expired session attempt",
-			zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()))
+			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
@@ -152,7 +153,7 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 		s.Config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "RefreshToken", "Failed to create access token",
-			zap.Int64("user_id", payload.UserId), zap.String("error", err.Error()))
+			zap.String("user_id", payload.UserId.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create access token")
 	}
 
@@ -161,7 +162,7 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "RefreshToken", "Access token refreshed successfully",
-		zap.Int64("user_id", payload.UserId), zap.String("session_id", payload.ID.String()))
+		zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 
 	return result, nil
 }
@@ -178,42 +179,42 @@ func (s *authService) VerifyTwoFAToken(req Verify2FARequest, ctx context.Context
 	if err != nil {
 		if err == sql.ErrNoRows {
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "User not found for 2FA",
-				zap.Int64("user_id", tempPayload.UserId))
+				zap.String("user_id", tempPayload.UserId.String()))
 			return nil, ErrUserNotFound
 		}
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "VerifyTwoFAToken", "Database error during user retrieval",
-			zap.Int64("user_id", tempPayload.UserId), zap.String("error", err.Error()))
+			zap.String("user_id", tempPayload.UserId.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to get user")
 	}
 
 	if !user.TwoFactorEnabled || user.TwoFactorSecret == nil || *user.TwoFactorSecret == "" {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "2FA not enabled for user",
-			zap.Int64("user_id", user.ID))
+			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecret)
 	if !valid {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "Invalid 2FA code",
-			zap.Int64("user_id", user.ID))
+			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
 	}
 	accessToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "VerifyTwoFAToken", "Failed to create access token",
-			zap.Int64("user_id", user.ID), zap.String("error", err.Error()))
+			zap.String("user_id", user.ID.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create access token: %v", err)
 	}
 
 	refreshToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "VerifyTwoFAToken", "Failed to create refresh token",
-			zap.Int64("user_id", user.ID), zap.String("error", err.Error()))
+			zap.String("user_id", user.ID.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create refresh token: %v", err)
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "VerifyTwoFAToken", "2FA verification successful, user logged in",
-		zap.Int64("user_id", user.ID))
+		zap.String("user_id", user.ID.String()))
 
 	return &LoginUserResponse{
 		AccessToken:  accessToken,
@@ -244,30 +245,30 @@ func (s *authService) Logout(req LogoutRequest, ctx context.Context) error {
 	return nil
 }
 
-func (s *authService) ChangePassword(req ChangePasswordRequest, userID int64, ctx context.Context) error {
+func (s *authService) ChangePassword(req ChangePasswordRequest, userID uuid.UUID, ctx context.Context) error {
 	user, err := s.Store.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "ChangePassword", "User not found during password change",
-				zap.Int64("user_id", userID))
+				zap.String("user_id", userID.String()))
 			return ErrUserNotFound
 		}
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ChangePassword", "Database error during user retrieval",
-			zap.Int64("user_id", userID), zap.String("error", err.Error()))
+			zap.String("user_id", userID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to get user: %v", err)
 	}
 
 	err = util.CheckPassword(req.OldPassword, user.Password)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "ChangePassword", "Incorrect old password during password change",
-			zap.Int64("user_id", userID))
+			zap.String("user_id", userID.String()))
 		return ErrInvalidCredentials
 	}
 
 	hashedPassword, err := util.HashPassword(req.NewPassword)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ChangePassword", "Error hashing new password",
-			zap.Int64("user_id", userID), zap.String("error", err.Error()))
+			zap.String("user_id", userID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to hash new password: %v", err)
 	}
 
@@ -277,12 +278,12 @@ func (s *authService) ChangePassword(req ChangePasswordRequest, userID int64, ct
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ChangePassword", "Database error updating password",
-			zap.Int64("user_id", userID), zap.String("error", err.Error()))
+			zap.String("user_id", userID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to update password: %v", err)
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ChangePassword", "Password changed successfully",
-		zap.Int64("user_id", userID))
+		zap.String("user_id", userID.String()))
 
 	return nil
 }

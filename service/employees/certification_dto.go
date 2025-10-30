@@ -2,6 +2,8 @@ package employees
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // AddEmployeeCertificationRequest represents the request for AddEmployeeCertification
@@ -14,7 +16,7 @@ type AddEmployeeCertificationRequest struct {
 // AddEmployeeCertificationResponse represents the response for AddEmployeeCertification
 type AddEmployeeCertificationResponse struct {
 	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
 	DateIssued time.Time `json:"date_issued"`
@@ -24,7 +26,7 @@ type AddEmployeeCertificationResponse struct {
 // ListEmployeeCertificationResponse represents the response for ListEmployeeCertification
 type ListEmployeeCertificationResponse struct {
 	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
 	DateIssued time.Time `json:"date_issued"`
@@ -40,7 +42,7 @@ type UpdateEmployeeCertificationRequest struct {
 // UpdateEmployeeCertificationResponse represents the response for UpdateEmployeeCertification
 type UpdateEmployeeCertificationResponse struct {
 	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
 	DateIssued time.Time `json:"date_issued"`
@@ -50,7 +52,7 @@ type UpdateEmployeeCertificationResponse struct {
 // DeleteEmployeeCertificationResponse represents the response for DeleteEmployeeCertification
 type DeleteEmployeeCertificationResponse struct {
 	ID         int64     `json:"id"`
-	EmployeeID int64     `json:"employee_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
 	DateIssued time.Time `json:"date_issued"`

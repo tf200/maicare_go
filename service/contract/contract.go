@@ -3,14 +3,16 @@ package contract
 import (
 	"context"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
 	"maicare_go/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -19,10 +21,10 @@ type ContractService interface {
 	CreateContractType(ctx context.Context, req CreateContractTypeRequest) (*CreateContractTypeResponse, error)
 	ListContractTypes(ctx context.Context) ([]ListContractTypesResponse, error)
 	DeleteContractType(ctx context.Context, contractTypeID int64) (*DeleteContractTypeResponse, error)
-	CreateContract(ctx context.Context, req CreateContractRequest, clientID int64) (*CreateContractResponse, error)
-	ListClientContracts(ctx *gin.Context, req ListClientContractsRequest, clientID int64) (*pagination.Response[ListClientContractsResponse], error)
-	UpdateContract(ctx context.Context, req UpdateContractRequest, contractID int64, employeeID int64) (*UpdateContractResponse, error)
-	UpdateContractStatus(ctx context.Context, req UpdateContractStatusRequest, contractID int64, employeeID int64) (*UpdateContractStatusResponse, error)
+	CreateContract(ctx context.Context, req CreateContractRequest, clientID uuid.UUID) (*CreateContractResponse, error)
+	ListClientContracts(ctx *gin.Context, req ListClientContractsRequest, clientID uuid.UUID) (*pagination.Response[ListClientContractsResponse], error)
+	UpdateContract(ctx context.Context, req UpdateContractRequest, contractID int64, employeeID uuid.UUID) (*UpdateContractResponse, error)
+	UpdateContractStatus(ctx context.Context, req UpdateContractStatusRequest, contractID int64, employeeID uuid.UUID) (*UpdateContractStatusResponse, error)
 	GetClientContract(ctx context.Context, contractID int64) (*GetClientContractResponse, error)
 	ListContracts(ctx *gin.Context, req ListContractsRequest) (*pagination.Response[ListContractsResponse], error)
 	GetContractAuditLog(ctx context.Context, contractID int64) ([]GetContractAuditLogResponse, error)
@@ -84,7 +86,7 @@ func (s *contractService) DeleteContractType(ctx context.Context, contractTypeID
 	return &DeleteContractTypeResponse{ID: contractTypeID}, nil
 }
 
-func (s *contractService) CreateContract(ctx context.Context, req CreateContractRequest, clientID int64) (*CreateContractResponse, error) {
+func (s *contractService) CreateContract(ctx context.Context, req CreateContractRequest, clientID uuid.UUID) (*CreateContractResponse, error) {
 	contract, err := s.Store.CreateContract(ctx, db.CreateContractParams{
 		TypeID:          req.TypeID,
 		StartDate:       pgtype.Timestamptz{Time: req.StartDate, Valid: true},
@@ -105,7 +107,7 @@ func (s *contractService) CreateContract(ctx context.Context, req CreateContract
 		FinancingOption: req.FinancingOption,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateContract", "Failed to create contract", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateContract", "Failed to create contract", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -136,7 +138,7 @@ func (s *contractService) CreateContract(ctx context.Context, req CreateContract
 	return response, nil
 }
 
-func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientContractsRequest, clientID int64) (*pagination.Response[ListClientContractsResponse], error) {
+func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientContractsRequest, clientID uuid.UUID) (*pagination.Response[ListClientContractsResponse], error) {
 	params := req.GetParams()
 
 	contracts, err := s.Store.ListClientContracts(ctx, db.ListClientContractsParams{
@@ -145,7 +147,7 @@ func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientCo
 		Offset:   params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientContracts", "Failed to list client contracts", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientContracts", "Failed to list client contracts", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -191,7 +193,7 @@ func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientCo
 	return &pag, nil
 }
 
-func (s *contractService) UpdateContract(ctx context.Context, req UpdateContractRequest, contractID int64, employeeID int64) (*UpdateContractResponse, error) {
+func (s *contractService) UpdateContract(ctx context.Context, req UpdateContractRequest, contractID int64, employeeID uuid.UUID) (*UpdateContractResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to begin transaction", zap.Int64("contract_id", contractID), zap.Error(err))
@@ -203,7 +205,7 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 
 	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.Int64("employee_id", employeeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.String("employee_id", employeeID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -262,7 +264,7 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 	return response, nil
 }
 
-func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateContractStatusRequest, contractID int64, employeeID int64) (*UpdateContractStatusResponse, error) {
+func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateContractStatusRequest, contractID int64, employeeID uuid.UUID) (*UpdateContractStatusResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to begin transaction", zap.Int64("contract_id", contractID), zap.Error(err))
@@ -274,7 +276,7 @@ func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateCo
 
 	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.Int64("employee_id", employeeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.String("employee_id", employeeID.String()), zap.Error(err))
 		return nil, err
 	}
 

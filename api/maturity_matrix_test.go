@@ -4,16 +4,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
+	"maicare_go/service/care"
+	"maicare_go/token"
+	"maicare_go/util"
+
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +33,7 @@ type RandomCarePlan struct {
 	ReportID         int64 `json:"report_id"`
 }
 
-func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
+func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 	clientAssessments, err := testStore.CreateClientMaturityMatrixAssessment(context.Background(), db.CreateClientMaturityMatrixAssessmentParams{
 		ClientID:         clientID,
 		MaturityMatrixID: 1,
@@ -203,6 +206,7 @@ func createRandomCarePlan(t *testing.T, clientID int64) RandomCarePlan {
 }
 
 func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 
 	testCases := []struct {
@@ -214,10 +218,10 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				assessmentReq := CreateClientMaturityMatrixAssessmentRequest{
+				assessmentReq := care.CreateClientCarePlanRequest{
 					MaturityMatrixID: 1,
 					InitialLevel:     1,
 					TargetLevel:      3,
@@ -230,12 +234,11 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
-
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var assessmentCard Response[CreateClientMaturityMatrixAssessmentResponse]
+				var assessmentCard Response[care.CreateClientCarePlanResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &assessmentCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, assessmentCard.Data)
@@ -256,10 +259,10 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	_ = createRandomCarePlan(t, client.ID)
 	testCases := []struct {
@@ -271,7 +274,7 @@ func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/assessments", client.ID)
@@ -286,7 +289,7 @@ func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListClientMaturityMatrixAssessmentsResponse]]
+				var response Response[pagination.Response[care.ListClientCarePlansResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -307,6 +310,7 @@ func TestListClientMaturityMatrixAssessmentsApi(t *testing.T) {
 }
 
 func TestGetCarePlanOverviewApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 	testCases := []struct {
@@ -318,7 +322,7 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d", carePlan.CarePlanID)
@@ -329,7 +333,7 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetCarePlanOverviewResponse]
+				var response Response[care.GetCarePlanOverviewResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -351,7 +355,9 @@ func TestGetCarePlanOverviewApi(t *testing.T) {
 		})
 	}
 }
+
 func TestUpdateCarePlanOverviewApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -364,10 +370,10 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanOverviewRequest{
+				updateReq := care.UpdateCarePlanOverviewRequest{
 					AssessmentSummary: util.StringPtr("Updated assessment summary"),
 				}
 				data, err := json.Marshal(updateReq)
@@ -381,7 +387,7 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanOverviewResponse]
+				var response Response[care.UpdateCarePlanOverviewResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -405,6 +411,7 @@ func TestUpdateCarePlanOverviewApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -417,7 +424,7 @@ func TestDeleteCarePlanApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d", carePlan.CarePlanID)
@@ -447,6 +454,7 @@ func TestDeleteCarePlanApi(t *testing.T) {
 }
 
 func TestCreateCarePlanObjectiveApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -459,10 +467,10 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanObjectiveRequest{
+				createReq := care.CreateCarePlanObjectiveRequest{
 					TimeFrame:   "short_term",
 					GoalTitle:   "New Objective",
 					Description: "This is a new objective for the care plan.",
@@ -478,7 +486,7 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanObjectiveResponse]
+				var response Response[care.CreateCarePlanObjectiveResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -503,6 +511,7 @@ func TestCreateCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestGetCarePlanObjectivesApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlanID := createRandomCarePlan(t, client.ID)
 
@@ -515,7 +524,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/objectives", carePlanID)
@@ -526,7 +535,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetCarePlanObjectivesResponse]
+				var response Response[care.GetCarePlanObjectivesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 
 				require.NoError(t, err)
@@ -550,6 +559,7 @@ func TestGetCarePlanObjectivesApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanObjectiveApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -562,10 +572,10 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanObjectiveRequest{
+				updateReq := care.UpdateCarePlanObjectiveRequest{
 					TimeFrame:   util.StringPtr("short_term"),
 					GoalTitle:   util.StringPtr("Updated Objective"),
 					Description: util.StringPtr("This is an updated objective for the care plan."),
@@ -582,7 +592,7 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanObjectiveResponse]
+				var response Response[care.UpdateCarePlanObjectiveResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -605,6 +615,7 @@ func TestUpdateCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanObjectiveApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -617,7 +628,7 @@ func TestDeleteCarePlanObjectiveApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/objectives/%d", carePlan.ObjectiveID)
@@ -646,6 +657,7 @@ func TestDeleteCarePlanObjectiveApi(t *testing.T) {
 }
 
 func TestCreateCarePlanActionsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -658,10 +670,10 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanActionsRequest{
+				createReq := care.CreateCarePlanActionsRequest{
 					ActionDescription: "New action for care plan objective",
 				}
 				data, err := json.Marshal(createReq)
@@ -675,7 +687,7 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanActionsResponse]
+				var response Response[care.CreateCarePlanActionsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -698,6 +710,7 @@ func TestCreateCarePlanActionsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanActionsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -710,10 +723,10 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanActionsRequest{
+				updateReq := care.UpdateCarePlanActionsRequest{
 					ActionDescription: util.StringPtr("Updated action description for care plan objective"),
 				}
 				data, err := json.Marshal(updateReq)
@@ -727,7 +740,7 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanActionsResponse]
+				var response Response[care.UpdateCarePlanActionsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -750,6 +763,7 @@ func TestUpdateCarePlanActionsApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanActionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -762,7 +776,7 @@ func TestDeleteCarePlanActionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/actions/%d", carePlan.ActionID)
@@ -791,6 +805,7 @@ func TestDeleteCarePlanActionApi(t *testing.T) {
 }
 
 func TestCreateCarePlanInterventionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -803,10 +818,10 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanInterventionRequest{
+				createReq := care.CreateCarePlanInterventionRequest{
 					Frequency:               "daily",
 					InterventionDescription: "New daily intervention for care plan",
 				}
@@ -821,7 +836,7 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanInterventionResponse]
+				var response Response[care.CreateCarePlanInterventionResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -844,6 +859,7 @@ func TestCreateCarePlanInterventionApi(t *testing.T) {
 }
 
 func TestGetCarePlanInterventionsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -856,7 +872,7 @@ func TestGetCarePlanInterventionsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/interventions", carePlan.CarePlanID)
@@ -867,7 +883,7 @@ func TestGetCarePlanInterventionsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GetCarePlanInterventionsResponse]
+				var response Response[care.GetCarePlanInterventionsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -890,6 +906,7 @@ func TestGetCarePlanInterventionsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanInterventionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -902,10 +919,10 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanInterventionRequest{
+				updateReq := care.UpdateCarePlanInterventionRequest{
 					Frequency:               util.StringPtr("weekly"),
 					InterventionDescription: util.StringPtr("Updated intervention description for care plan"),
 				}
@@ -920,7 +937,7 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanInterventionResponse]
+				var response Response[care.UpdateCarePlanInterventionResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -943,6 +960,7 @@ func TestUpdateCarePlanInterventionApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanInterventionApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -955,7 +973,7 @@ func TestDeleteCarePlanInterventionApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/interventions/%d", carePlan.InterventionID)
@@ -984,6 +1002,7 @@ func TestDeleteCarePlanInterventionApi(t *testing.T) {
 }
 
 func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -996,10 +1015,10 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanSuccessMetricsRequest{
+				createReq := care.CreateCarePlanSuccessMetricsRequest{
 					MetricName:        "Weight Loss",
 					TargetValue:       "10",
 					MeasurementMethod: "kg",
@@ -1016,14 +1035,13 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanSuccessMetricsResponse]
+				var response Response[care.CreateCarePlanSuccessMetricsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
 				require.Equal(t, carePlan.SuccessMetricID, response.Data.MetricID)
 				require.NotNil(t, response.Data.CurrentValue)
 				require.Equal(t, "5", *response.Data.CurrentValue)
-
 			},
 		},
 	}
@@ -1042,6 +1060,7 @@ func TestCreateCarePlanSuccessMetricApi(t *testing.T) {
 }
 
 func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1054,7 +1073,7 @@ func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/success_metrics", carePlan.CarePlanID)
@@ -1065,7 +1084,7 @@ func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanSuccessMetricsResponse]
+				var response Response[[]care.GetCarePlanSuccessMetricsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1087,6 +1106,7 @@ func TestGetCarePlanSuccessMetricsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1099,10 +1119,10 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanSuccessMetricsRequest{
+				updateReq := care.UpdateCarePlanSuccessMetricsRequest{
 					MetricName:        util.StringPtr("Updated Weight Loss"),
 					TargetValue:       util.StringPtr("15"),
 					MeasurementMethod: util.StringPtr("kg"),
@@ -1119,7 +1139,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanSuccessMetricsResponse]
+				var response Response[care.UpdateCarePlanSuccessMetricsResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1142,6 +1162,7 @@ func TestUpdateCarePlanSuccessMetricApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1154,7 +1175,7 @@ func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/success_metrics/%d", carePlan.SuccessMetricID)
@@ -1183,6 +1204,7 @@ func TestDeleteCarePlanSuccessMetricApi(t *testing.T) {
 }
 
 func TestCreateCarePlanRisksApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1195,10 +1217,10 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanRisksRequest{
+				createReq := care.CreateCarePlanRisksRequest{
 					RiskDescription:    "High risk of falls",
 					RiskLevel:          util.StringPtr("high"),
 					MitigationStrategy: "Implement fall prevention measures",
@@ -1214,7 +1236,7 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanRisksResponse]
+				var response Response[care.CreateCarePlanRisksResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1236,6 +1258,7 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 }
 
 func TestGetCarePlanRisksApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1248,7 +1271,7 @@ func TestGetCarePlanRisksApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/risks", carePlan.CarePlanID)
@@ -1259,7 +1282,7 @@ func TestGetCarePlanRisksApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanRisksResponse]
+				var response Response[[]care.GetCarePlanRisksResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1281,6 +1304,7 @@ func TestGetCarePlanRisksApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanRiskApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1293,10 +1317,10 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanRisksRequest{
+				updateReq := care.UpdateCarePlanRisksRequest{
 					RiskDescription:    util.StringPtr("Updated risk description for care plan"),
 					RiskLevel:          util.StringPtr("medium"),
 					MitigationStrategy: util.StringPtr("Implement updated mitigation strategy"),
@@ -1312,7 +1336,7 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanRisksResponse]
+				var response Response[care.UpdateCarePlanRisksResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1335,6 +1359,7 @@ func TestUpdateCarePlanRiskApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanRiskApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1347,7 +1372,7 @@ func TestDeleteCarePlanRiskApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/risks/%d", carePlan.RiskID)
@@ -1376,6 +1401,7 @@ func TestDeleteCarePlanRiskApi(t *testing.T) {
 }
 
 func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1388,10 +1414,10 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanSupportNetworkRequest{
+				createReq := care.CreateCarePlanSupportNetworkRequest{
 					RoleTitle:                 "Caregiver",
 					ResponsibilityDescription: "Assist with daily activities and provide emotional support.",
 				}
@@ -1406,7 +1432,7 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanSupportNetworkResponse]
+				var response Response[care.CreateCarePlanSupportNetworkResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1428,6 +1454,7 @@ func TestCreateCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestGetCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1440,7 +1467,7 @@ func TestGetCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/support_network", carePlan.CarePlanID)
@@ -1451,7 +1478,7 @@ func TestGetCarePlanSupportNetworkApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanSupportNetworkResponse]
+				var response Response[[]care.GetCarePlanSupportNetworkResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1473,6 +1500,7 @@ func TestGetCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1485,10 +1513,10 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanSupportNetworkRequest{
+				updateReq := care.UpdateCarePlanSupportNetworkRequest{
 					RoleTitle:                 util.StringPtr("Updated Caregiver"),
 					ResponsibilityDescription: util.StringPtr("Updated responsibilities for caregiver."),
 				}
@@ -1503,7 +1531,7 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanSupportNetworkResponse]
+				var response Response[care.UpdateCarePlanSupportNetworkResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1526,6 +1554,7 @@ func TestUpdateCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1538,7 +1567,7 @@ func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/support_network/%d", carePlan.SupportNetworkID)
@@ -1567,6 +1596,7 @@ func TestDeleteCarePlanSupportNetworkApi(t *testing.T) {
 }
 
 func TestCreateCarePlanResourcesApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1579,11 +1609,10 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanResourcesRequest{
-
+				createReq := care.CreateCarePlanResourcesRequest{
 					ResourceDescription: "A comprehensive guide to nutrition for better health.",
 					IsObtained:          util.BoolPtr(true),
 					ObtainedDate:        util.TimePtr(time.Now()),
@@ -1599,7 +1628,7 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanResourcesResponse]
+				var response Response[care.CreateCarePlanResourcesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1621,6 +1650,7 @@ func TestCreateCarePlanResourcesApi(t *testing.T) {
 }
 
 func TestGetCarePlanResourcesApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1633,7 +1663,7 @@ func TestGetCarePlanResourcesApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/resources", carePlan.CarePlanID)
@@ -1644,7 +1674,7 @@ func TestGetCarePlanResourcesApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[[]GetCarePlanResourcesResponse]
+				var response Response[[]care.GetCarePlanResourcesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1666,6 +1696,7 @@ func TestGetCarePlanResourcesApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanResourceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1678,10 +1709,10 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanResourcesRequest{
+				updateReq := care.UpdateCarePlanResourcesRequest{
 					ResourceDescription: util.StringPtr("Updated resource description for care plan"),
 					IsObtained:          util.BoolPtr(false),
 					ObtainedDate:        time.Now().AddDate(0, 0, 1),
@@ -1697,7 +1728,7 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanResourcesResponse]
+				var response Response[care.UpdateCarePlanResourcesResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1718,6 +1749,7 @@ func TestUpdateCarePlanResourceApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanResourceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1730,7 +1762,7 @@ func TestDeleteCarePlanResourceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/resources/%d", carePlan.ResourceID)
@@ -1759,6 +1791,7 @@ func TestDeleteCarePlanResourceApi(t *testing.T) {
 }
 
 func TestCreateCarePlanReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1771,10 +1804,10 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				createReq := CreateCarePlanReportRequest{
+				createReq := care.CreateCarePlanReportRequest{
 					ReportType:    "progress",
 					ReportContent: "Client has shown significant improvement in mobility and daily activities.",
 					IsCritical:    false,
@@ -1790,7 +1823,7 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var response Response[CreateCarePlanReportResponse]
+				var response Response[care.CreateCarePlanReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1812,6 +1845,7 @@ func TestCreateCarePlanReportApi(t *testing.T) {
 }
 
 func TestListCarePlanReportsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1824,7 +1858,7 @@ func TestListCarePlanReportsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/%d/reports?page=1&page_size=10", carePlan.CarePlanID)
@@ -1835,7 +1869,7 @@ func TestListCarePlanReportsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[pagination.Response[ListCarePlanReportsResponse]]
+				var response Response[pagination.Response[care.ListCarePlanReportsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1857,6 +1891,7 @@ func TestListCarePlanReportsApi(t *testing.T) {
 }
 
 func TestUpdateCarePlanReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1869,10 +1904,10 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				updateReq := UpdateCarePlanReportRequest{
+				updateReq := care.UpdateCarePlanReportRequest{
 					ReportType:    util.StringPtr("updated progress"),
 					ReportContent: util.StringPtr("Client has shown significant improvement in mobility and daily activities."),
 					IsCritical:    util.BoolPtr(false),
@@ -1888,7 +1923,7 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[UpdateCarePlanReportResponse]
+				var response Response[care.UpdateCarePlanReportResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -1910,6 +1945,7 @@ func TestUpdateCarePlanReportApi(t *testing.T) {
 }
 
 func TestDeleteCarePlanReportApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	carePlan := createRandomCarePlan(t, client.ID)
 
@@ -1922,7 +1958,7 @@ func TestDeleteCarePlanReportApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/care_plans/reports/%d", carePlan.ReportID)

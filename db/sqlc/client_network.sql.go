@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -41,20 +42,20 @@ LEFT JOIN
 `
 
 type AssignEmployeeParams struct {
-	ClientID   int64       `json:"client_id"`
-	EmployeeID int64       `json:"employee_id"`
+	ClientID   uuid.UUID   `json:"client_id"`
+	EmployeeID uuid.UUID   `json:"employee_id"`
 	StartDate  pgtype.Date `json:"start_date"`
 	Role       string      `json:"role"`
 }
 
 type AssignEmployeeRow struct {
 	ID                 int64              `json:"id"`
-	ClientID           int64              `json:"client_id"`
-	EmployeeID         int64              `json:"employee_id"`
+	ClientID           uuid.UUID          `json:"client_id"`
+	EmployeeID         uuid.UUID          `json:"employee_id"`
 	StartDate          pgtype.Date        `json:"start_date"`
 	Role               string             `json:"role"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
-	UserID             int64              `json:"user_id"`
+	UserID             uuid.UUID          `json:"user_id"`
 	ClientFirstName    string             `json:"client_first_name"`
 	ClientLastName     string             `json:"client_last_name"`
 	ClientLocationName *string            `json:"client_location_name"`
@@ -92,8 +93,8 @@ RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, st
 `
 
 type AssignSenderParams struct {
-	SenderID *int64 `json:"sender_id"`
-	ID       int64  `json:"id"`
+	SenderID *int64    `json:"sender_id"`
+	ID       uuid.UUID `json:"id"`
 }
 
 func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error) {
@@ -180,17 +181,17 @@ INSERT INTO client_emergency_contact (
 `
 
 type CreateEmemrgencyContactParams struct {
-	ClientID         int64   `json:"client_id"`
-	FirstName        *string `json:"first_name"`
-	LastName         *string `json:"last_name"`
-	Email            *string `json:"email"`
-	PhoneNumber      *string `json:"phone_number"`
-	Address          *string `json:"address"`
-	Relationship     *string `json:"relationship"`
-	RelationStatus   *string `json:"relation_status"`
-	MedicalReports   bool    `json:"medical_reports"`
-	IncidentsReports bool    `json:"incidents_reports"`
-	GoalsReports     bool    `json:"goals_reports"`
+	ClientID         uuid.UUID `json:"client_id"`
+	FirstName        *string   `json:"first_name"`
+	LastName         *string   `json:"last_name"`
+	Email            *string   `json:"email"`
+	PhoneNumber      *string   `json:"phone_number"`
+	Address          *string   `json:"address"`
+	Relationship     *string   `json:"relationship"`
+	RelationStatus   *string   `json:"relation_status"`
+	MedicalReports   bool      `json:"medical_reports"`
+	IncidentsReports bool      `json:"incidents_reports"`
+	GoalsReports     bool      `json:"goals_reports"`
 }
 
 func (q *Queries) CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error) {
@@ -287,8 +288,8 @@ WHERE ae.id = $1 LIMIT 1
 
 type GetAssignedEmployeeRow struct {
 	ID                int64              `json:"id"`
-	ClientID          int64              `json:"client_id"`
-	EmployeeID        int64              `json:"employee_id"`
+	ClientID          uuid.UUID          `json:"client_id"`
+	EmployeeID        uuid.UUID          `json:"employee_id"`
 	StartDate         pgtype.Date        `json:"start_date"`
 	Role              string             `json:"role"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
@@ -329,7 +330,7 @@ UNION
 SELECT contact_email FROM emergency_contact_emails
 `
 
-func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID int64) ([]string, error) {
+func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]string, error) {
 	rows, err := q.db.Query(ctx, getClientRelatedEmails, clientID)
 	if err != nil {
 		return nil, err
@@ -356,7 +357,7 @@ WHERE cd.id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetClientSender(ctx context.Context, id int64) (Sender, error) {
+func (q *Queries) GetClientSender(ctx context.Context, id uuid.UUID) (Sender, error) {
 	row := q.db.QueryRow(ctx, getClientSender, id)
 	var i Sender
 	err := row.Scan(
@@ -426,15 +427,15 @@ LIMIT $2 OFFSET $3
 `
 
 type ListAssignedEmployeesParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListAssignedEmployeesRow struct {
 	ID                int64              `json:"id"`
-	ClientID          int64              `json:"client_id"`
-	EmployeeID        int64              `json:"employee_id"`
+	ClientID          uuid.UUID          `json:"client_id"`
+	EmployeeID        uuid.UUID          `json:"employee_id"`
 	StartDate         pgtype.Date        `json:"start_date"`
 	Role              string             `json:"role"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
@@ -489,15 +490,15 @@ LIMIT $1 OFFSET $2
 `
 
 type ListEmergencyContactsParams struct {
-	Limit    int32  `json:"limit"`
-	Offset   int32  `json:"offset"`
-	ClientID int64  `json:"client_id"`
-	Search   string `json:"search"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Search   string    `json:"search"`
 }
 
 type ListEmergencyContactsRow struct {
 	ID               int64              `json:"id"`
-	ClientID         int64              `json:"client_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	FirstName        *string            `json:"first_name"`
 	LastName         *string            `json:"last_name"`
 	Email            *string            `json:"email"`
@@ -566,7 +567,7 @@ RETURNING id, client_id, employee_id, start_date, role, created_at
 
 type UpdateAssignedEmployeeParams struct {
 	ID         int64       `json:"id"`
-	EmployeeID *int64      `json:"employee_id"`
+	EmployeeID *uuid.UUID  `json:"employee_id"`
 	StartDate  pgtype.Date `json:"start_date"`
 	Role       *string     `json:"role"`
 }

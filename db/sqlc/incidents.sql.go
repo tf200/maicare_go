@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -61,7 +62,7 @@ type ListAllIncidentsParams struct {
 
 type ListAllIncidentsRow struct {
 	ID                      int64              `json:"id"`
-	EmployeeID              int64              `json:"employee_id"`
+	EmployeeID              uuid.UUID          `json:"employee_id"`
 	LocationID              int64              `json:"location_id"`
 	ReporterInvolvement     string             `json:"reporter_involvement"`
 	InformWho               []string           `json:"inform_who"`
@@ -100,7 +101,7 @@ type ListAllIncidentsRow struct {
 	OtherDesc               *string            `json:"other_desc"`
 	AdditionalAppointments  *string            `json:"additional_appointments"`
 	EmployeeAbsenteeism     string             `json:"employee_absenteeism"`
-	ClientID                int64              `json:"client_id"`
+	ClientID                uuid.UUID          `json:"client_id"`
 	SoftDelete              bool               `json:"soft_delete"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`

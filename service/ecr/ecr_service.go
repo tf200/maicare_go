@@ -3,25 +3,16 @@ package ecr
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
-	"maicare_go/service/deps"
-	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
-
-type ecrService struct {
-	*deps.ServiceDependencies
-}
-
-func NewECRService(deps *deps.ServiceDependencies) ECRService {
-	return &ecrService{
-		ServiceDependencies: deps,
-	}
-}
 
 func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRequest) (*pagination.Response[DischargeOverviewResponse], error) {
 	params := req.GetParams()
@@ -194,7 +185,7 @@ func (s *ecrService) ListLatestPayments(ctx context.Context) ([]ListLatestPaymen
 	return response, nil
 }
 
-func (s *ecrService) ListUpcomingAppointments(ctx context.Context, employeeID int64) ([]ListUpcomingAppointmentsResponse, error) {
+func (s *ecrService) ListUpcomingAppointments(ctx context.Context, employeeID uuid.UUID) ([]ListUpcomingAppointmentsResponse, error) {
 	appointments, err := s.Store.ListUpcomingAppointments(ctx, &employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListUpcomingAppointments", "Failed to list upcoming appointments", zap.Error(err))

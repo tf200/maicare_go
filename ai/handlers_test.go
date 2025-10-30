@@ -1,8 +1,9 @@
 package ai
 
 import (
-	"maicare_go/util"
 	"testing"
+
+	"maicare_go/util"
 
 	"github.com/stretchr/testify/require"
 )

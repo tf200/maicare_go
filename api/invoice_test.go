@@ -3,14 +3,15 @@ package api
 import (
 	"bytes"
 	"context"
-	db "maicare_go/db/sqlc"
-	"maicare_go/invoice"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	invserv "maicare_go/service/invoice"
+	"maicare_go/token"
+	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomBillableHours(t *testing.T) int64 {
+func createRandomBillableHours(t *testing.T) uuid.UUID {
 	client := createRandomClientDetails(t)
 	employee, _ := createRandomEmployee(t)
 
@@ -79,7 +80,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 	appointement := createRandomAppointment(t, employee.ID)
 	err = testStore.BulkAddAppointmentClients(context.Background(), db.BulkAddAppointmentClientsParams{
 		AppointmentID: appointement.ID,
-		ClientIds:     []int64{client.ID},
+		ClientIds:     []uuid.UUID{client.ID},
 	})
 
 	require.NoError(t, err)
@@ -87,6 +88,7 @@ func createRandomBillableHours(t *testing.T) int64 {
 }
 
 func TestCreateInvoiceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	sender := createRandomSender(t)
 	clientID := createRandomBillableHours(t)
 
@@ -101,21 +103,21 @@ func TestCreateInvoiceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				amblanteTiotalMinutes := 100.0
 				preVatTotal := contract.Price * amblanteTiotalMinutes
 				Total := preVatTotal * (1 + float64(*contract.Vat)/100)
-				req := CreateInvoiceRequest{
+				req := invserv.CreateInvoiceRequest{
 					ClientID:  clientID,
 					IssueDate: time.Date(2025, time.August, 1, 0, 0, 0, 0, time.UTC),
 					DueDate:   time.Date(2025, time.August, 31, 23, 59, 59, 0, time.UTC),
-					InvoiceDetails: []invoice.InvoiceDetails{
+					InvoiceDetails: []invserv.InvoiceDetails{
 						{
 							ContractID:   contract.ID,
 							ContractType: contract.CareType,
-							Periods: []invoice.InvoicePeriod{
+							Periods: []invserv.InvoicePeriod{
 								{
 									StartDate:             time.Date(2025, time.August, 1, 0, 0, 0, 0, time.UTC),
 									EndDate:               time.Date(2025, time.August, 31, 23, 59, 59, 0, time.UTC),
@@ -146,7 +148,7 @@ func TestCreateInvoiceApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[CreateInvoiceResponse]
+				var response Response[invserv.CreateInvoiceResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
@@ -165,10 +167,10 @@ func TestCreateInvoiceApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGenerateInvoiceApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	clientID := createRandomBillableHours(t)
 
 	testCases := []struct {
@@ -180,10 +182,10 @@ func TestGenerateInvoiceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				req := GenerateInvoiceRequest{
+				req := invserv.GenerateInvoiceRequest{
 					ClientID:  clientID,
 					StartDate: time.Date(2025, time.August, 1, 0, 0, 0, 0, time.UTC),
 					EndDate:   time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC),
@@ -198,13 +200,12 @@ func TestGenerateInvoiceApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log("Response Body:", recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var response Response[GenerateInvoiceResponse]
+				var response Response[invserv.GenerateInvoiceResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
 				require.NoError(t, err)
 				require.NotEmpty(t, response.Data)
 				require.NotEmpty(t, response.Data.InvoiceNumber)
 				require.NotEmpty(t, response.Data.InvoiceDetails)
-
 			},
 		},
 	}
@@ -220,5 +221,4 @@ func TestGenerateInvoiceApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }

@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	db "maicare_go/db/sqlc"
-	"maicare_go/pagination"
-	"maicare_go/token"
-	"maicare_go/util"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/pagination"
+	clientp "maicare_go/service/client"
+	"maicare_go/token"
+	"maicare_go/util"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
@@ -92,7 +94,7 @@ func createRandomRegistrationForm(t *testing.T) db.RegistrationForm {
 }
 
 func TestCreateRegistrationFormApi(t *testing.T) {
-
+	_, user := createRandomEmployee(t)
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -102,10 +104,10 @@ func TestCreateRegistrationFormApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				rfRequest := CreateRegistrationFormRequest{
+				rfRequest := clientp.CreateRegistrationFormRequest{
 					ClientFirstName:               faker.FirstName(),
 					ClientLastName:                faker.LastName(),
 					ClientBsnNumber:               "123456789",
@@ -183,7 +185,7 @@ func TestCreateRegistrationFormApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusCreated, recorder.Code)
-				var registrationFormCard Response[CreateRegistrationFormResponse]
+				var registrationFormCard Response[clientp.CreateRegistrationFormResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &registrationFormCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, registrationFormCard.Data)
@@ -203,10 +205,10 @@ func TestCreateRegistrationFormApi(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestListRegistrationFormsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomRegistrationForm(t)
 	}
@@ -220,7 +222,7 @@ func TestListRegistrationFormsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/registration_form?page=1&page_size=5&status=all"
@@ -231,7 +233,7 @@ func TestListRegistrationFormsApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var registrationFormsCard Response[pagination.Response[ListRegistrationFormsResponse]]
+				var registrationFormsCard Response[pagination.Response[clientp.ListRegistrationFormsResponse]]
 				err := json.Unmarshal(recorder.Body.Bytes(), &registrationFormsCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, registrationFormsCard.Data)
@@ -255,6 +257,7 @@ func TestListRegistrationFormsApi(t *testing.T) {
 }
 
 func TestGetRegistrationFormApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	registrationForm := createRandomRegistrationForm(t)
 
 	testCases := []struct {
@@ -266,7 +269,7 @@ func TestGetRegistrationFormApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/registration_form/%d", registrationForm.ID)
@@ -278,7 +281,7 @@ func TestGetRegistrationFormApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var registrationFormCard Response[GetRegistrationFormResponse]
+				var registrationFormCard Response[clientp.GetRegistrationFormResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &registrationFormCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, registrationFormCard.Data)
@@ -301,6 +304,7 @@ func TestGetRegistrationFormApi(t *testing.T) {
 }
 
 func TestUpdateRegistrationFormApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	registrationForm := createRandomRegistrationForm(t)
 
 	testCases := []struct {
@@ -312,10 +316,10 @@ func TestUpdateRegistrationFormApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				rfRequest := UpdateRegistrationFormRequest{
+				rfRequest := clientp.UpdateRegistrationFormRequest{
 					ClientFirstName: util.StringPtr(faker.FirstName()),
 					ClientLastName:  util.StringPtr(faker.LastName()),
 					ClientBsnNumber: util.StringPtr("123456789"),
@@ -331,7 +335,7 @@ func TestUpdateRegistrationFormApi(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				t.Log(recorder.Body.String())
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var registrationFormCard Response[UpdateRegistrationFormResponse]
+				var registrationFormCard Response[clientp.UpdateRegistrationFormResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &registrationFormCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, registrationFormCard.Data)
@@ -353,6 +357,7 @@ func TestUpdateRegistrationFormApi(t *testing.T) {
 }
 
 func TestDeleteRegistrationFormApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	registrationForm := createRandomRegistrationForm(t)
 
 	testCases := []struct {
@@ -364,7 +369,7 @@ func TestDeleteRegistrationFormApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/registration_form/%d", registrationForm.ID)
@@ -396,6 +401,7 @@ func TestDeleteRegistrationFormApi(t *testing.T) {
 
 func TestUpdateRegistrationFormStatusApi(t *testing.T) {
 	testasynqClient.EXPECT().EnqueueAcceptedRegistration(gomock.Any(), gomock.Any()).Times(1)
+	_, user := createRandomEmployee(t)
 	registrationForm := createRandomRegistrationForm(t)
 
 	testCases := []struct {
@@ -407,10 +413,10 @@ func TestUpdateRegistrationFormStatusApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				reqBody := UpdateRegistrationFormStatusRequest{
+				reqBody := clientp.UpdateRegistrationFormStatusRequest{
 					Status:                    "approved",
 					IntakeAppointmentDate:     time.Now().AddDate(0, 0, 7),
 					IntakeAppointmentLocation: util.StringPtr("Intake Location"),

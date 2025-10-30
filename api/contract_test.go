@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/service/contract"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -21,7 +22,6 @@ import (
 )
 
 func createRandomContractType(t *testing.T) db.ContractType {
-
 	contractType, err := testStore.CreateContractType(context.Background(), "Test Contract Type")
 	require.NoError(t, err)
 	require.NotEmpty(t, contractType)
@@ -79,6 +79,7 @@ func TestCreateContractTypeApi(t *testing.T) {
 }
 
 func TestListContractTypeApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		createRandomContractType(t)
 	}
@@ -91,7 +92,7 @@ func TestListContractTypeApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				request, err := http.NewRequest(http.MethodGet, "/contract_types", nil)
@@ -140,8 +141,7 @@ var (
 	FinancingOption = []string{"ZIN", "PGB"}
 )
 
-func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Contract {
-
+func createRandomContract(t *testing.T, clientID uuid.UUID, senderID *int64) db.Contract {
 	contractType := createRandomContractType(t)
 	attachment := createRandomAttachmentFile(t)
 
@@ -188,7 +188,7 @@ func createRandomContract(t *testing.T, clientID int64, senderID *int64) db.Cont
 func TestCreateClientContractApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	contractType := createRandomContractType(t)
-	
+
 	attachment := createRandomAttachmentFile(t)
 	_, user := createRandomEmployee(t)
 
@@ -268,6 +268,7 @@ func TestCreateClientContractApi(t *testing.T) {
 }
 
 func TestListClientContractsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	for i := 0; i < 10; i++ {
 		createRandomContract(t, client.ID, client.SenderID)
@@ -281,10 +282,9 @@ func TestListClientContractsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				url := fmt.Sprintf("/clients/%d/contracts?page=1&page_size=5", client.ID)
 				request, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
@@ -316,6 +316,7 @@ func TestListClientContractsApi(t *testing.T) {
 }
 
 func TestGetClientContract(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	cont := createRandomContract(t, client.ID, client.SenderID)
 	testCases := []struct {
@@ -327,7 +328,7 @@ func TestGetClientContract(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/clients/%d/contracts/%d", cont.ClientID, cont.ID)
@@ -374,6 +375,7 @@ func TestGetClientContract(t *testing.T) {
 }
 
 func TestListContractsApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	for i := 0; i < 10; i++ {
 		client := createRandomClientDetails(t)
 		createRandomContract(t, client.ID, client.SenderID)
@@ -387,10 +389,9 @@ func TestListContractsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5", nil)
 				require.NoError(t, err)
 				return request, nil
@@ -408,10 +409,9 @@ func TestListContractsApi(t *testing.T) {
 		{
 			name: "Filter By Status",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-
 				request, err := http.NewRequest(http.MethodGet, "/contracts?page=1&page_size=5&status=draft", nil)
 				require.NoError(t, err)
 				return request, nil

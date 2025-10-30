@@ -61,7 +61,7 @@ CREATE OR REPLACE FUNCTION insert_default_shifts()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO location_shift (location_id, shift_name, start_time, end_time)
-    VALUES 
+    VALUES
         (NEW.id, 'Ochtenddienst', TIME '07:30:00', TIME '15:30:00'),
         (NEW.id, 'Avonddienst', TIME '15:00:00', TIME '23:00:00'),
         (NEW.id, 'Slaapdienst of Waakdienst', TIME '23:00:00', TIME '07:30:00');
@@ -103,7 +103,7 @@ CREATE TABLE role_permissions (
 
 -- User authentication data
 CREATE TABLE custom_user (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     password VARCHAR(128) NOT NULL,
     last_login TIMESTAMPTZ,
     email VARCHAR(254) NOT NULL UNIQUE,
@@ -121,7 +121,7 @@ CREATE INDEX custom_user_id_idx ON custom_user(id);
 
 -- Direct user-to-permission assignments
 CREATE TABLE user_permissions (
-    user_id BIGINT NOT NULL,
+    user_id UUID NOT NULL,
     permission_id INT NOT NULL,
     PRIMARY KEY (user_id, permission_id),
     FOREIGN KEY (user_id) REFERENCES custom_user(id) ON DELETE CASCADE,
@@ -130,7 +130,7 @@ CREATE TABLE user_permissions (
 
 -- Track which role templates were given to a user
 CREATE TABLE user_roles (
-    user_id BIGINT NOT NULL PRIMARY KEY,
+    user_id UUID NOT NULL PRIMARY KEY,
     role_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES custom_user(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
@@ -145,7 +145,7 @@ CREATE TABLE "sessions" (
     "is_blocked" boolean NOT NULL DEFAULT false,
     "expires_at" timestamptz NOT NULL,
     "created_at" timestamptz NOT NULL,
-    "user_id" BIGINT NOT NULL,
+    "user_id" UUID NOT NULL,
     CONSTRAINT fk_user FOREIGN KEY ("user_id") REFERENCES custom_user("id") ON DELETE CASCADE
 );
 
@@ -156,7 +156,7 @@ CREATE INDEX idx_sessions_token_blocked ON sessions("refresh_token", "is_blocked
 -- Notifications for users
 CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id BIGINT NOT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
     type VARCHAR(100) NOT NULL CHECK (type IN (
         'new_appointment', 'appointment_update', 'new_client_assigned',
         'client_goal_update', 'incident_report', 'client_contract_reminder',
@@ -206,8 +206,8 @@ CREATE INDEX temporary_file_uploaded_at_idx ON temporary_file(uploaded_at);
 
 -- Employee profile (linked to custom_user)
 CREATE TABLE employee_profile (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     position VARCHAR(100) NULL,
@@ -244,7 +244,7 @@ CREATE INDEX idx_employee_profile_out_of_service ON employee_profile(out_of_serv
 -- Employee education records
 CREATE TABLE employee_education (
     id BIGSERIAL PRIMARY KEY,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     institution_name VARCHAR(255) NOT NULL,
     degree VARCHAR(100) NOT NULL,
     field_of_study VARCHAR(100) NOT NULL,
@@ -258,7 +258,7 @@ CREATE INDEX education_employee_id_idx ON employee_education(employee_id);
 -- Employee certifications
 CREATE TABLE certification (
     id BIGSERIAL PRIMARY KEY,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     issued_by VARCHAR(255) NOT NULL,
     date_issued DATE NOT NULL,
@@ -270,7 +270,7 @@ CREATE INDEX certification_employee_id_idx ON certification(employee_id);
 -- Employee work experience
 CREATE TABLE employee_experience (
     id BIGSERIAL PRIMARY KEY,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     job_title VARCHAR(255) NOT NULL,
     company_name VARCHAR(255) NOT NULL,
     start_date DATE NOT NULL,
@@ -289,7 +289,7 @@ CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
 CREATE TABLE sender (
     id BIGSERIAL PRIMARY KEY,
     types VARCHAR(50) NOT NULL CHECK (types IN (
-        'main_provider', 'local_authority', 
+        'main_provider', 'local_authority',
         'particular_party', 'healthcare_institution'
     )),
     name VARCHAR(60) NOT NULL,
@@ -298,7 +298,7 @@ CREATE TABLE sender (
     place VARCHAR(20) NULL,
     land VARCHAR(20) NULL,
     kvknumber VARCHAR(20) NULL,
-    btwnumber VARCHAR(20) NULL, 
+    btwnumber VARCHAR(20) NULL,
     phone_number VARCHAR(20) NULL,
     client_number VARCHAR(20) NULL,
     email_address VARCHAR(20) NULL,
@@ -405,7 +405,7 @@ CREATE TABLE intake_forms (
 
 -- Main client details table
 CREATE TABLE client_details (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     intake_form_id BIGINT NULL REFERENCES intake_forms(id) ON DELETE SET NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -413,7 +413,7 @@ CREATE TABLE client_details (
     "identity" BOOLEAN NOT NULL DEFAULT FALSE,
     "status" VARCHAR(20) NULL CHECK (status IN ('In Care', 'On Waiting List', 'Out Of Care')) DEFAULT 'On Waiting List',
     bsn VARCHAR(50) NULL,
-    bsn_verified_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    bsn_verified_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     source VARCHAR(100) NULL,
     birthplace VARCHAR(100) NULL,
     email VARCHAR(100) NOT NULL,
@@ -454,7 +454,7 @@ CREATE TABLE client_details (
     living_situation VARCHAR(50) NULL CHECK (living_situation IN ('home', 'foster_care', 'youth_care_institution', 'other')),
     living_situation_notes TEXT NULL,
 
-    -- Risks 
+    -- Risks
     risk_aggressive_behavior BOOLEAN DEFAULT FALSE,
     risk_suicidal_selfharm BOOLEAN DEFAULT FALSE,
     risk_substance_abuse BOOLEAN DEFAULT FALSE,
@@ -475,7 +475,7 @@ CREATE INDEX client_details_location_id_idx ON client_details(location_id);
 -- Client status history tracking
 CREATE TABLE client_status_history (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     old_status VARCHAR(50),
     new_status VARCHAR(50) NOT NULL,
     changed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -489,7 +489,7 @@ CREATE INDEX idx_client_status_history_changed_at ON client_status_history(chang
 -- Scheduled status changes
 CREATE TABLE scheduled_status_changes (
     id SERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     new_status VARCHAR(50) NULL,
     reason TEXT,
     scheduled_date DATE NULL,
@@ -500,7 +500,7 @@ CREATE TABLE scheduled_status_changes (
 CREATE TABLE client_diagnosis (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(50) NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     diagnosis_code VARCHAR(10) NOT NULL,
     description TEXT NOT NULL,
     severity VARCHAR(50) NULL,
@@ -525,7 +525,7 @@ CREATE INDEX contact_relationship_soft_delete_idx ON contact_relationship(soft_d
 -- Client emergency contacts
 CREATE TABLE client_emergency_contact (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     first_name VARCHAR(50) NULL,
     last_name VARCHAR(100) NULL,
     email VARCHAR(100) NULL,
@@ -546,7 +546,7 @@ CREATE INDEX client_emergency_contact_client_id_idx ON client_emergency_contact(
 CREATE TABLE client_documents (
     id BIGSERIAL PRIMARY KEY,
     attachment_uuid UUID NULL REFERENCES attachment_file("uuid") ON DELETE SET NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     label VARCHAR(100) NOT NULL CHECK (label IN (
         'registration_form', 'intake_form', 'consent_form',
         'risk_assessment', 'self_reliance_matrix', 'force_inventory',
@@ -568,7 +568,7 @@ CREATE TABLE client_medication (
     notes TEXT NULL,
     self_administered BOOLEAN NOT NULL DEFAULT TRUE,
     slots JSONB NULL DEFAULT '[]',
-    administered_by_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    administered_by_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
@@ -600,9 +600,9 @@ CREATE TABLE contract (
     hours_type VARCHAR(20) NULL DEFAULT NULL CHECK (hours_type IN ('weekly', 'all_period') OR hours_type IS NULL),
     care_name VARCHAR(255) NOT NULL,
     care_type VARCHAR(20) NOT NULL CHECK (care_type IN ('ambulante', 'accommodation')),
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE, 
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL,
-    attachment_ids UUID[] NOT NULL DEFAULT '{}',  
+    attachment_ids UUID[] NOT NULL DEFAULT '{}',
     financing_act VARCHAR(50) NOT NULL CHECK (financing_act IN ('WMO', 'ZVW', 'WLZ', 'JW', 'WPG')) DEFAULT 'WMO',
     financing_option VARCHAR(50) NOT NULL CHECK (financing_option IN ('ZIN', 'PGB')) DEFAULT 'PGB',
     departure_reason VARCHAR(255) NULL,
@@ -621,7 +621,7 @@ CREATE TABLE contract_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     contract_id BIGINT NOT NULL,
     operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
-    changed_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    changed_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values JSONB NULL,
     new_values JSONB NULL,
@@ -633,9 +633,9 @@ CREATE INDEX idx_contract_audit_changed_at ON contract_audit(changed_at);
 CREATE INDEX idx_contract_audit_operation ON contract_audit(operation);
 
 -- Contract audit trigger function
-CREATE OR REPLACE FUNCTION contract_audit_trigger_func() 
-RETURNS TRIGGER AS $$ 
-DECLARE 
+CREATE OR REPLACE FUNCTION contract_audit_trigger_func()
+RETURNS TRIGGER AS $$
+DECLARE
     old_row JSONB;
     new_row JSONB;
     changed_fields TEXT[] := '{}';
@@ -654,31 +654,31 @@ BEGIN
         INSERT INTO contract_audit (contract_id, operation, old_values, changed_by, changed_at)
         VALUES (OLD.id, 'DELETE', old_row, current_user_id, CURRENT_TIMESTAMP);
         RETURN OLD;
-        
+
     ELSIF TG_OP = 'INSERT' THEN
         new_row := to_jsonb(NEW);
         INSERT INTO contract_audit (contract_id, operation, new_values, changed_by, changed_at)
         VALUES (NEW.id, 'INSERT', new_row, current_user_id, CURRENT_TIMESTAMP);
         RETURN NEW;
-        
+
     ELSIF TG_OP = 'UPDATE' THEN
         old_row := to_jsonb(OLD);
         new_row := to_jsonb(NEW);
-        
+
         FOR field_name IN SELECT jsonb_object_keys(new_row) LOOP
             IF old_row->>field_name IS DISTINCT FROM new_row->>field_name THEN
                 changed_fields := array_append(changed_fields, field_name);
             END IF;
         END LOOP;
-        
-        IF array_length(changed_fields, 1) > 0 AND 
+
+        IF array_length(changed_fields, 1) > 0 AND
            NOT (array_length(changed_fields, 1) = 1 AND 'updated_at' = ANY(changed_fields)) THEN
             INSERT INTO contract_audit (contract_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
             VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields, current_user_id, CURRENT_TIMESTAMP);
         END IF;
         RETURN NEW;
     END IF;
-    
+
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -736,7 +736,7 @@ CREATE INDEX provision_contract_id_idx ON provision(contract_id);
 
 CREATE TABLE framework_agreement (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     agreement_details TEXT NOT NULL,
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -760,7 +760,7 @@ CREATE TABLE invoice (
     total_amount DECIMAL(20,2) NOT NULL DEFAULT 0,
     pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     extra_content JSONB NULL DEFAULT '{}',
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL,
     warning_count INTEGER NOT NULL DEFAULT 0,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -776,7 +776,7 @@ CREATE TABLE invoice_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     invoice_id BIGINT NOT NULL,
     operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
-    changed_by BIGINT REFERENCES employee_profile(id) ON DELETE SET NULL,
+    changed_by UUID REFERENCES employee_profile(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values JSONB NULL,
     new_values JSONB NULL,
@@ -819,21 +819,21 @@ BEGIN
     ELSIF TG_OP = 'UPDATE' THEN
         old_row := to_jsonb(OLD);
         new_row := to_jsonb(NEW);
-        
+
         FOR field_name IN SELECT jsonb_object_keys(new_row) LOOP
             IF old_row->>field_name IS DISTINCT FROM new_row->>field_name THEN
                 changed_fields_arr := array_append(changed_fields_arr, field_name);
             END IF;
         END LOOP;
-        
+
         IF array_length(changed_fields_arr, 1) > 0 AND NOT (array_length(changed_fields_arr, 1) = 1 AND 'updated_at' = ANY(changed_fields_arr)) THEN
             INSERT INTO invoice_audit (invoice_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
             VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields_arr, current_employee_id, CURRENT_TIMESTAMP);
         END IF;
-        
+
         RETURN NEW;
     END IF;
-    
+
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -856,7 +856,7 @@ CREATE TABLE invoice_payment_history (
     payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
     payment_reference VARCHAR(100) NULL,
     notes TEXT NULL,
-    recorded_by BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    recorded_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -1252,7 +1252,7 @@ VALUES
 -- Client maturity matrix assessments
 CREATE TABLE client_maturity_matrix_assessment (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     maturity_matrix_id BIGINT NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
@@ -1297,8 +1297,8 @@ CREATE TABLE care_plans (
     id BIGSERIAL PRIMARY KEY,
     assessment_id BIGINT NOT NULL REFERENCES client_maturity_matrix_assessment(id) ON DELETE CASCADE,
     generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    generated_by_employee_id BIGINT REFERENCES employee_profile(id),
-    approved_by_employee_id BIGINT REFERENCES employee_profile(id),
+    generated_by_employee_id UUID REFERENCES employee_profile(id),
+    approved_by_employee_id UUID REFERENCES employee_profile(id),
     approved_at TIMESTAMP,
     status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending_approval', 'approved', 'active', 'completed', 'discontinued')),
     assessment_summary TEXT NOT NULL,
@@ -1331,7 +1331,7 @@ CREATE TABLE care_plan_actions (
     action_description TEXT NOT NULL,
     is_completed BOOLEAN NOT NULL DEFAULT FALSE,
     completed_at TIMESTAMP,
-    completed_by_employee_id BIGINT REFERENCES employee_profile(id),
+    completed_by_employee_id UUID REFERENCES employee_profile(id),
     notes TEXT,
     sort_order INT NOT NULL DEFAULT 0
 );
@@ -1346,7 +1346,7 @@ CREATE TABLE care_plan_interventions (
     last_completed_date DATE,
     total_completions INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Care plan metrics
@@ -1407,7 +1407,7 @@ CREATE TABLE care_plan_reports (
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
     report_type VARCHAR(50) NOT NULL CHECK (report_type IN ('progress', 'concern', 'achievement', 'modification')),
     report_content TEXT NOT NULL,
-    created_by_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+    created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id),
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1420,7 +1420,7 @@ CREATE TABLE care_plan_reports (
 -- Incident reports
 CREATE TABLE incident (
     id BIGSERIAL PRIMARY KEY,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     location_id BIGINT NOT NULL REFERENCES location(id) ON DELETE CASCADE,
     reporter_involvement VARCHAR(100) NOT NULL CHECK (reporter_involvement IN (
         'directly_involved', 'witness', 'found_afterwards', 'alarmed'
@@ -1472,7 +1472,7 @@ CREATE TABLE incident (
     other_desc VARCHAR(100) NULL,
     additional_appointments TEXT NULL DEFAULT '',
     employee_absenteeism VARCHAR(100) NOT NULL DEFAULT '',
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     soft_delete BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1488,8 +1488,8 @@ CREATE INDEX incident_soft_delete_idx ON incident(soft_delete);
 -- Employee assignments
 CREATE TABLE assignment (
     id BIGSERIAL PRIMARY KEY,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     start_datetime TIMESTAMPTZ NOT NULL,
     end_datetime TIMESTAMPTZ NOT NULL,
     "status" VARCHAR(50) NOT NULL CHECK (status IN ('Confirmed', 'Pending', 'Cancelled')),
@@ -1502,8 +1502,8 @@ CREATE INDEX assignment_client_id_idx ON assignment(client_id);
 -- Assigned employees to clients
 CREATE TABLE assigned_employee (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     role VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
@@ -1515,11 +1515,11 @@ CREATE INDEX assigned_employee_employee_id_idx ON assigned_employee(employee_id)
 -- Progress reports
 CREATE TABLE progress_report (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     date TIMESTAMPTZ NOT NULL,
     title VARCHAR(50) NULL,
     report_text TEXT NOT NULL,
-    employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     type VARCHAR(50) NOT NULL CHECK (type IN (
         'morning_report', 'evening_report', 'night_report', 'shift_report',
         'one_to_one_report', 'process_report', 'contact_journal', 'other'
@@ -1538,7 +1538,7 @@ CREATE INDEX progress_report_created_idx ON progress_report(created_at DESC);
 CREATE TABLE ai_generated_reports (
     id BIGSERIAL PRIMARY KEY,
     report_text TEXT NOT NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1551,14 +1551,14 @@ CREATE TABLE ai_generated_reports (
 -- Employee schedules
 CREATE TABLE schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+    employee_id UUID NOT NULL REFERENCES employee_profile(id),
     color VARCHAR(20) DEFAULT '#0000FF',
     location_id BIGINT NOT NULL REFERENCES location(id),
     location_shift_id BIGINT NULL REFERENCES location_shift(id),
     is_custom BOOLEAN NOT NULL DEFAULT FALSE,
     start_datetime TIMESTAMP NOT NULL,
     end_datetime TIMESTAMP NOT NULL,
-    created_by_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+    created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT valid_timeframe CHECK (end_datetime > start_datetime)
@@ -1567,12 +1567,12 @@ CREATE TABLE schedules (
 -- Appointment templates
 CREATE TABLE appointment_templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+    creator_employee_id UUID NOT NULL REFERENCES employee_profile(id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
     description TEXT,
-    color VARCHAR(20) DEFAULT '#0000FF', 
+    color VARCHAR(20) DEFAULT '#0000FF',
     recurrence_type VARCHAR(50) DEFAULT 'DAILY' CHECK (recurrence_type IN ('DAILY', 'WEEKLY', 'MONTHLY')),
     recurrence_interval INT NULL,
     recurrence_end_date DATE,
@@ -1584,7 +1584,7 @@ CREATE TABLE appointment_templates (
 CREATE TABLE scheduled_appointments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     appointment_templates_id UUID NULL REFERENCES appointment_templates(id) ON DELETE CASCADE,
-    creator_employee_id BIGINT NULL REFERENCES employee_profile(id),
+    creator_employee_id UUID NULL REFERENCES employee_profile(id),
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
@@ -1592,7 +1592,7 @@ CREATE TABLE scheduled_appointments (
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
     color VARCHAR(20) DEFAULT '#0000FF',
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
-    confirmed_by_employee_id BIGINT REFERENCES employee_profile(id),
+    confirmed_by_employee_id UUID REFERENCES employee_profile(id),
     confirmed_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -1605,7 +1605,7 @@ CREATE INDEX idx_scheduled_appointments_template_id ON scheduled_appointments (a
 CREATE TABLE appointment_participants (
     appointment_participant_id BIGSERIAL PRIMARY KEY,
     appointment_id UUID NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
-    employee_id BIGINT NOT NULL REFERENCES employee_profile(id),
+    employee_id UUID NOT NULL REFERENCES employee_profile(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (appointment_id, employee_id)
 );
@@ -1614,7 +1614,7 @@ CREATE TABLE appointment_participants (
 CREATE TABLE appointment_clients (
     appointment_client_id BIGSERIAL PRIMARY KEY,
     appointment_id UUID NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
-    client_id BIGINT NOT NULL REFERENCES client_details(id),
+    client_id UUID NOT NULL REFERENCES client_details(id),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (appointment_id, client_id)
 );
@@ -1626,7 +1626,7 @@ CREATE TABLE appointment_clients (
 -- Appointment cards
 CREATE TABLE appointment_card (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE UNIQUE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE UNIQUE,
     general_information TEXT[] NOT NULL DEFAULT '{}',
     important_contacts TEXT[] NOT NULL DEFAULT '{}',
     household_info TEXT[] NOT NULL DEFAULT '{}',
@@ -1729,7 +1729,7 @@ CREATE TABLE registration_form (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
-    processed_by_employee_id BIGINT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    processed_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     intake_appointment_datetime TIMESTAMPTZ NULL,
     intake_appointment_location VARCHAR(255) NULL,
     addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement'))
@@ -1738,7 +1738,7 @@ CREATE TABLE registration_form (
 -- Collaboration agreements
 CREATE TABLE collaboration_agreement (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     client_full_name VARCHAR(100) NOT NULL,
     client_skn VARCHAR(100) NOT NULL,
     client_number VARCHAR(100) NOT NULL,
@@ -1762,7 +1762,7 @@ CREATE INDEX collaboration_agreement_client_id_idx ON collaboration_agreement(cl
 -- Risk assessments
 CREATE TABLE risk_assessment (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     date_of_birth DATE NOT NULL,
     gender VARCHAR(100) NOT NULL,
     date_of_intake TIMESTAMPTZ NOT NULL,
@@ -1827,7 +1827,7 @@ CREATE TABLE consent_declaration (
     contact_person_name VARCHAR(255) NOT NULL,
     contact_phone_number VARCHAR(20) NOT NULL,
     contact_email VARCHAR(254) NOT NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL
@@ -1838,7 +1838,7 @@ CREATE INDEX consent_declaration_client_id_idx ON consent_declaration(client_id)
 -- Youth care intake forms
 CREATE TABLE youth_care_intake (
     id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     date_of_birth DATE NOT NULL,
     gender VARCHAR(30) NOT NULL,
@@ -1909,7 +1909,7 @@ CREATE TABLE data_sharing_statement (
     contact_person_name VARCHAR(255) NOT NULL,
     contact_phone_number VARCHAR(20) NOT NULL,
     contact_email VARCHAR(254) NOT NULL,
-    client_id BIGINT NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -1918,7 +1918,7 @@ CREATE TABLE data_sharing_statement (
 -- UTILITY TABLES
 -- ==========================================
 
--- Template items for document generation for custom data fields to include in invoice generation 
+-- Template items for document generation for custom data fields to include in invoice generation
 CREATE TABLE template_items (
     id BIGSERIAL PRIMARY KEY,
     item_tag VARCHAR(255) NOT NULL,

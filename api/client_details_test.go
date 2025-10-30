@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 	"maicare_go/util"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
@@ -24,7 +25,6 @@ import (
 )
 
 func createRandomAttachmentFile(t *testing.T) db.AttachmentFile {
-
 	tagvalue := "test"
 	arg := db.CreateAttachmentParams{
 		Uuid: uuid.New(),
@@ -115,7 +115,6 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 }
 
 func TestCreateClientApi(t *testing.T) {
-
 	sender := createRandomSender(t)
 	location := createRandomLocation(t)
 	employee, user := createRandomEmployee(t)
@@ -284,7 +283,6 @@ func TestListClient(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestGetClientDetails(t *testing.T) {
@@ -329,7 +327,6 @@ func TestGetClientDetails(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
 
 func TestUpdateClientDetailsApi(t *testing.T) {
@@ -393,6 +390,7 @@ func TestUpdateClientDetailsApi(t *testing.T) {
 }
 
 func TestSetClientProfilePictureApi(t *testing.T) {
+	_, user := createRandomEmployee(t)
 	client := createRandomClientDetails(t)
 	file := createRandomAttachmentFile(t)
 	testCases := []struct {
@@ -404,7 +402,7 @@ func TestSetClientProfilePictureApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				reqBody := clientp.SetClientProfilePictureRequest{
@@ -492,8 +490,7 @@ func TestAddClientDocumentApi(t *testing.T) {
 	}
 }
 
-func addRandomClientDocument(t *testing.T, ClientID int64) db.ClientDocument {
-
+func addRandomClientDocument(t *testing.T, ClientID uuid.UUID) db.ClientDocument {
 	attachment := createRandomAttachmentFile(t)
 
 	arg := db.AddClientDocumentTxParams{
@@ -634,7 +631,6 @@ func TestGetMissingClientDocumentsApi(t *testing.T) {
 				require.NotEmpty(t, clientRes.Data)
 				require.NotEmpty(t, clientRes.Data.MissingDocs)
 				require.NotContains(t, clientRes.Data.MissingDocs, clientDoc.Label)
-
 			},
 		},
 	}
@@ -693,7 +689,7 @@ func TestUpdateClientStatusApi(t *testing.T) {
 		{
 			name: "OK With Scheduling",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				scheduledTime := time.Date(2028, 1, 2, 0, 0, 0, 0, time.UTC)

@@ -3,12 +3,13 @@ package invoice
 import (
 	"context"
 	"database/sql"
-
 	"errors"
 	"fmt"
+	"time"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"time"
+	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -16,14 +17,8 @@ import (
 	"go.uber.org/zap"
 )
 
-type InvoiceParams struct {
-	ClientID  int64     `json:"client_id"`
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
-}
-
 type InvoiceData struct {
-	ClientID          int64            `json:"client_id"`
+	ClientID          uuid.UUID        `json:"client_id"`
 	SenderID          int64            `json:"sender_id"`
 	InvoiceDate       time.Time        `json:"invoice_date"`
 	InvoiceNumber     string           `json:"invoice_number"`
@@ -31,19 +26,6 @@ type InvoiceData struct {
 	PreVatTotalAmount float64          `json:"pre_vat_total"` // Total before VAT
 	TotalAmount       float64          `json:"total_amount"`  // Total amount for the invoice
 	InvoiceDetails    []InvoiceDetails `json:"invoice_details"`
-}
-
-// InvoiceDetails contains details for each contract in the invoice
-type InvoiceDetails struct {
-	ContractID    int64           `json:"contract_id"`
-	ContractType  string          `json:"contract_name"`
-	Periods       []InvoicePeriod `json:"periods"`
-	PreVatTotal   float64         `json:"pre_vat_total_price"`
-	Total         float64         `json:"total_price"`
-	Vat           float64         `json:"vat"`
-	Price         float64         `json:"price"`
-	PriceTimeUnit string          `json:"price_time_unit"`
-	Warnings      []string        `json:"warnings"`
 }
 
 type InvoicePeriod struct {
@@ -69,56 +51,33 @@ func (s *invoiceService) GenerateInvoiceNumber(ctx context.Context) (string, int
 	return invoiceNumber, nextSeq, nil
 }
 
-type GenerateInvoiceRequest struct {
-	ClientID  int64
-	StartDate time.Time
-	EndDate   time.Time
-}
-
-type GenerateInvoiceResult struct {
-	ID              int64
-	InvoiceNumber   string
-	IssueDate       time.Time
-	DueDate         time.Time
-	Status          string
-	InvoiceDetails  []InvoiceDetails
-	TotalAmount     float64
-	PdfAttachmentID *uuid.UUID
-	ExtraContent    []byte
-	ClientID        int64
-	SenderID        *int64
-	UpdatedAt       time.Time
-	CreatedAt       time.Time
-}
-
-func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResult, int64, error) {
-
+func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context.Context) (*GenerateInvoiceResponse, int64, error) {
 	clientSender, err := s.Store.GetClientSender(ctx, req.ClientID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateInvoice", "No sender found for client",
-				zap.Int64("client_id", req.ClientID))
+				zap.String("client_id", req.ClientID.String()))
 			return nil, 0, fmt.Errorf("no sender found for client %d", req.ClientID)
 		}
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Database error during sender retrieval",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
 		return nil, 0, fmt.Errorf("failed to get client sender: %v", err)
 	}
 
 	var warningCount int64
-	if req.ClientID <= 0 {
+	if req.ClientID == uuid.Nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateInvoice", "Invalid client ID",
-			zap.Int64("client_id", req.ClientID))
-		return nil, warningCount, fmt.Errorf("invalid client ID: %d", req.ClientID)
+			zap.String("client_id", req.ClientID.String()))
+		return nil, warningCount, fmt.Errorf("invalid client ID: %s", req.ClientID.String())
 	}
 	if req.StartDate.IsZero() || req.EndDate.IsZero() {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateInvoice", "Start date and end date must be specified",
-			zap.Int64("client_id", req.ClientID))
+			zap.String("client_id", req.ClientID.String()))
 		return nil, warningCount, fmt.Errorf("start date and end date must be specified")
 	}
 	if req.EndDate.Before(req.StartDate) {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateInvoice", "End date cannot be before start date",
-			zap.Int64("client_id", req.ClientID))
+			zap.String("client_id", req.ClientID.String()))
 		return nil, warningCount, fmt.Errorf("end date cannot be before start date")
 	}
 
@@ -130,19 +89,19 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Database error during contract retrieval",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
-		return nil, warningCount, fmt.Errorf("failed to get client contracts for client %d: %w", req.ClientID, err)
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
+		return nil, warningCount, fmt.Errorf("failed to get client contracts for client %s: %w", req.ClientID.String(), err)
 	}
 	if len(contracts) == 0 {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateInvoice", "No contracts found for client",
-			zap.Int64("client_id", req.ClientID))
-		return nil, warningCount, fmt.Errorf("no contracts found for client %d", req.ClientID)
+			zap.String("client_id", req.ClientID.String()))
+		return nil, warningCount, fmt.Errorf("no contracts found for client %s", req.ClientID.String())
 	}
 	var totalInvoiceItems int
 
 	var totalAmount float64
 	var totalPreVat float64
-	var invoice = make([]InvoiceDetails, len(contracts))
+	invoice := make([]InvoiceDetails, len(contracts))
 
 	for i, contract := range contracts {
 		billablePeriods, err := s.Store.GetBillablePeriodsForContract(ctx, db.GetBillablePeriodsForContractParams{
@@ -258,15 +217,15 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 
 	if totalInvoiceItems == 0 {
 		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GenerateInvoice", "No billable items found for client",
-			zap.Int64("client_id", req.ClientID))
-		return nil, warningCount, fmt.Errorf("no billable items found for client %d in the specified date range", req.ClientID)
+			zap.String("client_id", req.ClientID.String()))
+		return nil, warningCount, fmt.Errorf("no billable items found for client %s in the specified date range", req.ClientID.String())
 	}
 
 	invoiceDate := time.Now()
 	invoiceNumber, invoiceSequence, err := s.GenerateInvoiceNumber(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Failed to generate invoice number",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
 		return nil, 0, fmt.Errorf("failed to generate invoice number: %w", err)
 	}
 
@@ -283,7 +242,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 	invoiceDetailsBytes, err := json.Marshal(finalInvoice.InvoiceDetails)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Failed to marshal invoice details",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
 		return nil, 0, fmt.Errorf("failed to marshal invoice details: %v", err)
 	}
 
@@ -294,8 +253,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Failed to fetch invoice template items",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
-
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
 	}
 	if len(extraContent) == 0 {
 		extraContent = map[string]string{}
@@ -304,7 +262,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 	extraContentBytes, err := json.Marshal(extraContent)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Failed to marshal extra content",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
 		return nil, 0, fmt.Errorf("failed to marshal extra content: %v", err)
 	}
 
@@ -323,19 +281,20 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateInvoice", "Failed to create invoice in database",
-			zap.Int64("client_id", req.ClientID), zap.String("error", err.Error()))
+			zap.String("client_id", req.ClientID.String()), zap.String("error", err.Error()))
 		return nil, 0, fmt.Errorf("failed to create invoice in database: %v", err)
 	}
 
-	result := &GenerateInvoiceResult{
+	result := &GenerateInvoiceResponse{
 		ID:              createdInv.ID,
 		InvoiceNumber:   createdInv.InvoiceNumber,
 		IssueDate:       createdInv.IssueDate.Time,
+		DueDate:         createdInv.DueDate.Time,
 		Status:          createdInv.Status,
 		InvoiceDetails:  finalInvoice.InvoiceDetails,
 		TotalAmount:     createdInv.TotalAmount,
 		PdfAttachmentID: createdInv.PdfAttachmentID,
-		ExtraContent:    createdInv.ExtraContent,
+		ExtraContent:    util.ParseJSONToObject(createdInv.ExtraContent),
 		ClientID:        createdInv.ClientID,
 		SenderID:        createdInv.SenderID,
 		UpdatedAt:       createdInv.UpdatedAt.Time,
@@ -375,11 +334,11 @@ func (s *invoiceService) BatchGenerateInvoices(ctx context.Context) error {
 			_, warnings, err := s.GenerateInvoice(req, ctx)
 			if err != nil {
 				s.Logger.LogBusinessEvent(logger.LogLevelError, "BatchGenerateInvoices", "Failed to generate invoice",
-					zap.Int64("client_id", clientID), zap.String("error", err.Error()))
+					zap.String("client_id", clientID.String()), zap.String("error", err.Error()))
 				continue
 			}
 			s.Logger.LogBusinessEvent(logger.LogLevelInfo, "BatchGenerateInvoices", "Successfully generated invoice",
-				zap.Int64("client_id", clientID), zap.Int64("warnings", warnings))
+				zap.String("client_id", clientID.String()), zap.Int64("warnings", warnings))
 		}
 
 	} else {

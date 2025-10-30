@@ -3,7 +3,6 @@ package api
 import "github.com/gin-gonic/gin"
 
 func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
-
 	clientGroup := baseRouter.Group("/clients")
 	clientGroup.Use(server.AuthMiddleware())
 	{
@@ -21,5 +20,4 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	baseRouter.PUT("/contracts/:id", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.UPDATE"), server.UpdateContractApi)
 
 	baseRouter.GET("/contracts/:id/audit", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.VIEW"), server.GetContractAuditLogApi)
-
 }

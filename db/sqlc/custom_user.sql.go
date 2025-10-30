@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,8 +19,8 @@ WHERE id = $1
 `
 
 type CreateTemp2FaSecretParams struct {
-	ID                  int64   `json:"id"`
-	TwoFactorSecretTemp *string `json:"two_factor_secret_temp"`
+	ID                  uuid.UUID `json:"id"`
+	TwoFactorSecretTemp *string   `json:"two_factor_secret_temp"`
 }
 
 func (q *Queries) CreateTemp2FaSecret(ctx context.Context, arg CreateTemp2FaSecretParams) error {
@@ -80,9 +81,9 @@ WHERE id = $1
 `
 
 type Enable2FaParams struct {
-	ID              int64    `json:"id"`
-	TwoFactorSecret *string  `json:"two_factor_secret"`
-	RecoveryCodes   []string `json:"recovery_codes"`
+	ID              uuid.UUID `json:"id"`
+	TwoFactorSecret *string   `json:"two_factor_secret"`
+	RecoveryCodes   []string  `json:"recovery_codes"`
 }
 
 func (q *Queries) Enable2Fa(ctx context.Context, arg Enable2FaParams) error {
@@ -132,7 +133,7 @@ SELECT two_factor_secret_temp FROM custom_user
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetTemp2FaSecret(ctx context.Context, id int64) (*string, error) {
+func (q *Queries) GetTemp2FaSecret(ctx context.Context, id uuid.UUID) (*string, error) {
 	row := q.db.QueryRow(ctx, getTemp2FaSecret, id)
 	var two_factor_secret_temp *string
 	err := row.Scan(&two_factor_secret_temp)
@@ -146,7 +147,7 @@ WHERE cu.email = $1 LIMIT 1
 `
 
 type GetUserByEmailRow struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	Password            string             `json:"password"`
 	LastLogin           pgtype.Timestamptz `json:"last_login"`
 	Email               string             `json:"email"`
@@ -157,7 +158,7 @@ type GetUserByEmailRow struct {
 	TwoFactorSecret     *string            `json:"two_factor_secret"`
 	TwoFactorSecretTemp *string            `json:"two_factor_secret_temp"`
 	RecoveryCodes       []string           `json:"recovery_codes"`
-	EmployeeID          int64              `json:"employee_id"`
+	EmployeeID          uuid.UUID          `json:"employee_id"`
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
@@ -187,7 +188,7 @@ WHERE cu.id = $1 LIMIT 1
 `
 
 type GetUserByIDRow struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	Password            string             `json:"password"`
 	LastLogin           pgtype.Timestamptz `json:"last_login"`
 	Email               string             `json:"email"`
@@ -198,10 +199,10 @@ type GetUserByIDRow struct {
 	TwoFactorSecret     *string            `json:"two_factor_secret"`
 	TwoFactorSecretTemp *string            `json:"two_factor_secret_temp"`
 	RecoveryCodes       []string           `json:"recovery_codes"`
-	EmployeeID          int64              `json:"employee_id"`
+	EmployeeID          uuid.UUID          `json:"employee_id"`
 }
 
-func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i GetUserByIDRow
 	err := row.Scan(
@@ -228,8 +229,8 @@ WHERE id = $1
 `
 
 type UpdatePasswordParams struct {
-	ID       int64  `json:"id"`
-	Password string `json:"password"`
+	ID       uuid.UUID `json:"id"`
+	Password string    `json:"password"`
 }
 
 func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {

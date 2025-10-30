@@ -2,9 +2,10 @@ package email
 
 import (
 	"log"
-	"maicare_go/util"
 	"os"
 	"testing"
+
+	"maicare_go/util"
 )
 
 var testBrevo *BrevoConf
@@ -16,5 +17,4 @@ func TestMain(m *testing.M) {
 	}
 	testBrevo = NewBrevoConf(config.BrevoSenderName, config.BrevoSenderEmail, config.BrevoApiKey)
 	os.Exit(m.Run())
-
 }

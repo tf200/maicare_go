@@ -1,6 +1,10 @@
 package clientp
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // CreateAppointmentCardRequest represents a request to create a new appointment card
 type CreateAppointmentCardRequest struct {
@@ -20,7 +24,7 @@ type CreateAppointmentCardRequest struct {
 // CreateAppointmentCardResponse represents a response to a create appointment card request
 type CreateAppointmentCardResponse struct {
 	ID                     int64     `json:"id"`
-	ClientID               int64     `json:"client_id"`
+	ClientID               uuid.UUID `json:"client_id"`
 	GeneralInformation     []string  `json:"general_information"`
 	ImportantContacts      []string  `json:"important_contacts"`
 	HouseholdInfo          []string  `json:"household_info"`
@@ -40,7 +44,7 @@ type CreateAppointmentCardResponse struct {
 // GetAppointmentCardResponse represents a response to a get appointment card request
 type GetAppointmentCardResponse struct {
 	ID                     int64     `json:"id"`
-	ClientID               int64     `json:"client_id"`
+	ClientID               uuid.UUID `json:"client_id"`
 	GeneralInformation     []string  `json:"general_information"`
 	ImportantContacts      []string  `json:"important_contacts"`
 	HouseholdInfo          []string  `json:"household_info"`
@@ -75,7 +79,7 @@ type UpdateAppointmentCardRequest struct {
 // UpdateAppointmentCardResponse represents a response to an update appointment card request
 type UpdateAppointmentCardResponse struct {
 	ID                     int64     `json:"id"`
-	ClientID               int64     `json:"client_id"`
+	ClientID               uuid.UUID `json:"client_id"`
 	GeneralInformation     []string  `json:"general_information"`
 	ImportantContacts      []string  `json:"important_contacts"`
 	HouseholdInfo          []string  `json:"household_info"`
@@ -93,6 +97,6 @@ type UpdateAppointmentCardResponse struct {
 
 // GenerateAppointmentCardDocumentApiResponse represents a response to generate appointment card document request
 type GenerateAppointmentCardDocumentApiResponse struct {
-	ClientID int64   `json:"client_id"`
-	FileUrl  *string `json:"file_url"`
+	ClientID uuid.UUID `json:"client_id"`
+	FileUrl  *string   `json:"file_url"`
 }

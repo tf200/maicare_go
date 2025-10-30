@@ -3,27 +3,29 @@ package clientp
 import (
 	"context"
 	"encoding/json"
-	db "maicare_go/db/sqlc"
-	"maicare_go/logger"
-	"maicare_go/notification"
-	"maicare_go/pagination"
 	"time"
 
+	db "maicare_go/db/sqlc"
+	"maicare_go/logger"
+	"maicare_go/pagination"
+	"maicare_go/service/notification"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *clientService) GetClientSender(ctx context.Context, clientID int64) (*GetClientSenderResponse, error) {
+func (s *clientService) GetClientSender(ctx context.Context, clientID uuid.UUID) (*GetClientSenderResponse, error) {
 	sender, err := s.Store.GetClientSender(ctx, clientID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientSender", "Failed to get client sender", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientSender", "Failed to get client sender", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
 	var contacts []SenderContact
 	if err := json.Unmarshal(sender.Contacts, &contacts); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientSender", "Failed to unmarshal contacts", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientSender", "Failed to unmarshal contacts", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 	response := &GetClientSenderResponse{
@@ -44,7 +46,7 @@ func (s *clientService) GetClientSender(ctx context.Context, clientID int64) (*G
 	return response, nil
 }
 
-func (s *clientService) CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID int64) (*CreateClientEmergencyContactResponse, error) {
+func (s *clientService) CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID uuid.UUID) (*CreateClientEmergencyContactResponse, error) {
 	arg := db.CreateEmemrgencyContactParams{
 		ClientID:         clientID,
 		FirstName:        req.FirstName,
@@ -60,7 +62,7 @@ func (s *clientService) CreateClientEmergencyContact(ctx context.Context, req Cr
 	}
 	clientEmergencyContact, err := s.Store.CreateEmemrgencyContact(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientEmergencyContact", "Failed to create client emergency contact", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientEmergencyContact", "Failed to create client emergency contact", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -83,7 +85,7 @@ func (s *clientService) CreateClientEmergencyContact(ctx context.Context, req Cr
 	return response, nil
 }
 
-func (s *clientService) ListClientEmergencyContacts(ctx *gin.Context, req ListClientEmergencyContactsRequest, clientID int64) (*pagination.Response[ListClientEmergencyContactsResponse], error) {
+func (s *clientService) ListClientEmergencyContacts(ctx *gin.Context, req ListClientEmergencyContactsRequest, clientID uuid.UUID) (*pagination.Response[ListClientEmergencyContactsResponse], error) {
 	params := req.GetParams()
 	contacts, err := s.Store.ListEmergencyContacts(ctx, db.ListEmergencyContactsParams{
 		ClientID: clientID,
@@ -92,7 +94,7 @@ func (s *clientService) ListClientEmergencyContacts(ctx *gin.Context, req ListCl
 		Search:   req.Search,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientEmergencyContacts", "Failed to list client emergency contacts", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientEmergencyContacts", "Failed to list client emergency contacts", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -200,7 +202,7 @@ func (s *clientService) DeleteClientEmergencyContact(ctx context.Context, contac
 	return &DeleteClientEmergencyContactResponse{ID: contact.ID}, nil
 }
 
-func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEmployeeRequest, clientID int64) (*AssignEmployeeResponse, error) {
+func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEmployeeRequest, clientID uuid.UUID) (*AssignEmployeeResponse, error) {
 	arg := db.AssignEmployeeParams{
 		ClientID:   clientID,
 		EmployeeID: req.EmployeeID,
@@ -209,7 +211,7 @@ func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEm
 	}
 	assign, err := s.Store.AssignEmployee(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignEmployeeToClient", "Failed to assign employee to client", zap.Int64("client_id", clientID), zap.Int64("employee_id", req.EmployeeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignEmployeeToClient", "Failed to assign employee to client", zap.String("client_id", clientID.String()), zap.String("employee_id", req.EmployeeID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -220,8 +222,8 @@ func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEm
 		ClientLocation:  assign.ClientLocationName,
 	}
 
-	err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
-		RecipientUserIDs: []int64{assign.UserID},
+	err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+		RecipientUserIDs: []uuid.UUID{assign.UserID},
 		Type:             notification.TypeNewClientAssignment,
 		Data: notification.NotificationData{
 			NewClientAssignment: &notificationData,
@@ -230,7 +232,7 @@ func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEm
 		Message:   notificationData.NewClientAssignmentMessage(),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignEmployeeToClient", "Failed to enqueue notification task", zap.Int64("client_id", clientID), zap.Int64("employee_id", req.EmployeeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AssignEmployeeToClient", "Failed to enqueue notification task", zap.String("client_id", clientID.String()), zap.String("employee_id", req.EmployeeID.String()), zap.Error(err))
 	}
 
 	response := &AssignEmployeeResponse{
@@ -244,7 +246,7 @@ func (s *clientService) AssignEmployeeToClient(ctx context.Context, req AssignEm
 	return response, nil
 }
 
-func (s *clientService) ListAssignedEmployees(ctx *gin.Context, req ListAssignedEmployeesRequest, clientID int64) (*pagination.Response[ListAssignedEmployeesResponse], error) {
+func (s *clientService) ListAssignedEmployees(ctx *gin.Context, req ListAssignedEmployeesRequest, clientID uuid.UUID) (*pagination.Response[ListAssignedEmployeesResponse], error) {
 	params := req.GetParams()
 	assignedEmployees, err := s.Store.ListAssignedEmployees(ctx, db.ListAssignedEmployeesParams{
 		ClientID: clientID,
@@ -252,7 +254,7 @@ func (s *clientService) ListAssignedEmployees(ctx *gin.Context, req ListAssigned
 		Offset:   params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAssignedEmployees", "Failed to list assigned employees", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAssignedEmployees", "Failed to list assigned employees", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -329,10 +331,10 @@ func (s *clientService) DeleteAssignedEmployee(ctx context.Context, assignmentID
 	return &DeleteAssignedEmployeeResponse{ID: assignment.ID}, nil
 }
 
-func (s *clientService) GetClientRelatedEmail(ctx context.Context, clientID int64) (*GetClientRelatedEmailsResponse, error) {
+func (s *clientService) GetClientRelatedEmail(ctx context.Context, clientID uuid.UUID) (*GetClientRelatedEmailsResponse, error) {
 	email, err := s.Store.GetClientRelatedEmails(ctx, clientID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientRelatedEmail", "Failed to get client related email", zap.Int64("client_id", clientID), zap.Error(err))
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientRelatedEmail", "Failed to get client related email", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 

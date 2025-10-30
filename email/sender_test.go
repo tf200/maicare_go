@@ -32,11 +32,9 @@ func TestSendCredentials(t *testing.T) {
 	// require.NoError(t, err)
 
 	err = testBrevo.SendCredentials(context.Background(), []string{"q.zeeman@diversitaszorg.nl"}, Credentials{
-		Name:     "Quinten Zeeman",
-		Email:    "q.zeeman@diversitaszorg.nl",
+		Name:  "Quinten Zeeman",
+		Email: "q.zeeman@diversitaszorg.nl",
 
-
-		
 		Password: "Secr3tPass!",
 	})
 	t.Log(err)
@@ -49,7 +47,6 @@ func TestSendCredentials(t *testing.T) {
 	// })
 	// t.Log(err)
 	// require.NoError(t, err)
-
 }
 
 func TestSendIncident(t *testing.T) {

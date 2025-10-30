@@ -924,7 +924,7 @@ RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gen
 type UpdateRegistrationFormStatusParams struct {
 	ID                        int64              `json:"id"`
 	FormStatus                string             `json:"form_status"`
-	ProcessedByEmployeeID     *int64             `json:"processed_by_employee_id"`
+	ProcessedByEmployeeID     *uuid.UUID         `json:"processed_by_employee_id"`
 	IntakeAppointmentDatetime pgtype.Timestamptz `json:"intake_appointment_datetime"`
 	IntakeAppointmentLocation *string            `json:"intake_appointment_location"`
 	AddmissionType            *string            `json:"addmission_type"`

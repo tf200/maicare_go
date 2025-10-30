@@ -264,7 +264,6 @@ func TestSetEmployeeProfilePictureTx(t *testing.T) {
 	result, err := store.SetEmployeeProfilePictureTx(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, result)
-
 }
 
 func TestCountEmployeeProfile(t *testing.T) {
@@ -409,7 +408,6 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 }
 
 func addRandomEducation(t *testing.T, employeeID int64) EmployeeEducation {
-
 	educationArg := AddEducationToEmployeeProfileParams{
 		EmployeeID:      employeeID,
 		InstitutionName: util.RandomString(5),
@@ -449,7 +447,6 @@ func TestListEducations(t *testing.T) {
 	educations, err := testQueries.ListEducations(context.Background(), employee.ID)
 	require.NoError(t, err)
 	require.Len(t, educations, numEducations)
-
 }
 
 func TestUpdateEducation(t *testing.T) {
@@ -480,7 +477,6 @@ func TestDeleteEmployeeEducation(t *testing.T) {
 }
 
 func addRandomExperience(t *testing.T, employeeID int64) EmployeeExperience {
-
 	experienceArg := AddEmployeeExperienceParams{
 		EmployeeID:  employeeID,
 		JobTitle:    util.RandomString(5),
@@ -537,7 +533,6 @@ func TestUpdateEmployeeExperience(t *testing.T) {
 	require.NotEmpty(t, updatedExperience)
 	require.NotEqual(t, experience.JobTitle, updatedExperience.JobTitle)
 	require.NotEqual(t, experience.CompanyName, updatedExperience.CompanyName)
-
 }
 
 func TestDeleteEmployeeExperience(t *testing.T) {
@@ -610,7 +605,6 @@ func TestDeleteEmployeeCertification(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, deletedCert)
 	require.Equal(t, certifcation.ID, deletedCert.ID)
-
 }
 
 func TestSearchEmployeesByNameOrEmail(t *testing.T) {
@@ -622,5 +616,4 @@ func TestSearchEmployeesByNameOrEmail(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, searchedEmployees)
 	require.Len(t, searchedEmployees, 10)
-
 }

@@ -1,6 +1,10 @@
 package token
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type TokenType string
 
@@ -15,6 +19,6 @@ func (t TokenType) String() string {
 }
 
 type Maker interface {
-	CreateToken(user_id int64, employee_id int64, duration time.Duration, tokenType TokenType) (string, *Payload, error)
+	CreateToken(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType) (string, *Payload, error)
 	VerifyToken(token string) (*Payload, error)
 }

@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"maicare_go/notification"
+
+	"maicare_go/service/notification"
 
 	"github.com/hibiken/asynq"
 )
@@ -27,7 +28,8 @@ const (
 func (c *AsynqClient) EnqueueEmailDelivery(
 	payload EmailDeliveryPayload,
 	ctx context.Context,
-	opts ...asynq.Option) error {
+	opts ...asynq.Option,
+) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("json.Marshal failed: %v", err)
@@ -39,13 +41,13 @@ func (c *AsynqClient) EnqueueEmailDelivery(
 	}
 	log.Printf("task enqueued: id=%s queue=%s", info.ID, info.Queue)
 	return nil
-
 }
 
 func (c *AsynqClient) EnqueueIncident(
 	payload IncidentPayload,
 	ctx context.Context,
-	opts ...asynq.Option) error {
+	opts ...asynq.Option,
+) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("json.Marshal failed: %v", err)
@@ -62,8 +64,8 @@ func (c *AsynqClient) EnqueueIncident(
 func (c *AsynqClient) EnqueueNotificationTask(
 	ctx context.Context,
 	payload notification.NotificationPayload,
-	opts ...asynq.Option) error {
-
+	opts ...asynq.Option,
+) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("EnqueueNotificationTask: json.Marshal failed: %w", err)
@@ -87,8 +89,8 @@ func (c *AsynqClient) EnqueueNotificationTask(
 func (c *AsynqClient) EnqueueAppointmentTask(
 	ctx context.Context,
 	payload AppointmentPayload,
-	opts ...asynq.Option) error {
-
+	opts ...asynq.Option,
+) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("EnqueueAppointmentTask: json.Marshal failed: %w", err)
@@ -112,8 +114,8 @@ func (c *AsynqClient) EnqueueAppointmentTask(
 func (c *AsynqClient) EnqueueAcceptedRegistration(
 	ctx context.Context,
 	payload AcceptedRegistrationFormPayload,
-	opts ...asynq.Option) error {
-
+	opts ...asynq.Option,
+) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("EnqueueAcceptedRegistration: json.Marshal failed: %w", err)

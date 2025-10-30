@@ -2,22 +2,23 @@ package clientp
 
 import (
 	"context"
+	"time"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"maicare_go/notification"
 	"maicare_go/pagination"
-	"maicare_go/pdf"
+	"maicare_go/service/notification"
+	"maicare_go/service/pdf"
 	"maicare_go/util"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID int64) (*CreateIncidentResponse, error) {
-
+func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID uuid.UUID) (*CreateIncidentResponse, error) {
 	arg := db.CreateIncidentParams{
 		EmployeeID:              req.EmployeeID,
 		LocationID:              req.LocationID,
@@ -70,7 +71,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.Int64("IncidentID", incident.ID))
 
-	err = s.AsynqClient.EnqueueIncident(aclient.IncidentPayload{
+	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -124,9 +125,8 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 	receipients, err := s.Store.GetAllAdminUsers(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to get admin users for incident notification", zap.Error(err))
-
 	} else {
-		var recipientUserIDs []int64
+		var recipientUserIDs []uuid.UUID
 		for _, user := range receipients {
 			recipientUserIDs = append(recipientUserIDs, user.ID)
 		}
@@ -143,7 +143,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 				ClientLastName:     util.DerefString(incident.ClientLastName),
 				SeverityOfIncident: incident.SeverityOfIncident,
 			}
-			err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+			err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 				RecipientUserIDs: recipientUserIDs,
 				Type:             notification.TypeNewClientAssignment,
 				Data: notification.NotificationData{
@@ -208,7 +208,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 	return response, nil
 }
 
-func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest, clientID int64) (*pagination.Response[ListIncidentsResponse], error) {
+func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest, clientID uuid.UUID) (*pagination.Response[ListIncidentsResponse], error) {
 	params := req.GetParams()
 
 	incidents, err := s.Store.ListIncidents(ctx, db.ListIncidentsParams{
@@ -222,7 +222,7 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 	}
 
 	if len(incidents) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.Int64("ClientID", clientID))
+		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.String("ClientID", clientID.String()))
 		pag := pagination.NewResponse(ctx, req.Request, []ListIncidentsResponse{}, 0)
 		return &pag, nil
 	}
@@ -400,7 +400,7 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.Int64("IncidentID", incident.ID))
-	err = s.AsynqClient.EnqueueIncident(aclient.IncidentPayload{
+	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		EmployeeFirstName:       "",
@@ -513,7 +513,6 @@ func (s *clientService) DeleteIncident(ctx context.Context, incidentID int64) er
 }
 
 func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error) {
-
 	incident, err := s.Store.GetIncident(ctx, incidentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
@@ -568,7 +567,7 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int
 		ClientLastName:          incident.ClientLastName,
 		LocationName:            incident.LocationName,
 	}
-	fileKey, err := pdf.GenerateAndUploadIncidentPDF(ctx, incidentData, s.B2Client)
+	fileKey, err := s.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
 	if err != nil && fileKey == "" {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateIncidentFile", "Failed to generate incident PDF", zap.Error(err))
 		return nil, err
@@ -602,5 +601,78 @@ func (s *clientService) ConfirmIncident(ctx context.Context, incidentID int64) (
 		ID:      incident.ID,
 	}, nil
 	// TODO: Send notification to the party responsivle for the client
+}
 
+func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidentsRequest) (*pagination.Response[ListAllIncidentsResponse], error) {
+	params := req.GetParams()
+	arg := db.ListAllIncidentsParams{
+		Limit:       params.Limit,
+		Offset:      params.Offset,
+		IsConfirmed: req.IsConfirmed,
+	}
+	incidents, err := s.Store.ListAllIncidents(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAllIncidents", "Failed to list all incidents", zap.Error(err))
+		return nil, err
+	}
+
+	count, err := s.Store.CountAllIncidents(ctx, req.IsConfirmed)
+	if err != nil {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAllIncidents", "Failed to count all incidents", zap.Error(err))
+		return nil, err
+	}
+
+	response := []ListAllIncidentsResponse{}
+	for _, incident := range incidents {
+		response = append(response, ListAllIncidentsResponse{
+			ID:                      incident.ID,
+			EmployeeID:              incident.EmployeeID,
+			LocationID:              incident.LocationID,
+			ReporterInvolvement:     incident.ReporterInvolvement,
+			IncidentDate:            incident.IncidentDate.Time,
+			RuntimeIncident:         incident.RuntimeIncident,
+			IncidentType:            incident.IncidentType,
+			PassingAway:             incident.PassingAway,
+			SelfHarm:                incident.SelfHarm,
+			Violence:                incident.Violence,
+			FireWaterDamage:         incident.FireWaterDamage,
+			Accident:                incident.Accident,
+			ClientAbsence:           incident.ClientAbsence,
+			Medicines:               incident.Medicines,
+			Organization:            incident.Organization,
+			UseProhibitedSubstances: incident.UseProhibitedSubstances,
+			OtherNotifications:      incident.OtherNotifications,
+			SeverityOfIncident:      incident.SeverityOfIncident,
+			IncidentExplanation:     incident.IncidentExplanation,
+			RecurrenceRisk:          incident.RecurrenceRisk,
+			IncidentPreventSteps:    incident.IncidentPreventSteps,
+			IncidentTakenMeasures:   incident.IncidentTakenMeasures,
+			OtherCause:              incident.OtherCause,
+			CauseExplanation:        incident.CauseExplanation,
+			PhysicalInjury:          incident.PhysicalInjury,
+			PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
+			PsychologicalDamage:     incident.PsychologicalDamage,
+			PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
+			NeededConsultation:      incident.NeededConsultation,
+			SuccessionDesc:          incident.SuccessionDesc,
+			Other:                   incident.Other,
+			OtherDesc:               incident.OtherDesc,
+			AdditionalAppointments:  incident.AdditionalAppointments,
+			EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+			ClientID:                incident.ClientID,
+			SoftDelete:              incident.SoftDelete,
+			UpdatedAt:               incident.UpdatedAt.Time,
+			CreatedAt:               incident.CreatedAt.Time,
+			IsConfirmed:             incident.IsConfirmed,
+			FileUrl:                 incident.FileUrl,
+			Emails:                  incident.Emails,
+			ClientFirstName:         incident.ClientFirstName,
+			ClientLastName:          incident.ClientLastName,
+			EmployeeFirstName:       incident.EmployeeFirstName,
+			EmployeeLastName:        incident.EmployeeLastName,
+		})
+	}
+
+	paginatedResponse := pagination.NewResponse(ctx, req.Request, response, count)
+	return &paginatedResponse, nil
 }

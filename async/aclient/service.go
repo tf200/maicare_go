@@ -3,8 +3,9 @@ package aclient
 import (
 	"context"
 	"crypto/tls"
-	"maicare_go/notification"
 	"time"
+
+	"maicare_go/service/notification"
 
 	"github.com/hibiken/asynq"
 )

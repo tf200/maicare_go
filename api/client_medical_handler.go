@@ -1,13 +1,15 @@
 package api
 
 import (
-	_ "maicare_go/pagination"
-	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
 	"time"
 
+	_ "maicare_go/pagination"
+	clientp "maicare_go/service/client"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateClientDiagnosisApi creates a client diagnosis
@@ -22,7 +24,7 @@ import (
 // @Router /clients/{id}/diagnosis [post]
 func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -58,7 +60,7 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 // @Router /clients/{id}/diagnosis [get]
 func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	clientID, err := strconv.ParseInt(id, 10, 64)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -78,7 +80,6 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 
 	res := SuccessResponse(pag, "Client diagnoses fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // GetClientDiagnosisApi gets a client diagnosis
@@ -93,7 +94,6 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 	id := ctx.Param("diagnosis_id")
 	diagnosisID, err := strconv.ParseInt(id, 10, 64)
-
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -107,7 +107,6 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 
 	res := SuccessResponse(diagnosis, "Client diagnosis fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // UpdateClientDiagnosisApi updates a client diagnosis
@@ -207,7 +206,6 @@ func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
 	res := SuccessResponse(result, "Client medication created successfully")
 
 	ctx.JSON(http.StatusCreated, res)
-
 }
 
 // ListClientMedicationsResponse defines the response for listing client medications
@@ -285,7 +283,6 @@ func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 	}
 	res := SuccessResponse(medication, "Client medication fetched successfully")
 	ctx.JSON(http.StatusOK, res)
-
 }
 
 // UpdateClientMedicationApi updates a client medication

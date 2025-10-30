@@ -1,13 +1,16 @@
 package clientp
 
 import (
-	"maicare_go/pagination"
 	"time"
+
+	"maicare_go/pagination"
+
+	"github.com/google/uuid"
 )
 
 // CreateIncidentRequest represents a request to create an incident
 type CreateIncidentRequest struct {
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement" binding:"required" enums:"directly_involved,witness,found_afterwards,alarmed"`
 	InformWho               []string  `json:"inform_who"`
@@ -46,14 +49,13 @@ type CreateIncidentRequest struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
 	Emails                  []string  `json:"emails"`
 }
 
 // CreateIncidentResponse represents a response for CreateIncidentApi
 type CreateIncidentResponse struct {
 	ID                      int64     `json:"id"`
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
@@ -92,7 +94,7 @@ type CreateIncidentResponse struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
+	ClientID                uuid.UUID `json:"client_id"`
 	Emails                  []string  `json:"emails"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated"`
@@ -107,7 +109,7 @@ type ListIncidentsRequest struct {
 // ListIncidentsResponse defines the response for listing incidents
 type ListIncidentsResponse struct {
 	ID                      int64     `json:"id"`
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
 	LocationID              int64     `json:"location_id"`
@@ -148,7 +150,7 @@ type ListIncidentsResponse struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
+	ClientID                uuid.UUID `json:"client_id"`
 	Emails                  []string  `json:"emails"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
@@ -161,7 +163,7 @@ type ListIncidentsResponse struct {
 // GetIncidentResponse represents a response for GetIncidentApi
 type GetIncidentResponse struct {
 	ID                      int64     `json:"id"`
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
 	LocationID              int64     `json:"location_id"`
@@ -202,7 +204,7 @@ type GetIncidentResponse struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
+	ClientID                uuid.UUID `json:"client_id"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated_at"`
 	CreatedAt               time.Time `json:"created_at"`
@@ -213,53 +215,53 @@ type GetIncidentResponse struct {
 
 // UpdateIncidentRequest represents a request to update an incident
 type UpdateIncidentRequest struct {
-	ID                      int64     `json:"id"`
-	EmployeeID              *int64    `json:"employee_id"`
-	LocationID              *int64    `json:"location_id"`
-	ReporterInvolvement     *string   `json:"reporter_involvement"`
-	InformWho               []string  `json:"inform_who"`
-	IncidentDate            time.Time `json:"incident_date"`
-	RuntimeIncident         *string   `json:"runtime_incident"`
-	IncidentType            *string   `json:"incident_type"`
-	PassingAway             *bool     `json:"passing_away"`
-	SelfHarm                *bool     `json:"self_harm"`
-	Violence                *bool     `json:"violence"`
-	FireWaterDamage         *bool     `json:"fire_water_damage"`
-	Accident                *bool     `json:"accident"`
-	ClientAbsence           *bool     `json:"client_absence"`
-	Medicines               *bool     `json:"medicines"`
-	Organization            *bool     `json:"organization"`
-	UseProhibitedSubstances *bool     `json:"use_prohibited_substances"`
-	OtherNotifications      *bool     `json:"other_notifications"`
-	SeverityOfIncident      *string   `json:"severity_of_incident"`
-	IncidentExplanation     *string   `json:"incident_explanation"`
-	RecurrenceRisk          *string   `json:"recurrence_risk"`
-	IncidentPreventSteps    *string   `json:"incident_prevent_steps"`
-	IncidentTakenMeasures   *string   `json:"incident_taken_measures"`
-	Technical               []string  `json:"technical"`
-	Organizational          []string  `json:"organizational"`
-	MeseWorker              []string  `json:"mese_worker"`
-	ClientOptions           []string  `json:"client_options"`
-	OtherCause              *string   `json:"other_cause"`
-	CauseExplanation        *string   `json:"cause_explanation"`
-	PhysicalInjury          *string   `json:"physical_injury"`
-	PhysicalInjuryDesc      *string   `json:"physical_injury_desc"`
-	PsychologicalDamage     *string   `json:"psychological_damage"`
-	PsychologicalDamageDesc *string   `json:"psychological_damage_desc"`
-	NeededConsultation      *string   `json:"needed_consultation"`
-	Succession              []string  `json:"succession"`
-	SuccessionDesc          *string   `json:"succession_desc"`
-	Other                   *bool     `json:"other"`
-	OtherDesc               *string   `json:"other_desc"`
-	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     *string   `json:"employee_absenteeism"`
-	Emails                  []string  `json:"emails"`
+	ID                      int64      `json:"id"`
+	EmployeeID              *uuid.UUID `json:"employee_id"`
+	LocationID              *int64     `json:"location_id"`
+	ReporterInvolvement     *string    `json:"reporter_involvement"`
+	InformWho               []string   `json:"inform_who"`
+	IncidentDate            time.Time  `json:"incident_date"`
+	RuntimeIncident         *string    `json:"runtime_incident"`
+	IncidentType            *string    `json:"incident_type"`
+	PassingAway             *bool      `json:"passing_away"`
+	SelfHarm                *bool      `json:"self_harm"`
+	Violence                *bool      `json:"violence"`
+	FireWaterDamage         *bool      `json:"fire_water_damage"`
+	Accident                *bool      `json:"accident"`
+	ClientAbsence           *bool      `json:"client_absence"`
+	Medicines               *bool      `json:"medicines"`
+	Organization            *bool      `json:"organization"`
+	UseProhibitedSubstances *bool      `json:"use_prohibited_substances"`
+	OtherNotifications      *bool      `json:"other_notifications"`
+	SeverityOfIncident      *string    `json:"severity_of_incident"`
+	IncidentExplanation     *string    `json:"incident_explanation"`
+	RecurrenceRisk          *string    `json:"recurrence_risk"`
+	IncidentPreventSteps    *string    `json:"incident_prevent_steps"`
+	IncidentTakenMeasures   *string    `json:"incident_taken_measures"`
+	Technical               []string   `json:"technical"`
+	Organizational          []string   `json:"organizational"`
+	MeseWorker              []string   `json:"mese_worker"`
+	ClientOptions           []string   `json:"client_options"`
+	OtherCause              *string    `json:"other_cause"`
+	CauseExplanation        *string    `json:"cause_explanation"`
+	PhysicalInjury          *string    `json:"physical_injury"`
+	PhysicalInjuryDesc      *string    `json:"physical_injury_desc"`
+	PsychologicalDamage     *string    `json:"psychological_damage"`
+	PsychologicalDamageDesc *string    `json:"psychological_damage_desc"`
+	NeededConsultation      *string    `json:"needed_consultation"`
+	Succession              []string   `json:"succession"`
+	SuccessionDesc          *string    `json:"succession_desc"`
+	Other                   *bool      `json:"other"`
+	OtherDesc               *string    `json:"other_desc"`
+	AdditionalAppointments  *string    `json:"additional_appointments"`
+	EmployeeAbsenteeism     *string    `json:"employee_absenteeism"`
+	Emails                  []string   `json:"emails"`
 }
 
 // UpdateIncidentResponse represents a response for UpdateIncidentApi
 type UpdateIncidentResponse struct {
 	ID                      int64     `json:"id"`
-	EmployeeID              int64     `json:"employee_id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
 	LocationID              int64     `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
@@ -298,7 +300,7 @@ type UpdateIncidentResponse struct {
 	OtherDesc               *string   `json:"other_desc"`
 	AdditionalAppointments  *string   `json:"additional_appointments"`
 	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
-	ClientID                int64     `json:"client_id"`
+	ClientID                uuid.UUID `json:"client_id"`
 	SoftDelete              bool      `json:"soft_delete"`
 	UpdatedAt               time.Time `json:"updated"`
 	CreatedAt               time.Time `json:"created"`
@@ -316,4 +318,59 @@ type GenerateIncidentFileResponse struct {
 type ConfirmIncidentResponse struct {
 	ID      int64   `json:"id"`
 	FileUrl *string `json:"file_url"`
+}
+
+// ListAllIncidentsRequest represents the request body for listing all incidents
+type ListAllIncidentsRequest struct {
+	pagination.Request
+	IsConfirmed bool `form:"is_confirmed" json:"is_confirmed"`
+}
+
+// ListAllIncidentsResponse represents the response body for listing all incidents
+type ListAllIncidentsResponse struct {
+	ID                      int64     `json:"id"`
+	EmployeeID              uuid.UUID `json:"employee_id"`
+	LocationID              int64     `json:"location_id"`
+	ReporterInvolvement     string    `json:"reporter_involvement"`
+	IncidentDate            time.Time `json:"incident_date"`
+	RuntimeIncident         string    `json:"runtime_incident"`
+	IncidentType            string    `json:"incident_type"`
+	PassingAway             bool      `json:"passing_away"`
+	SelfHarm                bool      `json:"self_harm"`
+	Violence                bool      `json:"violence"`
+	FireWaterDamage         bool      `json:"fire_water_damage"`
+	Accident                bool      `json:"accident"`
+	ClientAbsence           bool      `json:"client_absence"`
+	Medicines               bool      `json:"medicines"`
+	Organization            bool      `json:"organization"`
+	UseProhibitedSubstances bool      `json:"use_prohibited_substances"`
+	OtherNotifications      bool      `json:"other_notifications"`
+	SeverityOfIncident      string    `json:"severity_of_incident"`
+	IncidentExplanation     *string   `json:"incident_explanation"`
+	RecurrenceRisk          string    `json:"recurrence_risk"`
+	IncidentPreventSteps    *string   `json:"incident_prevent_steps"`
+	IncidentTakenMeasures   *string   `json:"incident_taken_measures"`
+	OtherCause              *string   `json:"other_cause"`
+	CauseExplanation        *string   `json:"cause_explanation"`
+	PhysicalInjury          string    `json:"physical_injury"`
+	PhysicalInjuryDesc      *string   `json:"physical_injury_desc"`
+	PsychologicalDamage     string    `json:"psychological_damage"`
+	PsychologicalDamageDesc *string   `json:"psychological_damage_desc"`
+	NeededConsultation      string    `json:"needed_consultation"`
+	SuccessionDesc          *string   `json:"succession_desc"`
+	Other                   bool      `json:"other"`
+	OtherDesc               *string   `json:"other_desc"`
+	AdditionalAppointments  *string   `json:"additional_appointments"`
+	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
+	ClientID                uuid.UUID `json:"client_id"`
+	SoftDelete              bool      `json:"soft_delete"`
+	UpdatedAt               time.Time `json:"updated_at"`
+	CreatedAt               time.Time `json:"created_at"`
+	IsConfirmed             bool      `json:"is_confirmed"`
+	FileUrl                 *string   `json:"file_url"`
+	Emails                  []string  `json:"emails"`
+	ClientFirstName         string    `json:"client_first_name"`
+	ClientLastName          string    `json:"client_last_name"`
+	EmployeeFirstName       string    `json:"employee_first_name"`
+	EmployeeLastName        string    `json:"employee_last_name"`
 }

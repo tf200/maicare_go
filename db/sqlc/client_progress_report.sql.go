@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -24,7 +25,7 @@ INSERT INTO ai_generated_reports (
 `
 
 type CreateAiGeneratedReportParams struct {
-	ClientID   int64       `json:"client_id"`
+	ClientID   uuid.UUID   `json:"client_id"`
 	ReportText string      `json:"report_text"`
 	StartDate  pgtype.Date `json:"start_date"`
 	EndDate    pgtype.Date `json:"end_date"`
@@ -64,8 +65,8 @@ INSERT INTO progress_report (
 `
 
 type CreateProgressReportParams struct {
-	ClientID       int64              `json:"client_id"`
-	EmployeeID     *int64             `json:"employee_id"`
+	ClientID       uuid.UUID          `json:"client_id"`
+	EmployeeID     *uuid.UUID         `json:"employee_id"`
 	Title          *string            `json:"title"`
 	Date           pgtype.Timestamptz `json:"date"`
 	ReportText     string             `json:"report_text"`
@@ -143,11 +144,11 @@ WHERE pr.id = $1 LIMIT 1
 
 type GetProgressReportRow struct {
 	ID                     int64              `json:"id"`
-	ClientID               int64              `json:"client_id"`
+	ClientID               uuid.UUID          `json:"client_id"`
 	Date                   pgtype.Timestamptz `json:"date"`
 	Title                  *string            `json:"title"`
 	ReportText             string             `json:"report_text"`
-	EmployeeID             *int64             `json:"employee_id"`
+	EmployeeID             *uuid.UUID         `json:"employee_id"`
 	Type                   string             `json:"type"`
 	EmotionalState         string             `json:"emotional_state"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
@@ -186,7 +187,7 @@ ORDER BY date ASC
 `
 
 type GetProgressReportsByDateRangeParams struct {
-	ClientID  int64              `json:"client_id"`
+	ClientID  uuid.UUID          `json:"client_id"`
 	StartDate pgtype.Timestamptz `json:"start_date"`
 	EndDate   pgtype.Timestamptz `json:"end_date"`
 }
@@ -232,15 +233,15 @@ LIMIT $2 OFFSET $3
 `
 
 type ListAiGeneratedReportsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListAiGeneratedReportsRow struct {
 	ID         int64              `json:"id"`
 	ReportText string             `json:"report_text"`
-	ClientID   int64              `json:"client_id"`
+	ClientID   uuid.UUID          `json:"client_id"`
 	StartDate  pgtype.Date        `json:"start_date"`
 	EndDate    pgtype.Date        `json:"end_date"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
@@ -291,18 +292,18 @@ LIMIT $2 OFFSET $3
 `
 
 type ListProgressReportsParams struct {
-	ClientID int64 `json:"client_id"`
-	Limit    int32 `json:"limit"`
-	Offset   int32 `json:"offset"`
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
 }
 
 type ListProgressReportsRow struct {
 	ID                     int64              `json:"id"`
-	ClientID               int64              `json:"client_id"`
+	ClientID               uuid.UUID          `json:"client_id"`
 	Date                   pgtype.Timestamptz `json:"date"`
 	Title                  *string            `json:"title"`
 	ReportText             string             `json:"report_text"`
-	EmployeeID             *int64             `json:"employee_id"`
+	EmployeeID             *uuid.UUID         `json:"employee_id"`
 	Type                   string             `json:"type"`
 	EmotionalState         string             `json:"emotional_state"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
@@ -361,7 +362,7 @@ RETURNING id, client_id, date, title, report_text, employee_id, type, emotional_
 
 type UpdateProgressReportParams struct {
 	ID             int64              `json:"id"`
-	EmployeeID     *int64             `json:"employee_id"`
+	EmployeeID     *uuid.UUID         `json:"employee_id"`
 	Title          *string            `json:"title"`
 	Date           pgtype.Timestamptz `json:"date"`
 	ReportText     *string            `json:"report_text"`

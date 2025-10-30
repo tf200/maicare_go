@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
+
+	"maicare_go/util"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,6 @@ func TestListProgressReport(t *testing.T) {
 	progressReports, err := testQueries.ListProgressReports(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, progressReports, 5)
-
 }
 
 func TestGetProgressReport(t *testing.T) {
@@ -148,5 +148,3 @@ func TestGetAiGeneratedReport(t *testing.T) {
 	require.Equal(t, aiGeneratedReport1.ID, aiGeneratedReport2.ID)
 	require.Equal(t, aiGeneratedReport1.ClientID, aiGeneratedReport2.ClientID)
 }
-
-

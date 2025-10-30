@@ -21,16 +21,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	"maicare_go/ai"
-	"maicare_go/async/aclient"
-	"maicare_go/bucket"
-	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
-	"maicare_go/notification"
 	"maicare_go/service"
 	"maicare_go/token"
 	"maicare_go/util"
@@ -46,43 +40,30 @@ import (
 )
 
 type Server struct {
-	store           *db.Store
 	router          *gin.Engine
 	config          util.Config
 	tokenMaker      token.Maker
-	b2Client        bucket.ObjectStorageInterface
-	asynqClient     aclient.AsynqClientInterface
 	httpServer      *http.Server
-	aiHandler       *ai.AiHandler
 	hub             *hub.Hub
-	notifService    *notification.Service
 	logger          *zap.Logger
 	grpClient       grpclient.GrpcClientInterface
 	businessService *service.BusinessService
 }
 
-func NewServer(store *db.Store, b2Client bucket.ObjectStorageInterface,
-	asyncClient aclient.AsynqClientInterface, apiKey string, hubInstance *hub.Hub,
-	notifService *notification.Service, grpcClient grpclient.GrpcClientInterface,
-	tokenMaker token.Maker, config util.Config, service *service.BusinessService) (*Server, error) {
-
-	aiHandler := ai.NewAiHandler(apiKey)
-
+func NewServer(hubInstance *hub.Hub,
+	grpcClient grpclient.GrpcClientInterface,
+	tokenMaker token.Maker, config util.Config, service *service.BusinessService,
+) (*Server, error) {
 	logger, err := setupLogger(config.Environment)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create logger %v", err)
 	}
 
 	server := &Server{
-		store:           store,
 		config:          config,
 		tokenMaker:      tokenMaker,
-		b2Client:        b2Client,
-		asynqClient:     asyncClient,
-		aiHandler:       aiHandler,
 		hub:             hubInstance,
 		logger:          logger,
-		notifService:    notifService,
 		grpClient:       grpcClient,
 		businessService: service,
 	}
@@ -139,7 +120,7 @@ func (server *Server) setupRoutes() {
 	server.setupProgressReportsRoutes(baseRouter)
 	server.setupAppointmentCardRoutes(baseRouter)
 	server.setupMaturityMatrixRoutes(baseRouter)
-	server.setupIntakeFormRoutes(baseRouter)
+	// server.setupIntakeFormRoutes(baseRouter)
 	server.setupContractRoutes(baseRouter)
 	server.setupECRRoutes(baseRouter)
 	server.setupAppointmentRoutes(baseRouter)
@@ -274,17 +255,4 @@ func setupLogger(environment string) (*zap.Logger, error) {
 	}
 
 	return logger, nil
-
-}
-
-func (server *Server) generateResponsePresignedURL(key *string) *string {
-	if key == nil {
-		return nil
-	}
-	url, err := server.b2Client.GeneratePresignedURL(context.Background(), *key, 15*time.Minute)
-	if err != nil {
-		server.logger.Error("Failed to generate presigned URL", zap.String("key", *key), zap.Error(err))
-		return nil
-	}
-	return &url
 }

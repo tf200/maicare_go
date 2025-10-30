@@ -49,7 +49,6 @@ func TestGetMonthlySchedulesByLocation(t *testing.T) {
 		require.NotEmpty(t, s.StartDatetime.Time)
 		require.NotEmpty(t, s.EndDatetime.Time)
 	}
-
 }
 
 func TestGetDailySchedulesByLocation(t *testing.T) {

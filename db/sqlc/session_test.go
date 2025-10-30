@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"maicare_go/util"
 	"testing"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -70,5 +71,4 @@ func TestGetSessionByID(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, session2)
 	require.Equal(t, session1.ID, session2.ID)
-
 }

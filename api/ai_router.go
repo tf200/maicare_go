@@ -8,5 +8,4 @@ func (server *Server) setupAiRoutes(baseRouter *gin.RouterGroup) {
 	{
 		aiGroup.POST("/spelling_check", server.SpellingCheckApi)
 	}
-
 }

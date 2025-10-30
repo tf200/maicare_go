@@ -1,13 +1,14 @@
 package api
 
 import (
-	"maicare_go/pagination"
-	"maicare_go/service/ecr"
-	"maicare_go/token"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"maicare_go/pagination"
+	"maicare_go/service/ecr"
+	"maicare_go/token"
 
 	"github.com/goccy/go-json"
 	"github.com/stretchr/testify/require"

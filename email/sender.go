@@ -117,7 +117,6 @@ func (e *SmtpConf) Send(subject, body string, to []string) error {
 var credentialsTemplateFS embed.FS
 
 func (b *BrevoConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
-
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")
 	}
@@ -180,7 +179,6 @@ func (b *BrevoConf) SendCredentials(ctx context.Context, to []string, data Crede
 var incidentTemplateFS embed.FS
 
 func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident) error {
-
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")
 	}
@@ -240,7 +238,6 @@ func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident
 var acceptedRegistrationFormTemplateFS embed.FS
 
 func (b *BrevoConf) SendAcceptedRegistrationForm(ctx context.Context, to []string, data AcceptedRegitrationForm) error {
-
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")
 	}

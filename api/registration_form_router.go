@@ -4,7 +4,6 @@ package api
 import "github.com/gin-gonic/gin"
 
 func (server *Server) setupRegistrationFormRoutes(baseRouter *gin.RouterGroup) {
-
 	rfRoutes := baseRouter.Group("/registration_form")
 	{
 		rfRoutes.POST("", server.CreateRegistrationFormApi)
@@ -15,5 +14,4 @@ func (server *Server) setupRegistrationFormRoutes(baseRouter *gin.RouterGroup) {
 		rfRoutes.POST("/:id/status", server.AuthMiddleware(), server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.UpdateRegistrationFormStatusApi)
 
 	}
-
 }

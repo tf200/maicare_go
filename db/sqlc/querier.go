@@ -41,6 +41,8 @@ type Querier interface {
 	CreateAppointmentCard(ctx context.Context, arg CreateAppointmentCardParams) (AppointmentCard, error)
 	CreateAppointmentTemplate(ctx context.Context, arg CreateAppointmentTemplateParams) (AppointmentTemplate, error)
 	CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (AttachmentFile, error)
+	// Audit table queries
+	CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) error
 	// ==================== new code    ====================
 	CreateCarePlan(ctx context.Context, arg CreateCarePlanParams) (CarePlan, error)
 	CreateCarePlanAction(ctx context.Context, arg CreateCarePlanActionParams) (CarePlanAction, error)
@@ -124,14 +126,14 @@ type Querier interface {
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	DeleteShift(ctx context.Context, id int64) error
 	// Removes *all* permissions from the given user.
-	DeleteUserPermissions(ctx context.Context, userID int64) error
+	DeleteUserPermissions(ctx context.Context, userID uuid.UUID) error
 	DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error)
 	Enable2Fa(ctx context.Context, arg Enable2FaParams) error
 	GetAiGeneratedReport(ctx context.Context, id int64) (AiGeneratedReport, error)
 	GetAllAdminUsers(ctx context.Context) ([]CustomUser, error)
-	GetAllClientsIDs(ctx context.Context) ([]int64, error)
+	GetAllClientsIDs(ctx context.Context) ([]uuid.UUID, error)
 	GetAllTemplateItems(ctx context.Context) ([]TemplateItem, error)
-	GetAppointmentCard(ctx context.Context, clientID int64) (GetAppointmentCardRow, error)
+	GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (GetAppointmentCardRow, error)
 	// Optional ordering
 	GetAppointmentClients(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentClientsRow, error)
 	GetAppointmentParticipants(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentParticipantsRow, error)
@@ -150,34 +152,35 @@ type Querier interface {
 	GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]CarePlanRisk, error)
 	GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int64) ([]CarePlanMetric, error)
 	GetCarePlanSupportNetwork(ctx context.Context, carePlanID int64) ([]CarePlanSupportNetwork, error)
-	GetClientAddresses(ctx context.Context, id int64) ([]byte, error)
+	GetClientAddresses(ctx context.Context, id uuid.UUID) ([]byte, error)
 	GetClientContract(ctx context.Context, id int64) (GetClientContractRow, error)
 	GetClientCounts(ctx context.Context) (GetClientCountsRow, error)
-	GetClientDetails(ctx context.Context, id int64) (GetClientDetailsRow, error)
+	GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error)
 	GetClientDiagnosis(ctx context.Context, id int64) (ClientDiagnosis, error)
 	GetClientMaturityMatrixAssessment(ctx context.Context, id int64) (GetClientMaturityMatrixAssessmentRow, error)
-	GetClientRelatedEmails(ctx context.Context, clientID int64) ([]string, error)
-	GetClientSender(ctx context.Context, id int64) (Sender, error)
+	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]string, error)
+	GetClientSender(ctx context.Context, id uuid.UUID) (Sender, error)
 	GetCompletedPaymentSum(ctx context.Context, invoiceID int64) (float64, error)
 	GetContractAudit(ctx context.Context, contractID int64) ([]GetContractAuditRow, error)
 	GetDailySchedulesByLocation(ctx context.Context, arg GetDailySchedulesByLocationParams) ([]GetDailySchedulesByLocationRow, error)
 	GetEmergencyContact(ctx context.Context, id int64) (ClientEmergencyContact, error)
-	GetEmployeeContractDetails(ctx context.Context, id int64) (GetEmployeeContractDetailsRow, error)
+	GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error)
 	GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, error)
-	GetEmployeeProfileByID(ctx context.Context, id int64) (GetEmployeeProfileByIDRow, error)
-	GetEmployeeProfileByUserID(ctx context.Context, id int64) (GetEmployeeProfileByUserIDRow, error)
+	GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error)
+	GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
 	GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error)
 	GetIncident(ctx context.Context, id int64) (GetIncidentRow, error)
 	GetIntakeForm(ctx context.Context, id int64) (IntakeForm, error)
 	GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error)
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]GetInvoiceAuditLogsRow, error)
 	GetInvoiceSenderID(ctx context.Context, id int64) (*int64, error)
+	GetLatestAuditHash(ctx context.Context) (string, error)
 	GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) (GetLevelDescriptionRow, error)
 	GetLocation(ctx context.Context, id int64) (Location, error)
 	GetMaturityMatrix(ctx context.Context, id int64) (MaturityMatrix, error)
 	GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error)
 	GetMedication(ctx context.Context, id int64) (GetMedicationRow, error)
-	GetMissingClientDocuments(ctx context.Context, clientID int64) ([]string, error)
+	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	GetMonthlySchedulesByLocation(ctx context.Context, arg GetMonthlySchedulesByLocationParams) ([]GetMonthlySchedulesByLocationRow, error)
 	GetOrganisation(ctx context.Context, id int64) (GetOrganisationRow, error)
 	GetOrganisationCounts(ctx context.Context, id int64) (GetOrganisationCountsRow, error)
@@ -194,16 +197,16 @@ type Querier interface {
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetShiftByID(ctx context.Context, id int64) (LocationShift, error)
 	GetShiftsByLocationID(ctx context.Context, locationID int64) ([]LocationShift, error)
-	GetTemp2FaSecret(ctx context.Context, id int64) (*string, error)
+	GetTemp2FaSecret(ctx context.Context, id uuid.UUID) (*string, error)
 	GetTemplateItemsByIds(ctx context.Context, dollar_1 []int64) ([]int64, error)
 	GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []int64) ([]TemplateItem, error)
 	GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID int64) (float64, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
-	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
-	GetUserIDByEmployeeID(ctx context.Context, id int64) (int64, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error)
+	GetUserIDByEmployeeID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	// ---------- 4. USER-ROLE MAPPING ----------
 	// Returns every role granted to a user.
-	GetUserRoles(ctx context.Context, userID int64) (Role, error)
+	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	GrantRolePermissionsToUser(ctx context.Context, arg GrantRolePermissionsToUserParams) error
 	// Bulk-insert permission IDs for a user (idempotent).
 	GrantUserPermissions(ctx context.Context, arg GrantUserPermissionsParams) error
@@ -219,6 +222,7 @@ type Querier interface {
 	ListAllRolePermissions(ctx context.Context, roleID int32) ([]ListAllRolePermissionsRow, error)
 	// Join to get the client location name
 	ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error)
+	ListAuditRecords(ctx context.Context, arg ListAuditRecordsParams) ([]Audit, error)
 	ListCarePlanReports(ctx context.Context, arg ListCarePlanReportsParams) ([]ListCarePlanReportsRow, error)
 	// Define the parameters for the query
 	// client_id: The ID of the client whose appointments are being queried.
@@ -241,7 +245,7 @@ type Querier interface {
 	ListContractTypes(ctx context.Context) ([]ContractType, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]ListContractsRow, error)
 	ListContractsTobeReminded(ctx context.Context) ([]ListContractsTobeRemindedRow, error)
-	ListEducations(ctx context.Context, employeeID int64) ([]EmployeeEducation, error)
+	ListEducations(ctx context.Context, employeeID uuid.UUID) ([]EmployeeEducation, error)
 	ListEmergencyContacts(ctx context.Context, arg ListEmergencyContactsParams) ([]ListEmergencyContactsRow, error)
 	// Define the parameters for the query
 	// employee_id: The ID of the employee whose appointments are being queried.
@@ -249,8 +253,8 @@ type Querier interface {
 	// end_date: The end of the time range to search within.
 	// Order the combined results by start time
 	ListEmployeeAppointmentsInRange(ctx context.Context, arg ListEmployeeAppointmentsInRangeParams) ([]ListEmployeeAppointmentsInRangeRow, error)
-	ListEmployeeCertifications(ctx context.Context, employeeID int64) ([]Certification, error)
-	ListEmployeeExperience(ctx context.Context, employeeID int64) ([]EmployeeExperience, error)
+	ListEmployeeCertifications(ctx context.Context, employeeID uuid.UUID) ([]Certification, error)
+	ListEmployeeExperience(ctx context.Context, employeeID uuid.UUID) ([]EmployeeExperience, error)
 	ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error)
 	ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error)
 	ListIncidents(ctx context.Context, arg ListIncidentsParams) ([]ListIncidentsRow, error)
@@ -269,10 +273,10 @@ type Querier interface {
 	// Returns every role ordered by id with count of permissions.
 	ListRoles(ctx context.Context) ([]ListRolesRow, error)
 	ListSenders(ctx context.Context, arg ListSendersParams) ([]Sender, error)
-	ListUpcomingAppointments(ctx context.Context, creatorEmployeeID *int64) ([]ListUpcomingAppointmentsRow, error)
+	ListUpcomingAppointments(ctx context.Context, creatorEmployeeID *uuid.UUID) ([]ListUpcomingAppointmentsRow, error)
 	// ---------- 5. USER-PERMISSION MAPPING ----------
 	// Returns every permission granted to a user (direct or via roles).
-	ListUserPermissions(ctx context.Context, userID int64) ([]ListUserPermissionsRow, error)
+	ListUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionsRow, error)
 	MarkNotificationAsRead(ctx context.Context, id uuid.UUID) (Notification, error)
 	MoveToWaitingList(ctx context.Context, id int64) (IntakeForm, error)
 	RecentIncidents(ctx context.Context) (int64, error)

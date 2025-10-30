@@ -4,19 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
-	"maicare_go/notification"
+	"maicare_go/service/notification"
 	"maicare_go/util"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
-func (s *appointmentService) CreateAppointment(req *CreateAppointmentRequest, userID int64, ctx context.Context) (*CreateAppointmentResponse, error) {
+func (s *appointmentService) CreateAppointment(req *CreateAppointmentRequest, userID uuid.UUID, ctx context.Context) (*CreateAppointmentResponse, error) {
 	if req.StartTime.After(req.EndTime) {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Start time is after end time")
 		return nil, fmt.Errorf("start time must be before end time")
@@ -40,13 +41,13 @@ func (s *appointmentService) CreateAppointment(req *CreateAppointmentRequest, us
 	} else {
 		return s.createRecurringAppointment(req, employee.EmployeeID, employee.FirstName, employee.LastName, ctx)
 	}
-
 }
 
 func (s *appointmentService) AddParticipantToAppointment(
 	ctx context.Context,
 	appointmentID uuid.UUID,
-	req AddParticipantToAppointmentRequest) error {
+	req AddParticipantToAppointmentRequest,
+) error {
 	err := s.Store.BulkAddAppointmentParticipants(ctx, db.BulkAddAppointmentParticipantsParams{
 		AppointmentID: appointmentID,
 		EmployeeIds:   req.ParticipantEmployeeIDs,
@@ -62,7 +63,8 @@ func (s *appointmentService) AddParticipantToAppointment(
 func (s *appointmentService) AddClientToAppointment(
 	ctx context.Context,
 	appointmentID uuid.UUID,
-	req AddClientToAppointmentRequest) error {
+	req AddClientToAppointmentRequest,
+) error {
 	err := s.Store.BulkAddAppointmentClients(ctx, db.BulkAddAppointmentClientsParams{
 		AppointmentID: appointmentID,
 		ClientIds:     req.ClientIDs,
@@ -77,8 +79,9 @@ func (s *appointmentService) AddClientToAppointment(
 
 func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 	ctx context.Context,
-	employeeID int64,
-	req ListAppointmentsForEmployeeInRangeRequest) ([]ListAppointmentsForEmployeeInRangeResponse, error) {
+	employeeID uuid.UUID,
+	req ListAppointmentsForEmployeeInRangeRequest,
+) ([]ListAppointmentsForEmployeeInRangeResponse, error) {
 	if req.StartDate.After(req.EndDate) {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Start date is after end date")
 		return nil, fmt.Errorf("start date must be before end date")
@@ -153,8 +156,9 @@ func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 
 func (s *appointmentService) ListAppointmentsForClientInRange(
 	ctx context.Context,
-	clientID int64,
-	req ListAppointmentsForClientRequest) ([]ListAppointmentsForClientResponse, error) {
+	clientID uuid.UUID,
+	req ListAppointmentsForClientRequest,
+) ([]ListAppointmentsForClientResponse, error) {
 	if req.StartDate.After(req.EndDate) {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Start date is after end date")
 		return nil, fmt.Errorf("start date must be before end date")
@@ -229,7 +233,8 @@ func (s *appointmentService) ListAppointmentsForClientInRange(
 
 func (s *appointmentService) GetAppointment(
 	ctx context.Context,
-	appointmentID uuid.UUID) (*GetAppointmentResponse, error) {
+	appointmentID uuid.UUID,
+) (*GetAppointmentResponse, error) {
 	appointment, err := s.Store.GetScheduledAppointmentByID(ctx, appointmentID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -286,8 +291,8 @@ func (s *appointmentService) GetAppointment(
 func (s *appointmentService) UpdateAppointment(
 	ctx context.Context,
 	appointmentID uuid.UUID,
-	req *UpdateAppointmentRequest) (*UpdateAppointmentResponse, error) {
-
+	req *UpdateAppointmentRequest,
+) (*UpdateAppointmentResponse, error) {
 	if req.StartTime.After(req.EndTime) {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Start time is after end time")
 		return nil, fmt.Errorf("start time must be before end time")
@@ -379,12 +384,12 @@ func (s *appointmentService) UpdateAppointment(
 		CreatedAt:              appointment.CreatedAt,
 		UpdatedAt:              appointment.UpdatedAt,
 	}, nil
-
 }
 
 func (s *appointmentService) DeleteAppointment(
 	ctx context.Context,
-	appointmentID uuid.UUID) error {
+	appointmentID uuid.UUID,
+) error {
 	err := s.Store.DeleteAppointment(ctx, appointmentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAppointmentApi", "Failed to delete appointment", zap.Error(err))
@@ -397,7 +402,8 @@ func (s *appointmentService) DeleteAppointment(
 func (s *appointmentService) ConfirmAppointment(
 	ctx context.Context,
 	appointmentID uuid.UUID,
-	employeeID int64) error {
+	employeeID uuid.UUID,
+) error {
 	err := s.Store.ConfirmAppointment(ctx, db.ConfirmAppointmentParams{
 		ID:         appointmentID,
 		EmployeeID: &employeeID,
@@ -412,10 +418,11 @@ func (s *appointmentService) ConfirmAppointment(
 
 func (s *appointmentService) createNormalAppointment(
 	req *CreateAppointmentRequest,
-	employeeID int64,
+	employeeID uuid.UUID,
 	employeeFirstName string,
 	employeeLastName string,
-	ctx context.Context) (*CreateAppointmentResponse, error) {
+	ctx context.Context,
+) (*CreateAppointmentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to begin transaction", zap.Error(err))
@@ -481,7 +488,7 @@ func (s *appointmentService) createNormalAppointment(
 			Location:      util.DerefString(req.Location),
 		}
 
-		err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+		err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 			RecipientUserIDs: req.ParticipantEmployeeIDs,
 			Type:             notification.TypeNewAppointment,
 			Data: notification.NotificationData{
@@ -511,11 +518,11 @@ func (s *appointmentService) createNormalAppointment(
 
 func (s *appointmentService) createRecurringAppointment(
 	req *CreateAppointmentRequest,
-	employeeID int64,
+	employeeID uuid.UUID,
 	employeeFirstName string,
 	employeeLastName string,
-	ctx context.Context) (*CreateAppointmentResponse, error) {
-
+	ctx context.Context,
+) (*CreateAppointmentResponse, error) {
 	appointmentTemp, err := s.Store.CreateAppointmentTemplate(ctx, db.CreateAppointmentTemplateParams{
 		CreatorEmployeeID:  employeeID,
 		StartTime:          pgtype.Timestamp{Time: req.StartTime, Valid: true},
@@ -532,7 +539,7 @@ func (s *appointmentService) createRecurringAppointment(
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
-	err = s.AsynqClient.EnqueueAppointmentTask(ctx, aclient.AppointmentPayload{
+	err = s.asynqClient.EnqueueAppointmentTask(ctx, aclient.AppointmentPayload{
 		AppointmentTemplateID:  appointmentTemp.ID,
 		ParticipantEmployeeIDs: req.ParticipantEmployeeIDs,
 		ClientIDs:              req.ClientIDs,
@@ -552,7 +559,7 @@ func (s *appointmentService) createRecurringAppointment(
 			Location:      util.DerefString(req.Location),
 		}
 
-		err = s.AsynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+		err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 			RecipientUserIDs: req.ParticipantEmployeeIDs,
 			Type:             notification.TypeNewAppointment,
 			Data: notification.NotificationData{

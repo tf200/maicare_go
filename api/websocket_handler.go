@@ -3,9 +3,10 @@ package api
 import (
 	"fmt"
 	"log"
+	"net/http"
+
 	"maicare_go/hub"
 	"maicare_go/token"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -80,4 +81,3 @@ func (server *Server) handleWebSocket(ctx *gin.Context) {
 	// Note: From this point on, we don't use the gin context (ctx) to send responses.
 	// The connection is now a WebSocket managed by the client's pumps.
 }
-

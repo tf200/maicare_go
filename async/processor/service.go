@@ -2,32 +2,31 @@ package processor
 
 import (
 	"crypto/tls"
+	"time"
+
 	"maicare_go/async/aclient"
 	"maicare_go/async/scheduler"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
-	"maicare_go/notification"
 	"maicare_go/service"
-	"time"
 
 	"github.com/hibiken/asynq"
 )
 
 type AsynqServer struct {
-	businessService     *service.BusinessService
-	server              *asynq.Server
-	store               *db.Store
-	brevoConf           *email.BrevoConf
-	b2Bucket            bucket.ObjectStorageInterface
-	notificationService *notification.Service
+	businessService *service.BusinessService
+	server          *asynq.Server
+	store           *db.Store
+	brevoConf       *email.BrevoConf
+	b2Bucket        bucket.ObjectStorageInterface
 }
 
 func NewAsynqServer(redisHost, redisUser, redisPassword string,
 	store *db.Store, tls *tls.Config,
 	brevoConf *email.BrevoConf, b2Bucket bucket.ObjectStorageInterface,
-	notificationService *notification.Service,
-	businessService *service.BusinessService) *AsynqServer {
+	businessService *service.BusinessService,
+) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
 			Addr:         redisHost,
@@ -50,12 +49,13 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string,
 			},
 		},
 	)
-	return &AsynqServer{server: srv,
-		store:               store,
-		brevoConf:           brevoConf,
-		b2Bucket:            b2Bucket,
-		notificationService: notificationService,
-		businessService:     businessService}
+	return &AsynqServer{
+		server:          srv,
+		store:           store,
+		brevoConf:       brevoConf,
+		b2Bucket:        b2Bucket,
+		businessService: businessService,
+	}
 }
 
 func (a *AsynqServer) Start() error {

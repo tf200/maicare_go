@@ -26,10 +26,10 @@ INSERT INTO notifications (
 `
 
 type CreateNotificationParams struct {
-	UserID  int64  `json:"user_id"`
-	Type    string `json:"type"`
-	Data    []byte `json:"data"`
-	Message string `json:"message"`
+	UserID  uuid.UUID `json:"user_id"`
+	Type    string    `json:"type"`
+	Data    []byte    `json:"data"`
+	Message string    `json:"message"`
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
@@ -61,9 +61,9 @@ LIMIT $2 OFFSET $3
 `
 
 type ListNotificationsParams struct {
-	UserID int64 `json:"user_id"`
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	UserID uuid.UUID `json:"user_id"`
+	Limit  int32     `json:"limit"`
+	Offset int32     `json:"offset"`
 }
 
 func (q *Queries) ListNotifications(ctx context.Context, arg ListNotificationsParams) ([]Notification, error) {

@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
-	"maicare_go/service/attachment"
-	"maicare_go/token"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"maicare_go/service/attachment"
+	"maicare_go/token"
 
 	"github.com/goccy/go-json"
 
@@ -85,7 +86,6 @@ func TestUploadHandler(t *testing.T) {
 				require.NotEmpty(t, response.Data.FileID)
 				require.NotEmpty(t, response.Data.CreatedAt)
 				require.Equal(t, "File uploaded successfully", response.Message)
-
 			},
 		},
 		{
