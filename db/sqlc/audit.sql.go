@@ -112,3 +112,89 @@ func (q *Queries) GetLatestAuditHash(ctx context.Context) (string, error) {
 	err := row.Scan(&hash_self)
 	return hash_self, err
 }
+
+const listAuditRecords = `-- name: ListAuditRecords :many
+SELECT
+    event_id,
+    event_type,
+    occured_at,
+    actor_role,
+    actor_id,
+    subject_type,
+    subject_id,
+    access_reason,
+    action,
+    result,
+    module,
+    tenant_id,
+    details,
+    ip,
+    user_agent,
+    hash_prev,
+    hash_self
+FROM audit
+WHERE
+    ($3::UUID IS NULL OR subject_id = $3::UUID)
+    AND ($4::UUID IS NULL OR actor_id = $4::UUID)
+    AND ($5::TIMESTAMPTZ IS NULL OR occured_at >= $5::TIMESTAMPTZ)
+    AND ($6::TIMESTAMPTZ IS NULL OR occured_at <= $6::TIMESTAMPTZ)
+    AND ($7::TEXT IS NULL OR tenant_id = $7::TEXT)
+ORDER BY occured_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListAuditRecordsParams struct {
+	Limit     int32              `json:"limit"`
+	Offset    int32              `json:"offset"`
+	SubjectID *uuid.UUID         `json:"subject_id"`
+	ActorID   *uuid.UUID         `json:"actor_id"`
+	StartTime pgtype.Timestamptz `json:"start_time"`
+	EndTime   pgtype.Timestamptz `json:"end_time"`
+	TenantID  *string            `json:"tenant_id"`
+}
+
+func (q *Queries) ListAuditRecords(ctx context.Context, arg ListAuditRecordsParams) ([]Audit, error) {
+	rows, err := q.db.Query(ctx, listAuditRecords,
+		arg.Limit,
+		arg.Offset,
+		arg.SubjectID,
+		arg.ActorID,
+		arg.StartTime,
+		arg.EndTime,
+		arg.TenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Audit{}
+	for rows.Next() {
+		var i Audit
+		if err := rows.Scan(
+			&i.EventID,
+			&i.EventType,
+			&i.OccuredAt,
+			&i.ActorRole,
+			&i.ActorID,
+			&i.SubjectType,
+			&i.SubjectID,
+			&i.AccessReason,
+			&i.Action,
+			&i.Result,
+			&i.Module,
+			&i.TenantID,
+			&i.Details,
+			&i.Ip,
+			&i.UserAgent,
+			&i.HashPrev,
+			&i.HashSelf,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

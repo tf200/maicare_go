@@ -222,6 +222,7 @@ type Querier interface {
 	ListAllRolePermissions(ctx context.Context, roleID int32) ([]ListAllRolePermissionsRow, error)
 	// Join to get the client location name
 	ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error)
+	ListAuditRecords(ctx context.Context, arg ListAuditRecordsParams) ([]Audit, error)
 	ListCarePlanReports(ctx context.Context, arg ListCarePlanReportsParams) ([]ListCarePlanReportsRow, error)
 	// Define the parameters for the query
 	// client_id: The ID of the client whose appointments are being queried.

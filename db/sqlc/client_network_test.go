@@ -7,6 +7,7 @@ import (
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +36,7 @@ func TestGetClientSender(t *testing.T) {
 	require.Equal(t, client.SenderID, &sender.ID)
 }
 
-func createRandomEmergencyContact(t *testing.T, clientID int64) ClientEmergencyContact {
+func createRandomEmergencyContact(t *testing.T, clientID uuid.UUID) ClientEmergencyContact {
 	arg := CreateEmemrgencyContactParams{
 		ClientID:         clientID,
 		FirstName:        util.StringPtr(util.RandomString(5)),
@@ -120,7 +121,7 @@ func TestDeleteEmergencyContact(t *testing.T) {
 	require.Empty(t, contact2)
 }
 
-func assignRandomEmployee(t *testing.T, clientID int64, employeeID int64) AssignEmployeeRow {
+func assignRandomEmployee(t *testing.T, clientID uuid.UUID, employeeID uuid.UUID) AssignEmployeeRow {
 	arg := AssignEmployeeParams{
 		ClientID:   clientID,
 		EmployeeID: employeeID,
