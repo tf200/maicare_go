@@ -299,3 +299,14 @@ SELECT
     COUNT(*) FILTER (WHERE out_of_service = TRUE) AS total_out_of_service
 FROM
     employee_profile;
+
+
+
+-- name: ListEmployeesWithContractHours :many
+SELECT
+    id,
+    first_name,
+    last_name,
+    contract_hours
+FROM employee_profile
+WHERE id IN (sqlc.slice('employee_ids'));

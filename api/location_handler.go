@@ -15,8 +15,8 @@ import (
 // @Tags organisations
 // @Accept json
 // @Produce json
-// @Param input body CreateOrganisationRequest true "Create organisation"
-// @Success 200 {object} Response[CreateOrganisationResponse]
+// @Param input body organization.CreateOrganisationRequest true "Create organisation"
+// @Success 200 {object} Response[organization.CreateOrganisationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations [post]
 func (server *Server) CreateOrganisationApi(ctx *gin.Context) {
@@ -40,7 +40,7 @@ func (server *Server) CreateOrganisationApi(ctx *gin.Context) {
 // @Description Get a list of all organisations
 // @Tags organisations
 // @Produce json
-// @Success 200 {object} Response[[]ListOrganisationsResponse]
+// @Success 200 {object} Response[[]organization.ListOrganisationsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -63,7 +63,7 @@ func (server *Server) ListOrganisationsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Organisation ID"
-// @Success 200 {object} Response[GetOrganisationResponse]
+// @Success 200 {object} Response[organization.GetOrganisationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations/{id} [get]
 func (server *Server) GetOrganisationApi(ctx *gin.Context) {
@@ -90,7 +90,7 @@ func (server *Server) GetOrganisationApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Organisation ID"
-// @Success 200 {object} Response[GetOrganisationCountResponse]
+// @Success 200 {object} Response[organization.GetOrganisationCountResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations/{id}/counts [get]
 func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
@@ -115,8 +115,8 @@ func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Organisation ID"
-// @Param input body UpdateOrganisationRequest true "Update organisation"
-// @Success 200 {object} Response[UpdateOrganisationResponse]
+// @Param input body organization.UpdateOrganisationRequest true "Update organisation"
+// @Success 200 {object} Response[organization.UpdateOrganisationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations/{id} [put]
 func (server *Server) UpdateOrganisationApi(ctx *gin.Context) {
@@ -149,7 +149,7 @@ func (server *Server) UpdateOrganisationApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Organisation ID"
-// @Success 200 {object} Response[DeleteOrganisationResponse]
+// @Success 200 {object} Response[organization.DeleteOrganisationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations/{id} [delete]
 func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
@@ -175,7 +175,7 @@ func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
 // @Tags organisations
 // @Param id path int true "Organisation ID"
 // @Produce json
-// @Success 200 {object} Response[[]ListLocationsResponse]
+// @Success 200 {object} Response[[]organization.ListLocationsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -202,7 +202,7 @@ func (server *Server) ListLocationsApi(ctx *gin.Context) {
 // @Description Get a list of all locations across all organisations
 // @Tags organisations
 // @Produce json
-// @Success 200 {object} Response[[]ListLocationsResponse]
+// @Success 200 {object} Response[[]organization.ListLocationsResponse]
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /locations [get]
 func (server *Server) ListAllLocationsApi(ctx *gin.Context) {
@@ -223,8 +223,8 @@ func (server *Server) ListAllLocationsApi(ctx *gin.Context) {
 // @Param id path int true "Organisation ID"
 // @Accept json
 // @Produce json
-// @Param input body CreateLocationRequest true "Create location"
-// @Success 200 {object} Response[CreateLocationResponse]
+// @Param input body organization.CreateLocationRequest true "Create location"
+// @Success 200 {object} Response[organization.CreateLocationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations/{id}/locations [post]
 func (server *Server) CreateLocationApi(ctx *gin.Context) {
@@ -253,8 +253,8 @@ func (server *Server) CreateLocationApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Location ID"
-// @Param input body UpdateLocationRequest true "Update location"
-// @Success 200 {object} Response[UpdateLocationResponse]
+// @Param input body organization.UpdateLocationRequest true "Update location"
+// @Success 200 {object} Response[organization.UpdateLocationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /locations/{id} [put]
 func (server *Server) UpdateLocationApi(ctx *gin.Context) {
@@ -285,7 +285,7 @@ func (server *Server) UpdateLocationApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Location ID"
-// @Success 200 {object} Response[DeleteLocationResponse]
+// @Success 200 {object} Response[organization.DeleteLocationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /locations/{id} [delete]
 func (server *Server) DeleteLocationApi(ctx *gin.Context) {
@@ -310,7 +310,7 @@ func (server *Server) DeleteLocationApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Location ID"
-// @Success 200 {object} Response[GetLocationResponse]
+// @Success 200 {object} Response[organization.GetLocationResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /locations/{id} [get]
 func (server *Server) GetLocationApi(ctx *gin.Context) {

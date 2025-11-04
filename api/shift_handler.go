@@ -16,8 +16,8 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path int true "Location ID"
-// @Param request body CreateShiftApiRequest true "Shift creation request"
-// @Success 201 {object} Response[CreateShiftApiResponse]
+// @Param request body organization.CreateShiftApiRequest true "Shift creation request"
+// @Success 201 {object} Response[organization.CreateShiftApiResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /locations/{id}/shifts [post]
@@ -53,8 +53,8 @@ func (server *Server) CreateShiftApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Location ID"
 // @Param shift_id path int true "Shift ID"
-// @Param request body UpdateShiftApiRequest true "Shift update request"
-// @Success 200 {object} Response[UpdateShiftApiResponse]
+// @Param request body organization.UpdateShiftApiRequest true "Shift update request"
+// @Success 200 {object} Response[organization.UpdateShiftApiResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
@@ -117,7 +117,7 @@ func (server *Server) DeleteShiftApi(ctx *gin.Context) {
 // @Tags Shifts
 // @Produce json
 // @Param id path int true "Location ID"
-// @Success 200 {object} Response[[]ListShiftsByLocationIDResponse]
+// @Success 200 {object} Response[[]organization.ListShiftsByLocationIDResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
@@ -206,8 +207,8 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body ConfirmProgressReportRequest true "Progress Report Request"
-// @Success 201 {object} Response[ConfirmProgressReportResponse]
+// @Param request body clientp.ConfirmProgressReportRequest true "Progress Report Request"
+// @Success 201 {object} Response[clientp.ConfirmProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/ai_progress_reports/confirm [post]
 func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
@@ -242,7 +243,7 @@ func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
 // @Param id path int true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[[]ListAiGeneratedReportsResponse]]
+// @Success 200 {object} Response[pagination.Response[[]clientp.ListAiGeneratedReportsResponse]]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/ai_progress_reports [get]
 func (server *Server) ListAiGeneratedReportsApi(ctx *gin.Context) {

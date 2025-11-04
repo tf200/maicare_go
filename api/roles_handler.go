@@ -16,7 +16,7 @@ import (
 // @Description List all roles
 // @Tags roles
 // @Produce json
-// @Success 200 {object} Response[[]ListRolesApiResponse]
+// @Success 200 {object} Response[[]auth.ListRolesApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles [get]
 func (server *Server) ListRolesApi(ctx *gin.Context) {
@@ -33,7 +33,7 @@ func (server *Server) ListRolesApi(ctx *gin.Context) {
 // @Description List all permissions
 // @Tags roles
 // @Produce json
-// @Success 200 {object} Response[[]ListAllPermissionsApiResponse]
+// @Success 200 {object} Response[[]auth.ListAllPermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /permissions [get]
 func (server *Server) ListAllPermissionsApi(ctx *gin.Context) {
@@ -51,7 +51,7 @@ func (server *Server) ListAllPermissionsApi(ctx *gin.Context) {
 // @Tags roles
 // @Produce json
 // @Param role_id path int true "Role ID"
-// @Success 200 {object} Response[[]ListAllRolePermissionsApiResponse]
+// @Success 200 {object} Response[[]auth.ListAllRolePermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/{role_id}/permissions [get]
 func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
@@ -76,8 +76,8 @@ func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 // @Param employee_id query int true "Employee ID"
 // @Accept json
 // @Produce json
-// @Param input body AssignRoleToUserParams true "Assign role to user"
-// @Success 200 {object} Response[AssignRoleToUserApiResponse]
+// @Param input body auth.AssignRoleToEmployeeParams true "Assign role to user"
+// @Success 200 {object} Response[auth.AssignRoleToEmployeeApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles [post]
 func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
@@ -105,7 +105,7 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 // @Tags roles
 // @Produce json
 // @Param employee_id path int true "Employee ID"
-// @Success 200 {object} Response[ListUserRolesAndPermissionsApiResponse]
+// @Success 200 {object} Response[auth.ListUserRolesAndPermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles_permissions [get]
 func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
@@ -129,8 +129,8 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param employee_id path int true "Employee ID"
-// @Param input body GrantUserPermissionsRequest true "Grant user permissions"
-// @Success 200 {object} Response[GrantUserPermissionsResponse]
+// @Param input body auth.GrantUserPermissionsRequest true "Grant user permissions"
+// @Success 200 {object} Response[auth.GrantUserPermissionsResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/permissions [post]
 func (server *Server) GrantUserPermissionsApi(ctx *gin.Context) {
@@ -159,8 +159,8 @@ func (server *Server) GrantUserPermissionsApi(ctx *gin.Context) {
 // @Tags roles
 // @Accept json
 // @Produce json
-// @Param input body CreateRoleRequest true "Create role"
-// @Success 200 {object} Response[CreateRoleResponse]
+// @Param input body auth.CreateRoleRequest true "Create role"
+// @Success 200 {object} Response[auth.CreateRoleResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles [post]
 func (server *Server) CreateRoleApi(ctx *gin.Context) {
@@ -186,8 +186,8 @@ func (server *Server) CreateRoleApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param role_id path int true "Role ID"
-// @Param input body AddPermissionsToRoleRequest true "Add permissions to role"
-// @Success 200 {object} Response[AddPermissionsToRoleResponse]
+// @Param input body auth.AddPermissionsToRoleRequest true "Add permissions to role"
+// @Success 200 {object} Response[auth.AddPermissionsToRoleResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/{role_id}/permissions [post]
 func (server *Server) AddPermissionsToRoleApi(ctx *gin.Context) {

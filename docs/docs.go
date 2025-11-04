@@ -50,7 +50,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanActionsRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanActionsRequest"
                         }
                     }
                 ],
@@ -58,7 +58,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanActionsResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanActionsResponse"
                         }
                     },
                     "400": {
@@ -732,6 +732,83 @@ const docTemplate = `{
                 }
             }
         },
+        "/audit/logs": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of audit logs based on query parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "audit"
+                ],
+                "summary": "List Audit Logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "actor_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 5,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "subject_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved audit logs",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-array_audit_AuditRecord"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/change_password": {
             "post": {
                 "description": "Change user password",
@@ -927,6 +1004,7 @@ const docTemplate = `{
                 "tags": [
                     "authentication"
                 ],
+                "summary": "Refresh access token",
                 "parameters": [
                     {
                         "description": "Refresh token",
@@ -1236,7 +1314,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanResourcesResponse"
+                            "$ref": "#/definitions/api.Response-array_care_GetCarePlanResourcesResponse"
                         }
                     },
                     "400": {
@@ -1285,7 +1363,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanResourcesRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanResourcesRequest"
                         }
                     }
                 ],
@@ -1293,7 +1371,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanResourcesResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanResourcesResponse"
                         }
                     },
                     "400": {
@@ -1340,7 +1418,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanRisksResponse"
+                            "$ref": "#/definitions/api.Response-array_care_GetCarePlanRisksResponse"
                         }
                     },
                     "400": {
@@ -1391,7 +1469,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanReportRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanReportRequest"
                         }
                     }
                 ],
@@ -1399,7 +1477,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanReportResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanReportResponse"
                         }
                     },
                     "400": {
@@ -1491,7 +1569,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetCarePlanOverviewResponse"
+                            "$ref": "#/definitions/api.Response-care_GetCarePlanOverviewResponse"
                         }
                     },
                     "400": {
@@ -1540,7 +1618,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanOverviewRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanOverviewRequest"
                         }
                     }
                 ],
@@ -1548,7 +1626,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanOverviewResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanOverviewResponse"
                         }
                     },
                     "400": {
@@ -1595,7 +1673,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetCarePlanInterventionsResponse"
+                            "$ref": "#/definitions/api.Response-care_GetCarePlanInterventionsResponse"
                         }
                     },
                     "400": {
@@ -1644,7 +1722,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanInterventionRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanInterventionRequest"
                         }
                     }
                 ],
@@ -1652,7 +1730,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanInterventionResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanInterventionResponse"
                         }
                     },
                     "400": {
@@ -1699,7 +1777,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetCarePlanObjectivesResponse"
+                            "$ref": "#/definitions/api.Response-care_GetCarePlanObjectivesResponse"
                         }
                     },
                     "400": {
@@ -1748,7 +1826,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanObjectiveRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanObjectiveRequest"
                         }
                     }
                 ],
@@ -1756,7 +1834,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanObjectiveResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanObjectiveResponse"
                         }
                     },
                     "400": {
@@ -1818,7 +1896,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListCarePlanReportsResponse"
+                            "$ref": "#/definitions/api.Response-array_care_ListCarePlanReportsResponse"
                         }
                     },
                     "400": {
@@ -1867,7 +1945,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanReportRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanReportRequest"
                         }
                     }
                 ],
@@ -1875,7 +1953,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanReportResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanReportResponse"
                         }
                     },
                     "400": {
@@ -1926,7 +2004,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanRisksRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanRisksRequest"
                         }
                     }
                 ],
@@ -1934,7 +2012,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanRisksResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanRisksResponse"
                         }
                     },
                     "400": {
@@ -1981,7 +2059,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanSuccessMetricsResponse"
+                            "$ref": "#/definitions/api.Response-array_care_GetCarePlanSuccessMetricsResponse"
                         }
                     },
                     "400": {
@@ -2030,7 +2108,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanSuccessMetricsRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanSuccessMetricsRequest"
                         }
                     }
                 ],
@@ -2038,7 +2116,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanSuccessMetricsResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanSuccessMetricsResponse"
                         }
                     },
                     "400": {
@@ -2085,7 +2163,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetCarePlanSupportNetworkResponse"
+                            "$ref": "#/definitions/api.Response-array_care_GetCarePlanSupportNetworkResponse"
                         }
                     },
                     "400": {
@@ -2134,7 +2212,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanSupportNetworkRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanSupportNetworkRequest"
                         }
                     }
                 ],
@@ -2142,7 +2220,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanSupportNetworkResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanSupportNetworkResponse"
                         }
                     },
                     "400": {
@@ -2503,7 +2581,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-array_api_ListAiGeneratedReportsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-array_clientp_ListAiGeneratedReportsResponse"
                         }
                     },
                     "400": {
@@ -2586,7 +2664,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.ConfirmProgressReportRequest"
+                            "$ref": "#/definitions/clientp.ConfirmProgressReportRequest"
                         }
                     }
                 ],
@@ -2594,7 +2672,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ConfirmProgressReportResponse"
+                            "$ref": "#/definitions/api.Response-clientp_ConfirmProgressReportResponse"
                         }
                     },
                     "400": {
@@ -2848,7 +2926,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-care_ListClientCarePlansResponse"
                         }
                     },
                     "400": {
@@ -2897,7 +2975,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateClientMaturityMatrixAssessmentRequest"
+                            "$ref": "#/definitions/care.CreateClientCarePlanRequest"
                         }
                     }
                 ],
@@ -2905,7 +2983,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateClientMaturityMatrixAssessmentResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateClientCarePlanResponse"
                         }
                     },
                     "400": {
@@ -4529,60 +4607,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/maturity_matrix_assessment/{mma_id}": {
-            "get": {
-                "description": "Get a client maturity matrix assessment",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "maturity_matrix"
-                ],
-                "summary": "Get client maturity matrix assessment",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Client maturity matrix assessment ID",
-                        "name": "assessment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetClientMaturityMatrixAssessmentResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/clients/{id}/medications/{medication_id}": {
             "delete": {
                 "produces": [
@@ -5513,7 +5537,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_DischargeOverviewResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-ecr_DischargeOverviewResponse"
                         }
                     },
                     "400": {
@@ -5539,7 +5563,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListEmployeesByContractEndDateResponse"
+                            "$ref": "#/definitions/api.Response-array_ecr_ListEmployeesByContractEndDateResponse"
                         }
                     },
                     "500": {
@@ -5565,7 +5589,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListLatestPaymentsResponse"
+                            "$ref": "#/definitions/api.Response-array_ecr_ListLatestPaymentsResponse"
                         }
                     },
                     "500": {
@@ -5590,7 +5614,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_TotalDischargeCountResponse"
+                            "$ref": "#/definitions/api.Response-ecr_TotalDischargeCountResponse"
                         }
                     },
                     "400": {
@@ -5616,7 +5640,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListUpcomingAppointmentsResponse"
+                            "$ref": "#/definitions/api.Response-array_ecr_ListUpcomingAppointmentsResponse"
                         }
                     },
                     "500": {
@@ -5804,7 +5828,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetEmployeeCountsResponse"
+                            "$ref": "#/definitions/api.Response-employees_GetEmployeeCountsResponse"
                         }
                     },
                     "400": {
@@ -5863,7 +5887,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_SearchEmployeesByNameOrEmailResponse"
+                            "$ref": "#/definitions/api.Response-array_employees_SearchEmployeesByNameOrEmailResponse"
                         }
                     },
                     "400": {
@@ -5913,7 +5937,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetEmployeeProfileResponse"
+                            "$ref": "#/definitions/api.Response-employees_GetEmployeeProfileResponse"
                         }
                     },
                     "400": {
@@ -5976,7 +6000,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.GrantUserPermissionsRequest"
+                            "$ref": "#/definitions/auth.GrantUserPermissionsRequest"
                         }
                     }
                 ],
@@ -5984,7 +6008,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GrantUserPermissionsResponse"
+                            "$ref": "#/definitions/api.Response-auth_GrantUserPermissionsResponse"
                         }
                     },
                     "400": {
@@ -6035,7 +6059,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AssignRoleToUserParams"
+                            "$ref": "#/definitions/auth.AssignRoleToEmployeeParams"
                         }
                     }
                 ],
@@ -6043,7 +6067,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AssignRoleToUserApiResponse"
+                            "$ref": "#/definitions/api.Response-auth_AssignRoleToEmployeeApiResponse"
                         }
                     },
                     "400": {
@@ -6090,7 +6114,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListUserRolesAndPermissionsApiResponse"
+                            "$ref": "#/definitions/api.Response-auth_ListUserRolesAndPermissionsApiResponse"
                         }
                     },
                     "400": {
@@ -6128,7 +6152,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetEmployeeProfileByIDApiResponse"
+                            "$ref": "#/definitions/api.Response-employees_GetEmployeeProfileByIDResponse"
                         }
                     },
                     "400": {
@@ -6185,7 +6209,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateEmployeeProfileResponse"
+                            "$ref": "#/definitions/api.Response-employees_UpdateEmployeeProfileResponse"
                         }
                     },
                     "400": {
@@ -6309,7 +6333,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListEmployeeCertificationResponse"
+                            "$ref": "#/definitions/api.Response-array_employees_ListEmployeeCertificationResponse"
                         }
                     },
                     "400": {
@@ -6367,7 +6391,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AddEmployeeCertificationRequest"
+                            "$ref": "#/definitions/employees.AddEmployeeCertificationRequest"
                         }
                     }
                 ],
@@ -6375,7 +6399,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AddEmployeeCertificationResponse"
+                            "$ref": "#/definitions/api.Response-employees_AddEmployeeCertificationResponse"
                         }
                     },
                     "400": {
@@ -6442,7 +6466,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateEmployeeCertificationRequest"
+                            "$ref": "#/definitions/employees.UpdateEmployeeCertificationRequest"
                         }
                     }
                 ],
@@ -6450,7 +6474,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateEmployeeCertificationResponse"
+                            "$ref": "#/definitions/api.Response-employees_UpdateEmployeeCertificationResponse"
                         }
                     },
                     "400": {
@@ -6514,7 +6538,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteEmployeeCertificationResponse"
+                            "$ref": "#/definitions/api.Response-employees_DeleteEmployeeCertificationResponse"
                         }
                     },
                     "400": {
@@ -6573,7 +6597,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetEmployeeContractDetailsResponse"
+                            "$ref": "#/definitions/api.Response-employees_GetEmployeeContractDetailsResponse"
                         }
                     },
                     "400": {
@@ -6634,7 +6658,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AddEmployeeContractDetailsRequest"
+                            "$ref": "#/definitions/employees.AddEmployeeContractDetailsRequest"
                         }
                     }
                 ],
@@ -6642,7 +6666,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AddEmployeeContractDetailsResponse"
+                            "$ref": "#/definitions/api.Response-employees_AddEmployeeContractDetailsResponse"
                         }
                     },
                     "400": {
@@ -6701,7 +6725,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListEmployeeEducationResponse"
+                            "$ref": "#/definitions/api.Response-array_employees_ListEmployeeEducationResponse"
                         }
                     },
                     "400": {
@@ -6762,7 +6786,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AddEducationToEmployeeProfileRequest"
+                            "$ref": "#/definitions/employees.AddEducationToEmployeeProfileRequest"
                         }
                     }
                 ],
@@ -6770,7 +6794,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AddEducationToEmployeeProfileResponse"
+                            "$ref": "#/definitions/api.Response-employees_AddEducationToEmployeeProfileResponse"
                         }
                     },
                     "400": {
@@ -6837,7 +6861,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateEmployeeEducationRequest"
+                            "$ref": "#/definitions/employees.UpdateEmployeeEducationRequest"
                         }
                     }
                 ],
@@ -6845,7 +6869,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateEmployeeEducationResponse"
+                            "$ref": "#/definitions/api.Response-employees_UpdateEmployeeEducationResponse"
                         }
                     },
                     "400": {
@@ -6909,7 +6933,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteEmployeeEducationResponse"
+                            "$ref": "#/definitions/api.Response-employees_DeleteEmployeeEducationResponse"
                         }
                     },
                     "400": {
@@ -6968,7 +6992,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListEmployeeExperienceResponse"
+                            "$ref": "#/definitions/api.Response-array_employees_ListEmployeeExperienceResponse"
                         }
                     },
                     "400": {
@@ -7026,7 +7050,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AddEmployeeExperienceRequest"
+                            "$ref": "#/definitions/employees.AddEmployeeExperienceRequest"
                         }
                     }
                 ],
@@ -7034,7 +7058,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AddEmployeeExperienceResponse"
+                            "$ref": "#/definitions/api.Response-employees_AddEmployeeExperienceResponse"
                         }
                     },
                     "400": {
@@ -7101,7 +7125,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateEmployeeExperienceRequest"
+                            "$ref": "#/definitions/employees.UpdateEmployeeExperienceRequest"
                         }
                     }
                 ],
@@ -7109,7 +7133,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateEmployeeExperienceResponse"
+                            "$ref": "#/definitions/api.Response-employees_UpdateEmployeeExperienceResponse"
                         }
                     },
                     "400": {
@@ -7173,7 +7197,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteEmployeeExperienceResponse"
+                            "$ref": "#/definitions/api.Response-employees_DeleteEmployeeExperienceResponse"
                         }
                     },
                     "400": {
@@ -7307,7 +7331,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.SetEmployeeProfilePictureRequest"
+                            "$ref": "#/definitions/employees.SetEmployeeProfilePictureRequest"
                         }
                     }
                 ],
@@ -7315,7 +7339,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_SetEmployeeProfilePictureResponse"
+                            "$ref": "#/definitions/api.Response-employees_SetEmployeeProfilePictureResponse"
                         }
                     },
                     "400": {
@@ -7391,7 +7415,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListWorkingHoursResponse"
+                            "$ref": "#/definitions/api.Response-employees_ListWorkingHoursResponse"
                         }
                     },
                     "400": {
@@ -7443,7 +7467,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListAllIncidentsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListAllIncidentsResponse"
                         }
                     },
                     "400": {
@@ -7507,219 +7531,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/intake_form": {
-            "get": {
-                "description": "List intake forms",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "List intake forms",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Search query",
-                        "name": "search",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by (options: created_at, urgency_score)",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort order (options: asc, desc)",
-                        "name": "sort_order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListIntakeFormsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "-": []
-                    }
-                ],
-                "description": "Create an intake form",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "Create an intake form",
-                "parameters": [
-                    {
-                        "description": "Intake form request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CreateIntakeFormRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateIntakeFormResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/intake_form/{id}": {
-            "get": {
-                "description": "Get an intake form",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "Get an intake form",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Intake form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetIntakeFormResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/intake_form/{id}/urgency_score": {
-            "post": {
-                "description": "Add urgency score to an intake form",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "intake_form"
-                ],
-                "summary": "Add urgency score to an intake form",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Intake form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Urgency score request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.AddUrgencyScoreRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-api_AddUrgencyScoreResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/interventions/{intervention_id}": {
             "put": {
                 "description": "Update a care plan intervention by its ID",
@@ -7747,7 +7558,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanInterventionRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanInterventionRequest"
                         }
                     }
                 ],
@@ -7755,7 +7566,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanInterventionResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanInterventionResponse"
                         }
                     },
                     "400": {
@@ -7884,7 +7695,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with paginated invoices",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListInvoicesResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-invoice_ListInvoicesResponse"
                         }
                     },
                     "400": {
@@ -7932,7 +7743,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateInvoiceRequest"
+                            "$ref": "#/definitions/invoice.CreateInvoiceRequest"
                         }
                     }
                 ],
@@ -7940,7 +7751,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with invoice details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateInvoiceResponse"
+                            "$ref": "#/definitions/api.Response-invoice_CreateInvoiceResponse"
                         }
                     },
                     "400": {
@@ -7990,7 +7801,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.GenerateInvoiceRequest"
+                            "$ref": "#/definitions/invoice.GenerateInvoiceRequest"
                         }
                     }
                 ],
@@ -7998,7 +7809,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with invoice details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GenerateInvoiceResponse"
+                            "$ref": "#/definitions/api.Response-invoice_GenerateInvoiceResponse"
                         }
                     },
                     "400": {
@@ -8048,7 +7859,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetInvoiceTemplateItemsResponse"
+                            "$ref": "#/definitions/api.Response-array_invoice_GetInvoiceTemplateItemsResponse"
                         }
                     },
                     "400": {
@@ -8158,7 +7969,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateInvoiceRequest"
+                            "$ref": "#/definitions/invoice.UpdateInvoiceRequest"
                         }
                     }
                 ],
@@ -8166,7 +7977,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with updated invoice details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateInvoiceResponse"
+                            "$ref": "#/definitions/api.Response-invoice_UpdateInvoiceResponse"
                         }
                     },
                     "400": {
@@ -8272,7 +8083,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetInvoiceAuditLogsResponse"
+                            "$ref": "#/definitions/api.Response-array_invoice_GetInvoiceAuditLogResponse"
                         }
                     },
                     "400": {
@@ -8326,7 +8137,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with credit note details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreditInvoiceResponse"
+                            "$ref": "#/definitions/api.Response-invoice_CreditInvoiceResponse"
                         }
                     },
                     "400": {
@@ -8380,7 +8191,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Successful response indicating generation",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GenerateInvoicePDFResponse"
+                            "$ref": "#/definitions/api.Response-invoice_GenerateInvoicePDFResponse"
                         }
                     },
                     "400": {
@@ -8434,7 +8245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListPaymentsResponse"
+                            "$ref": "#/definitions/api.Response-array_invoice_ListPaymentsResponse"
                         }
                     },
                     "400": {
@@ -8490,7 +8301,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreatePaymentRequest"
+                            "$ref": "#/definitions/invoice.CreatePaymentRequest"
                         }
                     }
                 ],
@@ -8498,7 +8309,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with payment",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreatePaymentResponse"
+                            "$ref": "#/definitions/api.Response-invoice_CreatePaymentResponse"
                         }
                     },
                     "400": {
@@ -8552,7 +8363,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetPaymentByIDResponse"
+                            "$ref": "#/definitions/api.Response-invoice_GetPaymentByIDResponse"
                         }
                     },
                     "400": {
@@ -8672,7 +8483,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdatePaymentRequest"
+                            "$ref": "#/definitions/invoice.UpdatePaymentRequest"
                         }
                     }
                 ],
@@ -8680,7 +8491,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with updated payment",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdatePaymentResponse"
+                            "$ref": "#/definitions/api.Response-invoice_UpdatePaymentResponse"
                         }
                     },
                     "400": {
@@ -8743,7 +8554,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response with deletion details",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeletePaymentResponse"
+                            "$ref": "#/definitions/api.Response-invoice_DeletePaymentResponse"
                         }
                     },
                     "400": {
@@ -8787,7 +8598,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListLocationsResponse"
+                            "$ref": "#/definitions/api.Response-array_organization_ListLocationsResponse"
                         }
                     },
                     "500": {
@@ -8825,7 +8636,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetLocationResponse"
+                            "$ref": "#/definitions/api.Response-organization_GetLocationResponse"
                         }
                     },
                     "400": {
@@ -8874,7 +8685,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateLocationRequest"
+                            "$ref": "#/definitions/organization.UpdateLocationRequest"
                         }
                     }
                 ],
@@ -8882,7 +8693,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateLocationResponse"
+                            "$ref": "#/definitions/api.Response-organization_UpdateLocationResponse"
                         }
                     },
                     "400": {
@@ -8930,7 +8741,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteLocationResponse"
+                            "$ref": "#/definitions/api.Response-organization_DeleteLocationResponse"
                         }
                     },
                     "400": {
@@ -8998,7 +8809,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Daily schedules retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetDailySchedulesByLocationResponse"
+                            "$ref": "#/definitions/api.Response-schedule_GetDailySchedulesByLocationResponse"
                         }
                     },
                     "400": {
@@ -9053,7 +8864,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Monthly schedules retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_GetMonthlySchedulesByLocationResponse"
+                            "$ref": "#/definitions/api.Response-array_schedule_GetMonthlySchedulesByLocationResponse"
                         }
                     },
                     "400": {
@@ -9094,7 +8905,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListShiftsByLocationIDResponse"
+                            "$ref": "#/definitions/api.Response-array_organization_ListShiftsByLocationIDResponse"
                         }
                     },
                     "400": {
@@ -9143,7 +8954,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateShiftApiRequest"
+                            "$ref": "#/definitions/organization.CreateShiftApiRequest"
                         }
                     }
                 ],
@@ -9151,7 +8962,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateShiftApiResponse"
+                            "$ref": "#/definitions/api.Response-organization_CreateShiftApiResponse"
                         }
                     },
                     "400": {
@@ -9203,7 +9014,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateShiftApiRequest"
+                            "$ref": "#/definitions/organization.UpdateShiftApiRequest"
                         }
                     }
                 ],
@@ -9211,7 +9022,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateShiftApiResponse"
+                            "$ref": "#/definitions/api.Response-organization_UpdateShiftApiResponse"
                         }
                     },
                     "400": {
@@ -9294,7 +9105,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListMaturityMatrixResponse"
+                            "$ref": "#/definitions/api.Response-array_care_ListCarePlanTopics"
                         }
                     },
                     "400": {
@@ -9348,7 +9159,7 @@ const docTemplate = `{
                     "200": {
                         "description": "List of notifications",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_ListNotificationsResponse"
+                            "$ref": "#/definitions/api.Response-notification_ListNotificationsResponse"
                         }
                     },
                     "400": {
@@ -9398,7 +9209,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_MarkNotificationAsReadResponse"
+                            "$ref": "#/definitions/api.Response-notification_MarkNotificationAsReadResponse"
                         }
                     },
                     "400": {
@@ -9455,7 +9266,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanObjectiveRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanObjectiveRequest"
                         }
                     }
                 ],
@@ -9463,7 +9274,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanObjectiveResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanObjectiveResponse"
                         }
                     },
                     "400": {
@@ -9559,7 +9370,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateCarePlanActionsRequest"
+                            "$ref": "#/definitions/care.CreateCarePlanActionsRequest"
                         }
                     }
                 ],
@@ -9567,7 +9378,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateCarePlanActionsResponse"
+                            "$ref": "#/definitions/api.Response-care_CreateCarePlanActionsResponse"
                         }
                     },
                     "400": {
@@ -9605,7 +9416,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListOrganisationsResponse"
+                            "$ref": "#/definitions/api.Response-array_organization_ListOrganisationsResponse"
                         }
                     },
                     "400": {
@@ -9647,7 +9458,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateOrganisationRequest"
+                            "$ref": "#/definitions/organization.CreateOrganisationRequest"
                         }
                     }
                 ],
@@ -9655,7 +9466,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateOrganisationResponse"
+                            "$ref": "#/definitions/api.Response-organization_CreateOrganisationResponse"
                         }
                     },
                     "400": {
@@ -9705,7 +9516,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetOrganisationResponse"
+                            "$ref": "#/definitions/api.Response-organization_GetOrganisationResponse"
                         }
                     },
                     "400": {
@@ -9754,7 +9565,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateOrganisationRequest"
+                            "$ref": "#/definitions/organization.UpdateOrganisationRequest"
                         }
                     }
                 ],
@@ -9762,7 +9573,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateOrganisationResponse"
+                            "$ref": "#/definitions/api.Response-organization_UpdateOrganisationResponse"
                         }
                     },
                     "400": {
@@ -9810,7 +9621,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_DeleteOrganisationResponse"
+                            "$ref": "#/definitions/api.Response-organization_DeleteOrganisationResponse"
                         }
                     },
                     "400": {
@@ -9860,7 +9671,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetOrganisationCountResponse"
+                            "$ref": "#/definitions/api.Response-organization_GetOrganisationCountResponse"
                         }
                     },
                     "400": {
@@ -9907,7 +9718,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListLocationsResponse"
+                            "$ref": "#/definitions/api.Response-array_organization_ListLocationsResponse"
                         }
                     },
                     "400": {
@@ -9956,7 +9767,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateLocationRequest"
+                            "$ref": "#/definitions/organization.CreateLocationRequest"
                         }
                     }
                 ],
@@ -9964,7 +9775,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateLocationResponse"
+                            "$ref": "#/definitions/api.Response-organization_CreateLocationResponse"
                         }
                     },
                     "400": {
@@ -10002,7 +9813,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListAllPermissionsApiResponse"
+                            "$ref": "#/definitions/api.Response-array_auth_ListAllPermissionsApiResponse"
                         }
                     },
                     "400": {
@@ -10119,7 +9930,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListRegistrationFormsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListRegistrationFormsResponse"
                         }
                     },
                     "400": {
@@ -10155,7 +9966,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateRegistrationFormRequest"
+                            "$ref": "#/definitions/clientp.CreateRegistrationFormRequest"
                         }
                     }
                 ],
@@ -10163,7 +9974,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.CreateRegistrationFormResponse"
+                            "$ref": "#/definitions/clientp.CreateRegistrationFormResponse"
                         }
                     },
                     "400": {
@@ -10204,7 +10015,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetRegistrationFormResponse"
+                            "$ref": "#/definitions/api.Response-clientp_GetRegistrationFormResponse"
                         }
                     },
                     "400": {
@@ -10253,7 +10064,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateRegistrationFormRequest"
+                            "$ref": "#/definitions/clientp.UpdateRegistrationFormRequest"
                         }
                     }
                 ],
@@ -10261,7 +10072,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateRegistrationFormResponse"
+                            "$ref": "#/definitions/api.Response-clientp_UpdateRegistrationFormResponse"
                         }
                     },
                     "400": {
@@ -10354,7 +10165,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateRegistrationFormStatusRequest"
+                            "$ref": "#/definitions/clientp.UpdateRegistrationFormStatusRequest"
                         }
                     }
                 ],
@@ -10413,7 +10224,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanResourcesRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanResourcesRequest"
                         }
                     }
                 ],
@@ -10421,7 +10232,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanResourcesResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanResourcesResponse"
                         }
                     },
                     "400": {
@@ -10517,7 +10328,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanRisksRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanRisksRequest"
                         }
                     }
                 ],
@@ -10525,7 +10336,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanRisksResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanRisksResponse"
                         }
                     },
                     "400": {
@@ -10608,7 +10419,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListRolesApiResponse"
+                            "$ref": "#/definitions/api.Response-array_auth_ListRolesApiResponse"
                         }
                     },
                     "400": {
@@ -10650,7 +10461,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateRoleRequest"
+                            "$ref": "#/definitions/auth.CreateRoleRequest"
                         }
                     }
                 ],
@@ -10658,7 +10469,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateRoleResponse"
+                            "$ref": "#/definitions/api.Response-auth_CreateRoleResponse"
                         }
                     },
                     "400": {
@@ -10705,7 +10516,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_api_ListAllRolePermissionsApiResponse"
+                            "$ref": "#/definitions/api.Response-array_auth_ListAllRolePermissionsApiResponse"
                         }
                     },
                     "400": {
@@ -10754,7 +10565,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AddPermissionsToRoleRequest"
+                            "$ref": "#/definitions/auth.AddPermissionsToRoleRequest"
                         }
                     }
                 ],
@@ -10762,7 +10573,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_AddPermissionsToRoleResponse"
+                            "$ref": "#/definitions/api.Response-auth_AddPermissionsToRoleResponse"
                         }
                     },
                     "400": {
@@ -10806,7 +10617,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateScheduleRequest"
+                            "$ref": "#/definitions/schedule.CreateScheduleRequest"
                         }
                     }
                 ],
@@ -10814,7 +10625,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Schedule created successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateScheduleResponse"
+                            "$ref": "#/definitions/api.Response-schedule_CreateScheduleResponse"
                         }
                     },
                     "400": {
@@ -10855,7 +10666,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Schedule retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetScheduleByIdResponse"
+                            "$ref": "#/definitions/api.Response-schedule_GetScheduleByIdResponse"
                         }
                     },
                     "400": {
@@ -10898,7 +10709,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateScheduleRequest"
+                            "$ref": "#/definitions/schedule.UpdateScheduleRequest"
                         }
                     }
                 ],
@@ -10906,7 +10717,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Schedule updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateScheduleResponse"
+                            "$ref": "#/definitions/api.Response-schedule_UpdateScheduleResponse"
                         }
                     },
                     "400": {
@@ -11012,7 +10823,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-api_ListSendersResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-sender_ListSendersResponse"
                         }
                     },
                     "400": {
@@ -11054,7 +10865,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateSenderRequest"
+                            "$ref": "#/definitions/sender.CreateSenderRequest"
                         }
                     }
                 ],
@@ -11062,7 +10873,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_CreateSenderResponse"
+                            "$ref": "#/definitions/api.Response-sender_CreateSenderResponse"
                         }
                     },
                     "400": {
@@ -11109,7 +10920,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_GetSenderByIdResponse"
+                            "$ref": "#/definitions/api.Response-sender_GetSenderByIdResponse"
                         }
                     },
                     "400": {
@@ -11158,7 +10969,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateSenderRequest"
+                            "$ref": "#/definitions/sender.UpdateSenderRequest"
                         }
                     }
                 ],
@@ -11166,7 +10977,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateSenderResponse"
+                            "$ref": "#/definitions/api.Response-sender_UpdateSenderResponse"
                         }
                     },
                     "400": {
@@ -11265,7 +11076,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateSenderInvoiceTemplateRequest"
+                            "$ref": "#/definitions/sender.CreateSenderInvoiceTemplateRequest"
                         }
                     }
                 ],
@@ -11324,7 +11135,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanSuccessMetricsRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanSuccessMetricsRequest"
                         }
                     }
                 ],
@@ -11332,7 +11143,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanSuccessMetricsResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanSuccessMetricsResponse"
                         }
                     },
                     "400": {
@@ -11428,7 +11239,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateCarePlanSupportNetworkRequest"
+                            "$ref": "#/definitions/care.UpdateCarePlanSupportNetworkRequest"
                         }
                     }
                 ],
@@ -11436,7 +11247,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-api_UpdateCarePlanSupportNetworkResponse"
+                            "$ref": "#/definitions/api.Response-care_UpdateCarePlanSupportNetworkResponse"
                         }
                     },
                     "400": {
@@ -11599,347 +11410,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.AddEducationToEmployeeProfileRequest": {
-            "type": "object",
-            "required": [
-                "degree",
-                "end_date",
-                "field_of_study",
-                "institution_name",
-                "start_date"
-            ],
-            "properties": {
-                "degree": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "field_of_study": {
-                    "type": "string"
-                },
-                "institution_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddEducationToEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "degree": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "field_of_study": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "institution_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddEmployeeCertificationRequest": {
-            "type": "object",
-            "properties": {
-                "date_issued": {
-                    "type": "string"
-                },
-                "issued_by": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "date_issued": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "issued_by": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddEmployeeContractDetailsRequest": {
-            "type": "object",
-            "required": [
-                "contract_hours"
-            ],
-            "properties": {
-                "contract_end_date": {
-                    "type": "string"
-                },
-                "contract_hours": {
-                    "type": "number"
-                },
-                "contract_rate": {
-                    "description": "Optional field for contract rate",
-                    "type": "number"
-                },
-                "contract_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddEmployeeContractDetailsResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_date": {
-                    "type": "string"
-                },
-                "contract_hours": {
-                    "type": "number"
-                },
-                "contract_rate": {
-                    "description": "Optional field for contract rate",
-                    "type": "number"
-                },
-                "contract_start_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.AddEmployeeExperienceRequest": {
-            "type": "object",
-            "required": [
-                "company_name",
-                "end_date",
-                "job_title",
-                "start_date"
-            ],
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "job_title": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "job_title": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddPermissionsToRoleRequest": {
-            "type": "object",
-            "required": [
-                "permission_ids"
-            ],
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "api.AddPermissionsToRoleResponse": {
-            "type": "object",
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "role_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.AddUrgencyScoreRequest": {
-            "type": "object",
-            "properties": {
-                "urgency_score": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AddUrgencyScoreResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "urgency_score": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.AssignRoleToUserApiResponse": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "integer"
-                },
-                "role_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.AssignRoleToUserParams": {
-            "type": "object",
-            "properties": {
-                "role_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CarePlanActions": {
-            "type": "object",
-            "properties": {
-                "action_description": {
-                    "type": "string"
-                },
-                "action_id": {
-                    "type": "integer"
-                },
-                "is_completed": {
-                    "type": "boolean"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CarePlanObjectives": {
-            "type": "object",
-            "properties": {
-                "actions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.CarePlanActions"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "objective_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timeframe": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ConfirmProgressReportRequest": {
-            "type": "object",
-            "required": [
-                "end_date",
-                "report_text",
-                "start_date"
-            ],
-            "properties": {
-                "end_date": {
-                    "type": "string"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ConfirmProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
         "api.CorrectSpellingRequest": {
             "type": "object",
             "properties": {
@@ -11959,4236 +11429,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateCarePlanActionsRequest": {
-            "type": "object",
-            "required": [
-                "action_description"
-            ],
-            "properties": {
-                "action_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanActionsResponse": {
-            "type": "object",
-            "properties": {
-                "action_description": {
-                    "type": "string"
-                },
-                "action_id": {
-                    "type": "integer"
-                },
-                "objective_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateCarePlanInterventionRequest": {
-            "type": "object",
-            "required": [
-                "frequency",
-                "intervention_description"
-            ],
-            "properties": {
-                "frequency": {
-                    "type": "string",
-                    "enum": [
-                        "daily",
-                        "weekly",
-                        "monthly"
-                    ]
-                },
-                "intervention_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanInterventionResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "frequency": {
-                    "type": "string"
-                },
-                "intervention_description": {
-                    "type": "string"
-                },
-                "intervention_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateCarePlanObjectiveRequest": {
-            "type": "object",
-            "required": [
-                "description",
-                "goal_title",
-                "timeframe"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "goal_title": {
-                    "type": "string"
-                },
-                "timeframe": {
-                    "type": "string",
-                    "enum": [
-                        "short_term",
-                        "medium_term",
-                        "long_term"
-                    ]
-                }
-            }
-        },
-        "api.CreateCarePlanObjectiveResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "completion_date": {
-                    "type": "string"
-                },
-                "completion_notes": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "goal_title": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "target_date": {
-                    "type": "string"
-                },
-                "timeframe": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanReportRequest": {
-            "type": "object",
-            "required": [
-                "report_content",
-                "report_type"
-            ],
-            "properties": {
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "report_content": {
-                    "type": "string"
-                },
-                "report_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanReportResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "report_content": {
-                    "type": "string"
-                },
-                "report_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanResourcesRequest": {
-            "type": "object",
-            "required": [
-                "resource_description"
-            ],
-            "properties": {
-                "is_obtained": {
-                    "type": "boolean"
-                },
-                "obtained_date": {
-                    "type": "string"
-                },
-                "resource_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanResourcesResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "is_obtained": {
-                    "type": "boolean"
-                },
-                "obtained_date": {
-                    "type": "string"
-                },
-                "resource_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanRisksRequest": {
-            "type": "object",
-            "required": [
-                "mitigation_strategy",
-                "risk_description"
-            ],
-            "properties": {
-                "mitigation_strategy": {
-                    "type": "string"
-                },
-                "risk_description": {
-                    "type": "string"
-                },
-                "risk_level": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanRisksResponse": {
-            "type": "object",
-            "properties": {
-                "mitigation_strategy": {
-                    "type": "string"
-                },
-                "risk_description": {
-                    "type": "string"
-                },
-                "risk_id": {
-                    "type": "integer"
-                },
-                "risk_level": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanSuccessMetricsRequest": {
-            "type": "object",
-            "required": [
-                "measurement_method",
-                "metric_name",
-                "target_value"
-            ],
-            "properties": {
-                "current_value": {
-                    "description": "Optional, can be nil if not set",
-                    "type": "string"
-                },
-                "measurement_method": {
-                    "type": "string"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "target_value": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanSuccessMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "current_value": {
-                    "type": "string"
-                },
-                "measurement_method": {
-                    "type": "string"
-                },
-                "metric_id": {
-                    "type": "integer"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "target_value": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanSupportNetworkRequest": {
-            "type": "object",
-            "required": [
-                "role_title"
-            ],
-            "properties": {
-                "responsibility_description": {
-                    "type": "string"
-                },
-                "role_title": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateCarePlanSupportNetworkResponse": {
-            "type": "object",
-            "properties": {
-                "responsibility_description": {
-                    "type": "string"
-                },
-                "role_title": {
-                    "type": "string"
-                },
-                "support_network_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateClientMaturityMatrixAssessmentRequest": {
-            "type": "object",
-            "properties": {
-                "initial_level": {
-                    "type": "integer"
-                },
-                "maturity_matrix_id": {
-                    "type": "integer"
-                },
-                "target_level": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateClientMaturityMatrixAssessmentResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "client_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateIntakeFormRequest": {
-            "type": "object",
-            "properties": {
-                "addiction_issues": {
-                    "type": "boolean"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "attachement_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "bsn": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "client_signature": {
-                    "type": "boolean"
-                },
-                "current_school": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "diagnoses": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "guardian_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.GuardionInfo"
-                    }
-                },
-                "guardian_signature": {
-                    "type": "boolean"
-                },
-                "guidance_goals": {
-                    "type": "string"
-                },
-                "has_valid_indication": {
-                    "type": "boolean"
-                },
-                "id_number": {
-                    "type": "string"
-                },
-                "id_type": {
-                    "type": "string"
-                },
-                "indication_end_date": {
-                    "type": "string"
-                },
-                "indication_start_date": {
-                    "type": "string"
-                },
-                "judicial_involvement": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "law_type": {
-                    "type": "string"
-                },
-                "living_situation": {
-                    "type": "string"
-                },
-                "main_provider_contact": {
-                    "type": "string"
-                },
-                "main_provider_name": {
-                    "type": "string"
-                },
-                "medication_details": {
-                    "type": "string"
-                },
-                "mentor_email": {
-                    "type": "string"
-                },
-                "mentor_name": {
-                    "type": "string"
-                },
-                "mentor_phone": {
-                    "type": "string"
-                },
-                "nationality": {
-                    "type": "string"
-                },
-                "other_law_specification": {
-                    "type": "string"
-                },
-                "other_living_situation": {
-                    "type": "string"
-                },
-                "other_risks": {
-                    "type": "string"
-                },
-                "parental_authority": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "previous_care": {
-                    "type": "string"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_function": {
-                    "type": "string"
-                },
-                "referrer_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "registration_reason": {
-                    "type": "string"
-                },
-                "registration_type": {
-                    "type": "string"
-                },
-                "risk_aggression": {
-                    "type": "boolean"
-                },
-                "risk_drug_dealing": {
-                    "type": "boolean"
-                },
-                "risk_running_away": {
-                    "type": "boolean"
-                },
-                "risk_self_harm": {
-                    "type": "boolean"
-                },
-                "risk_suicidality": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "sharing_permission": {
-                    "type": "boolean"
-                },
-                "signature_date": {
-                    "type": "string"
-                },
-                "signed_by": {
-                    "type": "string"
-                },
-                "truth_declaration": {
-                    "type": "boolean"
-                },
-                "urgency_score": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "medium",
-                        "high"
-                    ]
-                },
-                "uses_medication": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.CreateIntakeFormResponse": {
-            "type": "object",
-            "properties": {
-                "addiction_issues": {
-                    "type": "boolean"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "attachement_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "bsn": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "client_signature": {
-                    "type": "boolean"
-                },
-                "current_school": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "diagnoses": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "guardian_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.GuardionInfo"
-                    }
-                },
-                "guardian_signature": {
-                    "type": "boolean"
-                },
-                "guidance_goals": {
-                    "type": "string"
-                },
-                "has_valid_indication": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "id_number": {
-                    "type": "string"
-                },
-                "id_type": {
-                    "type": "string"
-                },
-                "indication_end_date": {
-                    "type": "string"
-                },
-                "indication_start_date": {
-                    "type": "string"
-                },
-                "judicial_involvement": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "law_type": {
-                    "type": "string"
-                },
-                "living_situation": {
-                    "type": "string"
-                },
-                "main_provider_contact": {
-                    "type": "string"
-                },
-                "main_provider_name": {
-                    "type": "string"
-                },
-                "medication_details": {
-                    "type": "string"
-                },
-                "mentor_email": {
-                    "type": "string"
-                },
-                "mentor_name": {
-                    "type": "string"
-                },
-                "mentor_phone": {
-                    "type": "string"
-                },
-                "nationality": {
-                    "type": "string"
-                },
-                "other_law_specification": {
-                    "type": "string"
-                },
-                "other_living_situation": {
-                    "type": "string"
-                },
-                "other_risks": {
-                    "type": "string"
-                },
-                "parental_authority": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "previous_care": {
-                    "type": "string"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_function": {
-                    "type": "string"
-                },
-                "referrer_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "registration_reason": {
-                    "type": "string"
-                },
-                "registration_type": {
-                    "type": "string"
-                },
-                "risk_aggression": {
-                    "type": "boolean"
-                },
-                "risk_drug_dealing": {
-                    "type": "boolean"
-                },
-                "risk_running_away": {
-                    "type": "boolean"
-                },
-                "risk_self_harm": {
-                    "type": "boolean"
-                },
-                "risk_suicidality": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "sharing_permission": {
-                    "type": "boolean"
-                },
-                "signature_date": {
-                    "type": "string"
-                },
-                "signed_by": {
-                    "type": "string"
-                },
-                "truth_declaration": {
-                    "type": "boolean"
-                },
-                "urgency_score": {
-                    "type": "string"
-                },
-                "uses_medication": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.CreateInvoiceRequest": {
-            "type": "object",
-            "required": [
-                "client_id",
-                "due_date",
-                "extra_content",
-                "invoice_details",
-                "invoice_type",
-                "issue_date",
-                "status",
-                "total_amount"
-            ],
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
-                    }
-                },
-                "invoice_type": {
-                    "type": "string",
-                    "enum": [
-                        "standard",
-                        "credit_note"
-                    ]
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "outstanding",
-                        "partially_paid",
-                        "paid",
-                        "expired",
-                        "overpaid",
-                        "imported",
-                        "concept"
-                    ]
-                },
-                "total_amount": {
-                    "type": "number"
-                }
-            }
-        },
-        "api.CreateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
-                    }
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "invoice_type": {
-                    "type": "string"
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "pdf_attachment_id": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateLocationRequest": {
-            "type": "object",
-            "required": [
-                "address",
-                "name"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateLocationResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateOrganisationRequest": {
-            "type": "object",
-            "required": [
-                "address",
-                "city",
-                "name",
-                "postal_code"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btw_number": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "kvk_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btw_number": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kvk_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreatePaymentRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "payment_date",
-                "payment_status"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "string",
-                    "example": "2023-10-01T00:00:00Z"
-                },
-                "payment_method": {
-                    "type": "string",
-                    "enum": [
-                        "credit_card",
-                        "bank_transfer",
-                        "cash",
-                        "check",
-                        "other"
-                    ]
-                },
-                "payment_reference": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string",
-                    "enum": [
-                        "pending",
-                        "completed",
-                        "failed",
-                        "refunded",
-                        "reversed"
-                    ]
-                }
-            }
-        },
-        "api.CreatePaymentResponse": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "current_invoice_status": {
-                    "type": "string"
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "invoice_status_changed": {
-                    "type": "boolean"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "integer"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_reference": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string"
-                },
-                "recorded_by": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateRegistrationFormRequest": {
-            "type": "object",
-            "properties": {
-                "application_date": {
-                    "type": "string"
-                },
-                "care_ambulatory_guidance": {
-                    "type": "boolean"
-                },
-                "care_assisted_independent_living": {
-                    "type": "boolean"
-                },
-                "care_protected_living": {
-                    "type": "boolean"
-                },
-                "care_room_training_center": {
-                    "type": "boolean"
-                },
-                "client_bsn_number": {
-                    "type": "string"
-                },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_house_number": {
-                    "type": "string"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_level": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
-                    "type": "string"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_first_name": {
-                    "type": "string"
-                },
-                "referrer_job_title": {
-                    "type": "string"
-                },
-                "referrer_last_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
-                },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateRegistrationFormResponse": {
-            "type": "object",
-            "properties": {
-                "application_date": {
-                    "type": "string"
-                },
-                "application_reason": {
-                    "type": "string"
-                },
-                "care_ambulatory_guidance": {
-                    "type": "boolean"
-                },
-                "care_assisted_independent_living": {
-                    "type": "boolean"
-                },
-                "care_protected_living": {
-                    "type": "boolean"
-                },
-                "care_room_training_center": {
-                    "type": "boolean"
-                },
-                "client_bsn_number": {
-                    "type": "string"
-                },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_goals": {
-                    "type": "string"
-                },
-                "client_house_number": {
-                    "type": "string"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "document_action_plan": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "form_status": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "processed_at": {
-                    "type": "string"
-                },
-                "processed_by_employee_id": {
-                    "type": "integer"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_first_name": {
-                    "type": "string"
-                },
-                "referrer_job_title": {
-                    "type": "string"
-                },
-                "referrer_last_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
-                },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "submitted_at": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateRoleRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateRoleResponse": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.CreateScheduleRequest": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_datetime": {
-                    "type": "string",
-                    "example": "2023-10-01T17:00:00Z"
-                },
-                "is_custom": {
-                    "description": "true for custom schedule, false for preset shift",
-                    "type": "boolean",
-                    "example": true
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "location_shift_id": {
-                    "description": "For preset shift-based schedules (required when is_custom = false)",
-                    "type": "integer",
-                    "example": 1
-                },
-                "shift_date": {
-                    "description": "Date to apply the shift",
-                    "type": "string",
-                    "example": "2023-10-01"
-                },
-                "start_datetime": {
-                    "description": "For custom schedules (required when is_custom = true)",
-                    "type": "string",
-                    "example": "2023-10-01T09:00:00Z"
-                }
-            }
-        },
-        "api.CreateScheduleResponse": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "location_shift_id": {
-                    "description": "Additional info if created from preset shift",
-                    "type": "integer"
-                },
-                "shift_name": {
-                    "type": "string"
-                },
-                "start_datetime": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateSenderInvoiceTemplateRequest": {
-            "type": "object",
-            "required": [
-                "invoice_template"
-            ],
-            "properties": {
-                "invoice_template": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "api.CreateSenderRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "types"
-            ],
-            "properties": {
-                "BTWnumber": {
-                    "type": "string"
-                },
-                "KVKnumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string",
-                    "enum": [
-                        "main_provider",
-                        "local_authority",
-                        "particular_party",
-                        "healthcare_institution"
-                    ]
-                }
-            }
-        },
-        "api.CreateSenderResponse": {
-            "type": "object",
-            "properties": {
-                "BTWnumber": {
-                    "type": "string"
-                },
-                "KVKnumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateShiftApiRequest": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "shift": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreateShiftApiResponse": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "shift": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.CreditInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.DeleteEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "date_issued": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "issued_by": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.DeleteEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "degree": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "field_of_study": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "institution_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.DeleteEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "job_title": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.DeleteLocationResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.DeleteOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.DeletePaymentResponse": {
-            "type": "object",
-            "properties": {
-                "current_invoice_status": {
-                    "type": "string"
-                },
-                "deleted_amount": {
-                    "type": "number"
-                },
-                "deleted_payment_id": {
-                    "type": "integer"
-                },
-                "deleted_payment_status": {
-                    "type": "string"
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "invoice_status_changed": {
-                    "type": "boolean"
-                },
-                "previous_invoice_status": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.DischargeOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_date": {
-                    "type": "string"
-                },
-                "contract_status": {
-                    "type": "string"
-                },
-                "current_status": {
-                    "type": "string"
-                },
-                "departure_reason": {
-                    "type": "string"
-                },
-                "discharge_type": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "follow_up_plan": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "scheduled_status": {
-                    "type": "string"
-                },
-                "status_change_date": {
-                    "type": "string"
-                },
-                "status_change_reason": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GenerateInvoicePDFResponse": {
-            "type": "object",
-            "properties": {
-                "file_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GenerateInvoiceRequest": {
-            "type": "object",
-            "required": [
-                "client_id",
-                "end_date",
-                "start_date"
-            ],
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GenerateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_service_invoice.InvoiceDetails"
-                    }
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "pdf_attachment_id": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetCarePlanInterventionsResponse": {
-            "type": "object",
-            "properties": {
-                "daily_activities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.Intervention"
-                    }
-                },
-                "monthly_activities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.Intervention"
-                    }
-                },
-                "weekly_activities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.Intervention"
-                    }
-                }
-            }
-        },
-        "api.GetCarePlanObjectivesResponse": {
-            "type": "object",
-            "properties": {
-                "long_term_goals": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.CarePlanObjectives"
-                    }
-                },
-                "medium_term_goals": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.CarePlanObjectives"
-                    }
-                },
-                "short_term_goals": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.CarePlanObjectives"
-                    }
-                }
-            }
-        },
-        "api.GetCarePlanOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "assessment_summary": {
-                    "type": "string"
-                },
-                "current_level": {
-                    "type": "integer"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "generated_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "raw_llm_response": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "target_level": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.GetCarePlanResourcesResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "is_obtained": {
-                    "type": "boolean"
-                },
-                "obtained_date": {
-                    "type": "string"
-                },
-                "resource_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetCarePlanRisksResponse": {
-            "type": "object",
-            "properties": {
-                "mitigation_strategy": {
-                    "type": "string"
-                },
-                "risk_description": {
-                    "type": "string"
-                },
-                "risk_id": {
-                    "type": "integer"
-                },
-                "risk_level": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetCarePlanSuccessMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "current_value": {
-                    "type": "string"
-                },
-                "measurement_method": {
-                    "type": "string"
-                },
-                "metric_id": {
-                    "type": "integer"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "target_value": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetCarePlanSupportNetworkResponse": {
-            "type": "object",
-            "properties": {
-                "responsibility_description": {
-                    "type": "string"
-                },
-                "role_title": {
-                    "type": "string"
-                },
-                "support_network_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.GetClientMaturityMatrixAssessmentResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "current_level": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "initial_level": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "maturity_matrix_id": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "topic_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetDailySchedulesByLocationResponse": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "shifts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.Shift"
-                    }
-                }
-            }
-        },
-        "api.GetEmployeeContractDetailsResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_date": {
-                    "type": "string"
-                },
-                "contract_hours": {
-                    "type": "number"
-                },
-                "contract_rate": {
-                    "description": "Optional field for contract rate",
-                    "type": "number"
-                },
-                "contract_start_date": {
-                    "type": "string"
-                },
-                "contract_type": {
-                    "type": "string"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.GetEmployeeCountsResponse": {
-            "type": "object",
-            "properties": {
-                "total_archived": {
-                    "type": "integer"
-                },
-                "total_employees": {
-                    "type": "integer"
-                },
-                "total_out_of_service": {
-                    "type": "integer"
-                },
-                "total_subcontractors": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.GetEmployeeProfileByIDApiResponse": {
-            "type": "object",
-            "properties": {
-                "authentication_phone_number": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "department": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employee_number": {
-                    "type": "string"
-                },
-                "employment_number": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "has_borrowed": {
-                    "type": "boolean"
-                },
-                "home_telephone_number": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "is_logged_in_user": {
-                    "type": "boolean"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "out_of_service": {
-                    "type": "boolean"
-                },
-                "position": {
-                    "type": "string"
-                },
-                "private_email_address": {
-                    "type": "string"
-                },
-                "private_phone_number": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "work_phone_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_login": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.Permission"
-                    }
-                },
-                "role_id": {
-                    "type": "integer"
-                },
-                "two_factor_enabled": {
-                    "type": "boolean"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.GetIntakeFormResponse": {
-            "type": "object",
-            "properties": {
-                "addiction_issues": {
-                    "type": "boolean"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "attachement_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "bsn": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "client_signature": {
-                    "type": "boolean"
-                },
-                "current_school": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "diagnoses": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "guardian_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.GuardionInfo"
-                    }
-                },
-                "guardian_signature": {
-                    "type": "boolean"
-                },
-                "guidance_goals": {
-                    "type": "string"
-                },
-                "has_valid_indication": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "id_number": {
-                    "type": "string"
-                },
-                "id_type": {
-                    "type": "string"
-                },
-                "indication_end_date": {
-                    "type": "string"
-                },
-                "indication_start_date": {
-                    "type": "string"
-                },
-                "judicial_involvement": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "law_type": {
-                    "type": "string"
-                },
-                "living_situation": {
-                    "type": "string"
-                },
-                "main_provider_contact": {
-                    "type": "string"
-                },
-                "main_provider_name": {
-                    "type": "string"
-                },
-                "medication_details": {
-                    "type": "string"
-                },
-                "mentor_email": {
-                    "type": "string"
-                },
-                "mentor_name": {
-                    "type": "string"
-                },
-                "mentor_phone": {
-                    "type": "string"
-                },
-                "nationality": {
-                    "type": "string"
-                },
-                "other_law_specification": {
-                    "type": "string"
-                },
-                "other_living_situation": {
-                    "type": "string"
-                },
-                "other_risks": {
-                    "type": "string"
-                },
-                "parental_authority": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "previous_care": {
-                    "type": "string"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_function": {
-                    "type": "string"
-                },
-                "referrer_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "registration_reason": {
-                    "type": "string"
-                },
-                "registration_type": {
-                    "type": "string"
-                },
-                "risk_aggression": {
-                    "type": "boolean"
-                },
-                "risk_drug_dealing": {
-                    "type": "boolean"
-                },
-                "risk_running_away": {
-                    "type": "boolean"
-                },
-                "risk_self_harm": {
-                    "type": "boolean"
-                },
-                "risk_suicidality": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "sharing_permission": {
-                    "type": "boolean"
-                },
-                "signature_date": {
-                    "type": "string"
-                },
-                "signed_by": {
-                    "type": "string"
-                },
-                "time_since_submission": {
-                    "type": "string"
-                },
-                "truth_declaration": {
-                    "type": "boolean"
-                },
-                "urgency_score": {
-                    "type": "string"
-                },
-                "uses_medication": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.GetInvoiceAuditLogsResponse": {
-            "type": "object",
-            "properties": {
-                "audit_id": {
-                    "type": "integer"
-                },
-                "changed_at": {
-                    "type": "string"
-                },
-                "changed_by": {
-                    "type": "integer"
-                },
-                "changed_by_first_name": {
-                    "type": "string"
-                },
-                "changed_by_last_name": {
-                    "type": "string"
-                },
-                "changed_fields": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "new_values": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "old_values": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "operation": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetInvoiceTemplateItemsResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "item_tag": {
-                    "type": "string"
-                },
-                "source_column": {
-                    "type": "string"
-                },
-                "source_table": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetLocationResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetMonthlySchedulesByLocationResponse": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "shifts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.Shift"
-                    }
-                }
-            }
-        },
-        "api.GetOrganisationCountResponse": {
-            "type": "object",
-            "properties": {
-                "client_count": {
-                    "type": "integer"
-                },
-                "employee_count": {
-                    "type": "integer"
-                },
-                "location_count": {
-                    "type": "integer"
-                },
-                "organisation_id": {
-                    "type": "integer"
-                },
-                "organisation_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btw_number": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kvk_number": {
-                    "type": "string"
-                },
-                "location_count": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetPaymentByIDResponse": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "integer"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_reference": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string"
-                },
-                "recorded_by": {
-                    "type": "integer"
-                },
-                "recorded_by_first_name": {
-                    "type": "string"
-                },
-                "recorded_by_last_name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetRegistrationFormResponse": {
-            "type": "object",
-            "properties": {
-                "admission_type": {
-                    "description": "\"crisis_admission\" or \"regular_placement\"",
-                    "type": "string"
-                },
-                "application_date": {
-                    "type": "string"
-                },
-                "application_reason": {
-                    "type": "string"
-                },
-                "care_ambulatory_guidance": {
-                    "type": "boolean"
-                },
-                "care_assisted_independent_living": {
-                    "type": "boolean"
-                },
-                "care_protected_living": {
-                    "type": "boolean"
-                },
-                "care_room_training_center": {
-                    "type": "boolean"
-                },
-                "client_bsn_number": {
-                    "type": "string"
-                },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_goals": {
-                    "type": "string"
-                },
-                "client_house_number": {
-                    "type": "string"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "document_action_plan": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_level": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "form_status": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "intake_appointment_date": {
-                    "type": "string"
-                },
-                "processed_at": {
-                    "type": "string"
-                },
-                "processed_by_employee_id": {
-                    "type": "integer"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_first_name": {
-                    "type": "string"
-                },
-                "referrer_job_title": {
-                    "type": "string"
-                },
-                "referrer_last_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
-                },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "submitted_at": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetScheduleByIdResponse": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "description": "Optional field for color coding",
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_last_name": {
-                    "type": "string"
-                },
-                "end_datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_custom": {
-                    "description": "Indicates if this is a custom schedule",
-                    "type": "boolean"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "location_name": {
-                    "type": "string"
-                },
-                "location_shift_id": {
-                    "description": "Optional field for preset shift",
-                    "type": "integer"
-                },
-                "shift_name": {
-                    "description": "Optional field for shift name",
-                    "type": "string"
-                },
-                "start_datetime": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GetSenderByIdResponse": {
-            "type": "object",
-            "properties": {
-                "BTWnumber": {
-                    "type": "string"
-                },
-                "KVKnumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email_address": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "invoice_template_items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.TemplateItem"
-                    }
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.GrantUserPermissionsRequest": {
-            "type": "object",
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "api.GrantUserPermissionsResponse": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "integer"
-                },
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "api.GuardionInfo": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.Intervention": {
-            "type": "object",
-            "properties": {
-                "intervention_description": {
-                    "type": "string"
-                },
-                "intervention_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.ListAiGeneratedReportsResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "report_text": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListAllIncidentsResponse": {
-            "type": "object",
-            "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
-                    "type": "string"
-                },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
-                "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_last_name": {
-                    "type": "string"
-                },
-                "file_url": {
-                    "type": "string"
-                },
-                "fire_water_damage": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "incident_date": {
-                    "type": "string"
-                },
-                "incident_explanation": {
-                    "type": "string"
-                },
-                "incident_prevent_steps": {
-                    "type": "string"
-                },
-                "incident_taken_measures": {
-                    "type": "string"
-                },
-                "incident_type": {
-                    "type": "string"
-                },
-                "is_confirmed": {
-                    "type": "boolean"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "needed_consultation": {
-                    "type": "string"
-                },
-                "organization": {
-                    "type": "boolean"
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
-                    "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
-                },
-                "physical_injury": {
-                    "type": "string"
-                },
-                "physical_injury_desc": {
-                    "type": "string"
-                },
-                "psychological_damage": {
-                    "type": "string"
-                },
-                "psychological_damage_desc": {
-                    "type": "string"
-                },
-                "recurrence_risk": {
-                    "type": "string"
-                },
-                "reporter_involvement": {
-                    "type": "string"
-                },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
-                },
-                "severity_of_incident": {
-                    "type": "string"
-                },
-                "soft_delete": {
-                    "type": "boolean"
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.ListAllPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "permission_id": {
-                    "type": "integer"
-                },
-                "permission_name": {
-                    "type": "string"
-                },
-                "permission_resource": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListAllRolePermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "permission_id": {
-                    "type": "integer"
-                },
-                "permission_name": {
-                    "type": "string"
-                },
-                "permission_resource": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.ListCarePlanReportsResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by_first_name": {
-                    "type": "string"
-                },
-                "created_by_last_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "report_content": {
-                    "type": "string"
-                },
-                "report_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListClientMaturityMatrixAssessmentsResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "current_level": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "$ref": "#/definitions/pgtype.Date"
-                },
-                "initial_level": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "$ref": "#/definitions/pgtype.Date"
-                },
-                "topic_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "date_issued": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "issued_by": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "degree": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "field_of_study": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "institution_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "job_title": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListEmployeesByContractEndDateResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_date": {
-                    "type": "string"
-                },
-                "contract_start_date": {
-                    "type": "string"
-                },
-                "contract_type": {
-                    "type": "string"
-                },
-                "department": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employee_number": {
-                    "type": "string"
-                },
-                "employment_number": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "position": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListIntakeFormsResponse": {
-            "type": "object",
-            "properties": {
-                "addiction_issues": {
-                    "type": "boolean"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "attachement_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "bsn": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "client_signature": {
-                    "type": "boolean"
-                },
-                "current_school": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "diagnoses": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "guardian_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.GuardionInfo"
-                    }
-                },
-                "guardian_signature": {
-                    "type": "boolean"
-                },
-                "guidance_goals": {
-                    "type": "string"
-                },
-                "has_valid_indication": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "id_number": {
-                    "type": "string"
-                },
-                "id_type": {
-                    "type": "string"
-                },
-                "indication_end_date": {
-                    "type": "string"
-                },
-                "indication_start_date": {
-                    "type": "string"
-                },
-                "judicial_involvement": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "law_type": {
-                    "type": "string"
-                },
-                "living_situation": {
-                    "type": "string"
-                },
-                "main_provider_contact": {
-                    "type": "string"
-                },
-                "main_provider_name": {
-                    "type": "string"
-                },
-                "medication_details": {
-                    "type": "string"
-                },
-                "mentor_email": {
-                    "type": "string"
-                },
-                "mentor_name": {
-                    "type": "string"
-                },
-                "mentor_phone": {
-                    "type": "string"
-                },
-                "nationality": {
-                    "type": "string"
-                },
-                "other_law_specification": {
-                    "type": "string"
-                },
-                "other_living_situation": {
-                    "type": "string"
-                },
-                "other_risks": {
-                    "type": "string"
-                },
-                "parental_authority": {
-                    "type": "boolean"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "previous_care": {
-                    "type": "string"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_function": {
-                    "type": "string"
-                },
-                "referrer_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "registration_reason": {
-                    "type": "string"
-                },
-                "registration_type": {
-                    "type": "string"
-                },
-                "risk_aggression": {
-                    "type": "boolean"
-                },
-                "risk_drug_dealing": {
-                    "type": "boolean"
-                },
-                "risk_running_away": {
-                    "type": "boolean"
-                },
-                "risk_self_harm": {
-                    "type": "boolean"
-                },
-                "risk_suicidality": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "sharing_permission": {
-                    "type": "boolean"
-                },
-                "signature_date": {
-                    "type": "string"
-                },
-                "signed_by": {
-                    "type": "string"
-                },
-                "time_since_submission": {
-                    "type": "string"
-                },
-                "truth_declaration": {
-                    "type": "boolean"
-                },
-                "urgency_score": {
-                    "type": "string"
-                },
-                "uses_medication": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.ListInvoicesResponse": {
-            "type": "object",
-            "properties": {
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
-                    "type": "integer"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
-                    }
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "invoice_type": {
-                    "type": "string"
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "original_invoice_id": {
-                    "type": "integer"
-                },
-                "pdf_attachment_id": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "sender_name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "warning_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.ListLatestPaymentsResponse": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "string"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListLocationsResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListMaturityMatrixResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "topic_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListNotificationsResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "data": {
-                    "$ref": "#/definitions/notification.NotificationData"
-                },
-                "is_read": {
-                    "type": "boolean"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "notification_id": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListOrganisationsResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btw_number": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kvk_number": {
-                    "type": "string"
-                },
-                "location_count": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListPaymentsResponse": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "$ref": "#/definitions/pgtype.Date"
-                },
-                "payment_id": {
-                    "type": "integer"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_reference": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string"
-                },
-                "recorded_by": {
-                    "type": "integer"
-                },
-                "recorded_by_first_name": {
-                    "type": "string"
-                },
-                "recorded_by_last_name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListRegistrationFormsResponse": {
-            "type": "object",
-            "properties": {
-                "admission_type": {
-                    "description": "\"crisis_admission\" or \"regular_placement\"",
-                    "type": "string"
-                },
-                "application_date": {
-                    "type": "string"
-                },
-                "application_reason": {
-                    "type": "string"
-                },
-                "care_ambulatory_guidance": {
-                    "type": "boolean"
-                },
-                "care_assisted_independent_living": {
-                    "type": "boolean"
-                },
-                "care_protected_living": {
-                    "type": "boolean"
-                },
-                "care_room_training_center": {
-                    "type": "boolean"
-                },
-                "client_bsn_number": {
-                    "type": "string"
-                },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_goals": {
-                    "type": "string"
-                },
-                "client_house_number": {
-                    "type": "string"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "document_action_plan": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "form_status": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "intake_appointment_date": {
-                    "type": "string"
-                },
-                "processed_at": {
-                    "type": "string"
-                },
-                "processed_by_employee_id": {
-                    "type": "integer"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_first_name": {
-                    "type": "string"
-                },
-                "referrer_job_title": {
-                    "type": "string"
-                },
-                "referrer_last_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
-                },
-                "risk_count": {
-                    "type": "integer"
-                },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "submitted_at": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListRolesApiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "permission_count": {
-                    "type": "integer"
-                },
-                "role_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListSendersResponse": {
-            "type": "object",
-            "properties": {
-                "BTWnumber": {
-                    "type": "string"
-                },
-                "KVKnumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListShiftsByLocationIDResponse": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "shift": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListUpcomingAppointmentsResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ListUserRolesAndPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "integer"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "resource": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                "roles": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "integer"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "api.ListWorkingHoursResponse": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "integer"
-                },
-                "period": {
-                    "$ref": "#/definitions/api.Period"
-                },
-                "summary": {
-                    "$ref": "#/definitions/api.Summary"
-                },
-                "working_hours": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.WorkingHourItem"
-                    }
-                }
-            }
-        },
-        "api.MarkNotificationAsReadResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "is_read": {
-                    "type": "boolean"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "notification_id": {
-                    "type": "string"
-                },
-                "notification_type": {
-                    "type": "string"
-                }
-            }
-        },
         "api.NotificationResponse": {
             "type": "object",
             "properties": {
@@ -16196,51 +11436,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.Period": {
-            "type": "object",
-            "properties": {
-                "Week": {
-                    "type": "integer"
-                },
-                "date_range": {
-                    "type": "object",
-                    "properties": {
-                        "end": {
-                            "type": "string"
-                        },
-                        "start": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "is_current_week": {
-                    "type": "boolean"
-                },
-                "month_name": {
-                    "type": "string"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.Permission": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "method": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "resource": {
                     "type": "string"
                 }
             }
@@ -16257,1131 +11452,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-api_AddEducationToEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AddEducationToEmployeeProfileResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_AddEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AddEmployeeCertificationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_AddEmployeeContractDetailsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AddEmployeeContractDetailsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_AddEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AddEmployeeExperienceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_AddPermissionsToRoleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AddPermissionsToRoleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_AddUrgencyScoreResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AddUrgencyScoreResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_AssignRoleToUserApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.AssignRoleToUserApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_ConfirmProgressReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ConfirmProgressReportResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-api_CorrectSpellingResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/api.CorrectSpellingResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanActionsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanActionsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanInterventionResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanInterventionResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanObjectiveResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanObjectiveResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanReportResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanResourcesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanResourcesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanRisksResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanRisksResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanSuccessMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanSuccessMetricsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateCarePlanSupportNetworkResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateCarePlanSupportNetworkResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateClientMaturityMatrixAssessmentResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateClientMaturityMatrixAssessmentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateIntakeFormResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateIntakeFormResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateInvoiceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateLocationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateLocationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateOrganisationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreatePaymentResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreatePaymentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateRoleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateRoleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateScheduleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateScheduleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateSenderResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateSenderResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreateShiftApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreateShiftApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_CreditInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.CreditInvoiceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeleteEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteEmployeeCertificationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeleteEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteEmployeeEducationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeleteEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteEmployeeExperienceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeleteLocationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteLocationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeleteOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeleteOrganisationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_DeletePaymentResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.DeletePaymentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GenerateInvoicePDFResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GenerateInvoicePDFResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GenerateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GenerateInvoiceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetCarePlanInterventionsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetCarePlanInterventionsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetCarePlanObjectivesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetCarePlanObjectivesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetCarePlanOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetCarePlanOverviewResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetClientMaturityMatrixAssessmentResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetClientMaturityMatrixAssessmentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetDailySchedulesByLocationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetDailySchedulesByLocationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetEmployeeContractDetailsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetEmployeeContractDetailsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetEmployeeCountsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetEmployeeCountsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetEmployeeProfileByIDApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetEmployeeProfileByIDApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetEmployeeProfileResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetIntakeFormResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetIntakeFormResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetLocationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetLocationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetOrganisationCountResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetOrganisationCountResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetOrganisationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetPaymentByIDResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetPaymentByIDResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetRegistrationFormResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetRegistrationFormResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetScheduleByIdResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetScheduleByIdResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GetSenderByIdResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GetSenderByIdResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_GrantUserPermissionsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.GrantUserPermissionsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_ListNotificationsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListNotificationsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_ListUserRolesAndPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListUserRolesAndPermissionsApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_ListWorkingHoursResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.ListWorkingHoursResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_MarkNotificationAsReadResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.MarkNotificationAsReadResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_SetEmployeeProfilePictureResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.SetEmployeeProfilePictureResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_TotalDischargeCountResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.TotalDischargeCountResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanActionsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanActionsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanInterventionResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanInterventionResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanObjectiveResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanObjectiveResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanOverviewResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanReportResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanResourcesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanResourcesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanRisksResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanRisksResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanSuccessMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanSuccessMetricsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateCarePlanSupportNetworkResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateCarePlanSupportNetworkResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateEmployeeCertificationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateEmployeeEducationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateEmployeeExperienceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateEmployeeProfileResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateInvoiceResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateLocationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateLocationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateOrganisationResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdatePaymentResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdatePaymentResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateRegistrationFormResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateRegistrationFormResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateScheduleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateScheduleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateSenderResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateSenderResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-api_UpdateShiftApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/api.UpdateShiftApiResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17461,13 +11536,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetCarePlanResourcesResponse": {
+        "api.Response-array_audit_AuditRecord": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetCarePlanResourcesResponse"
+                        "$ref": "#/definitions/audit.AuditRecord"
                     }
                 },
                 "message": {
@@ -17478,13 +11553,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetCarePlanRisksResponse": {
+        "api.Response-array_auth_ListAllPermissionsApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetCarePlanRisksResponse"
+                        "$ref": "#/definitions/auth.ListAllPermissionsApiResponse"
                     }
                 },
                 "message": {
@@ -17495,13 +11570,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetCarePlanSuccessMetricsResponse": {
+        "api.Response-array_auth_ListAllRolePermissionsApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetCarePlanSuccessMetricsResponse"
+                        "$ref": "#/definitions/auth.ListAllRolePermissionsApiResponse"
                     }
                 },
                 "message": {
@@ -17512,13 +11587,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetCarePlanSupportNetworkResponse": {
+        "api.Response-array_auth_ListRolesApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetCarePlanSupportNetworkResponse"
+                        "$ref": "#/definitions/auth.ListRolesApiResponse"
                     }
                 },
                 "message": {
@@ -17529,13 +11604,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetInvoiceAuditLogsResponse": {
+        "api.Response-array_care_GetCarePlanResourcesResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetInvoiceAuditLogsResponse"
+                        "$ref": "#/definitions/care.GetCarePlanResourcesResponse"
                     }
                 },
                 "message": {
@@ -17546,13 +11621,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetInvoiceTemplateItemsResponse": {
+        "api.Response-array_care_GetCarePlanRisksResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetInvoiceTemplateItemsResponse"
+                        "$ref": "#/definitions/care.GetCarePlanRisksResponse"
                     }
                 },
                 "message": {
@@ -17563,13 +11638,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_GetMonthlySchedulesByLocationResponse": {
+        "api.Response-array_care_GetCarePlanSuccessMetricsResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.GetMonthlySchedulesByLocationResponse"
+                        "$ref": "#/definitions/care.GetCarePlanSuccessMetricsResponse"
                     }
                 },
                 "message": {
@@ -17580,13 +11655,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_ListAllPermissionsApiResponse": {
+        "api.Response-array_care_GetCarePlanSupportNetworkResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ListAllPermissionsApiResponse"
+                        "$ref": "#/definitions/care.GetCarePlanSupportNetworkResponse"
                     }
                 },
                 "message": {
@@ -17597,13 +11672,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_ListAllRolePermissionsApiResponse": {
+        "api.Response-array_care_ListCarePlanReportsResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ListAllRolePermissionsApiResponse"
+                        "$ref": "#/definitions/care.ListCarePlanReportsResponse"
                     }
                 },
                 "message": {
@@ -17614,234 +11689,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_api_ListCarePlanReportsResponse": {
+        "api.Response-array_care_ListCarePlanTopics": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ListCarePlanReportsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListEmployeeCertificationResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListEmployeeEducationResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListEmployeeExperienceResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListEmployeesByContractEndDateResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListEmployeesByContractEndDateResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListLatestPaymentsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListLatestPaymentsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListLocationsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListLocationsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListMaturityMatrixResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListMaturityMatrixResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListOrganisationsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListOrganisationsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListPaymentsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListPaymentsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListRolesApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListRolesApiResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListShiftsByLocationIDResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListShiftsByLocationIDResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_ListUpcomingAppointmentsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListUpcomingAppointmentsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_api_SearchEmployeesByNameOrEmailResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SearchEmployeesByNameOrEmailResponse"
+                        "$ref": "#/definitions/care.ListCarePlanTopics"
                     }
                 },
                 "message": {
@@ -17903,6 +11757,244 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-array_ecr_ListEmployeesByContractEndDateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ecr.ListEmployeesByContractEndDateResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_ecr_ListLatestPaymentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ecr.ListLatestPaymentsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_ecr_ListUpcomingAppointmentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ecr.ListUpcomingAppointmentsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_employees_ListEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.ListEmployeeCertificationResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_employees_ListEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.ListEmployeeEducationResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_employees_ListEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.ListEmployeeExperienceResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_employees_SearchEmployeesByNameOrEmailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.SearchEmployeesByNameOrEmailResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_invoice_GetInvoiceAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.GetInvoiceAuditLogResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_invoice_GetInvoiceTemplateItemsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.GetInvoiceTemplateItemsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_invoice_ListPaymentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.ListPaymentsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_organization_ListLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListLocationsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_organization_ListOrganisationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListOrganisationsResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_organization_ListShiftsByLocationIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListShiftsByLocationIDResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_schedule_GetMonthlySchedulesByLocationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.GetMonthlySchedulesByLocationResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-attachment_DeleteAttachmentResponse": {
             "type": "object",
             "properties": {
@@ -17936,6 +12028,76 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/attachment.UploadHandlerResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-auth_AddPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.AddPermissionsToRoleResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-auth_AssignRoleToEmployeeApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.AssignRoleToEmployeeApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-auth_CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.CreateRoleResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-auth_GrantUserPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.GrantUserPermissionsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-auth_ListUserRolesAndPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.ListUserRolesAndPermissionsApiResponse"
                 },
                 "message": {
                     "type": "string"
@@ -17987,6 +12149,300 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-care_CreateCarePlanActionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanActionsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanInterventionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanInterventionResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanObjectiveResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanObjectiveResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanResourcesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanRisksResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanRisksResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanSuccessMetricsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateCarePlanSupportNetworkResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_CreateClientCarePlanResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.CreateClientCarePlanResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_GetCarePlanInterventionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.GetCarePlanInterventionsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_GetCarePlanObjectivesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.GetCarePlanObjectivesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_GetCarePlanOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.GetCarePlanOverviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanActionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanActionsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanInterventionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanInterventionResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanObjectiveResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanObjectiveResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanOverviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanReportResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanResourcesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanRisksResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanRisksResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanSuccessMetricsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-care_UpdateCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/care.UpdateCarePlanSupportNetworkResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_AddClientDocumentApiResponse": {
             "type": "object",
             "properties": {
@@ -18020,6 +12476,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.ConfirmIncidentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_ConfirmProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.ConfirmProgressReportResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18393,6 +12863,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GetRegistrationFormResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetRegistrationFormResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_ListClientEmergencyContactsResponse": {
             "type": "object",
             "properties": {
@@ -18561,6 +13045,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_UpdateRegistrationFormResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateRegistrationFormResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-contract_CreateContractResponse": {
             "type": "object",
             "properties": {
@@ -18645,11 +13143,249 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-ecr_TotalDischargeCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/ecr.TotalDischargeCountResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_AddEducationToEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.AddEducationToEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_AddEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.AddEmployeeCertificationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_AddEmployeeContractDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.AddEmployeeContractDetailsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_AddEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.AddEmployeeExperienceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-employees_CreateEmployeeProfileResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/employees.CreateEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_DeleteEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.DeleteEmployeeCertificationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_DeleteEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.DeleteEmployeeEducationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_DeleteEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.DeleteEmployeeExperienceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_GetEmployeeContractDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.GetEmployeeContractDetailsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_GetEmployeeCountsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.GetEmployeeCountsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_GetEmployeeProfileByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.GetEmployeeProfileByIDResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_GetEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.GetEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_ListWorkingHoursResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.ListWorkingHoursResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_SetEmployeeProfilePictureResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.SetEmployeeProfilePictureResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_UpdateEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.UpdateEmployeeCertificationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_UpdateEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.UpdateEmployeeEducationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-employees_UpdateEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.UpdateEmployeeExperienceResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18673,6 +13409,104 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-employees_UpdateEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.UpdateEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_CreateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.CreateInvoiceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_CreatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.CreatePaymentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_CreditInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.CreditInvoiceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_DeletePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.DeletePaymentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_GenerateInvoicePDFResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.GenerateInvoicePDFResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-invoice_GenerateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/invoice.GenerateInvoiceResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-invoice_GetInvoiceByIDResponse": {
             "type": "object",
             "properties": {
@@ -18687,11 +13521,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_DischargeOverviewResponse": {
+        "api.Response-invoice_GetPaymentByIDResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_DischargeOverviewResponse"
+                    "$ref": "#/definitions/invoice.GetPaymentByIDResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18701,11 +13535,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListAllIncidentsResponse": {
+        "api.Response-invoice_UpdateInvoiceResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListAllIncidentsResponse"
+                    "$ref": "#/definitions/invoice.UpdateInvoiceResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18715,11 +13549,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListClientMaturityMatrixAssessmentsResponse": {
+        "api.Response-invoice_UpdatePaymentResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse"
+                    "$ref": "#/definitions/invoice.UpdatePaymentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18729,11 +13563,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListIntakeFormsResponse": {
+        "api.Response-notification_ListNotificationsResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListIntakeFormsResponse"
+                    "$ref": "#/definitions/notification.ListNotificationsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18743,11 +13577,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListInvoicesResponse": {
+        "api.Response-notification_MarkNotificationAsReadResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListInvoicesResponse"
+                    "$ref": "#/definitions/notification.MarkNotificationAsReadResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18757,11 +13591,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListRegistrationFormsResponse": {
+        "api.Response-organization_CreateLocationResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListRegistrationFormsResponse"
+                    "$ref": "#/definitions/organization.CreateLocationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18771,11 +13605,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-api_ListSendersResponse": {
+        "api.Response-organization_CreateOrganisationResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-api_ListSendersResponse"
+                    "$ref": "#/definitions/organization.CreateOrganisationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18785,11 +13619,137 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-array_api_ListAiGeneratedReportsResponse": {
+        "api.Response-organization_CreateShiftApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-array_api_ListAiGeneratedReportsResponse"
+                    "$ref": "#/definitions/organization.CreateShiftApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_DeleteLocationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.DeleteLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_DeleteOrganisationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.DeleteOrganisationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_GetLocationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.GetLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_GetOrganisationCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.GetOrganisationCountResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_GetOrganisationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.GetOrganisationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_UpdateLocationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.UpdateLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_UpdateOrganisationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.UpdateOrganisationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-organization_UpdateShiftApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.UpdateShiftApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-array_clientp_ListAiGeneratedReportsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-array_clientp_ListAiGeneratedReportsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18832,6 +13792,34 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-array_contract_ListContractsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-care_ListClientCarePlansResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-care_ListClientCarePlansResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-clientp_ListAllIncidentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListAllIncidentsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -18925,6 +13913,34 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-clientp_ListRegistrationFormsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListRegistrationFormsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-ecr_DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-ecr_DischargeOverviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-employees_ListEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -18939,1574 +13955,129 @@ const docTemplate = `{
                 }
             }
         },
-        "api.SearchEmployeesByNameOrEmailResponse": {
+        "api.Response-pagination_Response-invoice_ListInvoicesResponse": {
             "type": "object",
             "properties": {
-                "email": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-invoice_ListInvoicesResponse"
+                },
+                "message": {
                     "type": "string"
                 },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.SenderContact": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.SetEmployeeProfilePictureRequest": {
-            "type": "object",
-            "required": [
-                "attachement_id"
-            ],
-            "properties": {
-                "attachement_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.SetEmployeeProfilePictureResponse": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "profile_picture": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.Shift": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "description": "Optional field for color coding",
-                    "type": "string"
-                },
-                "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "employee_last_name": {
-                    "type": "string"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "is_custom": {
-                    "description": "Indicates if this is a custom schedule",
+                "success": {
                     "type": "boolean"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "location_shift_id": {
-                    "description": "Optional field for preset shift",
-                    "type": "integer"
-                },
-                "shift_id": {
-                    "type": "string"
-                },
-                "shift_name": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
                 }
             }
         },
-        "api.Summary": {
+        "api.Response-pagination_Response-sender_ListSendersResponse": {
             "type": "object",
             "properties": {
-                "appointment_hours": {
-                    "type": "number"
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-sender_ListSendersResponse"
                 },
-                "over_time": {
-                    "description": "Optional field for overtime hours",
-                    "type": "number"
-                },
-                "shift_hours": {
-                    "type": "number"
-                },
-                "total_days_worked": {
-                    "type": "integer"
-                },
-                "total_hours": {
-                    "type": "number"
-                }
-            }
-        },
-        "api.TemplateItem": {
-            "type": "object",
-            "properties": {
-                "description": {
+                "message": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "item_tag": {
-                    "type": "string"
-                },
-                "source_column": {
-                    "type": "string"
-                },
-                "source_table": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.TotalDischargeCountResponse": {
-            "type": "object",
-            "properties": {
-                "contract_end_count": {
-                    "type": "integer"
-                },
-                "status_change_count": {
-                    "type": "integer"
-                },
-                "total_discharge_count": {
-                    "type": "integer"
-                },
-                "urgent_cases_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateCarePlanActionsRequest": {
-            "type": "object",
-            "properties": {
-                "action_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateCarePlanActionsResponse": {
-            "type": "object",
-            "properties": {
-                "action_description": {
-                    "type": "string"
-                },
-                "action_id": {
-                    "type": "integer"
-                },
-                "objective_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateCarePlanInterventionRequest": {
-            "type": "object",
-            "properties": {
-                "frequency": {
-                    "type": "string",
-                    "enum": [
-                        "daily",
-                        "weekly",
-                        "monthly"
-                    ]
-                },
-                "intervention_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateCarePlanInterventionResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "frequency": {
-                    "type": "string"
-                },
-                "intervention_description": {
-                    "type": "string"
-                },
-                "intervention_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateCarePlanObjectiveRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "goal_title": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "not_started",
-                        "in_progress",
-                        "completed",
-                        "discontinued"
-                    ]
-                },
-                "timeframe": {
-                    "type": "string",
-                    "enum": [
-                        "short_term",
-                        "medium_term",
-                        "long_term"
-                    ]
-                }
-            }
-        },
-        "api.UpdateCarePlanObjectiveResponse": {
-            "type": "object",
-            "properties": {
-                "care_plan_id": {
-                    "type": "integer"
-                },
-                "goal_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateCarePlanOverviewRequest": {
-            "type": "object",
-            "properties": {
-                "assessment_summary": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateCarePlanOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "assessment_id": {
-                    "type": "integer"
-                },
-                "assessment_summary": {
-                    "type": "string"
-                },
-                "care_plan_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateCarePlanReportRequest": {
-            "type": "object",
-            "properties": {
-                "is_critical": {
+                "success": {
                     "type": "boolean"
-                },
-                "report_content": {
-                    "type": "string"
-                },
-                "report_type": {
-                    "type": "string"
                 }
             }
         },
-        "api.UpdateCarePlanReportResponse": {
+        "api.Response-schedule_CreateScheduleResponse": {
             "type": "object",
             "properties": {
-                "care_plan_id": {
-                    "type": "integer"
+                "data": {
+                    "$ref": "#/definitions/schedule.CreateScheduleResponse"
                 },
-                "created_at": {
+                "message": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "is_critical": {
+                "success": {
                     "type": "boolean"
-                },
-                "report_content": {
-                    "type": "string"
-                },
-                "report_type": {
-                    "type": "string"
                 }
             }
         },
-        "api.UpdateCarePlanResourcesRequest": {
+        "api.Response-schedule_GetDailySchedulesByLocationResponse": {
             "type": "object",
             "properties": {
-                "is_obtained": {
+                "data": {
+                    "$ref": "#/definitions/schedule.GetDailySchedulesByLocationResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
                     "type": "boolean"
-                },
-                "obtained_date": {
-                    "type": "string"
-                },
-                "resource_description": {
-                    "type": "string"
                 }
             }
         },
-        "api.UpdateCarePlanResourcesResponse": {
+        "api.Response-schedule_GetScheduleByIdResponse": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
+                "data": {
+                    "$ref": "#/definitions/schedule.GetScheduleByIdResponse"
                 },
-                "is_obtained": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
                     "type": "boolean"
-                },
-                "obtained_date": {
-                    "type": "string"
-                },
-                "resource_description": {
-                    "type": "string"
                 }
             }
         },
-        "api.UpdateCarePlanRisksRequest": {
+        "api.Response-schedule_UpdateScheduleResponse": {
             "type": "object",
             "properties": {
-                "mitigation_strategy": {
+                "data": {
+                    "$ref": "#/definitions/schedule.UpdateScheduleResponse"
+                },
+                "message": {
                     "type": "string"
                 },
-                "risk_description": {
-                    "type": "string"
-                },
-                "risk_level": {
-                    "type": "string"
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
-        "api.UpdateCarePlanRisksResponse": {
+        "api.Response-sender_CreateSenderResponse": {
             "type": "object",
             "properties": {
-                "mitigation_strategy": {
+                "data": {
+                    "$ref": "#/definitions/sender.CreateSenderResponse"
+                },
+                "message": {
                     "type": "string"
                 },
-                "risk_description": {
-                    "type": "string"
-                },
-                "risk_id": {
-                    "type": "integer"
-                },
-                "risk_level": {
-                    "type": "string"
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
-        "api.UpdateCarePlanSuccessMetricsRequest": {
+        "api.Response-sender_GetSenderByIdResponse": {
             "type": "object",
             "properties": {
-                "current_value": {
-                    "description": "Optional, can be nil if not set",
+                "data": {
+                    "$ref": "#/definitions/sender.GetSenderByIdResponse"
+                },
+                "message": {
                     "type": "string"
                 },
-                "measurement_method": {
-                    "type": "string"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "target_value": {
-                    "type": "string"
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
-        "api.UpdateCarePlanSuccessMetricsResponse": {
+        "api.Response-sender_UpdateSenderResponse": {
             "type": "object",
             "properties": {
-                "current_value": {
+                "data": {
+                    "$ref": "#/definitions/sender.UpdateSenderResponse"
+                },
+                "message": {
                     "type": "string"
                 },
-                "measurement_method": {
-                    "type": "string"
-                },
-                "metric_id": {
-                    "type": "integer"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "target_value": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateCarePlanSupportNetworkRequest": {
-            "type": "object",
-            "properties": {
-                "responsibility_description": {
-                    "type": "string"
-                },
-                "role_title": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateCarePlanSupportNetworkResponse": {
-            "type": "object",
-            "properties": {
-                "responsibility_description": {
-                    "type": "string"
-                },
-                "role_title": {
-                    "type": "string"
-                },
-                "support_network_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateEmployeeCertificationRequest": {
-            "type": "object",
-            "properties": {
-                "date_issued": {
-                    "type": "string"
-                },
-                "issued_by": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeCertificationResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "date_issued": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "issued_by": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeEducationRequest": {
-            "type": "object",
-            "properties": {
-                "degree": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "field_of_study": {
-                    "type": "string"
-                },
-                "institution_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeEducationResponse": {
-            "type": "object",
-            "properties": {
-                "degree": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "field_of_study": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "institution_name": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeExperienceRequest": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "job_title": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeExperienceResponse": {
-            "type": "object",
-            "properties": {
-                "company_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "job_title": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateEmployeeProfileResponse": {
-            "type": "object",
-            "properties": {
-                "authentication_phone_number": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "department": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employee_number": {
-                    "type": "string"
-                },
-                "employment_number": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "has_borrowed": {
+                "success": {
                     "type": "boolean"
-                },
-                "home_telephone_number": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "is_subcontractor": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "out_of_service": {
-                    "type": "boolean"
-                },
-                "position": {
-                    "type": "string"
-                },
-                "private_email_address": {
-                    "type": "string"
-                },
-                "private_phone_number": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "work_phone_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateInvoiceRequest": {
-            "type": "object",
-            "properties": {
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
-                    }
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "warning_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoiceDetails"
-                    }
-                },
-                "invoice_number": {
-                    "type": "string"
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "pdf_attachment_id": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateLocationRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateLocationResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "capacity": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateOrganisationRequest": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btw_number": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "kvk_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateOrganisationResponse": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "btw_number": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kvk_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdatePaymentRequest": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "string"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_reference": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdatePaymentResponse": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number"
-                },
-                "current_invoice_status": {
-                    "type": "string"
-                },
-                "invoice_id": {
-                    "type": "integer"
-                },
-                "invoice_status_changed": {
-                    "type": "boolean"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_date": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "integer"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_reference": {
-                    "type": "string"
-                },
-                "payment_status": {
-                    "type": "string"
-                },
-                "previous_invoice_status": {
-                    "type": "string"
-                },
-                "recorded_by": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.UpdateRegistrationFormRequest": {
-            "type": "object",
-            "properties": {
-                "application_date": {
-                    "$ref": "#/definitions/pgtype.Date"
-                },
-                "care_ambulatory_guidance": {
-                    "type": "boolean"
-                },
-                "care_assisted_independent_living": {
-                    "type": "boolean"
-                },
-                "care_protected_living": {
-                    "type": "boolean"
-                },
-                "care_room_training_center": {
-                    "type": "boolean"
-                },
-                "client_bsn_number": {
-                    "type": "string"
-                },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_house_number": {
-                    "type": "string"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_level": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
-                    "type": "string"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_first_name": {
-                    "type": "string"
-                },
-                "referrer_job_title": {
-                    "type": "string"
-                },
-                "referrer_last_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
-                },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateRegistrationFormResponse": {
-            "type": "object",
-            "properties": {
-                "application_date": {
-                    "type": "string"
-                },
-                "application_reason": {
-                    "type": "string"
-                },
-                "care_ambulatory_guidance": {
-                    "type": "boolean"
-                },
-                "care_assisted_independent_living": {
-                    "type": "boolean"
-                },
-                "care_protected_living": {
-                    "type": "boolean"
-                },
-                "care_room_training_center": {
-                    "type": "boolean"
-                },
-                "client_bsn_number": {
-                    "type": "string"
-                },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
-                "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_goals": {
-                    "type": "string"
-                },
-                "client_house_number": {
-                    "type": "string"
-                },
-                "client_last_name": {
-                    "type": "string"
-                },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "document_action_plan": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "form_status": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "processed_at": {
-                    "type": "string"
-                },
-                "processed_by_employee_id": {
-                    "type": "integer"
-                },
-                "referrer_email": {
-                    "type": "string"
-                },
-                "referrer_first_name": {
-                    "type": "string"
-                },
-                "referrer_job_title": {
-                    "type": "string"
-                },
-                "referrer_last_name": {
-                    "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
-                },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
-                "submitted_at": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateRegistrationFormStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "admission_type": {
-                    "type": "string",
-                    "enum": [
-                        "crisis_admission",
-                        "regular_placement"
-                    ],
-                    "example": "regular_placement"
-                },
-                "intake_appointment_date": {
-                    "type": "string",
-                    "example": "2023-10-01T10:00:00Z"
-                },
-                "intake_appointment_location": {
-                    "type": "string",
-                    "example": "Amsterdam Central Station"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "approved",
-                        "rejected"
-                    ],
-                    "example": "approved"
-                }
-            }
-        },
-        "api.UpdateScheduleRequest": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string",
-                    "example": "#FF5733"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_datetime": {
-                    "type": "string",
-                    "example": "2023-10-01T17:00:00Z"
-                },
-                "is_custom": {
-                    "description": "true for custom schedule, false for preset shift",
-                    "type": "boolean",
-                    "example": true
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "location_shift_id": {
-                    "description": "For preset shift-based schedules (required when is_custom = false)",
-                    "type": "integer",
-                    "example": 1
-                },
-                "shift_date": {
-                    "description": "Date to apply the shift",
-                    "type": "string",
-                    "example": "2023-10-01"
-                },
-                "start_datetime": {
-                    "description": "For custom schedules (required when is_custom = true)",
-                    "type": "string",
-                    "example": "2023-10-01T09:00:00Z"
-                }
-            }
-        },
-        "api.UpdateScheduleResponse": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "employee_id": {
-                    "type": "integer"
-                },
-                "end_datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "location_shift_id": {
-                    "description": "Additional info if updated from preset shift",
-                    "type": "integer"
-                },
-                "shift_name": {
-                    "type": "string"
-                },
-                "start_datetime": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateSenderRequest": {
-            "type": "object",
-            "properties": {
-                "BTWnumber": {
-                    "type": "string"
-                },
-                "KVKnumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "email_address": {
-                    "type": "string"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string",
-                    "enum": [
-                        "main_provider",
-                        "local_authority",
-                        "particular_party",
-                        "healthcare_institution"
-                    ]
-                }
-            }
-        },
-        "api.UpdateSenderResponse": {
-            "type": "object",
-            "properties": {
-                "BTWnumber": {
-                    "type": "string"
-                },
-                "KVKnumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "client_number": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.SenderContact"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email_address": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_archived": {
-                    "type": "boolean"
-                },
-                "land": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateShiftApiRequest": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "shift": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UpdateShiftApiResponse": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "shift": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.WorkingHourItem": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "duration_hours": {
-                    "type": "number"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "integer"
-                },
-                "start_time": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
                 }
             }
         },
@@ -20519,7 +14090,7 @@ const docTemplate = `{
                 "client_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -20533,7 +14104,7 @@ const docTemplate = `{
                 "participant_employee_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -20542,7 +14113,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "first_name": {
                     "type": "string"
@@ -20562,7 +14133,7 @@ const docTemplate = `{
                 "client_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "color": {
@@ -20581,7 +14152,7 @@ const docTemplate = `{
                 "participant_employee_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "recurrence_end_date": {
@@ -20608,7 +14179,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creator_employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -20658,7 +14229,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creator_employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "creator_first_name": {
                     "type": "string"
@@ -20737,7 +14308,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creator_employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -20807,7 +14378,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "creator_employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -20842,7 +14413,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "first_name": {
                     "type": "string"
@@ -20862,7 +14433,7 @@ const docTemplate = `{
                 "client_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "color": {
@@ -20881,7 +14452,7 @@ const docTemplate = `{
                 "participant_employee_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "start_time": {
@@ -20903,13 +14474,13 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },
                 "confirmed_by_employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamp"
                 },
                 "creator_employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -20988,6 +14559,100 @@ const docTemplate = `{
                 }
             }
         },
+        "audit.AuditRecord": {
+            "type": "object",
+            "properties": {
+                "access_reason": {
+                    "type": "string"
+                },
+                "action": {
+                    "type": "string"
+                },
+                "actor_id": {
+                    "type": "string"
+                },
+                "actor_role": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "ip": {
+                    "$ref": "#/definitions/netip.Addr"
+                },
+                "occured_at": {
+                    "type": "string"
+                },
+                "previous_hash": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "self_hash": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "subject_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.AddPermissionsToRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_ids"
+            ],
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "auth.AddPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth.AssignRoleToEmployeeApiResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth.AssignRoleToEmployeeParams": {
+            "type": "object",
+            "properties": {
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "auth.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -21003,6 +14668,28 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "auth.Enable2FARequest": {
             "type": "object",
             "required": [
@@ -21011,6 +14698,109 @@ const docTemplate = `{
             "properties": {
                 "validation_code": {
                     "type": "string"
+                }
+            }
+        },
+        "auth.GrantUserPermissionsRequest": {
+            "type": "object",
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "auth.GrantUserPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "auth.ListAllPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permission_id": {
+                    "type": "integer"
+                },
+                "permission_name": {
+                    "type": "string"
+                },
+                "permission_resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.ListAllRolePermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permission_id": {
+                    "type": "integer"
+                },
+                "permission_name": {
+                    "type": "string"
+                },
+                "permission_resource": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth.ListRolesApiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "permission_count": {
+                    "type": "integer"
+                },
+                "role_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.ListUserRolesAndPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "resource": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "roles": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
@@ -21101,6 +14891,883 @@ const docTemplate = `{
                 }
             }
         },
+        "care.CarePlanActions": {
+            "type": "object",
+            "properties": {
+                "action_description": {
+                    "type": "string"
+                },
+                "action_id": {
+                    "type": "integer"
+                },
+                "is_completed": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.CarePlanObjectives": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.CarePlanActions"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "objective_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timeframe": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanActionsRequest": {
+            "type": "object",
+            "required": [
+                "action_description"
+            ],
+            "properties": {
+                "action_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanActionsResponse": {
+            "type": "object",
+            "properties": {
+                "action_description": {
+                    "type": "string"
+                },
+                "action_id": {
+                    "type": "integer"
+                },
+                "objective_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.CreateCarePlanInterventionRequest": {
+            "type": "object",
+            "required": [
+                "frequency",
+                "intervention_description"
+            ],
+            "properties": {
+                "frequency": {
+                    "type": "string",
+                    "enum": [
+                        "daily",
+                        "weekly",
+                        "monthly"
+                    ]
+                },
+                "intervention_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanInterventionResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "frequency": {
+                    "type": "string"
+                },
+                "intervention_description": {
+                    "type": "string"
+                },
+                "intervention_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.CreateCarePlanObjectiveRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "goal_title",
+                "timeframe"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "goal_title": {
+                    "type": "string"
+                },
+                "timeframe": {
+                    "type": "string",
+                    "enum": [
+                        "short_term",
+                        "medium_term",
+                        "long_term"
+                    ]
+                }
+            }
+        },
+        "care.CreateCarePlanObjectiveResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "completion_date": {
+                    "type": "string"
+                },
+                "completion_notes": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "goal_title": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_date": {
+                    "type": "string"
+                },
+                "timeframe": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanReportRequest": {
+            "type": "object",
+            "required": [
+                "report_content",
+                "report_type"
+            ],
+            "properties": {
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanResourcesRequest": {
+            "type": "object",
+            "required": [
+                "resource_description"
+            ],
+            "properties": {
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
+                    "type": "string"
+                },
+                "resource_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
+                    "type": "string"
+                },
+                "resource_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanRisksRequest": {
+            "type": "object",
+            "required": [
+                "mitigation_strategy",
+                "risk_description"
+            ],
+            "properties": {
+                "mitigation_strategy": {
+                    "type": "string"
+                },
+                "risk_description": {
+                    "type": "string"
+                },
+                "risk_level": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanRisksResponse": {
+            "type": "object",
+            "properties": {
+                "mitigation_strategy": {
+                    "type": "string"
+                },
+                "risk_description": {
+                    "type": "string"
+                },
+                "risk_id": {
+                    "type": "integer"
+                },
+                "risk_level": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanSuccessMetricsRequest": {
+            "type": "object",
+            "required": [
+                "measurement_method",
+                "metric_name",
+                "target_value"
+            ],
+            "properties": {
+                "current_value": {
+                    "description": "Optional, can be nil if not set",
+                    "type": "string"
+                },
+                "measurement_method": {
+                    "type": "string"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "current_value": {
+                    "type": "string"
+                },
+                "measurement_method": {
+                    "type": "string"
+                },
+                "metric_id": {
+                    "type": "integer"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanSupportNetworkRequest": {
+            "type": "object",
+            "required": [
+                "role_title"
+            ],
+            "properties": {
+                "responsibility_description": {
+                    "type": "string"
+                },
+                "role_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.CreateCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "responsibility_description": {
+                    "type": "string"
+                },
+                "role_title": {
+                    "type": "string"
+                },
+                "support_network_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.CreateClientCarePlanRequest": {
+            "type": "object",
+            "properties": {
+                "initial_level": {
+                    "type": "integer"
+                },
+                "maturity_matrix_id": {
+                    "type": "integer"
+                },
+                "target_level": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.CreateClientCarePlanResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "client_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.GetCarePlanInterventionsResponse": {
+            "type": "object",
+            "properties": {
+                "daily_activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.Intervention"
+                    }
+                },
+                "monthly_activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.Intervention"
+                    }
+                },
+                "weekly_activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.Intervention"
+                    }
+                }
+            }
+        },
+        "care.GetCarePlanObjectivesResponse": {
+            "type": "object",
+            "properties": {
+                "long_term_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.CarePlanObjectives"
+                    }
+                },
+                "medium_term_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.CarePlanObjectives"
+                    }
+                },
+                "short_term_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.CarePlanObjectives"
+                    }
+                }
+            }
+        },
+        "care.GetCarePlanOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "assessment_summary": {
+                    "type": "string"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "raw_llm_response": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_level": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.GetCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
+                    "type": "string"
+                },
+                "resource_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.GetCarePlanRisksResponse": {
+            "type": "object",
+            "properties": {
+                "mitigation_strategy": {
+                    "type": "string"
+                },
+                "risk_description": {
+                    "type": "string"
+                },
+                "risk_id": {
+                    "type": "integer"
+                },
+                "risk_level": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.GetCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "current_value": {
+                    "type": "string"
+                },
+                "measurement_method": {
+                    "type": "string"
+                },
+                "metric_id": {
+                    "type": "integer"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.GetCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "responsibility_description": {
+                    "type": "string"
+                },
+                "role_title": {
+                    "type": "string"
+                },
+                "support_network_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.Intervention": {
+            "type": "object",
+            "properties": {
+                "intervention_description": {
+                    "type": "string"
+                },
+                "intervention_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.ListCarePlanReportsResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by_first_name": {
+                    "type": "string"
+                },
+                "created_by_last_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.ListCarePlanTopics": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "topic_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.ListClientCarePlansResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "initial_level": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "topic_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanActionsRequest": {
+            "type": "object",
+            "properties": {
+                "action_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanActionsResponse": {
+            "type": "object",
+            "properties": {
+                "action_description": {
+                    "type": "string"
+                },
+                "action_id": {
+                    "type": "integer"
+                },
+                "objective_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.UpdateCarePlanInterventionRequest": {
+            "type": "object",
+            "properties": {
+                "frequency": {
+                    "type": "string",
+                    "enum": [
+                        "daily",
+                        "weekly",
+                        "monthly"
+                    ]
+                },
+                "intervention_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanInterventionResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "frequency": {
+                    "type": "string"
+                },
+                "intervention_description": {
+                    "type": "string"
+                },
+                "intervention_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.UpdateCarePlanObjectiveRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "goal_title": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "not_started",
+                        "in_progress",
+                        "completed",
+                        "discontinued"
+                    ]
+                },
+                "timeframe": {
+                    "type": "string",
+                    "enum": [
+                        "short_term",
+                        "medium_term",
+                        "long_term"
+                    ]
+                }
+            }
+        },
+        "care.UpdateCarePlanObjectiveResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "goal_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.UpdateCarePlanOverviewRequest": {
+            "type": "object",
+            "properties": {
+                "assessment_summary": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "assessment_id": {
+                    "type": "integer"
+                },
+                "assessment_summary": {
+                    "type": "string"
+                },
+                "care_plan_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "care.UpdateCarePlanReportRequest": {
+            "type": "object",
+            "properties": {
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanReportResponse": {
+            "type": "object",
+            "properties": {
+                "care_plan_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "report_content": {
+                    "type": "string"
+                },
+                "report_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanResourcesRequest": {
+            "type": "object",
+            "properties": {
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
+                    "type": "string"
+                },
+                "resource_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanResourcesResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_obtained": {
+                    "type": "boolean"
+                },
+                "obtained_date": {
+                    "type": "string"
+                },
+                "resource_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanRisksRequest": {
+            "type": "object",
+            "properties": {
+                "mitigation_strategy": {
+                    "type": "string"
+                },
+                "risk_description": {
+                    "type": "string"
+                },
+                "risk_level": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanRisksResponse": {
+            "type": "object",
+            "properties": {
+                "mitigation_strategy": {
+                    "type": "string"
+                },
+                "risk_description": {
+                    "type": "string"
+                },
+                "risk_id": {
+                    "type": "integer"
+                },
+                "risk_level": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanSuccessMetricsRequest": {
+            "type": "object",
+            "properties": {
+                "current_value": {
+                    "description": "Optional, can be nil if not set",
+                    "type": "string"
+                },
+                "measurement_method": {
+                    "type": "string"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanSuccessMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "current_value": {
+                    "type": "string"
+                },
+                "measurement_method": {
+                    "type": "string"
+                },
+                "metric_id": {
+                    "type": "integer"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanSupportNetworkRequest": {
+            "type": "object",
+            "properties": {
+                "responsibility_description": {
+                    "type": "string"
+                },
+                "role_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "care.UpdateCarePlanSupportNetworkResponse": {
+            "type": "object",
+            "properties": {
+                "responsibility_description": {
+                    "type": "string"
+                },
+                "role_title": {
+                    "type": "string"
+                },
+                "support_network_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.AddClientDocumentApiRequest": {
             "type": "object",
             "required": [
@@ -21123,7 +15790,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created": {
                     "type": "string"
@@ -21181,7 +15848,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -21195,13 +15862,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -21222,6 +15889,48 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "clientp.ConfirmProgressReportRequest": {
+            "type": "object",
+            "required": [
+                "end_date",
+                "report_text",
+                "start_date"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ConfirmProgressReportResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         },
@@ -21300,7 +16009,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -21410,7 +16119,7 @@ const docTemplate = `{
                 },
                 "bsn_verified_by": {
                     "description": "needs to be checked",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "date_of_birth": {
                     "type": "string"
@@ -21589,7 +16298,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "identity": {
                     "type": "boolean"
@@ -21689,7 +16398,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -21762,7 +16471,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -21806,7 +16515,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -21835,7 +16544,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -21896,9 +16605,6 @@ const docTemplate = `{
                 "client_absence": {
                     "type": "boolean"
                 },
-                "client_id": {
-                    "type": "integer"
-                },
                 "client_options": {
                     "type": "array",
                     "items": {
@@ -21915,7 +16621,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "fire_water_damage": {
                     "type": "boolean"
@@ -22079,7 +16785,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_options": {
                     "type": "array",
@@ -22100,7 +16806,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "fire_water_damage": {
                     "type": "boolean"
@@ -22248,7 +16954,7 @@ const docTemplate = `{
                     ]
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -22275,7 +16981,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -22287,7 +16993,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -22299,6 +17005,433 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateRegistrationFormRequest": {
+            "type": "object",
+            "properties": {
+                "application_date": {
+                    "type": "string"
+                },
+                "care_ambulatory_guidance": {
+                    "type": "boolean"
+                },
+                "care_assisted_independent_living": {
+                    "type": "boolean"
+                },
+                "care_protected_living": {
+                    "type": "boolean"
+                },
+                "care_room_training_center": {
+                    "type": "boolean"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_city": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_gender": {
+                    "type": "string"
+                },
+                "client_house_number": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_nationality": {
+                    "type": "string"
+                },
+                "client_phone_number": {
+                    "type": "string"
+                },
+                "client_postal_code": {
+                    "type": "string"
+                },
+                "client_street": {
+                    "type": "string"
+                },
+                "document_diagnosis": {
+                    "type": "string"
+                },
+                "document_education_report": {
+                    "type": "string"
+                },
+                "document_id_copy": {
+                    "type": "string"
+                },
+                "document_psychiatric_report": {
+                    "type": "string"
+                },
+                "document_referral": {
+                    "type": "string"
+                },
+                "document_safety_plan": {
+                    "type": "string"
+                },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
+                "guardian1_email": {
+                    "type": "string"
+                },
+                "guardian1_first_name": {
+                    "type": "string"
+                },
+                "guardian1_last_name": {
+                    "type": "string"
+                },
+                "guardian1_phone_number": {
+                    "type": "string"
+                },
+                "guardian1_relationship": {
+                    "type": "string"
+                },
+                "guardian2_email": {
+                    "type": "string"
+                },
+                "guardian2_first_name": {
+                    "type": "string"
+                },
+                "guardian2_last_name": {
+                    "type": "string"
+                },
+                "guardian2_phone_number": {
+                    "type": "string"
+                },
+                "guardian2_relationship": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_first_name": {
+                    "type": "string"
+                },
+                "referrer_job_title": {
+                    "type": "string"
+                },
+                "referrer_last_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone_number": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "risk_additional_notes": {
+                    "type": "string"
+                },
+                "risk_aggressive_behavior": {
+                    "type": "boolean"
+                },
+                "risk_criminal_history": {
+                    "type": "boolean"
+                },
+                "risk_day_night_rhythm": {
+                    "type": "boolean"
+                },
+                "risk_flight_behavior": {
+                    "type": "boolean"
+                },
+                "risk_other": {
+                    "type": "boolean"
+                },
+                "risk_other_description": {
+                    "type": "string"
+                },
+                "risk_psychiatric_issues": {
+                    "type": "boolean"
+                },
+                "risk_sexual_behavior": {
+                    "type": "boolean"
+                },
+                "risk_substance_abuse": {
+                    "type": "boolean"
+                },
+                "risk_suicidal_selfharm": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateRegistrationFormResponse": {
+            "type": "object",
+            "properties": {
+                "application_date": {
+                    "type": "string"
+                },
+                "application_reason": {
+                    "type": "string"
+                },
+                "care_ambulatory_guidance": {
+                    "type": "boolean"
+                },
+                "care_assisted_independent_living": {
+                    "type": "boolean"
+                },
+                "care_protected_living": {
+                    "type": "boolean"
+                },
+                "care_room_training_center": {
+                    "type": "boolean"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_city": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_gender": {
+                    "type": "string"
+                },
+                "client_goals": {
+                    "type": "string"
+                },
+                "client_house_number": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_nationality": {
+                    "type": "string"
+                },
+                "client_phone_number": {
+                    "type": "string"
+                },
+                "client_postal_code": {
+                    "type": "string"
+                },
+                "client_street": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "document_action_plan": {
+                    "type": "string"
+                },
+                "document_diagnosis": {
+                    "type": "string"
+                },
+                "document_education_report": {
+                    "type": "string"
+                },
+                "document_id_copy": {
+                    "type": "string"
+                },
+                "document_psychiatric_report": {
+                    "type": "string"
+                },
+                "document_referral": {
+                    "type": "string"
+                },
+                "document_safety_plan": {
+                    "type": "string"
+                },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
+                "form_status": {
+                    "type": "string"
+                },
+                "guardian1_email": {
+                    "type": "string"
+                },
+                "guardian1_first_name": {
+                    "type": "string"
+                },
+                "guardian1_last_name": {
+                    "type": "string"
+                },
+                "guardian1_phone_number": {
+                    "type": "string"
+                },
+                "guardian1_relationship": {
+                    "type": "string"
+                },
+                "guardian2_email": {
+                    "type": "string"
+                },
+                "guardian2_first_name": {
+                    "type": "string"
+                },
+                "guardian2_last_name": {
+                    "type": "string"
+                },
+                "guardian2_phone_number": {
+                    "type": "string"
+                },
+                "guardian2_relationship": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "processed_at": {
+                    "type": "string"
+                },
+                "processed_by_employee_id": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_first_name": {
+                    "type": "string"
+                },
+                "referrer_job_title": {
+                    "type": "string"
+                },
+                "referrer_last_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone_number": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "risk_additional_notes": {
+                    "type": "string"
+                },
+                "risk_aggressive_behavior": {
+                    "type": "boolean"
+                },
+                "risk_criminal_history": {
+                    "type": "boolean"
+                },
+                "risk_day_night_rhythm": {
+                    "type": "boolean"
+                },
+                "risk_flight_behavior": {
+                    "type": "boolean"
+                },
+                "risk_other": {
+                    "type": "boolean"
+                },
+                "risk_other_description": {
+                    "type": "string"
+                },
+                "risk_psychiatric_issues": {
+                    "type": "boolean"
+                },
+                "risk_sexual_behavior": {
+                    "type": "boolean"
+                },
+                "risk_substance_abuse": {
+                    "type": "boolean"
+                },
+                "risk_suicidal_selfharm": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -22345,7 +17478,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -22374,7 +17507,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -22415,7 +17548,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "file_url": {
                     "type": "string"
@@ -22460,7 +17593,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -22546,13 +17679,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_name": {
                     "type": "string"
@@ -22589,7 +17722,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "bsn_verified_by": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "bsn_verified_by_first_name": {
                     "type": "string"
@@ -22649,7 +17782,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "identity": {
                     "type": "boolean"
@@ -22720,7 +17853,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -22767,7 +17900,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -22814,7 +17947,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "administered_by_last_name": {
                     "type": "string"
@@ -22954,7 +18087,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_options": {
                     "type": "array",
@@ -22978,7 +18111,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_last_name": {
                     "type": "string"
@@ -23126,7 +18259,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23141,7 +18274,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_last_name": {
                     "type": "string"
@@ -23163,17 +18296,420 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.GetRegistrationFormResponse": {
+            "type": "object",
+            "properties": {
+                "admission_type": {
+                    "description": "\"crisis_admission\" or \"regular_placement\"",
+                    "type": "string"
+                },
+                "application_date": {
+                    "type": "string"
+                },
+                "application_reason": {
+                    "type": "string"
+                },
+                "care_ambulatory_guidance": {
+                    "type": "boolean"
+                },
+                "care_assisted_independent_living": {
+                    "type": "boolean"
+                },
+                "care_protected_living": {
+                    "type": "boolean"
+                },
+                "care_room_training_center": {
+                    "type": "boolean"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_city": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_gender": {
+                    "type": "string"
+                },
+                "client_goals": {
+                    "type": "string"
+                },
+                "client_house_number": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_nationality": {
+                    "type": "string"
+                },
+                "client_phone_number": {
+                    "type": "string"
+                },
+                "client_postal_code": {
+                    "type": "string"
+                },
+                "client_street": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "document_action_plan": {
+                    "type": "string"
+                },
+                "document_diagnosis": {
+                    "type": "string"
+                },
+                "document_education_report": {
+                    "type": "string"
+                },
+                "document_id_copy": {
+                    "type": "string"
+                },
+                "document_psychiatric_report": {
+                    "type": "string"
+                },
+                "document_referral": {
+                    "type": "string"
+                },
+                "document_safety_plan": {
+                    "type": "string"
+                },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
+                "form_status": {
+                    "type": "string"
+                },
+                "guardian1_email": {
+                    "type": "string"
+                },
+                "guardian1_first_name": {
+                    "type": "string"
+                },
+                "guardian1_last_name": {
+                    "type": "string"
+                },
+                "guardian1_phone_number": {
+                    "type": "string"
+                },
+                "guardian1_relationship": {
+                    "type": "string"
+                },
+                "guardian2_email": {
+                    "type": "string"
+                },
+                "guardian2_first_name": {
+                    "type": "string"
+                },
+                "guardian2_last_name": {
+                    "type": "string"
+                },
+                "guardian2_phone_number": {
+                    "type": "string"
+                },
+                "guardian2_relationship": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "intake_appointment_date": {
+                    "type": "string"
+                },
+                "processed_at": {
+                    "type": "string"
+                },
+                "processed_by_employee_id": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_first_name": {
+                    "type": "string"
+                },
+                "referrer_job_title": {
+                    "type": "string"
+                },
+                "referrer_last_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone_number": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "risk_additional_notes": {
+                    "type": "string"
+                },
+                "risk_aggressive_behavior": {
+                    "type": "boolean"
+                },
+                "risk_criminal_history": {
+                    "type": "boolean"
+                },
+                "risk_day_night_rhythm": {
+                    "type": "boolean"
+                },
+                "risk_flight_behavior": {
+                    "type": "boolean"
+                },
+                "risk_other": {
+                    "type": "boolean"
+                },
+                "risk_other_description": {
+                    "type": "string"
+                },
+                "risk_psychiatric_issues": {
+                    "type": "boolean"
+                },
+                "risk_sexual_behavior": {
+                    "type": "boolean"
+                },
+                "risk_substance_abuse": {
+                    "type": "boolean"
+                },
+                "risk_suicidal_selfharm": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ListAiGeneratedReportsResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "report_text": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ListAllIncidentsResponse": {
+            "type": "object",
+            "properties": {
+                "accident": {
+                    "type": "boolean"
+                },
+                "additional_appointments": {
+                    "type": "string"
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_absence": {
+                    "type": "boolean"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "employee_absenteeism": {
+                    "type": "string"
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "fire_water_damage": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "incident_date": {
+                    "type": "string"
+                },
+                "incident_explanation": {
+                    "type": "string"
+                },
+                "incident_prevent_steps": {
+                    "type": "string"
+                },
+                "incident_taken_measures": {
+                    "type": "string"
+                },
+                "incident_type": {
+                    "type": "string"
+                },
+                "is_confirmed": {
+                    "type": "boolean"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "medicines": {
+                    "type": "boolean"
+                },
+                "needed_consultation": {
+                    "type": "string"
+                },
+                "organization": {
+                    "type": "boolean"
+                },
+                "other": {
+                    "type": "boolean"
+                },
+                "other_cause": {
+                    "type": "string"
+                },
+                "other_desc": {
+                    "type": "string"
+                },
+                "other_notifications": {
+                    "type": "boolean"
+                },
+                "passing_away": {
+                    "type": "boolean"
+                },
+                "physical_injury": {
+                    "type": "string"
+                },
+                "physical_injury_desc": {
+                    "type": "string"
+                },
+                "psychological_damage": {
+                    "type": "string"
+                },
+                "psychological_damage_desc": {
+                    "type": "string"
+                },
+                "recurrence_risk": {
+                    "type": "string"
+                },
+                "reporter_involvement": {
+                    "type": "string"
+                },
+                "runtime_incident": {
+                    "type": "string"
+                },
+                "self_harm": {
+                    "type": "boolean"
+                },
+                "severity_of_incident": {
+                    "type": "string"
+                },
+                "soft_delete": {
+                    "type": "boolean"
+                },
+                "succession_desc": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "use_prohibited_substances": {
+                    "type": "boolean"
+                },
+                "violence": {
+                    "type": "boolean"
+                }
+            }
+        },
         "clientp.ListAssignedEmployeesResponse": {
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_name": {
                     "type": "string"
@@ -23193,7 +18729,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23237,7 +18773,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23278,7 +18814,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23322,7 +18858,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23405,7 +18941,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "identity": {
                     "type": "boolean"
@@ -23461,7 +18997,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_options": {
                     "type": "array",
@@ -23485,7 +19021,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_last_name": {
                     "type": "string"
@@ -23625,7 +19161,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23640,7 +19176,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_last_name": {
                     "type": "string"
@@ -23662,6 +19198,243 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ListRegistrationFormsResponse": {
+            "type": "object",
+            "properties": {
+                "admission_type": {
+                    "description": "\"crisis_admission\" or \"regular_placement\"",
+                    "type": "string"
+                },
+                "application_date": {
+                    "type": "string"
+                },
+                "application_reason": {
+                    "type": "string"
+                },
+                "care_ambulatory_guidance": {
+                    "type": "boolean"
+                },
+                "care_assisted_independent_living": {
+                    "type": "boolean"
+                },
+                "care_protected_living": {
+                    "type": "boolean"
+                },
+                "care_room_training_center": {
+                    "type": "boolean"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_city": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_gender": {
+                    "type": "string"
+                },
+                "client_goals": {
+                    "type": "string"
+                },
+                "client_house_number": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_nationality": {
+                    "type": "string"
+                },
+                "client_phone_number": {
+                    "type": "string"
+                },
+                "client_postal_code": {
+                    "type": "string"
+                },
+                "client_street": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "document_action_plan": {
+                    "type": "string"
+                },
+                "document_diagnosis": {
+                    "type": "string"
+                },
+                "document_education_report": {
+                    "type": "string"
+                },
+                "document_id_copy": {
+                    "type": "string"
+                },
+                "document_psychiatric_report": {
+                    "type": "string"
+                },
+                "document_referral": {
+                    "type": "string"
+                },
+                "document_safety_plan": {
+                    "type": "string"
+                },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
+                "form_status": {
+                    "type": "string"
+                },
+                "guardian1_email": {
+                    "type": "string"
+                },
+                "guardian1_first_name": {
+                    "type": "string"
+                },
+                "guardian1_last_name": {
+                    "type": "string"
+                },
+                "guardian1_phone_number": {
+                    "type": "string"
+                },
+                "guardian1_relationship": {
+                    "type": "string"
+                },
+                "guardian2_email": {
+                    "type": "string"
+                },
+                "guardian2_first_name": {
+                    "type": "string"
+                },
+                "guardian2_last_name": {
+                    "type": "string"
+                },
+                "guardian2_phone_number": {
+                    "type": "string"
+                },
+                "guardian2_relationship": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "intake_appointment_date": {
+                    "type": "string"
+                },
+                "processed_at": {
+                    "type": "string"
+                },
+                "processed_by_employee_id": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_first_name": {
+                    "type": "string"
+                },
+                "referrer_job_title": {
+                    "type": "string"
+                },
+                "referrer_last_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone_number": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "risk_additional_notes": {
+                    "type": "string"
+                },
+                "risk_aggressive_behavior": {
+                    "type": "boolean"
+                },
+                "risk_count": {
+                    "type": "integer"
+                },
+                "risk_criminal_history": {
+                    "type": "boolean"
+                },
+                "risk_day_night_rhythm": {
+                    "type": "boolean"
+                },
+                "risk_flight_behavior": {
+                    "type": "boolean"
+                },
+                "risk_other": {
+                    "type": "boolean"
+                },
+                "risk_other_description": {
+                    "type": "string"
+                },
+                "risk_psychiatric_issues": {
+                    "type": "boolean"
+                },
+                "risk_sexual_behavior": {
+                    "type": "boolean"
+                },
+                "risk_substance_abuse": {
+                    "type": "boolean"
+                },
+                "risk_suicidal_selfharm": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ListStatusHistoryApiResponse": {
             "type": "object",
             "properties": {
@@ -23672,7 +19445,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -23717,7 +19490,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "profile_picture": {
                     "type": "string"
@@ -23799,7 +19572,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -23882,7 +19655,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -23896,13 +19669,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -23925,7 +19698,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "bsn_verified_by": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "date_of_birth": {
                     "type": "string"
@@ -24047,7 +19820,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "bsn_verified_by": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created": {
                     "type": "string"
@@ -24080,7 +19853,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "identity": {
                     "type": "boolean"
@@ -24153,7 +19926,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -24226,7 +19999,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -24270,7 +20043,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -24299,7 +20072,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "administered_by_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -24360,7 +20133,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -24398,7 +20171,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "fire_water_damage": {
                     "type": "boolean"
@@ -24532,7 +20305,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_options": {
                     "type": "array",
@@ -24553,7 +20326,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "fire_water_damage": {
                     "type": "boolean"
@@ -24684,7 +20457,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "date": {
                     "type": "string"
@@ -24693,7 +20466,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -24710,7 +20483,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -24722,7 +20495,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -24735,6 +20508,465 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateRegistrationFormRequest": {
+            "type": "object",
+            "properties": {
+                "application_date": {
+                    "$ref": "#/definitions/pgtype.Date"
+                },
+                "care_ambulatory_guidance": {
+                    "type": "boolean"
+                },
+                "care_assisted_independent_living": {
+                    "type": "boolean"
+                },
+                "care_protected_living": {
+                    "type": "boolean"
+                },
+                "care_room_training_center": {
+                    "type": "boolean"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_city": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_gender": {
+                    "type": "string"
+                },
+                "client_house_number": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_nationality": {
+                    "type": "string"
+                },
+                "client_phone_number": {
+                    "type": "string"
+                },
+                "client_postal_code": {
+                    "type": "string"
+                },
+                "client_street": {
+                    "type": "string"
+                },
+                "document_diagnosis": {
+                    "type": "string"
+                },
+                "document_education_report": {
+                    "type": "string"
+                },
+                "document_id_copy": {
+                    "type": "string"
+                },
+                "document_psychiatric_report": {
+                    "type": "string"
+                },
+                "document_referral": {
+                    "type": "string"
+                },
+                "document_safety_plan": {
+                    "type": "string"
+                },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_level": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
+                "guardian1_email": {
+                    "type": "string"
+                },
+                "guardian1_first_name": {
+                    "type": "string"
+                },
+                "guardian1_last_name": {
+                    "type": "string"
+                },
+                "guardian1_phone_number": {
+                    "type": "string"
+                },
+                "guardian1_relationship": {
+                    "type": "string"
+                },
+                "guardian2_email": {
+                    "type": "string"
+                },
+                "guardian2_first_name": {
+                    "type": "string"
+                },
+                "guardian2_last_name": {
+                    "type": "string"
+                },
+                "guardian2_phone_number": {
+                    "type": "string"
+                },
+                "guardian2_relationship": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_first_name": {
+                    "type": "string"
+                },
+                "referrer_job_title": {
+                    "type": "string"
+                },
+                "referrer_last_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone_number": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "risk_additional_notes": {
+                    "type": "string"
+                },
+                "risk_aggressive_behavior": {
+                    "type": "boolean"
+                },
+                "risk_criminal_history": {
+                    "type": "boolean"
+                },
+                "risk_day_night_rhythm": {
+                    "type": "boolean"
+                },
+                "risk_flight_behavior": {
+                    "type": "boolean"
+                },
+                "risk_other": {
+                    "type": "boolean"
+                },
+                "risk_other_description": {
+                    "type": "string"
+                },
+                "risk_psychiatric_issues": {
+                    "type": "boolean"
+                },
+                "risk_sexual_behavior": {
+                    "type": "boolean"
+                },
+                "risk_substance_abuse": {
+                    "type": "boolean"
+                },
+                "risk_suicidal_selfharm": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateRegistrationFormResponse": {
+            "type": "object",
+            "properties": {
+                "application_date": {
+                    "type": "string"
+                },
+                "application_reason": {
+                    "type": "string"
+                },
+                "care_ambulatory_guidance": {
+                    "type": "boolean"
+                },
+                "care_assisted_independent_living": {
+                    "type": "boolean"
+                },
+                "care_protected_living": {
+                    "type": "boolean"
+                },
+                "care_room_training_center": {
+                    "type": "boolean"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_city": {
+                    "type": "string"
+                },
+                "client_email": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_gender": {
+                    "type": "string"
+                },
+                "client_goals": {
+                    "type": "string"
+                },
+                "client_house_number": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "client_nationality": {
+                    "type": "string"
+                },
+                "client_phone_number": {
+                    "type": "string"
+                },
+                "client_postal_code": {
+                    "type": "string"
+                },
+                "client_street": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "document_action_plan": {
+                    "type": "string"
+                },
+                "document_diagnosis": {
+                    "type": "string"
+                },
+                "document_education_report": {
+                    "type": "string"
+                },
+                "document_id_copy": {
+                    "type": "string"
+                },
+                "document_psychiatric_report": {
+                    "type": "string"
+                },
+                "document_referral": {
+                    "type": "string"
+                },
+                "document_safety_plan": {
+                    "type": "string"
+                },
+                "education_additional_notes": {
+                    "type": "string"
+                },
+                "education_currently_enrolled": {
+                    "type": "boolean"
+                },
+                "education_institution": {
+                    "type": "string"
+                },
+                "education_mentor_email": {
+                    "type": "string"
+                },
+                "education_mentor_name": {
+                    "type": "string"
+                },
+                "education_mentor_phone": {
+                    "type": "string"
+                },
+                "form_status": {
+                    "type": "string"
+                },
+                "guardian1_email": {
+                    "type": "string"
+                },
+                "guardian1_first_name": {
+                    "type": "string"
+                },
+                "guardian1_last_name": {
+                    "type": "string"
+                },
+                "guardian1_phone_number": {
+                    "type": "string"
+                },
+                "guardian1_relationship": {
+                    "type": "string"
+                },
+                "guardian2_email": {
+                    "type": "string"
+                },
+                "guardian2_first_name": {
+                    "type": "string"
+                },
+                "guardian2_last_name": {
+                    "type": "string"
+                },
+                "guardian2_phone_number": {
+                    "type": "string"
+                },
+                "guardian2_relationship": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "processed_at": {
+                    "type": "string"
+                },
+                "processed_by_employee_id": {
+                    "type": "string"
+                },
+                "referrer_email": {
+                    "type": "string"
+                },
+                "referrer_first_name": {
+                    "type": "string"
+                },
+                "referrer_job_title": {
+                    "type": "string"
+                },
+                "referrer_last_name": {
+                    "type": "string"
+                },
+                "referrer_organization": {
+                    "type": "string"
+                },
+                "referrer_phone_number": {
+                    "type": "string"
+                },
+                "referrer_signature": {
+                    "type": "boolean"
+                },
+                "risk_additional_notes": {
+                    "type": "string"
+                },
+                "risk_aggressive_behavior": {
+                    "type": "boolean"
+                },
+                "risk_criminal_history": {
+                    "type": "boolean"
+                },
+                "risk_day_night_rhythm": {
+                    "type": "boolean"
+                },
+                "risk_flight_behavior": {
+                    "type": "boolean"
+                },
+                "risk_other": {
+                    "type": "boolean"
+                },
+                "risk_other_description": {
+                    "type": "string"
+                },
+                "risk_psychiatric_issues": {
+                    "type": "boolean"
+                },
+                "risk_sexual_behavior": {
+                    "type": "boolean"
+                },
+                "risk_substance_abuse": {
+                    "type": "boolean"
+                },
+                "risk_suicidal_selfharm": {
+                    "type": "boolean"
+                },
+                "risk_weapon_possession": {
+                    "type": "boolean"
+                },
+                "submitted_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "work_additional_notes": {
+                    "type": "string"
+                },
+                "work_current_employer": {
+                    "type": "string"
+                },
+                "work_current_position": {
+                    "type": "string"
+                },
+                "work_currently_employed": {
+                    "type": "boolean"
+                },
+                "work_employer_email": {
+                    "type": "string"
+                },
+                "work_employer_phone": {
+                    "type": "string"
+                },
+                "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateRegistrationFormStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "admission_type": {
+                    "type": "string",
+                    "enum": [
+                        "crisis_admission",
+                        "regular_placement"
+                    ],
+                    "example": "regular_placement"
+                },
+                "intake_appointment_date": {
+                    "type": "string",
+                    "example": "2023-10-01T10:00:00Z"
+                },
+                "intake_appointment_location": {
+                    "type": "string",
+                    "example": "Amsterdam Central Station"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "approved",
+                        "rejected"
+                    ],
+                    "example": "approved"
                 }
             }
         },
@@ -24852,7 +21084,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
@@ -24956,7 +21188,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25030,7 +21262,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
                 "changed_by": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "changed_by_first_name": {
                     "type": "string"
@@ -25076,7 +21308,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25161,7 +21393,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25276,7 +21508,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -25357,6 +21589,335 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "ecr.DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_status": {
+                    "type": "string"
+                },
+                "current_status": {
+                    "type": "string"
+                },
+                "departure_reason": {
+                    "type": "string"
+                },
+                "discharge_type": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "follow_up_plan": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "scheduled_status": {
+                    "type": "string"
+                },
+                "status_change_date": {
+                    "type": "string"
+                },
+                "status_change_reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "ecr.ListEmployeesByContractEndDateResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                }
+            }
+        },
+        "ecr.ListLatestPaymentsResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "ecr.ListUpcomingAppointmentsResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "ecr.TotalDischargeCountResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_count": {
+                    "type": "integer"
+                },
+                "status_change_count": {
+                    "type": "integer"
+                },
+                "total_discharge_count": {
+                    "type": "integer"
+                },
+                "urgent_cases_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "employees.AddEducationToEmployeeProfileRequest": {
+            "type": "object",
+            "required": [
+                "degree",
+                "end_date",
+                "field_of_study",
+                "institution_name",
+                "start_date"
+            ],
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEducationToEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEmployeeCertificationRequest": {
+            "type": "object",
+            "properties": {
+                "date_issued": {
+                    "type": "string"
+                },
+                "issued_by": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "date_issued": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issued_by": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEmployeeContractDetailsRequest": {
+            "type": "object",
+            "required": [
+                "contract_hours"
+            ],
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_hours": {
+                    "type": "number"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEmployeeContractDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_hours": {
+                    "type": "number"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEmployeeExperienceRequest": {
+            "type": "object",
+            "required": [
+                "company_name",
+                "end_date",
+                "job_title",
+                "start_date"
+            ],
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.AddEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 }
             }
@@ -25483,7 +22044,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_archived": {
                     "type": "boolean"
@@ -25510,9 +22071,315 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.DeleteEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "date_issued": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issued_by": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.DeleteEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.DeleteEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.GetEmployeeContractDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_hours": {
+                    "type": "number"
+                },
+                "contract_rate": {
+                    "description": "Optional field for contract rate",
+                    "type": "number"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "employees.GetEmployeeCountsResponse": {
+            "type": "object",
+            "properties": {
+                "total_archived": {
+                    "type": "integer"
+                },
+                "total_employees": {
+                    "type": "integer"
+                },
+                "total_out_of_service": {
+                    "type": "integer"
+                },
+                "total_subcontractors": {
+                    "type": "integer"
+                }
+            }
+        },
+        "employees.GetEmployeeProfileByIDResponse": {
+            "type": "object",
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_logged_in_user": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.GetEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.Permission"
+                    }
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "two_factor_enabled": {
+                    "type": "boolean"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.ListEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "date_issued": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issued_by": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.ListEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.ListEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 }
             }
@@ -25557,7 +22424,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_archived": {
                     "type": "boolean"
@@ -25593,9 +22460,266 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.ListWorkingHoursResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "period": {
+                    "$ref": "#/definitions/employees.Period"
+                },
+                "summary": {
+                    "$ref": "#/definitions/employees.Summary"
+                },
+                "working_hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.WorkingHourItem"
+                    }
+                }
+            }
+        },
+        "employees.Period": {
+            "type": "object",
+            "properties": {
+                "Week": {
+                    "type": "integer"
+                },
+                "date_range": {
+                    "type": "object",
+                    "properties": {
+                        "end": {
+                            "type": "string"
+                        },
+                        "start": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "is_current_week": {
+                    "type": "boolean"
+                },
+                "month_name": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "employees.Permission": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "method": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.SearchEmployeesByNameOrEmailResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.SetEmployeeProfilePictureRequest": {
+            "type": "object",
+            "required": [
+                "attachement_id"
+            ],
+            "properties": {
+                "attachement_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.SetEmployeeProfilePictureResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.Summary": {
+            "type": "object",
+            "properties": {
+                "appointment_hours": {
+                    "type": "number"
+                },
+                "over_time": {
+                    "description": "Optional field for overtime hours",
+                    "type": "number"
+                },
+                "shift_hours": {
+                    "type": "number"
+                },
+                "total_days_worked": {
+                    "type": "integer"
+                },
+                "total_hours": {
+                    "type": "number"
+                }
+            }
+        },
+        "employees.UpdateEmployeeCertificationRequest": {
+            "type": "object",
+            "properties": {
+                "date_issued": {
+                    "type": "string"
+                },
+                "issued_by": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.UpdateEmployeeCertificationResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "date_issued": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issued_by": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.UpdateEmployeeEducationRequest": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.UpdateEmployeeEducationResponse": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.UpdateEmployeeExperienceRequest": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.UpdateEmployeeExperienceResponse": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
                     "type": "string"
                 }
             }
@@ -25630,10 +22754,449 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_subcontractor": {
                     "type": "boolean"
+                }
+            }
+        },
+        "employees.UpdateEmployeeProfileResponse": {
+            "type": "object",
+            "properties": {
+                "authentication_phone_number": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "is_subcontractor": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.WorkingHourItem": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_hours": {
+                    "type": "number"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.CreateInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "client_id",
+                "due_date",
+                "extra_content",
+                "invoice_details",
+                "invoice_type",
+                "issue_date",
+                "status",
+                "total_amount"
+            ],
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_type": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "credit_note"
+                    ]
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "outstanding",
+                        "partially_paid",
+                        "paid",
+                        "expired",
+                        "overpaid",
+                        "imported",
+                        "concept"
+                    ]
+                },
+                "total_amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "invoice.CreateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.CreatePaymentRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "payment_date",
+                "payment_status"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string",
+                    "example": "2023-10-01T00:00:00Z"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "enum": [
+                        "credit_card",
+                        "bank_transfer",
+                        "cash",
+                        "check",
+                        "other"
+                    ]
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "completed",
+                        "failed",
+                        "refunded",
+                        "reversed"
+                    ]
+                }
+            }
+        },
+        "invoice.CreatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "current_invoice_status": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_status_changed": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.CreditInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "invoice.DeletePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "current_invoice_status": {
+                    "type": "string"
+                },
+                "deleted_amount": {
+                    "type": "number"
+                },
+                "deleted_payment_id": {
+                    "type": "integer"
+                },
+                "deleted_payment_status": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_status_changed": {
+                    "type": "boolean"
+                },
+                "previous_invoice_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.GenerateInvoicePDFResponse": {
+            "type": "object",
+            "properties": {
+                "file_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.GenerateInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "client_id",
+                "end_date",
+                "start_date"
+            ],
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.GenerateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.GetInvoiceAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "audit_id": {
+                    "type": "integer"
+                },
+                "changed_at": {
+                    "type": "string"
+                },
+                "changed_by": {
+                    "type": "string"
+                },
+                "changed_by_first_name": {
+                    "type": "string"
+                },
+                "changed_by_last_name": {
+                    "type": "string"
+                },
+                "changed_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "new_values": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "old_values": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "operation": {
+                    "type": "string"
                 }
             }
         },
@@ -25644,7 +23207,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25664,7 +23227,7 @@ const docTemplate = `{
                 "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/maicare_go_service_invoice.InvoiceDetails"
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
                     }
                 },
                 "invoice_number": {
@@ -25708,7 +23271,71 @@ const docTemplate = `{
                 }
             }
         },
-        "maicare_go_invoice.InvoiceDetails": {
+        "invoice.GetInvoiceTemplateItemsResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_tag": {
+                    "type": "string"
+                },
+                "source_column": {
+                    "type": "string"
+                },
+                "source_table": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.GetPaymentByIDResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "string"
+                },
+                "recorded_by_first_name": {
+                    "type": "string"
+                },
+                "recorded_by_last_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.InvoiceDetails": {
             "type": "object",
             "properties": {
                 "contract_id": {
@@ -25720,7 +23347,7 @@ const docTemplate = `{
                 "periods": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/maicare_go_invoice.InvoicePeriod"
+                        "$ref": "#/definitions/invoice.InvoicePeriod"
                     }
                 },
                 "pre_vat_total_price": {
@@ -25746,7 +23373,7 @@ const docTemplate = `{
                 }
             }
         },
-        "maicare_go_invoice.InvoicePeriod": {
+        "invoice.InvoicePeriod": {
             "type": "object",
             "properties": {
                 "accommodation_time_frame": {
@@ -25763,60 +23390,257 @@ const docTemplate = `{
                 }
             }
         },
-        "maicare_go_service_invoice.InvoiceDetails": {
+        "invoice.ListInvoicesResponse": {
             "type": "object",
             "properties": {
-                "contract_id": {
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "id": {
                     "type": "integer"
                 },
-                "contract_name": {
-                    "type": "string"
-                },
-                "periods": {
+                "invoice_details": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/maicare_go_service_invoice.InvoicePeriod"
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
                     }
                 },
-                "pre_vat_total_price": {
-                    "type": "number"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
+                "invoice_number": {
                     "type": "string"
                 },
-                "total_price": {
+                "invoice_type": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "original_invoice_id": {
+                    "type": "integer"
+                },
+                "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
                     "type": "number"
                 },
-                "vat": {
-                    "type": "number"
+                "updated_at": {
+                    "type": "string"
                 },
-                "warnings": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "warning_count": {
+                    "type": "integer"
                 }
             }
         },
-        "maicare_go_service_invoice.InvoicePeriod": {
+        "invoice.ListPaymentsResponse": {
             "type": "object",
             "properties": {
-                "accommodation_time_frame": {
-                    "type": "string"
-                },
-                "ambulante_total_minutes": {
+                "amount": {
                     "type": "number"
                 },
-                "end_date": {
+                "created_at": {
                     "type": "string"
                 },
-                "start_date": {
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "string"
+                },
+                "recorded_by_first_name": {
+                    "type": "string"
+                },
+                "recorded_by_last_name": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
+        },
+        "invoice.UpdateInvoiceRequest": {
+            "type": "object",
+            "properties": {
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "warning_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "invoice.UpdateInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "extra_content": {
+                    "$ref": "#/definitions/util.JSONObject"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invoice_details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                    }
+                },
+                "invoice_number": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.UpdatePaymentRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "invoice.UpdatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "current_invoice_status": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_status_changed": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_reference": {
+                    "type": "string"
+                },
+                "payment_status": {
+                    "type": "string"
+                },
+                "previous_invoice_status": {
+                    "type": "string"
+                },
+                "recorded_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "netip.Addr": {
+            "type": "object"
         },
         "notification.ClientContractReminderData": {
             "type": "object",
@@ -25829,7 +23653,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25848,6 +23672,49 @@ const docTemplate = `{
                 },
                 "reminder_type": {
                     "description": "e.g., \"initial",
+                    "type": "string"
+                }
+            }
+        },
+        "notification.ListNotificationsResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "data": {
+                    "$ref": "#/definitions/notification.NotificationData"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "notification_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.MarkNotificationAsReadResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "notification_id": {
+                    "type": "string"
+                },
+                "notification_type": {
                     "type": "string"
                 }
             }
@@ -25879,7 +23746,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25896,7 +23763,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
@@ -25905,7 +23772,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "employee_last_name": {
                     "type": "string"
@@ -25928,7 +23795,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_by": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "end_time": {
                     "type": "string"
@@ -25964,168 +23831,423 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-api_DischargeOverviewResponse": {
+        "organization.CreateLocationRequest": {
             "type": "object",
+            "required": [
+                "address",
+                "name"
+            ],
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
+                "address": {
                     "type": "string"
                 },
-                "page_size": {
+                "capacity": {
                     "type": "integer"
                 },
-                "previous": {
+                "name": {
                     "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.DischargeOverviewResponse"
-                    }
                 }
             }
         },
-        "pagination.Response-api_ListAllIncidentsResponse": {
+        "organization.CreateLocationResponse": {
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
+                "address": {
                     "type": "string"
                 },
-                "page_size": {
+                "capacity": {
                     "type": "integer"
                 },
-                "previous": {
-                    "type": "string"
+                "id": {
+                    "type": "integer"
                 },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListAllIncidentsResponse"
-                    }
+                "name": {
+                    "type": "string"
                 }
             }
         },
-        "pagination.Response-api_ListClientMaturityMatrixAssessmentsResponse": {
+        "organization.CreateOrganisationRequest": {
             "type": "object",
+            "required": [
+                "address",
+                "city",
+                "name",
+                "postal_code"
+            ],
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
+                "address": {
                     "type": "string"
                 },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
+                "btw_number": {
                     "type": "string"
                 },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListClientMaturityMatrixAssessmentsResponse"
-                    }
+                "city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "kvk_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
                 }
             }
         },
-        "pagination.Response-api_ListIntakeFormsResponse": {
+        "organization.CreateOrganisationResponse": {
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
+                "address": {
                     "type": "string"
                 },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
+                "btw_number": {
                     "type": "string"
                 },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListIntakeFormsResponse"
-                    }
+                "city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kvk_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
                 }
             }
         },
-        "pagination.Response-api_ListInvoicesResponse": {
+        "organization.CreateShiftApiRequest": {
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
+                "end_time": {
                     "type": "string"
                 },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
+                "shift": {
                     "type": "string"
                 },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListInvoicesResponse"
-                    }
+                "start_time": {
+                    "type": "string"
                 }
             }
         },
-        "pagination.Response-api_ListRegistrationFormsResponse": {
+        "organization.CreateShiftApiResponse": {
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
+                "end_time": {
                     "type": "string"
                 },
-                "page_size": {
+                "id": {
                     "type": "integer"
                 },
-                "previous": {
+                "location_id": {
+                    "type": "integer"
+                },
+                "shift": {
                     "type": "string"
                 },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListRegistrationFormsResponse"
-                    }
+                "start_time": {
+                    "type": "string"
                 }
             }
         },
-        "pagination.Response-api_ListSendersResponse": {
+        "organization.DeleteLocationResponse": {
             "type": "object",
             "properties": {
-                "count": {
+                "id": {
                     "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ListSendersResponse"
-                    }
                 }
             }
         },
-        "pagination.Response-array_api_ListAiGeneratedReportsResponse": {
+        "organization.DeleteOrganisationResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "organization.GetLocationResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.GetOrganisationCountResponse": {
+            "type": "object",
+            "properties": {
+                "client_count": {
+                    "type": "integer"
+                },
+                "employee_count": {
+                    "type": "integer"
+                },
+                "location_count": {
+                    "type": "integer"
+                },
+                "organisation_id": {
+                    "type": "integer"
+                },
+                "organisation_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.GetOrganisationResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btw_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kvk_number": {
+                    "type": "string"
+                },
+                "location_count": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.ListLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.ListOrganisationsResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btw_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kvk_number": {
+                    "type": "string"
+                },
+                "location_count": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.ListShiftsByLocationIDResponse": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.UpdateLocationRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.UpdateLocationResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.UpdateOrganisationRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btw_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "kvk_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.UpdateOrganisationResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "btw_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kvk_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.UpdateShiftApiRequest": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.UpdateShiftApiResponse": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "shift": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "pagination.Response-array_clientp_ListAiGeneratedReportsResponse": {
             "type": "object",
             "properties": {
                 "count": {
@@ -26145,7 +24267,7 @@ const docTemplate = `{
                     "items": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/definitions/api.ListAiGeneratedReportsResponse"
+                            "$ref": "#/definitions/clientp.ListAiGeneratedReportsResponse"
                         }
                     }
                 }
@@ -26225,6 +24347,52 @@ const docTemplate = `{
                         "items": {
                             "$ref": "#/definitions/contract.ListContractsResponse"
                         }
+                    }
+                }
+            }
+        },
+        "pagination.Response-care_ListClientCarePlansResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/care.ListClientCarePlansResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-clientp_ListAllIncidentsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListAllIncidentsResponse"
                     }
                 }
             }
@@ -26367,6 +24535,52 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-clientp_ListRegistrationFormsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListRegistrationFormsResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-ecr_DischargeOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ecr.DischargeOverviewResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-employees_ListEmployeeResponse": {
             "type": "object",
             "properties": {
@@ -26386,6 +24600,52 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/employees.ListEmployeeResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-invoice_ListInvoicesResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.ListInvoicesResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-sender_ListSendersResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.ListSendersResponse"
                     }
                 }
             }
@@ -26444,6 +24704,653 @@ const docTemplate = `{
                 },
                 "valid": {
                     "type": "boolean"
+                }
+            }
+        },
+        "schedule.CreateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "description": "Optional color for the schedule",
+                    "type": "string",
+                    "example": "#FF5733"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_datetime": {
+                    "type": "string",
+                    "example": "2023-10-01T17:00:00Z"
+                },
+                "is_custom": {
+                    "description": "true for custom schedule, false for preset shift",
+                    "type": "boolean",
+                    "example": true
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_shift_id": {
+                    "description": "For preset shift-based schedules (required when is_custom = false)",
+                    "type": "integer",
+                    "example": 1
+                },
+                "shift_date": {
+                    "description": "Date to apply the shift",
+                    "type": "string",
+                    "example": "2023-10-01"
+                },
+                "start_datetime": {
+                    "description": "For custom schedules (required when is_custom = true)",
+                    "type": "string",
+                    "example": "2023-10-01T09:00:00Z"
+                }
+            }
+        },
+        "schedule.CreateScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "location_shift_id": {
+                    "description": "Additional info if created from preset shift",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "type": "string"
+                },
+                "start_datetime": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.GetDailySchedulesByLocationResponse": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "shifts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.Shift"
+                    }
+                }
+            }
+        },
+        "schedule.GetMonthlySchedulesByLocationResponse": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "shifts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.Shift"
+                    }
+                }
+            }
+        },
+        "schedule.GetScheduleByIdResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "end_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_custom": {
+                    "description": "Indicates if this is a custom schedule",
+                    "type": "boolean"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "location_shift_id": {
+                    "description": "Optional field for preset shift",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "description": "Optional field for shift name",
+                    "type": "string"
+                },
+                "start_datetime": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.Shift": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "description": "Optional field for color coding",
+                    "type": "string"
+                },
+                "employee_first_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "employee_last_name": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "is_custom": {
+                    "description": "Indicates if this is a custom schedule",
+                    "type": "boolean"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_shift_id": {
+                    "description": "Optional field for preset shift",
+                    "type": "integer"
+                },
+                "shift_id": {
+                    "type": "string"
+                },
+                "shift_name": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.UpdateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string",
+                    "example": "#FF5733"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_datetime": {
+                    "type": "string",
+                    "example": "2023-10-01T17:00:00Z"
+                },
+                "is_custom": {
+                    "description": "true for custom schedule, false for preset shift",
+                    "type": "boolean",
+                    "example": true
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_shift_id": {
+                    "description": "For preset shift-based schedules (required when is_custom = false)",
+                    "type": "integer",
+                    "example": 1
+                },
+                "shift_date": {
+                    "description": "Date to apply the shift",
+                    "type": "string",
+                    "example": "2023-10-01"
+                },
+                "start_datetime": {
+                    "description": "For custom schedules (required when is_custom = true)",
+                    "type": "string",
+                    "example": "2023-10-01T09:00:00Z"
+                }
+            }
+        },
+        "schedule.UpdateScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "end_datetime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "location_shift_id": {
+                    "description": "Additional info if updated from preset shift",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "type": "string"
+                },
+                "start_datetime": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "sender.CreateSenderInvoiceTemplateRequest": {
+            "type": "object",
+            "required": [
+                "invoice_template"
+            ],
+            "properties": {
+                "invoice_template": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "sender.CreateSenderRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "types"
+            ],
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.SenderContact"
+                    }
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string",
+                    "enum": [
+                        "main_provider",
+                        "local_authority",
+                        "particular_party",
+                        "healthcare_institution"
+                    ]
+                }
+            }
+        },
+        "sender.CreateSenderResponse": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.SenderContact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "sender.GetSenderByIdResponse": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.SenderContact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "invoice_template_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.TemplateItem"
+                    }
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "sender.ListSendersResponse": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.SenderContact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "sender.SenderContact": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "sender.TemplateItem": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item_tag": {
+                    "type": "string"
+                },
+                "source_column": {
+                    "type": "string"
+                },
+                "source_table": {
+                    "type": "string"
+                }
+            }
+        },
+        "sender.UpdateSenderRequest": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.SenderContact"
+                    }
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string",
+                    "enum": [
+                        "main_provider",
+                        "local_authority",
+                        "particular_party",
+                        "healthcare_institution"
+                    ]
+                }
+            }
+        },
+        "sender.UpdateSenderResponse": {
+            "type": "object",
+            "properties": {
+                "BTWnumber": {
+                    "type": "string"
+                },
+                "KVKnumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "client_number": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sender.SenderContact"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email_address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "land": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

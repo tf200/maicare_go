@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
@@ -16,18 +17,18 @@ import (
 // @Param is_confirmed query bool false "Filter by confirmation status"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Number of items per page"
-// @Success 200 {object} Response[pagination.Response[ListAllIncidentsResponse]]
+// @Success 200 {object} Response[pagination.Response[clientp.ListAllIncidentsResponse]]
 // @Failure 400 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /incidents [get]
-func (serevr *Server) ListAllIncidentsApi(ctx *gin.Context) {
+func (server *Server) ListAllIncidentsApi(ctx *gin.Context) {
 	var req clientp.ListAllIncidentsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	pag, err := serevr.businessService.ClientService.ListAllIncidents(ctx, &req)
+	pag, err := server.businessService.ClientService.ListAllIncidents(ctx, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

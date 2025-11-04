@@ -9,6 +9,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -407,7 +408,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 	require.Equal(t, employee.LastName, updatedEmployee.LastName)
 }
 
-func addRandomEducation(t *testing.T, employeeID int64) EmployeeEducation {
+func addRandomEducation(t *testing.T, employeeID uuid.UUID) EmployeeEducation {
 	educationArg := AddEducationToEmployeeProfileParams{
 		EmployeeID:      employeeID,
 		InstitutionName: util.RandomString(5),
@@ -476,7 +477,7 @@ func TestDeleteEmployeeEducation(t *testing.T) {
 	require.Equal(t, education.ID, deletedEducation.ID)
 }
 
-func addRandomExperience(t *testing.T, employeeID int64) EmployeeExperience {
+func addRandomExperience(t *testing.T, employeeID uuid.UUID) EmployeeExperience {
 	experienceArg := AddEmployeeExperienceParams{
 		EmployeeID:  employeeID,
 		JobTitle:    util.RandomString(5),

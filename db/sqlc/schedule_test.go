@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomSchedule(t *testing.T, employeeID int64) CreateScheduleRow {
+func createRandomSchedule(t *testing.T, employeeID uuid.UUID) CreateScheduleRow {
 	location := CreateRandomLocation(t)
 
 	arg := CreateScheduleParams{

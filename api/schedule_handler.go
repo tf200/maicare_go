@@ -18,8 +18,8 @@ import (
 // @Tags Schedule
 // @Accept json
 // @Produce json
-// @Param request body CreateScheduleRequest true "Create Schedule Request"
-// @Success 200 {object} Response[CreateScheduleResponse] "Schedule created successfully"
+// @Param request body schedule.CreateScheduleRequest true "Create Schedule Request"
+// @Success 200 {object} Response[schedule.CreateScheduleResponse] "Schedule created successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules [post]
@@ -53,7 +53,7 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 // @Param id path int true "Location ID"
 // @Param year query int true "Year"
 // @Param month query int true "Month"
-// @Success 200 {object} Response[[]GetMonthlySchedulesByLocationResponse] "Monthly schedules retrieved successfully"
+// @Success 200 {object} Response[[]schedule.GetMonthlySchedulesByLocationResponse] "Monthly schedules retrieved successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /locations/{id}/monthly_schedules [get]
@@ -86,7 +86,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 // @Param year query int true "Year"
 // @Param month query int true "Month"
 // @Param day query int true "Day"
-// @Success 200 {object} Response[GetDailySchedulesByLocationResponse] "Daily schedules retrieved successfully"
+// @Success 200 {object} Response[schedule.GetDailySchedulesByLocationResponse] "Daily schedules retrieved successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /locations/{id}/daily_schedules [get]
@@ -117,7 +117,7 @@ func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
 // @Tags Schedule
 // @Produce json
 // @Param id path string true "Schedule ID"
-// @Success 200 {object} Response[GetScheduleByIdResponse] "Schedule retrieved successfully"
+// @Success 200 {object} Response[schedule.GetScheduleByIdResponse] "Schedule retrieved successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules/{id} [get]
@@ -146,8 +146,8 @@ func (server *Server) GetScheduleByIDApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Schedule ID"
-// @Param request body UpdateScheduleRequest true "Update Schedule Request"
-// @Success 200 {object} Response[UpdateScheduleResponse] "Schedule updated successfully"
+// @Param request body schedule.UpdateScheduleRequest true "Update Schedule Request"
+// @Success 200 {object} Response[schedule.UpdateScheduleResponse] "Schedule updated successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 404 {object} Response[any] "Schedule not found"
 // @Failure 500 {object} Response[any] "Internal Server Error"

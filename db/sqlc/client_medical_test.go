@@ -136,6 +136,7 @@ func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID uu
 	return medication
 }
 
+
 func TestCreateClientMedication(t *testing.T) {
 	client := createRandomClientDetails(t)
 	diagnosis := createRandomClientDiagnosis(t, client.ID)
