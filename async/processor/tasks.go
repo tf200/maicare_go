@@ -95,7 +95,7 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.
 		LocationName:            p.LocationName,
 	}
 
-	pdfName, err := processor.businessService.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
+	pdfName, err := processor.service.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
 	if err != nil {
 		log.Printf("Failed to generate and upload incident PDF: %v", err)
 		return fmt.Errorf("failed to generate and upload incident PDF: %v: %w", err, asynq.SkipRetry)
@@ -129,13 +129,13 @@ func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *asynq.Task
 	log.Printf("Received notification task: %+v", payload) // Log received payload
 
 	// Ensure the notification service is available
-	if a.businessService.NotificationService == nil {
+	if a.service.NotificationService == nil {
 		// Don't retry if the fundamental dependency is missing
 		return fmt.Errorf("notification service not initialized on AsynqServer: %w", asynq.SkipRetry)
 	}
 
 	// Delegate the actual work to the notification service
-	err := a.businessService.NotificationService.CreateAndDeliver(ctx, payload)
+	err := a.service.NotificationService.CreateAndDeliver(ctx, payload)
 	if err != nil {
 		// Log the error from the service
 		log.Printf("Error processing notification task (ID: %s, Type: %s): %v", t.ResultWriter().TaskID(), payload.Type, err)
@@ -350,7 +350,7 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 			notificationPayload.RecipientUserIDs[i] = user.ID
 		}
 
-		err = c.businessService.NotificationService.CreateAndDeliver(ctx, notificationPayload)
+		err = c.service.NotificationService.CreateAndDeliver(ctx, notificationPayload)
 		if err != nil {
 			log.Printf("Failed to deliver notification for contract ID %d: %v", contract.ID, err)
 			return fmt.Errorf("failed to deliver notification for contract ID %d: %v: %w", contract.ID, err, asynq.SkipRetry)

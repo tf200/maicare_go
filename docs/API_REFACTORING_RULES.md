@@ -95,7 +95,7 @@ func (s *featureService) CreateFeature(ctx context.Context, req CreateFeatureReq
 ### Rule 5: Response Pattern
 ```go
 // Controller pattern
-result, err := server.businessService.FeatureService.CreateFeature(ctx, req, id)
+result, err := server.service.FeatureService.CreateFeature(ctx, req, id)
 if err != nil {
     ctx.JSON(http.StatusInternalServerError, errorResponse(err))
     return
@@ -160,7 +160,7 @@ func (server *Server) CreateProgressReportApi(ctx *gin.Context) {
     }
 
     // Business logic delegation
-    progressReport, err := server.businessService.ClientService.CreateProgressReport(ctx, &req, clientID)
+    progressReport, err := server.service.ClientService.CreateProgressReport(ctx, &req, clientID)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, errorResponse(err))
         return

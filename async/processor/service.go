@@ -15,17 +15,17 @@ import (
 )
 
 type AsynqServer struct {
-	businessService *service.BusinessService
-	server          *asynq.Server
-	store           *db.Store
-	brevoConf       *email.BrevoConf
-	b2Bucket        bucket.ObjectStorageInterface
+	service   *service.BusinessService
+	server    *asynq.Server
+	store     *db.Store
+	brevoConf *email.BrevoConf
+	b2Bucket  bucket.ObjectStorageInterface
 }
 
 func NewAsynqServer(redisHost, redisUser, redisPassword string,
 	store *db.Store, tls *tls.Config,
 	brevoConf *email.BrevoConf, b2Bucket bucket.ObjectStorageInterface,
-	businessService *service.BusinessService,
+	service *service.BusinessService,
 ) *AsynqServer {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{
@@ -50,11 +50,11 @@ func NewAsynqServer(redisHost, redisUser, redisPassword string,
 		},
 	)
 	return &AsynqServer{
-		server:          srv,
-		store:           store,
-		brevoConf:       brevoConf,
-		b2Bucket:        b2Bucket,
-		businessService: businessService,
+		server:    srv,
+		store:     store,
+		brevoConf: brevoConf,
+		b2Bucket:  b2Bucket,
+		service:   service,
 	}
 }
 

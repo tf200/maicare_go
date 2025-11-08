@@ -226,10 +226,13 @@ func (x *Shift) GetEndTime() string {
 }
 
 type GenerateScheduleResponse struct {
-	state         protoimpl.MessageState  `protogen:"open.v1"`
-	Status        string                  `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`                                                                               // "optimal" or "feasible"
-	Schedule      map[string]*DaySchedule `protobuf:"bytes,2,rep,name=schedule,proto3" json:"schedule,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // key: day name (Monday, Tuesday, etc.)
-	Summary       []*EmployeeSummary      `protobuf:"bytes,3,rep,name=summary,proto3" json:"summary,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"` // "optimal" or "feasible"
+	Week          int32                  `protobuf:"varint,2,opt,name=week,proto3" json:"week,omitempty"`
+	Year          int32                  `protobuf:"varint,3,opt,name=year,proto3" json:"year,omitempty"`
+	Shifts        []*ScheduledShift      `protobuf:"bytes,4,rep,name=shifts,proto3" json:"shifts,omitempty"`                     // Flat list for database
+	GridView      *GridView              `protobuf:"bytes,5,opt,name=grid_view,json=gridView,proto3" json:"grid_view,omitempty"` // Grid for frontend visualization
+	Summary       []*EmployeeSummary     `protobuf:"bytes,6,rep,name=summary,proto3" json:"summary,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -271,9 +274,30 @@ func (x *GenerateScheduleResponse) GetStatus() string {
 	return ""
 }
 
-func (x *GenerateScheduleResponse) GetSchedule() map[string]*DaySchedule {
+func (x *GenerateScheduleResponse) GetWeek() int32 {
 	if x != nil {
-		return x.Schedule
+		return x.Week
+	}
+	return 0
+}
+
+func (x *GenerateScheduleResponse) GetYear() int32 {
+	if x != nil {
+		return x.Year
+	}
+	return 0
+}
+
+func (x *GenerateScheduleResponse) GetShifts() []*ScheduledShift {
+	if x != nil {
+		return x.Shifts
+	}
+	return nil
+}
+
+func (x *GenerateScheduleResponse) GetGridView() *GridView {
+	if x != nil {
+		return x.GridView
 	}
 	return nil
 }
@@ -285,27 +309,35 @@ func (x *GenerateScheduleResponse) GetSummary() []*EmployeeSummary {
 	return nil
 }
 
-type DaySchedule struct {
-	state         protoimpl.MessageState      `protogen:"open.v1"`
-	Shifts        map[string]*ShiftAssignment `protobuf:"bytes,1,rep,name=shifts,proto3" json:"shifts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // key: shift name
+// Flat structure for database insertion
+type ScheduledShift struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`                      // ISO format: "2025-02-03"
+	DayName       string                 `protobuf:"bytes,2,opt,name=day_name,json=dayName,proto3" json:"day_name,omitempty"` // "Monday", "Tuesday", etc.
+	ShiftId       int32                  `protobuf:"varint,3,opt,name=shift_id,json=shiftId,proto3" json:"shift_id,omitempty"`
+	ShiftName     string                 `protobuf:"bytes,4,opt,name=shift_name,json=shiftName,proto3" json:"shift_name,omitempty"`
+	StartTime     string                 `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"` // ISO 8601 datetime string
+	EndTime       string                 `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`       // ISO 8601 datetime string
+	Hours         float64                `protobuf:"fixed64,7,opt,name=hours,proto3" json:"hours,omitempty"`
+	Employees     []*AssignedEmployee    `protobuf:"bytes,8,rep,name=employees,proto3" json:"employees,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DaySchedule) Reset() {
-	*x = DaySchedule{}
+func (x *ScheduledShift) Reset() {
+	*x = ScheduledShift{}
 	mi := &file_proto_schedule_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DaySchedule) String() string {
+func (x *ScheduledShift) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DaySchedule) ProtoMessage() {}
+func (*ScheduledShift) ProtoMessage() {}
 
-func (x *DaySchedule) ProtoReflect() protoreflect.Message {
+func (x *ScheduledShift) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_schedule_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -317,92 +349,298 @@ func (x *DaySchedule) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DaySchedule.ProtoReflect.Descriptor instead.
-func (*DaySchedule) Descriptor() ([]byte, []int) {
+// Deprecated: Use ScheduledShift.ProtoReflect.Descriptor instead.
+func (*ScheduledShift) Descriptor() ([]byte, []int) {
 	return file_proto_schedule_service_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *DaySchedule) GetShifts() map[string]*ShiftAssignment {
+func (x *ScheduledShift) GetDate() string {
 	if x != nil {
-		return x.Shifts
+		return x.Date
 	}
-	return nil
+	return ""
 }
 
-type ShiftAssignment struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShiftId       int32                  `protobuf:"varint,1,opt,name=shift_id,json=shiftId,proto3" json:"shift_id,omitempty"`      // ID of the shift from the request
-	Employees     []string               `protobuf:"bytes,2,rep,name=employees,proto3" json:"employees,omitempty"`                  // List of employee names
-	StartTime     string                 `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"` // ISO 8601 datetime string
-	EndTime       string                 `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`       // ISO 8601 datetime string
-	Hours         float64                `protobuf:"fixed64,5,opt,name=hours,proto3" json:"hours,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ShiftAssignment) Reset() {
-	*x = ShiftAssignment{}
-	mi := &file_proto_schedule_service_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ShiftAssignment) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ShiftAssignment) ProtoMessage() {}
-
-func (x *ShiftAssignment) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_schedule_service_proto_msgTypes[5]
+func (x *ScheduledShift) GetDayName() string {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.DayName
 	}
-	return mi.MessageOf(x)
+	return ""
 }
 
-// Deprecated: Use ShiftAssignment.ProtoReflect.Descriptor instead.
-func (*ShiftAssignment) Descriptor() ([]byte, []int) {
-	return file_proto_schedule_service_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ShiftAssignment) GetShiftId() int32 {
+func (x *ScheduledShift) GetShiftId() int32 {
 	if x != nil {
 		return x.ShiftId
 	}
 	return 0
 }
 
-func (x *ShiftAssignment) GetEmployees() []string {
+func (x *ScheduledShift) GetShiftName() string {
 	if x != nil {
-		return x.Employees
+		return x.ShiftName
 	}
-	return nil
+	return ""
 }
 
-func (x *ShiftAssignment) GetStartTime() string {
+func (x *ScheduledShift) GetStartTime() string {
 	if x != nil {
 		return x.StartTime
 	}
 	return ""
 }
 
-func (x *ShiftAssignment) GetEndTime() string {
+func (x *ScheduledShift) GetEndTime() string {
 	if x != nil {
 		return x.EndTime
 	}
 	return ""
 }
 
-func (x *ShiftAssignment) GetHours() float64 {
+func (x *ScheduledShift) GetHours() float64 {
 	if x != nil {
 		return x.Hours
 	}
 	return 0
+}
+
+func (x *ScheduledShift) GetEmployees() []*AssignedEmployee {
+	if x != nil {
+		return x.Employees
+	}
+	return nil
+}
+
+type AssignedEmployee struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`     // UUID as string
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // Full name of the employee
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssignedEmployee) Reset() {
+	*x = AssignedEmployee{}
+	mi := &file_proto_schedule_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssignedEmployee) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssignedEmployee) ProtoMessage() {}
+
+func (x *AssignedEmployee) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_schedule_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssignedEmployee.ProtoReflect.Descriptor instead.
+func (*AssignedEmployee) Descriptor() ([]byte, []int) {
+	return file_proto_schedule_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AssignedEmployee) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AssignedEmployee) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// Grid structure for frontend visualization
+type GridView struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Days          []string               `protobuf:"bytes,1,rep,name=days,proto3" json:"days,omitempty"`                                                                                                              // ["Monday", "Tuesday", ...]
+	Dates         []string               `protobuf:"bytes,2,rep,name=dates,proto3" json:"dates,omitempty"`                                                                                                            // ["2025-02-03", "2025-02-04", ...]
+	ShiftsByDay   map[string]*GridDay    `protobuf:"bytes,3,rep,name=shifts_by_day,json=shiftsByDay,proto3" json:"shifts_by_day,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // key: day_name
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GridView) Reset() {
+	*x = GridView{}
+	mi := &file_proto_schedule_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GridView) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GridView) ProtoMessage() {}
+
+func (x *GridView) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_schedule_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GridView.ProtoReflect.Descriptor instead.
+func (*GridView) Descriptor() ([]byte, []int) {
+	return file_proto_schedule_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GridView) GetDays() []string {
+	if x != nil {
+		return x.Days
+	}
+	return nil
+}
+
+func (x *GridView) GetDates() []string {
+	if x != nil {
+		return x.Dates
+	}
+	return nil
+}
+
+func (x *GridView) GetShiftsByDay() map[string]*GridDay {
+	if x != nil {
+		return x.ShiftsByDay
+	}
+	return nil
+}
+
+type GridDay struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`                                                                               // ISO format: "2025-02-03"
+	Shifts        map[string]*GridShift  `protobuf:"bytes,2,rep,name=shifts,proto3" json:"shifts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // key: shift_name
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GridDay) Reset() {
+	*x = GridDay{}
+	mi := &file_proto_schedule_service_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GridDay) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GridDay) ProtoMessage() {}
+
+func (x *GridDay) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_schedule_service_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GridDay.ProtoReflect.Descriptor instead.
+func (*GridDay) Descriptor() ([]byte, []int) {
+	return file_proto_schedule_service_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GridDay) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *GridDay) GetShifts() map[string]*GridShift {
+	if x != nil {
+		return x.Shifts
+	}
+	return nil
+}
+
+type GridShift struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Employees     []string               `protobuf:"bytes,1,rep,name=employees,proto3" json:"employees,omitempty"` // Employee names only
+	Hours         float64                `protobuf:"fixed64,2,opt,name=hours,proto3" json:"hours,omitempty"`
+	Start         string                 `protobuf:"bytes,3,opt,name=start,proto3" json:"start,omitempty"` // Time only: "08:00"
+	End           string                 `protobuf:"bytes,4,opt,name=end,proto3" json:"end,omitempty"`     // Time only: "16:00"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GridShift) Reset() {
+	*x = GridShift{}
+	mi := &file_proto_schedule_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GridShift) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GridShift) ProtoMessage() {}
+
+func (x *GridShift) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_schedule_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GridShift.ProtoReflect.Descriptor instead.
+func (*GridShift) Descriptor() ([]byte, []int) {
+	return file_proto_schedule_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GridShift) GetEmployees() []string {
+	if x != nil {
+		return x.Employees
+	}
+	return nil
+}
+
+func (x *GridShift) GetHours() float64 {
+	if x != nil {
+		return x.Hours
+	}
+	return 0
+}
+
+func (x *GridShift) GetStart() string {
+	if x != nil {
+		return x.Start
+	}
+	return ""
+}
+
+func (x *GridShift) GetEnd() string {
+	if x != nil {
+		return x.End
+	}
+	return ""
 }
 
 type EmployeeSummary struct {
@@ -421,7 +659,7 @@ type EmployeeSummary struct {
 
 func (x *EmployeeSummary) Reset() {
 	*x = EmployeeSummary{}
-	mi := &file_proto_schedule_service_proto_msgTypes[6]
+	mi := &file_proto_schedule_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -433,7 +671,7 @@ func (x *EmployeeSummary) String() string {
 func (*EmployeeSummary) ProtoMessage() {}
 
 func (x *EmployeeSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_schedule_service_proto_msgTypes[6]
+	mi := &file_proto_schedule_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -446,7 +684,7 @@ func (x *EmployeeSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmployeeSummary.ProtoReflect.Descriptor instead.
 func (*EmployeeSummary) Descriptor() ([]byte, []int) {
-	return file_proto_schedule_service_proto_rawDescGZIP(), []int{6}
+	return file_proto_schedule_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EmployeeSummary) GetId() string {
@@ -527,26 +765,46 @@ const file_proto_schedule_service_proto_rawDesc = "" +
 	"shift_name\x18\x02 \x01(\tR\tshiftName\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x03 \x01(\tR\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x04 \x01(\tR\aendTime\"\x8c\x02\n" +
+	"\bend_time\x18\x04 \x01(\tR\aendTime\"\xf5\x01\n" +
 	"\x18GenerateScheduleResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\x12M\n" +
-	"\bschedule\x18\x02 \x03(\v21.grpclient.GenerateScheduleResponse.ScheduleEntryR\bschedule\x124\n" +
-	"\asummary\x18\x03 \x03(\v2\x1a.grpclient.EmployeeSummaryR\asummary\x1aS\n" +
-	"\rScheduleEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
-	"\x05value\x18\x02 \x01(\v2\x16.grpclient.DayScheduleR\x05value:\x028\x01\"\xa0\x01\n" +
-	"\vDaySchedule\x12:\n" +
-	"\x06shifts\x18\x01 \x03(\v2\".grpclient.DaySchedule.ShiftsEntryR\x06shifts\x1aU\n" +
-	"\vShiftsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x120\n" +
-	"\x05value\x18\x02 \x01(\v2\x1a.grpclient.ShiftAssignmentR\x05value:\x028\x01\"\x9a\x01\n" +
-	"\x0fShiftAssignment\x12\x19\n" +
-	"\bshift_id\x18\x01 \x01(\x05R\ashiftId\x12\x1c\n" +
-	"\temployees\x18\x02 \x03(\tR\temployees\x12\x1d\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x12\n" +
+	"\x04week\x18\x02 \x01(\x05R\x04week\x12\x12\n" +
+	"\x04year\x18\x03 \x01(\x05R\x04year\x121\n" +
+	"\x06shifts\x18\x04 \x03(\v2\x19.grpclient.ScheduledShiftR\x06shifts\x120\n" +
+	"\tgrid_view\x18\x05 \x01(\v2\x13.grpclient.GridViewR\bgridView\x124\n" +
+	"\asummary\x18\x06 \x03(\v2\x1a.grpclient.EmployeeSummaryR\asummary\"\x84\x02\n" +
+	"\x0eScheduledShift\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x12\x19\n" +
+	"\bday_name\x18\x02 \x01(\tR\adayName\x12\x19\n" +
+	"\bshift_id\x18\x03 \x01(\x05R\ashiftId\x12\x1d\n" +
 	"\n" +
-	"start_time\x18\x03 \x01(\tR\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x04 \x01(\tR\aendTime\x12\x14\n" +
-	"\x05hours\x18\x05 \x01(\x01R\x05hours\"\xbe\x02\n" +
+	"shift_name\x18\x04 \x01(\tR\tshiftName\x12\x1d\n" +
+	"\n" +
+	"start_time\x18\x05 \x01(\tR\tstartTime\x12\x19\n" +
+	"\bend_time\x18\x06 \x01(\tR\aendTime\x12\x14\n" +
+	"\x05hours\x18\a \x01(\x01R\x05hours\x129\n" +
+	"\temployees\x18\b \x03(\v2\x1b.grpclient.AssignedEmployeeR\temployees\"6\n" +
+	"\x10AssignedEmployee\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\xd2\x01\n" +
+	"\bGridView\x12\x12\n" +
+	"\x04days\x18\x01 \x03(\tR\x04days\x12\x14\n" +
+	"\x05dates\x18\x02 \x03(\tR\x05dates\x12H\n" +
+	"\rshifts_by_day\x18\x03 \x03(\v2$.grpclient.GridView.ShiftsByDayEntryR\vshiftsByDay\x1aR\n" +
+	"\x10ShiftsByDayEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
+	"\x05value\x18\x02 \x01(\v2\x12.grpclient.GridDayR\x05value:\x028\x01\"\xa6\x01\n" +
+	"\aGridDay\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x126\n" +
+	"\x06shifts\x18\x02 \x03(\v2\x1e.grpclient.GridDay.ShiftsEntryR\x06shifts\x1aO\n" +
+	"\vShiftsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12*\n" +
+	"\x05value\x18\x02 \x01(\v2\x14.grpclient.GridShiftR\x05value:\x028\x01\"g\n" +
+	"\tGridShift\x12\x1c\n" +
+	"\temployees\x18\x01 \x03(\tR\temployees\x12\x14\n" +
+	"\x05hours\x18\x02 \x01(\x01R\x05hours\x12\x14\n" +
+	"\x05start\x18\x03 \x01(\tR\x05start\x12\x10\n" +
+	"\x03end\x18\x04 \x01(\tR\x03end\"\xbe\x02\n" +
 	"\x0fEmployeeSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -575,35 +833,41 @@ func file_proto_schedule_service_proto_rawDescGZIP() []byte {
 	return file_proto_schedule_service_proto_rawDescData
 }
 
-var file_proto_schedule_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_proto_schedule_service_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_proto_schedule_service_proto_goTypes = []any{
 	(*GenerateScheduleRequest)(nil),  // 0: grpclient.GenerateScheduleRequest
 	(*Employee)(nil),                 // 1: grpclient.Employee
 	(*Shift)(nil),                    // 2: grpclient.Shift
 	(*GenerateScheduleResponse)(nil), // 3: grpclient.GenerateScheduleResponse
-	(*DaySchedule)(nil),              // 4: grpclient.DaySchedule
-	(*ShiftAssignment)(nil),          // 5: grpclient.ShiftAssignment
-	(*EmployeeSummary)(nil),          // 6: grpclient.EmployeeSummary
-	nil,                              // 7: grpclient.GenerateScheduleResponse.ScheduleEntry
-	nil,                              // 8: grpclient.DaySchedule.ShiftsEntry
-	nil,                              // 9: grpclient.EmployeeSummary.ShiftsEntry
+	(*ScheduledShift)(nil),           // 4: grpclient.ScheduledShift
+	(*AssignedEmployee)(nil),         // 5: grpclient.AssignedEmployee
+	(*GridView)(nil),                 // 6: grpclient.GridView
+	(*GridDay)(nil),                  // 7: grpclient.GridDay
+	(*GridShift)(nil),                // 8: grpclient.GridShift
+	(*EmployeeSummary)(nil),          // 9: grpclient.EmployeeSummary
+	nil,                              // 10: grpclient.GridView.ShiftsByDayEntry
+	nil,                              // 11: grpclient.GridDay.ShiftsEntry
+	nil,                              // 12: grpclient.EmployeeSummary.ShiftsEntry
 }
 var file_proto_schedule_service_proto_depIdxs = []int32{
-	1, // 0: grpclient.GenerateScheduleRequest.employees:type_name -> grpclient.Employee
-	2, // 1: grpclient.GenerateScheduleRequest.shifts:type_name -> grpclient.Shift
-	7, // 2: grpclient.GenerateScheduleResponse.schedule:type_name -> grpclient.GenerateScheduleResponse.ScheduleEntry
-	6, // 3: grpclient.GenerateScheduleResponse.summary:type_name -> grpclient.EmployeeSummary
-	8, // 4: grpclient.DaySchedule.shifts:type_name -> grpclient.DaySchedule.ShiftsEntry
-	9, // 5: grpclient.EmployeeSummary.shifts:type_name -> grpclient.EmployeeSummary.ShiftsEntry
-	4, // 6: grpclient.GenerateScheduleResponse.ScheduleEntry.value:type_name -> grpclient.DaySchedule
-	5, // 7: grpclient.DaySchedule.ShiftsEntry.value:type_name -> grpclient.ShiftAssignment
-	0, // 8: grpclient.ScheduleService.GenerateSchedule:input_type -> grpclient.GenerateScheduleRequest
-	3, // 9: grpclient.ScheduleService.GenerateSchedule:output_type -> grpclient.GenerateScheduleResponse
-	9, // [9:10] is the sub-list for method output_type
-	8, // [8:9] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	1,  // 0: grpclient.GenerateScheduleRequest.employees:type_name -> grpclient.Employee
+	2,  // 1: grpclient.GenerateScheduleRequest.shifts:type_name -> grpclient.Shift
+	4,  // 2: grpclient.GenerateScheduleResponse.shifts:type_name -> grpclient.ScheduledShift
+	6,  // 3: grpclient.GenerateScheduleResponse.grid_view:type_name -> grpclient.GridView
+	9,  // 4: grpclient.GenerateScheduleResponse.summary:type_name -> grpclient.EmployeeSummary
+	5,  // 5: grpclient.ScheduledShift.employees:type_name -> grpclient.AssignedEmployee
+	10, // 6: grpclient.GridView.shifts_by_day:type_name -> grpclient.GridView.ShiftsByDayEntry
+	11, // 7: grpclient.GridDay.shifts:type_name -> grpclient.GridDay.ShiftsEntry
+	12, // 8: grpclient.EmployeeSummary.shifts:type_name -> grpclient.EmployeeSummary.ShiftsEntry
+	7,  // 9: grpclient.GridView.ShiftsByDayEntry.value:type_name -> grpclient.GridDay
+	8,  // 10: grpclient.GridDay.ShiftsEntry.value:type_name -> grpclient.GridShift
+	0,  // 11: grpclient.ScheduleService.GenerateSchedule:input_type -> grpclient.GenerateScheduleRequest
+	3,  // 12: grpclient.ScheduleService.GenerateSchedule:output_type -> grpclient.GenerateScheduleResponse
+	12, // [12:13] is the sub-list for method output_type
+	11, // [11:12] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_proto_schedule_service_proto_init() }
@@ -617,7 +881,7 @@ func file_proto_schedule_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_schedule_service_proto_rawDesc), len(file_proto_schedule_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

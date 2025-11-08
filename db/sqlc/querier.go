@@ -25,6 +25,7 @@ type Querier interface {
 	// The array of employee_id
 	BulkAddAppointmentClients(ctx context.Context, arg BulkAddAppointmentClientsParams) error
 	BulkAddAppointmentParticipants(ctx context.Context, arg BulkAddAppointmentParticipantsParams) error
+	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
 	// ---------- 6. CHECK UTILITIES ----------
 	// Returns true/false whether the user has the named permission.
 	CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error)

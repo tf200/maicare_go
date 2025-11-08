@@ -11,6 +11,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkAllShiftsExist = `-- name: CheckAllShiftsExist :one
+SELECT COUNT(*) = $1::int AS all_exist
+FROM location_shift
+WHERE id = ANY($2::int[])
+`
+
+type CheckAllShiftsExistParams struct {
+	ExpectedCount int32   `json:"expected_count"`
+	Ids           []int32 `json:"ids"`
+}
+
+func (q *Queries) CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkAllShiftsExist, arg.ExpectedCount, arg.Ids)
+	var all_exist bool
+	err := row.Scan(&all_exist)
+	return all_exist, err
+}
+
 const createShift = `-- name: CreateShift :one
 INSERT INTO location_shift (
     location_id,
