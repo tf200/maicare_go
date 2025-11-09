@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	_ "maicare_go/pagination"
 	"net/http"
 	"strconv"
 
@@ -16,7 +17,7 @@ import (
 // @Description Get a list of all maturity matrix
 // @Tags maturity_matrix
 // @Produce json
-// @Success 200 {object} Response[[]ListMaturityMatrixResponse]
+// @Success 200 {object} Response[[]care.ListCarePlanTopics]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -39,8 +40,8 @@ func (server *Server) ListMaturityMatrixApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Client ID"
-// @Param request body CreateClientMaturityMatrixAssessmentRequest true "Request body"
-// @Success 201 {object} Response[CreateClientMaturityMatrixAssessmentResponse]
+// @Param request body care.CreateClientCarePlanRequest true "Request body"
+// @Success 201 {object} Response[care.CreateClientCarePlanResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -84,7 +85,7 @@ func (server *Server) CreateClientMaturityMatrixAssessmentApi(ctx *gin.Context) 
 // @Param id path int true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[ListClientMaturityMatrixAssessmentsResponse]]
+// @Success 200 {object} Response[pagination.Response[care.ListClientCarePlansResponse]]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -122,7 +123,7 @@ func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[GetCarePlanOverviewResponse]
+// @Success 200 {object} Response[care.GetCarePlanOverviewResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -152,8 +153,8 @@ func (server *Server) GetCarePlanOverviewApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body UpdateCarePlanOverviewRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanOverviewResponse]
+// @Param request body care.UpdateCarePlanOverviewRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanOverviewResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -219,8 +220,8 @@ func (server *Server) DeleteCarePlanApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanObjectiveRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanObjectiveResponse]
+// @Param request body care.CreateCarePlanObjectiveRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanObjectiveResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -255,7 +256,7 @@ func (server *Server) CreateCarePlanObjectiveApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[GetCarePlanObjectivesResponse]
+// @Success 200 {object} Response[care.GetCarePlanObjectivesResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -283,8 +284,8 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param objective_id path int true "Objective ID"
-// @Param request body UpdateCarePlanObjectiveRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanObjectiveResponse]
+// @Param request body care.UpdateCarePlanObjectiveRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanObjectiveResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -348,8 +349,8 @@ func (server *Server) DeleteCarePlanObjectiveApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param objective_id path int true "Objective ID"
-// @Param request body CreateCarePlanActionsRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanActionsResponse]
+// @Param request body care.CreateCarePlanActionsRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanActionsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -385,8 +386,8 @@ func (server *Server) CreateCarePlanActionsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param action_id path int true "Action ID"
-// @Param request body UpdateCarePlanActionsRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanActionsResponse]
+// @Param request body care.UpdateCarePlanActionsRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanActionsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -451,8 +452,8 @@ func (server *Server) DeleteCarePlanActionApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanInterventionRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanInterventionResponse]
+// @Param request body care.CreateCarePlanInterventionRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanInterventionResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -487,7 +488,7 @@ func (server *Server) CreateCarePlanInterventionApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[GetCarePlanInterventionsResponse]
+// @Success 200 {object} Response[care.GetCarePlanInterventionsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -515,8 +516,8 @@ func (server *Server) GetCarePlanInterventionsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param intervention_id path int true "Intervention ID"
-// @Param request body UpdateCarePlanInterventionRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanInterventionResponse]
+// @Param request body care.UpdateCarePlanInterventionRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanInterventionResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -590,8 +591,8 @@ func (server *Server) DeleteCarePlanInterventionApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanSuccessMetricsRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanSuccessMetricsResponse]
+// @Param request body care.CreateCarePlanSuccessMetricsRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanSuccessMetricsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -626,7 +627,7 @@ func (server *Server) CreateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[[]GetCarePlanSuccessMetricsResponse]
+// @Success 200 {object} Response[[]care.GetCarePlanSuccessMetricsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -655,8 +656,8 @@ func (server *Server) GetCarePlanSuccessMetricsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param metric_id path int true "Metric ID"
-// @Param request body UpdateCarePlanSuccessMetricsRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanSuccessMetricsResponse]
+// @Param request body care.UpdateCarePlanSuccessMetricsRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanSuccessMetricsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -722,8 +723,8 @@ func (server *Server) DeleteCarePlanSuccessMetricApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanRisksRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanRisksResponse]
+// @Param request body care.CreateCarePlanRisksRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanRisksResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -758,7 +759,7 @@ func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[[]GetCarePlanRisksResponse]
+// @Success 200 {object} Response[[]care.GetCarePlanRisksResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -786,8 +787,8 @@ func (server *Server) GetCarePlanRisksApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param risk_id path int true "Risk ID"
-// @Param request body UpdateCarePlanRisksRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanRisksResponse]
+// @Param request body care.UpdateCarePlanRisksRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanRisksResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -860,8 +861,8 @@ func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanSupportNetworkRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanSupportNetworkResponse]
+// @Param request body care.CreateCarePlanSupportNetworkRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanSupportNetworkResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -896,7 +897,7 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[[]GetCarePlanSupportNetworkResponse]
+// @Success 200 {object} Response[[]care.GetCarePlanSupportNetworkResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -924,8 +925,8 @@ func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param support_network_id path int true "Support Network ID"
-// @Param request body UpdateCarePlanSupportNetworkRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanSupportNetworkResponse]
+// @Param request body care.UpdateCarePlanSupportNetworkRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanSupportNetworkResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -999,8 +1000,8 @@ func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanResourcesRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanResourcesResponse]
+// @Param request body care.CreateCarePlanResourcesRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanResourcesResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -1035,7 +1036,7 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Success 200 {object} Response[[]GetCarePlanResourcesResponse]
+// @Success 200 {object} Response[[]care.GetCarePlanResourcesResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -1064,8 +1065,8 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param resource_id path int true "Resource ID"
-// @Param request body UpdateCarePlanResourcesRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanResourcesResponse]
+// @Param request body care.UpdateCarePlanResourcesRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanResourcesResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -1135,8 +1136,8 @@ func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request body CreateCarePlanReportRequest true "Request body"
-// @Success 201 {object} Response[CreateCarePlanReportResponse]
+// @Param request body care.CreateCarePlanReportRequest true "Request body"
+// @Success 201 {object} Response[care.CreateCarePlanReportResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -1177,8 +1178,8 @@ func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
 // @Tags care_plan
 // @Produce json
 // @Param care_plan_id path int true "Care Plan ID"
-// @Param request query ListCarePlanReportsRequest false "Pagination parameters"
-// @Success 200 {object} Response[[]ListCarePlanReportsResponse]
+// @Param request query care.ListCarePlanReportsRequest false "Pagination parameters"
+// @Success 200 {object} Response[[]care.ListCarePlanReportsResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -1213,8 +1214,8 @@ func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param report_id path int true "Report ID"
-// @Param request body UpdateCarePlanReportRequest true "Request body"
-// @Success 200 {object} Response[UpdateCarePlanReportResponse]
+// @Param request body care.UpdateCarePlanReportRequest true "Request body"
+// @Success 200 {object} Response[care.UpdateCarePlanReportResponse]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"

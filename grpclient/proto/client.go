@@ -12,6 +12,7 @@ type GrpcClientInterface interface {
 	GenerateCarePlan(ctx context.Context, req *PersonalizedCarePlanRequest) (*PersonalizedCarePlanResponse, error)
 	CorrectSpelling(ctx context.Context, req *CorrectSpellingRequest) (*CorrectSpellingResponse, error)
 	GenerateAutoReports(ctx context.Context, req *PastReports) (*GeneratedReports, error)
+	AutoGenerateSchedules(ctx context.Context, req *GenerateScheduleRequest) (*GenerateScheduleResponse, error)
 	Close() error
 }
 
@@ -21,6 +22,7 @@ type GrpcClient struct {
 	carePlanClient      CarePlannerClient
 	spellingCheckClient SpellingCorrectionClient
 	reportsClient       ReportGeneratorClient
+	scheduleClient      ScheduleServiceClient
 }
 
 func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {

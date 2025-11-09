@@ -12,19 +12,19 @@ import (
 )
 
 type AuditRecord struct {
-	EventID      uuid.UUID
-	EventType    string
-	OccuredAt    time.Time
-	ActorRole    []string
-	ActorID      uuid.UUID
-	SubjectType  string
-	SubjectID    uuid.UUID
-	Action       string
-	Result       string
-	AccessReason string
-	Ip           *netip.Addr
-	SelfHash     string
-	PreviousHash string
+	EventID      uuid.UUID   `json:"event_id"`
+	EventType    string      `json:"event_type"`
+	OccuredAt    time.Time   `json:"occured_at"`
+	ActorRole    []string    `json:"actor_role"`
+	ActorID      uuid.UUID   `json:"actor_id"`
+	SubjectType  string      `json:"subject_type"`
+	SubjectID    uuid.UUID   `json:"subject_id"`
+	Action       string      `json:"action"`
+	Result       string      `json:"result"`
+	AccessReason string      `json:"access_reason"`
+	Ip           *netip.Addr `json:"ip"`
+	SelfHash     string      `json:"self_hash"`
+	PreviousHash string      `json:"previous_hash"`
 }
 
 // calculateAuditHash generates a hash for the audit record for integrity verification

@@ -1,10 +1,10 @@
 package api
 
 import (
+	_ "maicare_go/pagination"
+	clientp "maicare_go/service/client"
 	"net/http"
 	"strconv"
-
-	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,8 +14,8 @@ import (
 // @Tags Registration Form
 // @Accept json
 // @Produce json
-// @Param request body CreateRegistrationFormRequest true "Create Registration Form Request"
-// @Success 200 {object} CreateRegistrationFormResponse
+// @Param request body clientp.CreateRegistrationFormRequest true "Create Registration Form Request"
+// @Success 200 {object} clientp.CreateRegistrationFormResponse
 // @Failure 400 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /registration_form [post]
@@ -52,7 +52,7 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 // @Param risk_weapon_possession query bool false "Risk weapon possession"
 // @Param risk_sexual_behavior query bool false "Risk sexual behavior"
 // @Param risk_day_night_rhythm query bool false "Risk day-night rhythm"
-// @Success 200 {object} Response[pagination.Response[ListRegistrationFormsResponse]]
+// @Success 200 {object} Response[pagination.Response[clientp.ListRegistrationFormsResponse]]
 // @Failure 400 {object}  Response[any]
 // @Failure 500 {object}  Response[any]
 // @Router /registration_form [get]
@@ -77,7 +77,7 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 // @Tags Registration Form
 // @Produce json
 // @Param id path int true "Registration Form ID"
-// @Success 200 {object} Response[GetRegistrationFormResponse]
+// @Success 200 {object} Response[clientp.GetRegistrationFormResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
@@ -104,8 +104,8 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Registration Form ID"
-// @Param request body UpdateRegistrationFormRequest true "Update Registration Form Request"
-// @Success 200 {object} Response[UpdateRegistrationFormResponse]
+// @Param request body clientp.UpdateRegistrationFormRequest true "Update Registration Form Request"
+// @Success 200 {object} Response[clientp.UpdateRegistrationFormResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
@@ -164,7 +164,7 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 // @Tags Registration Form
 // @Produce json
 // @Param id path int true "Registration Form ID"
-// @Param request body UpdateRegistrationFormStatusRequest true "Update Registration Form Status Request"
+// @Param request body clientp.UpdateRegistrationFormStatusRequest true "Update Registration Form Status Request"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]

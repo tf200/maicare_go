@@ -16,7 +16,7 @@ import (
 // @Description Get employee profile by user ID
 // @Tags employees
 // @Produce json
-// @Success 200 {object} Response[GetEmployeeProfileResponse]
+// @Success 200 {object} Response[employees.GetEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/profile [get]
 func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
@@ -94,19 +94,11 @@ func (server *Server) ListEmployeeProfileApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// GetEmployeeCountsResponse represents the response for GetEmployeeCountsApi
-type GetEmployeeCountsResponse struct {
-	TotalEmployees      int64 `json:"total_employees"`
-	TotalSubcontractors int64 `json:"total_subcontractors"`
-	TotalArchived       int64 `json:"total_archived"`
-	TotalOutOfService   int64 `json:"total_out_of_service"`
-}
-
 // @Summary Get employee counts
 // @Description Get total counts of employees, subcontractors, archived, and out of service employees
 // @Tags employees
 // @Produce json
-// @Success 200 {object} Response[GetEmployeeCountsResponse]
+// @Success 200 {object} Response[employees.GetEmployeeCountsResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/counts [get]
 func (server *Server) GetEmployeeCountsApi(ctx *gin.Context) {
@@ -124,7 +116,7 @@ func (server *Server) GetEmployeeCountsApi(ctx *gin.Context) {
 // @Description Get employee profile by ID
 // @Tags employees
 // @Produce json
-// @Success 200 {object} Response[GetEmployeeProfileByIDApiResponse]
+// @Success 200 {object} Response[employees.GetEmployeeProfileByIDResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id} [get]
 func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
@@ -157,7 +149,7 @@ func (server *Server) GetEmployeeProfileByIDApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Success 200 {object} Response[UpdateEmployeeProfileResponse]
+// @Success 200 {object} Response[employees.UpdateEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id} [put]
 func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
@@ -190,8 +182,8 @@ func (server *Server) UpdateEmployeeProfileApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Param request body SetEmployeeProfilePictureRequest true "Profile picture details"
-// @Success 200 {object} Response[SetEmployeeProfilePictureResponse]
+// @Param request body employees.SetEmployeeProfilePictureRequest true "Profile picture details"
+// @Success 200 {object} Response[employees.SetEmployeeProfilePictureResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/profile_picture [put]
 func (server *Server) SetEmployeeProfilePictureApi(ctx *gin.Context) {
@@ -258,8 +250,8 @@ func (server *Server) UpdateEmployeeIsSubcontractorApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Param request body AddEmployeeContractDetailsRequest true "Contract details"
-// @Success 201 {object} Response[AddEmployeeContractDetailsResponse]
+// @Param request body employees.AddEmployeeContractDetailsRequest true "Contract details"
+// @Success 201 {object} Response[employees.AddEmployeeContractDetailsResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/contract_details [put]
 func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
@@ -291,7 +283,7 @@ func (server *Server) AddEmployeeContractDetailsApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Success 200 {object} Response[GetEmployeeContractDetailsResponse]
+// @Success 200 {object} Response[employees.GetEmployeeContractDetailsResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/contract_details [get]
 func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
@@ -318,8 +310,8 @@ func (server *Server) GetEmployeeContractDetailsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Param request body AddEducationToEmployeeProfileRequest true "Education details"
-// @Success 201 {object} Response[AddEducationToEmployeeProfileResponse]
+// @Param request body employees.AddEducationToEmployeeProfileRequest true "Education details"
+// @Success 201 {object} Response[employees.AddEducationToEmployeeProfileResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/education [post]
 func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
@@ -351,7 +343,7 @@ func (server *Server) AddEducationToEmployeeProfileApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Success 200 {object} Response[[]ListEmployeeEducationResponse]
+// @Success 200 {object} Response[[]employees.ListEmployeeEducationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/education [get]
 func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
@@ -378,8 +370,8 @@ func (server *Server) ListEmployeeEducationApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param education_id path int true "Education ID"
-// @Param request body UpdateEmployeeEducationRequest true "Education details"
-// @Success 200 {object} Response[UpdateEmployeeEducationResponse]
+// @Param request body employees.UpdateEmployeeEducationRequest true "Education details"
+// @Success 200 {object} Response[employees.UpdateEmployeeEducationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/education/{education_id} [put]
 func (server *Server) UpdateEmployeeEducationApi(ctx *gin.Context) {
@@ -412,7 +404,7 @@ func (server *Server) UpdateEmployeeEducationApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param education_id path int true "Education ID"
-// @Success 200 {object} Response[DeleteEmployeeEducationResponse]
+// @Success 200 {object} Response[employees.DeleteEmployeeEducationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/education/{education_id} [delete]
 func (server *Server) DeleteEmployeeEducationApi(ctx *gin.Context) {
@@ -438,8 +430,8 @@ func (server *Server) DeleteEmployeeEducationApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Param request body AddEmployeeExperienceRequest true "Experience details"
-// @Success 201 {object} Response[AddEmployeeExperienceResponse]
+// @Param request body employees.AddEmployeeExperienceRequest true "Experience details"
+// @Success 201 {object} Response[employees.AddEmployeeExperienceResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/experience [post]
 func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
@@ -469,7 +461,7 @@ func (server *Server) AddEmployeeExperienceApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Success 200 {object} Response[[]ListEmployeeExperienceResponse]
+// @Success 200 {object} Response[[]employees.ListEmployeeExperienceResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/experience [get]
 func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
@@ -494,8 +486,8 @@ func (server *Server) ListEmployeeExperienceApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param experience_id path int true "Experience ID"
-// @Param request body UpdateEmployeeExperienceRequest true "Experience details"
-// @Success 200 {object} Response[UpdateEmployeeExperienceResponse]
+// @Param request body employees.UpdateEmployeeExperienceRequest true "Experience details"
+// @Success 200 {object} Response[employees.UpdateEmployeeExperienceResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/experience/{experience_id} [put]
 func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
@@ -525,7 +517,7 @@ func (server *Server) UpdateEmployeeExperienceApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param experience_id path int true "Experience ID"
-// @Success 200 {object} Response[DeleteEmployeeExperienceResponse]
+// @Success 200 {object} Response[employees.DeleteEmployeeExperienceResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/experience/{experience_id} [delete]
 func (server *Server) DeleteEmployeeExperienceApi(ctx *gin.Context) {
@@ -549,8 +541,8 @@ func (server *Server) DeleteEmployeeExperienceApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Param request body AddEmployeeCertificationRequest true "Certification details"
-// @Success 201 {object} Response[AddEmployeeCertificationResponse]
+// @Param request body employees.AddEmployeeCertificationRequest true "Certification details"
+// @Success 201 {object} Response[employees.AddEmployeeCertificationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/certification [post]
 func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
@@ -579,7 +571,7 @@ func (server *Server) AddEmployeeCertificationApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param id path int true "Employee ID"
-// @Success 200 {object} Response[[]ListEmployeeCertificationResponse]
+// @Success 200 {object} Response[[]employees.ListEmployeeCertificationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/certification [get]
 func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
@@ -606,8 +598,8 @@ func (server *Server) ListEmployeeCertificationApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param certification_id path int true "Certification ID"
-// @Param request body UpdateEmployeeCertificationRequest true "Certification details"
-// @Success 200 {object} Response[UpdateEmployeeCertificationResponse]
+// @Param request body employees.UpdateEmployeeCertificationRequest true "Certification details"
+// @Success 200 {object} Response[employees.UpdateEmployeeCertificationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/certification/{certification_id} [put]
 func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
@@ -637,7 +629,7 @@ func (server *Server) UpdateEmployeeCertificationApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Employee ID"
 // @Param certification_id path int true "Certification ID"
-// @Success 200 {object} Response[DeleteEmployeeCertificationResponse]
+// @Success 200 {object} Response[employees.DeleteEmployeeCertificationResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/{id}/certification/{certification_id} [delete]
 func (server *Server) DeleteEmployeeCertificationApi(ctx *gin.Context) {
@@ -661,7 +653,7 @@ func (server *Server) DeleteEmployeeCertificationApi(ctx *gin.Context) {
 // @Tags employees
 // @Produce json
 // @Param search query string true "Search query"
-// @Success 200 {object} Response[[]SearchEmployeesByNameOrEmailResponse]
+// @Success 200 {object} Response[[]employees.SearchEmployeesByNameOrEmailResponse]
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /employees/emails [get]
 func (server *Server) SearchEmployeesByNameOrEmailApi(ctx *gin.Context) {

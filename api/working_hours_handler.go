@@ -17,7 +17,7 @@ import (
 // @Param id path int true "Employee ID"
 // @Param year query int true "Year"
 // @Param week query int true "Week"
-// @Success 200 {object} Response[ListWorkingHoursResponse] "
+// @Success 200 {object} Response[employees.ListWorkingHoursResponse] "
 // @Failure 400 {object} Response[any] "Invalid request parameters"
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /employees/{id}/working_hours [get]

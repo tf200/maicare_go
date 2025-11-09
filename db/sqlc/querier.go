@@ -25,6 +25,7 @@ type Querier interface {
 	// The array of employee_id
 	BulkAddAppointmentClients(ctx context.Context, arg BulkAddAppointmentClientsParams) error
 	BulkAddAppointmentParticipants(ctx context.Context, arg BulkAddAppointmentParticipantsParams) error
+	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
 	// ---------- 6. CHECK UTILITIES ----------
 	// Returns true/false whether the user has the named permission.
 	CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error)
@@ -257,6 +258,7 @@ type Querier interface {
 	ListEmployeeExperience(ctx context.Context, employeeID uuid.UUID) ([]EmployeeExperience, error)
 	ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error)
 	ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error)
+	ListEmployeesWithContractHours(ctx context.Context, employeeIds []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error)
 	ListIncidents(ctx context.Context, arg ListIncidentsParams) ([]ListIncidentsRow, error)
 	ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error)
 	ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error)

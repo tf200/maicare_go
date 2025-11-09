@@ -33,9 +33,16 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
-	appointmentCard, err := server.businessService.ClientService.CreateAppointmentCard(req, clientID, ctx)
+	appointmentCard, err := server.businessService.ClientService.CreateAppointmentCard(
+		req,
+		clientID,
+		ctx,
+	)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create appointment card")))
+		ctx.JSON(
+			http.StatusInternalServerError,
+			errorResponse(fmt.Errorf("failed to create appointment card")),
+		)
 		return
 	}
 	res := SuccessResponse(appointmentCard, "Appointment card created successfully")
@@ -98,7 +105,11 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 		return
 	}
 
-	appointmentCard, err := server.businessService.ClientService.UpdateAppointmentCard(req, clientID, ctx)
+	appointmentCard, err := server.businessService.ClientService.UpdateAppointmentCard(
+		req,
+		clientID,
+		ctx,
+	)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -125,9 +136,15 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	response, err := server.businessService.ClientService.GenerateAppointmentCardDocumentApi(ctx, clientID)
+	response, err := server.businessService.ClientService.GenerateAppointmentCardDocumentApi(
+		ctx,
+		clientID,
+	)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to generate appointment card document")))
+		ctx.JSON(
+			http.StatusInternalServerError,
+			errorResponse(fmt.Errorf("failed to generate appointment card document")),
+		)
 		return
 	}
 

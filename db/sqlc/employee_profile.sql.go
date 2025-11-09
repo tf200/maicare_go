@@ -838,6 +838,48 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 	return items, nil
 }
 
+const listEmployeesWithContractHours = `-- name: ListEmployeesWithContractHours :many
+SELECT
+    id,
+    first_name,
+    last_name,
+    contract_hours
+FROM employee_profile
+WHERE id IN ($1)
+`
+
+type ListEmployeesWithContractHoursRow struct {
+	ID            uuid.UUID `json:"id"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
+	ContractHours *float64  `json:"contract_hours"`
+}
+
+func (q *Queries) ListEmployeesWithContractHours(ctx context.Context, employeeIds []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error) {
+	rows, err := q.db.Query(ctx, listEmployeesWithContractHours, employeeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEmployeesWithContractHoursRow{}
+	for rows.Next() {
+		var i ListEmployeesWithContractHoursRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.ContractHours,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchEmployeesByNameOrEmail = `-- name: SearchEmployeesByNameOrEmail :many
 SELECT
     id,

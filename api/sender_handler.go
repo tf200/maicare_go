@@ -1,10 +1,10 @@
 package api
 
 import (
+	_ "maicare_go/pagination"
+	"maicare_go/service/sender"
 	"net/http"
 	"strconv"
-
-	"maicare_go/service/sender"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,7 +46,7 @@ func (server *Server) CreateSenderApi(ctx *gin.Context) {
 // @Param page_size query int false "Page size"
 // @Param search query string false "Search"
 // @Param include_archived query bool false "Include archived"
-// @Success 200 {object} Response[pagination.Response[ListSendersResponse]]
+// @Success 200 {object} Response[pagination.Response[sender.ListSendersResponse]]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /senders [get]
 func (server *Server) ListSendersAPI(ctx *gin.Context) {
@@ -72,7 +72,7 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 // @Tags senders
 // @Produce json
 // @Param id path int true "Sender ID"
-// @Success 200 {object} Response[GetSenderByIdResponse]
+// @Success 200 {object} Response[sender.GetSenderByIdResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /senders/{id} [get]
 func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
@@ -100,8 +100,8 @@ func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Sender ID"
-// @Param request body UpdateSenderRequest true "Sender data"
-// @Success 200 {object} Response[UpdateSenderResponse]
+// @Param request body sender.UpdateSenderRequest true "Sender data"
+// @Success 200 {object} Response[sender.UpdateSenderResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /senders/{id} [put]
 func (server *Server) UpdateSenderApi(ctx *gin.Context) {
@@ -163,7 +163,7 @@ func (server *Server) DeleteSenderApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Sender ID"
-// @Param request body CreateSenderInvoiceTemplateRequest true "Invoice template IDs"
+// @Param request body sender.CreateSenderInvoiceTemplateRequest true "Invoice template IDs"
 // @Success 201 {object} Response[any]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /senders/{id}/invoice_template [post]

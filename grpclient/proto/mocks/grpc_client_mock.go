@@ -41,6 +41,21 @@ func (m *MockGrpcClientInterface) EXPECT() *MockGrpcClientInterfaceMockRecorder 
 	return m.recorder
 }
 
+// AutoGenerateSchedules mocks base method.
+func (m *MockGrpcClientInterface) AutoGenerateSchedules(ctx context.Context, req *grpclient.GenerateScheduleRequest) (*grpclient.GenerateScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutoGenerateSchedules", ctx, req)
+	ret0, _ := ret[0].(*grpclient.GenerateScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoGenerateSchedules indicates an expected call of AutoGenerateSchedules.
+func (mr *MockGrpcClientInterfaceMockRecorder) AutoGenerateSchedules(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoGenerateSchedules", reflect.TypeOf((*MockGrpcClientInterface)(nil).AutoGenerateSchedules), ctx, req)
+}
+
 // Close mocks base method.
 func (m *MockGrpcClientInterface) Close() error {
 	m.ctrl.T.Helper()

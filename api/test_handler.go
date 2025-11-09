@@ -62,7 +62,7 @@ func (server *Server) handleLatency(c *gin.Context) {
 }
 
 func (server *Server) EmailAndAsynq(c *gin.Context) {
-	// server.businessService.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
+	// server.service.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
 	// 	Name:         "Farjia Taha",
 	// 	To:           "farjiataha@gmail.com",
 	// 	UserEmail:    "farjiataha@gmail.com",
@@ -101,7 +101,7 @@ func (server *Server) Notification(c *gin.Context) {
 	// // _ := payload.UserId
 	// // Enqueue the notification task
 
-	// server.businessService.NotificationService.EnqueueNotificationTask(c, notification.NotificationPayload{
+	// server.service.NotificationService.EnqueueNotificationTask(c, notification.NotificationPayload{
 	// 	RecipientUserIDs: []int64{1},
 	// 	Type:             "new_client_assigned",
 	// 	Data: notification.NotificationData{

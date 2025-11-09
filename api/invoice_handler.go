@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	_ "maicare_go/pagination"
+
 	invserv "maicare_go/service/invoice"
 
 	"github.com/gin-gonic/gin"
@@ -16,8 +18,8 @@ import (
 // @Tags Invoice
 // @Accept json
 // @Produce json
-// @Param request body CreateInvoiceRequest true "Create Invoice Request"
-// @Success 200 {object} Response[CreateInvoiceResponse] "Successful response with invoice details"
+// @Param request body invserv.CreateInvoiceRequest true "Create Invoice Request"
+// @Success 200 {object} Response[invserv.CreateInvoiceResponse] "Successful response with invoice details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices [post]
 func (server *Server) CreateInvoiceApi(ctx *gin.Context) {
@@ -47,8 +49,8 @@ func (server *Server) CreateInvoiceApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Accept json
 // @Produce json
-// @Param request body GenerateInvoiceRequest true "Generate Invoice Request"
-// @Success 200 {object} Response[GenerateInvoiceResponse] "Successful response with invoice details"
+// @Param request body invserv.GenerateInvoiceRequest true "Generate Invoice Request"
+// @Success 200 {object} Response[invserv.GenerateInvoiceResponse] "Successful response with invoice details"
 // @Failure 400,401,404,409,500 {object} Response[any]
 // @Router /invoices/generate [post]
 func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
@@ -73,7 +75,7 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Success 200 {object} Response[CreditInvoiceResponse] "Successful response with credit note details"
+// @Success 200 {object} Response[invserv.CreditInvoiceResponse] "Successful response with credit note details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/credit [post]
 func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
@@ -107,7 +109,7 @@ func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 // @Param end_date query string false "End date (YYYY-MM-DD)"
 // @Param page query int false "Page number for pagination"
 // @Param page_size query int false "Number of items per page"
-// @Success 200 {object} Response[pagination.Response[ListInvoicesResponse]] "Successful response with paginated invoices"
+// @Success 200 {object} Response[pagination.Response[invserv.ListInvoicesResponse]] "Successful response with paginated invoices"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices [get]
 func (server *Server) ListInvoicesApi(ctx *gin.Context) {
@@ -131,7 +133,7 @@ func (server *Server) ListInvoicesApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Success 200 {object} Response[invoice.GetInvoiceByIDResponse] "Successful response with invoice details"
+// @Success 200 {object} Response[invserv.GetInvoiceByIDResponse] "Successful response with invoice details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id} [get]
 func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
@@ -156,8 +158,8 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Param request body UpdateInvoiceRequest true "Update Invoice Request"
-// @Success 200 {object} Response[UpdateInvoiceResponse] "Successful response with updated invoice details"
+// @Param request body invserv.UpdateInvoiceRequest true "Update Invoice Request"
+// @Success 200 {object} Response[invserv.UpdateInvoiceResponse] "Successful response with updated invoice details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id} [put]
 func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
@@ -218,7 +220,7 @@ func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Success 201 {object} Response[GenerateInvoicePDFResponse] "Successful response indicating generation"
+// @Success 201 {object} Response[invserv.GenerateInvoicePDFResponse] "Successful response indicating generation"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/generate_pdf [get]
 func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
@@ -244,7 +246,7 @@ func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
 // @Description Retrieve all invoice template items.
 // @Tags Invoice
 // @Produce json
-// @Success 200 {object} Response[[]GetInvoiceTemplateItemsResponse] "Successful
+// @Success 200 {object} Response[[]invserv.GetInvoiceTemplateItemsResponse] "Successful
 // response with template items"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/template_items [get]
@@ -289,7 +291,7 @@ func (server *Server) SendInvoiceReminderApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Success 200 {object} Response[[]GetInvoiceAuditLogsResponse] "Successful
+// @Success 200 {object} Response[[]invserv.GetInvoiceAuditLogResponse] "Successful
 // response with audit logs"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/audit [get]
@@ -321,8 +323,8 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Param request body CreatePaymentRequest true "Create Payment Request"
-// @Success 200 {object} Response[CreatePaymentResponse] "Successful response with payment
+// @Param request body invserv.CreatePaymentRequest true "Create Payment Request"
+// @Success 200 {object} Response[invserv.CreatePaymentResponse] "Successful response with payment
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/payments [post]
 func (server *Server) CreatePaymentApi(ctx *gin.Context) {
@@ -357,7 +359,7 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Invoice ID"
-// @Success 200 {object} Response[[]ListPaymentsResponse] "Successful response with
+// @Success 200 {object} Response[[]invserv.ListPaymentsResponse] "Successful response with
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/payments [get]
 func (server *Server) ListPaymentsApi(ctx *gin.Context) {
@@ -381,7 +383,7 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Produce json
 // @Param id path int64 true "Payment ID"
-// @Success 200 {object} Response[GetPaymentByIDResponse] "Successful response
+// @Success 200 {object} Response[invserv.GetPaymentByIDResponse] "Successful response
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/payments/{payment_id} [get]
 func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
@@ -406,8 +408,8 @@ func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
 // @Produce json
 // @Param invoice_id path int64 true "Invoice ID"
 // @Param payment_id path int64 true "Payment ID"
-// @Param request body UpdatePaymentRequest true "Update Payment Request"
-// @Success 200 {object} Response[UpdatePaymentResponse] "Successful response with updated payment"
+// @Param request body invserv.UpdatePaymentRequest true "Update Payment Request"
+// @Success 200 {object} Response[invserv.UpdatePaymentResponse] "Successful response with updated payment"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{invoice_id}/payments/{payment_id} [put]
 func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
@@ -454,7 +456,7 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 // @Produce json
 // @Param invoice_id path int64 true "Invoice ID"
 // @Param payment_id path int64 true "Payment ID"
-// @Success 200 {object} Response[DeletePaymentResponse] "Successful response with deletion details"
+// @Success 200 {object} Response[invserv.DeletePaymentResponse] "Successful response with deletion details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{invoice_id}/payments/{payment_id} [delete]
 func (server *Server) DeletePaymentApi(ctx *gin.Context) {

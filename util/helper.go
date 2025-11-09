@@ -198,3 +198,10 @@ func HandleLambdaFunction(key string, fn func() (string, error)) *string {
 	}
 	return &result
 }
+
+func MicrosecondsToTimeString(microseconds int64) string {
+	d := time.Duration(microseconds) * time.Microsecond
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	return fmt.Sprintf("%02d:%02d", hours, minutes)
+}

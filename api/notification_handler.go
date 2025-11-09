@@ -17,7 +17,7 @@ import (
 // @Produce json
 // @Param page query integer false "Page number" default(1)
 // @Param page_size query integer false "Number of items per page" default(10)
-// @Success 200 {object} Response[ListNotificationsResponse] "List of notifications"
+// @Success 200 {object} Response[notification.ListNotificationsResponse] "List of notifications"
 // @Failure 400 {object} Response[any] "Invalid request parameters"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"
@@ -48,7 +48,7 @@ func (server *Server) ListNotificationsApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Notification ID"
-// @Success 200 {object} Response[MarkNotificationAsReadResponse]
+// @Success 200 {object} Response[notification.MarkNotificationAsReadResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 401 {object} Response[any]
 // @Failure 403 {object} Response[any]
