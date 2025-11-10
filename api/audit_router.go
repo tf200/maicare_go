@@ -6,6 +6,6 @@ func (s *Server) setupAuditRoutes(router *gin.RouterGroup) {
 	auditRoutes := router.Group("/audit")
 	auditRoutes.Use(s.AuthMiddleware())
 	{
-		auditRoutes.GET("/logs", s.RBACMiddleware("AUDIT_LOGS.VIEW"), s.ListAuditLogs)
+		auditRoutes.GET("/logs", s.ListAuditLogs)
 	}
 }
