@@ -131,6 +131,7 @@ func (server *Server) setupRoutes() {
 	server.setupWorkingHours(baseRouter)
 	server.setupInvoiceRoutes(baseRouter)
 	server.setupNotificationRoutes(baseRouter)
+	server.setupAuditRoutes(baseRouter)
 	// Add more route setups as needed
 
 	server.setupWebsocketRoutes(baseRouter)
