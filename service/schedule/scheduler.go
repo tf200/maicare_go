@@ -139,7 +139,7 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 	}, nil
 }
 
-func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID uuid.UUID, locationID int64, req *SaveGeneratedSchedulesRequest) error {
+func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID uuid.UUID, req *SaveGeneratedSchedulesRequest) error {
 	if len(req.ScheduledShifts) == 0 {
 		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "SaveGeneratedSchedules", "No schedules to save", zap.String("Empty", "true"))
 		return nil
@@ -193,5 +193,4 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 		}
 	}
 	return nil
-
 }

@@ -1656,6 +1656,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-schedule_AutoGenerateSchedulesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/schedule.AutoGenerateSchedulesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-schedule_CreateScheduleResponse:
     properties:
       data:
@@ -8778,6 +8787,47 @@ definitions:
       valid:
         type: boolean
     type: object
+  schedule.AssignedEmployee:
+    properties:
+      employee_id:
+        type: string
+      employee_name:
+        type: string
+    type: object
+  schedule.AutoGenerateSchedulesRequest:
+    properties:
+      employee_ids:
+        items:
+          type: string
+        type: array
+      location_id:
+        type: integer
+      week:
+        description: e.g., "2024-W27"
+        type: integer
+      year:
+        description: e.g., 2024
+        type: integer
+    type: object
+  schedule.AutoGenerateSchedulesResponse:
+    properties:
+      grid_view:
+        $ref: '#/definitions/schedule.GridView'
+      shifts:
+        items:
+          $ref: '#/definitions/schedule.ScheduledShift'
+        type: array
+      status:
+        type: string
+      summary:
+        items:
+          $ref: '#/definitions/schedule.EmployeeSummary'
+        type: array
+      week:
+        type: integer
+      year:
+        type: integer
+    type: object
   schedule.CreateScheduleRequest:
     properties:
       color:
@@ -8834,6 +8884,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  schedule.EmployeeSummary:
+    properties:
+      actual_hours:
+        type: number
+      deviation:
+        type: number
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      shifts:
+        additionalProperties:
+          type: integer
+        description: shift type -> count
+        type: object
+      status:
+        description: '"perfect", "overtime", or "undertime"'
+        type: string
+      target_hours:
+        type: number
+    type: object
   schedule.GetDailySchedulesByLocationResponse:
     properties:
       date:
@@ -8885,6 +8958,93 @@ definitions:
       start_datetime:
         type: string
       updated_at:
+        type: string
+    type: object
+  schedule.GridDay:
+    properties:
+      date:
+        description: e.g., "2024-07-01"
+        type: string
+      shifts:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/schedule.GridShift'
+          type: array
+        description: shift_name -> list of GridShift
+        type: object
+    type: object
+  schedule.GridShift:
+    properties:
+      employees:
+        description: list of employee names
+        items:
+          type: string
+        type: array
+      end:
+        description: e.g., "17:00"
+        type: string
+      hours:
+        description: e.g., 8.0
+        type: number
+      start:
+        description: e.g., "09:00"
+        type: string
+    type: object
+  schedule.GridView:
+    properties:
+      dates:
+        description: e.g., ["Mon", "Tue", ...]
+        items:
+          type: string
+        type: array
+      days:
+        description: e.g., ["2024-07-01", "2024-07-02", ...]
+        items:
+          type: string
+        type: array
+      shifts_by_day:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/schedule.GridDay'
+          type: array
+        description: date -> list of shifts
+        type: object
+    type: object
+  schedule.SaveGeneratedSchedulesRequest:
+    properties:
+      location_id:
+        type: integer
+      scheduled_shifts:
+        items:
+          $ref: '#/definitions/schedule.ScheduledShift'
+        type: array
+    type: object
+  schedule.ScheduledShift:
+    properties:
+      date:
+        description: e.g., "2024-07-01"
+        type: string
+      day_name:
+        description: e.g., "Monday"
+        type: string
+      employees:
+        items:
+          $ref: '#/definitions/schedule.AssignedEmployee'
+        type: array
+      end_time:
+        description: e.g., "17:00"
+        type: string
+      hours:
+        description: e.g., 8.0
+        type: number
+      shift_id:
+        description: e.g., 1
+        type: integer
+      shift_name:
+        description: e.g., "Morning Shift"
+        type: string
+      start_time:
+        description: e.g., "09:00"
         type: string
     type: object
   schedule.Shift:
@@ -10779,7 +10939,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -16362,6 +16522,67 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Update an existing schedule
+      tags:
+      - Schedule
+  /schedules/auto_generate:
+    post:
+      consumes:
+      - application/json
+      description: Auto-generate schedules for a location based on employee availability
+        and shift requirements
+      parameters:
+      - description: Auto-generate Schedules Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schedule.AutoGenerateSchedulesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedules auto-generated successfully
+          schema:
+            $ref: '#/definitions/api.Response-schedule_AutoGenerateSchedulesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Auto-generate schedules
+      tags:
+      - Schedule
+  /schedules/save_generated:
+    post:
+      consumes:
+      - application/json
+      description: Save the auto-generated schedules for a location
+      parameters:
+      - description: Save Generated Schedules Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schedule.SaveGeneratedSchedulesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Generated schedules saved successfully
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Save generated schedules
       tags:
       - Schedule
   /senders:

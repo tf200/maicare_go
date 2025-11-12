@@ -88,7 +88,7 @@ func (server *Server) GetClientsCountApi(ctx *gin.Context) {
 // @Summary Get a client
 // @Tags clients
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path string true "Client ID"
 // @Success 200 {object} Response[clientp.GetClientApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id} [get]

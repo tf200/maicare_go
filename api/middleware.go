@@ -250,6 +250,7 @@ func (s *Server) AuditMiddleware() gin.HandlerFunc {
 		// Save the audit record asynchronously to avoid blocking response
 		go func(record *audit.AuditRecord) {
 			if err := s.businessService.AuditService.CreateAuditRecord(ctx, record); err != nil {
+				fmt.Printf("failed to create audit record: %v\n", err)
 			}
 		}(auditRecord)
 	}

@@ -101,14 +101,6 @@ func (s *AuditRecord) validate() error {
 		errs = append(errs, "Ip is required")
 	}
 
-	if s.SelfHash == "" {
-		errs = append(errs, "SelfHash is required")
-	}
-
-	if s.PreviousHash == "" {
-		errs = append(errs, "PreviousHash is required")
-	}
-
 	if len(errs) > 0 {
 		return fmt.Errorf("validation failed: %s", strings.Join(errs, "; "))
 	}

@@ -207,3 +207,64 @@ func (server *Server) DeleteScheduleApi(ctx *gin.Context) {
 	res := SuccessResponse[any](nil, "Schedule deleted successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// @Summary Auto-generate schedules
+// @Description Auto-generate schedules for a location based on employee availability and shift requirements
+// @Tags Schedule
+// @Accept json
+// @Produce json
+// @Param request body schedule.AutoGenerateSchedulesRequest true "Auto-generate Schedules Request"
+// @Success 200 {object} Response[schedule.AutoGenerateSchedulesResponse] "Schedules auto-generated successfully"
+// @Failure 400 {object} Response[any] "Bad Request"
+// @Failure 500 {object} Response[any] "Internal Server Error"
+// @Router /schedules/auto_generate [post]
+func (server *Server) AutoGenerateSchedulesApi(ctx *gin.Context) {
+	var req schedule.AutoGenerateSchedulesRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	generatedSchedule, err := server.businessService.ScheduleService.AutoGenerateSchedules(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to auto-generate schedules: %w", err)))
+		return
+	}
+
+	res := SuccessResponse(generatedSchedule, "Schedules auto-generated successfully")
+	ctx.JSON(http.StatusOK, res)
+
+}
+
+// @Summary Save generated schedules
+// @Description Save the auto-generated schedules for a location
+// @Tags Schedule
+// @Accept json
+// @Produce json
+// @Param request body schedule.SaveGeneratedSchedulesRequest true "Save Generated Schedules Request"
+// @Success 200 {object} Response[any] "Generated schedules saved successfully"
+// @Failure 400 {object} Response[any] "Bad Request"
+// @Failure 500 {object} Response[any] "Internal Server Error"
+// @Router /schedules/save_generated [post]
+func (server *Server) SaveGeneratedSchedulesApi(ctx *gin.Context) {
+	var req schedule.SaveGeneratedSchedulesRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized")))
+		return
+	}
+
+	err = server.businessService.ScheduleService.SaveGeneratedSchedules(ctx, payload.EmployeeID, req.LocationID, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to save generated schedules: %w", err)))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Generated schedules saved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
