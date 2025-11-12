@@ -259,7 +259,7 @@ func (server *Server) SaveGeneratedSchedulesApi(ctx *gin.Context) {
 		return
 	}
 
-	err = server.businessService.ScheduleService.SaveGeneratedSchedules(ctx, payload.EmployeeID, req.LocationID, &req)
+	err = server.businessService.ScheduleService.SaveGeneratedSchedules(ctx, payload.EmployeeID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to save generated schedules: %w", err)))
 		return
