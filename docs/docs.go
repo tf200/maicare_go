@@ -2410,7 +2410,7 @@ const docTemplate = `{
                 "summary": "Get a client",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Client ID",
                         "name": "id",
                         "in": "path",
@@ -10643,6 +10643,98 @@ const docTemplate = `{
                 }
             }
         },
+        "/schedules/auto_generate": {
+            "post": {
+                "description": "Auto-generate schedules for a location based on employee availability and shift requirements",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "Auto-generate schedules",
+                "parameters": [
+                    {
+                        "description": "Auto-generate Schedules Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schedule.AutoGenerateSchedulesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Schedules auto-generated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-schedule_AutoGenerateSchedulesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/schedules/save_generated": {
+            "post": {
+                "description": "Save the auto-generated schedules for a location",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "Save generated schedules",
+                "parameters": [
+                    {
+                        "description": "Save Generated Schedules Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schedule.SaveGeneratedSchedulesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Generated schedules saved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/schedules/{id}": {
             "get": {
                 "description": "Get a schedule by its ID",
@@ -13974,6 +14066,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-sender_ListSendersResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-schedule_AutoGenerateSchedulesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schedule.AutoGenerateSchedulesResponse"
                 },
                 "message": {
                     "type": "string"
@@ -24707,6 +24813,68 @@ const docTemplate = `{
                 }
             }
         },
+        "schedule.AssignedEmployee": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "employee_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.AutoGenerateSchedulesRequest": {
+            "type": "object",
+            "properties": {
+                "employee_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "week": {
+                    "description": "e.g., \"2024-W27\"",
+                    "type": "integer"
+                },
+                "year": {
+                    "description": "e.g., 2024",
+                    "type": "integer"
+                }
+            }
+        },
+        "schedule.AutoGenerateSchedulesResponse": {
+            "type": "object",
+            "properties": {
+                "grid_view": {
+                    "$ref": "#/definitions/schedule.GridView"
+                },
+                "shifts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.ScheduledShift"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.EmployeeSummary"
+                    }
+                },
+                "week": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "schedule.CreateScheduleRequest": {
             "type": "object",
             "properties": {
@@ -24786,6 +24954,40 @@ const docTemplate = `{
                 }
             }
         },
+        "schedule.EmployeeSummary": {
+            "type": "object",
+            "properties": {
+                "actual_hours": {
+                    "type": "number"
+                },
+                "deviation": {
+                    "type": "number"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "shifts": {
+                    "description": "shift type -\u003e count",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "description": "\"perfect\", \"overtime\", or \"undertime\"",
+                    "type": "string"
+                },
+                "target_hours": {
+                    "type": "number"
+                }
+            }
+        },
         "schedule.GetDailySchedulesByLocationResponse": {
             "type": "object",
             "properties": {
@@ -24861,6 +25063,131 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.GridDay": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "description": "e.g., \"2024-07-01\"",
+                    "type": "string"
+                },
+                "shifts": {
+                    "description": "shift_name -\u003e list of GridShift",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/schedule.GridShift"
+                        }
+                    }
+                }
+            }
+        },
+        "schedule.GridShift": {
+            "type": "object",
+            "properties": {
+                "employees": {
+                    "description": "list of employee names",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "end": {
+                    "description": "e.g., \"17:00\"",
+                    "type": "string"
+                },
+                "hours": {
+                    "description": "e.g., 8.0",
+                    "type": "number"
+                },
+                "start": {
+                    "description": "e.g., \"09:00\"",
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.GridView": {
+            "type": "object",
+            "properties": {
+                "dates": {
+                    "description": "e.g., [\"Mon\", \"Tue\", ...]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "days": {
+                    "description": "e.g., [\"2024-07-01\", \"2024-07-02\", ...]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "shifts_by_day": {
+                    "description": "date -\u003e list of shifts",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/schedule.GridDay"
+                        }
+                    }
+                }
+            }
+        },
+        "schedule.SaveGeneratedSchedulesRequest": {
+            "type": "object",
+            "properties": {
+                "location_id": {
+                    "type": "integer"
+                },
+                "scheduled_shifts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.ScheduledShift"
+                    }
+                }
+            }
+        },
+        "schedule.ScheduledShift": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "description": "e.g., \"2024-07-01\"",
+                    "type": "string"
+                },
+                "day_name": {
+                    "description": "e.g., \"Monday\"",
+                    "type": "string"
+                },
+                "employees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.AssignedEmployee"
+                    }
+                },
+                "end_time": {
+                    "description": "e.g., \"17:00\"",
+                    "type": "string"
+                },
+                "hours": {
+                    "description": "e.g., 8.0",
+                    "type": "number"
+                },
+                "shift_id": {
+                    "description": "e.g., 1",
+                    "type": "integer"
+                },
+                "shift_name": {
+                    "description": "e.g., \"Morning Shift\"",
+                    "type": "string"
+                },
+                "start_time": {
+                    "description": "e.g., \"09:00\"",
                     "type": "string"
                 }
             }

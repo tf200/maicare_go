@@ -23,9 +23,12 @@ func NewAuditService(store *db.Store) *AuditService {
 // service/audit/service.go
 func (s *AuditService) CreateAuditRecord(ctx context.Context, record *AuditRecord) error {
 	lastHash, err := s.Store.GetLatestAuditHash(ctx)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
+		lastHash = ""
+	} else if err != nil {
 		return err
 	}
+
 	selfHash := record.calculateAuditHash()
 	record.SelfHash = selfHash
 	record.PreviousHash = lastHash
