@@ -14,5 +14,9 @@ func (server *Server) setupScheduleRoutes(baseRouter *gin.RouterGroup) {
 		schedule.DELETE("/schedules/:id", server.RBACMiddleware("SCHEDULE.DELETE"), server.DeleteScheduleApi)
 		schedule.GET("/schedules/:id", server.RBACMiddleware("SCHEDULE.VIEW"), server.GetScheduleByIDApi)
 		schedule.PUT("/schedules/:id", server.RBACMiddleware("SCHEDULE.UPDATE"), server.UpdateScheduleApi)
+
+		schedule.POST("/schedules/auto_generate", server.RBACMiddleware("SCHEDULE.CREATE"), server.AutoGenerateSchedulesApi)
+		schedule.POST("/schedules/save_generated", server.RBACMiddleware("SCHEDULE.CREATE"), server.SaveGeneratedSchedulesApi)
+
 	}
 }
