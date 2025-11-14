@@ -35,6 +35,7 @@ func NewGrpcClient(grpcHost string) (GrpcClientInterface, error) {
 		carePlanClient:      NewCarePlannerClient(conn),
 		spellingCheckClient: NewSpellingCorrectionClient(conn),
 		reportsClient:       NewReportGeneratorClient(conn),
+		scheduleClient:      NewScheduleServiceClient(conn),
 	}, nil
 }
 

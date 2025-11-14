@@ -20,6 +20,10 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "Failed to fetch employee contract hours", zap.Error(err))
 		return nil, err
 	}
+	if len(employees) == 0 {
+		s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "No employees found with contract hours", zap.Int("EmployeeCount", len(req.EmployeeIDs)))
+		return nil, fmt.Errorf("no employees found with contract hours")
+	}
 
 	locationShifts, err := s.Store.GetShiftsByLocationID(ctx, req.LocationID)
 	if err != nil {
