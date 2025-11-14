@@ -845,7 +845,9 @@ SELECT
     last_name,
     contract_hours
 FROM employee_profile
-WHERE id IN ($1)
+WHERE id = ANY($1::uuid[])
+AND contract_hours IS NOT NULL
+AND contract_hours > 0
 `
 
 type ListEmployeesWithContractHoursRow struct {
@@ -855,8 +857,8 @@ type ListEmployeesWithContractHoursRow struct {
 	ContractHours *float64  `json:"contract_hours"`
 }
 
-func (q *Queries) ListEmployeesWithContractHours(ctx context.Context, employeeIds []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error) {
-	rows, err := q.db.Query(ctx, listEmployeesWithContractHours, employeeIds)
+func (q *Queries) ListEmployeesWithContractHours(ctx context.Context, dollar_1 []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error) {
+	rows, err := q.db.Query(ctx, listEmployeesWithContractHours, dollar_1)
 	if err != nil {
 		return nil, err
 	}

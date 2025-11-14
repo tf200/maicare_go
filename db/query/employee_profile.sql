@@ -309,4 +309,6 @@ SELECT
     last_name,
     contract_hours
 FROM employee_profile
-WHERE id IN (sqlc.slice('employee_ids'));
+WHERE id = ANY($1::uuid[])
+AND contract_hours IS NOT NULL
+AND contract_hours > 0;

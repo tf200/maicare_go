@@ -198,6 +198,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		setupMock     func(t *testing.T)
 		buildRequest  func() (*http.Request, error)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
@@ -205,6 +206,9 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			setupMock: func(t *testing.T) {
+				testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("https://example.com", nil).AnyTimes()
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/employees?page=1&page_size=10"
@@ -235,6 +239,9 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
+			setupMock: func(t *testing.T) {
+				// No mock setup needed for invalid request
+			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/employees?page=1&page_size=1000"
 				return http.NewRequest(http.MethodGet, url, nil)
@@ -247,6 +254,9 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			name: "FilterByDepartment",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			setupMock: func(t *testing.T) {
+				testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("https://example.com", nil).AnyTimes()
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/employees?page=1&page_size=10&department=IT"
@@ -268,6 +278,9 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			name: "SecondPage",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+			},
+			setupMock: func(t *testing.T) {
+				testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("https://example.com", nil).AnyTimes()
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/employees?page=2&page_size=10"
@@ -293,6 +306,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 			request, err := tc.buildRequest()
 			require.NoError(t, err)
 
+			tc.setupMock(t)
 			tc.setupAuth(t, request, testServer.tokenMaker)
 			testServer.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
