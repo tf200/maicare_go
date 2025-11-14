@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// old tests
 func createRandomEmployee(t *testing.T) (EmployeeProfile, *CustomUser) {
 	// Create prerequisite records
 	location := CreateRandomLocation(t)
