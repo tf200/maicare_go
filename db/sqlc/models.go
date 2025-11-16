@@ -259,6 +259,7 @@ type ClientDetail struct {
 	Birthplace                 *string            `json:"birthplace"`
 	Email                      string             `json:"email"`
 	PhoneNumber                *string            `json:"phone_number"`
+	OrganizationID             *int64             `json:"organization_id"`
 	Departement                *string            `json:"departement"`
 	Gender                     string             `json:"gender"`
 	Filenumber                 string             `json:"filenumber"`
@@ -302,7 +303,6 @@ type ClientDetail struct {
 	RiskOther                  *bool              `json:"risk_other"`
 	RiskOtherDescription       *string            `json:"risk_other_description"`
 	RiskAdditionalNotes        *string            `json:"risk_additional_notes"`
-	OrganizationID             *int64             `json:"organization_id"`
 }
 
 type ClientDiagnosis struct {
@@ -340,6 +340,19 @@ type ClientEmergencyContact struct {
 	MedicalReports   bool               `json:"medical_reports"`
 	IncidentsReports bool               `json:"incidents_reports"`
 	GoalsReports     bool               `json:"goals_reports"`
+}
+
+type ClientLocationTransfer struct {
+	ID                 int64              `json:"id"`
+	ClientID           uuid.UUID          `json:"client_id"`
+	FromLocationID     *int64             `json:"from_location_id"`
+	ToLocationID       *int64             `json:"to_location_id"`
+	NewMentorID        *uuid.UUID         `json:"new_mentor_id"`
+	RequestDate        pgtype.Timestamptz `json:"request_date"`
+	Status             string             `json:"status"`
+	ApprovedRejectedBy *uuid.UUID         `json:"approved_rejected_by"`
+	ApprovedRejectedAt pgtype.Timestamptz `json:"approved_rejected_at"`
+	Reason             *string            `json:"reason"`
 }
 
 type ClientMaturityMatrixAssessment struct {
@@ -940,6 +953,7 @@ type RegistrationForm struct {
 	SubmittedAt                   pgtype.Timestamptz `json:"submitted_at"`
 	ProcessedAt                   pgtype.Timestamptz `json:"processed_at"`
 	ProcessedByEmployeeID         *uuid.UUID         `json:"processed_by_employee_id"`
+	Status                        string             `json:"status"`
 	IntakeAppointmentDatetime     pgtype.Timestamptz `json:"intake_appointment_datetime"`
 	IntakeAppointmentLocation     *string            `json:"intake_appointment_location"`
 	AddmissionType                *string            `json:"addmission_type"`

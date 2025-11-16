@@ -94,6 +94,10 @@ type ClientService interface {
 	UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID int64) (*UpdateRegistrationFormResponse, error)
 	DeleteRegistrationForm(ctx context.Context, formID int64) error
 	UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID int64, employeeID uuid.UUID) error
+
+	// Location Transfer
+	RequestLocationTransfer(ctx context.Context, clientID uuid.UUID, req LocationTransferRequest) error
+	ApproveLocationTransfer(ctx context.Context, employeeID uuid.UUID, req ApproveOrRejectLocationTransferRequest) error
 }
 
 type clientService struct {

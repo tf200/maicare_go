@@ -28,5 +28,8 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		clientsGroup.GET("/:id/missing_documents", server.RBACMiddleware("CLIENT.CREATE"), server.GetMissingClientDocumentsApi)
 
 		clientsGroup.POST("/:id/appointments", server.RBACMiddleware("CLIENT.CREATE"), server.ListAppointmentsForClientApi)
+
+		clientsGroup.POST("/:id/location_transfer", server.RBACMiddleware("CLIENT.UPDATE"), server.RequestLocationTransferApi)
+		clientsGroup.POST("/location_transfer/approve_reject", server.RBACMiddleware("CLIENT.UPDATE"), server.ApproveOrRejectClientLocationTransferApi)
 	}
 }

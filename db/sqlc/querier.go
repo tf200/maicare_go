@@ -18,6 +18,7 @@ type Querier interface {
 	// Bulk-insert permission IDs into a role (idempotent).
 	AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error
 	AddUrgencyScore(ctx context.Context, arg AddUrgencyScoreParams) (IntakeForm, error)
+	ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error
 	// Select the columns from the inserted row AND join to get the user_id
 	AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignEmployeeRow, error)
 	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
@@ -64,6 +65,7 @@ type Querier interface {
 	CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error)
 	CreateClientDiagnosis(ctx context.Context, arg CreateClientDiagnosisParams) (ClientDiagnosis, error)
 	CreateClientDocument(ctx context.Context, arg CreateClientDocumentParams) (ClientDocument, error)
+	CreateClientLocationTransfer(ctx context.Context, arg CreateClientLocationTransferParams) error
 	CreateClientMaturityMatrixAssessment(ctx context.Context, arg CreateClientMaturityMatrixAssessmentParams) (CreateClientMaturityMatrixAssessmentRow, error)
 	CreateClientMedication(ctx context.Context, arg CreateClientMedicationParams) (ClientMedication, error)
 	CreateClientStatusHistory(ctx context.Context, arg CreateClientStatusHistoryParams) (ClientStatusHistory, error)
@@ -214,7 +216,7 @@ type Querier interface {
 	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error)
 	ListAiGeneratedReports(ctx context.Context, arg ListAiGeneratedReportsParams) ([]ListAiGeneratedReportsRow, error)
 	ListAllIncidents(ctx context.Context, arg ListAllIncidentsParams) ([]ListAllIncidentsRow, error)
-	ListAllLocations(ctx context.Context) ([]Location, error)
+	ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, error)
 	// ---------- 2. PERMISSIONS ----------
 	// Returns every permission ordered by id.
 	ListAllPermissions(ctx context.Context) ([]Permission, error)
@@ -263,7 +265,7 @@ type Querier interface {
 	ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error)
 	ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error)
 	ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsRow, error)
-	ListLocations(ctx context.Context, organisationID int64) ([]Location, error)
+	ListLocations(ctx context.Context, organisationID int64) ([]ListLocationsRow, error)
 	ListMaturityMatrix(ctx context.Context) ([]MaturityMatrix, error)
 	ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedicationsByDiagnosisIDParams) ([]ListMedicationsByDiagnosisIDRow, error)
 	ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []int64) ([]ClientMedication, error)

@@ -418,7 +418,7 @@ CREATE TABLE client_details (
     birthplace VARCHAR(100) NULL,
     email VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NULL,
-    organisation VARCHAR(100) NULL,
+    organization_id BIGINT NULL REFERENCES organisations(id) ON DELETE SET NULL,
     departement VARCHAR(100) NULL,
     gender VARCHAR(100) NOT NULL CHECK (gender IN ('male', 'female', 'other')),
     filenumber VARCHAR(100) NOT NULL,
@@ -572,6 +572,19 @@ CREATE TABLE client_medication (
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE client_location_transfer (
+    id BIGSERIAL PRIMARY KEY,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    from_location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    to_location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    new_mentor_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    request_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+    approved_rejected_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    approved_rejected_at TIMESTAMPTZ NULL,
+    reason TEXT NULL
 );
 
 -- ==========================================
@@ -1730,6 +1743,7 @@ CREATE TABLE registration_form (
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
     processed_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    status TEXT NOT NULL CHECK (status IN ('new', 'in_review', 'approved', 'rejected')) DEFAULT 'new',
     intake_appointment_datetime TIMESTAMPTZ NULL,
     intake_appointment_location VARCHAR(255) NULL,
     addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement'))
@@ -1932,3 +1946,28 @@ INSERT INTO template_items (item_tag, description, source_table, source_column) 
 ('client.filenumber', 'File number', 'client_details', 'filenumber'),
 ('contract.financing_act', 'Financing act', 'contract', 'financing_act'),
 ('contract.financing_option', 'Financing option', 'contract', 'financing_option');
+
+
+
+-- ===============================================
+-- AUDIT LOGGING
+-- ===============================================
+CREATE TABLE audit (
+    event_id UUID PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    occured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    actor_role TEXT[] NOT NULL,
+    actor_id UUID NOT NULL,
+    subject_type TEXT NOT NULL,
+    subject_id UUID NOT NULL,
+    access_reason TEXT NOT NULL,
+    action TEXT NOT NULL,
+    result TEXT NOT NULL,
+    module TEXT NOT NULL,
+    tenant_id TEXT NOT NULL,
+    details JSONB,
+    ip INET,
+    user_agent TEXT,
+    hash_prev TEXT NOT NULL,
+    hash_self TEXT NOT NULL
+);
