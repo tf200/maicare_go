@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -50,11 +51,12 @@ func seedLocations(ctx context.Context, store *db.Store, organisation *db.Organi
 	locationType := locationTypes[0]
 
 	locationName := gofakeit.Word()
-	if locationType == db.LocationTypeEnumCareHome {
+	switch locationType {
+	case db.LocationTypeEnumCareHome:
 		locationName += " Care Home"
-	} else if locationType == db.LocationTypeEnumOffice {
+	case db.LocationTypeEnumOffice:
 		locationName += " Office"
-	} else {
+	default:
 		locationName += " Facility"
 	}
 
@@ -168,6 +170,17 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 	return &employee, nil
 }
 
+func grantPermissions(ctx context.Context, store *db.Store, userID uuid.UUID) {
+	store.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
+		UserID: userID,
+		RoleID: 1, // Admin Role ID
+	})
+	store.GrantRolePermissionsToUser(ctx, db.GrantRolePermissionsToUserParams{
+		UserID: userID,
+		RoleID: 1, // Admin Role ID
+	})
+}
+
 func main() {
 
 	config, err := util.LoadConfig(".")
@@ -203,6 +216,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to seed employee profile: %v", err)
 	}
+	grantPermissions(ctx, store, user.ID)
 
 	fmt.Println("Admin User Seeded Successfully")
 
