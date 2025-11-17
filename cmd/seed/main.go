@@ -251,9 +251,27 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, users []db.Custo
 		if err != nil {
 			return nil, fmt.Errorf("failed to create employee profile: %w", err)
 		}
+		// Add contract details
+		var contractType db.EmployeeContractTypeEnum
+		if isSubcontractor {
+			contractType = db.EmployeeContractTypeEnumZZP
+		} else {
+			contractType = db.EmployeeContractTypeEnumLoondienst
+		}
+		startdate := gofakeit.Date()
+		_, err = store.AddEmployeeContractDetails(ctx, db.AddEmployeeContractDetailsParams{
+			ContractHours:     util.Float64Ptr(float64(gofakeit.Number(20, 40))),
+			ContractStartDate: pgtype.Date{Time: startdate, Valid: true},
+			ContractEndDate:   pgtype.Date{Time: startdate.AddDate(1, 0, 0), Valid: true},
+			ID:                employee.ID,
+			ContractType:      db.NullEmployeeContractTypeEnum{EmployeeContractTypeEnum: contractType, Valid: true},
+			ContractRate:      util.Float64Ptr(gofakeit.Price(20, 60)),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add contract details for subcontractor: %w", err)
+		}
 
 		employees = append(employees, employee)
 	}
-
 	return employees, nil
 }

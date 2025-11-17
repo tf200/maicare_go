@@ -149,9 +149,14 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 		return nil
 	}
 
+	shiftIDSet := make(map[int32]struct{})
 	shiftIDs := make([]int32, 0)
+
 	for _, sch := range req.ScheduledShifts {
-		shiftIDs = append(shiftIDs, int32(sch.ShiftId))
+		if _, exists := shiftIDSet[sch.ShiftId]; !exists {
+			shiftIDSet[sch.ShiftId] = struct{}{}
+			shiftIDs = append(shiftIDs, sch.ShiftId)
+		}
 	}
 
 	// verify shifts exist
@@ -171,15 +176,27 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 	// proceed to save schedules
 	for _, sch := range req.ScheduledShifts {
 		for _, emp := range sch.Employees {
-			startTime, err := time.Parse(time.RFC3339, sch.StartTime)
+			startTime, err := time.Parse(time.RFC3339Nano, sch.StartTime)
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse start time", zap.Error(err))
-				return err
+				// Try parsing without timezone if RFC3339Nano fails
+				startTime, err = time.Parse("2006-01-02T15:04:05", sch.StartTime)
+				if err != nil {
+					s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse start time", zap.Error(err))
+					return err
+				}
+				// Set to UTC
+				startTime = startTime.UTC()
 			}
-			endTime, err := time.Parse(time.RFC3339, sch.EndTime)
+			endTime, err := time.Parse(time.RFC3339Nano, sch.EndTime)
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse end time", zap.Error(err))
-				return err
+				// Try parsing without timezone if RFC3339Nano fails
+				endTime, err = time.Parse("2006-01-02T15:04:05", sch.EndTime)
+				if err != nil {
+					s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse end time", zap.Error(err))
+					return err
+				}
+				// Set to UTC
+				endTime = endTime.UTC()
 			}
 			_, err = s.Store.CreateSchedule(ctx, db.CreateScheduleParams{
 				EmployeeID:          emp.EmployeeID,
