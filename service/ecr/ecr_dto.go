@@ -50,14 +50,14 @@ type ListEmployeesByContractEndDateResponse struct {
 	Email             string    `json:"email"`
 	ContractStartDate time.Time `json:"contract_start_date"`
 	ContractEndDate   time.Time `json:"contract_end_date"`
-	ContractType      *string   `json:"contract_type"`
+	ContractType      string    `json:"contract_type"`
 }
 
 // ListLatestPaymentsResponse defines the response for the ListLatestPayments API.
 type ListLatestPaymentsResponse struct {
 	InvoiceID     int64     `json:"invoice_id"`
 	InvoiceNumber string    `json:"invoice_number"`
-	PaymentMethod *string   `json:"payment_method"`
+	PaymentMethod string    `json:"payment_method"`
 	PaymentStatus string    `json:"payment_status"`
 	Amount        float64   `json:"amount"`
 	PaymentDate   time.Time `json:"payment_date"`

@@ -21,7 +21,7 @@ func (s *senderService) CreateSender(ctx context.Context, req *CreateSenderReque
 	}
 
 	sender, err := s.Store.CreateSender(ctx, db.CreateSenderParams{
-		Types:        req.Types,
+		Types:        db.SenderTypesEnum(req.Types),
 		Name:         req.Name,
 		Address:      req.Address,
 		PostalCode:   req.PostalCode,
@@ -45,7 +45,7 @@ func (s *senderService) CreateSender(ctx context.Context, req *CreateSenderReque
 
 	response := &CreateSenderResponse{
 		ID:           sender.ID,
-		Types:        sender.Types,
+		Types:        string(sender.Types),
 		Name:         sender.Name,
 		Address:      sender.Address,
 		PostalCode:   sender.PostalCode,
@@ -95,7 +95,7 @@ func (s *senderService) ListSenders(ctx *gin.Context, req *ListSendersRequest) (
 
 		response := ListSendersResponse{
 			ID:           sender.ID,
-			Types:        sender.Types,
+			Types:        string(sender.Types),
 			Name:         sender.Name,
 			Address:      sender.Address,
 			PostalCode:   sender.PostalCode,
@@ -150,7 +150,7 @@ func (s *senderService) GetSenderByID(ctx context.Context, senderID int64) (*Get
 
 	response := &GetSenderByIdResponse{
 		ID:                   sender.ID,
-		Types:                sender.Types,
+		Types:                string(sender.Types),
 		Name:                 sender.Name,
 		Address:              sender.Address,
 		PostalCode:           sender.PostalCode,
@@ -185,7 +185,12 @@ func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *U
 		ClientNumber: req.ClientNumber,
 		EmailAddress: req.EmailAddress,
 		IsArchived:   req.IsArchived,
-		Types:        req.Types,
+		Types: func() db.NullSenderTypesEnum {
+			if req.Types != nil {
+				return db.NullSenderTypesEnum{SenderTypesEnum: db.SenderTypesEnum(*req.Types), Valid: true}
+			}
+			return db.NullSenderTypesEnum{Valid: false}
+		}(),
 	}
 
 	if req.Contacts != nil {
@@ -210,7 +215,7 @@ func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *U
 
 	response := &UpdateSenderResponse{
 		ID:           updatedSender.ID,
-		Types:        updatedSender.Types,
+		Types:        string(updatedSender.Types),
 		Name:         updatedSender.Name,
 		Address:      updatedSender.Address,
 		PostalCode:   updatedSender.PostalCode,

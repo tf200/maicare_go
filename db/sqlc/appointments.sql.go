@@ -136,15 +136,15 @@ INSERT INTO appointment_templates (
 `
 
 type CreateAppointmentTemplateParams struct {
-	CreatorEmployeeID  uuid.UUID        `json:"creator_employee_id"`
-	StartTime          pgtype.Timestamp `json:"start_time"`
-	EndTime            pgtype.Timestamp `json:"end_time"`
-	Location           *string          `json:"location"`
-	Description        *string          `json:"description"`
-	Color              *string          `json:"color"`
-	RecurrenceType     *string          `json:"recurrence_type"`
-	RecurrenceInterval *int32           `json:"recurrence_interval"`
-	RecurrenceEndDate  pgtype.Date      `json:"recurrence_end_date"`
+	CreatorEmployeeID  uuid.UUID          `json:"creator_employee_id"`
+	StartTime          pgtype.Timestamp   `json:"start_time"`
+	EndTime            pgtype.Timestamp   `json:"end_time"`
+	Location           *string            `json:"location"`
+	Description        *string            `json:"description"`
+	Color              *string            `json:"color"`
+	RecurrenceType     RecurrenceTypeEnum `json:"recurrence_type"`
+	RecurrenceInterval *int32             `json:"recurrence_interval"`
+	RecurrenceEndDate  pgtype.Date        `json:"recurrence_end_date"`
 }
 
 func (q *Queries) CreateAppointmentTemplate(ctx context.Context, arg CreateAppointmentTemplateParams) (AppointmentTemplate, error) {
@@ -370,24 +370,24 @@ LIMIT 1
 `
 
 type GetScheduledAppointmentByIDRow struct {
-	ID                     uuid.UUID        `json:"id"`
-	AppointmentTemplatesID *uuid.UUID       `json:"appointment_templates_id"`
-	CreatorEmployeeID      *uuid.UUID       `json:"creator_employee_id"`
-	CreatorFirstName       *string          `json:"creator_first_name"`
-	CreatorLastName        *string          `json:"creator_last_name"`
-	StartTime              pgtype.Timestamp `json:"start_time"`
-	EndTime                pgtype.Timestamp `json:"end_time"`
-	Location               *string          `json:"location"`
-	Description            *string          `json:"description"`
-	Color                  *string          `json:"color"`
-	Status                 string           `json:"status"`
-	IsConfirmed            bool             `json:"is_confirmed"`
-	ConfirmedByEmployeeID  *uuid.UUID       `json:"confirmed_by_employee_id"`
-	ConfirmerFirstName     *string          `json:"confirmer_first_name"`
-	ConfirmerLastName      *string          `json:"confirmer_last_name"`
-	ConfirmedAt            pgtype.Timestamp `json:"confirmed_at"`
-	CreatedAt              pgtype.Timestamp `json:"created_at"`
-	UpdatedAt              pgtype.Timestamp `json:"updated_at"`
+	ID                     uuid.UUID             `json:"id"`
+	AppointmentTemplatesID *uuid.UUID            `json:"appointment_templates_id"`
+	CreatorEmployeeID      *uuid.UUID            `json:"creator_employee_id"`
+	CreatorFirstName       *string               `json:"creator_first_name"`
+	CreatorLastName        *string               `json:"creator_last_name"`
+	StartTime              pgtype.Timestamp      `json:"start_time"`
+	EndTime                pgtype.Timestamp      `json:"end_time"`
+	Location               *string               `json:"location"`
+	Description            *string               `json:"description"`
+	Color                  *string               `json:"color"`
+	Status                 AppointmentStatusEnum `json:"status"`
+	IsConfirmed            bool                  `json:"is_confirmed"`
+	ConfirmedByEmployeeID  *uuid.UUID            `json:"confirmed_by_employee_id"`
+	ConfirmerFirstName     *string               `json:"confirmer_first_name"`
+	ConfirmerLastName      *string               `json:"confirmer_last_name"`
+	ConfirmedAt            pgtype.Timestamp      `json:"confirmed_at"`
+	CreatedAt              pgtype.Timestamp      `json:"created_at"`
+	UpdatedAt              pgtype.Timestamp      `json:"updated_at"`
 }
 
 func (q *Queries) GetScheduledAppointmentByID(ctx context.Context, id uuid.UUID) (GetScheduledAppointmentByIDRow, error) {
@@ -449,15 +449,15 @@ type ListClientAppointmentsInRangeParams struct {
 }
 
 type ListClientAppointmentsInRangeRow struct {
-	AppointmentID     uuid.UUID        `json:"appointment_id"`
-	StartTime         pgtype.Timestamp `json:"start_time"`
-	EndTime           pgtype.Timestamp `json:"end_time"`
-	Location          *string          `json:"location"`
-	Description       *string          `json:"description"`
-	Color             *string          `json:"color"`
-	Status            string           `json:"status"`
-	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
-	CreatedAt         pgtype.Timestamp `json:"created_at"`
+	AppointmentID     uuid.UUID             `json:"appointment_id"`
+	StartTime         pgtype.Timestamp      `json:"start_time"`
+	EndTime           pgtype.Timestamp      `json:"end_time"`
+	Location          *string               `json:"location"`
+	Description       *string               `json:"description"`
+	Color             *string               `json:"color"`
+	Status            AppointmentStatusEnum `json:"status"`
+	CreatorEmployeeID *uuid.UUID            `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamp      `json:"created_at"`
 }
 
 // Define the parameters for the query
@@ -527,15 +527,15 @@ type ListClientAppointmentsStartingInRangeParams struct {
 }
 
 type ListClientAppointmentsStartingInRangeRow struct {
-	AppointmentID     uuid.UUID        `json:"appointment_id"`
-	StartTime         pgtype.Timestamp `json:"start_time"`
-	EndTime           pgtype.Timestamp `json:"end_time"`
-	Location          *string          `json:"location"`
-	Description       *string          `json:"description"`
-	Color             *string          `json:"color"`
-	Status            string           `json:"status"`
-	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
-	CreatedAt         pgtype.Timestamp `json:"created_at"`
+	AppointmentID     uuid.UUID             `json:"appointment_id"`
+	StartTime         pgtype.Timestamp      `json:"start_time"`
+	EndTime           pgtype.Timestamp      `json:"end_time"`
+	Location          *string               `json:"location"`
+	Description       *string               `json:"description"`
+	Color             *string               `json:"color"`
+	Status            AppointmentStatusEnum `json:"status"`
+	CreatorEmployeeID *uuid.UUID            `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamp      `json:"created_at"`
 }
 
 // Define the parameters for the query
@@ -629,17 +629,17 @@ type ListEmployeeAppointmentsInRangeParams struct {
 }
 
 type ListEmployeeAppointmentsInRangeRow struct {
-	AppointmentID     uuid.UUID        `json:"appointment_id"`
-	StartTime         pgtype.Timestamp `json:"start_time"`
-	EndTime           pgtype.Timestamp `json:"end_time"`
-	Location          *string          `json:"location"`
-	Description       *string          `json:"description"`
-	Color             *string          `json:"color"`
-	Status            string           `json:"status"`
-	IsConfirmed       bool             `json:"is_confirmed"`
-	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
-	CreatedAt         pgtype.Timestamp `json:"created_at"`
-	InvolvementType   string           `json:"involvement_type"`
+	AppointmentID     uuid.UUID             `json:"appointment_id"`
+	StartTime         pgtype.Timestamp      `json:"start_time"`
+	EndTime           pgtype.Timestamp      `json:"end_time"`
+	Location          *string               `json:"location"`
+	Description       *string               `json:"description"`
+	Color             *string               `json:"color"`
+	Status            AppointmentStatusEnum `json:"status"`
+	IsConfirmed       bool                  `json:"is_confirmed"`
+	CreatorEmployeeID *uuid.UUID            `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamp      `json:"created_at"`
+	InvolvementType   string                `json:"involvement_type"`
 }
 
 // Define the parameters for the query

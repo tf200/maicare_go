@@ -121,8 +121,8 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 		invoice[i] = InvoiceDetails{
 			ContractID:    contract.ID,
 			Price:         contract.Price,
-			ContractType:  contract.CareType,
-			PriceTimeUnit: contract.PriceTimeUnit,
+			ContractType:  string(contract.CareType),
+			PriceTimeUnit: string(contract.PriceTimeUnit),
 			Vat:           float64(*contract.Vat),
 			Warnings:      []string{},
 			Periods:       []InvoicePeriod{},
@@ -142,7 +142,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 			if contract.CareType == "accommodation" {
 				totals, err := CalculateAccomodationInvoiceTotal(AccommodationInvoiceParams{
 					Price:               contract.Price,
-					PriceTimeUnit:       contract.PriceTimeUnit,
+					PriceTimeUnit:       string(contract.PriceTimeUnit),
 					VAT:                 float64(*contract.Vat),
 					BillablePeriodStart: period.BillableStart.Time,
 					BillablePeriodEnd:   period.BillableEnd.Time,
@@ -193,7 +193,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 
 				totals, err := CalculateAmbulanteInvoiceTotal(AmbulanteInvoiceParams{
 					Price:         contract.Price,
-					PriceTimeUnit: contract.PriceTimeUnit,
+					PriceTimeUnit: string(contract.PriceTimeUnit),
 					VAT:           float64(*contract.Vat),
 					TotalMinutes:  totalMinutes,
 				})
@@ -290,7 +290,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 		InvoiceNumber:   createdInv.InvoiceNumber,
 		IssueDate:       createdInv.IssueDate.Time,
 		DueDate:         createdInv.DueDate.Time,
-		Status:          createdInv.Status,
+		Status:          string(createdInv.Status),
 		InvoiceDetails:  finalInvoice.InvoiceDetails,
 		TotalAmount:     createdInv.TotalAmount,
 		PdfAttachmentID: createdInv.PdfAttachmentID,

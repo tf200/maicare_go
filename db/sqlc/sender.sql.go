@@ -48,18 +48,18 @@ INSERT INTO sender (
 `
 
 type CreateSenderParams struct {
-	Types        string  `json:"types"`
-	Name         string  `json:"name"`
-	Address      *string `json:"address"`
-	PostalCode   *string `json:"postal_code"`
-	Place        *string `json:"place"`
-	Land         *string `json:"land"`
-	Kvknumber    *string `json:"kvknumber"`
-	Btwnumber    *string `json:"btwnumber"`
-	PhoneNumber  *string `json:"phone_number"`
-	ClientNumber *string `json:"client_number"`
-	EmailAddress *string `json:"email_address"`
-	Contacts     []byte  `json:"contacts"`
+	Types        SenderTypesEnum `json:"types"`
+	Name         string          `json:"name"`
+	Address      *string         `json:"address"`
+	PostalCode   *string         `json:"postal_code"`
+	Place        *string         `json:"place"`
+	Land         *string         `json:"land"`
+	Kvknumber    *string         `json:"kvknumber"`
+	Btwnumber    *string         `json:"btwnumber"`
+	PhoneNumber  *string         `json:"phone_number"`
+	ClientNumber *string         `json:"client_number"`
+	EmailAddress *string         `json:"email_address"`
+	Contacts     []byte          `json:"contacts"`
 }
 
 func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sender, error) {
@@ -260,20 +260,20 @@ RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumb
 `
 
 type UpdateSenderParams struct {
-	Name         *string `json:"name"`
-	Address      *string `json:"address"`
-	PostalCode   *string `json:"postal_code"`
-	Place        *string `json:"place"`
-	Land         *string `json:"land"`
-	Kvknumber    *string `json:"kvknumber"`
-	Btwnumber    *string `json:"btwnumber"`
-	PhoneNumber  *string `json:"phone_number"`
-	ClientNumber *string `json:"client_number"`
-	EmailAddress *string `json:"email_address"`
-	Contacts     []byte  `json:"contacts"`
-	IsArchived   *bool   `json:"is_archived"`
-	Types        *string `json:"types"`
-	ID           int64   `json:"id"`
+	Name         *string             `json:"name"`
+	Address      *string             `json:"address"`
+	PostalCode   *string             `json:"postal_code"`
+	Place        *string             `json:"place"`
+	Land         *string             `json:"land"`
+	Kvknumber    *string             `json:"kvknumber"`
+	Btwnumber    *string             `json:"btwnumber"`
+	PhoneNumber  *string             `json:"phone_number"`
+	ClientNumber *string             `json:"client_number"`
+	EmailAddress *string             `json:"email_address"`
+	Contacts     []byte              `json:"contacts"`
+	IsArchived   *bool               `json:"is_archived"`
+	Types        NullSenderTypesEnum `json:"types"`
+	ID           int64               `json:"id"`
 }
 
 func (q *Queries) UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sender, error) {

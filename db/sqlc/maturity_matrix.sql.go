@@ -26,11 +26,11 @@ INSERT INTO care_plans (
 `
 
 type CreateCarePlanParams struct {
-	AssessmentID          int64      `json:"assessment_id"`
-	GeneratedByEmployeeID *uuid.UUID `json:"generated_by_employee_id"`
-	AssessmentSummary     string     `json:"assessment_summary"`
-	RawLlmResponse        []byte     `json:"raw_llm_response"`
-	Status                string     `json:"status"`
+	AssessmentID          int64              `json:"assessment_id"`
+	GeneratedByEmployeeID *uuid.UUID         `json:"generated_by_employee_id"`
+	AssessmentSummary     string             `json:"assessment_summary"`
+	RawLlmResponse        []byte             `json:"raw_llm_response"`
+	Status                CarePlanStatusEnum `json:"status"`
 }
 
 // ==================== new code    ====================
@@ -105,9 +105,9 @@ RETURNING id, care_plan_id, frequency, intervention_description, is_active, last
 `
 
 type CreateCarePlanInterventionParams struct {
-	CarePlanID              int64  `json:"care_plan_id"`
-	Frequency               string `json:"frequency"`
-	InterventionDescription string `json:"intervention_description"`
+	CarePlanID              int64                             `json:"care_plan_id"`
+	Frequency               CarePlanInterventionFrequencyEnum `json:"frequency"`
+	InterventionDescription string                            `json:"intervention_description"`
 }
 
 // ==================== care plan interventions ====================
@@ -144,11 +144,11 @@ RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, sta
 `
 
 type CreateCarePlanObjectiveParams struct {
-	CarePlanID  int64       `json:"care_plan_id"`
-	Timeframe   string      `json:"timeframe"`
-	GoalTitle   string      `json:"goal_title"`
-	Description string      `json:"description"`
-	TargetDate  pgtype.Date `json:"target_date"`
+	CarePlanID  int64                 `json:"care_plan_id"`
+	Timeframe   CarePlanTimeframeEnum `json:"timeframe"`
+	GoalTitle   string                `json:"goal_title"`
+	Description string                `json:"description"`
+	TargetDate  pgtype.Date           `json:"target_date"`
 }
 
 // ==================== care plan objectives and actions ====================
@@ -190,11 +190,11 @@ INSERT INTO care_plan_reports (
 `
 
 type CreateCarePlanReportParams struct {
-	CarePlanID          int64     `json:"care_plan_id"`
-	ReportType          string    `json:"report_type"`
-	ReportContent       string    `json:"report_content"`
-	CreatedByEmployeeID uuid.UUID `json:"created_by_employee_id"`
-	IsCritical          bool      `json:"is_critical"`
+	CarePlanID          int64                  `json:"care_plan_id"`
+	ReportType          CarePlanReportTypeEnum `json:"report_type"`
+	ReportContent       string                 `json:"report_content"`
+	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
+	IsCritical          bool                   `json:"is_critical"`
 }
 
 // ===================== care plan reports ====================
@@ -277,10 +277,10 @@ RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, i
 `
 
 type CreateCarePlanRiskParams struct {
-	CarePlanID         int64   `json:"care_plan_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
+	CarePlanID         int64                 `json:"care_plan_id"`
+	RiskDescription    string                `json:"risk_description"`
+	MitigationStrategy string                `json:"mitigation_strategy"`
+	RiskLevel          CarePlanRiskLevelEnum `json:"risk_level"`
 }
 
 // ==================== care plan risks ====================
@@ -430,7 +430,7 @@ type CreateClientMaturityMatrixAssessmentRow struct {
 	TargetLevel         int32              `json:"target_level"`
 	CurrentLevel        int32              `json:"current_level"`
 	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
-	CarePlanStatus      string             `json:"care_plan_status"`
+	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
 	IsActive            bool               `json:"is_active"`
 	TopicName           string             `json:"topic_name"`
 }
@@ -632,16 +632,16 @@ ORDER BY
 `
 
 type GetCarePlanObjectivesWithActionsRow struct {
-	ObjectiveID          int64   `json:"objective_id"`
-	ObjectiveTitle       string  `json:"objective_title"`
-	ObjectiveDescription string  `json:"objective_description"`
-	ObjectiveTimeframe   string  `json:"objective_timeframe"`
-	ObjectiveStatus      string  `json:"objective_status"`
-	ActionID             *int64  `json:"action_id"`
-	ActionDescription    *string `json:"action_description"`
-	IsCompleted          *bool   `json:"is_completed"`
-	ActionNotes          *string `json:"action_notes"`
-	SortOrder            *int32  `json:"sort_order"`
+	ObjectiveID          int64                       `json:"objective_id"`
+	ObjectiveTitle       string                      `json:"objective_title"`
+	ObjectiveDescription string                      `json:"objective_description"`
+	ObjectiveTimeframe   CarePlanTimeframeEnum       `json:"objective_timeframe"`
+	ObjectiveStatus      CarePlanObjectiveStatusEnum `json:"objective_status"`
+	ActionID             *int64                      `json:"action_id"`
+	ActionDescription    *string                     `json:"action_description"`
+	IsCompleted          *bool                       `json:"is_completed"`
+	ActionNotes          *string                     `json:"action_notes"`
+	SortOrder            *int32                      `json:"sort_order"`
 }
 
 func (q *Queries) GetCarePlanObjectivesWithActions(ctx context.Context, carePlanID int64) ([]GetCarePlanObjectivesWithActionsRow, error) {
@@ -692,24 +692,24 @@ WHERE cp.id = $1
 `
 
 type GetCarePlanOverviewRow struct {
-	ID                    int64            `json:"id"`
-	AssessmentID          int64            `json:"assessment_id"`
-	GeneratedAt           pgtype.Timestamp `json:"generated_at"`
-	GeneratedByEmployeeID *uuid.UUID       `json:"generated_by_employee_id"`
-	ApprovedByEmployeeID  *uuid.UUID       `json:"approved_by_employee_id"`
-	ApprovedAt            pgtype.Timestamp `json:"approved_at"`
-	Status                string           `json:"status"`
-	AssessmentSummary     string           `json:"assessment_summary"`
-	RawLlmResponse        []byte           `json:"raw_llm_response"`
-	CreatedAt             pgtype.Timestamp `json:"created_at"`
-	UpdatedAt             pgtype.Timestamp `json:"updated_at"`
-	Version               int32            `json:"version"`
-	ClientID              uuid.UUID        `json:"client_id"`
-	CurrentLevel          int32            `json:"current_level"`
-	TargetLevel           int32            `json:"target_level"`
-	TopicName             string           `json:"topic_name"`
-	FirstName             string           `json:"first_name"`
-	LastName              string           `json:"last_name"`
+	ID                    int64              `json:"id"`
+	AssessmentID          int64              `json:"assessment_id"`
+	GeneratedAt           pgtype.Timestamp   `json:"generated_at"`
+	GeneratedByEmployeeID *uuid.UUID         `json:"generated_by_employee_id"`
+	ApprovedByEmployeeID  *uuid.UUID         `json:"approved_by_employee_id"`
+	ApprovedAt            pgtype.Timestamp   `json:"approved_at"`
+	Status                CarePlanStatusEnum `json:"status"`
+	AssessmentSummary     string             `json:"assessment_summary"`
+	RawLlmResponse        []byte             `json:"raw_llm_response"`
+	CreatedAt             pgtype.Timestamp   `json:"created_at"`
+	UpdatedAt             pgtype.Timestamp   `json:"updated_at"`
+	Version               int32              `json:"version"`
+	ClientID              uuid.UUID          `json:"client_id"`
+	CurrentLevel          int32              `json:"current_level"`
+	TargetLevel           int32              `json:"target_level"`
+	TopicName             string             `json:"topic_name"`
+	FirstName             string             `json:"first_name"`
+	LastName              string             `json:"last_name"`
 }
 
 func (q *Queries) GetCarePlanOverview(ctx context.Context, id int64) (GetCarePlanOverviewRow, error) {
@@ -749,16 +749,16 @@ WHERE cpr.id = $1
 `
 
 type GetCarePlanReportRow struct {
-	ID                  int64              `json:"id"`
-	CarePlanID          int64              `json:"care_plan_id"`
-	ReportType          string             `json:"report_type"`
-	ReportContent       string             `json:"report_content"`
-	CreatedByEmployeeID uuid.UUID          `json:"created_by_employee_id"`
-	IsCritical          bool               `json:"is_critical"`
-	CreatedAt           pgtype.Timestamp   `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
-	CreatedByFirstName  string             `json:"created_by_first_name"`
-	CreatedByLastName   string             `json:"created_by_last_name"`
+	ID                  int64                  `json:"id"`
+	CarePlanID          int64                  `json:"care_plan_id"`
+	ReportType          CarePlanReportTypeEnum `json:"report_type"`
+	ReportContent       string                 `json:"report_content"`
+	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
+	IsCritical          bool                   `json:"is_critical"`
+	CreatedAt           pgtype.Timestamp       `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz     `json:"updated_at"`
+	CreatedByFirstName  string                 `json:"created_by_first_name"`
+	CreatedByLastName   string                 `json:"created_by_last_name"`
 }
 
 func (q *Queries) GetCarePlanReport(ctx context.Context, id int64) (GetCarePlanReportRow, error) {
@@ -947,7 +947,7 @@ type GetClientMaturityMatrixAssessmentRow struct {
 	TargetLevel         int32              `json:"target_level"`
 	CurrentLevel        int32              `json:"current_level"`
 	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
-	CarePlanStatus      string             `json:"care_plan_status"`
+	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
 	IsActive            bool               `json:"is_active"`
 	TopicName           string             `json:"topic_name"`
 }
@@ -1028,17 +1028,17 @@ type ListCarePlanReportsParams struct {
 }
 
 type ListCarePlanReportsRow struct {
-	ID                  int64              `json:"id"`
-	CarePlanID          int64              `json:"care_plan_id"`
-	ReportType          string             `json:"report_type"`
-	ReportContent       string             `json:"report_content"`
-	CreatedByEmployeeID uuid.UUID          `json:"created_by_employee_id"`
-	IsCritical          bool               `json:"is_critical"`
-	CreatedAt           pgtype.Timestamp   `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
-	CreatedByFirstName  string             `json:"created_by_first_name"`
-	CreatedByLastName   string             `json:"created_by_last_name"`
-	TotalCount          int64              `json:"total_count"`
+	ID                  int64                  `json:"id"`
+	CarePlanID          int64                  `json:"care_plan_id"`
+	ReportType          CarePlanReportTypeEnum `json:"report_type"`
+	ReportContent       string                 `json:"report_content"`
+	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
+	IsCritical          bool                   `json:"is_critical"`
+	CreatedAt           pgtype.Timestamp       `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz     `json:"updated_at"`
+	CreatedByFirstName  string                 `json:"created_by_first_name"`
+	CreatedByLastName   string                 `json:"created_by_last_name"`
+	TotalCount          int64                  `json:"total_count"`
 }
 
 func (q *Queries) ListCarePlanReports(ctx context.Context, arg ListCarePlanReportsParams) ([]ListCarePlanReportsRow, error) {
@@ -1104,7 +1104,7 @@ type ListClientMaturityMatrixAssessmentsRow struct {
 	TargetLevel         int32              `json:"target_level"`
 	CurrentLevel        int32              `json:"current_level"`
 	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
-	CarePlanStatus      string             `json:"care_plan_status"`
+	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
 	IsActive            bool               `json:"is_active"`
 	TopicName           string             `json:"topic_name"`
 	CarePlanID          *int64             `json:"care_plan_id"`
@@ -1210,9 +1210,9 @@ RETURNING id, care_plan_id, frequency, intervention_description, is_active, last
 `
 
 type UpdateCarePlanInterventionParams struct {
-	ID                      int64   `json:"id"`
-	Frequency               *string `json:"frequency"`
-	InterventionDescription *string `json:"intervention_description"`
+	ID                      int64                                 `json:"id"`
+	Frequency               NullCarePlanInterventionFrequencyEnum `json:"frequency"`
+	InterventionDescription *string                               `json:"intervention_description"`
 }
 
 func (q *Queries) UpdateCarePlanIntervention(ctx context.Context, arg UpdateCarePlanInterventionParams) (CarePlanIntervention, error) {
@@ -1245,11 +1245,11 @@ RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, sta
 `
 
 type UpdateCarePlanObjectiveParams struct {
-	ID          int64   `json:"id"`
-	Timeframe   *string `json:"timeframe"`
-	GoalTitle   *string `json:"goal_title"`
-	Description *string `json:"description"`
-	Status      *string `json:"status"`
+	ID          int64                           `json:"id"`
+	Timeframe   NullCarePlanTimeframeEnum       `json:"timeframe"`
+	GoalTitle   *string                         `json:"goal_title"`
+	Description *string                         `json:"description"`
+	Status      NullCarePlanObjectiveStatusEnum `json:"status"`
 }
 
 func (q *Queries) UpdateCarePlanObjective(ctx context.Context, arg UpdateCarePlanObjectiveParams) (CarePlanObjective, error) {
@@ -1322,10 +1322,10 @@ RETURNING id, care_plan_id, report_type, report_content, created_by_employee_id,
 `
 
 type UpdateCarePlanReportParams struct {
-	ID            int64   `json:"id"`
-	ReportType    *string `json:"report_type"`
-	ReportContent *string `json:"report_content"`
-	IsCritical    *bool   `json:"is_critical"`
+	ID            int64                      `json:"id"`
+	ReportType    NullCarePlanReportTypeEnum `json:"report_type"`
+	ReportContent *string                    `json:"report_content"`
+	IsCritical    *bool                      `json:"is_critical"`
 }
 
 func (q *Queries) UpdateCarePlanReport(ctx context.Context, arg UpdateCarePlanReportParams) (CarePlanReport, error) {
@@ -1401,10 +1401,10 @@ RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, i
 `
 
 type UpdateCarePlanRiskParams struct {
-	ID                 int64   `json:"id"`
-	RiskDescription    *string `json:"risk_description"`
-	MitigationStrategy *string `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
+	ID                 int64                     `json:"id"`
+	RiskDescription    *string                   `json:"risk_description"`
+	MitigationStrategy *string                   `json:"mitigation_strategy"`
+	RiskLevel          NullCarePlanRiskLevelEnum `json:"risk_level"`
 }
 
 func (q *Queries) UpdateCarePlanRisk(ctx context.Context, arg UpdateCarePlanRiskParams) (CarePlanRisk, error) {

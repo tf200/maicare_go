@@ -19,15 +19,3 @@ const (
 	PaymentStatusReversed  PaymentStatus = "reversed"
 	PaymentStatusRefunded  PaymentStatus = "refunded"
 )
-
-type InvoiceStatus string
-
-const (
-	InvoiceStatusOutstanding   InvoiceStatus = "outstanding"
-	InvoiceStatusPartiallyPaid InvoiceStatus = "partially_paid"
-	InvoiceStatusPaid          InvoiceStatus = "paid"
-	InvoiceStatusExpired       InvoiceStatus = "expired"
-	InvoiceStatusOverpaid      InvoiceStatus = "overpaid"
-	InvoiceStatusImported      InvoiceStatus = "imported"
-	InvoiceStatusConcept       InvoiceStatus = "concept"
-)

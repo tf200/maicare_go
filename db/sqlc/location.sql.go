@@ -270,7 +270,7 @@ type ListAllLocationsRow struct {
 	Name           string             `json:"name"`
 	Address        string             `json:"address"`
 	Capacity       *int32             `json:"capacity"`
-	LocationType   string             `json:"location_type"`
+	LocationType   LocationTypeEnum   `json:"location_type"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 	ClientCount    int64              `json:"client_count"`
@@ -321,7 +321,7 @@ type ListLocationsRow struct {
 	Name           string             `json:"name"`
 	Address        string             `json:"address"`
 	Capacity       *int32             `json:"capacity"`
-	LocationType   string             `json:"location_type"`
+	LocationType   LocationTypeEnum   `json:"location_type"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 	ClientCount    int64              `json:"client_count"`

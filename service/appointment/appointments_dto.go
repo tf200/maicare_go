@@ -28,7 +28,7 @@ type CreateAppointmentRequest struct {
 	Location               *string     `json:"location"`
 	Description            *string     `json:"description"`
 	Color                  *string     `json:"color" example:"#FF5733"`
-	RecurrenceType         string      `json:"recurrence_type" example:"NONE" enum:"NONE,DAILY,WEEKLY,MONTHLY"`
+	RecurrenceType         string      `json:"recurrence_type" example:"NONE" enum:"NONE,DAILY,WEEKLY,MONTHLY" binding:"required,oneof=NONE DAILY WEEKLY MONTHLY"`
 	RecurrenceInterval     *int32      `json:"recurrence_interval"`
 	RecurrenceEndDate      time.Time   `json:"recurrence_end_date" example:"2025-10-01T10:00:00Z"`
 	ParticipantEmployeeIDs []uuid.UUID `json:"participant_employee_ids"`

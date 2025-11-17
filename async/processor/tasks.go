@@ -168,10 +168,6 @@ func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task)
 		return fmt.Errorf("failed to get appointment template: %v", err)
 	}
 
-	if appointemntTemplate.RecurrenceType == nil {
-		return fmt.Errorf("invalid appointment template: missing recurrence type: %w", asynq.SkipRetry)
-	}
-
 	if !appointemntTemplate.StartTime.Valid || !appointemntTemplate.EndTime.Valid {
 		return fmt.Errorf("invalid appointment template: missing start or end time: %w", asynq.SkipRetry)
 	}
@@ -179,7 +175,7 @@ func (c *AsynqServer) ProcessAppointmentTask(ctx context.Context, t *asynq.Task)
 	startTime := appointemntTemplate.StartTime.Time
 	endTime := appointemntTemplate.EndTime.Time
 	duration := endTime.Sub(startTime)
-	recurenceType := *appointemntTemplate.RecurrenceType
+	recurenceType := appointemntTemplate.RecurrenceType
 	interval := int(*appointemntTemplate.RecurrenceInterval)
 	endDate := time.Time{}
 	hasEndDate := appointemntTemplate.RecurrenceEndDate.Valid
@@ -320,10 +316,10 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 			ClientFirstName:    contract.ClientFirstName,
 			ClientLastName:     contract.ClientLastName,
 			ContractID:         contract.ID,
-			CareType:           contract.CareType,
+			CareType:           string(contract.CareType),
 			ContractStart:      contract.StartDate.Time,
 			ContractEnd:        contract.EndDate.Time,
-			ReminderType:       reminder.ReminderType,
+			ReminderType:       string(reminder.ReminderType),
 			LastReminderSentAt: &reminder.ReminderSentAt.Time,
 		}
 

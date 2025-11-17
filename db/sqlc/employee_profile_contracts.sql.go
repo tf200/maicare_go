@@ -25,12 +25,12 @@ RETURNING id, user_id, first_name, last_name, position, department, employee_num
 `
 
 type AddEmployeeContractDetailsParams struct {
-	ID                uuid.UUID   `json:"id"`
-	ContractHours     *float64    `json:"contract_hours"`
-	ContractStartDate pgtype.Date `json:"contract_start_date"`
-	ContractEndDate   pgtype.Date `json:"contract_end_date"`
-	ContractType      *string     `json:"contract_type"`
-	ContractRate      *float64    `json:"contract_rate"`
+	ID                uuid.UUID                    `json:"id"`
+	ContractHours     *float64                     `json:"contract_hours"`
+	ContractStartDate pgtype.Date                  `json:"contract_start_date"`
+	ContractEndDate   pgtype.Date                  `json:"contract_end_date"`
+	ContractType      NullEmployeeContractTypeEnum `json:"contract_type"`
+	ContractRate      *float64                     `json:"contract_rate"`
 }
 
 func (q *Queries) AddEmployeeContractDetails(ctx context.Context, arg AddEmployeeContractDetailsParams) (EmployeeProfile, error) {
@@ -88,12 +88,12 @@ WHERE id = $1
 `
 
 type GetEmployeeContractDetailsRow struct {
-	ContractHours     *float64    `json:"contract_hours"`
-	ContractStartDate pgtype.Date `json:"contract_start_date"`
-	ContractEndDate   pgtype.Date `json:"contract_end_date"`
-	ContractType      *string     `json:"contract_type"`
-	ContractRate      *float64    `json:"contract_rate"`
-	IsSubcontractor   *bool       `json:"is_subcontractor"`
+	ContractHours     *float64                 `json:"contract_hours"`
+	ContractStartDate pgtype.Date              `json:"contract_start_date"`
+	ContractEndDate   pgtype.Date              `json:"contract_end_date"`
+	ContractType      EmployeeContractTypeEnum `json:"contract_type"`
+	ContractRate      *float64                 `json:"contract_rate"`
+	IsSubcontractor   *bool                    `json:"is_subcontractor"`
 }
 
 func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error) {
@@ -120,9 +120,9 @@ RETURNING id, user_id, first_name, last_name, position, department, employee_num
 `
 
 type UpdateEmployeeIsSubcontractorParams struct {
-	ID              uuid.UUID `json:"id"`
-	IsSubcontractor *bool     `json:"is_subcontractor"`
-	ContractType    *string   `json:"contract_type"`
+	ID              uuid.UUID                `json:"id"`
+	IsSubcontractor *bool                    `json:"is_subcontractor"`
+	ContractType    EmployeeContractTypeEnum `json:"contract_type"`
 }
 
 func (q *Queries) UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error) {

@@ -106,7 +106,7 @@ func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocume
 		result.ClientDocument, err = q.CreateClientDocument(ctx, CreateClientDocumentParams{
 			ClientID:       arg.ClientID,
 			AttachmentUuid: &result.Attachment.Uuid,
-			Label:          arg.Label,
+			Label:          ClientDocumentLabelEnum(arg.Label),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create client details: %w", err)

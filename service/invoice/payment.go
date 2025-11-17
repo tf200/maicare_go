@@ -7,8 +7,6 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
-	"maicare_go/util"
-
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
@@ -41,8 +39,8 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 
 	paymentParams := db.CreatePaymentParams{
 		InvoiceID:        invoiceID,
-		PaymentMethod:    req.PaymentMethod,
-		PaymentStatus:    req.PaymentStatus,
+		PaymentMethod:    db.PaymentMethodEnum(req.PaymentMethod),
+		PaymentStatus:    db.PaymentStatusEnum(req.PaymentStatus),
 		Amount:           req.Amount,
 		PaymentDate:      pgtype.Date{Time: req.PaymentDate, Valid: true},
 		PaymentReference: req.PaymentReference,
@@ -56,7 +54,7 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 		return nil, fmt.Errorf("failed to create payment: %v", err)
 	}
 
-	var newInvoiceStatus InvoiceStatus
+	var newInvoiceStatus db.InvoiceStatusEnum
 	invoiceStatusChanged := false
 
 	if req.PaymentStatus == string(PaymentStatusCompleted) {
@@ -72,11 +70,11 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
 		}
 
-		if newInvoiceStatus != InvoiceStatus(getInvoice.Status) {
+		if newInvoiceStatus != db.InvoiceStatusEnum(getInvoice.Status) {
 			invoiceStatusChanged = true
 			_, err = qtx.UpdateInvoiceStatus(ctx, db.UpdateInvoiceStatusParams{
 				ID:     invoiceID,
-				Status: string(newInvoiceStatus),
+				Status: newInvoiceStatus,
 			})
 			if err != nil {
 				s.Logger.LogBusinessEvent(logger.LogLevelError, "CreatePayment", "Failed to update invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -94,8 +92,8 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 	response := &CreatePaymentResponse{
 		PaymentID:            payment.ID,
 		InvoiceID:            payment.InvoiceID,
-		PaymentMethod:        payment.PaymentMethod,
-		PaymentStatus:        payment.PaymentStatus,
+		PaymentMethod:        string(payment.PaymentMethod),
+		PaymentStatus:        string(payment.PaymentStatus),
 		Amount:               payment.Amount,
 		PaymentDate:          payment.PaymentDate.Time,
 		PaymentReference:     payment.PaymentReference,
@@ -120,8 +118,8 @@ func (s *invoiceService) ListPayments(ctx context.Context, invoiceID int64) ([]L
 		response = append(response, ListPaymentsResponse{
 			PaymentID:           payment.ID,
 			InvoiceID:           payment.InvoiceID,
-			PaymentMethod:       payment.PaymentMethod,
-			PaymentStatus:       payment.PaymentStatus,
+			PaymentMethod:       string(payment.PaymentMethod),
+			PaymentStatus:       string(payment.PaymentStatus),
 			Amount:              payment.Amount,
 			PaymentDate:         payment.PaymentDate.Time,
 			PaymentReference:    payment.PaymentReference,
@@ -147,8 +145,8 @@ func (s *invoiceService) GetPaymentByID(ctx context.Context, paymentID int64) (*
 	response := &GetPaymentByIDResponse{
 		PaymentID:           payment.ID,
 		InvoiceID:           payment.InvoiceID,
-		PaymentMethod:       payment.PaymentMethod,
-		PaymentStatus:       payment.PaymentStatus,
+		PaymentMethod:       string(payment.PaymentMethod),
+		PaymentStatus:       string(payment.PaymentStatus),
 		Amount:              payment.Amount,
 		PaymentDate:         payment.PaymentDate.Time,
 		PaymentReference:    payment.PaymentReference,
@@ -189,9 +187,19 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 
 	originalInvoiceStatus := currentPayment.InvoiceStatus
 	updateParams := db.UpdatePaymentParams{
-		ID:               paymentID,
-		PaymentMethod:    req.PaymentMethod,
-		PaymentStatus:    req.PaymentStatus,
+		ID: paymentID,
+		PaymentMethod: func() db.NullPaymentMethodEnum {
+			if req.PaymentMethod != nil {
+				return db.NullPaymentMethodEnum{PaymentMethodEnum: db.PaymentMethodEnum(*req.PaymentMethod), Valid: true}
+			}
+			return db.NullPaymentMethodEnum{Valid: false}
+		}(),
+		PaymentStatus: func() db.NullPaymentStatusEnum {
+			if req.PaymentStatus != nil {
+				return db.NullPaymentStatusEnum{PaymentStatusEnum: db.PaymentStatusEnum(*req.PaymentStatus), Valid: true}
+			}
+			return db.NullPaymentStatusEnum{Valid: false}
+		}(),
 		Amount:           req.Amount,
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,
@@ -207,11 +215,11 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 		return nil, fmt.Errorf("failed to update payment: %v", err)
 	}
 
-	var newInvoiceStatus string
+	var newInvoiceStatus db.InvoiceStatusEnum
 	var statusChanged bool = false
 
-	if updatedPayment.PaymentStatus == string(PaymentStatusCompleted) ||
-		currentPayment.PaymentStatus == string(PaymentStatusCompleted) {
+	if updatedPayment.PaymentStatus == db.PaymentStatusEnumCompleted ||
+		currentPayment.PaymentStatus == db.PaymentStatusEnumCompleted {
 		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
 		if err != nil {
 			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdatePayment", "Failed to get total paid amount", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -224,10 +232,10 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
 		}
 
-		if string(newStatus) != originalInvoiceStatus {
+		if newStatus != originalInvoiceStatus {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: util.StringPtr(string(newStatus)),
+				Status: db.NullInvoiceStatusEnum{InvoiceStatusEnum: newStatus, Valid: true},
 			})
 			if err != nil {
 				s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdatePayment", "Failed to update invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -251,16 +259,16 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 	response := &UpdatePaymentResponse{
 		PaymentID:             updatedPayment.ID,
 		InvoiceID:             updatedPayment.InvoiceID,
-		PaymentMethod:         updatedPayment.PaymentMethod,
-		PaymentStatus:         updatedPayment.PaymentStatus,
+		PaymentMethod:         string(updatedPayment.PaymentMethod),
+		PaymentStatus:         string(updatedPayment.PaymentStatus),
 		Amount:                updatedPayment.Amount,
 		PaymentDate:           updatedPayment.PaymentDate.Time,
 		PaymentReference:      updatedPayment.PaymentReference,
 		Notes:                 updatedPayment.Notes,
 		RecordedBy:            updatedPayment.RecordedBy,
 		InvoiceStatusChanged:  statusChanged,
-		CurrentInvoiceStatus:  newInvoiceStatus,
-		PreviousInvoiceStatus: originalInvoiceStatus,
+		CurrentInvoiceStatus:  string(newInvoiceStatus),
+		PreviousInvoiceStatus: string(originalInvoiceStatus),
 	}
 
 	return response, nil
@@ -299,10 +307,10 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 		return nil, fmt.Errorf("failed to delete payment: %v", err)
 	}
 
-	var newInvoiceStatus string
+	var newInvoiceStatus db.InvoiceStatusEnum
 	var statusChanged bool = false
 
-	if deletedPayment.PaymentStatus == string(PaymentStatusCompleted) {
+	if deletedPayment.PaymentStatus == db.PaymentStatusEnumCompleted {
 		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
 		if err != nil {
 			s.Logger.LogBusinessEvent(logger.LogLevelError, "DeletePayment", "Failed to get total paid amount", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -315,10 +323,10 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
 		}
 
-		if string(newStatus) != originalInvoiceStatus {
+		if newStatus != originalInvoiceStatus {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: util.StringPtr(string(newStatus)),
+				Status: db.NullInvoiceStatusEnum{InvoiceStatusEnum: newStatus, Valid: true},
 			})
 			if err != nil {
 				s.Logger.LogBusinessEvent(logger.LogLevelError, "DeletePayment", "Failed to update invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
@@ -343,29 +351,29 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 		DeletedPaymentID:      deletedPayment.ID,
 		InvoiceID:             deletedPayment.InvoiceID,
 		DeletedAmount:         deletedPayment.Amount,
-		DeletedPaymentStatus:  deletedPayment.PaymentStatus,
+		DeletedPaymentStatus:  string(deletedPayment.PaymentStatus),
 		InvoiceStatusChanged:  statusChanged,
-		CurrentInvoiceStatus:  newInvoiceStatus,
-		PreviousInvoiceStatus: originalInvoiceStatus,
+		CurrentInvoiceStatus:  string(newInvoiceStatus),
+		PreviousInvoiceStatus: string(originalInvoiceStatus),
 	}, nil
 }
 
-func DetermineInvoiceStatus(invoiceTotal, totalPaid float64) (InvoiceStatus, error) {
+func DetermineInvoiceStatus(invoiceTotal, totalPaid float64) (db.InvoiceStatusEnum, error) {
 	diffrence := totalPaid - invoiceTotal
 
 	if totalPaid <= PAYMENT_TOLERANCE {
-		return InvoiceStatusOutstanding, nil
+		return db.InvoiceStatusEnumOutstanding, nil
 	}
 
 	if diffrence < -PAYMENT_TOLERANCE {
-		return InvoiceStatusPartiallyPaid, nil
+		return db.InvoiceStatusEnumPartiallyPaid, nil
 	}
 
 	if diffrence >= -PAYMENT_TOLERANCE && diffrence <= PAYMENT_TOLERANCE {
-		return InvoiceStatusPaid, nil
+		return db.InvoiceStatusEnumPaid, nil
 	}
 	if diffrence > PAYMENT_TOLERANCE {
-		return InvoiceStatusOverpaid, nil
+		return db.InvoiceStatusEnumOverpaid, nil
 	}
 
 	return "", fmt.Errorf("could not determine invoice status for totalPaid: %f, invoiceTotal: %f", totalPaid, invoiceTotal)

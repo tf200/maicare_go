@@ -16,7 +16,7 @@ type WorkingHourItem struct {
 	Location      string    `json:"location"`
 	LocationID    *int64    `json:"location_id,omitempty"`
 	Description   *string   `json:"description,omitempty"`
-	Status        *string   `json:"status,omitempty"`
+	Status        *string   `json:"status"`
 	Color         string    `json:"color"`
 }
 

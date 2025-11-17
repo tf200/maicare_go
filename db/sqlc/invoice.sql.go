@@ -31,17 +31,17 @@ INSERT INTO invoice (
 `
 
 type CreateInvoiceParams struct {
-	InvoiceNumber   string      `json:"invoice_number"`
-	InvoiceSequence int64       `json:"invoice_sequence"`
-	DueDate         pgtype.Date `json:"due_date"`
-	IssueDate       pgtype.Date `json:"issue_date"`
-	InvoiceDetails  []byte      `json:"invoice_details"`
-	TotalAmount     float64     `json:"total_amount"`
-	ExtraContent    []byte      `json:"extra_content"`
-	ClientID        uuid.UUID   `json:"client_id"`
-	SenderID        *int64      `json:"sender_id"`
-	WarningCount    int32       `json:"warning_count"`
-	InvoiceType     string      `json:"invoice_type"`
+	InvoiceNumber   string          `json:"invoice_number"`
+	InvoiceSequence int64           `json:"invoice_sequence"`
+	DueDate         pgtype.Date     `json:"due_date"`
+	IssueDate       pgtype.Date     `json:"issue_date"`
+	InvoiceDetails  []byte          `json:"invoice_details"`
+	TotalAmount     float64         `json:"total_amount"`
+	ExtraContent    []byte          `json:"extra_content"`
+	ClientID        uuid.UUID       `json:"client_id"`
+	SenderID        *int64          `json:"sender_id"`
+	WarningCount    int32           `json:"warning_count"`
+	InvoiceType     InvoiceTypeEnum `json:"invoice_type"`
 }
 
 func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error) {
@@ -98,14 +98,14 @@ INSERT INTO invoice_payment_history (
 `
 
 type CreatePaymentParams struct {
-	InvoiceID        int64       `json:"invoice_id"`
-	PaymentMethod    *string     `json:"payment_method"`
-	PaymentStatus    string      `json:"payment_status"`
-	Amount           float64     `json:"amount"`
-	PaymentDate      pgtype.Date `json:"payment_date"`
-	PaymentReference *string     `json:"payment_reference"`
-	Notes            *string     `json:"notes"`
-	RecordedBy       *uuid.UUID  `json:"recorded_by"`
+	InvoiceID        int64             `json:"invoice_id"`
+	PaymentMethod    PaymentMethodEnum `json:"payment_method"`
+	PaymentStatus    PaymentStatusEnum `json:"payment_status"`
+	Amount           float64           `json:"amount"`
+	PaymentDate      pgtype.Date       `json:"payment_date"`
+	PaymentReference *string           `json:"payment_reference"`
+	Notes            *string           `json:"notes"`
+	RecordedBy       *uuid.UUID        `json:"recorded_by"`
 }
 
 // ////////////////////// Payments //////////////////////
@@ -214,8 +214,8 @@ type GetInvoiceRow struct {
 	InvoiceSequence   int64              `json:"invoice_sequence"`
 	IssueDate         pgtype.Date        `json:"issue_date"`
 	DueDate           pgtype.Date        `json:"due_date"`
-	Status            string             `json:"status"`
-	InvoiceType       string             `json:"invoice_type"`
+	Status            InvoiceStatusEnum  `json:"status"`
+	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
 	OriginalInvoiceID *int64             `json:"original_invoice_id"`
 	InvoiceDetails    []byte             `json:"invoice_details"`
 	TotalAmount       float64            `json:"total_amount"`
@@ -285,16 +285,16 @@ ORDER BY
 `
 
 type GetInvoiceAuditLogsRow struct {
-	AuditID            int64              `json:"audit_id"`
-	InvoiceID          int64              `json:"invoice_id"`
-	Operation          string             `json:"operation"`
-	ChangedBy          *uuid.UUID         `json:"changed_by"`
-	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
-	OldValues          []byte             `json:"old_values"`
-	NewValues          []byte             `json:"new_values"`
-	ChangedFields      []string           `json:"changed_fields"`
-	ChangedByFirstName *string            `json:"changed_by_first_name"`
-	ChangedByLastName  *string            `json:"changed_by_last_name"`
+	AuditID            int64                     `json:"audit_id"`
+	InvoiceID          int64                     `json:"invoice_id"`
+	Operation          InvoiceAuditOperationEnum `json:"operation"`
+	ChangedBy          *uuid.UUID                `json:"changed_by"`
+	ChangedAt          pgtype.Timestamptz        `json:"changed_at"`
+	OldValues          []byte                    `json:"old_values"`
+	NewValues          []byte                    `json:"new_values"`
+	ChangedFields      []string                  `json:"changed_fields"`
+	ChangedByFirstName *string                   `json:"changed_by_first_name"`
+	ChangedByLastName  *string                   `json:"changed_by_last_name"`
 }
 
 func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]GetInvoiceAuditLogsRow, error) {
@@ -371,8 +371,8 @@ LIMIT 1
 type GetPaymentRow struct {
 	ID                  int64              `json:"id"`
 	InvoiceID           int64              `json:"invoice_id"`
-	PaymentMethod       *string            `json:"payment_method"`
-	PaymentStatus       string             `json:"payment_status"`
+	PaymentMethod       PaymentMethodEnum  `json:"payment_method"`
+	PaymentStatus       PaymentStatusEnum  `json:"payment_status"`
 	Amount              float64            `json:"amount"`
 	PaymentDate         pgtype.Date        `json:"payment_date"`
 	PaymentReference    *string            `json:"payment_reference"`
@@ -418,8 +418,8 @@ WHERE p.id = $1
 type GetPaymentWithInvoiceRow struct {
 	ID                 int64              `json:"id"`
 	InvoiceID          int64              `json:"invoice_id"`
-	PaymentMethod      *string            `json:"payment_method"`
-	PaymentStatus      string             `json:"payment_status"`
+	PaymentMethod      PaymentMethodEnum  `json:"payment_method"`
+	PaymentStatus      PaymentStatusEnum  `json:"payment_status"`
 	Amount             float64            `json:"amount"`
 	PaymentDate        pgtype.Date        `json:"payment_date"`
 	PaymentReference   *string            `json:"payment_reference"`
@@ -428,7 +428,7 @@ type GetPaymentWithInvoiceRow struct {
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
 	InvoiceTotalAmount float64            `json:"invoice_total_amount"`
-	InvoiceStatus      string             `json:"invoice_status"`
+	InvoiceStatus      InvoiceStatusEnum  `json:"invoice_status"`
 }
 
 func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id int64) (GetPaymentWithInvoiceRow, error) {
@@ -528,13 +528,13 @@ OFFSET $6
 `
 
 type ListInvoicesParams struct {
-	ClientID  *uuid.UUID  `json:"client_id"`
-	SenderID  *int64      `json:"sender_id"`
-	Status    *string     `json:"status"`
-	StartDate pgtype.Date `json:"start_date"`
-	EndDate   pgtype.Date `json:"end_date"`
-	Offset    int32       `json:"offset"`
-	Limit     int32       `json:"limit"`
+	ClientID  *uuid.UUID            `json:"client_id"`
+	SenderID  *int64                `json:"sender_id"`
+	Status    NullInvoiceStatusEnum `json:"status"`
+	StartDate pgtype.Date           `json:"start_date"`
+	EndDate   pgtype.Date           `json:"end_date"`
+	Offset    int32                 `json:"offset"`
+	Limit     int32                 `json:"limit"`
 }
 
 type ListInvoicesRow struct {
@@ -543,8 +543,8 @@ type ListInvoicesRow struct {
 	InvoiceSequence   int64              `json:"invoice_sequence"`
 	IssueDate         pgtype.Date        `json:"issue_date"`
 	DueDate           pgtype.Date        `json:"due_date"`
-	Status            string             `json:"status"`
-	InvoiceType       string             `json:"invoice_type"`
+	Status            InvoiceStatusEnum  `json:"status"`
+	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
 	OriginalInvoiceID *int64             `json:"original_invoice_id"`
 	InvoiceDetails    []byte             `json:"invoice_details"`
 	TotalAmount       float64            `json:"total_amount"`
@@ -629,8 +629,8 @@ ORDER BY
 type ListPaymentsRow struct {
 	ID                  int64              `json:"id"`
 	InvoiceID           int64              `json:"invoice_id"`
-	PaymentMethod       *string            `json:"payment_method"`
-	PaymentStatus       string             `json:"payment_status"`
+	PaymentMethod       PaymentMethodEnum  `json:"payment_method"`
+	PaymentStatus       PaymentStatusEnum  `json:"payment_status"`
 	Amount              float64            `json:"amount"`
 	PaymentDate         pgtype.Date        `json:"payment_date"`
 	PaymentReference    *string            `json:"payment_reference"`
@@ -691,14 +691,14 @@ RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, in
 `
 
 type UpdateInvoiceParams struct {
-	ID             int64       `json:"id"`
-	IssueDate      pgtype.Date `json:"issue_date"`
-	DueDate        pgtype.Date `json:"due_date"`
-	InvoiceDetails []byte      `json:"invoice_details"`
-	TotalAmount    *float64    `json:"total_amount"`
-	ExtraContent   []byte      `json:"extra_content"`
-	Status         *string     `json:"status"`
-	WarningCount   *int32      `json:"warning_count"`
+	ID             int64                 `json:"id"`
+	IssueDate      pgtype.Date           `json:"issue_date"`
+	DueDate        pgtype.Date           `json:"due_date"`
+	InvoiceDetails []byte                `json:"invoice_details"`
+	TotalAmount    *float64              `json:"total_amount"`
+	ExtraContent   []byte                `json:"extra_content"`
+	Status         NullInvoiceStatusEnum `json:"status"`
+	WarningCount   *int32                `json:"warning_count"`
 }
 
 func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error) {
@@ -745,8 +745,8 @@ RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, in
 `
 
 type UpdateInvoiceStatusParams struct {
-	ID     int64  `json:"id"`
-	Status string `json:"status"`
+	ID     int64             `json:"id"`
+	Status InvoiceStatusEnum `json:"status"`
 }
 
 func (q *Queries) UpdateInvoiceStatus(ctx context.Context, arg UpdateInvoiceStatusParams) (Invoice, error) {
@@ -790,14 +790,14 @@ RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, 
 `
 
 type UpdatePaymentParams struct {
-	PaymentMethod    *string     `json:"payment_method"`
-	PaymentStatus    *string     `json:"payment_status"`
-	Amount           *float64    `json:"amount"`
-	PaymentDate      pgtype.Date `json:"payment_date"`
-	PaymentReference *string     `json:"payment_reference"`
-	Notes            *string     `json:"notes"`
-	RecordedBy       *uuid.UUID  `json:"recorded_by"`
-	ID               int64       `json:"id"`
+	PaymentMethod    NullPaymentMethodEnum `json:"payment_method"`
+	PaymentStatus    NullPaymentStatusEnum `json:"payment_status"`
+	Amount           *float64              `json:"amount"`
+	PaymentDate      pgtype.Date           `json:"payment_date"`
+	PaymentReference *string               `json:"payment_reference"`
+	Notes            *string               `json:"notes"`
+	RecordedBy       *uuid.UUID            `json:"recorded_by"`
+	ID               int64                 `json:"id"`
 }
 
 func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (InvoicePaymentHistory, error) {

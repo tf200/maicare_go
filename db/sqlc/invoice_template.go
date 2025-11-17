@@ -101,9 +101,9 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 			for _, item := range items {
 				switch item.SourceColumn {
 				case TableContract.Columns.FinancingAct:
-					extraContent[item.Description] = contract.FinancingAct
+					extraContent[item.Description] = string(contract.FinancingAct)
 				case TableContract.Columns.FinancingOption:
-					extraContent[item.Description] = contract.FinancingOption
+					extraContent[item.Description] = string(contract.FinancingOption)
 				}
 			}
 		}

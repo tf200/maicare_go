@@ -72,3 +72,4 @@ DROP TABLE IF EXISTS "public".youth_care_intake CASCADE;
 DROP TABLE IF EXISTS "public".data_sharing_statement CASCADE;
 DROP TABLE IF EXISTS "public".template_items CASCADE;
 DROP TABLE IF EXISTS audit;
+DROP TYPE IF EXISTS "public".client_location_transfer CASCADE;

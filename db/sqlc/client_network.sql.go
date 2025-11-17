@@ -181,17 +181,17 @@ INSERT INTO client_emergency_contact (
 `
 
 type CreateEmemrgencyContactParams struct {
-	ClientID         uuid.UUID `json:"client_id"`
-	FirstName        *string   `json:"first_name"`
-	LastName         *string   `json:"last_name"`
-	Email            *string   `json:"email"`
-	PhoneNumber      *string   `json:"phone_number"`
-	Address          *string   `json:"address"`
-	Relationship     *string   `json:"relationship"`
-	RelationStatus   *string   `json:"relation_status"`
-	MedicalReports   bool      `json:"medical_reports"`
-	IncidentsReports bool      `json:"incidents_reports"`
-	GoalsReports     bool      `json:"goals_reports"`
+	ClientID         uuid.UUID              `json:"client_id"`
+	FirstName        *string                `json:"first_name"`
+	LastName         *string                `json:"last_name"`
+	Email            *string                `json:"email"`
+	PhoneNumber      *string                `json:"phone_number"`
+	Address          *string                `json:"address"`
+	Relationship     *string                `json:"relationship"`
+	RelationStatus   NullRelationStatusEnum `json:"relation_status"`
+	MedicalReports   bool                   `json:"medical_reports"`
+	IncidentsReports bool                   `json:"incidents_reports"`
+	GoalsReports     bool                   `json:"goals_reports"`
 }
 
 func (q *Queries) CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error) {
@@ -497,21 +497,21 @@ type ListEmergencyContactsParams struct {
 }
 
 type ListEmergencyContactsRow struct {
-	ID               int64              `json:"id"`
-	ClientID         uuid.UUID          `json:"client_id"`
-	FirstName        *string            `json:"first_name"`
-	LastName         *string            `json:"last_name"`
-	Email            *string            `json:"email"`
-	PhoneNumber      *string            `json:"phone_number"`
-	Address          *string            `json:"address"`
-	Relationship     *string            `json:"relationship"`
-	RelationStatus   *string            `json:"relation_status"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	IsVerified       bool               `json:"is_verified"`
-	MedicalReports   bool               `json:"medical_reports"`
-	IncidentsReports bool               `json:"incidents_reports"`
-	GoalsReports     bool               `json:"goals_reports"`
-	TotalCount       int64              `json:"total_count"`
+	ID               int64                  `json:"id"`
+	ClientID         uuid.UUID              `json:"client_id"`
+	FirstName        *string                `json:"first_name"`
+	LastName         *string                `json:"last_name"`
+	Email            *string                `json:"email"`
+	PhoneNumber      *string                `json:"phone_number"`
+	Address          *string                `json:"address"`
+	Relationship     *string                `json:"relationship"`
+	RelationStatus   NullRelationStatusEnum `json:"relation_status"`
+	CreatedAt        pgtype.Timestamptz     `json:"created_at"`
+	IsVerified       bool                   `json:"is_verified"`
+	MedicalReports   bool                   `json:"medical_reports"`
+	IncidentsReports bool                   `json:"incidents_reports"`
+	GoalsReports     bool                   `json:"goals_reports"`
+	TotalCount       int64                  `json:"total_count"`
 }
 
 func (q *Queries) ListEmergencyContacts(ctx context.Context, arg ListEmergencyContactsParams) ([]ListEmergencyContactsRow, error) {
@@ -609,17 +609,17 @@ RETURNING id, client_id, first_name, last_name, email, phone_number, address, re
 `
 
 type UpdateEmergencyContactParams struct {
-	ID               int64   `json:"id"`
-	FirstName        *string `json:"first_name"`
-	LastName         *string `json:"last_name"`
-	Email            *string `json:"email"`
-	PhoneNumber      *string `json:"phone_number"`
-	Address          *string `json:"address"`
-	Relationship     *string `json:"relationship"`
-	RelationStatus   *string `json:"relation_status"`
-	MedicalReports   *bool   `json:"medical_reports"`
-	IncidentsReports *bool   `json:"incidents_reports"`
-	GoalsReports     *bool   `json:"goals_reports"`
+	ID               int64                  `json:"id"`
+	FirstName        *string                `json:"first_name"`
+	LastName         *string                `json:"last_name"`
+	Email            *string                `json:"email"`
+	PhoneNumber      *string                `json:"phone_number"`
+	Address          *string                `json:"address"`
+	Relationship     *string                `json:"relationship"`
+	RelationStatus   NullRelationStatusEnum `json:"relation_status"`
+	MedicalReports   *bool                  `json:"medical_reports"`
+	IncidentsReports *bool                  `json:"incidents_reports"`
+	GoalsReports     *bool                  `json:"goals_reports"`
 }
 
 func (q *Queries) UpdateEmergencyContact(ctx context.Context, arg UpdateEmergencyContactParams) (ClientEmergencyContact, error) {

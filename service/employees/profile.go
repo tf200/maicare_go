@@ -47,9 +47,9 @@ func (s *employeeService) CreateEmployee(
 		}
 	}
 
-	contractType := "loondienst"
+	contractType := db.EmployeeContractTypeEnumLoondienst
 	if req.IsSubcontractor != nil && *req.IsSubcontractor {
-		contractType = "ZZP"
+		contractType = db.EmployeeContractTypeEnumZZP
 	}
 
 	employee, err := s.Store.CreateEmployeeWithAccountTx(
@@ -69,7 +69,7 @@ func (s *employeeService) CreateEmployee(
 				LocationID:                req.LocationID,
 				IsSubcontractor:           req.IsSubcontractor,
 				DateOfBirth:               pgtype.Date{Time: parsedDateOfBirth, Valid: true},
-				Gender:                    req.Gender,
+				Gender:                    db.EmployeeGenderEnum(req.Gender),
 				Email:                     req.Email,
 				PrivateEmailAddress:       req.PrivateEmailAddress,
 				AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
@@ -78,7 +78,7 @@ func (s *employeeService) CreateEmployee(
 				HomeTelephoneNumber:       req.HomeTelephoneNumber,
 				Position:                  req.Position,
 				Department:                req.Department,
-				ContractType:              &contractType,
+				ContractType:              contractType,
 			},
 			RoleID: req.RoleID,
 		},
@@ -101,7 +101,7 @@ func (s *employeeService) CreateEmployee(
 		LastName:                  employee.Employee.LastName,
 		IsSubcontractor:           employee.Employee.IsSubcontractor,
 		DateOfBirth:               employee.Employee.DateOfBirth.Time,
-		Gender:                    employee.Employee.Gender,
+		Gender:                    string(employee.Employee.Gender),
 		Email:                     employee.Employee.Email,
 		PrivateEmailAddress:       employee.Employee.PrivateEmailAddress,
 		AuthenticationPhoneNumber: employee.Employee.AuthenticationPhoneNumber,
@@ -179,7 +179,7 @@ func (s *employeeService) ListEmployees(
 			HomeTelephoneNumber:       employee.HomeTelephoneNumber,
 			CreatedAt:                 employee.CreatedAt.Time,
 			IsSubcontractor:           employee.IsSubcontractor,
-			Gender:                    employee.Gender,
+			Gender:                    string(employee.Gender),
 			LocationID:                employee.LocationID,
 			HasBorrowed:               employee.HasBorrowed,
 			OutOfService:              employee.OutOfService,
@@ -205,15 +205,15 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	employeeID uuid.UUID,
 	ctx context.Context,
 ) (*UpdateEmployeeIsSubcontractorResponse, error) {
-	contractType := "loondienst"
+	contractType := db.EmployeeContractTypeEnumLoondienst
 	if req.IsSubcontractor != nil && *req.IsSubcontractor {
-		contractType = "ZZP"
+		contractType = db.EmployeeContractTypeEnumZZP
 	}
 
 	emp, err := s.Store.UpdateEmployeeIsSubcontractor(ctx, db.UpdateEmployeeIsSubcontractorParams{
 		ID:              employeeID,
 		IsSubcontractor: req.IsSubcontractor,
-		ContractType:    &contractType,
+		ContractType:    contractType,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
@@ -229,7 +229,7 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	res := &UpdateEmployeeIsSubcontractorResponse{
 		ID:                emp.ID,
 		IsSubcontractor:   emp.IsSubcontractor,
-		ContractType:      emp.ContractType,
+		ContractType:      string(emp.ContractType),
 		ContractHours:     emp.ContractHours,
 		ContractStartDate: emp.ContractStartDate.Time,
 		ContractEndDate:   emp.ContractEndDate.Time,
@@ -328,7 +328,7 @@ func (s *employeeService) GetEmployeeProfileByID(
 		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
 		CreatedAt:                 employee.CreatedAt.Time,
 		IsSubcontractor:           employee.IsSubcontractor,
-		Gender:                    employee.Gender,
+		Gender:                    string(employee.Gender),
 		LocationID:                employee.LocationID,
 		HasBorrowed:               employee.HasBorrowed,
 		OutOfService:              employee.OutOfService,
@@ -384,11 +384,16 @@ func (s *employeeService) UpdateEmployeeProfile(
 		DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
 		HomeTelephoneNumber:       req.HomeTelephoneNumber,
 		IsSubcontractor:           req.IsSubcontractor,
-		Gender:                    req.Gender,
-		LocationID:                req.LocationID,
-		HasBorrowed:               req.HasBorrowed,
-		OutOfService:              req.OutOfService,
-		IsArchived:                req.IsArchived,
+		Gender: func() db.NullEmployeeGenderEnum {
+			if req.Gender == nil {
+				return db.NullEmployeeGenderEnum{EmployeeGenderEnum: db.EmployeeGenderEnum(*req.Gender), Valid: false}
+			}
+			return db.NullEmployeeGenderEnum{Valid: false}
+		}(),
+		LocationID:   req.LocationID,
+		HasBorrowed:  req.HasBorrowed,
+		OutOfService: req.OutOfService,
+		IsArchived:   req.IsArchived,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
@@ -419,7 +424,7 @@ func (s *employeeService) UpdateEmployeeProfile(
 		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
 		CreatedAt:                 employee.CreatedAt.Time,
 		IsSubcontractor:           employee.IsSubcontractor,
-		Gender:                    employee.Gender,
+		Gender:                    string(employee.Gender),
 		LocationID:                employee.LocationID,
 		HasBorrowed:               employee.HasBorrowed,
 		OutOfService:              employee.OutOfService,
