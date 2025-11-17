@@ -23,8 +23,8 @@ func (s *clientService) CreateProgressReport(ctx context.Context, req *CreatePro
 		Title:          req.Title,
 		Date:           pgtype.Timestamptz{Time: req.Date, Valid: true},
 		ReportText:     req.ReportText,
-		Type:           req.Type,
-		EmotionalState: req.EmotionalState,
+		Type:           db.ProgressReportTypeEnum(req.Type),
+		EmotionalState: db.EmotionalStateEnum(req.EmotionalState),
 	}
 
 	report, err := s.Store.CreateProgressReport(ctx, arg)
@@ -39,8 +39,8 @@ func (s *clientService) CreateProgressReport(ctx context.Context, req *CreatePro
 		Title:          report.Title,
 		ReportText:     report.ReportText,
 		EmployeeID:     report.EmployeeID,
-		Type:           report.Type,
-		EmotionalState: report.EmotionalState,
+		Type:           string(report.Type),
+		EmotionalState: string(report.EmotionalState),
 		CreatedAt:      report.CreatedAt.Time,
 	}, nil
 }
@@ -74,8 +74,8 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 			Title:                  report.Title,
 			ReportText:             report.ReportText,
 			EmployeeID:             report.EmployeeID,
-			Type:                   report.Type,
-			EmotionalState:         report.EmotionalState,
+			Type:                   string(report.Type),
+			EmotionalState:         string(report.EmotionalState),
 			CreatedAt:              report.CreatedAt.Time,
 			EmployeeFirstName:      report.EmployeeFirstName,
 			EmployeeLastName:       report.EmployeeLastName,
@@ -99,8 +99,8 @@ func (s *clientService) GetProgressReport(ctx context.Context, reportID int64) (
 		Title:                  report.Title,
 		ReportText:             report.ReportText,
 		EmployeeID:             report.EmployeeID,
-		Type:                   report.Type,
-		EmotionalState:         report.EmotionalState,
+		Type:                   string(report.Type),
+		EmotionalState:         string(report.EmotionalState),
 		CreatedAt:              report.CreatedAt.Time,
 		EmployeeFirstName:      report.EmployeeFirstName,
 		EmployeeLastName:       report.EmployeeLastName,
@@ -110,13 +110,23 @@ func (s *clientService) GetProgressReport(ctx context.Context, reportID int64) (
 
 func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error) {
 	arg := db.UpdateProgressReportParams{
-		ID:             reportID,
-		EmployeeID:     req.EmployeeID,
-		Title:          req.Title,
-		Date:           pgtype.Timestamptz{Time: req.Date, Valid: true},
-		ReportText:     req.ReportText,
-		Type:           req.Type,
-		EmotionalState: req.EmotionalState,
+		ID:         reportID,
+		EmployeeID: req.EmployeeID,
+		Title:      req.Title,
+		Date:       pgtype.Timestamptz{Time: req.Date, Valid: true},
+		ReportText: req.ReportText,
+		Type: func() db.NullProgressReportTypeEnum {
+			if req.Type != nil {
+				return db.NullProgressReportTypeEnum{ProgressReportTypeEnum: db.ProgressReportTypeEnum(*req.Type), Valid: true}
+			}
+			return db.NullProgressReportTypeEnum{Valid: false}
+		}(),
+		EmotionalState: func() db.NullEmotionalStateEnum {
+			if req.EmotionalState != nil {
+				return db.NullEmotionalStateEnum{EmotionalStateEnum: db.EmotionalStateEnum(*req.EmotionalState), Valid: true}
+			}
+			return db.NullEmotionalStateEnum{Valid: false}
+		}(),
 	}
 
 	report, err := s.Store.UpdateProgressReport(ctx, arg)
@@ -131,8 +141,8 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 		Title:          report.Title,
 		ReportText:     report.ReportText,
 		EmployeeID:     report.EmployeeID,
-		Type:           report.Type,
-		EmotionalState: report.EmotionalState,
+		Type:           string(report.Type),
+		EmotionalState: string(report.EmotionalState),
 		CreatedAt:      report.CreatedAt.Time,
 	}, nil
 }

@@ -30,16 +30,10 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 	overviewRes := []DischargeOverviewResponse{}
 	for _, item := range overview {
 		overviewRes = append(overviewRes, DischargeOverviewResponse{
-			ID:        item.ID,
-			FirstName: item.FirstName,
-			LastName:  item.LastName,
-			CurrentStatus: func() *string {
-				if item.CurrentStatus.Valid {
-					status := string(item.CurrentStatus.ClientStatusEnum)
-					return &status
-				}
-				return nil
-			}(),
+			ID:                 item.ID,
+			FirstName:          item.FirstName,
+			LastName:           item.LastName,
+			CurrentStatus:      string(item.CurrentStatus),
 			ScheduledStatus:    item.ScheduledStatus,
 			StatusChangeReason: item.StatusChangeReason,
 			StatusChangeDate:   item.StatusChangeDate.Time,

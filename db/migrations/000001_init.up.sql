@@ -432,7 +432,7 @@ CREATE TABLE client_details (
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
     "identity" BOOLEAN NOT NULL DEFAULT FALSE,
-    "status" client_status_enum NULL DEFAULT 'On Waiting List',
+    "status" client_status_enum NOT NULL DEFAULT 'On Waiting List',
     bsn VARCHAR(50) NULL,
     bsn_verified_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     source VARCHAR(100) NULL,
@@ -462,7 +462,7 @@ CREATE TABLE client_details (
     education_mentor_phone VARCHAR(50) NULL,
     education_mentor_email VARCHAR(255) NULL,
     education_additional_notes TEXT NULL,
-    education_level client_education_level_enum NULL DEFAULT 'none',
+    education_level client_education_level_enum NOT NULL DEFAULT 'none',
     -- Work
     work_currently_employed BOOLEAN NOT NULL DEFAULT FALSE,
     work_current_employer VARCHAR(255) NULL,

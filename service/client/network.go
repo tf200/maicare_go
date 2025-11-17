@@ -30,7 +30,7 @@ func (s *clientService) GetClientSender(ctx context.Context, clientID uuid.UUID)
 	}
 	response := &GetClientSenderResponse{
 		ID:           sender.ID,
-		Types:        sender.Types,
+		Types:        string(sender.Types),
 		Name:         sender.Name,
 		Address:      sender.Address,
 		PostalCode:   sender.PostalCode,
@@ -48,14 +48,22 @@ func (s *clientService) GetClientSender(ctx context.Context, clientID uuid.UUID)
 
 func (s *clientService) CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID uuid.UUID) (*CreateClientEmergencyContactResponse, error) {
 	arg := db.CreateEmemrgencyContactParams{
-		ClientID:         clientID,
-		FirstName:        req.FirstName,
-		LastName:         req.LastName,
-		Email:            req.Email,
-		PhoneNumber:      req.PhoneNumber,
-		Address:          req.Address,
-		Relationship:     req.Relationship,
-		RelationStatus:   req.RelationStatus,
+		ClientID:     clientID,
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		Email:        req.Email,
+		PhoneNumber:  req.PhoneNumber,
+		Address:      req.Address,
+		Relationship: req.Relationship,
+		RelationStatus: func() db.NullRelationStatusEnum {
+			if req.RelationStatus != nil {
+				return db.NullRelationStatusEnum{
+					RelationStatusEnum: db.RelationStatusEnum(*req.RelationStatus),
+					Valid:              true,
+				}
+			}
+			return db.NullRelationStatusEnum{Valid: false}
+		}(),
 		MedicalReports:   req.MedicalReports,
 		IncidentsReports: req.IncidentsReports,
 		GoalsReports:     req.GoalsReports,
@@ -67,15 +75,21 @@ func (s *clientService) CreateClientEmergencyContact(ctx context.Context, req Cr
 	}
 
 	response := &CreateClientEmergencyContactResponse{
-		ID:               clientEmergencyContact.ID,
-		ClientID:         clientEmergencyContact.ClientID,
-		FirstName:        clientEmergencyContact.FirstName,
-		LastName:         clientEmergencyContact.LastName,
-		Email:            clientEmergencyContact.Email,
-		PhoneNumber:      clientEmergencyContact.PhoneNumber,
-		Address:          clientEmergencyContact.Address,
-		Relationship:     clientEmergencyContact.Relationship,
-		RelationStatus:   clientEmergencyContact.RelationStatus,
+		ID:           clientEmergencyContact.ID,
+		ClientID:     clientEmergencyContact.ClientID,
+		FirstName:    clientEmergencyContact.FirstName,
+		LastName:     clientEmergencyContact.LastName,
+		Email:        clientEmergencyContact.Email,
+		PhoneNumber:  clientEmergencyContact.PhoneNumber,
+		Address:      clientEmergencyContact.Address,
+		Relationship: clientEmergencyContact.Relationship,
+		RelationStatus: func() *string {
+			if clientEmergencyContact.RelationStatus.Valid {
+				rs := string(clientEmergencyContact.RelationStatus.RelationStatusEnum)
+				return &rs
+			}
+			return nil
+		}(),
 		CreatedAt:        clientEmergencyContact.CreatedAt.Time,
 		IsVerified:       clientEmergencyContact.IsVerified,
 		MedicalReports:   clientEmergencyContact.MedicalReports,
@@ -107,15 +121,21 @@ func (s *clientService) ListClientEmergencyContacts(ctx *gin.Context, req ListCl
 	var results []ListClientEmergencyContactsResponse
 	for _, contact := range contacts {
 		results = append(results, ListClientEmergencyContactsResponse{
-			ID:               contact.ID,
-			ClientID:         contact.ClientID,
-			FirstName:        contact.FirstName,
-			LastName:         contact.LastName,
-			Email:            contact.Email,
-			PhoneNumber:      contact.PhoneNumber,
-			Address:          contact.Address,
-			Relationship:     contact.Relationship,
-			RelationStatus:   contact.RelationStatus,
+			ID:           contact.ID,
+			ClientID:     contact.ClientID,
+			FirstName:    contact.FirstName,
+			LastName:     contact.LastName,
+			Email:        contact.Email,
+			PhoneNumber:  contact.PhoneNumber,
+			Address:      contact.Address,
+			Relationship: contact.Relationship,
+			RelationStatus: func() *string {
+				if contact.RelationStatus.Valid {
+					rs := string(contact.RelationStatus.RelationStatusEnum)
+					return &rs
+				}
+				return nil
+			}(),
 			CreatedAt:        contact.CreatedAt.Time,
 			IsVerified:       contact.IsVerified,
 			MedicalReports:   contact.MedicalReports,
@@ -136,15 +156,21 @@ func (s *clientService) GetClientEmergencyContact(ctx context.Context, contactID
 	}
 
 	response := &GetClientEmergencyContactResponse{
-		ID:               contact.ID,
-		ClientID:         contact.ClientID,
-		FirstName:        contact.FirstName,
-		LastName:         contact.LastName,
-		Email:            contact.Email,
-		PhoneNumber:      contact.PhoneNumber,
-		Address:          contact.Address,
-		Relationship:     contact.Relationship,
-		RelationStatus:   contact.RelationStatus,
+		ID:           contact.ID,
+		ClientID:     contact.ClientID,
+		FirstName:    contact.FirstName,
+		LastName:     contact.LastName,
+		Email:        contact.Email,
+		PhoneNumber:  contact.PhoneNumber,
+		Address:      contact.Address,
+		Relationship: contact.Relationship,
+		RelationStatus: func() *string {
+			if contact.RelationStatus.Valid {
+				rs := string(contact.RelationStatus.RelationStatusEnum)
+				return &rs
+			}
+			return nil
+		}(),
 		CreatedAt:        contact.CreatedAt.Time,
 		IsVerified:       contact.IsVerified,
 		MedicalReports:   contact.MedicalReports,
@@ -156,13 +182,21 @@ func (s *clientService) GetClientEmergencyContact(ctx context.Context, contactID
 
 func (s *clientService) UpdateClientEmergencyContact(ctx context.Context, req UpdateClientEmergencyContactParams, contactID int64) (*UpdateClientEmergencyContactResponse, error) {
 	arg := db.UpdateEmergencyContactParams{
-		FirstName:        req.FirstName,
-		LastName:         req.LastName,
-		Email:            req.Email,
-		PhoneNumber:      req.PhoneNumber,
-		Address:          req.Address,
-		Relationship:     req.Relationship,
-		RelationStatus:   req.RelationStatus,
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		Email:        req.Email,
+		PhoneNumber:  req.PhoneNumber,
+		Address:      req.Address,
+		Relationship: req.Relationship,
+		RelationStatus: func() db.NullRelationStatusEnum {
+			if req.RelationStatus != nil {
+				return db.NullRelationStatusEnum{
+					RelationStatusEnum: db.RelationStatusEnum(*req.RelationStatus),
+					Valid:              true,
+				}
+			}
+			return db.NullRelationStatusEnum{Valid: false}
+		}(),
 		MedicalReports:   req.MedicalReports,
 		IncidentsReports: req.IncidentsReports,
 		GoalsReports:     req.GoalsReports,
@@ -175,15 +209,21 @@ func (s *clientService) UpdateClientEmergencyContact(ctx context.Context, req Up
 	}
 
 	response := &UpdateClientEmergencyContactResponse{
-		ID:               clientEmergencyContact.ID,
-		ClientID:         clientEmergencyContact.ClientID,
-		FirstName:        clientEmergencyContact.FirstName,
-		LastName:         clientEmergencyContact.LastName,
-		Email:            clientEmergencyContact.Email,
-		PhoneNumber:      clientEmergencyContact.PhoneNumber,
-		Address:          clientEmergencyContact.Address,
-		Relationship:     clientEmergencyContact.Relationship,
-		RelationStatus:   clientEmergencyContact.RelationStatus,
+		ID:           clientEmergencyContact.ID,
+		ClientID:     clientEmergencyContact.ClientID,
+		FirstName:    clientEmergencyContact.FirstName,
+		LastName:     clientEmergencyContact.LastName,
+		Email:        clientEmergencyContact.Email,
+		PhoneNumber:  clientEmergencyContact.PhoneNumber,
+		Address:      clientEmergencyContact.Address,
+		Relationship: clientEmergencyContact.Relationship,
+		RelationStatus: func() *string {
+			if clientEmergencyContact.RelationStatus.Valid {
+				rs := string(clientEmergencyContact.RelationStatus.RelationStatusEnum)
+				return &rs
+			}
+			return nil
+		}(),
 		CreatedAt:        clientEmergencyContact.CreatedAt.Time,
 		IsVerified:       clientEmergencyContact.IsVerified,
 		MedicalReports:   clientEmergencyContact.MedicalReports,

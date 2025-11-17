@@ -109,7 +109,7 @@ type CreateClientDetailsParams struct {
 	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
 	EducationMentorEmail       *string                       `json:"education_mentor_email"`
 	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
-	EducationLevel             NullClientEducationLevelEnum  `json:"education_level"`
+	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
 	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
 	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
 	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
@@ -462,7 +462,7 @@ type GetClientDetailsRow struct {
 	LastName                   string                        `json:"last_name"`
 	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
 	Identity                   bool                          `json:"identity"`
-	Status                     NullClientStatusEnum          `json:"status"`
+	Status                     ClientStatusEnum              `json:"status"`
 	Bsn                        *string                       `json:"bsn"`
 	BsnVerifiedBy              *uuid.UUID                    `json:"bsn_verified_by"`
 	Source                     *string                       `json:"source"`
@@ -491,7 +491,7 @@ type GetClientDetailsRow struct {
 	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
 	EducationMentorEmail       *string                       `json:"education_mentor_email"`
 	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
-	EducationLevel             NullClientEducationLevelEnum  `json:"education_level"`
+	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
 	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
 	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
 	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
@@ -658,7 +658,7 @@ type ListClientDetailsRow struct {
 	LastName                   string                        `json:"last_name"`
 	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
 	Identity                   bool                          `json:"identity"`
-	Status                     NullClientStatusEnum          `json:"status"`
+	Status                     ClientStatusEnum              `json:"status"`
 	Bsn                        *string                       `json:"bsn"`
 	BsnVerifiedBy              *uuid.UUID                    `json:"bsn_verified_by"`
 	Source                     *string                       `json:"source"`
@@ -687,7 +687,7 @@ type ListClientDetailsRow struct {
 	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
 	EducationMentorEmail       *string                       `json:"education_mentor_email"`
 	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
-	EducationLevel             NullClientEducationLevelEnum  `json:"education_level"`
+	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
 	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
 	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
 	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
@@ -1198,8 +1198,8 @@ RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, st
 `
 
 type UpdateClientStatusParams struct {
-	ID     uuid.UUID            `json:"id"`
-	Status NullClientStatusEnum `json:"status"`
+	ID     uuid.UUID        `json:"id"`
+	Status ClientStatusEnum `json:"status"`
 }
 
 func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error) {

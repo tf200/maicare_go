@@ -37,6 +37,8 @@ type Config struct {
 	Environment           string        `mapstructure:"ENVIRONMENT"`
 	GrpcUrl               string        `mapstructure:"GRPC_URL"`
 	MigrationsPath        string        `mapstructure:"MIGRATIONS_PATH"`
+	AdminEmail            string        `mapstructure:"ADMIN_EMAIL"`
+	AdminPassword         string        `mapstructure:"ADMIN_PASSWORD"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

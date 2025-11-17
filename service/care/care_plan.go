@@ -53,7 +53,7 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 	generatedCarePlan, err := s.GrpcClient.GenerateCarePlan(ctx, &grpclient.PersonalizedCarePlanRequest{
 		ClientData: &grpclient.ClientData{
 			Age:              details.Age,
-			EducationLevel:   util.DerefString(details.EducationLevel),
+			EducationLevel:   details.EducationLevel,
 			LivingSituation:  util.DerefString(details.LivingSituation),
 			DomainName:       clientAssessments.TopicName,
 			CurrentLevel:     clientAssessments.CurrentLevel,
@@ -172,7 +172,7 @@ func (s *carePlanService) GetCarePlanOverview(ctx *gin.Context, carePlanID int64
 		Domain:            carePlan.TopicName,
 		CurrentLevel:      carePlan.CurrentLevel,
 		TargetLevel:       carePlan.TargetLevel,
-		Status:            carePlan.Status,
+		Status:            string(carePlan.Status),
 		GeneratedAt:       carePlan.GeneratedAt.Time,
 		AssessmentSummary: carePlan.AssessmentSummary,
 		RawLlmResponse:    string(carePlan.RawLlmResponse),
@@ -215,7 +215,7 @@ func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanI
 	createdObj, err := s.Store.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
 		CarePlanID:  carePlanID,
 		Description: req.Description,
-		Timeframe:   req.TimeFrame,
+		Timeframe:   db.CarePlanTimeframeEnum(req.TimeFrame),
 		GoalTitle:   req.GoalTitle,
 	})
 	if err != nil {
@@ -226,11 +226,11 @@ func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanI
 	response := &CreateCarePlanObjectiveResponse{
 		ID:              createdObj.ID,
 		CarePlanID:      carePlanID,
-		Timeframe:       createdObj.Timeframe,
+		Timeframe:       string(createdObj.Timeframe),
 		GoalTitle:       createdObj.GoalTitle,
 		Description:     createdObj.Description,
 		TargetDate:      createdObj.TargetDate.Time,
-		Status:          createdObj.Status,
+		Status:          string(createdObj.Status),
 		CompletionDate:  createdObj.CompletionDate.Time,
 		CompletionNotes: createdObj.CompletionNotes,
 		CreatedAt:       createdObj.CreatedAt.Time,
@@ -255,8 +255,8 @@ func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, c
 				ObjectiveID: row.ObjectiveID,
 				Title:       row.ObjectiveTitle,
 				Description: row.ObjectiveDescription,
-				TimeFrame:   row.ObjectiveTimeframe,
-				Status:      row.ObjectiveStatus,
+				TimeFrame:   string(row.ObjectiveTimeframe),
+				Status:      string(row.ObjectiveStatus),
 				Actions:     []CarePlanActions{},
 			}
 			objectiveMap[row.ObjectiveID] = objective
@@ -295,11 +295,21 @@ func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, c
 
 func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objectiveID int64, req *UpdateCarePlanObjectiveRequest) (*UpdateCarePlanObjectiveResponse, error) {
 	objective, err := s.Store.UpdateCarePlanObjective(ctx, db.UpdateCarePlanObjectiveParams{
-		ID:          objectiveID,
-		Timeframe:   req.TimeFrame,
+		ID: objectiveID,
+		Timeframe: func() db.NullCarePlanTimeframeEnum {
+			if req.TimeFrame != nil {
+				return db.NullCarePlanTimeframeEnum{CarePlanTimeframeEnum: db.CarePlanTimeframeEnum(*req.TimeFrame), Valid: true}
+			}
+			return db.NullCarePlanTimeframeEnum{Valid: false}
+		}(),
 		GoalTitle:   req.GoalTitle,
 		Description: req.Description,
-		Status:      req.Status,
+		Status: func() db.NullCarePlanObjectiveStatusEnum {
+			if req.Status != nil {
+				return db.NullCarePlanObjectiveStatusEnum{CarePlanObjectiveStatusEnum: db.CarePlanObjectiveStatusEnum(*req.Status), Valid: true}
+			}
+			return db.NullCarePlanObjectiveStatusEnum{Valid: false}
+		}(),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanObjective", "Failed to update care plan objective", zap.Error(err))
@@ -382,7 +392,7 @@ func (s *carePlanService) DeleteCarePlanAction(ctx context.Context, actionID int
 func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePlanID int64, req *CreateCarePlanInterventionRequest) (*CreateCarePlanInterventionResponse, error) {
 	intervention, err := s.Store.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
 		CarePlanID:              carePlanID,
-		Frequency:               req.Frequency,
+		Frequency:               db.CarePlanInterventionFrequencyEnum(req.Frequency),
 		InterventionDescription: req.InterventionDescription,
 	})
 	if err != nil {
@@ -393,7 +403,7 @@ func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePl
 	response := &CreateCarePlanInterventionResponse{
 		InterventionID:          intervention.ID,
 		CarePlanID:              intervention.CarePlanID,
-		Frequency:               intervention.Frequency,
+		Frequency:               string(intervention.Frequency),
 		InterventionDescription: intervention.InterventionDescription,
 	}
 	return response, nil
@@ -431,7 +441,7 @@ func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlan
 			})
 
 		default:
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GetCarePlanInterventions", "Unknown intervention frequency", zap.String("frequency", intervention.Frequency))
+			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GetCarePlanInterventions", "Unknown intervention frequency", zap.String("frequency", string(intervention.Frequency)))
 		}
 	}
 
@@ -440,8 +450,13 @@ func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlan
 
 func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interventionID int64, req *UpdateCarePlanInterventionRequest) (*UpdateCarePlanInterventionResponse, error) {
 	intervention, err := s.Store.UpdateCarePlanIntervention(ctx, db.UpdateCarePlanInterventionParams{
-		ID:                      interventionID,
-		Frequency:               req.Frequency,
+		ID: interventionID,
+		Frequency: func() db.NullCarePlanInterventionFrequencyEnum {
+			if req.Frequency != nil {
+				return db.NullCarePlanInterventionFrequencyEnum{CarePlanInterventionFrequencyEnum: db.CarePlanInterventionFrequencyEnum(*req.Frequency), Valid: true}
+			}
+			return db.NullCarePlanInterventionFrequencyEnum{Valid: false}
+		}(),
 		InterventionDescription: req.InterventionDescription,
 	})
 	if err != nil {
@@ -452,7 +467,7 @@ func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interv
 	response := &UpdateCarePlanInterventionResponse{
 		InterventionID:          intervention.ID,
 		CarePlanID:              intervention.CarePlanID,
-		Frequency:               intervention.Frequency,
+		Frequency:               string(intervention.Frequency),
 		InterventionDescription: intervention.InterventionDescription,
 	}
 	return response, nil
@@ -552,7 +567,7 @@ func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int
 		CarePlanID:         carePlanID,
 		RiskDescription:    req.RiskDescription,
 		MitigationStrategy: req.MitigationStrategy,
-		RiskLevel:          req.RiskLevel,
+		RiskLevel:          db.CarePlanRiskLevelEnum(req.RiskLevel),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanRiskFactor", "Failed to create care plan risk factor", zap.Error(err))
@@ -563,7 +578,7 @@ func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int
 		RiskID:             riskFactor.ID,
 		RiskDescription:    riskFactor.RiskDescription,
 		MitigationStrategy: riskFactor.MitigationStrategy,
-		RiskLevel:          riskFactor.RiskLevel,
+		RiskLevel:          string(riskFactor.RiskLevel),
 	}
 	return response, nil
 }
@@ -581,7 +596,7 @@ func (s *carePlanService) GetCarePlanRisks(ctx context.Context, carePlanID int64
 			RiskID:             riskFactor.ID,
 			RiskDescription:    riskFactor.RiskDescription,
 			MitigationStrategy: riskFactor.MitigationStrategy,
-			RiskLevel:          riskFactor.RiskLevel,
+			RiskLevel:          string(riskFactor.RiskLevel),
 		})
 	}
 
@@ -593,7 +608,12 @@ func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, 
 		ID:                 riskID,
 		RiskDescription:    req.RiskDescription,
 		MitigationStrategy: req.MitigationStrategy,
-		RiskLevel:          req.RiskLevel,
+		RiskLevel: func() db.NullCarePlanRiskLevelEnum {
+			if req.RiskLevel != nil {
+				return db.NullCarePlanRiskLevelEnum{CarePlanRiskLevelEnum: db.CarePlanRiskLevelEnum(*req.RiskLevel), Valid: true}
+			}
+			return db.NullCarePlanRiskLevelEnum{Valid: false}
+		}(),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanRiskFactor", "Failed to update care plan risk factor", zap.Error(err))
@@ -604,7 +624,7 @@ func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, 
 		RiskID:             riskFactor.ID,
 		RiskDescription:    riskFactor.RiskDescription,
 		MitigationStrategy: riskFactor.MitigationStrategy,
-		RiskLevel:          riskFactor.RiskLevel,
+		RiskLevel:          string(riskFactor.RiskLevel),
 	}
 	return response, nil
 }
@@ -761,7 +781,7 @@ func (s *carePlanService) DeleteCarePlanResource(ctx context.Context, resourceID
 func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID int64, employeeID uuid.UUID, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error) {
 	report, err := s.Store.CreateCarePlanReport(ctx, db.CreateCarePlanReportParams{
 		CarePlanID:          carePlanID,
-		ReportType:          req.ReportType,
+		ReportType:          db.CarePlanReportTypeEnum(req.ReportType),
 		ReportContent:       req.ReportContent,
 		IsCritical:          req.IsCritical,
 		CreatedByEmployeeID: employeeID,
@@ -774,7 +794,7 @@ func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID i
 	response := &CreateCarePlanReportResponse{
 		ID:            report.ID,
 		CarePlanID:    report.CarePlanID,
-		ReportType:    report.ReportType,
+		ReportType:    string(report.ReportType),
 		ReportContent: report.ReportContent,
 		IsCritical:    report.IsCritical,
 		CreatedAt:     report.CreatedAt.Time,
@@ -799,7 +819,7 @@ func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID int64
 		responseData = append(responseData, ListCarePlanReportsResponse{
 			ID:                 report.ID,
 			CarePlanID:         report.CarePlanID,
-			ReportType:         report.ReportType,
+			ReportType:         string(report.ReportType),
 			ReportContent:      report.ReportContent,
 			CreatedByFirstName: report.CreatedByFirstName,
 			CreatedByLastName:  report.CreatedByLastName,
@@ -814,8 +834,13 @@ func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID int64
 
 func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int64, req *UpdateCarePlanReportRequest) (*UpdateCarePlanReportResponse, error) {
 	report, err := s.Store.UpdateCarePlanReport(ctx, db.UpdateCarePlanReportParams{
-		ID:            reportID,
-		ReportType:    req.ReportType,
+		ID: reportID,
+		ReportType: func() db.NullCarePlanReportTypeEnum {
+			if req.ReportType != nil {
+				return db.NullCarePlanReportTypeEnum{CarePlanReportTypeEnum: db.CarePlanReportTypeEnum(*req.ReportType), Valid: true}
+			}
+			return db.NullCarePlanReportTypeEnum{Valid: false}
+		}(),
 		ReportContent: req.ReportContent,
 		IsCritical:    req.IsCritical,
 	})
@@ -827,7 +852,7 @@ func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int
 	response := &UpdateCarePlanReportResponse{
 		ID:            report.ID,
 		CarePlanID:    report.CarePlanID,
-		ReportType:    report.ReportType,
+		ReportType:    string(report.ReportType),
 		ReportContent: report.ReportContent,
 		IsCritical:    report.IsCritical,
 	}
@@ -870,9 +895,15 @@ func (s *carePlanService) getDetails(
 		return nil, fmt.Errorf("failed to get client details: %w", err)
 	}
 	details := &Details{
-		TopicName:        topicDescription.TopicName,
-		LivingSituation:  clientDetails.LivingSituation,
-		EducationLevel:   clientDetails.EducationLevel,
+		TopicName: topicDescription.TopicName,
+		LivingSituation: func() *string {
+			if clientDetails.LivingSituation.Valid {
+				str := string(clientDetails.LivingSituation.ClientLivingSituationEnum)
+				return &str
+			}
+			return nil
+		}(),
+		EducationLevel:   string(clientDetails.EducationLevel),
 		Age:              int32(time.Since(clientDetails.DateOfBirth.Time).Hours() / 24 / 365),
 		LevelDescription: levelDescription,
 	}
@@ -1073,7 +1104,7 @@ func (s *carePlanService) insertCarePlanRiskFactors(
 			CarePlanID:         carePlanID,
 			RiskDescription:    risk.Risk,
 			MitigationStrategy: risk.Mitigation,
-			RiskLevel:          &risk.RiskLevel, // Use pointer to allow NULL values
+			RiskLevel:          db.CarePlanRiskLevelEnum(risk.RiskLevel), // Use pointer to allow NULL values
 		})
 		if err != nil {
 			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanRiskFactors", "Failed to create care plan risk factor", zap.Error(err))

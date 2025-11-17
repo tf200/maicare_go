@@ -131,7 +131,7 @@ type DischargeOverviewRow struct {
 	ID                 uuid.UUID              `json:"id"`
 	FirstName          string                 `json:"first_name"`
 	LastName           string                 `json:"last_name"`
-	CurrentStatus      NullClientStatusEnum   `json:"current_status"`
+	CurrentStatus      ClientStatusEnum       `json:"current_status"`
 	ScheduledStatus    *string                `json:"scheduled_status"`
 	StatusChangeReason *string                `json:"status_change_reason"`
 	StatusChangeDate   pgtype.Date            `json:"status_change_date"`

@@ -63,7 +63,7 @@ type CreateClientDetailsResponse struct {
 	LastName                   string    `json:"last_name"`
 	DateOfBirth                time.Time `json:"date_of_birth"`
 	Identity                   bool      `json:"identity"`
-	Status                     *string   `json:"status"`
+	Status                     string    `json:"status"`
 	Bsn                        *string   `json:"bsn"`
 	BsnVerifiedBy              *int64    `json:"bsn_verified_by"` // needs to be checked
 	Source                     *string   `json:"source"`
@@ -89,7 +89,7 @@ type CreateClientDetailsResponse struct {
 	EducationMentorEmail       *string   `json:"education_mentor_email"`
 	EducationMentorPhone       *string   `json:"education_mentor_phone"`
 	EducationAdditionalNotes   *string   `json:"education_additional_notes"`
-	EducationLevel             *string   `json:"education_level"`
+	EducationLevel             string    `json:"education_level"`
 	WorkCurrentlyEmployed      bool      `json:"work_currently_employed"`
 	WorkCurrentEmployer        *string   `json:"work_current_employer"`
 	WorkCurrentEmployerPhone   *string   `json:"work_employer_phone"`
@@ -116,7 +116,7 @@ type ListClientsApiResponse struct {
 	LastName              string    `json:"last_name"`
 	DateOfBirth           time.Time `json:"date_of_birth"`
 	Identity              bool      `json:"identity"`
-	Status                *string   `json:"status"`
+	Status                string    `json:"status"`
 	Bsn                   *string   `json:"bsn"`
 	Source                *string   `json:"source"`
 	Birthplace            *string   `json:"birthplace"`
@@ -154,7 +154,7 @@ type GetClientApiResponse struct {
 	LastName                   string     `json:"last_name"`
 	DateOfBirth                time.Time  `json:"date_of_birth"`
 	Identity                   bool       `json:"identity"`
-	Status                     *string    `json:"status"`
+	Status                     string     `json:"status"`
 	Bsn                        *string    `json:"bsn"`
 	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"`
 	BsnVerifiedByFirstName     *string    `json:"bsn_verified_by_first_name"`
@@ -183,7 +183,7 @@ type GetClientApiResponse struct {
 	EducationMentorEmail       *string    `json:"education_mentor_email"`
 	EducationMentorPhone       *string    `json:"education_mentor_phone"`
 	EducationAdditionalNotes   *string    `json:"education_additional_notes"`
-	EducationLevel             *string    `json:"education_level"`
+	EducationLevel             string     `json:"education_level"`
 	WorkCurrentlyEmployed      bool       `json:"work_currently_employed"`
 	WorkCurrentEmployer        *string    `json:"work_current_employer"`
 	WorkCurrentEmployerPhone   *string    `json:"work_employer_phone"`
@@ -248,7 +248,7 @@ type UpdateClientDetailsResponse struct {
 	LastName              string     `json:"last_name"`
 	DateOfBirth           time.Time  `json:"date_of_birth"`
 	Identity              bool       `json:"identity"`
-	Status                *string    `json:"status"`
+	Status                string     `json:"status"`
 	Bsn                   *string    `json:"bsn"`
 	BsnVerifiedBy         *uuid.UUID `json:"bsn_verified_by"`
 	Source                *string    `json:"source"`
@@ -282,7 +282,7 @@ type UpdateClientStatusRequest struct {
 // UpdateClientStatusResponse represents a response to an update client request
 type UpdateClientStatusResponse struct {
 	ID     uuid.UUID `json:"id"`
-	Status *string   `json:"status"`
+	Status string    `json:"status"`
 }
 
 // ListStatusHistoryApiResponse represents a response to a list status history request
