@@ -84,8 +84,12 @@ INSERT INTO location (
 
 
 -- name: ListLocations :many
-SELECT * FROM location 
-WHERE organisation_id = $1;
+SELECT l.*,
+    COUNT(c.id) AS client_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+WHERE organisation_id = $1
+GROUP BY l.id;
 
 -- name: GetLocation :one
 SELECT * FROM location
@@ -109,5 +113,9 @@ RETURNING *;
 
 
 -- name: ListAllLocations :many
-SELECT * FROM location
-ORDER BY name;
+SELECT l.*,
+       COUNT(c.id) AS client_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+GROUP BY l.id
+ORDER BY l.name;

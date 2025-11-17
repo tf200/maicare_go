@@ -131,7 +131,7 @@ func (s *employeeService) GetEmployeeContractDetails(
 		ContractHours:     contractDetails.ContractHours,
 		ContractStartDate: contractDetails.ContractStartDate.Time,
 		ContractEndDate:   contractDetails.ContractEndDate.Time,
-		ContractType:      contractDetails.ContractType,
+		ContractType:      string(contractDetails.ContractType),
 		ContractRate:      contractDetails.ContractRate, // Optional field for contract rate
 		IsSubcontractor:   contractDetails.IsSubcontractor,
 	}

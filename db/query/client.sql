@@ -221,3 +221,26 @@ SELECT al.label::text AS missing_label
 FROM all_labels al
 LEFT JOIN client_labels cl ON al.label = cl.label
 WHERE cl.label IS NULL;
+
+
+
+-- name: CreateClientLocationTransfer :exec
+INSERT INTO client_location_transfer (
+    client_id,
+    from_location_id,
+    to_location_id,
+    request_date,
+    new_mentor_id,
+    reason
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+);
+
+
+-- name: ApproveOrRejectClientLocationTransfer :exec
+UPDATE client_location_transfer
+SET
+    status = $2,
+    approved_rejected_at = NOW(),
+    approved_rejected_by = $3
+WHERE id = $1;

@@ -128,18 +128,18 @@ type DischargeOverviewParams struct {
 }
 
 type DischargeOverviewRow struct {
-	ID                 uuid.UUID   `json:"id"`
-	FirstName          string      `json:"first_name"`
-	LastName           string      `json:"last_name"`
-	CurrentStatus      *string     `json:"current_status"`
-	ScheduledStatus    *string     `json:"scheduled_status"`
-	StatusChangeReason *string     `json:"status_change_reason"`
-	StatusChangeDate   pgtype.Date `json:"status_change_date"`
-	ContractEndDate    pgtype.Date `json:"contract_end_date"`
-	ContractStatus     *string     `json:"contract_status"`
-	DepartureReason    *string     `json:"departure_reason"`
-	FollowUpPlan       *string     `json:"follow_up_plan"`
-	DischargeType      string      `json:"discharge_type"`
+	ID                 uuid.UUID              `json:"id"`
+	FirstName          string                 `json:"first_name"`
+	LastName           string                 `json:"last_name"`
+	CurrentStatus      ClientStatusEnum       `json:"current_status"`
+	ScheduledStatus    *string                `json:"scheduled_status"`
+	StatusChangeReason *string                `json:"status_change_reason"`
+	StatusChangeDate   pgtype.Date            `json:"status_change_date"`
+	ContractEndDate    pgtype.Date            `json:"contract_end_date"`
+	ContractStatus     NullContractStatusEnum `json:"contract_status"`
+	DepartureReason    *string                `json:"departure_reason"`
+	FollowUpPlan       *string                `json:"follow_up_plan"`
+	DischargeType      string                 `json:"discharge_type"`
 }
 
 func (q *Queries) DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error) {
@@ -197,18 +197,18 @@ LIMIT 10
 `
 
 type ListEmployeesByContractEndDateRow struct {
-	ID                uuid.UUID   `json:"id"`
-	UserID            uuid.UUID   `json:"user_id"`
-	FirstName         string      `json:"first_name"`
-	LastName          string      `json:"last_name"`
-	Position          *string     `json:"position"`
-	Department        *string     `json:"department"`
-	EmployeeNumber    *string     `json:"employee_number"`
-	EmploymentNumber  *string     `json:"employment_number"`
-	Email             string      `json:"email"`
-	ContractStartDate pgtype.Date `json:"contract_start_date"`
-	ContractEndDate   pgtype.Date `json:"contract_end_date"`
-	ContractType      *string     `json:"contract_type"`
+	ID                uuid.UUID                `json:"id"`
+	UserID            uuid.UUID                `json:"user_id"`
+	FirstName         string                   `json:"first_name"`
+	LastName          string                   `json:"last_name"`
+	Position          *string                  `json:"position"`
+	Department        *string                  `json:"department"`
+	EmployeeNumber    *string                  `json:"employee_number"`
+	EmploymentNumber  *string                  `json:"employment_number"`
+	Email             string                   `json:"email"`
+	ContractStartDate pgtype.Date              `json:"contract_start_date"`
+	ContractEndDate   pgtype.Date              `json:"contract_end_date"`
+	ContractType      EmployeeContractTypeEnum `json:"contract_type"`
 }
 
 func (q *Queries) ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error) {
@@ -265,8 +265,8 @@ LIMIT 10
 type ListLatestPaymentsRow struct {
 	InvoiceID     int64              `json:"invoice_id"`
 	InvoiceNumber string             `json:"invoice_number"`
-	PaymentMethod *string            `json:"payment_method"`
-	PaymentStatus string             `json:"payment_status"`
+	PaymentMethod PaymentMethodEnum  `json:"payment_method"`
+	PaymentStatus PaymentStatusEnum  `json:"payment_status"`
 	Amount        float64            `json:"amount"`
 	PaymentDate   pgtype.Date        `json:"payment_date"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`

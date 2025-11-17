@@ -65,13 +65,13 @@ INSERT INTO progress_report (
 `
 
 type CreateProgressReportParams struct {
-	ClientID       uuid.UUID          `json:"client_id"`
-	EmployeeID     *uuid.UUID         `json:"employee_id"`
-	Title          *string            `json:"title"`
-	Date           pgtype.Timestamptz `json:"date"`
-	ReportText     string             `json:"report_text"`
-	Type           string             `json:"type"`
-	EmotionalState string             `json:"emotional_state"`
+	ClientID       uuid.UUID              `json:"client_id"`
+	EmployeeID     *uuid.UUID             `json:"employee_id"`
+	Title          *string                `json:"title"`
+	Date           pgtype.Timestamptz     `json:"date"`
+	ReportText     string                 `json:"report_text"`
+	Type           ProgressReportTypeEnum `json:"type"`
+	EmotionalState EmotionalStateEnum     `json:"emotional_state"`
 }
 
 func (q *Queries) CreateProgressReport(ctx context.Context, arg CreateProgressReportParams) (ProgressReport, error) {
@@ -143,18 +143,18 @@ WHERE pr.id = $1 LIMIT 1
 `
 
 type GetProgressReportRow struct {
-	ID                     int64              `json:"id"`
-	ClientID               uuid.UUID          `json:"client_id"`
-	Date                   pgtype.Timestamptz `json:"date"`
-	Title                  *string            `json:"title"`
-	ReportText             string             `json:"report_text"`
-	EmployeeID             *uuid.UUID         `json:"employee_id"`
-	Type                   string             `json:"type"`
-	EmotionalState         string             `json:"emotional_state"`
-	CreatedAt              pgtype.Timestamptz `json:"created_at"`
-	EmployeeFirstName      string             `json:"employee_first_name"`
-	EmployeeLastName       string             `json:"employee_last_name"`
-	EmployeeProfilePicture *string            `json:"employee_profile_picture"`
+	ID                     int64                  `json:"id"`
+	ClientID               uuid.UUID              `json:"client_id"`
+	Date                   pgtype.Timestamptz     `json:"date"`
+	Title                  *string                `json:"title"`
+	ReportText             string                 `json:"report_text"`
+	EmployeeID             *uuid.UUID             `json:"employee_id"`
+	Type                   ProgressReportTypeEnum `json:"type"`
+	EmotionalState         EmotionalStateEnum     `json:"emotional_state"`
+	CreatedAt              pgtype.Timestamptz     `json:"created_at"`
+	EmployeeFirstName      string                 `json:"employee_first_name"`
+	EmployeeLastName       string                 `json:"employee_last_name"`
+	EmployeeProfilePicture *string                `json:"employee_profile_picture"`
 }
 
 func (q *Queries) GetProgressReport(ctx context.Context, id int64) (GetProgressReportRow, error) {
@@ -298,19 +298,19 @@ type ListProgressReportsParams struct {
 }
 
 type ListProgressReportsRow struct {
-	ID                     int64              `json:"id"`
-	ClientID               uuid.UUID          `json:"client_id"`
-	Date                   pgtype.Timestamptz `json:"date"`
-	Title                  *string            `json:"title"`
-	ReportText             string             `json:"report_text"`
-	EmployeeID             *uuid.UUID         `json:"employee_id"`
-	Type                   string             `json:"type"`
-	EmotionalState         string             `json:"emotional_state"`
-	CreatedAt              pgtype.Timestamptz `json:"created_at"`
-	TotalCount             int64              `json:"total_count"`
-	EmployeeFirstName      string             `json:"employee_first_name"`
-	EmployeeLastName       string             `json:"employee_last_name"`
-	EmployeeProfilePicture *string            `json:"employee_profile_picture"`
+	ID                     int64                  `json:"id"`
+	ClientID               uuid.UUID              `json:"client_id"`
+	Date                   pgtype.Timestamptz     `json:"date"`
+	Title                  *string                `json:"title"`
+	ReportText             string                 `json:"report_text"`
+	EmployeeID             *uuid.UUID             `json:"employee_id"`
+	Type                   ProgressReportTypeEnum `json:"type"`
+	EmotionalState         EmotionalStateEnum     `json:"emotional_state"`
+	CreatedAt              pgtype.Timestamptz     `json:"created_at"`
+	TotalCount             int64                  `json:"total_count"`
+	EmployeeFirstName      string                 `json:"employee_first_name"`
+	EmployeeLastName       string                 `json:"employee_last_name"`
+	EmployeeProfilePicture *string                `json:"employee_profile_picture"`
 }
 
 func (q *Queries) ListProgressReports(ctx context.Context, arg ListProgressReportsParams) ([]ListProgressReportsRow, error) {
@@ -361,13 +361,13 @@ RETURNING id, client_id, date, title, report_text, employee_id, type, emotional_
 `
 
 type UpdateProgressReportParams struct {
-	ID             int64              `json:"id"`
-	EmployeeID     *uuid.UUID         `json:"employee_id"`
-	Title          *string            `json:"title"`
-	Date           pgtype.Timestamptz `json:"date"`
-	ReportText     *string            `json:"report_text"`
-	Type           *string            `json:"type"`
-	EmotionalState *string            `json:"emotional_state"`
+	ID             int64                      `json:"id"`
+	EmployeeID     *uuid.UUID                 `json:"employee_id"`
+	Title          *string                    `json:"title"`
+	Date           pgtype.Timestamptz         `json:"date"`
+	ReportText     *string                    `json:"report_text"`
+	Type           NullProgressReportTypeEnum `json:"type"`
+	EmotionalState NullEmotionalStateEnum     `json:"emotional_state"`
 }
 
 func (q *Queries) UpdateProgressReport(ctx context.Context, arg UpdateProgressReportParams) (ProgressReport, error) {

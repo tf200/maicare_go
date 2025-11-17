@@ -165,7 +165,7 @@ func (s *employeeService) buildWorkingHoursItems(
 			Location:      *appointment.Location,
 			LocationID:    nil,
 			Description:   appointment.Description,
-			Status:        &appointment.Status,
+			Status:        util.StringPtr(string(appointment.Status)),
 		}
 	}
 
@@ -192,7 +192,7 @@ func (s *employeeService) calculateOvertime(
 	}
 
 	// Calculate overtime if applicable
-	if contractDetails.ContractType != nil && contractDetails.ContractHours != nil {
+	if contractDetails.ContractHours != nil {
 		standardHours := *contractDetails.ContractHours
 		if standardHours > 0 && summary.TotalHours > standardHours {
 			summary.OverTime = summary.TotalHours - standardHours

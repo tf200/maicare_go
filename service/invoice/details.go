@@ -107,7 +107,7 @@ func (s *invoiceService) CreateInvoice(
 		ClientID:        req.ClientID,
 		SenderID:        &sender.ID,
 		WarningCount:    0,
-		InvoiceType:     req.InvoiceType,
+		InvoiceType:     db.InvoiceTypeEnum(req.InvoiceType),
 	}
 	invoice, err := qtx.CreateInvoice(ctx, arg)
 	if err != nil {
@@ -137,7 +137,7 @@ func (s *invoiceService) CreateInvoice(
 		InvoiceNumber:   invoice.InvoiceNumber,
 		IssueDate:       invoice.IssueDate.Time,
 		DueDate:         invoice.DueDate.Time,
-		Status:          invoice.Status,
+		Status:          string(invoice.Status),
 		InvoiceDetails:  req.InvoiceDetails,
 		TotalAmount:     req.TotalAmount,
 		PdfAttachmentID: invoice.PdfAttachmentID,
@@ -184,14 +184,14 @@ func (s *invoiceService) GetInvoiceByID(
 		InvoiceNumber:        inv.InvoiceNumber,
 		IssueDate:            inv.IssueDate.Time,
 		DueDate:              inv.DueDate.Time,
-		Status:               inv.Status,
+		Status:               string(inv.Status),
 		InvoiceDetails:       invoiceDetails,
 		TotalAmount:          inv.TotalAmount,
 		PdfAttachmentID:      inv.PdfAttachmentID,
 		ExtraContent:         util.ParseJSONToObject(inv.ExtraContent),
 		ClientID:             inv.ClientID,
 		SenderID:             inv.SenderID,
-		InvoiceType:          inv.InvoiceType,
+		InvoiceType:          string(inv.InvoiceType),
 		OriginalInvoiceID:    inv.OriginalInvoiceID,
 		UpdatedAt:            inv.UpdatedAt.Time,
 		CreatedAt:            inv.CreatedAt.Time,
@@ -211,9 +211,15 @@ func (s *invoiceService) ListInvoices(
 	params := req.GetParams()
 
 	invoices, err := s.Store.ListInvoices(ctx, db.ListInvoicesParams{
-		ClientID:  req.ClientID,
-		SenderID:  req.SenderID,
-		Status:    req.Status,
+		ClientID: req.ClientID,
+		SenderID: req.SenderID,
+		Status: func() db.NullInvoiceStatusEnum {
+			if req.Status != nil {
+				return db.NullInvoiceStatusEnum{Valid: true, InvoiceStatusEnum: db.InvoiceStatusEnum(*req.Status)}
+			}
+			return db.NullInvoiceStatusEnum{Valid: false}
+		}(),
+
 		StartDate: pgtype.Date{Time: req.StartDate, Valid: !req.StartDate.IsZero()},
 		EndDate:   pgtype.Date{Time: req.EndDate, Valid: !req.EndDate.IsZero()},
 		Limit:     params.Limit,
@@ -252,14 +258,14 @@ func (s *invoiceService) ListInvoices(
 			InvoiceNumber:     inv.InvoiceNumber,
 			IssueDate:         inv.IssueDate.Time,
 			DueDate:           inv.DueDate.Time,
-			Status:            inv.Status,
+			Status:            string(inv.Status),
 			InvoiceDetails:    invoiceDetails,
 			TotalAmount:       inv.TotalAmount,
 			PdfAttachmentID:   inv.PdfAttachmentID,
 			ExtraContent:      util.ParseJSONToObject(inv.ExtraContent),
 			ClientID:          inv.ClientID,
 			SenderID:          inv.SenderID,
-			InvoiceType:       inv.InvoiceType,
+			InvoiceType:       string(inv.InvoiceType),
 			OriginalInvoiceID: inv.OriginalInvoiceID,
 			UpdatedAt:         inv.UpdatedAt.Time,
 			CreatedAt:         inv.CreatedAt.Time,
@@ -336,8 +342,11 @@ func (s *invoiceService) UpdateInvoice(
 		InvoiceDetails: invoiceDetailsBytes,
 		TotalAmount:    &req.TotalAmount,
 		ExtraContent:   util.ParseObjectToJSON(req.ExtraContent),
-		Status:         &req.Status,
-		WarningCount:   &req.WarningCount,
+		Status: db.NullInvoiceStatusEnum{
+			Valid:             true,
+			InvoiceStatusEnum: db.InvoiceStatusEnum(req.Status),
+		},
+		WarningCount: &req.WarningCount,
 	}
 	updatedInv, err := qtx.UpdateInvoice(ctx, arg)
 	if err != nil {
@@ -367,7 +376,7 @@ func (s *invoiceService) UpdateInvoice(
 		InvoiceNumber:   updatedInv.InvoiceNumber,
 		IssueDate:       updatedInv.IssueDate.Time,
 		DueDate:         updatedInv.DueDate.Time,
-		Status:          updatedInv.Status,
+		Status:          string(updatedInv.Status),
 		InvoiceDetails:  req.InvoiceDetails,
 		TotalAmount:     req.TotalAmount,
 		PdfAttachmentID: updatedInv.PdfAttachmentID,
@@ -416,7 +425,7 @@ func (s *invoiceService) GetInvoiceAuditLogs(
 		response = append(response, GetInvoiceAuditLogResponse{
 			AuditID:            log.AuditID,
 			InvoiceID:          log.InvoiceID,
-			Operation:          log.Operation,
+			Operation:          string(log.Operation),
 			ChangedBy:          log.ChangedBy,
 			ChangedAt:          log.ChangedAt.Time,
 			OldValues:          util.ParseJSONToObject(log.OldValues),

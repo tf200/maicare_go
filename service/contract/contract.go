@@ -94,17 +94,17 @@ func (s *contractService) CreateContract(ctx context.Context, req CreateContract
 		ReminderPeriod:  req.ReminderPeriod,
 		Vat:             req.Vat,
 		Price:           req.Price,
-		PriceTimeUnit:   req.PriceTimeUnit,
+		PriceTimeUnit:   db.PriceTimeUnitEnum(req.PriceTimeUnit),
 		Hours:           req.Hours,
-		HoursType:       req.HoursType,
+		HoursType:       db.HoursTypeEnum(req.HoursType),
 		CareName:        req.CareName,
-		CareType:        req.CareType,
+		CareType:        db.CareTypeEnum(req.CareType),
 		ClientID:        clientID,
 		SenderID:        req.SenderID,
 		Status:          "draft",
 		AttachmentIds:   req.AttachmentIds,
-		FinancingAct:    req.FinancingAct,
-		FinancingOption: req.FinancingOption,
+		FinancingAct:    db.FinancingActEnum(req.FinancingAct),
+		FinancingOption: db.FinancingOptionEnum(req.FinancingOption),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateContract", "Failed to create contract", zap.String("client_id", clientID.String()), zap.Error(err))
@@ -114,22 +114,22 @@ func (s *contractService) CreateContract(ctx context.Context, req CreateContract
 	response := &CreateContractResponse{
 		ID:              contract.ID,
 		TypeID:          contract.TypeID,
-		Status:          contract.Status,
+		Status:          string(contract.Status),
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
 		ReminderPeriod:  contract.ReminderPeriod,
 		Vat:             contract.Vat,
 		Price:           contract.Price,
-		PriceTimeUnit:   contract.PriceTimeUnit,
+		PriceTimeUnit:   string(contract.PriceTimeUnit),
 		Hours:           contract.Hours,
-		HoursType:       contract.HoursType,
+		HoursType:       string(contract.HoursType),
 		CareName:        contract.CareName,
-		CareType:        contract.CareType,
+		CareType:        string(contract.CareType),
 		ClientID:        contract.ClientID,
 		SenderID:        contract.SenderID,
 		AttachmentIds:   contract.AttachmentIds,
-		FinancingAct:    contract.FinancingAct,
-		FinancingOption: contract.FinancingOption,
+		FinancingAct:    string(contract.FinancingAct),
+		FinancingOption: string(contract.FinancingOption),
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
 		UpdatedAt:       contract.UpdatedAt,
@@ -163,25 +163,25 @@ func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientCo
 		contractsRes[i] = ListClientContractsResponse{
 			ID:              contract.ID,
 			TypeID:          contract.TypeID,
-			Status:          contract.Status,
+			Status:          string(contract.Status),
 			StartDate:       contract.StartDate.Time,
 			EndDate:         contract.EndDate.Time,
 			ReminderPeriod:  contract.ReminderPeriod,
 			Vat:             contract.Vat,
 			Price:           contract.Price,
-			PriceTimeUnit:   contract.PriceTimeUnit,
+			PriceTimeUnit:   string(contract.PriceTimeUnit),
 			Hours:           contract.Hours,
-			HoursType:       contract.HoursType,
+			HoursType:       string(contract.HoursType),
 			CareName:        contract.CareName,
-			CareType:        contract.CareType,
+			CareType:        string(contract.CareType),
 			ClientID:        contract.ClientID,
 			ClientFirstName: contract.ClientFirstName,
 			ClientLastName:  contract.ClientLastName,
 			SenderID:        contract.SenderID,
 			SenderName:      contract.SenderName,
 			AttachmentIds:   contract.AttachmentIds,
-			FinancingAct:    contract.FinancingAct,
-			FinancingOption: contract.FinancingOption,
+			FinancingAct:    string(contract.FinancingAct),
+			FinancingOption: string(contract.FinancingOption),
 			DepartureReason: contract.DepartureReason,
 			DepartureReport: contract.DepartureReport,
 			UpdatedAt:       contract.UpdatedAt.Time,
@@ -210,22 +210,62 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 	}
 
 	contract, err := qtx.UpdateContract(ctx, db.UpdateContractParams{
-		ID:              contractID,
-		TypeID:          req.TypeID,
-		StartDate:       pgtype.Timestamptz{Time: req.StartDate, Valid: true},
-		EndDate:         pgtype.Timestamptz{Time: req.EndDate, Valid: true},
-		ReminderPeriod:  req.ReminderPeriod,
-		VAT:             req.Vat,
-		Price:           req.Price,
-		PriceTimeUnit:   req.PriceTimeUnit,
-		Hours:           req.Hours,
-		HoursType:       req.HoursType,
-		CareName:        req.CareName,
-		CareType:        req.CareType,
-		SenderID:        req.SenderID,
-		AttachmentIds:   req.AttachmentIds,
-		FinancingAct:    req.FinancingAct,
-		FinancingOption: req.FinancingOption,
+		ID:             contractID,
+		TypeID:         req.TypeID,
+		StartDate:      pgtype.Timestamptz{Time: req.StartDate, Valid: true},
+		EndDate:        pgtype.Timestamptz{Time: req.EndDate, Valid: true},
+		ReminderPeriod: req.ReminderPeriod,
+		VAT:            req.Vat,
+		Price:          req.Price,
+		PriceTimeUnit: func() db.NullPriceTimeUnitEnum {
+			if req.PriceTimeUnit == nil {
+				return db.NullPriceTimeUnitEnum{Valid: false}
+			}
+			return db.NullPriceTimeUnitEnum{
+				PriceTimeUnitEnum: db.PriceTimeUnitEnum(*req.PriceTimeUnit),
+				Valid:             true,
+			}
+		}(),
+		Hours: req.Hours,
+		HoursType: func() db.NullHoursTypeEnum {
+			if req.HoursType == nil {
+				return db.NullHoursTypeEnum{Valid: false}
+			}
+			return db.NullHoursTypeEnum{
+				HoursTypeEnum: db.HoursTypeEnum(*req.HoursType),
+				Valid:         true,
+			}
+		}(),
+		CareName: req.CareName,
+		CareType: func() db.NullCareTypeEnum {
+			if req.CareType == nil {
+				return db.NullCareTypeEnum{Valid: false}
+			}
+			return db.NullCareTypeEnum{
+				CareTypeEnum: db.CareTypeEnum(*req.CareType),
+				Valid:        true,
+			}
+		}(),
+		SenderID:      req.SenderID,
+		AttachmentIds: req.AttachmentIds,
+		FinancingAct: func() db.NullFinancingActEnum {
+			if req.FinancingAct == nil {
+				return db.NullFinancingActEnum{Valid: false}
+			}
+			return db.NullFinancingActEnum{
+				FinancingActEnum: db.FinancingActEnum(*req.FinancingAct),
+				Valid:            true,
+			}
+		}(),
+		FinancingOption: func() db.NullFinancingOptionEnum {
+			if req.FinancingOption == nil {
+				return db.NullFinancingOptionEnum{Valid: false}
+			}
+			return db.NullFinancingOptionEnum{
+				FinancingOptionEnum: db.FinancingOptionEnum(*req.FinancingOption),
+				Valid:               true,
+			}
+		}(),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to update contract", zap.Int64("contract_id", contractID), zap.Error(err))
@@ -240,22 +280,22 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 	response := &UpdateContractResponse{
 		ID:              contract.ID,
 		TypeID:          contract.TypeID,
-		Status:          contract.Status,
+		Status:          string(contract.Status),
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
 		ReminderPeriod:  contract.ReminderPeriod,
 		Vat:             contract.Vat,
 		Price:           contract.Price,
-		PriceFrequency:  contract.PriceTimeUnit,
+		PriceFrequency:  string(contract.PriceTimeUnit),
 		Hours:           contract.Hours,
-		HoursType:       contract.HoursType,
+		HoursType:       string(contract.HoursType),
 		CareName:        contract.CareName,
-		CareType:        contract.CareType,
+		CareType:        string(contract.CareType),
 		ClientID:        contract.ClientID,
 		SenderID:        contract.SenderID,
 		AttachmentIds:   contract.AttachmentIds,
-		FinancingAct:    contract.FinancingAct,
-		FinancingOption: contract.FinancingOption,
+		FinancingAct:    string(contract.FinancingAct),
+		FinancingOption: string(contract.FinancingOption),
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
 		UpdatedAt:       contract.UpdatedAt.Time,
@@ -308,7 +348,7 @@ func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateCo
 
 	response := &UpdateContractStatusResponse{
 		ID:     updatedContract.ID,
-		Status: updatedContract.Status,
+		Status: string(updatedContract.Status),
 	}
 	return response, nil
 }
@@ -324,25 +364,25 @@ func (s *contractService) GetClientContract(ctx context.Context, contractID int6
 		ID:              contract.ID,
 		TypeID:          contract.TypeID,
 		TypeName:        contract.ContractTypeName,
-		Status:          contract.Status,
+		Status:          string(contract.Status),
 		StartDate:       contract.StartDate.Time,
 		EndDate:         contract.EndDate.Time,
 		ReminderPeriod:  contract.ReminderPeriod,
 		Vat:             contract.Vat,
 		Price:           contract.Price,
-		PriceTimeUnit:   contract.PriceTimeUnit,
+		PriceTimeUnit:   string(contract.PriceTimeUnit),
 		Hours:           contract.Hours,
-		HoursType:       contract.HoursType,
+		HoursType:       string(contract.HoursType),
 		CareName:        contract.CareName,
-		CareType:        contract.CareType,
+		CareType:        string(contract.CareType),
 		ClientID:        contract.ClientID,
 		ClientFirstName: contract.ClientFirstName,
 		ClientLastName:  contract.ClientLastName,
 		SenderID:        contract.SenderID,
 		SenderName:      contract.SenderName,
 		AttachmentIds:   contract.AttachmentIds,
-		FinancingAct:    contract.FinancingAct,
-		FinancingOption: contract.FinancingOption,
+		FinancingAct:    string(contract.FinancingAct),
+		FinancingOption: string(contract.FinancingOption),
 		DepartureReason: contract.DepartureReason,
 		DepartureReport: contract.DepartureReport,
 		UpdatedAt:       contract.UpdatedAt.Time,
@@ -380,15 +420,15 @@ func (s *contractService) ListContracts(ctx *gin.Context, req ListContractsReque
 		contractsRes[i] = ListContractsResponse{
 			ID:              contract.ID,
 			ClientID:        contract.ClientID,
-			Status:          contract.Status,
+			Status:          string(contract.Status),
 			StartDate:       contract.StartDate.Time,
 			EndDate:         contract.EndDate.Time,
 			Price:           contract.Price,
-			PriceTimeUnit:   contract.PriceTimeUnit,
+			PriceTimeUnit:   string(contract.PriceTimeUnit),
 			CareName:        contract.CareName,
-			CareType:        contract.CareType,
-			FinancingAct:    contract.FinancingAct,
-			FinancingOption: contract.FinancingOption,
+			CareType:        string(contract.CareType),
+			FinancingAct:    string(contract.FinancingAct),
+			FinancingOption: string(contract.FinancingOption),
 			SenderID:        contract.SenderID,
 			SenderName:      contract.SenderName,
 			ClientFirstName: contract.ClientFirstName,
@@ -417,7 +457,7 @@ func (s *contractService) GetContractAuditLog(ctx context.Context, contractID in
 		auditLogsRes[i] = GetContractAuditLogResponse{
 			AuditID:            log.AuditID,
 			ContractID:         log.ContractID,
-			Operation:          log.Operation,
+			Operation:          string(log.Operation),
 			ChangedBy:          log.ChangedBy,
 			ChangedAt:          log.ChangedAt,
 			OldValues:          util.ParseJSONToObject(log.OldValues),

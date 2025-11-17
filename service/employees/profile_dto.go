@@ -17,7 +17,7 @@ type CreateEmployeeProfileRequest struct {
 	FirstName                 string  `json:"first_name" binding:"required" example:"fara"`
 	LastName                  string  `json:"last_name" binding:"required" example:"joe"`
 	DateOfBirth               *string `json:"date_of_birth" example:"2000-01-01"`
-	Gender                    *string `json:"gender" example:"man"`
+	Gender                    string  `json:"gender" binding:"oneof=male female not_specified" example:"man"`
 	Email                     string  `json:"email" binding:"required,email" example:"emai@exe.com"`
 	PrivateEmailAddress       *string `json:"private_email_address" binding:"email" example:"joe@ex.com"`
 	AuthenticationPhoneNumber *string `json:"authentication_phone_number" example:"1234567890"`
@@ -48,7 +48,7 @@ type CreateEmployeeProfileResponse struct {
 	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
 	CreatedAt                 time.Time `json:"created_at"`
 	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender" binding:"oneof= male female not_specified"`
+	Gender                    string    `json:"gender" binding:"oneof= male female not_specified"`
 	LocationID                *int64    `json:"location_id"`
 	HasBorrowed               bool      `json:"has_borrowed"`
 	OutOfService              *bool     `json:"out_of_service"`
@@ -85,7 +85,7 @@ type ListEmployeeResponse struct {
 	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
 	CreatedAt                 time.Time `json:"created_at"`
 	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
+	Gender                    string    `json:"gender"`
 	LocationID                *int64    `json:"location_id"`
 	HasBorrowed               bool      `json:"has_borrowed"`
 	OutOfService              *bool     `json:"out_of_service"`
@@ -105,7 +105,7 @@ type UpdateEmployeeIsSubcontractorRequest struct {
 type UpdateEmployeeIsSubcontractorResponse struct {
 	ID                uuid.UUID `json:"id"`
 	IsSubcontractor   *bool     `json:"is_subcontractor"`
-	ContractType      *string   `json:"contract_type"`
+	ContractType      string    `json:"contract_type"`
 	ContractHours     *float64  `json:"contract_hours"`
 	ContractRate      *float64  `json:"contract_rate"`
 	ContractStartDate time.Time `json:"contract_start_date"`
@@ -152,7 +152,7 @@ type GetEmployeeProfileByIDResponse struct {
 	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
 	CreatedAt                 time.Time `json:"created_at"`
 	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
+	Gender                    string    `json:"gender"`
 	LocationID                *int64    `json:"location_id"`
 	HasBorrowed               bool      `json:"has_borrowed"`
 	OutOfService              *bool     `json:"out_of_service"`
@@ -204,7 +204,7 @@ type UpdateEmployeeProfileResponse struct {
 	HomeTelephoneNumber       *string   `json:"home_telephone_number"`
 	CreatedAt                 time.Time `json:"created_at"`
 	IsSubcontractor           *bool     `json:"is_subcontractor"`
-	Gender                    *string   `json:"gender"`
+	Gender                    string    `json:"gender"`
 	LocationID                *int64    `json:"location_id"`
 	HasBorrowed               bool      `json:"has_borrowed"`
 	OutOfService              *bool     `json:"out_of_service"`
@@ -266,7 +266,7 @@ type GetEmployeeContractDetailsResponse struct {
 	ContractHours     *float64  `json:"contract_hours"`
 	ContractStartDate time.Time `json:"contract_start_date"`
 	ContractEndDate   time.Time `json:"contract_end_date"`
-	ContractType      *string   `json:"contract_type"`
+	ContractType      string    `json:"contract_type"`
 	ContractRate      *float64  `json:"contract_rate"` // Optional field for contract rate
 	IsSubcontractor   *bool     `json:"is_subcontractor"`
 }

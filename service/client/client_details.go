@@ -10,6 +10,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
+	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -45,7 +46,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		OrganizationID:             req.OrganizationID,
 		Departement:                req.Departement,
 		Infix:                      req.Infix,
-		Gender:                     req.Gender,
+		Gender:                     db.ClientGenderEnum(req.Gender),
 		Filenumber:                 req.Filenumber,
 		SenderID:                   req.SenderID,
 		LocationID:                 req.LocationID,
@@ -57,15 +58,28 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		EducationMentorPhone:       req.EducationMentorPhone,
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		EducationLevel:             req.EducationLevel,
-		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:        req.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:        req.WorkCurrentPosition,
-		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
-		WorkAdditionalNotes:        req.WorkAdditionalNotes,
-		LivingSituation:            req.LivingSituation,
+		EducationLevel: func() db.ClientEducationLevelEnum {
+			if req.EducationLevel == nil {
+				return ""
+			}
+			return db.ClientEducationLevelEnum(*req.EducationLevel)
+		}(),
+		WorkCurrentlyEmployed:    req.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:      req.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone: req.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail: req.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:      req.WorkCurrentPosition,
+		WorkStartDate:            pgtype.Date{Time: req.WorkStartDate, Valid: true},
+		WorkAdditionalNotes:      req.WorkAdditionalNotes,
+		LivingSituation: func() db.NullClientLivingSituationEnum {
+			if req.LivingSituation == nil {
+				return db.NullClientLivingSituationEnum{Valid: false}
+			}
+			return db.NullClientLivingSituationEnum{
+				ClientLivingSituationEnum: db.ClientLivingSituationEnum(*req.LivingSituation),
+				Valid:                     true,
+			}
+		}(),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDetails",
@@ -87,7 +101,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		LastName:                   client.LastName,
 		DateOfBirth:                client.DateOfBirth.Time,
 		Identity:                   client.Identity,
-		Status:                     client.Status,
+		Status:                     string(client.Status),
 		Bsn:                        client.Bsn,
 		Source:                     client.Source,
 		Birthplace:                 client.Birthplace,
@@ -95,7 +109,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		PhoneNumber:                client.PhoneNumber,
 		OrganizationID:             client.OrganizationID,
 		Departement:                client.Departement,
-		Gender:                     client.Gender,
+		Gender:                     string(client.Gender),
 		Filenumber:                 client.Filenumber,
 		ProfilePicture:             client.ProfilePicture,
 		Infix:                      client.Infix,
@@ -112,7 +126,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		EducationMentorPhone:       client.EducationMentorPhone,
 		EducationMentorEmail:       client.EducationMentorEmail,
 		EducationAdditionalNotes:   client.EducationAdditionalNotes,
-		EducationLevel:             client.EducationLevel,
+		EducationLevel:             string(client.EducationLevel),
 		WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
 		WorkCurrentEmployer:        client.WorkCurrentEmployer,
 		WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
@@ -120,8 +134,14 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		WorkCurrentPosition:        client.WorkCurrentPosition,
 		WorkStartDate:              client.WorkStartDate.Time,
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-		LivingSituation:            client.LivingSituation,
-		LivingSituationNotes:       client.LivingSituationNotes,
+		LivingSituation: func() *string {
+			if client.LivingSituation.Valid {
+				situation := string(client.LivingSituation.ClientLivingSituationEnum)
+				return &situation
+			}
+			return nil
+		}(),
+		LivingSituationNotes: client.LivingSituationNotes,
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateClientDetails",
@@ -133,9 +153,14 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 	params := req.GetParams()
 
 	clients, err := s.Store.ListClientDetails(ctx, db.ListClientDetailsParams{
-		Limit:      params.Limit,
-		Offset:     params.Offset,
-		Status:     req.Status,
+		Limit:  params.Limit,
+		Offset: params.Offset,
+		Status: func() db.NullClientStatusEnum {
+			if req.Status == nil {
+				return db.NullClientStatusEnum{Valid: false}
+			}
+			return db.NullClientStatusEnum{ClientStatusEnum: db.ClientStatusEnum(*req.Status), Valid: true}
+		}(),
 		LocationID: req.LocationID,
 		Search:     req.Search,
 	})
@@ -168,7 +193,7 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 			LastName:              client.LastName,
 			DateOfBirth:           client.DateOfBirth.Time,
 			Identity:              client.Identity,
-			Status:                client.Status,
+			Status:                string(client.Status),
 			Bsn:                   client.Bsn,
 			Source:                client.Source,
 			Birthplace:            client.Birthplace,
@@ -176,7 +201,7 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 			PhoneNumber:           client.PhoneNumber,
 			OrganizationID:        client.OrganizationID,
 			Departement:           client.Departement,
-			Gender:                client.Gender,
+			Gender:                string(client.Gender),
 			Filenumber:            client.Filenumber,
 			ProfilePicture:        s.GenerateResponsePresignedURL(client.ProfilePicture, ctx),
 			Infix:                 client.Infix,
@@ -226,7 +251,7 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		LastName:                   client.LastName,
 		DateOfBirth:                client.DateOfBirth.Time,
 		Identity:                   client.Identity,
-		Status:                     client.Status,
+		Status:                     string(client.Status),
 		Bsn:                        client.Bsn,
 		BsnVerifiedBy:              client.BsnVerifiedBy,
 		BsnVerifiedByFirstName:     client.BsnVerifiedByFirstName,
@@ -237,7 +262,7 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		PhoneNumber:                client.PhoneNumber,
 		OrganizationID:             client.OrganizationID,
 		Departement:                client.Departement,
-		Gender:                     client.Gender,
+		Gender:                     string(client.Gender),
 		Filenumber:                 client.Filenumber,
 		ProfilePicture:             s.GenerateResponsePresignedURL(client.ProfilePicture, ctx),
 		Infix:                      client.Infix,
@@ -254,7 +279,7 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		EducationMentorEmail:       client.EducationMentorEmail,
 		EducationMentorPhone:       client.EducationMentorPhone,
 		EducationAdditionalNotes:   client.EducationAdditionalNotes,
-		EducationLevel:             client.EducationLevel,
+		EducationLevel:             string(client.EducationLevel),
 		WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
 		WorkCurrentEmployer:        client.WorkCurrentEmployer,
 		WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
@@ -262,8 +287,14 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		WorkCurrentPosition:        client.WorkCurrentPosition,
 		WorkStartDate:              client.WorkStartDate.Time,
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-		LivingSituation:            client.LivingSituation,
-		LivingSituationNotes:       client.LivingSituationNotes,
+		LivingSituation: func() *string {
+			if client.LivingSituation.Valid {
+				level := string(client.LivingSituation.ClientLivingSituationEnum)
+				return &level
+			}
+			return nil
+		}(),
+		LivingSituationNotes: client.LivingSituationNotes,
 	}, nil
 }
 
@@ -290,20 +321,28 @@ func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UU
 
 func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error) {
 	client, err := s.Store.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
-		ID:                         clientID,
-		FirstName:                  req.FirstName,
-		LastName:                   req.LastName,
-		DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
-		Identity:                   req.Identity,
-		Bsn:                        req.Bsn,
-		BsnVerifiedBy:              req.BsnVerifiedBy,
-		Source:                     req.Source,
-		Birthplace:                 req.Birthplace,
-		Email:                      req.Email,
-		PhoneNumber:                req.PhoneNumber,
-		OrganizationID:             req.OrganizationID,
-		Departement:                req.Departement,
-		Gender:                     req.Gender,
+		ID:             clientID,
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		DateOfBirth:    pgtype.Date{Time: req.DateOfBirth, Valid: true},
+		Identity:       req.Identity,
+		Bsn:            req.Bsn,
+		BsnVerifiedBy:  req.BsnVerifiedBy,
+		Source:         req.Source,
+		Birthplace:     req.Birthplace,
+		Email:          req.Email,
+		PhoneNumber:    req.PhoneNumber,
+		OrganizationID: req.OrganizationID,
+		Departement:    req.Departement,
+		Gender: func() db.NullClientGenderEnum {
+			if req.Gender == nil {
+				return db.NullClientGenderEnum{Valid: false}
+			}
+			return db.NullClientGenderEnum{
+				ClientGenderEnum: db.ClientGenderEnum(*req.Gender),
+				Valid:            true,
+			}
+		}(),
 		Filenumber:                 req.Filenumber,
 		ProfilePicture:             req.ProfilePicture,
 		Infix:                      req.Infix,
@@ -318,16 +357,32 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 		EducationMentorPhone:       req.EducationMentorPhone,
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		EducationLevel:             req.EducationLevel,
-		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:        req.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:        req.WorkCurrentPosition,
-		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
-		WorkAdditionalNotes:        req.WorkAdditionalNotes,
-		LivingSituation:            req.LivingSituation,
-		LivingSituationNotes:       req.LivingSituationNotes,
+		EducationLevel: func() db.NullClientEducationLevelEnum {
+			if req.EducationLevel == nil {
+				return db.NullClientEducationLevelEnum{Valid: false}
+			}
+			return db.NullClientEducationLevelEnum{
+				ClientEducationLevelEnum: db.ClientEducationLevelEnum(*req.EducationLevel),
+				Valid:                    true,
+			}
+		}(),
+		WorkCurrentlyEmployed:    req.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:      req.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone: req.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail: req.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:      req.WorkCurrentPosition,
+		WorkStartDate:            pgtype.Date{Time: req.WorkStartDate, Valid: true},
+		WorkAdditionalNotes:      req.WorkAdditionalNotes,
+		LivingSituation: func() db.NullClientLivingSituationEnum {
+			if req.LivingSituation == nil {
+				return db.NullClientLivingSituationEnum{Valid: false}
+			}
+			return db.NullClientLivingSituationEnum{
+				ClientLivingSituationEnum: db.ClientLivingSituationEnum(*req.LivingSituation),
+				Valid:                     true,
+			}
+		}(),
+		LivingSituationNotes: req.LivingSituationNotes,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientDetails",
@@ -349,7 +404,7 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 		LastName:              client.LastName,
 		DateOfBirth:           client.DateOfBirth.Time,
 		Identity:              client.Identity,
-		Status:                client.Status,
+		Status:                string(client.Status),
 		Bsn:                   client.Bsn,
 		BsnVerifiedBy:         client.BsnVerifiedBy,
 		Source:                client.Source,
@@ -358,7 +413,7 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 		PhoneNumber:           client.PhoneNumber,
 		OrganizationID:        client.OrganizationID,
 		Departement:           client.Departement,
-		Gender:                client.Gender,
+		Gender:                string(client.Gender),
 		Filenumber:            client.Filenumber,
 		ProfilePicture:        client.ProfilePicture,
 		Infix:                 client.Infix,
@@ -407,9 +462,13 @@ func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req U
 		"Successfully created scheduled status change", zap.String("ClientID", clientID.String()),
 		zap.String("NewStatus", req.Status), zap.Time("ScheduledFor", req.SchedueledFor))
 
+	if schedueledChange.NewStatus == nil {
+		return nil, fmt.Errorf("scheduled status change not created properly")
+	}
+
 	return &UpdateClientStatusResponse{
 		ID:     clientID,
-		Status: schedueledChange.NewStatus,
+		Status: *schedueledChange.NewStatus,
 	}, nil
 }
 
@@ -470,7 +529,7 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 
 	client, err := qtx.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
 		ID:     clientID,
-		Status: &req.Status,
+		Status: db.ClientStatusEnum(req.Status),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientStatus",
@@ -480,7 +539,7 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 
 	_, err = qtx.CreateClientStatusHistory(ctx, db.CreateClientStatusHistoryParams{
 		ClientID:  clientID,
-		OldStatus: oldClient.Status,
+		OldStatus: util.StringPtr(string(oldClient.Status)),
 		NewStatus: req.Status,
 		Reason:    &req.Reason,
 	})
@@ -502,7 +561,7 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 
 	return &UpdateClientStatusResponse{
 		ID:     client.ID,
-		Status: client.Status,
+		Status: string(client.Status),
 	}, nil
 }
 
@@ -548,7 +607,7 @@ func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocu
 		ID:           clientDoc.ClientDocument.ID,
 		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
 		ClientID:     clientDoc.ClientDocument.ClientID,
-		Label:        clientDoc.ClientDocument.Label,
+		Label:        string(clientDoc.ClientDocument.Label),
 		Name:         clientDoc.Attachment.Name,
 		File:         clientDoc.Attachment.File,
 		Size:         clientDoc.Attachment.Size,
@@ -586,7 +645,7 @@ func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocu
 			ID:             doc.ID,
 			AttachmentUuid: doc.AttachmentUuid,
 			ClientID:       doc.ClientID,
-			Label:          doc.Label,
+			Label:          string(doc.Label),
 			Name:           doc.Name,
 			File:           s.GenerateResponsePresignedURL(&doc.File, ctx),
 			Size:           doc.Size,

@@ -8,6 +8,8 @@ type ListLocationsResponse struct {
 	Name      string    `json:"name"`
 	Address   string    `json:"address"`
 	Capacity  *int32    `json:"capacity"`
+	Occupied  int32     `json:"occupied"`
+	Available int32     `json:"available"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

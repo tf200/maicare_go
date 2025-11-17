@@ -89,7 +89,7 @@ const assignSender = `-- name: AssignSender :one
 UPDATE client_details
 SET sender_id = $1
 WHERE id = $2
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, organization_id
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type AssignSenderParams struct {
@@ -114,6 +114,7 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
+		&i.OrganizationID,
 		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
@@ -157,7 +158,6 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.RiskOther,
 		&i.RiskOtherDescription,
 		&i.RiskAdditionalNotes,
-		&i.OrganizationID,
 	)
 	return i, err
 }
@@ -181,17 +181,17 @@ INSERT INTO client_emergency_contact (
 `
 
 type CreateEmemrgencyContactParams struct {
-	ClientID         uuid.UUID `json:"client_id"`
-	FirstName        *string   `json:"first_name"`
-	LastName         *string   `json:"last_name"`
-	Email            *string   `json:"email"`
-	PhoneNumber      *string   `json:"phone_number"`
-	Address          *string   `json:"address"`
-	Relationship     *string   `json:"relationship"`
-	RelationStatus   *string   `json:"relation_status"`
-	MedicalReports   bool      `json:"medical_reports"`
-	IncidentsReports bool      `json:"incidents_reports"`
-	GoalsReports     bool      `json:"goals_reports"`
+	ClientID         uuid.UUID              `json:"client_id"`
+	FirstName        *string                `json:"first_name"`
+	LastName         *string                `json:"last_name"`
+	Email            *string                `json:"email"`
+	PhoneNumber      *string                `json:"phone_number"`
+	Address          *string                `json:"address"`
+	Relationship     *string                `json:"relationship"`
+	RelationStatus   NullRelationStatusEnum `json:"relation_status"`
+	MedicalReports   bool                   `json:"medical_reports"`
+	IncidentsReports bool                   `json:"incidents_reports"`
+	GoalsReports     bool                   `json:"goals_reports"`
 }
 
 func (q *Queries) CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error) {
@@ -497,21 +497,21 @@ type ListEmergencyContactsParams struct {
 }
 
 type ListEmergencyContactsRow struct {
-	ID               int64              `json:"id"`
-	ClientID         uuid.UUID          `json:"client_id"`
-	FirstName        *string            `json:"first_name"`
-	LastName         *string            `json:"last_name"`
-	Email            *string            `json:"email"`
-	PhoneNumber      *string            `json:"phone_number"`
-	Address          *string            `json:"address"`
-	Relationship     *string            `json:"relationship"`
-	RelationStatus   *string            `json:"relation_status"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	IsVerified       bool               `json:"is_verified"`
-	MedicalReports   bool               `json:"medical_reports"`
-	IncidentsReports bool               `json:"incidents_reports"`
-	GoalsReports     bool               `json:"goals_reports"`
-	TotalCount       int64              `json:"total_count"`
+	ID               int64                  `json:"id"`
+	ClientID         uuid.UUID              `json:"client_id"`
+	FirstName        *string                `json:"first_name"`
+	LastName         *string                `json:"last_name"`
+	Email            *string                `json:"email"`
+	PhoneNumber      *string                `json:"phone_number"`
+	Address          *string                `json:"address"`
+	Relationship     *string                `json:"relationship"`
+	RelationStatus   NullRelationStatusEnum `json:"relation_status"`
+	CreatedAt        pgtype.Timestamptz     `json:"created_at"`
+	IsVerified       bool                   `json:"is_verified"`
+	MedicalReports   bool                   `json:"medical_reports"`
+	IncidentsReports bool                   `json:"incidents_reports"`
+	GoalsReports     bool                   `json:"goals_reports"`
+	TotalCount       int64                  `json:"total_count"`
 }
 
 func (q *Queries) ListEmergencyContacts(ctx context.Context, arg ListEmergencyContactsParams) ([]ListEmergencyContactsRow, error) {
@@ -609,17 +609,17 @@ RETURNING id, client_id, first_name, last_name, email, phone_number, address, re
 `
 
 type UpdateEmergencyContactParams struct {
-	ID               int64   `json:"id"`
-	FirstName        *string `json:"first_name"`
-	LastName         *string `json:"last_name"`
-	Email            *string `json:"email"`
-	PhoneNumber      *string `json:"phone_number"`
-	Address          *string `json:"address"`
-	Relationship     *string `json:"relationship"`
-	RelationStatus   *string `json:"relation_status"`
-	MedicalReports   *bool   `json:"medical_reports"`
-	IncidentsReports *bool   `json:"incidents_reports"`
-	GoalsReports     *bool   `json:"goals_reports"`
+	ID               int64                  `json:"id"`
+	FirstName        *string                `json:"first_name"`
+	LastName         *string                `json:"last_name"`
+	Email            *string                `json:"email"`
+	PhoneNumber      *string                `json:"phone_number"`
+	Address          *string                `json:"address"`
+	Relationship     *string                `json:"relationship"`
+	RelationStatus   NullRelationStatusEnum `json:"relation_status"`
+	MedicalReports   *bool                  `json:"medical_reports"`
+	IncidentsReports *bool                  `json:"incidents_reports"`
+	GoalsReports     *bool                  `json:"goals_reports"`
 }
 
 func (q *Queries) UpdateEmergencyContact(ctx context.Context, arg UpdateEmergencyContactParams) (ClientEmergencyContact, error) {

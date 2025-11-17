@@ -205,3 +205,11 @@ func MicrosecondsToTimeString(microseconds int64) string {
 	minutes := int(d.Minutes()) % 60
 	return fmt.Sprintf("%02d:%02d", hours, minutes)
 }
+
+func NullEnumToStringPtr[T ~string](value T, valid bool) *string {
+	if valid {
+		s := string(value)
+		return &s
+	}
+	return nil
+}

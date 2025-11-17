@@ -35,7 +35,7 @@ func (s *notificationService) ListNotifications(ctx context.Context, req *ListNo
 
 		response = append(response, ListNotificationsResponse{
 			NotificationID:   notif.ID,
-			NotificationType: notif.Type,
+			NotificationType: string(notif.Type),
 			Message:          notif.Message,
 			IsRead:           notif.IsRead,
 			Data:             processedData,
@@ -76,7 +76,7 @@ func (s *notificationService) MarkNotificationAsRead(ctx context.Context, notifi
 	}
 	response := MarkNotificationAsReadResponse{
 		NotificationID:   updatedNotif.ID,
-		NotificationType: updatedNotif.Type,
+		NotificationType: string(updatedNotif.Type),
 		Message:          updatedNotif.Message,
 		IsRead:           updatedNotif.IsRead,
 		CreatedAT:        updatedNotif.CreatedAt.Time,

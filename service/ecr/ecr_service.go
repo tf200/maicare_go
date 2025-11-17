@@ -33,15 +33,21 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 			ID:                 item.ID,
 			FirstName:          item.FirstName,
 			LastName:           item.LastName,
-			CurrentStatus:      item.CurrentStatus,
+			CurrentStatus:      string(item.CurrentStatus),
 			ScheduledStatus:    item.ScheduledStatus,
 			StatusChangeReason: item.StatusChangeReason,
 			StatusChangeDate:   item.StatusChangeDate.Time,
 			ContractEndDate:    item.ContractEndDate.Time,
-			ContractStatus:     item.ContractStatus,
-			DepartureReason:    item.DepartureReason,
-			FollowUpPlan:       item.FollowUpPlan,
-			DischargeType:      item.DischargeType,
+			ContractStatus: func() *string {
+				if item.ContractStatus.Valid {
+					status := string(item.ContractStatus.ContractStatusEnum)
+					return &status
+				}
+				return nil
+			}(),
+			DepartureReason: item.DepartureReason,
+			FollowUpPlan:    item.FollowUpPlan,
+			DischargeType:   item.DischargeType,
 		})
 	}
 
@@ -155,7 +161,7 @@ func (s *ecrService) ListEmployeesByContractEndDate(ctx context.Context) ([]List
 			Email:             emp.Email,
 			ContractStartDate: emp.ContractStartDate.Time,
 			ContractEndDate:   emp.ContractEndDate.Time,
-			ContractType:      emp.ContractType,
+			ContractType:      string(emp.ContractType),
 		})
 	}
 
@@ -174,8 +180,8 @@ func (s *ecrService) ListLatestPayments(ctx context.Context) ([]ListLatestPaymen
 		response = append(response, ListLatestPaymentsResponse{
 			InvoiceID:     payment.InvoiceID,
 			InvoiceNumber: payment.InvoiceNumber,
-			PaymentMethod: payment.PaymentMethod,
-			PaymentStatus: payment.PaymentStatus,
+			PaymentMethod: string(payment.PaymentMethod),
+			PaymentStatus: string(payment.PaymentStatus),
 			Amount:        payment.Amount,
 			PaymentDate:   payment.PaymentDate.Time,
 			UpdatedAt:     payment.UpdatedAt.Time,

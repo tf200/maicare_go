@@ -50,11 +50,10 @@ func (s *notificationService) CreateAndDeliver(ctx context.Context, payload Noti
 	}
 
 	for _, recipientID := range payload.RecipientUserIDs {
-		log.Printf("Processing notification for recipient ID: %d", recipientID)
 		// 1. Save to Database
 		notif, dbErr := s.Store.CreateNotification(ctx, db.CreateNotificationParams{
 			UserID:  recipientID,
-			Type:    payload.Type,
+			Type:    db.NotificationTypeEnum(payload.Type),
 			Data:    dataBytes,
 			Message: payload.Message, // Use the original data bytes
 			// You might want to store CreatedAt from the payload too,
@@ -75,7 +74,7 @@ func (s *notificationService) CreateAndDeliver(ctx context.Context, payload Noti
 		// Prepare WebSocket message
 		wsMsg := WebSocketMessage{
 			NotificationID:   notif.ID,
-			NotificationType: notif.Type,
+			NotificationType: string(notif.Type),
 			Message:          notif.Message,
 			IsRead:           notif.IsRead,
 			Data:             payload.Data,

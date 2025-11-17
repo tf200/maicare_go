@@ -17,6 +17,9 @@ CREATE TABLE organisations (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- Create ENUM type for location_type
+CREATE TYPE location_type_enum AS ENUM ('care_home', 'office', 'other');
 -- Location represents a physical place (care home, apartment building, etc.) for the youth intake
 CREATE TABLE location (
     id BIGSERIAL PRIMARY KEY,
@@ -24,7 +27,7 @@ CREATE TABLE location (
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100) NOT NULL,
     capacity INTEGER NULL,
-    location_type VARCHAR(50) NOT NULL CHECK (location_type IN ('care_home', 'office', 'other')) DEFAULT 'other',
+    location_type location_type_enum NOT NULL DEFAULT 'other',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -153,15 +156,19 @@ CREATE INDEX idx_sessions_user ON sessions("user_id");
 CREATE INDEX idx_sessions_expires ON sessions("expires_at");
 CREATE INDEX idx_sessions_token_blocked ON sessions("refresh_token", "is_blocked");
 
+
+-- Notification types ENUM
+CREATE TYPE notification_type_enum AS ENUM (
+    'new_appointment', 'appointment_update', 'new_client_assigned',
+    'client_goal_update', 'incident_report', 'client_contract_reminder',
+    'new_schedule_notification'
+);
+
 -- Notifications for users
 CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES custom_user(id) ON DELETE CASCADE,
-    type VARCHAR(100) NOT NULL CHECK (type IN (
-        'new_appointment', 'appointment_update', 'new_client_assigned',
-        'client_goal_update', 'incident_report', 'client_contract_reminder',
-        'new_schedule_notification'
-    )),
+    type notification_type_enum NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     data JSONB NULL,
@@ -204,6 +211,10 @@ CREATE INDEX temporary_file_uploaded_at_idx ON temporary_file(uploaded_at);
 -- EMPLOYEE MANAGEMENT
 -- ==========================================
 
+-- Employee Gender ENUM
+CREATE TYPE employee_gender_enum AS ENUM ('male', 'female', 'not_specified');
+-- Employee Contract Type ENUM
+CREATE TYPE employee_contract_type_enum AS ENUM ('loondienst', 'ZZP', 'none');
 -- Employee profile (linked to custom_user)
 CREATE TABLE employee_profile (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -223,7 +234,7 @@ CREATE TABLE employee_profile (
     home_telephone_number VARCHAR(100) NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_subcontractor BOOLEAN NULL,
-    gender VARCHAR(20) NULL CHECK (gender IN ('male', 'female', 'not_specified')),
+    gender employee_gender_enum NOT NULL,
     location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,
@@ -231,7 +242,7 @@ CREATE TABLE employee_profile (
     contract_hours FLOAT NULL DEFAULT 0.0,
     contract_end_date DATE NULL,
     contract_start_date DATE NULL,
-    contract_type VARCHAR(50) NULL CHECK (contract_type IN ('loondienst', 'ZZP', 'none')) DEFAULT 'none',
+    contract_type employee_contract_type_enum NOT NULL DEFAULT 'none',
     contract_rate DECIMAL(10,2) NULL DEFAULT 0.00
 );
 
@@ -285,13 +296,15 @@ CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
 -- CLIENT MANAGEMENT & INTAKE
 -- ==========================================
 
+-- Sender types ENUM
+CREATE TYPE sender_types_enum AS ENUM (
+    'main_provider', 'local_authority',
+    'particular_party', 'healthcare_institution'
+);
 -- Sender organizations (municipalities, authorities, etc.)
 CREATE TABLE sender (
     id BIGSERIAL PRIMARY KEY,
-    types VARCHAR(50) NOT NULL CHECK (types IN (
-        'main_provider', 'local_authority',
-        'particular_party', 'healthcare_institution'
-    )),
+    types sender_types_enum NOT NULL,
     name VARCHAR(60) NOT NULL,
     address VARCHAR(200) NULL,
     postal_code VARCHAR(20) NULL,
@@ -403,6 +416,14 @@ CREATE TABLE intake_forms (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Client STATUS ENUM
+CREATE TYPE client_status_enum AS ENUM ('In Care', 'On Waiting List', 'Out Of Care');
+-- Client Gender ENUM
+CREATE TYPE client_gender_enum AS ENUM ('male', 'female', 'other');
+-- Client Education Level ENUM
+CREATE TYPE client_education_level_enum AS ENUM ('primary', 'secondary', 'higher', 'none');
+-- Clients living Situation ENUM
+CREATE TYPE client_living_situation_enum AS ENUM ('home', 'foster_care', 'youth_care_institution', 'other');
 -- Main client details table
 CREATE TABLE client_details (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -411,16 +432,16 @@ CREATE TABLE client_details (
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
     "identity" BOOLEAN NOT NULL DEFAULT FALSE,
-    "status" VARCHAR(20) NULL CHECK (status IN ('In Care', 'On Waiting List', 'Out Of Care')) DEFAULT 'On Waiting List',
+    "status" client_status_enum NOT NULL DEFAULT 'On Waiting List',
     bsn VARCHAR(50) NULL,
     bsn_verified_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     source VARCHAR(100) NULL,
     birthplace VARCHAR(100) NULL,
     email VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NULL,
-    organisation VARCHAR(100) NULL,
+    organization_id BIGINT NULL REFERENCES organisations(id) ON DELETE SET NULL,
     departement VARCHAR(100) NULL,
-    gender VARCHAR(100) NOT NULL CHECK (gender IN ('male', 'female', 'other')),
+    gender client_gender_enum NOT NULL,
     filenumber VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(600) NULL,
     infix VARCHAR(100) NULL,
@@ -441,7 +462,7 @@ CREATE TABLE client_details (
     education_mentor_phone VARCHAR(50) NULL,
     education_mentor_email VARCHAR(255) NULL,
     education_additional_notes TEXT NULL,
-    education_level VARCHAR(50) NULL CHECK (education_level IN ('primary', 'secondary', 'higher', 'none')) DEFAULT 'none',
+    education_level client_education_level_enum NOT NULL DEFAULT 'none',
     -- Work
     work_currently_employed BOOLEAN NOT NULL DEFAULT FALSE,
     work_current_employer VARCHAR(255) NULL,
@@ -451,7 +472,7 @@ CREATE TABLE client_details (
     work_start_date DATE NULL,
     work_additional_notes TEXT NULL,
     -- Living situation
-    living_situation VARCHAR(50) NULL CHECK (living_situation IN ('home', 'foster_care', 'youth_care_institution', 'other')),
+    living_situation client_living_situation_enum NULL DEFAULT NULL,
     living_situation_notes TEXT NULL,
 
     -- Risks
@@ -522,6 +543,8 @@ CREATE TABLE contact_relationship (
 
 CREATE INDEX contact_relationship_soft_delete_idx ON contact_relationship(soft_delete);
 
+-- Client Emergency Contacts Relationship Status ENUM
+CREATE TYPE relation_status_enum AS ENUM ('Primary Relationship', 'Secondary Relationship');
 -- Client emergency contacts
 CREATE TABLE client_emergency_contact (
     id BIGSERIAL PRIMARY KEY,
@@ -532,7 +555,7 @@ CREATE TABLE client_emergency_contact (
     phone_number VARCHAR(20) NULL,
     address VARCHAR(100) NULL,
     relationship VARCHAR(100) NULL,
-    relation_status VARCHAR(50) NULL CHECK (relation_status IN ('Primary Relationship', 'Secondary Relationship')),
+    relation_status relation_status_enum NULL,
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
     medical_reports BOOLEAN NOT NULL DEFAULT FALSE,
@@ -542,16 +565,18 @@ CREATE TABLE client_emergency_contact (
 
 CREATE INDEX client_emergency_contact_client_id_idx ON client_emergency_contact(client_id);
 
+-- Client Documents Labels ENUM
+CREATE TYPE client_document_label_enum AS ENUM (
+    'registration_form', 'intake_form', 'consent_form',
+    'risk_assessment', 'self_reliance_matrix', 'force_inventory',
+    'care_plan', 'signaling_plan', 'cooperation_agreement', 'other'
+);
 -- Client documents
 CREATE TABLE client_documents (
     id BIGSERIAL PRIMARY KEY,
     attachment_uuid UUID NULL REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    label VARCHAR(100) NOT NULL CHECK (label IN (
-        'registration_form', 'intake_form', 'consent_form',
-        'risk_assessment', 'self_reliance_matrix', 'force_inventory',
-        'care_plan', 'signaling_plan', 'cooperation_agreement', 'other'
-    )) DEFAULT 'other'
+    label client_document_label_enum NOT NULL DEFAULT 'other'
 );
 
 CREATE INDEX client_documents_user_id_idx ON client_documents(client_id);
@@ -574,6 +599,22 @@ CREATE TABLE client_medication (
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Client location transfer status ENUM
+CREATE TYPE  client_location_transfer_status_enum AS ENUM ('pending', 'approved', 'rejected');
+
+CREATE TABLE client_location_transfer (
+    id BIGSERIAL PRIMARY KEY,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    from_location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    to_location_id BIGINT NULL REFERENCES location(id) ON DELETE SET NULL,
+    new_mentor_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    request_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status client_location_transfer_status_enum NOT NULL DEFAULT 'pending',
+    approved_rejected_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    approved_rejected_at TIMESTAMPTZ NULL,
+    reason TEXT NULL
+);
+
 -- ==========================================
 -- CONTRACTS & FINANCIAL MANAGEMENT
 -- ==========================================
@@ -583,28 +624,39 @@ CREATE TABLE contract_type (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL
 );
-
+-- Contract status ENUM
+CREATE TYPE contract_status_enum AS ENUM ('approved', 'draft', 'terminated', 'stopped', 'expired');
+-- Price time unit ENUM
+CREATE TYPE price_time_unit_enum AS ENUM ('minute', 'hourly', 'daily', 'weekly', 'monthly');
+-- Hours type ENUM
+CREATE TYPE hours_type_enum AS ENUM ('weekly', 'all_period');
+-- Care type ENUM
+CREATE TYPE care_type_enum AS ENUM ('ambulante', 'accommodation');
+-- Financing act ENUM
+CREATE TYPE financing_act_enum AS ENUM ('WMO', 'ZVW', 'WLZ', 'JW', 'WPG');
+-- Financing option ENUM
+CREATE TYPE financing_option_enum AS ENUM ('ZIN', 'PGB');
 -- Main contracts table
 CREATE TABLE contract (
     id BIGSERIAL PRIMARY KEY,
     type_id BIGINT NULL REFERENCES contract_type(id) ON DELETE SET NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('approved', 'draft', 'terminated', 'stopped', 'expired')) DEFAULT 'draft',
+    status contract_status_enum NOT NULL DEFAULT 'draft',
     approved_at TIMESTAMPTZ NULL,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
     reminder_period INTEGER NOT NULL DEFAULT 90,
     VAT INTEGER NULL DEFAULT -1,
     price DECIMAL(10,2) NOT NULL,
-    price_time_unit VARCHAR(20) NOT NULL CHECK (price_time_unit IN ('minute', 'hourly', 'daily', 'weekly', 'monthly')) DEFAULT 'weekly',
+    price_time_unit price_time_unit_enum NOT NULL DEFAULT 'weekly',
     hours DECIMAL(10,2) NULL DEFAULT 0,
-    hours_type VARCHAR(20) NULL DEFAULT NULL CHECK (hours_type IN ('weekly', 'all_period') OR hours_type IS NULL),
+    hours_type hours_type_enum NOT NULL DEFAULT NULL,
     care_name VARCHAR(255) NOT NULL,
-    care_type VARCHAR(20) NOT NULL CHECK (care_type IN ('ambulante', 'accommodation')),
+    care_type care_type_enum NOT NULL,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     sender_id BIGINT NULL REFERENCES sender(id) ON DELETE SET NULL,
     attachment_ids UUID[] NOT NULL DEFAULT '{}',
-    financing_act VARCHAR(50) NOT NULL CHECK (financing_act IN ('WMO', 'ZVW', 'WLZ', 'JW', 'WPG')) DEFAULT 'WMO',
-    financing_option VARCHAR(50) NOT NULL CHECK (financing_option IN ('ZIN', 'PGB')) DEFAULT 'PGB',
+    financing_act financing_act_enum NOT NULL DEFAULT 'WMO',
+    financing_option financing_option_enum NOT NULL DEFAULT 'PGB',
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
     updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -616,11 +668,14 @@ CREATE INDEX contract_client_id_idx ON contract(client_id);
 CREATE INDEX contract_sender_id_idx ON contract(sender_id);
 CREATE INDEX contract_status_idx ON contract(status);
 
+-- Contract audit operations ENUM
+CREATE TYPE contract_audit_operation_enum AS ENUM ('INSERT', 'UPDATE', 'DELETE');
+
 -- Contract audit table
 CREATE TABLE contract_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     contract_id BIGINT NOT NULL,
-    operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+    operation contract_audit_operation_enum NOT NULL,
     changed_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values JSONB NULL,
@@ -687,12 +742,14 @@ CREATE TRIGGER contract_audit_trigger
     AFTER INSERT OR UPDATE OR DELETE ON contract
     FOR EACH ROW EXECUTE FUNCTION contract_audit_trigger_func();
 
+-- Contract reminder reminder_type ENUM
+CREATE TYPE contract_reminder_type_enum AS ENUM ('initial', 'follow_up', 'none');
 -- Contract-related tables
 CREATE TABLE contract_reminder (
     id BIGSERIAL PRIMARY KEY,
     contract_id BIGINT NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
     reminder_sent_at TIMESTAMPTZ NULL,
-    reminder_type VARCHAR(20) NOT NULL CHECK (reminder_type IN ('initial', 'follow_up', 'none')) DEFAULT 'none'
+    reminder_type contract_reminder_type_enum NOT NULL DEFAULT 'none'
 );
 
 CREATE TABLE contract_working_hours (
@@ -743,18 +800,25 @@ CREATE TABLE framework_agreement (
 
 CREATE INDEX framework_agreement_client_id_idx ON framework_agreement(client_id);
 
+
 -- Invoice management
+
+-- Invoice status ENUM
+CREATE TYPE invoice_status_enum AS ENUM (
+    'outstanding', 'partially_paid', 'paid', 'expired',
+    'overpaid', 'imported', 'concept', 'canceled'
+);
+-- Invoice type ENUM
+CREATE TYPE invoice_type_enum AS ENUM ('standard', 'credit_note');
+-- Main invoice table
 CREATE TABLE invoice (
     id BIGSERIAL PRIMARY KEY,
     invoice_number VARCHAR(50) NOT NULL UNIQUE,
     invoice_sequence BIGINT NOT NULL DEFAULT 1,
     issue_date DATE NOT NULL DEFAULT CURRENT_DATE,
     due_date DATE NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN (
-        'outstanding', 'partially_paid', 'paid', 'expired',
-        'overpaid', 'imported', 'concept', 'canceled'
-    )) DEFAULT 'concept',
-    invoice_type VARCHAR(20) NOT NULL CHECK (invoice_type IN ('standard', 'credit_note')) DEFAULT 'standard',
+    status invoice_status_enum NOT NULL DEFAULT 'concept',
+    invoice_type invoice_type_enum NOT NULL DEFAULT 'standard',
     original_invoice_id BIGINT NULL REFERENCES invoice(id) ON DELETE SET NULL,
     invoice_details JSONB NULL DEFAULT '[]',
     total_amount DECIMAL(20,2) NOT NULL DEFAULT 0,
@@ -772,10 +836,12 @@ CREATE INDEX invoice_client_id_idx ON invoice(client_id);
 CREATE INDEX invoice_status_idx ON invoice(status);
 
 -- Invoice audit table
+-- Invoice audit operations ENUM
+CREATE TYPE invoice_audit_operation_enum AS ENUM ('INSERT', 'UPDATE', 'DELETE');
 CREATE TABLE invoice_audit (
     audit_id BIGSERIAL PRIMARY KEY,
     invoice_id BIGINT NOT NULL,
-    operation VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+    operation invoice_audit_operation_enum NOT NULL,
     changed_by UUID REFERENCES employee_profile(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values JSONB NULL,
@@ -843,15 +909,20 @@ AFTER INSERT OR UPDATE OR DELETE ON invoice
 FOR EACH ROW EXECUTE FUNCTION invoice_audit_trigger_func();
 
 -- Invoice payment history
+
+-- Payment method ENUM
+CREATE TYPE payment_method_enum AS ENUM (
+    'bank_transfer', 'credit_card', 'check', 'cash', 'other'
+);
+-- Payment status ENUM
+CREATE TYPE payment_status_enum AS ENUM (
+    'completed', 'pending', 'failed', 'reversed', 'refunded'
+);
 CREATE TABLE invoice_payment_history (
     id BIGSERIAL PRIMARY KEY,
     invoice_id BIGINT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
-    payment_method VARCHAR(20) NULL CHECK (payment_method IN (
-        'bank_transfer', 'credit_card', 'check', 'cash', 'other'
-    )),
-    payment_status VARCHAR(20) NOT NULL CHECK (payment_status IN (
-        'completed', 'pending', 'failed', 'reversed', 'refunded'
-    )) DEFAULT 'completed',
+    payment_method payment_method_enum NOT NULL DEFAULT 'bank_transfer',
+    payment_status payment_status_enum NOT NULL DEFAULT 'completed',
     amount DECIMAL(20,2) NOT NULL DEFAULT 0,
     payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
     payment_reference VARCHAR(100) NULL,
@@ -1250,6 +1321,8 @@ VALUES
 ]');
 
 -- Client maturity matrix assessments
+-- Care plan status ENUM
+CREATE TYPE care_plan_status_enum AS ENUM ('pending', 'generated', 'approved', 'active', 'completed', 'discontinued');
 CREATE TABLE client_maturity_matrix_assessment (
     id BIGSERIAL PRIMARY KEY,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
@@ -1260,7 +1333,7 @@ CREATE TABLE client_maturity_matrix_assessment (
     target_level INT NOT NULL CHECK (target_level BETWEEN 1 AND 5),
     current_level INT NOT NULL CHECK (current_level BETWEEN 1 AND 5),
     care_plan_generated_at TIMESTAMPTZ NULL DEFAULT NULL,
-    care_plan_status VARCHAR(20) NOT NULL CHECK (care_plan_status IN ('pending', 'generated', 'approved', 'active', 'completed', 'discontinued')) DEFAULT 'pending',
+    care_plan_status care_plan_status_enum NOT NULL DEFAULT 'pending',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE(client_id, maturity_matrix_id)
 );
@@ -1300,7 +1373,7 @@ CREATE TABLE care_plans (
     generated_by_employee_id UUID REFERENCES employee_profile(id),
     approved_by_employee_id UUID REFERENCES employee_profile(id),
     approved_at TIMESTAMP,
-    status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending_approval', 'approved', 'active', 'completed', 'discontinued')),
+    status care_plan_status_enum NOT NULL DEFAULT 'generated',
     assessment_summary TEXT NOT NULL,
     raw_llm_response JSONB,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1310,14 +1383,18 @@ CREATE TABLE care_plans (
 );
 
 -- Care plan objectives
+-- Timeframe ENUM
+CREATE TYPE care_plan_timeframe_enum AS ENUM ('short_term', 'medium_term', 'long_term');
+-- Care plan objective status ENUM
+CREATE TYPE care_plan_objective_status_enum AS ENUM ('not_started', 'in_progress', 'completed', 'discontinued', 'draft');
 CREATE TABLE care_plan_objectives (
     id BIGSERIAL PRIMARY KEY,
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    timeframe VARCHAR(20) NOT NULL CHECK (timeframe IN ('short_term', 'medium_term', 'long_term')),
+    timeframe care_plan_timeframe_enum NOT NULL,
     goal_title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     target_date DATE,
-    status VARCHAR(20) NOT NULL DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'completed', 'discontinued', 'draft')),
+    status care_plan_objective_status_enum NOT NULL DEFAULT 'not_started',
     completion_date DATE,
     completion_notes TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1337,10 +1414,12 @@ CREATE TABLE care_plan_actions (
 );
 
 -- Care plan interventions
+-- Frequency ENUM
+CREATE TYPE care_plan_intervention_frequency_enum AS ENUM ('daily', 'weekly', 'monthly');
 CREATE TABLE care_plan_interventions (
     id BIGSERIAL PRIMARY KEY,
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'weekly', 'monthly')),
+    frequency care_plan_intervention_frequency_enum NOT NULL,
     intervention_description TEXT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     last_completed_date DATE,
@@ -1364,12 +1443,14 @@ CREATE TABLE care_plan_metrics (
 );
 
 -- Care plan risks
+-- Risk level ENUM
+CREATE TYPE care_plan_risk_level_enum AS ENUM ('low', 'medium', 'high');
 CREATE TABLE care_plan_risks (
     id BIGSERIAL PRIMARY KEY,
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
     risk_description TEXT NOT NULL,
     mitigation_strategy TEXT NOT NULL,
-    risk_level VARCHAR(20) CHECK (risk_level IN ('low', 'medium', 'high')),
+    risk_level care_plan_risk_level_enum NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1402,10 +1483,12 @@ CREATE TABLE care_plan_resources (
 );
 
 -- Care plan reports
+-- Report type ENUM
+CREATE TYPE care_plan_report_type_enum AS ENUM ('progress', 'concern', 'achievement', 'modification');
 CREATE TABLE care_plan_reports (
     id BIGSERIAL PRIMARY KEY,
     care_plan_id BIGINT NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    report_type VARCHAR(50) NOT NULL CHECK (report_type IN ('progress', 'concern', 'achievement', 'modification')),
+    report_type care_plan_report_type_enum NOT NULL,
     report_content TEXT NOT NULL,
     created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id),
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
@@ -1418,13 +1501,23 @@ CREATE TABLE care_plan_reports (
 -- ==========================================
 
 -- Incident reports
+-- Incident reporter involvement ENUM
+CREATE TYPE incident_reporter_involvement_enum AS ENUM ('directly_involved', 'witness', 'found_afterwards', 'alarmed');
+-- Severity of incident ENUM
+CREATE TYPE severity_of_incident_enum AS ENUM ('near_incident', 'less_serious', 'serious', 'fatal');
+-- Recurrence risk ENUM
+CREATE TYPE recurrence_risk_enum AS ENUM ('very_low', 'means', 'high', 'very_high');
+-- Physical injury ENUM
+CREATE TYPE physical_injury_enum AS ENUM ('no_injuries', 'not_noticeable_yet', 'bruising_swelling', 'skin_injury', 'broken_bones', 'shortness_of_breath', 'death', 'other');
+-- Psychological damage ENUM
+CREATE TYPE psychological_damage_enum AS ENUM ('no', 'not_noticeable_yet', 'drowsiness', 'unrest', 'other');
+-- Needed consultation ENUM
+CREATE TYPE needed_consultation_enum AS ENUM ('no', 'not_clear', 'hospitalization', 'consult_gp');
 CREATE TABLE incident (
     id BIGSERIAL PRIMARY KEY,
     employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     location_id BIGINT NOT NULL REFERENCES location(id) ON DELETE CASCADE,
-    reporter_involvement VARCHAR(100) NOT NULL CHECK (reporter_involvement IN (
-        'directly_involved', 'witness', 'found_afterwards', 'alarmed'
-    )),
+    reporter_involvement incident_reporter_involvement_enum NOT NULL,
     inform_who VARCHAR(255)[] NOT NULL DEFAULT '{}',
     incident_date DATE NOT NULL,
     runtime_incident VARCHAR(100) NOT NULL,
@@ -1439,13 +1532,9 @@ CREATE TABLE incident (
     organization BOOLEAN NOT NULL DEFAULT FALSE,
     use_prohibited_substances BOOLEAN NOT NULL DEFAULT FALSE,
     other_notifications BOOLEAN NOT NULL DEFAULT FALSE,
-    severity_of_incident VARCHAR(100) NOT NULL CHECK (severity_of_incident IN (
-        'near_incident', 'less_serious', 'serious', 'fatal'
-    )),
+    severity_of_incident severity_of_incident_enum NOT NULL,
     incident_explanation TEXT NULL,
-    recurrence_risk VARCHAR(100) NOT NULL CHECK (recurrence_risk IN (
-        'very_low', 'means', 'high', 'very_high'
-    )),
+    recurrence_risk recurrence_risk_enum NOT NULL,
     incident_prevent_steps TEXT NULL,
     incident_taken_measures TEXT NULL,
     technical VARCHAR(255)[] NOT NULL DEFAULT '{}',
@@ -1454,18 +1543,11 @@ CREATE TABLE incident (
     client_options VARCHAR(255)[] NOT NULL DEFAULT '{}',
     other_cause VARCHAR(100) NULL,
     cause_explanation TEXT NULL DEFAULT '',
-    physical_injury VARCHAR(100) NOT NULL CHECK (physical_injury IN (
-        'no_injuries', 'not_noticeable_yet', 'bruising_swelling', 'skin_injury',
-        'broken_bones', 'shortness_of_breath', 'death', 'other'
-    )),
+    physical_injury physical_injury_enum NOT NULL,
     physical_injury_desc TEXT NULL DEFAULT '',
-    psychological_damage VARCHAR(100) NOT NULL CHECK (psychological_damage IN (
-        'no', 'not_noticeable_yet', 'drowsiness', 'unrest', 'other'
-    )),
+    psychological_damage psychological_damage_enum NOT NULL,
     psychological_damage_desc TEXT NULL DEFAULT '',
-    needed_consultation VARCHAR(100) NOT NULL CHECK (needed_consultation IN (
-        'no', 'not_clear', 'hospitalization', 'consult_gp'
-    )),
+    needed_consultation needed_consultation_enum NOT NULL,
     succession VARCHAR(255)[] NOT NULL DEFAULT '{}',
     succession_desc TEXT NULL DEFAULT '',
     other BOOLEAN NOT NULL DEFAULT FALSE,
@@ -1513,6 +1595,15 @@ CREATE INDEX assigned_employee_client_id_idx ON assigned_employee(client_id);
 CREATE INDEX assigned_employee_employee_id_idx ON assigned_employee(employee_id);
 
 -- Progress reports
+-- Progress report types ENUM
+CREATE TYPE progress_report_type_enum AS ENUM (
+    'morning_report', 'evening_report', 'night_report', 'shift_report',
+    'one_to_one_report', 'process_report', 'contact_journal', 'other'
+);
+-- Emotional state ENUM
+CREATE TYPE emotional_state_enum AS ENUM (
+    'normal', 'excited', 'happy', 'sad', 'angry', 'anxious', 'depressed'
+);
 CREATE TABLE progress_report (
     id BIGSERIAL PRIMARY KEY,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
@@ -1520,13 +1611,8 @@ CREATE TABLE progress_report (
     title VARCHAR(50) NULL,
     report_text TEXT NOT NULL,
     employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL CHECK (type IN (
-        'morning_report', 'evening_report', 'night_report', 'shift_report',
-        'one_to_one_report', 'process_report', 'contact_journal', 'other'
-    )) DEFAULT 'other',
-    emotional_state VARCHAR(20) NOT NULL CHECK (emotional_state IN (
-        'normal', 'excited', 'happy', 'sad', 'angry', 'anxious', 'depressed'
-    )) DEFAULT 'normal',
+    type progress_report_type_enum NOT NULL,
+    emotional_state emotional_state_enum NOT NULL DEFAULT 'normal',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1565,6 +1651,8 @@ CREATE TABLE schedules (
 );
 
 -- Appointment templates
+-- Recurrence type ENUM
+CREATE TYPE recurrence_type_enum AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY');
 CREATE TABLE appointment_templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_employee_id UUID NOT NULL REFERENCES employee_profile(id),
@@ -1573,7 +1661,7 @@ CREATE TABLE appointment_templates (
     location VARCHAR(255),
     description TEXT,
     color VARCHAR(20) DEFAULT '#0000FF',
-    recurrence_type VARCHAR(50) DEFAULT 'DAILY' CHECK (recurrence_type IN ('DAILY', 'WEEKLY', 'MONTHLY')),
+    recurrence_type recurrence_type_enum NOT NULL DEFAULT 'DAILY',
     recurrence_interval INT NULL,
     recurrence_end_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -1581,6 +1669,8 @@ CREATE TABLE appointment_templates (
 );
 
 -- Scheduled appointments
+-- Appointment status ENUM
+CREATE TYPE appointment_status_enum AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED');
 CREATE TABLE scheduled_appointments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     appointment_templates_id UUID NULL REFERENCES appointment_templates(id) ON DELETE CASCADE,
@@ -1589,7 +1679,7 @@ CREATE TABLE scheduled_appointments (
     end_time TIMESTAMP NOT NULL,
     location VARCHAR(255),
     description TEXT,
-    status VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
+    status appointment_status_enum NOT NULL DEFAULT 'PENDING',
     color VARCHAR(20) DEFAULT '#0000FF',
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     confirmed_by_employee_id UUID REFERENCES employee_profile(id),
@@ -1644,12 +1734,14 @@ CREATE TABLE appointment_card (
 );
 
 -- Registration forms
+-- Form Status ENUM
+CREATE TYPE form_status_enum AS ENUM ('pending', 'approved', 'rejected');
 CREATE TABLE registration_form (
     id BIGSERIAL PRIMARY KEY,
     client_first_name VARCHAR(255) NOT NULL,
     client_last_name VARCHAR(255) NOT NULL,
     client_bsn_number VARCHAR(50) NOT NULL,
-    client_gender VARCHAR(10) NOT NULL CHECK (client_gender IN ('male', 'female', 'other')),
+    client_gender client_gender_enum NOT NULL,
     client_nationality VARCHAR(100) NOT NULL,
     client_phone_number VARCHAR(20) NOT NULL,
     client_email VARCHAR(255) NOT NULL,
@@ -1683,7 +1775,7 @@ CREATE TABLE registration_form (
     education_mentor_email VARCHAR(255) NULL,
     education_currently_enrolled BOOLEAN NOT NULL DEFAULT FALSE,
     education_additional_notes TEXT NULL,
-    education_level VARCHAR(50) NULL CHECK (education_level IN ('primary', 'secondary', 'higher', 'none')) DEFAULT 'none',
+    education_level client_education_level_enum NULL,
     -- Work
     work_current_employer VARCHAR(255) NULL,
     work_employer_phone VARCHAR(20) NULL,
@@ -1724,12 +1816,13 @@ CREATE TABLE registration_form (
     -- Signatures and processing
     application_date DATE,
     referrer_signature BOOLEAN DEFAULT FALSE,
-    form_status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (form_status IN ('pending', 'approved', 'rejected')),
+    form_status form_status_enum NOT NULL DEFAULT 'pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
     processed_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    status TEXT NOT NULL CHECK (status IN ('new', 'in_review', 'approved', 'rejected')) DEFAULT 'new',
     intake_appointment_datetime TIMESTAMPTZ NULL,
     intake_appointment_location VARCHAR(255) NULL,
     addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement'))
@@ -1932,3 +2025,28 @@ INSERT INTO template_items (item_tag, description, source_table, source_column) 
 ('client.filenumber', 'File number', 'client_details', 'filenumber'),
 ('contract.financing_act', 'Financing act', 'contract', 'financing_act'),
 ('contract.financing_option', 'Financing option', 'contract', 'financing_option');
+
+
+
+-- ===============================================
+-- AUDIT LOGGING
+-- ===============================================
+CREATE TABLE audit (
+    event_id UUID PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    occured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    actor_role TEXT[] NOT NULL,
+    actor_id UUID NOT NULL,
+    subject_type TEXT NOT NULL,
+    subject_id UUID NOT NULL,
+    access_reason TEXT NOT NULL,
+    action TEXT NOT NULL,
+    result TEXT NOT NULL,
+    module TEXT NOT NULL,
+    tenant_id TEXT NOT NULL,
+    details JSONB,
+    ip INET,
+    user_agent TEXT,
+    hash_prev TEXT NOT NULL,
+    hash_self TEXT NOT NULL
+);

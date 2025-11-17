@@ -26,10 +26,10 @@ INSERT INTO notifications (
 `
 
 type CreateNotificationParams struct {
-	UserID  uuid.UUID `json:"user_id"`
-	Type    string    `json:"type"`
-	Data    []byte    `json:"data"`
-	Message string    `json:"message"`
+	UserID  uuid.UUID            `json:"user_id"`
+	Type    NotificationTypeEnum `json:"type"`
+	Data    []byte               `json:"data"`
+	Message string               `json:"message"`
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {

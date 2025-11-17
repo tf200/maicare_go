@@ -38,23 +38,23 @@ RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_perio
 `
 
 type CreateContractParams struct {
-	TypeID          *int64             `json:"type_id"`
-	Status          string             `json:"status"`
-	StartDate       pgtype.Timestamptz `json:"start_date"`
-	EndDate         pgtype.Timestamptz `json:"end_date"`
-	ReminderPeriod  int32              `json:"reminder_period"`
-	Vat             *int32             `json:"vat"`
-	Price           float64            `json:"price"`
-	PriceTimeUnit   string             `json:"price_time_unit"`
-	Hours           *float64           `json:"hours"`
-	HoursType       *string            `json:"hours_type"`
-	CareName        string             `json:"care_name"`
-	CareType        string             `json:"care_type"`
-	ClientID        uuid.UUID          `json:"client_id"`
-	SenderID        *int64             `json:"sender_id"`
-	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
-	FinancingAct    string             `json:"financing_act"`
-	FinancingOption string             `json:"financing_option"`
+	TypeID          *int64              `json:"type_id"`
+	Status          ContractStatusEnum  `json:"status"`
+	StartDate       pgtype.Timestamptz  `json:"start_date"`
+	EndDate         pgtype.Timestamptz  `json:"end_date"`
+	ReminderPeriod  int32               `json:"reminder_period"`
+	Vat             *int32              `json:"vat"`
+	Price           float64             `json:"price"`
+	PriceTimeUnit   PriceTimeUnitEnum   `json:"price_time_unit"`
+	Hours           *float64            `json:"hours"`
+	HoursType       HoursTypeEnum       `json:"hours_type"`
+	CareName        string              `json:"care_name"`
+	CareType        CareTypeEnum        `json:"care_type"`
+	ClientID        uuid.UUID           `json:"client_id"`
+	SenderID        *int64              `json:"sender_id"`
+	AttachmentIds   []uuid.UUID         `json:"attachment_ids"`
+	FinancingAct    FinancingActEnum    `json:"financing_act"`
+	FinancingOption FinancingOptionEnum `json:"financing_option"`
 }
 
 func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
@@ -254,33 +254,33 @@ limit 1
 `
 
 type GetClientContractRow struct {
-	ID               int64              `json:"id"`
-	TypeID           *int64             `json:"type_id"`
-	Status           string             `json:"status"`
-	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
-	StartDate        pgtype.Timestamptz `json:"start_date"`
-	EndDate          pgtype.Timestamptz `json:"end_date"`
-	ReminderPeriod   int32              `json:"reminder_period"`
-	Vat              *int32             `json:"vat"`
-	Price            float64            `json:"price"`
-	PriceTimeUnit    string             `json:"price_time_unit"`
-	Hours            *float64           `json:"hours"`
-	HoursType        *string            `json:"hours_type"`
-	CareName         string             `json:"care_name"`
-	CareType         string             `json:"care_type"`
-	ClientID         uuid.UUID          `json:"client_id"`
-	SenderID         *int64             `json:"sender_id"`
-	AttachmentIds    []uuid.UUID        `json:"attachment_ids"`
-	FinancingAct     string             `json:"financing_act"`
-	FinancingOption  string             `json:"financing_option"`
-	DepartureReason  *string            `json:"departure_reason"`
-	DepartureReport  *string            `json:"departure_report"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	ContractTypeName string             `json:"contract_type_name"`
-	ClientFirstName  string             `json:"client_first_name"`
-	ClientLastName   string             `json:"client_last_name"`
-	SenderName       *string            `json:"sender_name"`
+	ID               int64               `json:"id"`
+	TypeID           *int64              `json:"type_id"`
+	Status           ContractStatusEnum  `json:"status"`
+	ApprovedAt       pgtype.Timestamptz  `json:"approved_at"`
+	StartDate        pgtype.Timestamptz  `json:"start_date"`
+	EndDate          pgtype.Timestamptz  `json:"end_date"`
+	ReminderPeriod   int32               `json:"reminder_period"`
+	Vat              *int32              `json:"vat"`
+	Price            float64             `json:"price"`
+	PriceTimeUnit    PriceTimeUnitEnum   `json:"price_time_unit"`
+	Hours            *float64            `json:"hours"`
+	HoursType        HoursTypeEnum       `json:"hours_type"`
+	CareName         string              `json:"care_name"`
+	CareType         CareTypeEnum        `json:"care_type"`
+	ClientID         uuid.UUID           `json:"client_id"`
+	SenderID         *int64              `json:"sender_id"`
+	AttachmentIds    []uuid.UUID         `json:"attachment_ids"`
+	FinancingAct     FinancingActEnum    `json:"financing_act"`
+	FinancingOption  FinancingOptionEnum `json:"financing_option"`
+	DepartureReason  *string             `json:"departure_reason"`
+	DepartureReport  *string             `json:"departure_report"`
+	UpdatedAt        pgtype.Timestamptz  `json:"updated_at"`
+	CreatedAt        pgtype.Timestamptz  `json:"created_at"`
+	ContractTypeName string              `json:"contract_type_name"`
+	ClientFirstName  string              `json:"client_first_name"`
+	ClientLastName   string              `json:"client_last_name"`
+	SenderName       *string             `json:"sender_name"`
 }
 
 func (q *Queries) GetClientContract(ctx context.Context, id int64) (GetClientContractRow, error) {
@@ -329,16 +329,16 @@ ORDER BY ca.changed_at DESC
 `
 
 type GetContractAuditRow struct {
-	AuditID            int64              `json:"audit_id"`
-	ContractID         int64              `json:"contract_id"`
-	Operation          string             `json:"operation"`
-	ChangedBy          *uuid.UUID         `json:"changed_by"`
-	ChangedAt          pgtype.Timestamptz `json:"changed_at"`
-	OldValues          []byte             `json:"old_values"`
-	NewValues          []byte             `json:"new_values"`
-	ChangedFields      []string           `json:"changed_fields"`
-	ChangedByFirstName *string            `json:"changed_by_first_name"`
-	ChangedByLastName  *string            `json:"changed_by_last_name"`
+	AuditID            int64                      `json:"audit_id"`
+	ContractID         int64                      `json:"contract_id"`
+	Operation          ContractAuditOperationEnum `json:"operation"`
+	ChangedBy          *uuid.UUID                 `json:"changed_by"`
+	ChangedAt          pgtype.Timestamptz         `json:"changed_at"`
+	OldValues          []byte                     `json:"old_values"`
+	NewValues          []byte                     `json:"new_values"`
+	ChangedFields      []string                   `json:"changed_fields"`
+	ChangedByFirstName *string                    `json:"changed_by_first_name"`
+	ChangedByLastName  *string                    `json:"changed_by_last_name"`
 }
 
 func (q *Queries) GetContractAudit(ctx context.Context, contractID int64) ([]GetContractAuditRow, error) {
@@ -450,34 +450,34 @@ type ListClientContractsParams struct {
 }
 
 type ListClientContractsRow struct {
-	TotalCount       int64              `json:"total_count"`
-	ID               int64              `json:"id"`
-	TypeID           *int64             `json:"type_id"`
-	Status           string             `json:"status"`
-	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
-	StartDate        pgtype.Timestamptz `json:"start_date"`
-	EndDate          pgtype.Timestamptz `json:"end_date"`
-	ReminderPeriod   int32              `json:"reminder_period"`
-	Vat              *int32             `json:"vat"`
-	Price            float64            `json:"price"`
-	PriceTimeUnit    string             `json:"price_time_unit"`
-	Hours            *float64           `json:"hours"`
-	HoursType        *string            `json:"hours_type"`
-	CareName         string             `json:"care_name"`
-	CareType         string             `json:"care_type"`
-	ClientID         uuid.UUID          `json:"client_id"`
-	SenderID         *int64             `json:"sender_id"`
-	AttachmentIds    []uuid.UUID        `json:"attachment_ids"`
-	FinancingAct     string             `json:"financing_act"`
-	FinancingOption  string             `json:"financing_option"`
-	DepartureReason  *string            `json:"departure_reason"`
-	DepartureReport  *string            `json:"departure_report"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	ContractTypeName string             `json:"contract_type_name"`
-	ClientFirstName  string             `json:"client_first_name"`
-	ClientLastName   string             `json:"client_last_name"`
-	SenderName       *string            `json:"sender_name"`
+	TotalCount       int64               `json:"total_count"`
+	ID               int64               `json:"id"`
+	TypeID           *int64              `json:"type_id"`
+	Status           ContractStatusEnum  `json:"status"`
+	ApprovedAt       pgtype.Timestamptz  `json:"approved_at"`
+	StartDate        pgtype.Timestamptz  `json:"start_date"`
+	EndDate          pgtype.Timestamptz  `json:"end_date"`
+	ReminderPeriod   int32               `json:"reminder_period"`
+	Vat              *int32              `json:"vat"`
+	Price            float64             `json:"price"`
+	PriceTimeUnit    PriceTimeUnitEnum   `json:"price_time_unit"`
+	Hours            *float64            `json:"hours"`
+	HoursType        HoursTypeEnum       `json:"hours_type"`
+	CareName         string              `json:"care_name"`
+	CareType         CareTypeEnum        `json:"care_type"`
+	ClientID         uuid.UUID           `json:"client_id"`
+	SenderID         *int64              `json:"sender_id"`
+	AttachmentIds    []uuid.UUID         `json:"attachment_ids"`
+	FinancingAct     FinancingActEnum    `json:"financing_act"`
+	FinancingOption  FinancingOptionEnum `json:"financing_option"`
+	DepartureReason  *string             `json:"departure_reason"`
+	DepartureReport  *string             `json:"departure_report"`
+	UpdatedAt        pgtype.Timestamptz  `json:"updated_at"`
+	CreatedAt        pgtype.Timestamptz  `json:"created_at"`
+	ContractTypeName string              `json:"contract_type_name"`
+	ClientFirstName  string              `json:"client_first_name"`
+	ClientLastName   string              `json:"client_last_name"`
+	SenderName       *string             `json:"sender_name"`
 }
 
 func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContractsParams) ([]ListClientContractsRow, error) {
@@ -614,23 +614,23 @@ type ListContractsParams struct {
 }
 
 type ListContractsRow struct {
-	TotalCount      int64              `json:"total_count"`
-	ID              int64              `json:"id"`
-	Status          string             `json:"status"`
-	StartDate       pgtype.Timestamptz `json:"start_date"`
-	EndDate         pgtype.Timestamptz `json:"end_date"`
-	Price           float64            `json:"price"`
-	PriceTimeUnit   string             `json:"price_time_unit"`
-	CareName        string             `json:"care_name"`
-	CareType        string             `json:"care_type"`
-	FinancingAct    string             `json:"financing_act"`
-	FinancingOption string             `json:"financing_option"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	SenderName      *string            `json:"sender_name"`
-	ClientID        uuid.UUID          `json:"client_id"`
-	SenderID        *int64             `json:"sender_id"`
-	ClientFirstName string             `json:"client_first_name"`
-	ClientLastName  string             `json:"client_last_name"`
+	TotalCount      int64               `json:"total_count"`
+	ID              int64               `json:"id"`
+	Status          ContractStatusEnum  `json:"status"`
+	StartDate       pgtype.Timestamptz  `json:"start_date"`
+	EndDate         pgtype.Timestamptz  `json:"end_date"`
+	Price           float64             `json:"price"`
+	PriceTimeUnit   PriceTimeUnitEnum   `json:"price_time_unit"`
+	CareName        string              `json:"care_name"`
+	CareType        CareTypeEnum        `json:"care_type"`
+	FinancingAct    FinancingActEnum    `json:"financing_act"`
+	FinancingOption FinancingOptionEnum `json:"financing_option"`
+	CreatedAt       pgtype.Timestamptz  `json:"created_at"`
+	SenderName      *string             `json:"sender_name"`
+	ClientID        uuid.UUID           `json:"client_id"`
+	SenderID        *int64              `json:"sender_id"`
+	ClientFirstName string              `json:"client_first_name"`
+	ClientLastName  string              `json:"client_last_name"`
 }
 
 func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([]ListContractsRow, error) {
@@ -721,7 +721,7 @@ type ListContractsTobeRemindedRow struct {
 	StartDate        pgtype.Timestamptz `json:"start_date"`
 	EndDate          pgtype.Timestamptz `json:"end_date"`
 	ReminderPeriod   int32              `json:"reminder_period"`
-	CareType         string             `json:"care_type"`
+	CareType         CareTypeEnum       `json:"care_type"`
 	ClientID_2       uuid.UUID          `json:"client_id_2"`
 	ClientFirstName  string             `json:"client_first_name"`
 	ClientLastName   string             `json:"client_last_name"`
@@ -786,22 +786,22 @@ RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_perio
 `
 
 type UpdateContractParams struct {
-	ID              int64              `json:"id"`
-	TypeID          *int64             `json:"type_id"`
-	StartDate       pgtype.Timestamptz `json:"start_date"`
-	EndDate         pgtype.Timestamptz `json:"end_date"`
-	ReminderPeriod  *int32             `json:"reminder_period"`
-	VAT             *int32             `json:"VAT"`
-	Price           *float64           `json:"price"`
-	PriceTimeUnit   *string            `json:"price_time_unit"`
-	Hours           *float64           `json:"hours"`
-	HoursType       *string            `json:"hours_type"`
-	CareName        *string            `json:"care_name"`
-	CareType        *string            `json:"care_type"`
-	SenderID        *int64             `json:"sender_id"`
-	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
-	FinancingAct    *string            `json:"financing_act"`
-	FinancingOption *string            `json:"financing_option"`
+	ID              int64                   `json:"id"`
+	TypeID          *int64                  `json:"type_id"`
+	StartDate       pgtype.Timestamptz      `json:"start_date"`
+	EndDate         pgtype.Timestamptz      `json:"end_date"`
+	ReminderPeriod  *int32                  `json:"reminder_period"`
+	VAT             *int32                  `json:"VAT"`
+	Price           *float64                `json:"price"`
+	PriceTimeUnit   NullPriceTimeUnitEnum   `json:"price_time_unit"`
+	Hours           *float64                `json:"hours"`
+	HoursType       NullHoursTypeEnum       `json:"hours_type"`
+	CareName        *string                 `json:"care_name"`
+	CareType        NullCareTypeEnum        `json:"care_type"`
+	SenderID        *int64                  `json:"sender_id"`
+	AttachmentIds   []uuid.UUID             `json:"attachment_ids"`
+	FinancingAct    NullFinancingActEnum    `json:"financing_act"`
+	FinancingOption NullFinancingOptionEnum `json:"financing_option"`
 }
 
 func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error) {

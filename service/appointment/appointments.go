@@ -377,7 +377,7 @@ func (s *appointmentService) UpdateAppointment(
 		Location:               appointment.Location,
 		Description:            appointment.Description,
 		Color:                  appointment.Color,
-		Status:                 appointment.Status,
+		Status:                 string(appointment.Status),
 		IsConfirmed:            appointment.IsConfirmed,
 		ConfirmedByEmployeeID:  appointment.ConfirmedByEmployeeID,
 		ConfirmedAt:            appointment.ConfirmedAt,
@@ -530,7 +530,7 @@ func (s *appointmentService) createRecurringAppointment(
 		Location:           req.Location,
 		Description:        req.Description,
 		Color:              req.Color,
-		RecurrenceType:     &req.RecurrenceType,
+		RecurrenceType:     db.RecurrenceTypeEnum(req.RecurrenceType),
 		RecurrenceInterval: req.RecurrenceInterval,
 		RecurrenceEndDate:  pgtype.Date{Time: req.RecurrenceEndDate, Valid: true},
 	})

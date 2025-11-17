@@ -31,7 +31,7 @@ type Level struct {
 type Details struct {
 	TopicName        string  `json:"topic_name"`
 	LivingSituation  *string `json:"living_situation"`
-	EducationLevel   *string `json:"education_level"`
+	EducationLevel   string  `json:"education_level"`
 	Age              int32   `json:"age"`
 	LevelDescription []Level `json:"level_description"`
 }
@@ -250,25 +250,25 @@ type UpdateCarePlanSuccessMetricsResponse struct {
 
 // CreateCarePlanRisksRequest represents the request body for creating a care plan risk
 type CreateCarePlanRisksRequest struct {
-	RiskDescription    string  `json:"risk_description" binding:"required"`
-	MitigationStrategy string  `json:"mitigation_strategy" binding:"required"`
-	RiskLevel          *string `json:"risk_level"`
+	RiskDescription    string `json:"risk_description" binding:"required"`
+	MitigationStrategy string `json:"mitigation_strategy" binding:"required"`
+	RiskLevel          string `json:"risk_level"`
 }
 
 // CreateCarePlanRisksResponse represents the response for the CreateCarePlanRisks API
 type CreateCarePlanRisksResponse struct {
-	RiskID             int64   `json:"risk_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
+	RiskID             int64  `json:"risk_id"`
+	RiskDescription    string `json:"risk_description"`
+	MitigationStrategy string `json:"mitigation_strategy"`
+	RiskLevel          string `json:"risk_level"`
 }
 
 // GetCarePlanRisksResponse represents the response for the GetCarePlanRisks API
 type GetCarePlanRisksResponse struct {
-	RiskID             int64   `json:"risk_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
+	RiskID             int64  `json:"risk_id"`
+	RiskDescription    string `json:"risk_description"`
+	MitigationStrategy string `json:"mitigation_strategy"`
+	RiskLevel          string `json:"risk_level"`
 }
 
 // UpdateCarePlanRisksRequest represents the request body for updating a care plan risk
@@ -280,10 +280,10 @@ type UpdateCarePlanRisksRequest struct {
 
 // UpdateCarePlanRisksResponse represents the response for the UpdateCarePlanRisks API
 type UpdateCarePlanRisksResponse struct {
-	RiskID             int64   `json:"risk_id"`
-	RiskDescription    string  `json:"risk_description"`
-	MitigationStrategy string  `json:"mitigation_strategy"`
-	RiskLevel          *string `json:"risk_level"`
+	RiskID             int64  `json:"risk_id"`
+	RiskDescription    string `json:"risk_description"`
+	MitigationStrategy string `json:"mitigation_strategy"`
+	RiskLevel          string `json:"risk_level"`
 }
 
 // CreateCarePlanSupportNetworkRequest represents the request body for creating a care plan support network

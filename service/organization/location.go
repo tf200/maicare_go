@@ -46,6 +46,17 @@ func (s *organizationService) ListAllLocations(ctx context.Context) ([]ListLocat
 			Name:     loc.Name,
 			Address:  loc.Address,
 			Capacity: loc.Capacity,
+			Occupied: int32(loc.ClientCount),
+			Available: func() int32 {
+				if loc.Capacity != nil {
+					available := *loc.Capacity - int32(loc.ClientCount)
+					if available < 0 {
+						return 0
+					}
+					return available
+				}
+				return 0
+			}(),
 		})
 	}
 

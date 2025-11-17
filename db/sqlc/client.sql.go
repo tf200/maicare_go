@@ -12,6 +12,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const approveOrRejectClientLocationTransfer = `-- name: ApproveOrRejectClientLocationTransfer :exec
+UPDATE client_location_transfer
+SET
+    status = $2,
+    approved_rejected_at = NOW(),
+    approved_rejected_by = $3
+WHERE id = $1
+`
+
+type ApproveOrRejectClientLocationTransferParams struct {
+	ID                 int64                            `json:"id"`
+	Status             ClientLocationTransferStatusEnum `json:"status"`
+	ApprovedRejectedBy *uuid.UUID                       `json:"approved_rejected_by"`
+}
+
+func (q *Queries) ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error {
+	_, err := q.db.Exec(ctx, approveOrRejectClientLocationTransfer, arg.ID, arg.Status, arg.ApprovedRejectedBy)
+	return err
+}
+
 const createClientDetails = `-- name: CreateClientDetails :one
 INSERT INTO client_details (
     intake_form_id,
@@ -56,49 +76,49 @@ INSERT INTO client_details (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
-) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, organization_id
+) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type CreateClientDetailsParams struct {
-	IntakeFormID               *int64      `json:"intake_form_id"`
-	FirstName                  string      `json:"first_name"`
-	LastName                   string      `json:"last_name"`
-	DateOfBirth                pgtype.Date `json:"date_of_birth"`
-	Identity                   bool        `json:"identity"`
-	Bsn                        *string     `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID  `json:"bsn_verified_by"`
-	Source                     *string     `json:"source"`
-	Birthplace                 *string     `json:"birthplace"`
-	Email                      string      `json:"email"`
-	PhoneNumber                *string     `json:"phone_number"`
-	OrganizationID             *int64      `json:"organization_id"`
-	Departement                *string     `json:"departement"`
-	Gender                     string      `json:"gender"`
-	Filenumber                 string      `json:"filenumber"`
-	ProfilePicture             *string     `json:"profile_picture"`
-	Infix                      *string     `json:"infix"`
-	SenderID                   *int64      `json:"sender_id"`
-	LocationID                 *int64      `json:"location_id"`
-	DepartureReason            *string     `json:"departure_reason"`
-	DepartureReport            *string     `json:"departure_report"`
-	Addresses                  []byte      `json:"addresses"`
-	LegalMeasure               *string     `json:"legal_measure"`
-	EducationCurrentlyEnrolled bool        `json:"education_currently_enrolled"`
-	EducationInstitution       *string     `json:"education_institution"`
-	EducationMentorName        *string     `json:"education_mentor_name"`
-	EducationMentorPhone       *string     `json:"education_mentor_phone"`
-	EducationMentorEmail       *string     `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string     `json:"education_additional_notes"`
-	EducationLevel             *string     `json:"education_level"`
-	WorkCurrentlyEmployed      bool        `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string     `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string     `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string     `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string     `json:"work_current_position"`
-	WorkStartDate              pgtype.Date `json:"work_start_date"`
-	WorkAdditionalNotes        *string     `json:"work_additional_notes"`
-	LivingSituation            *string     `json:"living_situation"`
-	LivingSituationNotes       *string     `json:"living_situation_notes"`
+	IntakeFormID               *int64                        `json:"intake_form_id"`
+	FirstName                  string                        `json:"first_name"`
+	LastName                   string                        `json:"last_name"`
+	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
+	Identity                   bool                          `json:"identity"`
+	Bsn                        *string                       `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID                    `json:"bsn_verified_by"`
+	Source                     *string                       `json:"source"`
+	Birthplace                 *string                       `json:"birthplace"`
+	Email                      string                        `json:"email"`
+	PhoneNumber                *string                       `json:"phone_number"`
+	OrganizationID             *int64                        `json:"organization_id"`
+	Departement                *string                       `json:"departement"`
+	Gender                     ClientGenderEnum              `json:"gender"`
+	Filenumber                 string                        `json:"filenumber"`
+	ProfilePicture             *string                       `json:"profile_picture"`
+	Infix                      *string                       `json:"infix"`
+	SenderID                   *int64                        `json:"sender_id"`
+	LocationID                 *int64                        `json:"location_id"`
+	DepartureReason            *string                       `json:"departure_reason"`
+	DepartureReport            *string                       `json:"departure_report"`
+	Addresses                  []byte                        `json:"addresses"`
+	LegalMeasure               *string                       `json:"legal_measure"`
+	EducationCurrentlyEnrolled bool                          `json:"education_currently_enrolled"`
+	EducationInstitution       *string                       `json:"education_institution"`
+	EducationMentorName        *string                       `json:"education_mentor_name"`
+	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                       `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
+	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
+	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                       `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                       `json:"work_current_position"`
+	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
+	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
+	LivingSituationNotes       *string                       `json:"living_situation_notes"`
 }
 
 func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error) {
@@ -158,6 +178,7 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
+		&i.OrganizationID,
 		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
@@ -201,7 +222,6 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.RiskOther,
 		&i.RiskOtherDescription,
 		&i.RiskAdditionalNotes,
-		&i.OrganizationID,
 	)
 	return i, err
 }
@@ -217,9 +237,9 @@ INSERT INTO client_documents (
 `
 
 type CreateClientDocumentParams struct {
-	ClientID       uuid.UUID  `json:"client_id"`
-	AttachmentUuid *uuid.UUID `json:"attachment_uuid"`
-	Label          string     `json:"label"`
+	ClientID       uuid.UUID               `json:"client_id"`
+	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
+	Label          ClientDocumentLabelEnum `json:"label"`
 }
 
 func (q *Queries) CreateClientDocument(ctx context.Context, arg CreateClientDocumentParams) (ClientDocument, error) {
@@ -232,6 +252,40 @@ func (q *Queries) CreateClientDocument(ctx context.Context, arg CreateClientDocu
 		&i.Label,
 	)
 	return i, err
+}
+
+const createClientLocationTransfer = `-- name: CreateClientLocationTransfer :exec
+INSERT INTO client_location_transfer (
+    client_id,
+    from_location_id,
+    to_location_id,
+    request_date,
+    new_mentor_id,
+    reason
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+`
+
+type CreateClientLocationTransferParams struct {
+	ClientID       uuid.UUID          `json:"client_id"`
+	FromLocationID *int64             `json:"from_location_id"`
+	ToLocationID   *int64             `json:"to_location_id"`
+	RequestDate    pgtype.Timestamptz `json:"request_date"`
+	NewMentorID    *uuid.UUID         `json:"new_mentor_id"`
+	Reason         *string            `json:"reason"`
+}
+
+func (q *Queries) CreateClientLocationTransfer(ctx context.Context, arg CreateClientLocationTransferParams) error {
+	_, err := q.db.Exec(ctx, createClientLocationTransfer,
+		arg.ClientID,
+		arg.FromLocationID,
+		arg.ToLocationID,
+		arg.RequestDate,
+		arg.NewMentorID,
+		arg.Reason,
+	)
+	return err
 }
 
 const createClientStatusHistory = `-- name: CreateClientStatusHistory :one
@@ -393,7 +447,7 @@ func (q *Queries) GetClientCounts(ctx context.Context) (GetClientCountsRow, erro
 }
 
 const getClientDetails = `-- name: GetClientDetails :one
-SELECT c.id, c.intake_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.source, c.birthplace, c.email, c.phone_number, c.departement, c.gender, c.filenumber, c.profile_picture, c.infix, c.created_at, c.sender_id, c.location_id, c.departure_reason, c.departure_report, c.gps_position, c.maturity_domains, c.addresses, c.legal_measure, c.has_untaken_medications, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.living_situation, c.living_situation_notes, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes, c.organization_id,
+SELECT c.id, c.intake_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.source, c.birthplace, c.email, c.phone_number, c.organization_id, c.departement, c.gender, c.filenumber, c.profile_picture, c.infix, c.created_at, c.sender_id, c.location_id, c.departure_reason, c.departure_report, c.gps_position, c.maturity_domains, c.addresses, c.legal_measure, c.has_untaken_medications, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.living_situation, c.living_situation_notes, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
        ep.first_name AS bsn_verified_by_first_name,
        ep.last_name AS bsn_verified_by_last_name
 FROM client_details c
@@ -402,65 +456,65 @@ WHERE c.id = $1 LIMIT 1
 `
 
 type GetClientDetailsRow struct {
-	ID                         uuid.UUID          `json:"id"`
-	IntakeFormID               *int64             `json:"intake_form_id"`
-	FirstName                  string             `json:"first_name"`
-	LastName                   string             `json:"last_name"`
-	DateOfBirth                pgtype.Date        `json:"date_of_birth"`
-	Identity                   bool               `json:"identity"`
-	Status                     *string            `json:"status"`
-	Bsn                        *string            `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID         `json:"bsn_verified_by"`
-	Source                     *string            `json:"source"`
-	Birthplace                 *string            `json:"birthplace"`
-	Email                      string             `json:"email"`
-	PhoneNumber                *string            `json:"phone_number"`
-	Departement                *string            `json:"departement"`
-	Gender                     string             `json:"gender"`
-	Filenumber                 string             `json:"filenumber"`
-	ProfilePicture             *string            `json:"profile_picture"`
-	Infix                      *string            `json:"infix"`
-	CreatedAt                  pgtype.Timestamptz `json:"created_at"`
-	SenderID                   *int64             `json:"sender_id"`
-	LocationID                 *int64             `json:"location_id"`
-	DepartureReason            *string            `json:"departure_reason"`
-	DepartureReport            *string            `json:"departure_report"`
-	GpsPosition                []byte             `json:"gps_position"`
-	MaturityDomains            []byte             `json:"maturity_domains"`
-	Addresses                  []byte             `json:"addresses"`
-	LegalMeasure               *string            `json:"legal_measure"`
-	HasUntakenMedications      bool               `json:"has_untaken_medications"`
-	EducationCurrentlyEnrolled bool               `json:"education_currently_enrolled"`
-	EducationInstitution       *string            `json:"education_institution"`
-	EducationMentorName        *string            `json:"education_mentor_name"`
-	EducationMentorPhone       *string            `json:"education_mentor_phone"`
-	EducationMentorEmail       *string            `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string            `json:"education_additional_notes"`
-	EducationLevel             *string            `json:"education_level"`
-	WorkCurrentlyEmployed      bool               `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string            `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string            `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string            `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string            `json:"work_current_position"`
-	WorkStartDate              pgtype.Date        `json:"work_start_date"`
-	WorkAdditionalNotes        *string            `json:"work_additional_notes"`
-	LivingSituation            *string            `json:"living_situation"`
-	LivingSituationNotes       *string            `json:"living_situation_notes"`
-	RiskAggressiveBehavior     *bool              `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool              `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool              `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool              `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool              `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool              `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool              `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool              `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool              `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool              `json:"risk_other"`
-	RiskOtherDescription       *string            `json:"risk_other_description"`
-	RiskAdditionalNotes        *string            `json:"risk_additional_notes"`
-	OrganizationID             *int64             `json:"organization_id"`
-	BsnVerifiedByFirstName     *string            `json:"bsn_verified_by_first_name"`
-	BsnVerifiedByLastName      *string            `json:"bsn_verified_by_last_name"`
+	ID                         uuid.UUID                     `json:"id"`
+	IntakeFormID               *int64                        `json:"intake_form_id"`
+	FirstName                  string                        `json:"first_name"`
+	LastName                   string                        `json:"last_name"`
+	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
+	Identity                   bool                          `json:"identity"`
+	Status                     ClientStatusEnum              `json:"status"`
+	Bsn                        *string                       `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID                    `json:"bsn_verified_by"`
+	Source                     *string                       `json:"source"`
+	Birthplace                 *string                       `json:"birthplace"`
+	Email                      string                        `json:"email"`
+	PhoneNumber                *string                       `json:"phone_number"`
+	OrganizationID             *int64                        `json:"organization_id"`
+	Departement                *string                       `json:"departement"`
+	Gender                     ClientGenderEnum              `json:"gender"`
+	Filenumber                 string                        `json:"filenumber"`
+	ProfilePicture             *string                       `json:"profile_picture"`
+	Infix                      *string                       `json:"infix"`
+	CreatedAt                  pgtype.Timestamptz            `json:"created_at"`
+	SenderID                   *int64                        `json:"sender_id"`
+	LocationID                 *int64                        `json:"location_id"`
+	DepartureReason            *string                       `json:"departure_reason"`
+	DepartureReport            *string                       `json:"departure_report"`
+	GpsPosition                []byte                        `json:"gps_position"`
+	MaturityDomains            []byte                        `json:"maturity_domains"`
+	Addresses                  []byte                        `json:"addresses"`
+	LegalMeasure               *string                       `json:"legal_measure"`
+	HasUntakenMedications      bool                          `json:"has_untaken_medications"`
+	EducationCurrentlyEnrolled bool                          `json:"education_currently_enrolled"`
+	EducationInstitution       *string                       `json:"education_institution"`
+	EducationMentorName        *string                       `json:"education_mentor_name"`
+	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                       `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
+	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
+	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                       `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                       `json:"work_current_position"`
+	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
+	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
+	LivingSituationNotes       *string                       `json:"living_situation_notes"`
+	RiskAggressiveBehavior     *bool                         `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                         `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                         `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                         `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                         `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                         `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                         `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                         `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                         `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                         `json:"risk_other"`
+	RiskOtherDescription       *string                       `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                       `json:"risk_additional_notes"`
+	BsnVerifiedByFirstName     *string                       `json:"bsn_verified_by_first_name"`
+	BsnVerifiedByLastName      *string                       `json:"bsn_verified_by_last_name"`
 }
 
 func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error) {
@@ -480,6 +534,7 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
+		&i.OrganizationID,
 		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
@@ -523,7 +578,6 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 		&i.RiskOther,
 		&i.RiskOtherDescription,
 		&i.RiskAdditionalNotes,
-		&i.OrganizationID,
 		&i.BsnVerifiedByFirstName,
 		&i.BsnVerifiedByLastName,
 	)
@@ -571,7 +625,7 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID uuid.U
 
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT 
-    c.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, departement, gender, filenumber, profile_picture, infix, c.created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, organization_id, location.id, organisation_id, name, address, capacity, location_type, location.created_at, updated_at,
+    c.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, c.created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, address, capacity, location_type, location.created_at, updated_at,
     location.name AS location_name,
     COUNT(*) OVER() AS total_count
 FROM client_details c
@@ -590,81 +644,81 @@ LIMIT $5 OFFSET $4
 `
 
 type ListClientDetailsParams struct {
-	Status     *string `json:"status"`
-	LocationID *int64  `json:"location_id"`
-	Search     *string `json:"search"`
-	Offset     int32   `json:"offset"`
-	Limit      int32   `json:"limit"`
+	Status     NullClientStatusEnum `json:"status"`
+	LocationID *int64               `json:"location_id"`
+	Search     *string              `json:"search"`
+	Offset     int32                `json:"offset"`
+	Limit      int32                `json:"limit"`
 }
 
 type ListClientDetailsRow struct {
-	ID                         uuid.UUID          `json:"id"`
-	IntakeFormID               *int64             `json:"intake_form_id"`
-	FirstName                  string             `json:"first_name"`
-	LastName                   string             `json:"last_name"`
-	DateOfBirth                pgtype.Date        `json:"date_of_birth"`
-	Identity                   bool               `json:"identity"`
-	Status                     *string            `json:"status"`
-	Bsn                        *string            `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID         `json:"bsn_verified_by"`
-	Source                     *string            `json:"source"`
-	Birthplace                 *string            `json:"birthplace"`
-	Email                      string             `json:"email"`
-	PhoneNumber                *string            `json:"phone_number"`
-	Departement                *string            `json:"departement"`
-	Gender                     string             `json:"gender"`
-	Filenumber                 string             `json:"filenumber"`
-	ProfilePicture             *string            `json:"profile_picture"`
-	Infix                      *string            `json:"infix"`
-	CreatedAt                  pgtype.Timestamptz `json:"created_at"`
-	SenderID                   *int64             `json:"sender_id"`
-	LocationID                 *int64             `json:"location_id"`
-	DepartureReason            *string            `json:"departure_reason"`
-	DepartureReport            *string            `json:"departure_report"`
-	GpsPosition                []byte             `json:"gps_position"`
-	MaturityDomains            []byte             `json:"maturity_domains"`
-	Addresses                  []byte             `json:"addresses"`
-	LegalMeasure               *string            `json:"legal_measure"`
-	HasUntakenMedications      bool               `json:"has_untaken_medications"`
-	EducationCurrentlyEnrolled bool               `json:"education_currently_enrolled"`
-	EducationInstitution       *string            `json:"education_institution"`
-	EducationMentorName        *string            `json:"education_mentor_name"`
-	EducationMentorPhone       *string            `json:"education_mentor_phone"`
-	EducationMentorEmail       *string            `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string            `json:"education_additional_notes"`
-	EducationLevel             *string            `json:"education_level"`
-	WorkCurrentlyEmployed      bool               `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string            `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string            `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string            `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string            `json:"work_current_position"`
-	WorkStartDate              pgtype.Date        `json:"work_start_date"`
-	WorkAdditionalNotes        *string            `json:"work_additional_notes"`
-	LivingSituation            *string            `json:"living_situation"`
-	LivingSituationNotes       *string            `json:"living_situation_notes"`
-	RiskAggressiveBehavior     *bool              `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool              `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool              `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool              `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool              `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool              `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool              `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool              `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool              `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool              `json:"risk_other"`
-	RiskOtherDescription       *string            `json:"risk_other_description"`
-	RiskAdditionalNotes        *string            `json:"risk_additional_notes"`
-	OrganizationID             *int64             `json:"organization_id"`
-	ID_2                       *int64             `json:"id_2"`
-	OrganisationID             *int64             `json:"organisation_id"`
-	Name                       *string            `json:"name"`
-	Address                    *string            `json:"address"`
-	Capacity                   *int32             `json:"capacity"`
-	LocationType               *string            `json:"location_type"`
-	CreatedAt_2                pgtype.Timestamptz `json:"created_at_2"`
-	UpdatedAt                  pgtype.Timestamptz `json:"updated_at"`
-	LocationName               *string            `json:"location_name"`
-	TotalCount                 int64              `json:"total_count"`
+	ID                         uuid.UUID                     `json:"id"`
+	IntakeFormID               *int64                        `json:"intake_form_id"`
+	FirstName                  string                        `json:"first_name"`
+	LastName                   string                        `json:"last_name"`
+	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
+	Identity                   bool                          `json:"identity"`
+	Status                     ClientStatusEnum              `json:"status"`
+	Bsn                        *string                       `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID                    `json:"bsn_verified_by"`
+	Source                     *string                       `json:"source"`
+	Birthplace                 *string                       `json:"birthplace"`
+	Email                      string                        `json:"email"`
+	PhoneNumber                *string                       `json:"phone_number"`
+	OrganizationID             *int64                        `json:"organization_id"`
+	Departement                *string                       `json:"departement"`
+	Gender                     ClientGenderEnum              `json:"gender"`
+	Filenumber                 string                        `json:"filenumber"`
+	ProfilePicture             *string                       `json:"profile_picture"`
+	Infix                      *string                       `json:"infix"`
+	CreatedAt                  pgtype.Timestamptz            `json:"created_at"`
+	SenderID                   *int64                        `json:"sender_id"`
+	LocationID                 *int64                        `json:"location_id"`
+	DepartureReason            *string                       `json:"departure_reason"`
+	DepartureReport            *string                       `json:"departure_report"`
+	GpsPosition                []byte                        `json:"gps_position"`
+	MaturityDomains            []byte                        `json:"maturity_domains"`
+	Addresses                  []byte                        `json:"addresses"`
+	LegalMeasure               *string                       `json:"legal_measure"`
+	HasUntakenMedications      bool                          `json:"has_untaken_medications"`
+	EducationCurrentlyEnrolled bool                          `json:"education_currently_enrolled"`
+	EducationInstitution       *string                       `json:"education_institution"`
+	EducationMentorName        *string                       `json:"education_mentor_name"`
+	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                       `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
+	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
+	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                       `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                       `json:"work_current_position"`
+	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
+	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
+	LivingSituationNotes       *string                       `json:"living_situation_notes"`
+	RiskAggressiveBehavior     *bool                         `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                         `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                         `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                         `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                         `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                         `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                         `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                         `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                         `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                         `json:"risk_other"`
+	RiskOtherDescription       *string                       `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                       `json:"risk_additional_notes"`
+	ID_2                       *int64                        `json:"id_2"`
+	OrganisationID             *int64                        `json:"organisation_id"`
+	Name                       *string                       `json:"name"`
+	Address                    *string                       `json:"address"`
+	Capacity                   *int32                        `json:"capacity"`
+	LocationType               NullLocationTypeEnum          `json:"location_type"`
+	CreatedAt_2                pgtype.Timestamptz            `json:"created_at_2"`
+	UpdatedAt                  pgtype.Timestamptz            `json:"updated_at"`
+	LocationName               *string                       `json:"location_name"`
+	TotalCount                 int64                         `json:"total_count"`
 }
 
 func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsParams) ([]ListClientDetailsRow, error) {
@@ -696,6 +750,7 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.Birthplace,
 			&i.Email,
 			&i.PhoneNumber,
+			&i.OrganizationID,
 			&i.Departement,
 			&i.Gender,
 			&i.Filenumber,
@@ -739,7 +794,6 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.RiskOther,
 			&i.RiskOtherDescription,
 			&i.RiskAdditionalNotes,
-			&i.OrganizationID,
 			&i.ID_2,
 			&i.OrganisationID,
 			&i.Name,
@@ -779,19 +833,19 @@ type ListClientDocumentsParams struct {
 }
 
 type ListClientDocumentsRow struct {
-	ID             int64              `json:"id"`
-	AttachmentUuid *uuid.UUID         `json:"attachment_uuid"`
-	ClientID       uuid.UUID          `json:"client_id"`
-	Label          string             `json:"label"`
-	Uuid           uuid.UUID          `json:"uuid"`
-	Name           string             `json:"name"`
-	File           string             `json:"file"`
-	Size           int32              `json:"size"`
-	IsUsed         bool               `json:"is_used"`
-	Tag            *string            `json:"tag"`
-	Updated        pgtype.Timestamptz `json:"updated"`
-	Created        pgtype.Timestamptz `json:"created"`
-	TotalCount     int64              `json:"total_count"`
+	ID             int64                   `json:"id"`
+	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
+	ClientID       uuid.UUID               `json:"client_id"`
+	Label          ClientDocumentLabelEnum `json:"label"`
+	Uuid           uuid.UUID               `json:"uuid"`
+	Name           string                  `json:"name"`
+	File           string                  `json:"file"`
+	Size           int32                   `json:"size"`
+	IsUsed         bool                    `json:"is_used"`
+	Tag            *string                 `json:"tag"`
+	Updated        pgtype.Timestamptz      `json:"updated"`
+	Created        pgtype.Timestamptz      `json:"created"`
+	TotalCount     int64                   `json:"total_count"`
 }
 
 func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumentsParams) ([]ListClientDocumentsRow, error) {
@@ -873,7 +927,7 @@ const setClientProfilePicture = `-- name: SetClientProfilePicture :one
 UPDATE client_details
 SET profile_picture = $2
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, organization_id
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type SetClientProfilePictureParams struct {
@@ -898,6 +952,7 @@ func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProf
 		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
+		&i.OrganizationID,
 		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
@@ -941,7 +996,6 @@ func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProf
 		&i.RiskOther,
 		&i.RiskOtherDescription,
 		&i.RiskAdditionalNotes,
-		&i.OrganizationID,
 	)
 	return i, err
 }
@@ -988,48 +1042,48 @@ SET
     living_situation_notes = COALESCE ($38, living_situation_notes)
 
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, organization_id
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type UpdateClientDetailsParams struct {
-	ID                         uuid.UUID   `json:"id"`
-	FirstName                  *string     `json:"first_name"`
-	LastName                   *string     `json:"last_name"`
-	DateOfBirth                pgtype.Date `json:"date_of_birth"`
-	Identity                   *bool       `json:"identity"`
-	Bsn                        *string     `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID  `json:"bsn_verified_by"`
-	Source                     *string     `json:"source"`
-	Birthplace                 *string     `json:"birthplace"`
-	Email                      *string     `json:"email"`
-	PhoneNumber                *string     `json:"phone_number"`
-	OrganizationID             *int64      `json:"organization_id"`
-	Departement                *string     `json:"departement"`
-	Gender                     *string     `json:"gender"`
-	Filenumber                 *string     `json:"filenumber"`
-	ProfilePicture             *string     `json:"profile_picture"`
-	Infix                      *string     `json:"infix"`
-	SenderID                   *int64      `json:"sender_id"`
-	LocationID                 *int64      `json:"location_id"`
-	DepartureReason            *string     `json:"departure_reason"`
-	DepartureReport            *string     `json:"departure_report"`
-	LegalMeasure               *string     `json:"legal_measure"`
-	EducationCurrentlyEnrolled *bool       `json:"education_currently_enrolled"`
-	EducationInstitution       *string     `json:"education_institution"`
-	EducationMentorName        *string     `json:"education_mentor_name"`
-	EducationMentorPhone       *string     `json:"education_mentor_phone"`
-	EducationMentorEmail       *string     `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string     `json:"education_additional_notes"`
-	EducationLevel             *string     `json:"education_level"`
-	WorkCurrentlyEmployed      *bool       `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string     `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string     `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string     `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string     `json:"work_current_position"`
-	WorkStartDate              pgtype.Date `json:"work_start_date"`
-	WorkAdditionalNotes        *string     `json:"work_additional_notes"`
-	LivingSituation            *string     `json:"living_situation"`
-	LivingSituationNotes       *string     `json:"living_situation_notes"`
+	ID                         uuid.UUID                     `json:"id"`
+	FirstName                  *string                       `json:"first_name"`
+	LastName                   *string                       `json:"last_name"`
+	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
+	Identity                   *bool                         `json:"identity"`
+	Bsn                        *string                       `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID                    `json:"bsn_verified_by"`
+	Source                     *string                       `json:"source"`
+	Birthplace                 *string                       `json:"birthplace"`
+	Email                      *string                       `json:"email"`
+	PhoneNumber                *string                       `json:"phone_number"`
+	OrganizationID             *int64                        `json:"organization_id"`
+	Departement                *string                       `json:"departement"`
+	Gender                     NullClientGenderEnum          `json:"gender"`
+	Filenumber                 *string                       `json:"filenumber"`
+	ProfilePicture             *string                       `json:"profile_picture"`
+	Infix                      *string                       `json:"infix"`
+	SenderID                   *int64                        `json:"sender_id"`
+	LocationID                 *int64                        `json:"location_id"`
+	DepartureReason            *string                       `json:"departure_reason"`
+	DepartureReport            *string                       `json:"departure_report"`
+	LegalMeasure               *string                       `json:"legal_measure"`
+	EducationCurrentlyEnrolled *bool                         `json:"education_currently_enrolled"`
+	EducationInstitution       *string                       `json:"education_institution"`
+	EducationMentorName        *string                       `json:"education_mentor_name"`
+	EducationMentorPhone       *string                       `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                       `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
+	EducationLevel             NullClientEducationLevelEnum  `json:"education_level"`
+	WorkCurrentlyEmployed      *bool                         `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                       `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                       `json:"work_current_position"`
+	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
+	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
+	LivingSituationNotes       *string                       `json:"living_situation_notes"`
 }
 
 func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetailsParams) (ClientDetail, error) {
@@ -1088,6 +1142,7 @@ func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetai
 		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
+		&i.OrganizationID,
 		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
@@ -1131,7 +1186,6 @@ func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetai
 		&i.RiskOther,
 		&i.RiskOtherDescription,
 		&i.RiskAdditionalNotes,
-		&i.OrganizationID,
 	)
 	return i, err
 }
@@ -1140,12 +1194,12 @@ const updateClientStatus = `-- name: UpdateClientStatus :one
 UPDATE client_details
 SET status = $2
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, organization_id
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type UpdateClientStatusParams struct {
-	ID     uuid.UUID `json:"id"`
-	Status *string   `json:"status"`
+	ID     uuid.UUID        `json:"id"`
+	Status ClientStatusEnum `json:"status"`
 }
 
 func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error) {
@@ -1165,6 +1219,7 @@ func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatus
 		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
+		&i.OrganizationID,
 		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
@@ -1208,7 +1263,6 @@ func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatus
 		&i.RiskOther,
 		&i.RiskOtherDescription,
 		&i.RiskAdditionalNotes,
-		&i.OrganizationID,
 	)
 	return i, err
 }

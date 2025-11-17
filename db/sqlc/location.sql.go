@@ -256,19 +256,35 @@ func (q *Queries) GetOrganisationCounts(ctx context.Context, id int64) (GetOrgan
 }
 
 const listAllLocations = `-- name: ListAllLocations :many
-SELECT id, organisation_id, name, address, capacity, location_type, created_at, updated_at FROM location
-ORDER BY name
+SELECT l.id, l.organisation_id, l.name, l.address, l.capacity, l.location_type, l.created_at, l.updated_at,
+       COUNT(c.id) AS client_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+GROUP BY l.id
+ORDER BY l.name
 `
 
-func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
+type ListAllLocationsRow struct {
+	ID             int64              `json:"id"`
+	OrganisationID int64              `json:"organisation_id"`
+	Name           string             `json:"name"`
+	Address        string             `json:"address"`
+	Capacity       *int32             `json:"capacity"`
+	LocationType   LocationTypeEnum   `json:"location_type"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ClientCount    int64              `json:"client_count"`
+}
+
+func (q *Queries) ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, error) {
 	rows, err := q.db.Query(ctx, listAllLocations)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Location{}
+	items := []ListAllLocationsRow{}
 	for rows.Next() {
-		var i Location
+		var i ListAllLocationsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.OrganisationID,
@@ -278,6 +294,7 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
 			&i.LocationType,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ClientCount,
 		); err != nil {
 			return nil, err
 		}
@@ -290,19 +307,35 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]Location, error) {
 }
 
 const listLocations = `-- name: ListLocations :many
-SELECT id, organisation_id, name, address, capacity, location_type, created_at, updated_at FROM location 
+SELECT l.id, l.organisation_id, l.name, l.address, l.capacity, l.location_type, l.created_at, l.updated_at,
+    COUNT(c.id) AS client_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
 WHERE organisation_id = $1
+GROUP BY l.id
 `
 
-func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]Location, error) {
+type ListLocationsRow struct {
+	ID             int64              `json:"id"`
+	OrganisationID int64              `json:"organisation_id"`
+	Name           string             `json:"name"`
+	Address        string             `json:"address"`
+	Capacity       *int32             `json:"capacity"`
+	LocationType   LocationTypeEnum   `json:"location_type"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ClientCount    int64              `json:"client_count"`
+}
+
+func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]ListLocationsRow, error) {
 	rows, err := q.db.Query(ctx, listLocations, organisationID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Location{}
+	items := []ListLocationsRow{}
 	for rows.Next() {
-		var i Location
+		var i ListLocationsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.OrganisationID,
@@ -312,6 +345,7 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]Lo
 			&i.LocationType,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ClientCount,
 		); err != nil {
 			return nil, err
 		}

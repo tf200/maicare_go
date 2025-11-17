@@ -43,6 +43,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/boombuler/barcode v1.0.2 // indirect
+	github.com/brianvoe/gofakeit/v7 v7.9.0 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect

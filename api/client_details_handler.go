@@ -388,3 +388,70 @@ func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
 	res := SuccessResponse(result, "Missing client documents fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// RequestLocationTransferApi handles location transfer requests
+// @Summary Request a location transfer for a client
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param request body clientp.LocationTransferRequest true "Location transfer request"
+// @Success 200 {object} Response[any]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/location_transfer [post]
+func (server *Server) RequestLocationTransferApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := uuid.Parse(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.LocationTransferRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.businessService.ClientService.RequestLocationTransfer(ctx, clientID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Location transfer request created successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ApproveOrRejectClientLocationTransferApi handles approval or rejection of location transfer requests
+// @Summary Approve or reject a location transfer request for a client
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param request body clientp.ApproveOrRejectLocationTransferRequest true "Approve or reject location transfer request"
+// @Success 200 {object} Response[any]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/location_transfer/approve_reject [post]
+func (server *Server) ApproveOrRejectClientLocationTransferApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	employeeID := payload.EmployeeID
+
+	var req clientp.ApproveOrRejectLocationTransferRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.businessService.ClientService.ApproveLocationTransfer(ctx, employeeID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Location transfer request processed successfully")
+	ctx.JSON(http.StatusOK, res)
+}

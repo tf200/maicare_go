@@ -8,7 +8,7 @@ import (
 
 // CreatePaymentRequest represents the request body for creating a payment.
 type CreatePaymentRequest struct {
-	PaymentMethod    *string   `json:"payment_method" binding:"oneof=credit_card bank_transfer cash check other"`
+	PaymentMethod    string    `json:"payment_method" binding:"oneof=credit_card bank_transfer cash check other"`
 	PaymentStatus    string    `json:"payment_status" binding:"required,oneof=pending completed failed refunded reversed"`
 	Amount           float64   `json:"amount" binding:"required,min=0"`
 	PaymentDate      time.Time `json:"payment_date" binding:"required" example:"2023-10-01T00:00:00Z"`
@@ -20,7 +20,7 @@ type CreatePaymentRequest struct {
 type CreatePaymentResponse struct {
 	PaymentID            int64      `json:"payment_id"`
 	InvoiceID            int64      `json:"invoice_id"`
-	PaymentMethod        *string    `json:"payment_method"`
+	PaymentMethod        string     `json:"payment_method"`
 	PaymentStatus        string     `json:"payment_status"`
 	Amount               float64    `json:"amount"`
 	PaymentDate          time.Time  `json:"payment_date"`
@@ -35,7 +35,7 @@ type CreatePaymentResponse struct {
 type ListPaymentsResponse struct {
 	PaymentID           int64      `json:"payment_id"`
 	InvoiceID           int64      `json:"invoice_id"`
-	PaymentMethod       *string    `json:"payment_method"`
+	PaymentMethod       string     `json:"payment_method"`
 	PaymentStatus       string     `json:"payment_status"`
 	Amount              float64    `json:"amount"`
 	PaymentDate         time.Time  `json:"payment_date"`
@@ -52,7 +52,7 @@ type ListPaymentsResponse struct {
 type GetPaymentByIDResponse struct {
 	PaymentID           int64      `json:"payment_id"`
 	InvoiceID           int64      `json:"invoice_id"`
-	PaymentMethod       *string    `json:"payment_method"`
+	PaymentMethod       string     `json:"payment_method"`
 	PaymentStatus       string     `json:"payment_status"`
 	Amount              float64    `json:"amount"`
 	PaymentDate         time.Time  `json:"payment_date"`
@@ -79,7 +79,7 @@ type UpdatePaymentRequest struct {
 type UpdatePaymentResponse struct {
 	PaymentID             int64      `json:"payment_id"`
 	InvoiceID             int64      `json:"invoice_id"`
-	PaymentMethod         *string    `json:"payment_method"`
+	PaymentMethod         string     `json:"payment_method"`
 	PaymentStatus         string     `json:"payment_status"`
 	Amount                float64    `json:"amount"`
 	PaymentDate           time.Time  `json:"payment_date"`
