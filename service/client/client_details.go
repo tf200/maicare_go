@@ -71,15 +71,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		WorkCurrentPosition:      req.WorkCurrentPosition,
 		WorkStartDate:            pgtype.Date{Time: req.WorkStartDate, Valid: true},
 		WorkAdditionalNotes:      req.WorkAdditionalNotes,
-		LivingSituation: func() db.NullClientLivingSituationEnum {
-			if req.LivingSituation == nil {
-				return db.NullClientLivingSituationEnum{Valid: false}
-			}
-			return db.NullClientLivingSituationEnum{
-				ClientLivingSituationEnum: db.ClientLivingSituationEnum(*req.LivingSituation),
-				Valid:                     true,
-			}
-		}(),
+		LivingSituation:          db.NullClientLivingSituationFromPtr(req.LivingSituation),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDetails",
@@ -134,14 +126,8 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		WorkCurrentPosition:        client.WorkCurrentPosition,
 		WorkStartDate:              client.WorkStartDate.Time,
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-		LivingSituation: func() *string {
-			if client.LivingSituation.Valid {
-				situation := string(client.LivingSituation.ClientLivingSituationEnum)
-				return &situation
-			}
-			return nil
-		}(),
-		LivingSituationNotes: client.LivingSituationNotes,
+		LivingSituation:            db.ClientLivingSituationPtrFromEnum(client.LivingSituation),
+		LivingSituationNotes:       client.LivingSituationNotes,
 	}
 
 	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateClientDetails",
@@ -153,14 +139,9 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 	params := req.GetParams()
 
 	clients, err := s.Store.ListClientDetails(ctx, db.ListClientDetailsParams{
-		Limit:  params.Limit,
-		Offset: params.Offset,
-		Status: func() db.NullClientStatusEnum {
-			if req.Status == nil {
-				return db.NullClientStatusEnum{Valid: false}
-			}
-			return db.NullClientStatusEnum{ClientStatusEnum: db.ClientStatusEnum(*req.Status), Valid: true}
-		}(),
+		Limit:      params.Limit,
+		Offset:     params.Offset,
+		Status:     db.NullClientStatusFromPtr(req.Status),
 		LocationID: req.LocationID,
 		Search:     req.Search,
 	})
@@ -287,14 +268,8 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		WorkCurrentPosition:        client.WorkCurrentPosition,
 		WorkStartDate:              client.WorkStartDate.Time,
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-		LivingSituation: func() *string {
-			if client.LivingSituation.Valid {
-				level := string(client.LivingSituation.ClientLivingSituationEnum)
-				return &level
-			}
-			return nil
-		}(),
-		LivingSituationNotes: client.LivingSituationNotes,
+		LivingSituation:            db.ClientLivingSituationPtrFromEnum(client.LivingSituation),
+		LivingSituationNotes:       client.LivingSituationNotes,
 	}, nil
 }
 
@@ -321,28 +296,20 @@ func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UU
 
 func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error) {
 	client, err := s.Store.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
-		ID:             clientID,
-		FirstName:      req.FirstName,
-		LastName:       req.LastName,
-		DateOfBirth:    pgtype.Date{Time: req.DateOfBirth, Valid: true},
-		Identity:       req.Identity,
-		Bsn:            req.Bsn,
-		BsnVerifiedBy:  req.BsnVerifiedBy,
-		Source:         req.Source,
-		Birthplace:     req.Birthplace,
-		Email:          req.Email,
-		PhoneNumber:    req.PhoneNumber,
-		OrganizationID: req.OrganizationID,
-		Departement:    req.Departement,
-		Gender: func() db.NullClientGenderEnum {
-			if req.Gender == nil {
-				return db.NullClientGenderEnum{Valid: false}
-			}
-			return db.NullClientGenderEnum{
-				ClientGenderEnum: db.ClientGenderEnum(*req.Gender),
-				Valid:            true,
-			}
-		}(),
+		ID:                         clientID,
+		FirstName:                  req.FirstName,
+		LastName:                   req.LastName,
+		DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
+		Identity:                   req.Identity,
+		Bsn:                        req.Bsn,
+		BsnVerifiedBy:              req.BsnVerifiedBy,
+		Source:                     req.Source,
+		Birthplace:                 req.Birthplace,
+		Email:                      req.Email,
+		PhoneNumber:                req.PhoneNumber,
+		OrganizationID:             req.OrganizationID,
+		Departement:                req.Departement,
+		Gender:                     db.NullClientGenderFromPtr(req.Gender),
 		Filenumber:                 req.Filenumber,
 		ProfilePicture:             req.ProfilePicture,
 		Infix:                      req.Infix,
@@ -357,32 +324,16 @@ func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClien
 		EducationMentorPhone:       req.EducationMentorPhone,
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		EducationLevel: func() db.NullClientEducationLevelEnum {
-			if req.EducationLevel == nil {
-				return db.NullClientEducationLevelEnum{Valid: false}
-			}
-			return db.NullClientEducationLevelEnum{
-				ClientEducationLevelEnum: db.ClientEducationLevelEnum(*req.EducationLevel),
-				Valid:                    true,
-			}
-		}(),
-		WorkCurrentlyEmployed:    req.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:      req.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone: req.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail: req.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:      req.WorkCurrentPosition,
-		WorkStartDate:            pgtype.Date{Time: req.WorkStartDate, Valid: true},
-		WorkAdditionalNotes:      req.WorkAdditionalNotes,
-		LivingSituation: func() db.NullClientLivingSituationEnum {
-			if req.LivingSituation == nil {
-				return db.NullClientLivingSituationEnum{Valid: false}
-			}
-			return db.NullClientLivingSituationEnum{
-				ClientLivingSituationEnum: db.ClientLivingSituationEnum(*req.LivingSituation),
-				Valid:                     true,
-			}
-		}(),
-		LivingSituationNotes: req.LivingSituationNotes,
+		EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
+		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:        req.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:        req.WorkCurrentPosition,
+		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
+		WorkAdditionalNotes:        req.WorkAdditionalNotes,
+		LivingSituation:            db.NullClientLivingSituationFromPtr(req.LivingSituation),
+		LivingSituationNotes:       req.LivingSituationNotes,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientDetails",

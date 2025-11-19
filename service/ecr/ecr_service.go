@@ -38,16 +38,10 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 			StatusChangeReason: item.StatusChangeReason,
 			StatusChangeDate:   item.StatusChangeDate.Time,
 			ContractEndDate:    item.ContractEndDate.Time,
-			ContractStatus: func() *string {
-				if item.ContractStatus.Valid {
-					status := string(item.ContractStatus.ContractStatusEnum)
-					return &status
-				}
-				return nil
-			}(),
-			DepartureReason: item.DepartureReason,
-			FollowUpPlan:    item.FollowUpPlan,
-			DischargeType:   item.DischargeType,
+			ContractStatus:     db.ContractStatusPtrFromEnum(item.ContractStatus),
+			DepartureReason:    item.DepartureReason,
+			FollowUpPlan:       item.FollowUpPlan,
+			DischargeType:      item.DischargeType,
 		})
 	}
 

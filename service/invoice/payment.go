@@ -187,19 +187,9 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 
 	originalInvoiceStatus := currentPayment.InvoiceStatus
 	updateParams := db.UpdatePaymentParams{
-		ID: paymentID,
-		PaymentMethod: func() db.NullPaymentMethodEnum {
-			if req.PaymentMethod != nil {
-				return db.NullPaymentMethodEnum{PaymentMethodEnum: db.PaymentMethodEnum(*req.PaymentMethod), Valid: true}
-			}
-			return db.NullPaymentMethodEnum{Valid: false}
-		}(),
-		PaymentStatus: func() db.NullPaymentStatusEnum {
-			if req.PaymentStatus != nil {
-				return db.NullPaymentStatusEnum{PaymentStatusEnum: db.PaymentStatusEnum(*req.PaymentStatus), Valid: true}
-			}
-			return db.NullPaymentStatusEnum{Valid: false}
-		}(),
+		ID:               paymentID,
+		PaymentMethod:    db.NullPaymentMethodFromPtr(req.PaymentMethod),
+		PaymentStatus:    db.NullPaymentStatusFromPtr(req.PaymentStatus),
 		Amount:           req.Amount,
 		PaymentReference: req.PaymentReference,
 		Notes:            req.Notes,

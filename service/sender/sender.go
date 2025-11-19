@@ -185,12 +185,7 @@ func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *U
 		ClientNumber: req.ClientNumber,
 		EmailAddress: req.EmailAddress,
 		IsArchived:   req.IsArchived,
-		Types: func() db.NullSenderTypesEnum {
-			if req.Types != nil {
-				return db.NullSenderTypesEnum{SenderTypesEnum: db.SenderTypesEnum(*req.Types), Valid: true}
-			}
-			return db.NullSenderTypesEnum{Valid: false}
-		}(),
+		Types:        db.NullSenderTypesFromPtr(req.Types),
 	}
 
 	if req.Contacts != nil {

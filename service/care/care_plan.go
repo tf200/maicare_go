@@ -295,21 +295,11 @@ func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, c
 
 func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objectiveID int64, req *UpdateCarePlanObjectiveRequest) (*UpdateCarePlanObjectiveResponse, error) {
 	objective, err := s.Store.UpdateCarePlanObjective(ctx, db.UpdateCarePlanObjectiveParams{
-		ID: objectiveID,
-		Timeframe: func() db.NullCarePlanTimeframeEnum {
-			if req.TimeFrame != nil {
-				return db.NullCarePlanTimeframeEnum{CarePlanTimeframeEnum: db.CarePlanTimeframeEnum(*req.TimeFrame), Valid: true}
-			}
-			return db.NullCarePlanTimeframeEnum{Valid: false}
-		}(),
+		ID:          objectiveID,
+		Timeframe:   db.NullCarePlanTimeframeFromPtr(req.TimeFrame),
 		GoalTitle:   req.GoalTitle,
 		Description: req.Description,
-		Status: func() db.NullCarePlanObjectiveStatusEnum {
-			if req.Status != nil {
-				return db.NullCarePlanObjectiveStatusEnum{CarePlanObjectiveStatusEnum: db.CarePlanObjectiveStatusEnum(*req.Status), Valid: true}
-			}
-			return db.NullCarePlanObjectiveStatusEnum{Valid: false}
-		}(),
+		Status:      db.NullCarePlanObjectiveStatusFromPtr(req.Status),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanObjective", "Failed to update care plan objective", zap.Error(err))
@@ -450,13 +440,8 @@ func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlan
 
 func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interventionID int64, req *UpdateCarePlanInterventionRequest) (*UpdateCarePlanInterventionResponse, error) {
 	intervention, err := s.Store.UpdateCarePlanIntervention(ctx, db.UpdateCarePlanInterventionParams{
-		ID: interventionID,
-		Frequency: func() db.NullCarePlanInterventionFrequencyEnum {
-			if req.Frequency != nil {
-				return db.NullCarePlanInterventionFrequencyEnum{CarePlanInterventionFrequencyEnum: db.CarePlanInterventionFrequencyEnum(*req.Frequency), Valid: true}
-			}
-			return db.NullCarePlanInterventionFrequencyEnum{Valid: false}
-		}(),
+		ID:                      interventionID,
+		Frequency:               db.NullCarePlanInterventionFrequencyFromPtr(req.Frequency),
 		InterventionDescription: req.InterventionDescription,
 	})
 	if err != nil {
@@ -608,12 +593,7 @@ func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, 
 		ID:                 riskID,
 		RiskDescription:    req.RiskDescription,
 		MitigationStrategy: req.MitigationStrategy,
-		RiskLevel: func() db.NullCarePlanRiskLevelEnum {
-			if req.RiskLevel != nil {
-				return db.NullCarePlanRiskLevelEnum{CarePlanRiskLevelEnum: db.CarePlanRiskLevelEnum(*req.RiskLevel), Valid: true}
-			}
-			return db.NullCarePlanRiskLevelEnum{Valid: false}
-		}(),
+		RiskLevel:          db.NullCarePlanRiskLevelFromPtr(req.RiskLevel),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanRiskFactor", "Failed to update care plan risk factor", zap.Error(err))
@@ -834,13 +814,8 @@ func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID int64
 
 func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int64, req *UpdateCarePlanReportRequest) (*UpdateCarePlanReportResponse, error) {
 	report, err := s.Store.UpdateCarePlanReport(ctx, db.UpdateCarePlanReportParams{
-		ID: reportID,
-		ReportType: func() db.NullCarePlanReportTypeEnum {
-			if req.ReportType != nil {
-				return db.NullCarePlanReportTypeEnum{CarePlanReportTypeEnum: db.CarePlanReportTypeEnum(*req.ReportType), Valid: true}
-			}
-			return db.NullCarePlanReportTypeEnum{Valid: false}
-		}(),
+		ID:            reportID,
+		ReportType:    db.NullCarePlanReportTypeFromPtr(req.ReportType),
 		ReportContent: req.ReportContent,
 		IsCritical:    req.IsCritical,
 	})

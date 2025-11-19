@@ -351,15 +351,10 @@ func (s *clientService) GetIncident(ctx context.Context, incidentID int64) (*Get
 
 func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRequest, incidentID int64) (*UpdateIncidentResponse, error) {
 	arg := db.UpdateIncidentParams{
-		ID:         incidentID,
-		EmployeeID: req.EmployeeID,
-		LocationID: req.LocationID,
-		ReporterInvolvement: func() db.NullIncidentReporterInvolvementEnum {
-			if req.ReporterInvolvement != nil {
-				return db.NullIncidentReporterInvolvementEnum{IncidentReporterInvolvementEnum: db.IncidentReporterInvolvementEnum(*req.ReporterInvolvement), Valid: true}
-			}
-			return db.NullIncidentReporterInvolvementEnum{Valid: false}
-		}(),
+		ID:                      incidentID,
+		EmployeeID:              req.EmployeeID,
+		LocationID:              req.LocationID,
+		ReporterInvolvement:     db.NullIncidentReporterInvolvementFromPtr(req.ReporterInvolvement),
 		IncidentDate:            pgtype.Date{Time: req.IncidentDate, Valid: true},
 		RuntimeIncident:         req.RuntimeIncident,
 		IncidentType:            req.IncidentType,
@@ -373,55 +368,30 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 		Organization:            req.Organization,
 		UseProhibitedSubstances: req.UseProhibitedSubstances,
 		OtherNotifications:      req.OtherNotifications,
-		SeverityOfIncident: func() db.NullSeverityOfIncidentEnum {
-			if req.SeverityOfIncident != nil {
-				return db.NullSeverityOfIncidentEnum{SeverityOfIncidentEnum: db.SeverityOfIncidentEnum(*req.SeverityOfIncident), Valid: true}
-			}
-			return db.NullSeverityOfIncidentEnum{Valid: false}
-		}(),
-		IncidentExplanation: req.IncidentExplanation,
-		RecurrenceRisk: func() db.NullRecurrenceRiskEnum {
-			if req.RecurrenceRisk != nil {
-				return db.NullRecurrenceRiskEnum{RecurrenceRiskEnum: db.RecurrenceRiskEnum(*req.RecurrenceRisk), Valid: true}
-			}
-			return db.NullRecurrenceRiskEnum{Valid: false}
-		}(),
-		IncidentPreventSteps:  req.IncidentPreventSteps,
-		IncidentTakenMeasures: req.IncidentTakenMeasures,
-		OtherCause:            req.OtherCause,
-		CauseExplanation:      req.CauseExplanation,
-		PhysicalInjury: func() db.NullPhysicalInjuryEnum {
-			if req.PhysicalInjury != nil {
-				return db.NullPhysicalInjuryEnum{PhysicalInjuryEnum: db.PhysicalInjuryEnum(*req.PhysicalInjury), Valid: true}
-			}
-			return db.NullPhysicalInjuryEnum{Valid: false}
-		}(),
-		PhysicalInjuryDesc: req.PhysicalInjuryDesc,
-		PsychologicalDamage: func() db.NullPsychologicalDamageEnum {
-			if req.PsychologicalDamage != nil {
-				return db.NullPsychologicalDamageEnum{PsychologicalDamageEnum: db.PsychologicalDamageEnum(*req.PsychologicalDamage), Valid: true}
-			}
-			return db.NullPsychologicalDamageEnum{Valid: false}
-		}(),
+		SeverityOfIncident:      db.NullSeverityOfIncidentFromPtr(req.SeverityOfIncident),
+		IncidentExplanation:     req.IncidentExplanation,
+		RecurrenceRisk:          db.NullRecurrenceRiskFromPtr(req.RecurrenceRisk),
+		IncidentPreventSteps:    req.IncidentPreventSteps,
+		IncidentTakenMeasures:   req.IncidentTakenMeasures,
+		OtherCause:              req.OtherCause,
+		CauseExplanation:        req.CauseExplanation,
+		PhysicalInjury:          db.NullPhysicalInjuryFromPtr(req.PhysicalInjury),
+		PhysicalInjuryDesc:      req.PhysicalInjuryDesc,
+		PsychologicalDamage:     db.NullPsychologicalDamageFromPtr(req.PsychologicalDamage),
 		PsychologicalDamageDesc: req.PsychologicalDamageDesc,
-		NeededConsultation: func() db.NullNeededConsultationEnum {
-			if req.NeededConsultation != nil {
-				return db.NullNeededConsultationEnum{NeededConsultationEnum: db.NeededConsultationEnum(*req.NeededConsultation), Valid: true}
-			}
-			return db.NullNeededConsultationEnum{Valid: false}
-		}(),
-		SuccessionDesc:         req.SuccessionDesc,
-		Other:                  req.Other,
-		OtherDesc:              req.OtherDesc,
-		AdditionalAppointments: req.AdditionalAppointments,
-		EmployeeAbsenteeism:    req.EmployeeAbsenteeism,
-		Emails:                 req.Emails,
-		InformWho:              req.InformWho,
-		Succession:             req.Succession,
-		Technical:              req.Technical,
-		Organizational:         req.Organizational,
-		MeseWorker:             req.MeseWorker,
-		ClientOptions:          req.ClientOptions,
+		NeededConsultation:      db.NullNeededConsultationFromPtr(req.NeededConsultation),
+		SuccessionDesc:          req.SuccessionDesc,
+		Other:                   req.Other,
+		OtherDesc:               req.OtherDesc,
+		AdditionalAppointments:  req.AdditionalAppointments,
+		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
+		Emails:                  req.Emails,
+		InformWho:               req.InformWho,
+		Succession:              req.Succession,
+		Technical:               req.Technical,
+		Organizational:          req.Organizational,
+		MeseWorker:              req.MeseWorker,
+		ClientOptions:           req.ClientOptions,
 	}
 	incident, err := s.Store.UpdateIncident(ctx, arg)
 	if err != nil {

@@ -506,6 +506,7 @@ checks func(t *testing.T, entities []Entity, err error)
 6. **Rollback everything**: Never commit test transactions
 7. **Descriptive error messages**: Future you will thank you
 8. **Follow the pattern**: Consistency across test files helps maintainability
+8. **For random methods** : Thos that get used to create items for foreign keys trys to assume they exist first to not keep duplicating over and over
 
 ## Reference: SQL Function Annotations
 

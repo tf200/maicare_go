@@ -210,62 +210,22 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 	}
 
 	contract, err := qtx.UpdateContract(ctx, db.UpdateContractParams{
-		ID:             contractID,
-		TypeID:         req.TypeID,
-		StartDate:      pgtype.Timestamptz{Time: req.StartDate, Valid: true},
-		EndDate:        pgtype.Timestamptz{Time: req.EndDate, Valid: true},
-		ReminderPeriod: req.ReminderPeriod,
-		VAT:            req.Vat,
-		Price:          req.Price,
-		PriceTimeUnit: func() db.NullPriceTimeUnitEnum {
-			if req.PriceTimeUnit == nil {
-				return db.NullPriceTimeUnitEnum{Valid: false}
-			}
-			return db.NullPriceTimeUnitEnum{
-				PriceTimeUnitEnum: db.PriceTimeUnitEnum(*req.PriceTimeUnit),
-				Valid:             true,
-			}
-		}(),
-		Hours: req.Hours,
-		HoursType: func() db.NullHoursTypeEnum {
-			if req.HoursType == nil {
-				return db.NullHoursTypeEnum{Valid: false}
-			}
-			return db.NullHoursTypeEnum{
-				HoursTypeEnum: db.HoursTypeEnum(*req.HoursType),
-				Valid:         true,
-			}
-		}(),
-		CareName: req.CareName,
-		CareType: func() db.NullCareTypeEnum {
-			if req.CareType == nil {
-				return db.NullCareTypeEnum{Valid: false}
-			}
-			return db.NullCareTypeEnum{
-				CareTypeEnum: db.CareTypeEnum(*req.CareType),
-				Valid:        true,
-			}
-		}(),
-		SenderID:      req.SenderID,
-		AttachmentIds: req.AttachmentIds,
-		FinancingAct: func() db.NullFinancingActEnum {
-			if req.FinancingAct == nil {
-				return db.NullFinancingActEnum{Valid: false}
-			}
-			return db.NullFinancingActEnum{
-				FinancingActEnum: db.FinancingActEnum(*req.FinancingAct),
-				Valid:            true,
-			}
-		}(),
-		FinancingOption: func() db.NullFinancingOptionEnum {
-			if req.FinancingOption == nil {
-				return db.NullFinancingOptionEnum{Valid: false}
-			}
-			return db.NullFinancingOptionEnum{
-				FinancingOptionEnum: db.FinancingOptionEnum(*req.FinancingOption),
-				Valid:               true,
-			}
-		}(),
+		ID:              contractID,
+		TypeID:          req.TypeID,
+		StartDate:       pgtype.Timestamptz{Time: req.StartDate, Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: req.EndDate, Valid: true},
+		ReminderPeriod:  req.ReminderPeriod,
+		VAT:             req.Vat,
+		Price:           req.Price,
+		PriceTimeUnit:   db.NullPriceTimeUnitFromPtr(req.PriceTimeUnit),
+		Hours:           req.Hours,
+		HoursType:       db.NullHoursTypeFromPtr(req.HoursType),
+		CareName:        req.CareName,
+		CareType:        db.NullCareTypeFromPtr(req.CareType),
+		SenderID:        req.SenderID,
+		AttachmentIds:   req.AttachmentIds,
+		FinancingAct:    db.NullFinancingActFromPtr(req.FinancingAct),
+		FinancingOption: db.NullFinancingOptionFromPtr(req.FinancingOption),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to update contract", zap.Int64("contract_id", contractID), zap.Error(err))
