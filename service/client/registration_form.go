@@ -174,10 +174,12 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 
 func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistrationFormsRequest) (*pagination.Response[ListRegistrationFormsResponse], error) {
 	params := req.GetParams()
+	status := db.NullFormStatusFromPtr(req.Status)
+
 	forms, err := s.Store.ListRegistrationForms(ctx, db.ListRegistrationFormsParams{
 		Limit:                  params.Limit,
 		Offset:                 params.Offset,
-		Status:                 req.Status,
+		Status:                 status,
 		RiskAggressiveBehavior: req.RiskAggressiveBehavior,
 		RiskSuicidalSelfharm:   req.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:     req.RiskSubstanceAbuse,
@@ -190,10 +192,10 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListRegistrationForms", "Failed to list registration forms", zap.Error(err))
-		return nil, fmt.Errorf("failed to list registration forms: %w", err)
+		return nil, fmt.Errorf("failed to list registration forms: %w status: %v", err, status)
 	}
 	totalCount, err := s.Store.CountRegistrationForms(ctx, db.CountRegistrationFormsParams{
-		Status:                 req.Status,
+		Status:                 status,
 		RiskAggressiveBehavior: req.RiskAggressiveBehavior,
 		RiskSuicidalSelfharm:   req.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:     req.RiskSubstanceAbuse,

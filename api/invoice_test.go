@@ -25,29 +25,29 @@ func createRandomBillableHours(t *testing.T) uuid.UUID {
 
 	// priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
 	// careType := []string{"ambulante", "accommodation"}
-	financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
-	financingOption := []string{"ZIN", "PGB"}
+	// financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
+	// financingOption := []string{"ZIN", "PGB"}
 
 	contractType := createRandomContractType(t)
 
 	arg1 := db.CreateContractParams{
-		TypeID:          &contractType.ID,
-		StartDate:       pgtype.Timestamptz{Time: time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: true},
-		EndDate:         pgtype.Timestamptz{Time: time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC), Valid: true},
-		ReminderPeriod:  10,
-		Vat:             util.Int32Ptr(20),
-		Status:          "approved",
-		Price:           54,
-		PriceTimeUnit:   "daily", // util.RandomEnum(priceFrequency),
-		Hours:           nil,
-		HoursType:       nil,
-		CareName:        "Test Care",
-		CareType:        "accommodation",
-		ClientID:        client.ID,
-		SenderID:        client.SenderID,
-		FinancingAct:    util.RandomEnum(financingAct),
-		FinancingOption: util.RandomEnum(financingOption),
-		AttachmentIds:   []uuid.UUID{},
+		TypeID:         &contractType.ID,
+		StartDate:      pgtype.Timestamptz{Time: time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: true},
+		EndDate:        pgtype.Timestamptz{Time: time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC), Valid: true},
+		ReminderPeriod: 10,
+		Vat:            util.Int32Ptr(20),
+		Status:         "approved",
+		Price:          54,
+		PriceTimeUnit:  "daily", // util.RandomEnum(priceFrequency),
+		// Hours:           nil,
+		// HoursType:       nil,
+		// CareName:        "Test Care",
+		// CareType:        "accommodation",
+		// ClientID:        client.ID,
+		// SenderID:        client.SenderID,
+		// FinancingAct:    util.RandomEnum(financingAct),
+		// FinancingOption: util.RandomEnum(financingOption),
+		// AttachmentIds:   []uuid.UUID{},
 	}
 
 	contract, err := testStore.CreateContract(context.Background(), arg1)
@@ -55,23 +55,23 @@ func createRandomBillableHours(t *testing.T) uuid.UUID {
 	require.NotEmpty(t, contract)
 
 	arg2 := db.CreateContractParams{
-		TypeID:          &contractType.ID,
-		StartDate:       pgtype.Timestamptz{Time: time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: true},
-		EndDate:         pgtype.Timestamptz{Time: time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC), Valid: true},
-		ReminderPeriod:  17,
-		Vat:             util.Int32Ptr(20),
-		Status:          "approved",
-		Price:           558,
-		PriceTimeUnit:   "hourly", // util.RandomEnum(priceFrequency),
-		Hours:           util.Float64Ptr(40),
-		HoursType:       util.StringPtr("weekly"),
-		CareName:        "Test Care",
-		CareType:        "ambulante", // util.RandomEnum(careType),
-		ClientID:        client.ID,
-		SenderID:        client.SenderID,
-		FinancingAct:    util.RandomEnum(financingAct),
-		FinancingOption: util.RandomEnum(financingOption),
-		AttachmentIds:   []uuid.UUID{},
+		TypeID:         &contractType.ID,
+		StartDate:      pgtype.Timestamptz{Time: time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC), Valid: true},
+		EndDate:        pgtype.Timestamptz{Time: time.Date(2025, time.December, 31, 23, 59, 59, 0, time.UTC), Valid: true},
+		ReminderPeriod: 17,
+		Vat:            util.Int32Ptr(20),
+		Status:         "approved",
+		Price:          558,
+		PriceTimeUnit:  "hourly", // util.RandomEnum(priceFrequency),
+		Hours:          util.Float64Ptr(40),
+		// HoursType:       util.StringPtr("weekly"),
+		// CareName:        "Test Care",
+		// CareType:        "ambulante", // util.RandomEnum(careType),
+		// ClientID:        client.ID,
+		// SenderID:        client.SenderID,
+		// FinancingAct:    util.RandomEnum(financingAct),
+		// FinancingOption: util.RandomEnum(financingOption),
+		AttachmentIds: []uuid.UUID{},
 	}
 	contract2, err := testStore.CreateContract(context.Background(), arg2)
 	require.NoError(t, err)
@@ -115,8 +115,8 @@ func TestCreateInvoiceApi(t *testing.T) {
 					DueDate:   time.Date(2025, time.August, 31, 23, 59, 59, 0, time.UTC),
 					InvoiceDetails: []invserv.InvoiceDetails{
 						{
-							ContractID:   contract.ID,
-							ContractType: contract.CareType,
+							ContractID: contract.ID,
+							// ContractType: contract.CareType,
 							Periods: []invserv.InvoicePeriod{
 								{
 									StartDate:             time.Date(2025, time.August, 1, 0, 0, 0, 0, time.UTC),
@@ -124,12 +124,12 @@ func TestCreateInvoiceApi(t *testing.T) {
 									AmbulanteTotalMinutes: &amblanteTiotalMinutes,
 								},
 							},
-							PreVatTotal:   preVatTotal,
-							Vat:           float64(*contract.Vat),
-							Total:         Total,
-							Price:         contract.Price,
-							PriceTimeUnit: contract.PriceTimeUnit,
-							Warnings:      []string{},
+							PreVatTotal: preVatTotal,
+							Vat:         float64(*contract.Vat),
+							Total:       Total,
+							Price:       contract.Price,
+							// PriceTimeUnit: contract.PriceTimeUnit,
+							Warnings: []string{},
 						},
 					},
 					ExtraContent: util.JSONObject{},

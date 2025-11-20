@@ -16,7 +16,7 @@ const countRegistrationForms = `-- name: CountRegistrationForms :one
 SELECT COUNT(*) FROM registration_form
 WHERE 
     -- Form status filtering
-    ($1::VARCHAR IS NULL OR form_status = $1)
+    ($1::form_status_enum IS NULL OR form_status = $1::form_status_enum)
     -- Risk filtering
     AND ($2::BOOLEAN IS NULL OR risk_aggressive_behavior = $2)
     AND ($3::BOOLEAN IS NULL OR risk_suicidal_selfharm = $3)
@@ -30,16 +30,16 @@ WHERE
 `
 
 type CountRegistrationFormsParams struct {
-	Status                 *string `json:"status"`
-	RiskAggressiveBehavior *bool   `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm   *bool   `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse     *bool   `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues  *bool   `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory    *bool   `json:"risk_criminal_history"`
-	RiskFlightBehavior     *bool   `json:"risk_flight_behavior"`
-	RiskWeaponPossession   *bool   `json:"risk_weapon_possession"`
-	RiskSexualBehavior     *bool   `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm     *bool   `json:"risk_day_night_rhythm"`
+	Status                 NullFormStatusEnum `json:"status"`
+	RiskAggressiveBehavior *bool              `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm   *bool              `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse     *bool              `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues  *bool              `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory    *bool              `json:"risk_criminal_history"`
+	RiskFlightBehavior     *bool              `json:"risk_flight_behavior"`
+	RiskWeaponPossession   *bool              `json:"risk_weapon_possession"`
+	RiskSexualBehavior     *bool              `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm     *bool              `json:"risk_day_night_rhythm"`
 }
 
 func (q *Queries) CountRegistrationForms(ctx context.Context, arg CountRegistrationFormsParams) (int64, error) {
@@ -466,11 +466,7 @@ const listRegistrationForms = `-- name: ListRegistrationForms :many
 SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type FROM registration_form
 WHERE 
     -- Form status filtering
-    (
-        $3::VARCHAR IS NULL 
-        OR $3 = 'all'
-        OR form_status = $3
-    )
+    ($3::form_status_enum IS NULL OR form_status = $3::form_status_enum)
     -- Risk filtering
     AND ($4::BOOLEAN IS NULL OR risk_aggressive_behavior = $4)
     AND ($5::BOOLEAN IS NULL OR risk_suicidal_selfharm = $5)
@@ -487,19 +483,19 @@ LIMIT $1 OFFSET $2
 `
 
 type ListRegistrationFormsParams struct {
-	Limit                  int32   `json:"limit"`
-	Offset                 int32   `json:"offset"`
-	Status                 *string `json:"status"`
-	RiskAggressiveBehavior *bool   `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm   *bool   `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse     *bool   `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues  *bool   `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory    *bool   `json:"risk_criminal_history"`
-	RiskFlightBehavior     *bool   `json:"risk_flight_behavior"`
-	RiskWeaponPossession   *bool   `json:"risk_weapon_possession"`
-	RiskSexualBehavior     *bool   `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm     *bool   `json:"risk_day_night_rhythm"`
-	RiskOther              *bool   `json:"risk_other"`
+	Limit                  int32              `json:"limit"`
+	Offset                 int32              `json:"offset"`
+	Status                 NullFormStatusEnum `json:"status"`
+	RiskAggressiveBehavior *bool              `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm   *bool              `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse     *bool              `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues  *bool              `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory    *bool              `json:"risk_criminal_history"`
+	RiskFlightBehavior     *bool              `json:"risk_flight_behavior"`
+	RiskWeaponPossession   *bool              `json:"risk_weapon_possession"`
+	RiskSexualBehavior     *bool              `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm     *bool              `json:"risk_day_night_rhythm"`
+	RiskOther              *bool              `json:"risk_other"`
 }
 
 func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistrationFormsParams) ([]RegistrationForm, error) {

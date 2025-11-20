@@ -159,7 +159,7 @@ type CreateRegistrationFormResponse struct {
 // ListRegistrationFormsRequest represents the request body for listing registration forms
 type ListRegistrationFormsRequest struct {
 	pagination.Request
-	Status                 *string `form:"status" json:"status" binding:"oneof=pending approved rejected all"`
+	Status                 *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected"`
 	RiskAggressiveBehavior *bool   `form:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm   *bool   `form:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse     *bool   `form:"risk_substance_abuse"`
