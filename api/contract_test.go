@@ -154,13 +154,13 @@ func createRandomContract(t *testing.T, clientID uuid.UUID, senderID *int64) db.
 		Price:           5.58,
 		PriceTimeUnit:   "minute",
 		Hours:           util.Float64Ptr(100),
-		HoursType:       util.StringPtr(util.RandomEnum(HoursType)),
+		HoursType:       db.HoursTypeEnumWeekly,
 		CareName:        "Test Care",
 		CareType:        "ambulante",
 		ClientID:        clientID,
 		SenderID:        senderID,
-		FinancingAct:    util.RandomEnum(FinancingAct),
-		FinancingOption: util.RandomEnum(FinancingOption),
+		FinancingAct:    db.FinancingActEnumJW,
+		FinancingOption: db.FinancingOptionEnumZIN,
 		AttachmentIds:   []uuid.UUID{attachment.Uuid},
 		Status:          "approved",
 	}
@@ -214,7 +214,7 @@ func TestCreateClientContractApi(t *testing.T) {
 					Price:           5.58,
 					PriceTimeUnit:   util.RandomEnum(PriceFrequency),
 					Hours:           util.Float64Ptr(100),
-					HoursType:       util.StringPtr(util.RandomEnum(HoursType)),
+					HoursType:       util.RandomEnum(HoursType),
 					CareName:        "Test Care",
 					CareType:        "ambulante",
 					SenderID:        client.SenderID,
@@ -242,7 +242,7 @@ func TestCreateClientContractApi(t *testing.T) {
 				require.Contains(t, PriceFrequency, response.Data.PriceTimeUnit)
 				require.Equal(t, util.Float64Ptr(100), response.Data.Hours)
 				require.NotNil(t, response.Data.HoursType)
-				require.Contains(t, HoursType, *response.Data.HoursType)
+				require.Contains(t, HoursType, response.Data.HoursType)
 				require.Equal(t, "Test Care", response.Data.CareName)
 				require.Contains(t, CareType, response.Data.CareType)
 				require.Equal(t, client.ID, response.Data.ClientID)
@@ -350,7 +350,7 @@ func TestGetClientContract(t *testing.T) {
 				require.Contains(t, PriceFrequency, response.Data.PriceTimeUnit)
 				require.Equal(t, util.Float64Ptr(100), response.Data.Hours)
 				require.NotNil(t, response.Data.HoursType)
-				require.Contains(t, HoursType, *response.Data.HoursType)
+				require.Contains(t, HoursType, response.Data.HoursType)
 				require.Equal(t, "Test Care", response.Data.CareName)
 				require.Contains(t, CareType, response.Data.CareType)
 				require.Equal(t, cont.ClientID, response.Data.ClientID)

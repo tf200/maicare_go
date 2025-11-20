@@ -110,23 +110,13 @@ func (s *clientService) GetProgressReport(ctx context.Context, reportID int64) (
 
 func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error) {
 	arg := db.UpdateProgressReportParams{
-		ID:         reportID,
-		EmployeeID: req.EmployeeID,
-		Title:      req.Title,
-		Date:       pgtype.Timestamptz{Time: req.Date, Valid: true},
-		ReportText: req.ReportText,
-		Type: func() db.NullProgressReportTypeEnum {
-			if req.Type != nil {
-				return db.NullProgressReportTypeEnum{ProgressReportTypeEnum: db.ProgressReportTypeEnum(*req.Type), Valid: true}
-			}
-			return db.NullProgressReportTypeEnum{Valid: false}
-		}(),
-		EmotionalState: func() db.NullEmotionalStateEnum {
-			if req.EmotionalState != nil {
-				return db.NullEmotionalStateEnum{EmotionalStateEnum: db.EmotionalStateEnum(*req.EmotionalState), Valid: true}
-			}
-			return db.NullEmotionalStateEnum{Valid: false}
-		}(),
+		ID:             reportID,
+		EmployeeID:     req.EmployeeID,
+		Title:          req.Title,
+		Date:           pgtype.Timestamptz{Time: req.Date, Valid: true},
+		ReportText:     req.ReportText,
+		Type:           db.NullProgressReportTypeFromPtr(req.Type),
+		EmotionalState: db.NullEmotionalStateFromPtr(req.EmotionalState),
 	}
 
 	report, err := s.Store.UpdateProgressReport(ctx, arg)

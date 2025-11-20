@@ -32,7 +32,6 @@ func createRandomEmergencyContact(t *testing.T, clientID uuid.UUID) db.ClientEme
 		PhoneNumber:      util.StringPtr(util.RandomString(4)),
 		Address:          util.StringPtr(util.RandomString(5)),
 		Relationship:     util.StringPtr(util.RandomString(5)),
-		RelationStatus:   util.StringPtr("Primary Relationship"),
 		MedicalReports:   util.RandomBool(),
 		IncidentsReports: util.RandomBool(),
 		GoalsReports:     util.RandomBool(),

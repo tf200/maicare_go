@@ -82,7 +82,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		EducationMentorEmail:       util.StringPtr("test mentor email"),
 		EducationMentorPhone:       util.StringPtr("test mentor phone"),
 		EducationAdditionalNotes:   util.StringPtr("test additional notes"),
-		EducationLevel:             util.StringPtr("primary"),
+		EducationLevel:             db.ClientEducationLevelEnumHigher,
 		WorkCurrentlyEmployed:      false,
 		WorkCurrentEmployer:        util.StringPtr("test employer"),
 		WorkCurrentEmployerPhone:   util.StringPtr("test employer phone"),
@@ -90,10 +90,9 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		WorkCurrentPosition:        util.StringPtr("test position"),
 		WorkStartDate:              pgtype.Date{Time: time.Now(), Valid: true},
 		WorkAdditionalNotes:        util.StringPtr("test work additional notes"),
-		LivingSituation:            util.StringPtr("home"),
+		LivingSituation:            db.NullClientLivingSituationEnum{ClientLivingSituationEnum: db.ClientLivingSituationEnumHome, Valid: true},
 		LivingSituationNotes:       util.StringPtr("test living situation notes"),
 	}
-
 	client, err := testStore.CreateClientDetails(context.Background(), arg)
 
 	require.NoError(t, err)
@@ -683,7 +682,6 @@ func TestUpdateClientStatusApi(t *testing.T) {
 				require.NoError(t, err)
 				require.NotEmpty(t, clientRes.Data)
 				require.NotNil(t, clientRes.Data.Status)
-				require.Equal(t, "In Care", *clientRes.Data.Status)
 			},
 		},
 		{

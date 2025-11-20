@@ -155,7 +155,7 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 			CarePlanID:         carePlan.ID,
 			RiskDescription:    risk.Risk,
 			MitigationStrategy: risk.Mitigation,
-			RiskLevel:          nil, // TODO: Add risk level if needed
+			// RiskLevel:          nil, // TODO: Add risk level if needed
 		})
 		randomRiskID = risk.ID
 		require.NoError(t, err)
@@ -1221,8 +1221,8 @@ func TestCreateCarePlanRisksApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				createReq := care.CreateCarePlanRisksRequest{
-					RiskDescription:    "High risk of falls",
-					RiskLevel:          util.StringPtr("high"),
+					RiskDescription: "High risk of falls",
+					// RiskLevel:          util.StringPtr("high"),
 					MitigationStrategy: "Implement fall prevention measures",
 				}
 				data, err := json.Marshal(createReq)

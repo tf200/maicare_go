@@ -384,16 +384,11 @@ func (s *employeeService) UpdateEmployeeProfile(
 		DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
 		HomeTelephoneNumber:       req.HomeTelephoneNumber,
 		IsSubcontractor:           req.IsSubcontractor,
-		Gender: func() db.NullEmployeeGenderEnum {
-			if req.Gender == nil {
-				return db.NullEmployeeGenderEnum{EmployeeGenderEnum: db.EmployeeGenderEnum(*req.Gender), Valid: false}
-			}
-			return db.NullEmployeeGenderEnum{Valid: false}
-		}(),
-		LocationID:   req.LocationID,
-		HasBorrowed:  req.HasBorrowed,
-		OutOfService: req.OutOfService,
-		IsArchived:   req.IsArchived,
+		Gender:                    db.NullEmployeeGenderFromPtr(req.Gender),
+		LocationID:                req.LocationID,
+		HasBorrowed:               req.HasBorrowed,
+		OutOfService:              req.OutOfService,
+		IsArchived:                req.IsArchived,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(

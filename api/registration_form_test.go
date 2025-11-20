@@ -57,7 +57,7 @@ func createRandomRegistrationForm(t *testing.T) db.RegistrationForm {
 		EducationMentorEmail:          util.StringPtr(faker.Email()),
 		EducationCurrentlyEnrolled:    true,
 		EducationAdditionalNotes:      util.StringPtr("Additional notes"),
-		EducationLevel:                util.StringPtr("higher"),
+		EducationLevel:                db.NullClientEducationLevelEnum{ClientEducationLevelEnum: db.ClientEducationLevelEnumHigher, Valid: true},
 		CareProtectedLiving:           util.BoolPtr(true),
 		CareAssistedIndependentLiving: util.BoolPtr(false),
 		CareRoomTrainingCenter:        util.BoolPtr(true),
@@ -225,7 +225,7 @@ func TestListRegistrationFormsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/registration_form?page=1&page_size=5&status=all"
+				url := "/registration_form?page=1&page_size=5"
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return req, nil

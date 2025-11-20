@@ -213,12 +213,7 @@ func (s *invoiceService) ListInvoices(
 	invoices, err := s.Store.ListInvoices(ctx, db.ListInvoicesParams{
 		ClientID: req.ClientID,
 		SenderID: req.SenderID,
-		Status: func() db.NullInvoiceStatusEnum {
-			if req.Status != nil {
-				return db.NullInvoiceStatusEnum{Valid: true, InvoiceStatusEnum: db.InvoiceStatusEnum(*req.Status)}
-			}
-			return db.NullInvoiceStatusEnum{Valid: false}
-		}(),
+		Status:   db.NullInvoiceStatusFromPtr(req.Status),
 
 		StartDate: pgtype.Date{Time: req.StartDate, Valid: !req.StartDate.IsZero()},
 		EndDate:   pgtype.Date{Time: req.EndDate, Valid: !req.EndDate.IsZero()},

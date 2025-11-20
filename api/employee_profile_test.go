@@ -29,6 +29,11 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 	location := createRandomLocation(t)
 	user := createRandomUser(t)
 
+	isSubcontractor := util.RandomBool()
+	contractType := db.EmployeeContractTypeEnumLoondienst
+	if isSubcontractor {
+		contractType = db.EmployeeContractTypeEnumZZP
+	}
 	arg := db.CreateEmployeeProfileParams{
 		UserID:                    user.ID,
 		FirstName:                 util.RandomString(5),
@@ -44,9 +49,10 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 		WorkPhoneNumber:           util.StringPtr(util.RandomString(5)),
 		DateOfBirth:               pgtype.Date{Time: time.Now(), Valid: true},
 		HomeTelephoneNumber:       util.StringPtr(util.RandomString(5)),
-		IsSubcontractor:           util.BoolPtr(util.RandomBool()),
-		Gender:                    util.StringPtr("male"),
+		IsSubcontractor:           util.BoolPtr(isSubcontractor),
+		Gender:                    db.EmployeeGenderEnumMale,
 		LocationID:                util.IntPtr(location.ID),
+		ContractType:              contractType,
 	}
 
 	employee, err := testStore.CreateEmployeeProfile(context.Background(), arg)
@@ -77,7 +83,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 		ContractHours:     util.Float64Ptr(40),
 		ContractStartDate: pgtype.Date{Time: time.Now(), Valid: true},
 		ContractEndDate:   pgtype.Date{Time: time.Now().AddDate(1, 0, 0), Valid: true},
-		ContractType:      util.StringPtr("loondienst"),
+		ContractType:      db.NullEmployeeContractTypeEnum{EmployeeContractTypeEnum: db.EmployeeContractTypeEnumZZP, Valid: true},
 		ContractRate:      util.Float64Ptr(43), // Optional field, can be set later if needed
 	}
 	contractDetails, err := testStore.AddEmployeeContractDetails(context.Background(), arg2)
@@ -117,7 +123,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					FirstName:                 util.RandomString(6),
 					LastName:                  util.RandomString(8),
 					DateOfBirth:               util.StringPtr("2000-01-05"),
-					Gender:                    util.StringPtr("male"),
+					Gender:                    "male",
 					Email:                     "farsjiataha@gmail.com",
 					PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
 					AuthenticationPhoneNumber: util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
