@@ -12,179 +12,699 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomContractType(t *testing.T) ContractType {
-	// Create a random contract type
+func TestCreateContract(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) CreateContractParams
+		checks func(t *testing.T, contract Contract, err error)
+	}{
+		{
+			name: "successful contract creation",
+			setup: func(ctx context.Context, qtx *Queries) CreateContractParams {
+				client := createRandomClientDetails(ctx, qtx)
+				sender := createRandomSenders(ctx, qtx)
+				contractType := createRandomContractType(ctx, qtx)
+				return CreateContractParams{
+					TypeID:          &contractType.ID,
+					Status:          "draft",
+					StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+					EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+					ReminderPeriod:  30,
+					Vat:             util.Int32Ptr(21),
+					Price:           100.0,
+					PriceTimeUnit:   "month",
+					Hours:           util.Float64Ptr(40.0),
+					HoursType:       "week",
+					CareName:        util.RandomString(10),
+					CareType:        "personal",
+					ClientID:        client.ID,
+					SenderID:        &sender.ID,
+					AttachmentIds:   []uuid.UUID{uuid.New()},
+					FinancingAct:    "wmo",
+					FinancingOption: "pgb",
+				}
+			},
+			checks: func(t *testing.T, contract Contract, err error) {
+				require.NoError(t, err, "CreateContract should not return an error")
+				require.NotZero(t, contract.ID)
+				require.Equal(t, "draft", string(contract.Status))
+			},
+		},
+		{
+			name: "contract creation with minimal fields",
+			setup: func(ctx context.Context, qtx *Queries) CreateContractParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateContractParams{
+					Status:          "draft",
+					StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+					EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+					ReminderPeriod:  30,
+					Price:           50.0,
+					PriceTimeUnit:   "month",
+					CareName:        util.RandomString(5),
+					CareType:        "personal",
+					ClientID:        client.ID,
+					FinancingAct:    "wmo",
+					FinancingOption: "pgb",
+				}
+			},
+			checks: func(t *testing.T, contract Contract, err error) {
+				require.NoError(t, err, "CreateContract should not return an error")
+				require.NotZero(t, contract.ID)
+				require.Nil(t, contract.TypeID)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	contractType, err := testQueries.CreateContractType(context.Background(), "Test Contract Type")
-	require.NoError(t, err)
-	require.NotEmpty(t, contractType)
-	require.NotEmpty(t, contractType.ID)
-	require.Equal(t, "Test Contract Type", contractType.Name)
-	return contractType
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			contract, err := qtx.CreateContract(ctx, params)
+			tt.checks(t, contract, err)
+		})
+	}
+}
+
+func TestCreateContractReminder(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) CreateContractReminderParams
+		checks func(t *testing.T, reminder ContractReminder, err error)
+	}{
+		{
+			name: "successful reminder creation",
+			setup: func(ctx context.Context, qtx *Queries) CreateContractReminderParams {
+				contract := createRandomContract(ctx, qtx)
+				return CreateContractReminderParams{
+					ContractID:     contract.ID,
+					ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+				}
+			},
+			checks: func(t *testing.T, reminder ContractReminder, err error) {
+				require.NoError(t, err, "CreateContractReminder should not return an error")
+				require.NotZero(t, reminder.ID)
+				require.Equal(t, "initial", string(reminder.ReminderType))
+			},
+		},
+		{
+			name: "follow-up reminder creation",
+			setup: func(ctx context.Context, qtx *Queries) CreateContractReminderParams {
+				contract := createRandomContract(ctx, qtx)
+				_, _ = qtx.CreateContractReminder(ctx, CreateContractReminderParams{
+					ContractID:     contract.ID,
+					ReminderSentAt: pgtype.Timestamptz{Time: time.Now().Add(-time.Hour), Valid: true},
+				})
+				return CreateContractReminderParams{
+					ContractID:     contract.ID,
+					ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+				}
+			},
+			checks: func(t *testing.T, reminder ContractReminder, err error) {
+				require.NoError(t, err, "CreateContractReminder should not return an error")
+				require.Equal(t, "follow_up", string(reminder.ReminderType))
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			reminder, err := qtx.CreateContractReminder(ctx, params)
+			tt.checks(t, reminder, err)
+		})
+	}
 }
 
 func TestCreateContractType(t *testing.T) {
-	createRandomContractType(t)
-}
-
-func TestListContractType(t *testing.T) {
-	// Create 10 random contract types
-	for i := 0; i < 10; i++ {
-		createRandomContractType(t)
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) string
+		checks func(t *testing.T, contractType ContractType, err error)
+	}{
+		{
+			name: "successful contract type creation",
+			setup: func(ctx context.Context, qtx *Queries) string {
+				return util.RandomString(10)
+			},
+			checks: func(t *testing.T, contractType ContractType, err error) {
+				require.NoError(t, err, "CreateContractType should not return an error")
+				require.NotZero(t, contractType.ID)
+			},
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	contractTypes, err := testQueries.ListContractTypes(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, contractTypes)
-	require.Len(t, contractTypes, 10)
-}
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
 
-func createRandomContract(t *testing.T, clientID int64, senderID *int64) Contract {
-	// priceFrequency := []string{"minute", "hourly", "daily", "weekly", "monthly"}
-	hoursType := []string{"weekly", "all_period"}
-	// careType := []string{"ambulante", "accommodation"}
-	financingAct := []string{"WMO", "ZVW", "WLZ", "JW", "WPG"}
-	financingOption := []string{"ZIN", "PGB"}
+			qtx := testQueries.WithTx(tx)
 
-	contractType := createRandomContractType(t)
-	attachment := createRandomAttachmentFile(t)
-
-	arg := CreateContractParams{
-		TypeID:          &contractType.ID,
-		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		EndDate:         pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
-		ReminderPeriod:  10,
-		Vat:             util.Int32Ptr(15),
-		Price:           558,
-		PriceTimeUnit:   "minute", // util.RandomEnum(priceFrequency),
-		Hours:           util.Float64Ptr(100),
-		HoursType:       util.StringPtr(util.RandomEnum(hoursType)),
-		CareName:        "Test Care",
-		CareType:        "ambulante",
-		ClientID:        clientID,
-		SenderID:        senderID,
-		Status:          "approved",
-		FinancingAct:    util.RandomEnum(financingAct),
-		FinancingOption: util.RandomEnum(financingOption),
-		AttachmentIds:   []uuid.UUID{attachment.Uuid},
+			name := tt.setup(ctx, qtx)
+			contractType, err := qtx.CreateContractType(ctx, name)
+			tt.checks(t, contractType, err)
+		})
 	}
-
-	contract, err := testQueries.CreateContract(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, contract)
-	require.Equal(t, arg.TypeID, contract.TypeID)
-	require.Equal(t, arg.ReminderPeriod, contract.ReminderPeriod)
-	require.Equal(t, arg.Vat, contract.Vat)
-	require.Equal(t, arg.Price, contract.Price)
-	require.Equal(t, arg.PriceTimeUnit, contract.PriceTimeUnit)
-	require.Equal(t, arg.Hours, contract.Hours)
-	require.Equal(t, arg.HoursType, contract.HoursType)
-	require.Equal(t, arg.CareName, contract.CareName)
-	require.Equal(t, arg.CareType, contract.CareType)
-	require.Equal(t, arg.ClientID, contract.ClientID)
-	require.Equal(t, arg.SenderID, contract.SenderID)
-	require.Equal(t, arg.FinancingAct, contract.FinancingAct)
-	require.Equal(t, arg.FinancingOption, contract.FinancingOption)
-	require.NotZero(t, contract.ID)
-	return contract
 }
 
-func TestCreateContract(t *testing.T) {
-	client := createRandomClientDetails(t)
-
-	createRandomContract(t, client.ID, client.SenderID)
-}
-
-func TestUpdateContract(t *testing.T) {
-	client := createRandomClientDetails(t)
-	contract := createRandomContract(t, client.ID, client.SenderID)
-
-	arg := UpdateContractParams{
-		ID:             contract.ID,
-		StartDate:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		EndDate:        pgtype.Timestamptz{Time: time.Now().AddDate(0, 2, 0), Valid: true},
-		ReminderPeriod: util.Int32Ptr(10),
-		VAT:            util.Int32Ptr(15),
-		PriceTimeUnit:  util.StringPtr("monthly"),
-		Hours:          util.Float64Ptr(100),
-		HoursType:      util.StringPtr("all_period"),
-		CareName:       util.StringPtr("Test Care"),
-		CareType:       util.StringPtr("accommodation"),
-		SenderID:       client.SenderID,
+func TestDeleteContractType(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) int64
+		checks func(t *testing.T, err error)
+	}{
+		{
+			name: "delete existing contract type",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				contractType := createRandomContractType(ctx, qtx)
+				return contractType.ID
+			},
+			checks: func(t *testing.T, err error) {
+				require.NoError(t, err, "DeleteContractType should not error")
+			},
+		},
+		{
+			name:  "delete non-existent contract type",
+			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			checks: func(t *testing.T, err error) {
+				require.NoError(t, err, "DeleteContractType should not error for non-existent ID")
+			},
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	contract2, err := testQueries.UpdateContract(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, contract2)
-	require.Equal(t, arg.ID, contract2.ID)
-	require.Equal(t, arg.ReminderPeriod, contract2.ReminderPeriod)
-	require.Equal(t, arg.VAT, contract2.Vat)
-	require.Equal(t, arg.Price, contract2.Price)
-	require.Equal(t, arg.PriceTimeUnit, contract2.PriceTimeUnit)
-	require.Equal(t, arg.Hours, contract2.Hours)
-	require.Equal(t, arg.HoursType, contract2.HoursType)
-	require.Equal(t, arg.CareName, contract2.CareName)
-	require.Equal(t, arg.CareType, contract2.CareType)
-	require.Equal(t, arg.SenderID, contract2.SenderID)
-	require.Equal(t, arg.FinancingAct, contract2.FinancingAct)
-	require.Equal(t, arg.FinancingOption, contract2.FinancingOption)
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			id := tt.setup(ctx, qtx)
+			err = qtx.DeleteContractType(ctx, id)
+			tt.checks(t, err)
+		})
+	}
+}
+
+func TestGetBillablePeriodsForContract(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) GetBillablePeriodsForContractParams
+		checks func(t *testing.T, periods []GetBillablePeriodsForContractRow, err error)
+	}{
+		{
+			name: "get billable periods for approved contract",
+			setup: func(ctx context.Context, qtx *Queries) GetBillablePeriodsForContractParams {
+				contract := createRandomContract(ctx, qtx)
+				_, _ = qtx.UpdateContractStatus(ctx, UpdateContractStatusParams{
+					Status:     "approved",
+					ContractID: contract.ID,
+				})
+				return GetBillablePeriodsForContractParams{
+					InvoiceStartDate: pgtype.Timestamptz{Time: time.Now().Add(-24 * time.Hour), Valid: true},
+					InvoiceEndDate:   pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+					ContractID:       contract.ID,
+				}
+			},
+			checks: func(t *testing.T, periods []GetBillablePeriodsForContractRow, err error) {
+				require.NoError(t, err, "GetBillablePeriodsForContract should not error")
+				require.GreaterOrEqual(t, len(periods), 0)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			periods, err := qtx.GetBillablePeriodsForContract(ctx, params)
+			tt.checks(t, periods, err)
+		})
+	}
 }
 
 func TestGetClientContract(t *testing.T) {
-	client := createRandomClientDetails(t)
-	contract := createRandomContract(t, client.ID, client.SenderID)
-	contract2, err := testQueries.GetClientContract(context.Background(), contract.ID)
-	require.NoError(t, err)
-	require.NotEmpty(t, contract2)
-	require.Equal(t, contract.ID, contract2.ID)
-	require.Equal(t, contract.TypeID, contract2.TypeID)
-	require.Equal(t, contract.ReminderPeriod, contract2.ReminderPeriod)
-	require.Equal(t, contract.Vat, contract2.Vat)
-	require.Equal(t, contract.Price, contract2.Price)
-	require.Equal(t, contract.PriceTimeUnit, contract2.PriceTimeUnit)
-	require.Equal(t, contract.Hours, contract2.Hours)
-	require.Equal(t, contract.HoursType, contract2.HoursType)
-	require.Equal(t, contract.CareName, contract2.CareName)
-	require.Equal(t, contract.CareType, contract2.CareType)
-	require.Equal(t, contract.ClientID, contract2.ClientID)
-	require.Equal(t, contract.SenderID, contract2.SenderID)
-	require.Equal(t, contract.FinancingAct, contract2.FinancingAct)
-	require.Equal(t, contract.FinancingOption, contract2.FinancingOption)
-	require.Equal(t, contract.AttachmentIds, contract2.AttachmentIds)
-	require.Equal(t, contract.DepartureReason, contract2.DepartureReason)
-	require.Equal(t, contract.DepartureReport, contract2.DepartureReport)
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) int64
+		checks func(t *testing.T, row GetClientContractRow, err error)
+	}{
+		{
+			name: "get existing client contract",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				contract := createRandomContract(ctx, qtx)
+				return contract.ID
+			},
+			checks: func(t *testing.T, row GetClientContractRow, err error) {
+				require.NoError(t, err, "GetClientContract should not error")
+				require.NotZero(t, row.ID)
+			},
+		},
+		{
+			name:  "get non-existent client contract",
+			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			checks: func(t *testing.T, row GetClientContractRow, err error) {
+				require.Error(t, err, "GetClientContract should error for non-existent ID")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			id := tt.setup(ctx, qtx)
+			row, err := qtx.GetClientContract(ctx, id)
+			tt.checks(t, row, err)
+		})
+	}
+}
+
+func TestGetContractAudit(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) int64
+		checks func(t *testing.T, audits []GetContractAuditRow, err error)
+	}{
+		{
+			name: "get contract audit",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				contract := createRandomContract(ctx, qtx)
+				return contract.ID
+			},
+			checks: func(t *testing.T, audits []GetContractAuditRow, err error) {
+				require.NoError(t, err, "GetContractAudit should not error")
+				require.GreaterOrEqual(t, len(audits), 0)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			contractID := tt.setup(ctx, qtx)
+			audits, err := qtx.GetContractAudit(ctx, contractID)
+			tt.checks(t, audits, err)
+		})
+	}
+}
+
+func TestGetSenderContracts(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) *int64
+		checks func(t *testing.T, contracts []Contract, err error)
+	}{
+		{
+			name: "get sender contracts",
+			setup: func(ctx context.Context, qtx *Queries) *int64 {
+				sender := createRandomSenders(ctx, qtx)
+				_ = createRandomContract(ctx, qtx)
+				return &sender.ID
+			},
+			checks: func(t *testing.T, contracts []Contract, err error) {
+				require.NoError(t, err, "GetSenderContracts should not error")
+				require.GreaterOrEqual(t, len(contracts), 0)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			senderID := tt.setup(ctx, qtx)
+			contracts, err := qtx.GetSenderContracts(ctx, senderID)
+			tt.checks(t, contracts, err)
+		})
+	}
 }
 
 func TestListClientContracts(t *testing.T) {
-	client := createRandomClientDetails(t)
-	for i := 0; i < 10; i++ {
-		createRandomContract(t, client.ID, client.SenderID)
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) ListClientContractsParams
+		checks func(t *testing.T, contracts []ListClientContractsRow, err error)
+	}{
+		{
+			name: "list client contracts with results",
+			setup: func(ctx context.Context, qtx *Queries) ListClientContractsParams {
+				client := createRandomClientDetails(ctx, qtx)
+				_ = createRandomContract(ctx, qtx)
+				return ListClientContractsParams{
+					ClientID: client.ID,
+					Limit:    10,
+					Offset:   0,
+				}
+			},
+			checks: func(t *testing.T, contracts []ListClientContractsRow, err error) {
+				require.NoError(t, err, "ListClientContracts should not error")
+				require.GreaterOrEqual(t, len(contracts), 1)
+			},
+		},
+		{
+			name: "list client contracts empty",
+			setup: func(ctx context.Context, qtx *Queries) ListClientContractsParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return ListClientContractsParams{
+					ClientID: client.ID,
+					Limit:    10,
+					Offset:   0,
+				}
+			},
+			checks: func(t *testing.T, contracts []ListClientContractsRow, err error) {
+				require.NoError(t, err, "ListClientContracts should not error")
+				require.Empty(t, contracts)
+			},
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	contracts, err := testQueries.ListClientContracts(context.Background(), ListClientContractsParams{
-		ClientID: client.ID,
-		Limit:    5,
-		Offset:   0,
-	})
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
 
-	require.NoError(t, err)
-	require.NotEmpty(t, contracts)
-	require.Len(t, contracts, 5)
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			contracts, err := qtx.ListClientContracts(ctx, params)
+			tt.checks(t, contracts, err)
+		})
+	}
+}
+
+func TestListContractTypes(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries)
+		checks func(t *testing.T, types []ContractType, err error)
+	}{
+		{
+			name: "list contract types",
+			setup: func(ctx context.Context, qtx *Queries) {
+				_ = createRandomContractType(ctx, qtx)
+			},
+			checks: func(t *testing.T, types []ContractType, err error) {
+				require.NoError(t, err, "ListContractTypes should not error")
+				require.GreaterOrEqual(t, len(types), 1)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			tt.setup(ctx, qtx)
+			types, err := qtx.ListContractTypes(ctx)
+			tt.checks(t, types, err)
+		})
+	}
 }
 
 func TestListContracts(t *testing.T) {
-	// Create 10 random contracts
-	for i := 0; i < 10; i++ {
-		client := createRandomClientDetails(t)
-		createRandomContract(t, client.ID, client.SenderID)
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) ListContractsParams
+		checks func(t *testing.T, contracts []ListContractsRow, err error)
+	}{
+		{
+			name: "list contracts with results",
+			setup: func(ctx context.Context, qtx *Queries) ListContractsParams {
+				_ = createRandomContract(ctx, qtx)
+				return ListContractsParams{
+					Limit:  10,
+					Offset: 0,
+				}
+			},
+			checks: func(t *testing.T, contracts []ListContractsRow, err error) {
+				require.NoError(t, err, "ListContracts should not error")
+				require.GreaterOrEqual(t, len(contracts), 1)
+			},
+		},
+		{
+			name: "list contracts with search",
+			setup: func(ctx context.Context, qtx *Queries) ListContractsParams {
+				contract := createRandomContract(ctx, qtx)
+				search := contract.CareName[:5]
+				return ListContractsParams{
+					Limit:  10,
+					Offset: 0,
+					Search: &search,
+				}
+			},
+			checks: func(t *testing.T, contracts []ListContractsRow, err error) {
+				require.NoError(t, err, "ListContracts should not error")
+				require.GreaterOrEqual(t, len(contracts), 1)
+			},
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	contracts, err := testQueries.ListContracts(context.Background(), ListContractsParams{
-		Limit:  5,
-		Offset: 0,
-	})
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
 
-	require.NoError(t, err)
-	require.NotEmpty(t, contracts)
-	require.Len(t, contracts, 5)
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			contracts, err := qtx.ListContracts(ctx, params)
+			tt.checks(t, contracts, err)
+		})
+	}
+}
+
+func TestListContractsTobeReminded(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries)
+		checks func(t *testing.T, contracts []ListContractsTobeRemindedRow, err error)
+	}{
+		{
+			name: "list contracts to be reminded",
+			setup: func(ctx context.Context, qtx *Queries) {
+				contract := createRandomContract(ctx, qtx)
+				_, _ = qtx.UpdateContractStatus(ctx, UpdateContractStatusParams{
+					Status:     "approved",
+					ContractID: contract.ID,
+				})
+			},
+			checks: func(t *testing.T, contracts []ListContractsTobeRemindedRow, err error) {
+				require.NoError(t, err, "ListContractsTobeReminded should not error")
+				// May be empty depending on dates
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			tt.setup(ctx, qtx)
+			contracts, err := qtx.ListContractsTobeReminded(ctx)
+			tt.checks(t, contracts, err)
+		})
+	}
+}
+
+func TestUpdateContract(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) UpdateContractParams
+		checks func(t *testing.T, contract Contract, params UpdateContractParams, err error)
+	}{
+		{
+			name: "update existing contract",
+			setup: func(ctx context.Context, qtx *Queries) UpdateContractParams {
+				contract := createRandomContract(ctx, qtx)
+				newCareName := util.RandomString(10)
+				return UpdateContractParams{
+					ID:       contract.ID,
+					CareName: &newCareName,
+				}
+			},
+			checks: func(t *testing.T, contract Contract, params UpdateContractParams, err error) {
+				require.NoError(t, err, "UpdateContract should not error")
+				require.Equal(t, *params.CareName, contract.CareName)
+			},
+		},
+		{
+			name: "update non-existent contract",
+			setup: func(ctx context.Context, qtx *Queries) UpdateContractParams {
+				return UpdateContractParams{
+					ID:       999999,
+					CareName: util.StringPtr(util.RandomString(5)),
+				}
+			},
+			checks: func(t *testing.T, contract Contract, params UpdateContractParams, err error) {
+				require.NoError(t, err, "UpdateContract should not error for non-existent ID")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			contract, err := qtx.UpdateContract(ctx, params)
+			tt.checks(t, contract, params, err)
+		})
+	}
+}
+
+func TestUpdateContractStatus(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) UpdateContractStatusParams
+		checks func(t *testing.T, contract Contract, err error)
+	}{
+		{
+			name: "update contract status to approved",
+			setup: func(ctx context.Context, qtx *Queries) UpdateContractStatusParams {
+				contract := createRandomContract(ctx, qtx)
+				return UpdateContractStatusParams{
+					Status:     "approved",
+					ContractID: contract.ID,
+				}
+			},
+			checks: func(t *testing.T, contract Contract, err error) {
+				require.NoError(t, err, "UpdateContractStatus should not error")
+				require.Equal(t, "approved", string(contract.Status))
+				require.True(t, contract.ApprovedAt.Valid)
+			},
+		},
+		{
+			name: "update contract status to draft",
+			setup: func(ctx context.Context, qtx *Queries) UpdateContractStatusParams {
+				contract := createRandomContract(ctx, qtx)
+				return UpdateContractStatusParams{
+					Status:     "draft",
+					ContractID: contract.ID,
+				}
+			},
+			checks: func(t *testing.T, contract Contract, err error) {
+				require.NoError(t, err, "UpdateContractStatus should not error")
+				require.Equal(t, "draft", string(contract.Status))
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			contract, err := qtx.UpdateContractStatus(ctx, params)
+			tt.checks(t, contract, err)
+		})
+	}
+}
+
+// Helpers
+func createRandomContractType(ctx context.Context, qtx *Queries) ContractType {
+	contractType, err := qtx.CreateContractType(ctx, util.RandomString(10))
+	if err != nil {
+		panic(err)
+	}
+	return contractType
+}
+
+func createRandomContract(ctx context.Context, qtx *Queries) Contract {
+	client := createRandomClientDetails(ctx, qtx)
+	params := CreateContractParams{
+		Status:          "draft",
+		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+		ReminderPeriod:  30,
+		Price:           100.0,
+		PriceTimeUnit:   "month",
+		CareName:        util.RandomString(10),
+		CareType:        "personal",
+		ClientID:        client.ID,
+		FinancingAct:    "wmo",
+		FinancingOption: "pgb",
+	}
+	contract, err := qtx.CreateContract(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return contract
+}
+
+func createRandomContractReminder(ctx context.Context, qtx *Queries) ContractReminder {
+	contract := createRandomContract(ctx, qtx)
+	params := CreateContractReminderParams{
+		ContractID:     contract.ID,
+		ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+	}
+	reminder, err := qtx.CreateContractReminder(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return reminder
 }

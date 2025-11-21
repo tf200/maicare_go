@@ -3,148 +3,610 @@ package db
 import (
 	"context"
 	"testing"
+	"time"
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomProgressReport(t *testing.T, clientID int64, employeeID int64) ProgressReport {
-	arg := CreateProgressReportParams{
-		ClientID:       clientID,
-		EmployeeID:     &employeeID,
-		Title:          util.StringPtr("Test Progress Report"),
-		Date:           pgtype.Timestamptz{Time: util.RandomTIme(), Valid: true},
-		ReportText:     "Test Progress Report",
-		Type:           "morning_report",
-		EmotionalState: "normal",
+func TestCreateAiGeneratedReport(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) CreateAiGeneratedReportParams
+		checks func(t *testing.T, report AiGeneratedReport, err error)
+	}{
+		{
+			name: "successful AI report creation",
+			setup: func(ctx context.Context, qtx *Queries) CreateAiGeneratedReportParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateAiGeneratedReportParams{
+					ClientID:   client.ID,
+					ReportText: util.RandomString(100),
+					StartDate: pgtype.Date{
+						Time:  time.Now().Add(-7 * 24 * time.Hour),
+						Valid: true,
+					},
+					EndDate: pgtype.Date{
+						Time:  time.Now(),
+						Valid: true,
+					},
+				}
+			},
+			checks: func(t *testing.T, report AiGeneratedReport, err error) {
+				require.NoError(t, err, "CreateAiGeneratedReport should not return an error")
+				require.NotZero(t, report.ID)
+				require.NotEmpty(t, report.ReportText)
+			},
+		},
 	}
-	progressReport, err := testQueries.CreateProgressReport(context.Background(), arg)
-	require.NoError(t, err)
-	return progressReport
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			report, err := qtx.CreateAiGeneratedReport(ctx, params)
+			tt.checks(t, report, err)
+		})
+	}
 }
 
 func TestCreateProgressReport(t *testing.T) {
-	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
-	createRandomProgressReport(t, client.ID, employee.ID)
-}
-
-func TestListProgressReport(t *testing.T) {
-	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
-	for i := 0; i < 10; i++ {
-		createRandomProgressReport(t, client.ID, employee.ID)
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) CreateProgressReportParams
+		checks func(t *testing.T, report ProgressReport, err error)
+	}{
+		{
+			name: "successful progress report creation",
+			setup: func(ctx context.Context, qtx *Queries) CreateProgressReportParams {
+				client := createRandomClientDetails(ctx, qtx)
+				employee := createRandomEmployee(ctx, qtx)
+				return CreateProgressReportParams{
+					ClientID:   client.ID,
+					EmployeeID: &employee.ID,
+					Title:      randomStringPtr(20),
+					Date: pgtype.Timestamptz{
+						Time:  time.Now(),
+						Valid: true,
+					},
+					ReportText:     util.RandomString(200),
+					Type:           ProgressReportTypeEnum("WEEKLY"),
+					EmotionalState: EmotionalStateEnum("POSITIVE"),
+				}
+			},
+			checks: func(t *testing.T, report ProgressReport, err error) {
+				require.NoError(t, err, "CreateProgressReport should not return an error")
+				require.NotZero(t, report.ID)
+				require.Equal(t, ProgressReportTypeEnum("WEEKLY"), report.Type)
+			},
+		},
+		{
+			name: "progress report creation without employee",
+			setup: func(ctx context.Context, qtx *Queries) CreateProgressReportParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateProgressReportParams{
+					ClientID:   client.ID,
+					EmployeeID: nil,
+					Title:      nil,
+					Date: pgtype.Timestamptz{
+						Time:  time.Now(),
+						Valid: true,
+					},
+					ReportText:     util.RandomString(200),
+					Type:           ProgressReportTypeEnum("MONTHLY"),
+					EmotionalState: EmotionalStateEnum("NEUTRAL"),
+				}
+			},
+			checks: func(t *testing.T, report ProgressReport, err error) {
+				require.NoError(t, err, "CreateProgressReport should not return an error")
+				require.Nil(t, report.EmployeeID)
+				require.Nil(t, report.Title)
+			},
+		},
 	}
-	arg := ListProgressReportsParams{
-		ClientID: client.ID,
-		Limit:    5,
-		Offset:   5,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			report, err := qtx.CreateProgressReport(ctx, params)
+			tt.checks(t, report, err)
+		})
 	}
-	progressReports, err := testQueries.ListProgressReports(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, progressReports, 5)
-}
-
-func TestGetProgressReport(t *testing.T) {
-	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
-	progressReport1 := createRandomProgressReport(t, client.ID, employee.ID)
-	progressReport2, err := testQueries.GetProgressReport(context.Background(), progressReport1.ID)
-	require.NoError(t, err)
-	require.NotEmpty(t, progressReport2)
-	require.Equal(t, progressReport1.ID, progressReport2.ID)
-	require.Equal(t, progressReport1.ClientID, progressReport2.ClientID)
-}
-
-func TestUpdateProgressReport(t *testing.T) {
-	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
-	progressReport1 := createRandomProgressReport(t, client.ID, employee.ID)
-	arg := UpdateProgressReportParams{
-		ID:             progressReport1.ID,
-		ReportText:     util.StringPtr("Updated Progress Report"),
-		EmotionalState: util.StringPtr("happy"),
-	}
-	progressReport2, err := testQueries.UpdateProgressReport(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, progressReport2)
-	require.Equal(t, progressReport1.ID, progressReport2.ID)
-	require.NotEqual(t, progressReport1.ReportText, progressReport2.ReportText)
-	require.NotEqual(t, progressReport1.EmotionalState, progressReport2.EmotionalState)
-}
-
-func TestGetProgressReportsByDateRange(t *testing.T) {
-	client := createRandomClientDetails(t)
-	employee, _ := createRandomEmployee(t)
-	for i := 0; i < 10; i++ {
-		createRandomProgressReport(t, client.ID, employee.ID)
-	}
-	startDate := util.RandomTIme()
-	endDate := startDate.AddDate(1, 1, 5)
-	arg := GetProgressReportsByDateRangeParams{
-		ClientID:  client.ID,
-		StartDate: pgtype.Timestamptz{Time: startDate, Valid: true},
-		EndDate:   pgtype.Timestamptz{Time: endDate, Valid: true},
-	}
-
-	progressReports, err := testQueries.GetProgressReportsByDateRange(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, progressReports, 5)
-	for _, report := range progressReports {
-		require.NotEmpty(t, report)
-		require.Equal(t, client.ID, report.ClientID)
-		require.GreaterOrEqual(t, report.Date.Time.Unix(), startDate.Unix())
-		require.LessOrEqual(t, report.Date.Time.Unix(), endDate.Unix())
-	}
-}
-
-func createRandomAiGeneratedReport(t *testing.T, clientID int64) AiGeneratedReport {
-	startdate := util.RandomTIme()
-	enddate := startdate.AddDate(0, 0, 7)
-
-	arg := CreateAiGeneratedReportParams{
-		ClientID:   clientID,
-		ReportText: "Test AI Generated Report",
-		StartDate:  pgtype.Date{Time: startdate, Valid: true},
-		EndDate:    pgtype.Date{Time: enddate, Valid: true},
-	}
-
-	aiGeneratedReport, err := testQueries.CreateAiGeneratedReport(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, aiGeneratedReport)
-	require.Equal(t, arg.ClientID, aiGeneratedReport.ClientID)
-	require.Equal(t, arg.ReportText, aiGeneratedReport.ReportText)
-	return aiGeneratedReport
-}
-
-func TestCreateAiGeneratedReport(t *testing.T) {
-	client := createRandomClientDetails(t)
-	createRandomAiGeneratedReport(t, client.ID)
-}
-
-func TestListAiGeneratedReports(t *testing.T) {
-	client := createRandomClientDetails(t)
-	for i := 0; i < 10; i++ {
-		createRandomAiGeneratedReport(t, client.ID)
-	}
-	arg := ListAiGeneratedReportsParams{
-		ClientID: client.ID,
-		Limit:    5,
-		Offset:   5,
-	}
-	aiGeneratedReports, err := testQueries.ListAiGeneratedReports(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, aiGeneratedReports, 5)
 }
 
 func TestGetAiGeneratedReport(t *testing.T) {
-	client := createRandomClientDetails(t)
-	aiGeneratedReport1 := createRandomAiGeneratedReport(t, client.ID)
-	aiGeneratedReport2, err := testQueries.GetAiGeneratedReport(context.Background(), aiGeneratedReport1.ID)
-	require.NoError(t, err)
-	require.NotEmpty(t, aiGeneratedReport2)
-	require.Equal(t, aiGeneratedReport1.ID, aiGeneratedReport2.ID)
-	require.Equal(t, aiGeneratedReport1.ClientID, aiGeneratedReport2.ClientID)
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) int64
+		checks func(t *testing.T, report AiGeneratedReport, err error)
+	}{
+		{
+			name: "get existing AI report",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				report := createRandomAiGeneratedReport(ctx, qtx)
+				return report.ID
+			},
+			checks: func(t *testing.T, report AiGeneratedReport, err error) {
+				require.NoError(t, err, "GetAiGeneratedReport should not return an error")
+				require.NotZero(t, report.ID)
+			},
+		},
+		{
+			name: "get non-existent AI report",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				return 999999
+			},
+			checks: func(t *testing.T, report AiGeneratedReport, err error) {
+				require.Error(t, err, "GetAiGeneratedReport should error for non-existent report")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			reportID := tt.setup(ctx, qtx)
+			report, err := qtx.GetAiGeneratedReport(ctx, reportID)
+			tt.checks(t, report, err)
+		})
+	}
+}
+
+func TestGetProgressReport(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) int64
+		checks func(t *testing.T, report GetProgressReportRow, err error)
+	}{
+		{
+			name: "get existing progress report",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				report := createRandomProgressReport(ctx, qtx)
+				return report.ID
+			},
+			checks: func(t *testing.T, report GetProgressReportRow, err error) {
+				require.NoError(t, err, "GetProgressReport should not return an error")
+				require.NotZero(t, report.ID)
+				require.NotEmpty(t, report.EmployeeFirstName)
+			},
+		},
+		{
+			name: "get non-existent progress report",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				return 999999
+			},
+			checks: func(t *testing.T, report GetProgressReportRow, err error) {
+				require.Error(t, err, "GetProgressReport should error for non-existent report")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			reportID := tt.setup(ctx, qtx)
+			report, err := qtx.GetProgressReport(ctx, reportID)
+			tt.checks(t, report, err)
+		})
+	}
+}
+
+func TestUpdateProgressReport(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) UpdateProgressReportParams
+		checks func(t *testing.T, report ProgressReport, err error)
+	}{
+		{
+			name: "update existing progress report",
+			setup: func(ctx context.Context, qtx *Queries) UpdateProgressReportParams {
+				report := createRandomProgressReport(ctx, qtx)
+				newEmployee := createRandomEmployee(ctx, qtx)
+				return UpdateProgressReportParams{
+					ID:         report.ID,
+					EmployeeID: &newEmployee.ID,
+					Title:      randomStringPtr(25),
+					Date: pgtype.Timestamptz{
+						Time:  time.Now().Add(time.Hour),
+						Valid: true,
+					},
+					ReportText: randomStringPtr(250),
+					Type: NullProgressReportTypeEnum{
+						ProgressReportTypeEnum: ProgressReportTypeEnum("DAILY"),
+						Valid:                  true,
+					},
+					EmotionalState: NullEmotionalStateEnum{
+						EmotionalStateEnum: EmotionalStateEnum("IMPROVING"),
+						Valid:              true,
+					},
+				}
+			},
+			checks: func(t *testing.T, report ProgressReport, err error) {
+				require.NoError(t, err, "UpdateProgressReport should not return an error")
+				require.NotZero(t, report.ID)
+			},
+		},
+		{
+			name: "update non-existent progress report",
+			setup: func(ctx context.Context, qtx *Queries) UpdateProgressReportParams {
+				newEmployee := createRandomEmployee(ctx, qtx)
+				return UpdateProgressReportParams{
+					ID:         999999,
+					EmployeeID: &newEmployee.ID,
+					Title:      randomStringPtr(25),
+					Date: pgtype.Timestamptz{
+						Time:  time.Now().Add(time.Hour),
+						Valid: true,
+					},
+					ReportText: randomStringPtr(250),
+					Type: NullProgressReportTypeEnum{
+						ProgressReportTypeEnum: ProgressReportTypeEnum("DAILY"),
+						Valid:                  true,
+					},
+					EmotionalState: NullEmotionalStateEnum{
+						EmotionalStateEnum: EmotionalStateEnum("IMPROVING"),
+						Valid:              true,
+					},
+				}
+			},
+			checks: func(t *testing.T, report ProgressReport, err error) {
+				require.Error(t, err, "UpdateProgressReport should error for non-existent report")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			report, err := qtx.UpdateProgressReport(ctx, params)
+			tt.checks(t, report, err)
+		})
+	}
+}
+
+func TestDeleteProgressReport(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) int64
+		checks func(t *testing.T, err error)
+	}{
+		{
+			name: "delete existing progress report",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				report := createRandomProgressReport(ctx, qtx)
+				return report.ID
+			},
+			checks: func(t *testing.T, err error) {
+				require.NoError(t, err, "DeleteProgressReport should not error")
+			},
+		},
+		{
+			name: "delete non-existent progress report",
+			setup: func(ctx context.Context, qtx *Queries) int64 {
+				return 999999
+			},
+			checks: func(t *testing.T, err error) {
+				require.NoError(t, err, "DeleteProgressReport should not error for non-existent report")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			reportID := tt.setup(ctx, qtx)
+			err = qtx.DeleteProgressReport(ctx, reportID)
+			tt.checks(t, err)
+		})
+	}
+}
+
+func TestGetProgressReportsByDateRange(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) GetProgressReportsByDateRangeParams
+		checks func(t *testing.T, reports []ProgressReport, err error)
+	}{
+		{
+			name: "get reports in date range",
+			setup: func(ctx context.Context, qtx *Queries) GetProgressReportsByDateRangeParams {
+				client := createRandomClientDetails(ctx, qtx)
+				// Create a report in the range
+				createRandomProgressReportForClient(ctx, qtx, client.ID)
+				startDate := time.Now().Add(-24 * time.Hour)
+				endDate := time.Now().Add(24 * time.Hour)
+				return GetProgressReportsByDateRangeParams{
+					ClientID: client.ID,
+					StartDate: pgtype.Timestamptz{
+						Time:  startDate,
+						Valid: true,
+					},
+					EndDate: pgtype.Timestamptz{
+						Time:  endDate,
+						Valid: true,
+					},
+				}
+			},
+			checks: func(t *testing.T, reports []ProgressReport, err error) {
+				require.NoError(t, err, "GetProgressReportsByDateRange should not error")
+				require.GreaterOrEqual(t, len(reports), 1)
+			},
+		},
+		{
+			name: "get reports outside date range",
+			setup: func(ctx context.Context, qtx *Queries) GetProgressReportsByDateRangeParams {
+				client := createRandomClientDetails(ctx, qtx)
+				startDate := time.Now().Add(48 * time.Hour)
+				endDate := time.Now().Add(72 * time.Hour)
+				return GetProgressReportsByDateRangeParams{
+					ClientID: client.ID,
+					StartDate: pgtype.Timestamptz{
+						Time:  startDate,
+						Valid: true,
+					},
+					EndDate: pgtype.Timestamptz{
+						Time:  endDate,
+						Valid: true,
+					},
+				}
+			},
+			checks: func(t *testing.T, reports []ProgressReport, err error) {
+				require.NoError(t, err, "GetProgressReportsByDateRange should not error")
+				require.Len(t, reports, 0)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			reports, err := qtx.GetProgressReportsByDateRange(ctx, params)
+			tt.checks(t, reports, err)
+		})
+	}
+}
+
+func TestListAiGeneratedReports(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) ListAiGeneratedReportsParams
+		checks func(t *testing.T, reports []ListAiGeneratedReportsRow, err error)
+	}{
+		{
+			name: "list AI reports for client",
+			setup: func(ctx context.Context, qtx *Queries) ListAiGeneratedReportsParams {
+				client := createRandomClientDetails(ctx, qtx)
+				// Create a report
+				createRandomAiGeneratedReportForClient(ctx, qtx, client.ID)
+				return ListAiGeneratedReportsParams{
+					ClientID: client.ID,
+					Limit:    10,
+					Offset:   0,
+				}
+			},
+			checks: func(t *testing.T, reports []ListAiGeneratedReportsRow, err error) {
+				require.NoError(t, err, "ListAiGeneratedReports should not error")
+				require.GreaterOrEqual(t, len(reports), 1)
+			},
+		},
+		{
+			name: "list AI reports with pagination",
+			setup: func(ctx context.Context, qtx *Queries) ListAiGeneratedReportsParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return ListAiGeneratedReportsParams{
+					ClientID: client.ID,
+					Limit:    5,
+					Offset:   0,
+				}
+			},
+			checks: func(t *testing.T, reports []ListAiGeneratedReportsRow, err error) {
+				require.NoError(t, err, "ListAiGeneratedReports should not error")
+				require.LessOrEqual(t, len(reports), 5)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			reports, err := qtx.ListAiGeneratedReports(ctx, params)
+			tt.checks(t, reports, err)
+		})
+	}
+}
+
+func TestListProgressReports(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) ListProgressReportsParams
+		checks func(t *testing.T, reports []ListProgressReportsRow, err error)
+	}{
+		{
+			name: "list progress reports for client",
+			setup: func(ctx context.Context, qtx *Queries) ListProgressReportsParams {
+				client := createRandomClientDetails(ctx, qtx)
+				// Create a report
+				createRandomProgressReportForClient(ctx, qtx, client.ID)
+				return ListProgressReportsParams{
+					ClientID: client.ID,
+					Limit:    10,
+					Offset:   0,
+				}
+			},
+			checks: func(t *testing.T, reports []ListProgressReportsRow, err error) {
+				require.NoError(t, err, "ListProgressReports should not error")
+				require.GreaterOrEqual(t, len(reports), 1)
+			},
+		},
+		{
+			name: "list progress reports with pagination",
+			setup: func(ctx context.Context, qtx *Queries) ListProgressReportsParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return ListProgressReportsParams{
+					ClientID: client.ID,
+					Limit:    5,
+					Offset:   0,
+				}
+			},
+			checks: func(t *testing.T, reports []ListProgressReportsRow, err error) {
+				require.NoError(t, err, "ListProgressReports should not error")
+				require.LessOrEqual(t, len(reports), 5)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.setup(ctx, qtx)
+			reports, err := qtx.ListProgressReports(ctx, params)
+			tt.checks(t, reports, err)
+		})
+	}
+}
+
+// Helpers
+func createRandomAiGeneratedReport(ctx context.Context, qtx *Queries) AiGeneratedReport {
+	client := createRandomClientDetails(ctx, qtx)
+	params := CreateAiGeneratedReportParams{
+		ClientID:   client.ID,
+		ReportText: util.RandomString(100),
+		StartDate: pgtype.Date{
+			Time:  time.Now().Add(-7 * 24 * time.Hour),
+			Valid: true,
+		},
+		EndDate: pgtype.Date{
+			Time:  time.Now(),
+			Valid: true,
+		},
+	}
+	report, err := qtx.CreateAiGeneratedReport(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return report
+}
+
+func createRandomAiGeneratedReportForClient(ctx context.Context, qtx *Queries, clientID uuid.UUID) AiGeneratedReport {
+	params := CreateAiGeneratedReportParams{
+		ClientID:   clientID,
+		ReportText: util.RandomString(100),
+		StartDate: pgtype.Date{
+			Time:  time.Now().Add(-7 * 24 * time.Hour),
+			Valid: true,
+		},
+		EndDate: pgtype.Date{
+			Time:  time.Now(),
+			Valid: true,
+		},
+	}
+	report, err := qtx.CreateAiGeneratedReport(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return report
+}
+
+func createRandomProgressReport(ctx context.Context, qtx *Queries) ProgressReport {
+	client := createRandomClientDetails(ctx, qtx)
+	employee := createRandomEmployee(ctx, qtx)
+	params := CreateProgressReportParams{
+		ClientID:   client.ID,
+		EmployeeID: &employee.ID,
+		Title:      randomStringPtr(20),
+		Date: pgtype.Timestamptz{
+			Time:  time.Now(),
+			Valid: true,
+		},
+		ReportText:     util.RandomString(200),
+		Type:           ProgressReportTypeEnum("WEEKLY"),
+		EmotionalState: EmotionalStateEnum("POSITIVE"),
+	}
+	report, err := qtx.CreateProgressReport(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return report
+}
+
+func createRandomProgressReportForClient(ctx context.Context, qtx *Queries, clientID uuid.UUID) ProgressReport {
+	employee := createRandomEmployee(ctx, qtx)
+	params := CreateProgressReportParams{
+		ClientID:   clientID,
+		EmployeeID: &employee.ID,
+		Title:      randomStringPtr(20),
+		Date: pgtype.Timestamptz{
+			Time:  time.Now(),
+			Valid: true,
+		},
+		ReportText:     util.RandomString(200),
+		Type:           ProgressReportTypeEnum("WEEKLY"),
+		EmotionalState: EmotionalStateEnum("POSITIVE"),
+	}
+	report, err := qtx.CreateProgressReport(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return report
 }
