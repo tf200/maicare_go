@@ -1780,6 +1780,11 @@ definitions:
       recurrence_interval:
         type: integer
       recurrence_type:
+        enum:
+        - NONE
+        - DAILY
+        - WEEKLY
+        - MONTHLY
         example: NONE
         type: string
       start_time:
@@ -1787,6 +1792,7 @@ definitions:
         type: string
     required:
     - end_time
+    - recurrence_type
     - start_time
     type: object
   appointment.CreateAppointmentResponse:
@@ -2888,6 +2894,19 @@ definitions:
         type: string
       zip_code:
         type: string
+    type: object
+  clientp.ApproveOrRejectLocationTransferRequest:
+    properties:
+      status:
+        enum:
+        - approved
+        - rejected
+        type: string
+      transfer_id:
+        type: integer
+    required:
+    - status
+    - transfer_id
     type: object
   clientp.AssignEmployeeRequest:
     properties:
@@ -5302,6 +5321,21 @@ definitions:
       reason:
         type: string
     type: object
+  clientp.LocationTransferRequest:
+    properties:
+      from_location_id:
+        type: integer
+      new_mentor_id:
+        type: string
+      reason:
+        type: string
+      to_location_id:
+        type: integer
+    required:
+    - from_location_id
+    - reason
+    - to_location_id
+    type: object
   clientp.SenderContact:
     properties:
       email:
@@ -6342,6 +6376,10 @@ definitions:
         example: 40
         type: number
       hours_type:
+        enum:
+        - weekly
+        - all_period
+        example: weekly
         type: string
       price:
         example: 100.5
@@ -6372,6 +6410,7 @@ definitions:
     - care_type
     - financing_act
     - financing_option
+    - hours_type
     - price_time_unit
     type: object
   contract.CreateContractResponse:
@@ -6966,6 +7005,10 @@ definitions:
         example: fara
         type: string
       gender:
+        enum:
+        - male
+        - female
+        - not_specified
         example: man
         type: string
       home_telephone_number:
@@ -8362,6 +8405,8 @@ definitions:
     properties:
       address:
         type: string
+      available:
+        type: integer
       capacity:
         type: integer
       created_at:
@@ -8370,6 +8415,8 @@ definitions:
         type: integer
       name:
         type: string
+      occupied:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -12391,6 +12438,44 @@ paths:
       summary: Update an assigned employee
       tags:
       - client_network
+  /clients/{id}/location_transfer:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Location transfer request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.LocationTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Request a location transfer for a client
+      tags:
+      - clients
   /clients/{id}/medications/{medication_id}:
     delete:
       parameters:
@@ -12803,6 +12888,39 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get the count of clients
+      tags:
+      - clients
+  /clients/location_transfer/approve_reject:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Approve or reject location transfer request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.ApproveOrRejectLocationTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Approve or reject a location transfer request for a client
       tags:
       - clients
   /contract_types:

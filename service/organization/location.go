@@ -20,10 +20,20 @@ func (s *organizationService) ListOrgLocations(ctx context.Context, organization
 	response := []ListLocationsResponse{}
 	for _, loc := range locations {
 		response = append(response, ListLocationsResponse{
-			ID:        loc.ID,
-			Name:      loc.Name,
-			Address:   loc.Address,
-			Capacity:  loc.Capacity,
+			ID:       loc.ID,
+			Name:     loc.Name,
+			Address:  loc.Address,
+			Capacity: loc.Capacity,
+			Occupied: func() int32 {
+				if loc.Capacity != nil {
+					available := *loc.Capacity - int32(loc.ClientCount)
+					if available < 0 {
+						return 0
+					}
+					return available
+				}
+				return 0
+			}(),
 			CreatedAt: loc.CreatedAt.Time,
 			UpdatedAt: loc.UpdatedAt.Time,
 		})

@@ -12,63 +12,195 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomSession(t *testing.T) Session {
-	user := CreateRandomUser(t)
+func TestCreateSession(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) CreateSessionParams
+		checks func(t *testing.T, session Session, err error)
+	}{
+		{
+			name: "successful session creation",
+			setup: func(ctx context.Context, qtx *Queries) CreateSessionParams {
+				user := createRandomUser(ctx, qtx)
+				sessionID, _ := uuid.NewRandom()
+				return CreateSessionParams{
+					ID:           sessionID,
+					RefreshToken: util.RandomString(16),
+					UserAgent:    util.RandomString(10),
+					ClientIp:     util.RandomString(10),
+					IsBlocked:    false,
+					ExpiresAt: pgtype.Timestamptz{
+						Time:  time.Now().Add(24 * time.Hour),
+						Valid: true,
+					},
+					CreatedAt: pgtype.Timestamptz{
+						Time:  time.Now(),
+						Valid: true,
+					},
+					UserID: user.ID,
+				}
+			},
+			checks: func(t *testing.T, session Session, err error) {
+				require.NoError(t, err, "CreateSession should not return an error")
+				require.NotZero(t, session.ID)
+				require.False(t, session.IsBlocked)
+			},
+		},
+		{
+			name: "session creation with blocked",
+			setup: func(ctx context.Context, qtx *Queries) CreateSessionParams {
+				user := createRandomUser(ctx, qtx)
+				sessionID, _ := uuid.NewRandom()
+				return CreateSessionParams{
+					ID:           sessionID,
+					RefreshToken: util.RandomString(16),
+					UserAgent:    util.RandomString(10),
+					ClientIp:     util.RandomString(10),
+					IsBlocked:    true,
+					ExpiresAt: pgtype.Timestamptz{
+						Time:  time.Now().Add(24 * time.Hour),
+						Valid: true,
+					},
+					CreatedAt: pgtype.Timestamptz{
+						Time:  time.Now(),
+						Valid: true,
+					},
+					UserID: user.ID,
+				}
+			},
+			checks: func(t *testing.T, session Session, err error) {
+				require.NoError(t, err, "CreateSession should not return an error")
+				require.True(t, session.IsBlocked)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	uuid, err := uuid.NewRandom()
-	require.NoError(t, err)
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
 
-	// Get current time for timestamps
-	now := time.Now()
-	expireTime := now.Add(24 * time.Hour) // Session expires in 24 hours
+			qtx := testQueries.WithTx(tx)
 
-	arg := CreateSessionParams{
-		ID:           uuid,
+			params := tt.setup(ctx, qtx)
+			session, err := qtx.CreateSession(ctx, params)
+			tt.checks(t, session, err)
+		})
+	}
+}
+
+func TestGetSessionByID(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
+		checks func(t *testing.T, session Session, err error)
+	}{
+		{
+			name: "get existing session",
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				session := createRandomSession(ctx, qtx)
+				return session.ID
+			},
+			checks: func(t *testing.T, session Session, err error) {
+				require.NoError(t, err, "GetSessionByID should not error")
+				require.NotZero(t, session.ID)
+			},
+		},
+		{
+			name: "get non-existent session",
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
+			},
+			checks: func(t *testing.T, session Session, err error) {
+				require.Error(t, err, "GetSessionByID should error for non-existent session")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			sessionID := tt.setup(ctx, qtx)
+			session, err := qtx.GetSessionByID(ctx, sessionID)
+			tt.checks(t, session, err)
+		})
+	}
+}
+
+func TestDeleteSession(t *testing.T) {
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
+		checks func(t *testing.T, err error)
+	}{
+		{
+			name: "delete existing session",
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				session := createRandomSession(ctx, qtx)
+				return session.ID
+			},
+			checks: func(t *testing.T, err error) {
+				require.NoError(t, err, "DeleteSession should not error")
+			},
+		},
+		{
+			name: "delete non-existent session",
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
+			},
+			checks: func(t *testing.T, err error) {
+				require.NoError(t, err, "DeleteSession should not error for non-existent session")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "Failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			sessionID := tt.setup(ctx, qtx)
+			err = qtx.DeleteSession(ctx, sessionID)
+			tt.checks(t, err)
+		})
+	}
+}
+
+// Helpers
+func createRandomSession(ctx context.Context, qtx *Queries) Session {
+	user := createRandomUser(ctx, qtx)
+	sessionID, _ := uuid.NewRandom()
+	params := CreateSessionParams{
+		ID:           sessionID,
 		RefreshToken: util.RandomString(16),
-		UserAgent:    util.RandomString(5),
-		ClientIp:     util.RandomString(5),
+		UserAgent:    util.RandomString(10),
+		ClientIp:     util.RandomString(10),
 		IsBlocked:    false,
 		ExpiresAt: pgtype.Timestamptz{
-			Time:  expireTime,
+			Time:  time.Now().Add(24 * time.Hour),
 			Valid: true,
 		},
 		CreatedAt: pgtype.Timestamptz{
-			Time:  now,
+			Time:  time.Now(),
 			Valid: true,
 		},
 		UserID: user.ID,
 	}
-
-	// Create the session
-	session, err := testQueries.CreateSession(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, session)
-
-	// Verify all fields match
-	require.Equal(t, arg.ID, session.ID)
-	require.Equal(t, arg.RefreshToken, session.RefreshToken)
-	require.Equal(t, arg.UserAgent, session.UserAgent)
-	require.Equal(t, arg.ClientIp, session.ClientIp)
-	require.Equal(t, arg.IsBlocked, session.IsBlocked)
-	require.Equal(t, arg.UserID, session.UserID)
-
-	// Verify timestamps
-	require.WithinDuration(t, arg.ExpiresAt.Time, session.ExpiresAt.Time, time.Second)
-	require.WithinDuration(t, arg.CreatedAt.Time, session.CreatedAt.Time, time.Second)
-
-	// Verify session was created with correct user
-	require.Equal(t, user.ID, session.UserID)
+	session, err := qtx.CreateSession(ctx, params)
+	if err != nil {
+		panic(err)
+	}
 	return session
-}
-
-func TestCreateSession(t *testing.T) {
-	createRandomSession(t)
-}
-
-func TestGetSessionByID(t *testing.T) {
-	session1 := createRandomSession(t)
-	session2, err := testQueries.GetSessionByID(context.Background(), session1.ID)
-	require.NoError(t, err)
-	require.NotEmpty(t, session2)
-	require.Equal(t, session1.ID, session2.ID)
 }

@@ -2399,6 +2399,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/location_transfer/approve_reject": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Approve or reject a location transfer request for a client",
+                "parameters": [
+                    {
+                        "description": "Approve or reject location transfer request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.ApproveOrRejectLocationTransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}": {
             "get": {
                 "produces": [
@@ -4600,6 +4651,64 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/location_transfer": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Request a location transfer for a client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Location transfer request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.LocationTransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -14233,6 +14342,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "end_time",
+                "recurrence_type",
                 "start_time"
             ],
             "properties": {
@@ -14270,6 +14380,12 @@ const docTemplate = `{
                 },
                 "recurrence_type": {
                     "type": "string",
+                    "enum": [
+                        "NONE",
+                        "DAILY",
+                        "WEEKLY",
+                        "MONTHLY"
+                    ],
                     "example": "NONE"
                 },
                 "start_time": {
@@ -15947,6 +16063,25 @@ const docTemplate = `{
                 },
                 "zip_code": {
                     "type": "string"
+                }
+            }
+        },
+        "clientp.ApproveOrRejectLocationTransferRequest": {
+            "type": "object",
+            "required": [
+                "status",
+                "transfer_id"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "approved",
+                        "rejected"
+                    ]
+                },
+                "transfer_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -19567,6 +19702,28 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.LocationTransferRequest": {
+            "type": "object",
+            "required": [
+                "from_location_id",
+                "reason",
+                "to_location_id"
+            ],
+            "properties": {
+                "from_location_id": {
+                    "type": "integer"
+                },
+                "new_mentor_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "to_location_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.SenderContact": {
             "type": "object",
             "properties": {
@@ -21082,6 +21239,7 @@ const docTemplate = `{
                 "care_type",
                 "financing_act",
                 "financing_option",
+                "hours_type",
                 "price_time_unit"
             ],
             "properties": {
@@ -21135,7 +21293,12 @@ const docTemplate = `{
                     "example": 40
                 },
                 "hours_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "weekly",
+                        "all_period"
+                    ],
+                    "example": "weekly"
                 },
                 "price": {
                     "type": "number",
@@ -22068,6 +22231,11 @@ const docTemplate = `{
                 },
                 "gender": {
                     "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "not_specified"
+                    ],
                     "example": "man"
                 },
                 "home_telephone_number": {
@@ -24164,6 +24332,9 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "available": {
+                    "type": "integer"
+                },
                 "capacity": {
                     "type": "integer"
                 },
@@ -24175,6 +24346,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "occupied": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
