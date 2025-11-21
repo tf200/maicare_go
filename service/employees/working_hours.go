@@ -24,6 +24,7 @@ func (s *employeeService) ListWorkingHours(
 	periodStart, periodEnd, err := util.GetStartAndEndOfISOWeek(int(req.Year), int(req.Week))
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"ListWorkingHours",
 			"Failed to get ISO week dates",
@@ -45,6 +46,7 @@ func (s *employeeService) ListWorkingHours(
 	err = s.calculateOvertime(ctx, employeeID, &summary)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"ListWorkingHours",
 			"Failed to calculate overtime",
@@ -86,6 +88,7 @@ func (s *employeeService) fetchWorkingHoursData(
 	)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"fetchWorkingHoursData",
 			"Failed to fetch employee appointments",
@@ -109,6 +112,7 @@ func (s *employeeService) fetchWorkingHoursData(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"fetchWorkingHoursData",
 			"Failed to fetch employee schedules",

@@ -93,7 +93,7 @@ type Querier interface {
 	CreateSenderInvoiceTemplate(ctx context.Context, arg CreateSenderInvoiceTemplateParams) ([]int64, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateShift(ctx context.Context, arg CreateShiftParams) (LocationShift, error)
-	CreateTemp2FaSecret(ctx context.Context, arg CreateTemp2FaSecretParams) error
+	CreateTemp2FaSecret(ctx context.Context, arg CreateTemp2FaSecretParams) (int64, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CustomUser, error)
 	DeleteAppointment(ctx context.Context, id uuid.UUID) error
 	DeleteAppointmentClients(ctx context.Context, appointmentID uuid.UUID) error
@@ -131,7 +131,7 @@ type Querier interface {
 	// Removes *all* permissions from the given user.
 	DeleteUserPermissions(ctx context.Context, userID uuid.UUID) error
 	DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error)
-	Enable2Fa(ctx context.Context, arg Enable2FaParams) error
+	Enable2Fa(ctx context.Context, arg Enable2FaParams) (int64, error)
 	GetAiGeneratedReport(ctx context.Context, id int64) (AiGeneratedReport, error)
 	GetAllAdminUsers(ctx context.Context) ([]CustomUser, error)
 	GetAllClientsIDs(ctx context.Context) ([]uuid.UUID, error)

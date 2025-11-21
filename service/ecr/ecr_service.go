@@ -23,7 +23,7 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 		FilterType: req.FilterType,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DischargeOverview", "Failed to get discharge overview", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DischargeOverview", "Failed to get discharge overview", zap.Error(err))
 		return nil, err
 	}
 
@@ -45,11 +45,11 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 		})
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "DischargeOverview", fmt.Sprintf("Retrieved %d discharge overview records", len(overviewRes)), zap.Int("record_count", len(overviewRes)))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "DischargeOverview", fmt.Sprintf("Retrieved %d discharge overview records", len(overviewRes)), zap.Int("record_count", len(overviewRes)))
 
 	count, err := s.Store.TotalDischargeCount(context.Background())
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DischargeOverview", "Failed to get total discharge count", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DischargeOverview", "Failed to get total discharge count", zap.Error(err))
 		return nil, err
 	}
 
@@ -138,7 +138,7 @@ func (s *ecrService) TotalDischargeCount(ctx *gin.Context) (*TotalDischargeCount
 func (s *ecrService) ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateResponse, error) {
 	employees, err := s.Store.ListEmployeesByContractEndDate(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListEmployeesByContractEndDate", "Failed to list employees by contract end date", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListEmployeesByContractEndDate", "Failed to list employees by contract end date", zap.Error(err))
 		return nil, err
 	}
 
@@ -165,7 +165,7 @@ func (s *ecrService) ListEmployeesByContractEndDate(ctx context.Context) ([]List
 func (s *ecrService) ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsResponse, error) {
 	latestPayments, err := s.Store.ListLatestPayments(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListLatestPayments", "Failed to list latest payments", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListLatestPayments", "Failed to list latest payments", zap.Error(err))
 		return nil, err
 	}
 
@@ -188,7 +188,7 @@ func (s *ecrService) ListLatestPayments(ctx context.Context) ([]ListLatestPaymen
 func (s *ecrService) ListUpcomingAppointments(ctx context.Context, employeeID uuid.UUID) ([]ListUpcomingAppointmentsResponse, error) {
 	appointments, err := s.Store.ListUpcomingAppointments(ctx, &employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListUpcomingAppointments", "Failed to list upcoming appointments", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListUpcomingAppointments", "Failed to list upcoming appointments", zap.Error(err))
 		return nil, err
 	}
 

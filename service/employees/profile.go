@@ -25,6 +25,7 @@ func (s *employeeService) CreateEmployee(
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateEmployee",
 			"Failed to hash password",
@@ -38,6 +39,7 @@ func (s *employeeService) CreateEmployee(
 		parsedDateOfBirth, err = time.Parse("2006-01-02", *req.DateOfBirth)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"CreateEmployee",
 				"Failed to parse date of birth",
@@ -85,6 +87,7 @@ func (s *employeeService) CreateEmployee(
 	)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateEmployee",
 			"Failed to create employee with account",
@@ -116,6 +119,7 @@ func (s *employeeService) CreateEmployee(
 		LocationID:                employee.Employee.LocationID,
 	}
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"CreateEmployee",
 		"Successfully created employee with account",
@@ -141,7 +145,7 @@ func (s *employeeService) ListEmployees(
 		Search:              req.Search,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListEmployees",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListEmployees",
 			"Failed to list employees", zap.Error(err))
 		return nil, fmt.Errorf("failed to list employees")
 	}
@@ -153,7 +157,7 @@ func (s *employeeService) ListEmployees(
 		LocationID:          req.LocationID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListEmployees",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListEmployees",
 			"Failed to count employees", zap.Error(err))
 		return nil, fmt.Errorf("failed to count employees")
 	}
@@ -195,7 +199,7 @@ func (s *employeeService) ListEmployees(
 
 	response := pagination.NewResponse(ctx, req.Request, responseEmployees, totalCount)
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListEmployees", "Successfully listed employees",
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListEmployees", "Successfully listed employees",
 		zap.Int("Count", len(employees)), zap.Int64("TotalCount", totalCount))
 	return &response, nil
 }
@@ -217,6 +221,7 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateEmployeeIsSubcontractor",
 			"Failed to update employee subcontractor status",
@@ -236,6 +241,7 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 		ContractRate:      emp.ContractRate,
 	}
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"UpdateEmployeeIsSubcontractor",
 		"Successfully updated employee subcontractor status",
@@ -252,6 +258,7 @@ func (s *employeeService) GetEmployeeProfile(
 	profile, err := s.Store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetEmployeeProfile",
 			"Failed to get employee profile by user ID",
@@ -264,6 +271,7 @@ func (s *employeeService) GetEmployeeProfile(
 	var permissions []Permission
 	if err := json.Unmarshal(profile.Permissions, &permissions); err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetEmployeeProfile",
 			"Failed to unmarshal permissions",
@@ -285,6 +293,7 @@ func (s *employeeService) GetEmployeeProfile(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"GetEmployeeProfile",
 		"Successfully retrieved employee profile",
@@ -301,6 +310,7 @@ func (s *employeeService) GetEmployeeProfileByID(
 	employee, err := s.Store.GetEmployeeProfileByID(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetEmployeeProfileByID",
 			"Failed to get employee profile by ID",
@@ -338,6 +348,7 @@ func (s *employeeService) GetEmployeeProfileByID(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"GetEmployeeProfileByID",
 		"Successfully retrieved employee profile by ID",
@@ -358,6 +369,7 @@ func (s *employeeService) UpdateEmployeeProfile(
 		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"UpdateEmployeeProfile",
 				"Failed to parse date of birth",
@@ -392,6 +404,7 @@ func (s *employeeService) UpdateEmployeeProfile(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateEmployeeProfile",
 			"Failed to update employee profile",
@@ -427,6 +440,7 @@ func (s *employeeService) UpdateEmployeeProfile(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"UpdateEmployeeProfile",
 		"Successfully updated employee profile",
@@ -443,6 +457,7 @@ func (s *employeeService) SetEmployeeProfilePicture(
 	attachmentID, err := uuid.Parse(req.AttachmentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"SetEmployeeProfilePicture",
 			"Failed to parse attachment ID",
@@ -459,6 +474,7 @@ func (s *employeeService) SetEmployeeProfilePicture(
 	user, err := s.Store.SetEmployeeProfilePictureTx(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"SetEmployeeProfilePicture",
 			"Failed to set employee profile picture",
@@ -475,6 +491,7 @@ func (s *employeeService) SetEmployeeProfilePicture(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"SetEmployeeProfilePicture",
 		"Successfully set employee profile picture",
@@ -489,6 +506,7 @@ func (s *employeeService) GetEmployeeCounts(
 	counts, err := s.Store.GetEmployeeCounts(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetEmployeeCounts",
 			"Failed to get employee counts",
@@ -505,6 +523,7 @@ func (s *employeeService) GetEmployeeCounts(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"GetEmployeeCounts",
 		"Successfully retrieved employee counts",
@@ -519,6 +538,7 @@ func (s *employeeService) SearchEmployeesByNameOrEmail(
 	employees, err := s.Store.SearchEmployeesByNameOrEmail(ctx, req.Search)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"SearchEmployeesByNameOrEmail",
 			"Failed to search employees",
@@ -539,6 +559,7 @@ func (s *employeeService) SearchEmployeesByNameOrEmail(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"SearchEmployeesByNameOrEmail",
 		"Successfully searched employees",

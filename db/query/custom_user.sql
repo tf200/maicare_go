@@ -26,7 +26,7 @@ SET password = $2
 WHERE id = $1;
 
 
--- name: CreateTemp2FaSecret :exec
+-- name: CreateTemp2FaSecret :execrows
 UPDATE custom_user
 SET two_factor_secret_temp = $2
 WHERE id = $1;
@@ -36,7 +36,7 @@ SELECT two_factor_secret_temp FROM custom_user
 WHERE id = $1 LIMIT 1;
 
 
--- name: Enable2Fa :exec
+-- name: Enable2Fa :execrows
 UPDATE custom_user
 SET two_factor_secret = $2,
     two_factor_secret_temp = NULL,

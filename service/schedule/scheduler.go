@@ -17,17 +17,17 @@ import (
 func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGenerateSchedulesRequest) (*AutoGenerateSchedulesResponse, error) {
 	employees, err := s.Store.ListEmployeesWithContractHours(ctx, req.EmployeeIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "Failed to fetch employee contract hours", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AutoGenerateSchedules", "Failed to fetch employee contract hours", zap.Error(err))
 		return nil, err
 	}
 	if len(employees) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "No employees found with contract hours", zap.Int("EmployeeCount", len(req.EmployeeIDs)))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AutoGenerateSchedules", "No employees found with contract hours", zap.Int("EmployeeCount", len(req.EmployeeIDs)))
 		return nil, fmt.Errorf("no employees found with contract hours")
 	}
 
 	locationShifts, err := s.Store.GetShiftsByLocationID(ctx, req.LocationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "Failed to fetch location shifts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AutoGenerateSchedules", "Failed to fetch location shifts", zap.Error(err))
 		return nil, err
 	}
 
@@ -56,7 +56,7 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 		Year:      req.Year,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "gRPC call to AutoGenerateSchedules failed", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AutoGenerateSchedules", "gRPC call to AutoGenerateSchedules failed", zap.Error(err))
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 		for j, emp := range shift.Employees {
 			empId, err := uuid.Parse(emp.Id)
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "AutoGenerateSchedules", "Failed to parse employee ID", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AutoGenerateSchedules", "Failed to parse employee ID", zap.Error(err))
 				return nil, err
 			}
 			employees[j] = AssignedEmployee{
@@ -145,7 +145,7 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 
 func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID uuid.UUID, req *SaveGeneratedSchedulesRequest) error {
 	if len(req.ScheduledShifts) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "SaveGeneratedSchedules", "No schedules to save", zap.String("Empty", "true"))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "SaveGeneratedSchedules", "No schedules to save", zap.String("Empty", "true"))
 		return nil
 	}
 
@@ -165,11 +165,11 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 		ExpectedCount: int32(len(shiftIDs)),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to verify shift IDs", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "Failed to verify shift IDs", zap.Error(err))
 		return err
 	}
 	if !exist {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "One or more shift IDs do not exist", zap.Int32s("ShiftIDs", shiftIDs))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "One or more shift IDs do not exist", zap.Int32s("ShiftIDs", shiftIDs))
 		return fmt.Errorf("one or more shift IDs do not exist")
 	}
 
@@ -181,7 +181,7 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 				// Try parsing without timezone if RFC3339Nano fails
 				startTime, err = time.Parse("2006-01-02T15:04:05", sch.StartTime)
 				if err != nil {
-					s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse start time", zap.Error(err))
+					s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse start time", zap.Error(err))
 					return err
 				}
 				// Set to UTC
@@ -192,7 +192,7 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 				// Try parsing without timezone if RFC3339Nano fails
 				endTime, err = time.Parse("2006-01-02T15:04:05", sch.EndTime)
 				if err != nil {
-					s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse end time", zap.Error(err))
+					s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "Failed to parse end time", zap.Error(err))
 					return err
 				}
 				// Set to UTC
@@ -208,7 +208,7 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 				EndDatetime:         pgtype.Timestamp{Time: endTime, Valid: true},
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "SaveGeneratedSchedules", "Failed to save schedule", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "Failed to save schedule", zap.Error(err))
 				return err
 			}
 		}

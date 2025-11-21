@@ -43,7 +43,7 @@ func NewContractService(deps *deps.ServiceDependencies) ContractService {
 func (s *contractService) CreateContractType(ctx context.Context, req CreateContractTypeRequest) (*CreateContractTypeResponse, error) {
 	contractType, err := s.Store.CreateContractType(ctx, req.Name)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateContractType", "Failed to create contract type", zap.String("name", req.Name), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateContractType", "Failed to create contract type", zap.String("name", req.Name), zap.Error(err))
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (s *contractService) CreateContractType(ctx context.Context, req CreateCont
 func (s *contractService) ListContractTypes(ctx context.Context) ([]ListContractTypesResponse, error) {
 	contractTypes, err := s.Store.ListContractTypes(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListContractTypes", "Failed to list contract types", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListContractTypes", "Failed to list contract types", zap.Error(err))
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func (s *contractService) ListContractTypes(ctx context.Context) ([]ListContract
 func (s *contractService) DeleteContractType(ctx context.Context, contractTypeID int64) (*DeleteContractTypeResponse, error) {
 	err := s.Store.DeleteContractType(ctx, contractTypeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteContractType", "Failed to delete contract type", zap.Int64("contract_type_id", contractTypeID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteContractType", "Failed to delete contract type", zap.Int64("contract_type_id", contractTypeID), zap.Error(err))
 		return nil, err
 	}
 
@@ -107,7 +107,7 @@ func (s *contractService) CreateContract(ctx context.Context, req CreateContract
 		FinancingOption: db.FinancingOptionEnum(req.FinancingOption),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateContract", "Failed to create contract", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateContract", "Failed to create contract", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -147,7 +147,7 @@ func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientCo
 		Offset:   params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientContracts", "Failed to list client contracts", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientContracts", "Failed to list client contracts", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -196,7 +196,7 @@ func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientCo
 func (s *contractService) UpdateContract(ctx context.Context, req UpdateContractRequest, contractID int64, employeeID uuid.UUID) (*UpdateContractResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to begin transaction", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContract", "Failed to begin transaction", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
@@ -205,7 +205,7 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 
 	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.String("employee_id", employeeID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContract", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.String("employee_id", employeeID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -228,12 +228,12 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 		FinancingOption: db.NullFinancingOptionFromPtr(req.FinancingOption),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to update contract", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContract", "Failed to update contract", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContract", "Failed to commit transaction", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContract", "Failed to commit transaction", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 
@@ -267,7 +267,7 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateContractStatusRequest, contractID int64, employeeID uuid.UUID) (*UpdateContractStatusResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to begin transaction", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Failed to begin transaction", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
@@ -276,19 +276,19 @@ func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateCo
 
 	_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.String("employee_id", employeeID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Failed to set current employee ID", zap.Int64("contract_id", contractID), zap.String("employee_id", employeeID.String()), zap.Error(err))
 		return nil, err
 	}
 
 	contract, err := qtx.GetClientContract(ctx, contractID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to get client contract", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Failed to get client contract", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 
 	if req.Status == "approved" && contract.EndDate.Time.Before(time.Now()) {
 		err := fmt.Errorf("cannot approve contract that has already ended")
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Cannot approve ended contract", zap.Int64("contract_id", contractID), zap.String("status", req.Status), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Cannot approve ended contract", zap.Int64("contract_id", contractID), zap.String("status", req.Status), zap.Error(err))
 		return nil, err
 	}
 
@@ -297,12 +297,12 @@ func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateCo
 		Status:     req.Status,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to update contract status", zap.Int64("contract_id", contractID), zap.String("status", req.Status), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Failed to update contract status", zap.Int64("contract_id", contractID), zap.String("status", req.Status), zap.Error(err))
 		return nil, err
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateContractStatus", "Failed to commit transaction", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Failed to commit transaction", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 
@@ -316,7 +316,7 @@ func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateCo
 func (s *contractService) GetClientContract(ctx context.Context, contractID int64) (*GetClientContractResponse, error) {
 	contract, err := s.Store.GetClientContract(ctx, contractID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientContract", "Failed to get client contract", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientContract", "Failed to get client contract", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 
@@ -364,7 +364,7 @@ func (s *contractService) ListContracts(ctx *gin.Context, req ListContractsReque
 		FinancingOption: req.FinancingOption,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListContracts", "Failed to list contracts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListContracts", "Failed to list contracts", zap.Error(err))
 		return nil, err
 	}
 
@@ -404,7 +404,7 @@ func (s *contractService) ListContracts(ctx *gin.Context, req ListContractsReque
 func (s *contractService) GetContractAuditLog(ctx context.Context, contractID int64) ([]GetContractAuditLogResponse, error) {
 	auditLogs, err := s.Store.GetContractAudit(ctx, contractID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetContractAuditLog", "Failed to get contract audit logs", zap.Int64("contract_id", contractID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetContractAuditLog", "Failed to get contract audit logs", zap.Int64("contract_id", contractID), zap.Error(err))
 		return nil, err
 	}
 

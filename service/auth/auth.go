@@ -28,18 +28,18 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 	user, err := s.Store.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "Login", "Failed login attempt: user not found",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Failed login attempt: user not found",
 				zap.String("email", email), zap.String("client_ip", clientIP), zap.String("user_agent", userAgent))
 			return nil, ErrInvalidCredentials
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Database error during login", zap.String("email", email),
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Database error during login", zap.String("email", email),
 			zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to get user")
 	}
 
 	err = util.CheckPassword(req.Password, user.Password)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "Login", "Failed login attempt: incorrect password",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Failed login attempt: incorrect password",
 			zap.String("email", email), zap.String("client_ip", clientIP),
 			zap.String("user_agent", userAgent))
 		return nil, ErrInvalidCredentials
@@ -49,11 +49,11 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 		tempToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID,
 			s.Config.TwoFATokenDuration, token.TwoFAToken)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Failed to create 2FA token",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Failed to create 2FA token",
 				zap.String("email", email), zap.String("error", err.Error()))
 			return nil, fmt.Errorf("failed to create 2FA token: %v", err)
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "Login", "2FA required for user",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "Login", "2FA required for user",
 			zap.String("email", email), zap.String("client_ip", clientIP),
 			zap.String("user_agent", userAgent))
 		return &LoginUserResponse{
@@ -65,14 +65,14 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 	accessToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID,
 		s.Config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Failed to create access token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Failed to create access token",
 			zap.String("email", email), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create access token")
 	}
 
 	refreshToken, payload, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Failed to create refresh token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Failed to create refresh token",
 			zap.String("email", email), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create refresh token: %v", err)
 	}
@@ -88,12 +88,12 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 		UserID:       payload.UserId,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "Login", "Database error during session creation",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Login", "Database error during session creation",
 			zap.String("email", email), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create session: %v", err)
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "Login", "User logged in successfully",
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "Login", "User logged in successfully",
 		zap.String("email", email), zap.String("client_ip", clientIP),
 		zap.String("user_agent", userAgent), zap.String("session_id", session.ID.String()))
 
@@ -108,7 +108,7 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context) (*RefreshTokenResponse, error) {
 	payload, err := s.TokenMaker.VerifyToken(req.RefreshToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Invalid refresh token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "RefreshToken", "Invalid refresh token",
 			zap.String("error", err.Error()))
 		return nil, ErrInvalidCredentials
 	}
@@ -116,35 +116,35 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 	session, err := s.Store.GetSessionByID(ctx, payload.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Session not found",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "RefreshToken", "Session not found",
 				zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 			return nil, ErrSessionNotFound
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "RefreshToken", "Database error during session retrieval",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "RefreshToken", "Database error during session retrieval",
 			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()),
 			zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to get session: %v", err)
 	}
 
 	if session.IsBlocked {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Blocked session attempt",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "RefreshToken", "Blocked session attempt",
 			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	if session.UserID != payload.UserId {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Session user mismatch",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "RefreshToken", "Session user mismatch",
 			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	if session.RefreshToken != req.RefreshToken {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Refresh token mismatch",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "RefreshToken", "Refresh token mismatch",
 			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 	if time.Now().After(session.ExpiresAt.Time) {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "RefreshToken", "Expired session attempt",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "RefreshToken", "Expired session attempt",
 			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
 	}
@@ -152,7 +152,7 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 	accessToken, _, err := s.TokenMaker.CreateToken(payload.UserId, payload.EmployeeID,
 		s.Config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "RefreshToken", "Failed to create access token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "RefreshToken", "Failed to create access token",
 			zap.String("user_id", payload.UserId.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create access token")
 	}
@@ -161,7 +161,7 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 		AccessToken: accessToken,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "RefreshToken", "Access token refreshed successfully",
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "RefreshToken", "Access token refreshed successfully",
 		zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 
 	return result, nil
@@ -170,7 +170,7 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 func (s *authService) VerifyTwoFAToken(req Verify2FARequest, ctx context.Context) (*LoginUserResponse, error) {
 	tempPayload, err := s.TokenMaker.VerifyToken(req.TempToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "Invalid temporary 2FA token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "VerifyTwoFAToken", "Invalid temporary 2FA token",
 			zap.String("error", err.Error()))
 		return nil, ErrUnauthorized
 	}
@@ -178,42 +178,42 @@ func (s *authService) VerifyTwoFAToken(req Verify2FARequest, ctx context.Context
 	user, err := s.Store.GetUserByID(context.Background(), tempPayload.UserId)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "User not found for 2FA",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "VerifyTwoFAToken", "User not found for 2FA",
 				zap.String("user_id", tempPayload.UserId.String()))
 			return nil, ErrUserNotFound
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "VerifyTwoFAToken", "Database error during user retrieval",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "VerifyTwoFAToken", "Database error during user retrieval",
 			zap.String("user_id", tempPayload.UserId.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to get user")
 	}
 
 	if !user.TwoFactorEnabled || user.TwoFactorSecret == nil || *user.TwoFactorSecret == "" {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "2FA not enabled for user",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "VerifyTwoFAToken", "2FA not enabled for user",
 			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecret)
 	if !valid {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "VerifyTwoFAToken", "Invalid 2FA code",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "VerifyTwoFAToken", "Invalid 2FA code",
 			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
 	}
 	accessToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.AccessTokenDuration, token.AccessToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "VerifyTwoFAToken", "Failed to create access token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "VerifyTwoFAToken", "Failed to create access token",
 			zap.String("user_id", user.ID.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create access token: %v", err)
 	}
 
 	refreshToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "VerifyTwoFAToken", "Failed to create refresh token",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "VerifyTwoFAToken", "Failed to create refresh token",
 			zap.String("user_id", user.ID.String()), zap.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to create refresh token: %v", err)
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "VerifyTwoFAToken", "2FA verification successful, user logged in",
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "VerifyTwoFAToken", "2FA verification successful, user logged in",
 		zap.String("user_id", user.ID.String()))
 
 	return &LoginUserResponse{
@@ -230,16 +230,16 @@ func (s *authService) Logout(req LogoutRequest, ctx context.Context) error {
 	err := s.Store.DeleteSession(ctx, req.PayloadID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "Logout", "Session not found during logout",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "Logout", "Session not found during logout",
 				zap.String("session_id", req.PayloadID.String()))
 			return ErrSessionNotFound
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "Logout", "Database error during session deletion",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "Logout", "Database error during session deletion",
 			zap.String("session_id", req.PayloadID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to delete session: %v", err)
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "Logout", "User logged out successfully",
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "Logout", "User logged out successfully",
 		zap.String("session_id", req.PayloadID.String()))
 
 	return nil
@@ -249,25 +249,25 @@ func (s *authService) ChangePassword(req ChangePasswordRequest, userID uuid.UUID
 	user, err := s.Store.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "ChangePassword", "User not found during password change",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "ChangePassword", "User not found during password change",
 				zap.String("user_id", userID.String()))
 			return ErrUserNotFound
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ChangePassword", "Database error during user retrieval",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ChangePassword", "Database error during user retrieval",
 			zap.String("user_id", userID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to get user: %v", err)
 	}
 
 	err = util.CheckPassword(req.OldPassword, user.Password)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelWarn, "ChangePassword", "Incorrect old password during password change",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "ChangePassword", "Incorrect old password during password change",
 			zap.String("user_id", userID.String()))
 		return ErrInvalidCredentials
 	}
 
 	hashedPassword, err := util.HashPassword(req.NewPassword)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ChangePassword", "Error hashing new password",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ChangePassword", "Error hashing new password",
 			zap.String("user_id", userID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to hash new password: %v", err)
 	}
@@ -277,12 +277,12 @@ func (s *authService) ChangePassword(req ChangePasswordRequest, userID uuid.UUID
 		Password: hashedPassword,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ChangePassword", "Database error updating password",
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ChangePassword", "Database error updating password",
 			zap.String("user_id", userID.String()), zap.String("error", err.Error()))
 		return fmt.Errorf("failed to update password: %v", err)
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ChangePassword", "Password changed successfully",
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ChangePassword", "Password changed successfully",
 		zap.String("user_id", userID.String()))
 
 	return nil

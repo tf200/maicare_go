@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createTemp2FaSecret = `-- name: CreateTemp2FaSecret :exec
+const createTemp2FaSecret = `-- name: CreateTemp2FaSecret :execrows
 UPDATE custom_user
 SET two_factor_secret_temp = $2
 WHERE id = $1
@@ -23,9 +23,12 @@ type CreateTemp2FaSecretParams struct {
 	TwoFactorSecretTemp *string   `json:"two_factor_secret_temp"`
 }
 
-func (q *Queries) CreateTemp2FaSecret(ctx context.Context, arg CreateTemp2FaSecretParams) error {
-	_, err := q.db.Exec(ctx, createTemp2FaSecret, arg.ID, arg.TwoFactorSecretTemp)
-	return err
+func (q *Queries) CreateTemp2FaSecret(ctx context.Context, arg CreateTemp2FaSecretParams) (int64, error) {
+	result, err := q.db.Exec(ctx, createTemp2FaSecret, arg.ID, arg.TwoFactorSecretTemp)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const createUser = `-- name: CreateUser :one
@@ -71,7 +74,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CustomU
 	return i, err
 }
 
-const enable2Fa = `-- name: Enable2Fa :exec
+const enable2Fa = `-- name: Enable2Fa :execrows
 UPDATE custom_user
 SET two_factor_secret = $2,
     two_factor_secret_temp = NULL,
@@ -86,9 +89,12 @@ type Enable2FaParams struct {
 	RecoveryCodes   []string  `json:"recovery_codes"`
 }
 
-func (q *Queries) Enable2Fa(ctx context.Context, arg Enable2FaParams) error {
-	_, err := q.db.Exec(ctx, enable2Fa, arg.ID, arg.TwoFactorSecret, arg.RecoveryCodes)
-	return err
+func (q *Queries) Enable2Fa(ctx context.Context, arg Enable2FaParams) (int64, error) {
+	result, err := q.db.Exec(ctx, enable2Fa, arg.ID, arg.TwoFactorSecret, arg.RecoveryCodes)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getAllAdminUsers = `-- name: GetAllAdminUsers :many

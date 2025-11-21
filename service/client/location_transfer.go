@@ -19,7 +19,7 @@ func (s *clientService) RequestLocationTransfer(ctx context.Context, clientID uu
 		NewMentorID:    req.NewMentorID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "RequestLocationTransferApi", "Failed to create location transfer request", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "RequestLocationTransferApi", "Failed to create location transfer request", zap.Error(err))
 		return fmt.Errorf("failed to create location transfer request")
 	}
 
@@ -33,7 +33,7 @@ func (s *clientService) ApproveLocationTransfer(ctx context.Context, employeeID 
 		ApprovedRejectedBy: &employeeID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ApproveLocationTransferApi", "Failed to approve location transfer request", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ApproveLocationTransferApi", "Failed to approve location transfer request", zap.Error(err))
 		return fmt.Errorf("failed to approve location transfer request")
 	}
 

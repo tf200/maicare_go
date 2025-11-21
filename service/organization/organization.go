@@ -21,7 +21,7 @@ func (s *organizationService) CreateOrganization(ctx context.Context, req Create
 		BtwNumber:  req.BtwNumber,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateOrganisationApi", "Failed to create organisation", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateOrganisationApi", "Failed to create organisation", zap.Error(err))
 		return nil, fmt.Errorf("failed to create organisation")
 	}
 
@@ -40,7 +40,7 @@ func (s *organizationService) CreateOrganization(ctx context.Context, req Create
 func (s *organizationService) ListOrganizations(ctx context.Context) ([]ListOrganisationsResponse, error) {
 	organisations, err := s.Store.ListOrganisations(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListOrganisationsApi", "Failed to list organisations", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListOrganisationsApi", "Failed to list organisations", zap.Error(err))
 		return nil, fmt.Errorf("failed to list organisations")
 	}
 
@@ -65,7 +65,7 @@ func (s *organizationService) ListOrganizations(ctx context.Context) ([]ListOrga
 func (s *organizationService) GetOrganizationByID(ctx context.Context, organizationID int64) (*GetOrganisationResponse, error) {
 	organization, err := s.Store.GetOrganisation(ctx, organizationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetOrganisationApi", "Failed to get organisation by ID", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetOrganisationApi", "Failed to get organisation by ID", zap.Error(err))
 		return nil, fmt.Errorf("failed to get organisation by ID")
 	}
 
@@ -87,7 +87,7 @@ func (s *organizationService) GetOrganizationByID(ctx context.Context, organizat
 func (s *organizationService) GetOrganizationCounts(ctx context.Context, organizationID int64) (*GetOrganisationCountResponse, error) {
 	counts, err := s.Store.GetOrganisationCounts(ctx, organizationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetOrganisationCountsApi", "Failed to get organisation counts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetOrganisationCountsApi", "Failed to get organisation counts", zap.Error(err))
 		return nil, fmt.Errorf("failed to get organisation counts")
 	}
 
@@ -112,7 +112,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, organizati
 		BtwNumber:  req.BtwNumber,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateOrganisationApi", "Failed to update organisation", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateOrganisationApi", "Failed to update organisation", zap.Error(err))
 		return nil, fmt.Errorf("failed to update organisation")
 	}
 
@@ -131,7 +131,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, organizati
 func (s *organizationService) DeleteOrganization(ctx context.Context, organizationID int64) (*DeleteOrganisationResponse, error) {
 	_, err := s.Store.DeleteOrganisation(ctx, organizationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteOrganisationApi", "Failed to delete organisation", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteOrganisationApi", "Failed to delete organisation", zap.Error(err))
 		return nil, fmt.Errorf("failed to delete organisation")
 	}
 

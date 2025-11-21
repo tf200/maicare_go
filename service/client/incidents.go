@@ -65,11 +65,11 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 
 	incident, err := s.Store.CreateIncident(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to create incident", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to create incident", zap.Error(err))
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.Int64("IncidentID", incident.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.Int64("IncidentID", incident.ID))
 
 	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
@@ -119,12 +119,12 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		To:                      incident.Emails,
 	}, ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to enqueue incident email task", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to enqueue incident email task", zap.Error(err))
 	}
 
 	receipients, err := s.Store.GetAllAdminUsers(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to get admin users for incident notification", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to get admin users for incident notification", zap.Error(err))
 	} else {
 		var recipientUserIDs []uuid.UUID
 		for _, user := range receipients {
@@ -152,7 +152,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 				CreatedAt: time.Now(),
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateIncident", "Failed to enqueue incident notification task", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to enqueue incident notification task", zap.Error(err))
 			}
 
 		}
@@ -217,12 +217,12 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 		Offset:   params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListIncidents", "Failed to list incidents", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListIncidents", "Failed to list incidents", zap.Error(err))
 		return nil, err
 	}
 
 	if len(incidents) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.String("ClientID", clientID.String()))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListIncidents", "No incidents found for client", zap.String("ClientID", clientID.String()))
 		pag := pagination.NewResponse(ctx, req.Request, []ListIncidentsResponse{}, 0)
 		return &pag, nil
 	}
@@ -291,7 +291,7 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 func (s *clientService) GetIncident(ctx context.Context, incidentID int64) (*GetIncidentResponse, error) {
 	incident, err := s.Store.GetIncident(ctx, incidentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetIncident", "Failed to get incident", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIncident", "Failed to get incident", zap.Error(err))
 		return nil, err
 	}
 
@@ -395,11 +395,11 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 	}
 	incident, err := s.Store.UpdateIncident(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateIncident", "Failed to update incident", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateIncident", "Failed to update incident", zap.Error(err))
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.Int64("IncidentID", incident.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.Int64("IncidentID", incident.ID))
 	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
@@ -448,7 +448,7 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 		To:                      incident.Emails,
 	}, ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateIncident", "Failed to enqueue incident email task", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateIncident", "Failed to enqueue incident email task", zap.Error(err))
 	}
 	response := &UpdateIncidentResponse{
 		ID:                      incident.ID,
@@ -504,18 +504,18 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 func (s *clientService) DeleteIncident(ctx context.Context, incidentID int64) error {
 	err := s.Store.DeleteIncident(ctx, incidentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteIncident", "Failed to delete incident", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteIncident", "Failed to delete incident", zap.Error(err))
 		return err
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "DeleteIncident", "Incident deleted successfully", zap.Int64("IncidentID", incidentID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "DeleteIncident", "Incident deleted successfully", zap.Int64("IncidentID", incidentID))
 	return nil
 }
 
 func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error) {
 	incident, err := s.Store.GetIncident(ctx, incidentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
 		return nil, err
 	}
 
@@ -569,7 +569,7 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int
 	}
 	fileKey, err := s.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
 	if err != nil && fileKey == "" {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateIncidentFile", "Failed to generate incident PDF", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to generate incident PDF", zap.Error(err))
 		return nil, err
 	}
 
@@ -578,7 +578,7 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int
 		FileUrl: &fileKey,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateIncidentFile", "Failed to update incident file URL", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to update incident file URL", zap.Error(err))
 		return nil, err
 	}
 	response := &GenerateIncidentFileResponse{
@@ -591,11 +591,11 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int
 func (s *clientService) ConfirmIncident(ctx context.Context, incidentID int64) (*ConfirmIncidentResponse, error) {
 	incident, err := s.Store.ConfirmIncident(ctx, incidentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ConfirmIncident", "Failed to confirm incident", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmIncident", "Failed to confirm incident", zap.Error(err))
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ConfirmIncident", "Incident confirmed successfully", zap.Int64("IncidentID", incidentID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ConfirmIncident", "Incident confirmed successfully", zap.Int64("IncidentID", incidentID))
 	return &ConfirmIncidentResponse{
 		FileUrl: s.GenerateResponsePresignedURL(incident.FileUrl, ctx),
 		ID:      incident.ID,
@@ -612,13 +612,13 @@ func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidents
 	}
 	incidents, err := s.Store.ListAllIncidents(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAllIncidents", "Failed to list all incidents", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllIncidents", "Failed to list all incidents", zap.Error(err))
 		return nil, err
 	}
 
 	count, err := s.Store.CountAllIncidents(ctx, req.IsConfirmed)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAllIncidents", "Failed to count all incidents", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllIncidents", "Failed to count all incidents", zap.Error(err))
 		return nil, err
 	}
 

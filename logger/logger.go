@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ import (
 
 //go:generate mockgen -source=logger.go -destination=../mocks/mock_logger.go -package=mocks
 type Logger interface {
-	LogBusinessEvent(level LogLevel, operation, message string, fields ...zap.Field)
+	LogBusinessEvent(ctx context.Context, level LogLevel, operation, message string, fields ...zap.Field)
 }
 
 type LogLevel string
@@ -95,9 +96,14 @@ func SetupLogger(environment string) (Logger, error) {
 	return &LoggerImpl{logger: logger}, nil
 }
 
-func (l *LoggerImpl) LogBusinessEvent(level LogLevel, operation, message string, fields ...zap.Field) {
-	// Add operation context to all business logs
+func (l *LoggerImpl) LogBusinessEvent(ctx context.Context, level LogLevel, operation, message string, fields ...zap.Field) {
+	// Extract request ID from context if available
+	requestID := "unknown"
+	if v, ok := ctx.Value("request_id").(string); ok {
+		requestID = v
+	}
 	commonFields := []zap.Field{
+		zap.String("request_id", requestID),
 		zap.String("operation", operation),
 		zap.String("service", "maicare-api"),
 		zap.Int64("timestamp", time.Now().Unix()),

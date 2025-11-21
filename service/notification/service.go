@@ -45,7 +45,7 @@ func (s *notificationService) CreateAndDeliver(ctx context.Context, payload Noti
 
 	dataBytes, err := json.Marshal(payload.Data)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAndDeliver", "Failed to marshal notification data", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAndDeliver", "Failed to marshal notification data", zap.Error(err))
 		return fmt.Errorf("failed to marshal notification data: %w", err)
 	}
 
@@ -83,7 +83,7 @@ func (s *notificationService) CreateAndDeliver(ctx context.Context, payload Noti
 
 		wsPayload, err := json.Marshal(wsMsg)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAndDeliver", fmt.Sprintf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAndDeliver", fmt.Sprintf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err))
 			// If we can't marshal this, we can't send it via WS.
 			// Depending on requirements, you might still want to proceed with DB saves,
 			// or return an error here. Let's log and proceed with DB saves for now.
@@ -96,12 +96,12 @@ func (s *notificationService) CreateAndDeliver(ctx context.Context, payload Noti
 			// It iterates through all connections for that user ID.
 			s.WsHub.SendToUser(recipientID, wsPayload)
 			// Log the *attempt* to send. The hub logs success/failure per connection.
-			s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateAndDeliver", fmt.Sprintf("Attempted WebSocket delivery to user %d.", recipientID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateAndDeliver", fmt.Sprintf("Attempted WebSocket delivery to user %d.", recipientID))
 		} else if s.WsHub == nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "CreateAndDeliver", fmt.Sprintf("WebSocket Hub is nil, skipping WS delivery for user %d.", recipientID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "CreateAndDeliver", fmt.Sprintf("WebSocket Hub is nil, skipping WS delivery for user %d.", recipientID))
 		} else {
 			// This means json.Marshal(wsMsg) failed earlier
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAndDeliver", "Failed to marshal WebSocket message", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAndDeliver", "Failed to marshal WebSocket message", zap.Error(err))
 		}
 	}
 

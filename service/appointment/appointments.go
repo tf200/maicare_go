@@ -19,13 +19,13 @@ import (
 
 func (s *appointmentService) CreateAppointment(req *CreateAppointmentRequest, userID uuid.UUID, ctx context.Context) (*CreateAppointmentResponse, error) {
 	if req.StartTime.After(req.EndTime) {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Start time is after end time")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Start time is after end time")
 		return nil, fmt.Errorf("start time must be before end time")
 	}
 
 	employee, err := s.Store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to get employee profile", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to get employee profile", zap.Error(err))
 		return nil, fmt.Errorf("failed to get employee profile")
 	}
 
@@ -53,10 +53,10 @@ func (s *appointmentService) AddParticipantToAppointment(
 		EmployeeIds:   req.ParticipantEmployeeIDs,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddParticipantToAppointmentApi", "Failed to add appointment participants", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AddParticipantToAppointmentApi", "Failed to add appointment participants", zap.Error(err))
 		return fmt.Errorf("failed to add participants to appointment")
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddParticipantToAppointmentApi", "Participants added to appointment successfully", zap.String("appointment_id", appointmentID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "AddParticipantToAppointmentApi", "Participants added to appointment successfully", zap.String("appointment_id", appointmentID.String()))
 	return nil
 }
 
@@ -70,10 +70,10 @@ func (s *appointmentService) AddClientToAppointment(
 		ClientIds:     req.ClientIDs,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "AddClientToAppointmentApi", "Failed to add appointment clients", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AddClientToAppointmentApi", "Failed to add appointment clients", zap.Error(err))
 		return fmt.Errorf("failed to add clients to appointment")
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "AddClientToAppointmentApi", "Clients added to appointment successfully", zap.String("appointment_id", appointmentID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "AddClientToAppointmentApi", "Clients added to appointment successfully", zap.String("appointment_id", appointmentID.String()))
 	return nil
 }
 
@@ -83,7 +83,7 @@ func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 	req ListAppointmentsForEmployeeInRangeRequest,
 ) ([]ListAppointmentsForEmployeeInRangeResponse, error) {
 	if req.StartDate.After(req.EndDate) {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Start date is after end date")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Start date is after end date")
 		return nil, fmt.Errorf("start date must be before end date")
 	}
 
@@ -93,12 +93,12 @@ func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 		EndDate:    pgtype.Timestamp{Time: req.EndDate, Valid: true},
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to list appointments", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to list appointments", zap.Error(err))
 		return nil, fmt.Errorf("failed to list appointments")
 	}
 
 	if len(appointments) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListAppointmentsForEmployeeInRangeApi", "No appointments found")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListAppointmentsForEmployeeInRangeApi", "No appointments found")
 		return []ListAppointmentsForEmployeeInRangeResponse{}, nil
 	}
 
@@ -110,7 +110,7 @@ func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 	participantsMap := make(map[uuid.UUID][]ParticipantsDetails)
 	participants, err := s.Store.GetAppointmentParticipants(ctx, appointmentIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to get appointment participants", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to get appointment participants", zap.Error(err))
 		return nil, fmt.Errorf("failed to list appointments")
 	}
 	for _, p := range participants {
@@ -124,7 +124,7 @@ func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 	clientsMap := make(map[uuid.UUID][]ClientsDetails)
 	clients, err := s.Store.GetAppointmentClients(ctx, appointmentIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to get appointment clients", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForEmployeeInRangeApi", "Failed to get appointment clients", zap.Error(err))
 		return nil, fmt.Errorf("failed to list appointments")
 	}
 	for _, c := range clients {
@@ -150,7 +150,7 @@ func (s *appointmentService) ListAppointmentsForEmployeeInRange(
 		})
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListAppointmentsForEmployeeInRangeApi", "Appointments listed successfully", zap.Int("count", len(resp)))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListAppointmentsForEmployeeInRangeApi", "Appointments listed successfully", zap.Int("count", len(resp)))
 	return resp, nil
 }
 
@@ -160,7 +160,7 @@ func (s *appointmentService) ListAppointmentsForClientInRange(
 	req ListAppointmentsForClientRequest,
 ) ([]ListAppointmentsForClientResponse, error) {
 	if req.StartDate.After(req.EndDate) {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Start date is after end date")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Start date is after end date")
 		return nil, fmt.Errorf("start date must be before end date")
 	}
 
@@ -170,12 +170,12 @@ func (s *appointmentService) ListAppointmentsForClientInRange(
 		EndDate:   pgtype.Timestamp{Time: req.EndDate, Valid: true},
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Failed to list appointments", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Failed to list appointments", zap.Error(err))
 		return nil, fmt.Errorf("failed to list appointments")
 	}
 
 	if len(appointments) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListAppointmentsForClientInRangeApi", "No appointments found")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListAppointmentsForClientInRangeApi", "No appointments found")
 		return []ListAppointmentsForClientResponse{}, nil
 	}
 
@@ -187,7 +187,7 @@ func (s *appointmentService) ListAppointmentsForClientInRange(
 	participantsMap := make(map[uuid.UUID][]ParticipantsDetails)
 	participants, err := s.Store.GetAppointmentParticipants(ctx, appointmentIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Failed to get appointment participants", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Failed to get appointment participants", zap.Error(err))
 		return nil, fmt.Errorf("failed to list appointments")
 	}
 	for _, p := range participants {
@@ -201,7 +201,7 @@ func (s *appointmentService) ListAppointmentsForClientInRange(
 	clientsMap := make(map[uuid.UUID][]ClientsDetails)
 	clients, err := s.Store.GetAppointmentClients(ctx, appointmentIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Failed to get appointment clients", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAppointmentsForClientInRangeApi", "Failed to get appointment clients", zap.Error(err))
 		return nil, fmt.Errorf("failed to list appointments")
 	}
 	for _, c := range clients {
@@ -227,7 +227,7 @@ func (s *appointmentService) ListAppointmentsForClientInRange(
 		})
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListAppointmentsForClientInRangeApi", "Appointments listed successfully", zap.Int("count", len(resp)))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListAppointmentsForClientInRangeApi", "Appointments listed successfully", zap.Int("count", len(resp)))
 	return resp, nil
 }
 
@@ -238,16 +238,16 @@ func (s *appointmentService) GetAppointment(
 	appointment, err := s.Store.GetScheduledAppointmentByID(ctx, appointmentID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "GetAppointmentApi", "Appointment not found", zap.String("appointment_id", appointmentID.String()))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAppointmentApi", "Appointment not found", zap.String("appointment_id", appointmentID.String()))
 			return nil, fmt.Errorf("appointment not found")
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetAppointmentApi", "Failed to get appointment", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAppointmentApi", "Failed to get appointment", zap.Error(err))
 		return nil, fmt.Errorf("failed to get appointment")
 	}
 
 	participants, err := s.Store.GetAppointmentParticipants(ctx, []uuid.UUID{appointmentID})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetAppointmentApi", "Failed to get appointment participants", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAppointmentApi", "Failed to get appointment participants", zap.Error(err))
 		return nil, fmt.Errorf("failed to get appointment")
 	}
 	var participantDetails []ParticipantsDetails
@@ -261,7 +261,7 @@ func (s *appointmentService) GetAppointment(
 
 	clients, err := s.Store.GetAppointmentClients(ctx, []uuid.UUID{appointmentID})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetAppointmentApi", "Failed to get appointment clients", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAppointmentApi", "Failed to get appointment clients", zap.Error(err))
 		return nil, fmt.Errorf("failed to get appointment")
 	}
 	var clientDetails []ClientsDetails
@@ -294,19 +294,19 @@ func (s *appointmentService) UpdateAppointment(
 	req *UpdateAppointmentRequest,
 ) (*UpdateAppointmentResponse, error) {
 	if req.StartTime.After(req.EndTime) {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Start time is after end time")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Start time is after end time")
 		return nil, fmt.Errorf("start time must be before end time")
 	}
 
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to begin transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to begin transaction", zap.Error(err))
 		return nil, fmt.Errorf("failed to update appointment")
 	}
 	defer func() {
 		err := tx.Rollback(ctx)
 		if err != nil && err != sql.ErrTxDone {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to rollback transaction", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to rollback transaction", zap.Error(err))
 		}
 	}()
 	qtx := s.Store.WithTx(tx)
@@ -320,14 +320,14 @@ func (s *appointmentService) UpdateAppointment(
 		Description: req.Description,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to update appointment", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to update appointment", zap.Error(err))
 		return nil, fmt.Errorf("failed to update appointment")
 	}
 
 	if req.ParticipantEmployeeIDs != nil {
 		err = qtx.DeleteAppointmentParticipants(ctx, appointment.ID)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to delete appointment participants", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to delete appointment participants", zap.Error(err))
 			return nil, fmt.Errorf("failed to update appointment")
 		}
 		if len(*req.ParticipantEmployeeIDs) > 0 {
@@ -336,7 +336,7 @@ func (s *appointmentService) UpdateAppointment(
 				EmployeeIds:   *req.ParticipantEmployeeIDs,
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to add appointment participants", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to add appointment participants", zap.Error(err))
 				return nil, fmt.Errorf("failed to update appointment")
 			}
 		}
@@ -345,7 +345,7 @@ func (s *appointmentService) UpdateAppointment(
 	if req.ClientIDs != nil {
 		err = qtx.DeleteAppointmentClients(ctx, appointment.ID)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to delete appointment clients", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to delete appointment clients", zap.Error(err))
 			return nil, fmt.Errorf("failed to update appointment")
 		}
 		if len(*req.ClientIDs) > 0 {
@@ -354,7 +354,7 @@ func (s *appointmentService) UpdateAppointment(
 				ClientIds:     *req.ClientIDs,
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to add appointment clients", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to add appointment clients", zap.Error(err))
 				return nil, fmt.Errorf("failed to update appointment")
 			}
 		}
@@ -362,11 +362,11 @@ func (s *appointmentService) UpdateAppointment(
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateAppointmentApi", "Failed to commit transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentApi", "Failed to commit transaction", zap.Error(err))
 		return nil, fmt.Errorf("failed to update appointment")
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "UpdateAppointmentApi", "Appointment updated successfully", zap.String("appointment_id", appointment.ID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateAppointmentApi", "Appointment updated successfully", zap.String("appointment_id", appointment.ID.String()))
 
 	return &UpdateAppointmentResponse{
 		ID:                     appointment.ID,
@@ -392,10 +392,10 @@ func (s *appointmentService) DeleteAppointment(
 ) error {
 	err := s.Store.DeleteAppointment(ctx, appointmentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAppointmentApi", "Failed to delete appointment", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAppointmentApi", "Failed to delete appointment", zap.Error(err))
 		return fmt.Errorf("failed to delete appointment")
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "DeleteAppointmentApi", "Appointment deleted successfully", zap.String("appointment_id", appointmentID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "DeleteAppointmentApi", "Appointment deleted successfully", zap.String("appointment_id", appointmentID.String()))
 	return nil
 }
 
@@ -409,10 +409,10 @@ func (s *appointmentService) ConfirmAppointment(
 		EmployeeID: &employeeID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ConfirmAppointmentApi", "Failed to confirm appointment", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAppointmentApi", "Failed to confirm appointment", zap.Error(err))
 		return fmt.Errorf("failed to confirm appointment")
 	}
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ConfirmAppointmentApi", "Appointment confirmed successfully", zap.String("appointment_id", appointmentID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ConfirmAppointmentApi", "Appointment confirmed successfully", zap.String("appointment_id", appointmentID.String()))
 	return nil
 }
 
@@ -425,13 +425,13 @@ func (s *appointmentService) createNormalAppointment(
 ) (*CreateAppointmentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to begin transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to begin transaction", zap.Error(err))
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 	defer func() {
 		err := tx.Rollback(ctx)
 		if err != nil && err != sql.ErrTxDone {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to rollback transaction", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to rollback transaction", zap.Error(err))
 		}
 	}()
 
@@ -446,7 +446,7 @@ func (s *appointmentService) createNormalAppointment(
 		Color:             req.Color,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to create appointment", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to create appointment", zap.Error(err))
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
@@ -456,7 +456,7 @@ func (s *appointmentService) createNormalAppointment(
 			EmployeeIds:   req.ParticipantEmployeeIDs,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to add appointment participants", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to add appointment participants", zap.Error(err))
 			return nil, fmt.Errorf("failed to create appointment")
 		}
 	}
@@ -467,14 +467,14 @@ func (s *appointmentService) createNormalAppointment(
 			ClientIds:     req.ClientIDs,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to add appointment clients", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to add appointment clients", zap.Error(err))
 			return nil, fmt.Errorf("failed to create appointment")
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to commit transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to commit transaction", zap.Error(err))
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
@@ -498,7 +498,7 @@ func (s *appointmentService) createNormalAppointment(
 			CreatedAt: time.Now(),
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
 		}
 	}
 
@@ -512,7 +512,7 @@ func (s *appointmentService) createNormalAppointment(
 		Description:       appointment.Description,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateAppointmentApi", "Appointment created successfully", zap.String("appointment_id", appointment.ID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateAppointmentApi", "Appointment created successfully", zap.String("appointment_id", appointment.ID.String()))
 	return resp, nil
 }
 
@@ -535,7 +535,7 @@ func (s *appointmentService) createRecurringAppointment(
 		RecurrenceEndDate:  pgtype.Date{Time: req.RecurrenceEndDate, Valid: true},
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to create appointment template", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to create appointment template", zap.Error(err))
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
@@ -545,7 +545,7 @@ func (s *appointmentService) createRecurringAppointment(
 		ClientIDs:              req.ClientIDs,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue appointment creation task", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue appointment creation task", zap.Error(err))
 		return nil, fmt.Errorf("failed to create appointment")
 	}
 
@@ -569,7 +569,7 @@ func (s *appointmentService) createRecurringAppointment(
 			CreatedAt: time.Now(),
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentApi", "Failed to enqueue notification task", zap.Error(err))
 		}
 	}
 
@@ -583,6 +583,6 @@ func (s *appointmentService) createRecurringAppointment(
 		Description:       appointmentTemp.Description,
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "CreateAppointmentApi", "Recurring appointment template created successfully", zap.String("appointment_template_id", appointmentTemp.ID.String()))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateAppointmentApi", "Recurring appointment template created successfully", zap.String("appointment_template_id", appointmentTemp.ID.String()))
 	return resp, nil
 }

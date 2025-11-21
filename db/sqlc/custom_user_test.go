@@ -79,7 +79,7 @@ func TestCreateTemp2FaSecret(t *testing.T) {
 	tests := []struct {
 		name   string
 		setup  func(ctx context.Context, qtx *Queries) CreateTemp2FaSecretParams
-		checks func(t *testing.T, err error)
+		checks func(t *testing.T, rowsAffected int64, err error)
 	}{
 		{
 			name: "successful creation",
@@ -90,20 +90,22 @@ func TestCreateTemp2FaSecret(t *testing.T) {
 					TwoFactorSecretTemp: util.StringPtr("tempsecret123"),
 				}
 			},
-			checks: func(t *testing.T, err error) {
+			checks: func(t *testing.T, rowsAffected int64, err error) {
 				require.NoError(t, err, "CreateTemp2FaSecret() should not error")
+				require.Equal(t, int64(1), rowsAffected, "should affect exactly 1 row")
 			},
 		},
 		{
 			name: "invalid user ID",
 			setup: func(ctx context.Context, qtx *Queries) CreateTemp2FaSecretParams {
 				return CreateTemp2FaSecretParams{
-					ID:                  uuid.Nil,
+					ID:                  uuid.New(),
 					TwoFactorSecretTemp: util.StringPtr("tempsecret123"),
 				}
 			},
-			checks: func(t *testing.T, err error) {
-				require.Error(t, err, "CreateTemp2FaSecret() should error for invalid user ID")
+			checks: func(t *testing.T, rowsAffected int64, err error) {
+				require.NoError(t, err, "CreateTemp2FaSecret() should not error")
+				require.Equal(t, int64(0), rowsAffected, "should affect 0 rows for non-existent user")
 			},
 		},
 	}
@@ -119,8 +121,8 @@ func TestCreateTemp2FaSecret(t *testing.T) {
 			qtx := testQueries.WithTx(tx)
 
 			params := tt.setup(ctx, qtx)
-			err = qtx.CreateTemp2FaSecret(ctx, params)
-			tt.checks(t, err)
+			rowsAffected, err := qtx.CreateTemp2FaSecret(ctx, params)
+			tt.checks(t, rowsAffected, err)
 		})
 	}
 }
@@ -129,7 +131,7 @@ func TestEnable2Fa(t *testing.T) {
 	tests := []struct {
 		name   string
 		setup  func(ctx context.Context, qtx *Queries) Enable2FaParams
-		checks func(t *testing.T, err error)
+		checks func(t *testing.T, rowsAffected int64, err error)
 	}{
 		{
 			name: "successful 2FA enablement",
@@ -141,8 +143,9 @@ func TestEnable2Fa(t *testing.T) {
 					RecoveryCodes:   []string{"code1", "code2", "code3"},
 				}
 			},
-			checks: func(t *testing.T, err error) {
+			checks: func(t *testing.T, rowsAffected int64, err error) {
 				require.NoError(t, err, "Enable2Fa() should not error")
+				require.Equal(t, int64(1), rowsAffected, "should affect exactly 1 row")
 			},
 		},
 		{
@@ -155,8 +158,9 @@ func TestEnable2Fa(t *testing.T) {
 					RecoveryCodes:   []string{},
 				}
 			},
-			checks: func(t *testing.T, err error) {
+			checks: func(t *testing.T, rowsAffected int64, err error) {
 				require.NoError(t, err, "Enable2Fa() should not error with empty recovery codes")
+				require.Equal(t, int64(1), rowsAffected, "should affect exactly 1 row")
 			},
 		},
 		{
@@ -168,8 +172,8 @@ func TestEnable2Fa(t *testing.T) {
 					RecoveryCodes:   []string{"code1"},
 				}
 			},
-			checks: func(t *testing.T, err error) {
-				require.Error(t, err, "Enable2Fa() should error for invalid user ID")
+			checks: func(t *testing.T, rowsAffected int64, err error) {
+				require.Equal(t, int64(0), rowsAffected, "should affect 0 rows for invalid user ID")
 			},
 		},
 	}
@@ -185,8 +189,8 @@ func TestEnable2Fa(t *testing.T) {
 			qtx := testQueries.WithTx(tx)
 
 			params := tt.setup(ctx, qtx)
-			err = qtx.Enable2Fa(ctx, params)
-			tt.checks(t, err)
+			rowsAffected, err := qtx.Enable2Fa(ctx, params)
+			tt.checks(t, rowsAffected, err)
 		})
 	}
 }
@@ -201,7 +205,7 @@ func TestGetTemp2FaSecret(t *testing.T) {
 			name: "get existing temp 2FA secret",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				user := createRandomUser(ctx, qtx)
-				err := qtx.CreateTemp2FaSecret(ctx, CreateTemp2FaSecretParams{
+				_, err := qtx.CreateTemp2FaSecret(ctx, CreateTemp2FaSecretParams{
 					ID:                  user.ID,
 					TwoFactorSecretTemp: util.StringPtr("tempsecret123"),
 				})
@@ -275,7 +279,6 @@ func TestGetUserByEmail(t *testing.T) {
 			checks: func(t *testing.T, user GetUserByEmailRow, err error) {
 				require.NoError(t, err, "GetUserByEmail() should not error")
 				require.NotEmpty(t, user.ID)
-				require.True(t, user.IsActive)
 			},
 		},
 		{

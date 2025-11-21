@@ -90,7 +90,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 	}
 	createdForm, err := s.Store.CreateRegistrationForm(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateRegistrationForm", "Failed to create registration form", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateRegistrationForm", "Failed to create registration form", zap.Error(err))
 		return nil, fmt.Errorf("failed to create registration form: %w", err)
 	}
 	response := &CreateRegistrationFormResponse{
@@ -191,7 +191,7 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 		RiskDayNightRhythm:     req.RiskDayNightRhythm,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListRegistrationForms", "Failed to list registration forms", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListRegistrationForms", "Failed to list registration forms", zap.Error(err))
 		return nil, fmt.Errorf("failed to list registration forms: %w status: %v", err, status)
 	}
 	totalCount, err := s.Store.CountRegistrationForms(ctx, db.CountRegistrationFormsParams{
@@ -207,7 +207,7 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 		RiskDayNightRhythm:     req.RiskDayNightRhythm,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListRegistrationForms", "Failed to count registration forms", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListRegistrationForms", "Failed to count registration forms", zap.Error(err))
 		return nil, fmt.Errorf("failed to count registration forms: %w", err)
 	}
 
@@ -298,10 +298,10 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 	return &paginationResponse, nil
 }
 
-func (s *clientService) GetRegistrationFormB(tx context.Context, formID int64) (*GetRegistrationFormResponse, error) {
-	registrationForm, err := s.Store.GetRegistrationForm(tx, formID)
+func (s *clientService) GetRegistrationFormB(ctx context.Context, formID int64) (*GetRegistrationFormResponse, error) {
+	registrationForm, err := s.Store.GetRegistrationForm(ctx, formID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetRegistrationFormB", "Failed to get registration form B", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetRegistrationFormB", "Failed to get registration form B", zap.Error(err), zap.Int64("FormID", formID))
 		return nil, fmt.Errorf("failed to get registration form B: %w", err)
 	}
 	response := &GetRegistrationFormResponse{
@@ -456,7 +456,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 	}
 	registrationForm, err := s.Store.UpdateRegistrationForm(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateRegistrationForm", "Failed to update registration form", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationForm", "Failed to update registration form", zap.Error(err), zap.Int64("FormID", formID))
 		return nil, fmt.Errorf("failed to update registration form: %w", err)
 	}
 	response := &UpdateRegistrationFormResponse{
@@ -541,7 +541,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 func (s *clientService) DeleteRegistrationForm(ctx context.Context, formID int64) error {
 	err := s.Store.DeleteRegistrationForm(ctx, formID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteRegistrationForm", "Failed to delete registration form", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteRegistrationForm", "Failed to delete registration form", zap.Error(err), zap.Int64("FormID", formID))
 		return fmt.Errorf("failed to delete registration form: %w", err)
 	}
 	return nil
@@ -557,7 +557,7 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 	}
 	updatedForm, err := s.Store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to update registration form status", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to update registration form status", zap.Error(err), zap.Int64("FormID", formID))
 		return fmt.Errorf("failed to update registration form status: %w", err)
 	}
 	if req.Status == "approved" {
@@ -571,7 +571,7 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 		})
 	}
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to enqueue accepted registration email", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to enqueue accepted registration email", zap.Error(err), zap.Int64("FormID", formID))
 	}
 	return nil
 }
