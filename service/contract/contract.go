@@ -294,7 +294,7 @@ func (s *contractService) UpdateContractStatus(ctx context.Context, req UpdateCo
 
 	updatedContract, err := qtx.UpdateContractStatus(ctx, db.UpdateContractStatusParams{
 		ContractID: contractID,
-		Status:     req.Status,
+		Status:     db.ContractStatusEnum(req.Status),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateContractStatus", "Failed to update contract status", zap.Int64("contract_id", contractID), zap.String("status", req.Status), zap.Error(err))
@@ -355,13 +355,49 @@ func (s *contractService) ListContracts(ctx *gin.Context, req ListContractsReque
 	params := req.GetParams()
 
 	contracts, err := s.Store.ListContracts(ctx, db.ListContractsParams{
-		Limit:           params.Limit,
-		Offset:          params.Offset,
-		Search:          req.Search,
-		Status:          req.Status,
-		CareType:        req.CareType,
-		FinancingAct:    req.FinancingAct,
-		FinancingOption: req.FinancingOption,
+		Limit:  params.Limit,
+		Offset: params.Offset,
+		Search: req.Search,
+		Status: func() []db.ContractStatusEnum {
+			if req.Status == nil {
+				return nil
+			}
+			statuses := make([]db.ContractStatusEnum, len(req.Status))
+			for i, status := range req.Status {
+				statuses[i] = db.ContractStatusEnum(status)
+			}
+			return statuses
+		}(),
+		CareType: func() []db.CareTypeEnum {
+			if req.CareType == nil {
+				return nil
+			}
+			types := make([]db.CareTypeEnum, len(req.CareType))
+			for i, careType := range req.CareType {
+				types[i] = db.CareTypeEnum(careType)
+			}
+			return types
+		}(),
+		FinancingAct: func() []db.FinancingActEnum {
+			if req.FinancingAct == nil {
+				return nil
+			}
+			acts := make([]db.FinancingActEnum, len(req.FinancingAct))
+			for i, act := range req.FinancingAct {
+				acts[i] = db.FinancingActEnum(act)
+			}
+			return acts
+		}(),
+		FinancingOption: func() []db.FinancingOptionEnum {
+			if req.FinancingOption == nil {
+				return nil
+			}
+			options := make([]db.FinancingOptionEnum, len(req.FinancingOption))
+			for i, option := range req.FinancingOption {
+				options[i] = db.FinancingOptionEnum(option)
+			}
+			return options
+		}(),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListContracts", "Failed to list contracts", zap.Error(err))

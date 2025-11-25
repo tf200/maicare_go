@@ -455,3 +455,37 @@ func (server *Server) ApproveOrRejectClientLocationTransferApi(ctx *gin.Context)
 	res := SuccessResponse[any](nil, "Location transfer request processed successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// ListLocationTransferRequestsApi lists location transfer requests for a client
+// @Summary List location transfer requests for a client
+// @Tags clients
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} Response[pagination.Response[clientp.ListLocationTransferRequestsResponse]]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/location_transfer [get]
+func (server *Server) ListLocationTransferRequestsApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := uuid.Parse(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.ListLocationTransferRequestsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	pag, err := server.businessService.ClientService.ListLocationTransferRequests(ctx, req, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(pag, "Location transfer requests fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}

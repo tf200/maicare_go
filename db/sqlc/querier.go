@@ -243,6 +243,7 @@ type Querier interface {
 	ListClientDetails(ctx context.Context, arg ListClientDetailsParams) ([]ListClientDetailsRow, error)
 	ListClientDiagnoses(ctx context.Context, arg ListClientDiagnosesParams) ([]ListClientDiagnosesRow, error)
 	ListClientDocuments(ctx context.Context, arg ListClientDocumentsParams) ([]ListClientDocumentsRow, error)
+	ListClientLocationTransfer(ctx context.Context, arg ListClientLocationTransferParams) ([]ListClientLocationTransferRow, error)
 	ListClientMaturityMatrixAssessments(ctx context.Context, arg ListClientMaturityMatrixAssessmentsParams) ([]ListClientMaturityMatrixAssessmentsRow, error)
 	ListClientStatusHistory(ctx context.Context, arg ListClientStatusHistoryParams) ([]ClientStatusHistory, error)
 	ListContractTypes(ctx context.Context) ([]ContractType, error)

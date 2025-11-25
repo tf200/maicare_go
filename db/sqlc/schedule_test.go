@@ -21,9 +21,9 @@ func TestCreateSchedule(t *testing.T) {
 		{
 			name: "successful schedule creation",
 			setup: func(ctx context.Context, qtx *Queries) CreateScheduleParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				location := createRandomLocation(ctx, qtx)
-				creator := createRandomEmployee(ctx, qtx)
+				creator := createRandomEmployeeProfile(ctx, qtx)
 				startTime := time.Now().Add(time.Hour)
 				endTime := startTime.Add(time.Hour)
 				return CreateScheduleParams{
@@ -52,10 +52,10 @@ func TestCreateSchedule(t *testing.T) {
 		{
 			name: "schedule creation with shift",
 			setup: func(ctx context.Context, qtx *Queries) CreateScheduleParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				location := createRandomLocation(ctx, qtx)
 				shift := createRandomShift(ctx, qtx)
-				creator := createRandomEmployee(ctx, qtx)
+				creator := createRandomEmployeeProfile(ctx, qtx)
 				startTime := time.Now().Add(time.Hour)
 				endTime := startTime.Add(time.Hour)
 				return CreateScheduleParams{
@@ -109,7 +109,8 @@ func TestGetScheduleById(t *testing.T) {
 		{
 			name: "get existing schedule",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
-				schedule := createRandomSchedule(ctx, qtx)
+				location := createRandomLocation(ctx, qtx)
+				schedule := createRandomSchedule(ctx, qtx, location.ID)
 				return schedule.ID
 			},
 			checks: func(t *testing.T, schedule GetScheduleByIdRow, err error) {
@@ -153,8 +154,9 @@ func TestUpdateSchedule(t *testing.T) {
 		{
 			name: "update existing schedule",
 			setup: func(ctx context.Context, qtx *Queries) UpdateScheduleParams {
-				schedule := createRandomSchedule(ctx, qtx)
-				newEmployee := createRandomEmployee(ctx, qtx)
+				location := createRandomLocation(ctx, qtx)
+				schedule := createRandomSchedule(ctx, qtx, location.ID)
+				newEmployee := createRandomEmployeeProfile(ctx, qtx)
 				newLocation := createRandomLocation(ctx, qtx)
 				startTime := time.Now().Add(2 * time.Hour)
 				endTime := startTime.Add(time.Hour)
@@ -182,7 +184,7 @@ func TestUpdateSchedule(t *testing.T) {
 		{
 			name: "update non-existent schedule",
 			setup: func(ctx context.Context, qtx *Queries) UpdateScheduleParams {
-				newEmployee := createRandomEmployee(ctx, qtx)
+				newEmployee := createRandomEmployeeProfile(ctx, qtx)
 				newLocation := createRandomLocation(ctx, qtx)
 				startTime := time.Now().Add(2 * time.Hour)
 				endTime := startTime.Add(time.Hour)
@@ -233,7 +235,8 @@ func TestDeleteSchedule(t *testing.T) {
 		{
 			name: "delete existing schedule",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
-				schedule := createRandomSchedule(ctx, qtx)
+				location := createRandomLocation(ctx, qtx)
+				schedule := createRandomSchedule(ctx, qtx, location.ID)
 				return schedule.ID
 			},
 			checks: func(t *testing.T, err error) {
@@ -278,7 +281,7 @@ func TestGetDailySchedulesByLocation(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) GetDailySchedulesByLocationParams {
 				location := createRandomLocation(ctx, qtx)
 				// Create a schedule for today
-				createRandomSchedule(ctx, qtx)
+				createRandomSchedule(ctx, qtx, location.ID)
 				now := time.Now()
 				return GetDailySchedulesByLocationParams{
 					Year:       int32(now.Year()),
@@ -337,9 +340,29 @@ func TestGetEmployeeSchedules(t *testing.T) {
 		{
 			name: "get schedules for employee in period",
 			setup: func(ctx context.Context, qtx *Queries) GetEmployeeSchedulesParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
+				location := createRandomLocation(ctx, qtx)
+				creator := createRandomEmployeeProfile(ctx, qtx)
 				// Create a schedule for this employee
-				createRandomSchedule(ctx, qtx)
+				startTime := time.Now().Add(-30 * time.Minute)
+				endTime := startTime.Add(time.Hour)
+				_, err := qtx.CreateSchedule(ctx, CreateScheduleParams{
+					EmployeeID:          employee.ID,
+					LocationID:          location.ID,
+					LocationShiftID:     nil,
+					Color:               randomStringPtrSchedule(7),
+					IsCustom:            false,
+					CreatedByEmployeeID: creator.ID,
+					StartDatetime: pgtype.Timestamp{
+						Time:  startTime,
+						Valid: true,
+					},
+					EndDatetime: pgtype.Timestamp{
+						Time:  endTime,
+						Valid: true,
+					},
+				})
+				require.NoError(t, err)
 				start := time.Now().Add(-time.Hour)
 				end := time.Now().Add(time.Hour)
 				return GetEmployeeSchedulesParams{
@@ -362,7 +385,7 @@ func TestGetEmployeeSchedules(t *testing.T) {
 		{
 			name: "get schedules for employee outside period",
 			setup: func(ctx context.Context, qtx *Queries) GetEmployeeSchedulesParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				start := time.Now().Add(24 * time.Hour)
 				end := time.Now().Add(25 * time.Hour)
 				return GetEmployeeSchedulesParams{
@@ -411,7 +434,7 @@ func TestGetMonthlySchedulesByLocation(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) GetMonthlySchedulesByLocationParams {
 				location := createRandomLocation(ctx, qtx)
 				// Create a schedule for this month
-				createRandomSchedule(ctx, qtx)
+				createRandomSchedule(ctx, qtx, location.ID)
 				now := time.Now()
 				return GetMonthlySchedulesByLocationParams{
 					Year:       int32(now.Year()),
@@ -460,15 +483,14 @@ func TestGetMonthlySchedulesByLocation(t *testing.T) {
 }
 
 // Helpers
-func createRandomSchedule(ctx context.Context, qtx *Queries) CreateScheduleRow {
-	employee := createRandomEmployee(ctx, qtx)
-	location := createRandomLocation(ctx, qtx)
-	creator := createRandomEmployee(ctx, qtx)
+func createRandomSchedule(ctx context.Context, qtx *Queries, locationID int64) CreateScheduleRow {
+	employee := createRandomEmployeeProfile(ctx, qtx)
+	creator := createRandomEmployeeProfile(ctx, qtx)
 	startTime := time.Now().Add(time.Hour)
 	endTime := startTime.Add(time.Hour)
 	params := CreateScheduleParams{
 		EmployeeID:          employee.ID,
-		LocationID:          location.ID,
+		LocationID:          locationID,
 		LocationShiftID:     nil,
 		Color:               randomStringPtrSchedule(7),
 		IsCustom:            false,

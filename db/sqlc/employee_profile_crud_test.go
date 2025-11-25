@@ -32,6 +32,7 @@ func TestCreateEmployeeProfile(t *testing.T) {
 					WorkPhoneNumber: util.StringPtr("+1234567890"),
 					LocationID:      &location.ID,
 					ContractType:    EmployeeContractTypeEnumLoondienst,
+					Gender:          EmployeeGenderEnumMale,
 				}
 			},
 			checks: func(t *testing.T, profile EmployeeProfile) {
@@ -44,9 +45,6 @@ func TestCreateEmployeeProfile(t *testing.T) {
 				require.NotNil(t, profile.ContractType)
 				require.Equal(t, EmployeeContractTypeEnumLoondienst, profile.ContractType)
 				require.False(t, profile.IsArchived)
-				require.Nil(t, profile.OutOfService)
-				require.Nil(t, profile.HasBorrowed)
-				require.False(t, profile.IsSubcontractor != nil && *profile.IsSubcontractor)
 			},
 		},
 		{
@@ -109,11 +107,13 @@ func TestCreateEmployeeProfile(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) CreateEmployeeProfileParams {
 				user := createRandomUser(ctx, qtx)
 				return CreateEmployeeProfileParams{
-					UserID:      user.ID,
-					FirstName:   "Bob",
-					LastName:    "Wilson",
-					Email:       util.RandomEmail(),
-					DateOfBirth: pgtype.Date{Time: time.Date(1975, 3, 10, 0, 0, 0, 0, time.UTC), Valid: true},
+					UserID:       user.ID,
+					FirstName:    "Bob",
+					LastName:     "Wilson",
+					Email:        util.RandomEmail(),
+					DateOfBirth:  pgtype.Date{Time: time.Date(1975, 3, 10, 0, 0, 0, 0, time.UTC), Valid: true},
+					Gender:       EmployeeGenderEnumMale,
+					ContractType: EmployeeContractTypeEnumLoondienst,
 				}
 			},
 			checks: func(t *testing.T, profile EmployeeProfile) {
@@ -129,9 +129,7 @@ func TestCreateEmployeeProfile(t *testing.T) {
 				require.Nil(t, profile.WorkPhoneNumber)
 				require.Nil(t, profile.HomeTelephoneNumber)
 				require.Nil(t, profile.IsSubcontractor)
-				require.Nil(t, profile.Gender)
 				require.Nil(t, profile.LocationID)
-				require.Nil(t, profile.ContractType)
 			},
 		},
 	}
@@ -323,11 +321,13 @@ func TestListEmployeeProfile(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) ListEmployeeProfileParams {
 				user := createRandomUser(ctx, qtx)
 				_, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
-					UserID:      user.ID,
-					FirstName:   "Searchable",
-					LastName:    "Name",
-					Email:       "searchable@example.com",
-					DateOfBirth: pgtype.Date{Time: time.Date(1992, 7, 25, 0, 0, 0, 0, time.UTC), Valid: true},
+					UserID:       user.ID,
+					FirstName:    "Searchable",
+					LastName:     "Name",
+					Email:        "searchable@example.com",
+					DateOfBirth:  pgtype.Date{Time: time.Date(1992, 7, 25, 0, 0, 0, 0, time.UTC), Valid: true},
+					Gender:       EmployeeGenderEnumMale,
+					ContractType: EmployeeContractTypeEnumLoondienst,
 				})
 				require.NoError(t, err)
 				return ListEmployeeProfileParams{
@@ -488,7 +488,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 	tests := []struct {
 		name   string
 		setup  func(ctx context.Context, qtx *Queries) UpdateEmployeeProfileParams
-		checks func(t *testing.T, profile EmployeeProfile, err error)
+		checks func(t *testing.T, params UpdateEmployeeProfileParams, profile EmployeeProfile, err error)
 	}{
 		{
 			name: "successful update with name",
@@ -500,7 +500,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 					LastName:  util.StringPtr("Updated Last"),
 				}
 			},
-			checks: func(t *testing.T, profile EmployeeProfile, err error) {
+			checks: func(t *testing.T, params UpdateEmployeeProfileParams, profile EmployeeProfile, err error) {
 				require.NoError(t, err, "UpdateEmployeeProfile() should not error")
 				require.Equal(t, "Updated Name", profile.FirstName)
 				require.Equal(t, "Updated Last", profile.LastName)
@@ -534,7 +534,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 					IsArchived:                util.BoolPtr(false),
 				}
 			},
-			checks: func(t *testing.T, profile EmployeeProfile, err error) {
+			checks: func(t *testing.T, params UpdateEmployeeProfileParams, profile EmployeeProfile, err error) {
 				require.NoError(t, err, "UpdateEmployeeProfile() should not error")
 				require.Equal(t, "Fully", profile.FirstName)
 				require.Equal(t, "Updated", profile.LastName)
@@ -561,7 +561,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 				require.True(t, *profile.IsSubcontractor)
 				require.Equal(t, EmployeeGenderEnumNotSpecified, profile.Gender)
 				require.NotNil(t, profile.LocationID)
-				require.Equal(t, int64(99), *profile.LocationID)
+				require.Equal(t, *params.LocationID, *profile.LocationID)
 				require.NotNil(t, profile.HasBorrowed)
 				require.True(t, profile.HasBorrowed)
 				require.NotNil(t, profile.OutOfService)
@@ -577,7 +577,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 					ID: profile.ID,
 				}
 			},
-			checks: func(t *testing.T, profile EmployeeProfile, err error) {
+			checks: func(t *testing.T, params UpdateEmployeeProfileParams, profile EmployeeProfile, err error) {
 				require.NoError(t, err, "UpdateEmployeeProfile() should not error even with no updates")
 			},
 		},
@@ -589,8 +589,8 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 					FirstName: util.StringPtr("Non-existent"),
 				}
 			},
-			checks: func(t *testing.T, profile EmployeeProfile, err error) {
-				require.NoError(t, err, "UpdateEmployeeProfile() should not error even for non-existent profile")
+			checks: func(t *testing.T, params UpdateEmployeeProfileParams, profile EmployeeProfile, err error) {
+				require.Error(t, err, "UpdateEmployeeProfile() should error even for non-existent profile")
 			},
 		},
 		{
@@ -602,7 +602,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 					IsArchived: util.BoolPtr(true),
 				}
 			},
-			checks: func(t *testing.T, profile EmployeeProfile, err error) {
+			checks: func(t *testing.T, params UpdateEmployeeProfileParams, profile EmployeeProfile, err error) {
 				require.NoError(t, err, "UpdateEmployeeProfile() should not error when archiving")
 				require.True(t, profile.IsArchived, "profile should be archived")
 			},
@@ -621,7 +621,7 @@ func TestUpdateEmployeeProfile(t *testing.T) {
 
 			params := tt.setup(ctx, qtx)
 			profile, err := qtx.UpdateEmployeeProfile(ctx, params)
-			tt.checks(t, profile, err)
+			tt.checks(t, params, profile, err)
 		})
 	}
 }
@@ -660,12 +660,14 @@ func createRandomEmployeeProfile(ctx context.Context, qtx *Queries) EmployeeProf
 func createRandomEmployeeProfileWithDepartment(ctx context.Context, qtx *Queries, department string) EmployeeProfile {
 	user := createRandomUser(ctx, qtx)
 	profile, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
-		UserID:      user.ID,
-		FirstName:   util.RandomString(8),
-		LastName:    util.RandomString(10),
-		Email:       util.RandomEmail(),
-		Department:  util.StringPtr(department),
-		DateOfBirth: pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		UserID:       user.ID,
+		FirstName:    util.RandomString(8),
+		LastName:     util.RandomString(10),
+		Email:        util.RandomEmail(),
+		Department:   util.StringPtr(department),
+		DateOfBirth:  pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		Gender:       EmployeeGenderEnumMale,
+		ContractType: EmployeeContractTypeEnumLoondienst,
 	})
 	if err != nil {
 		panic("failed to create random employee profile with department: " + err.Error())
@@ -676,12 +678,14 @@ func createRandomEmployeeProfileWithDepartment(ctx context.Context, qtx *Queries
 func createRandomEmployeeProfileWithLocation(ctx context.Context, qtx *Queries, locationID int64) EmployeeProfile {
 	user := createRandomUser(ctx, qtx)
 	profile, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
-		UserID:      user.ID,
-		FirstName:   util.RandomString(8),
-		LastName:    util.RandomString(10),
-		Email:       util.RandomEmail(),
-		LocationID:  &locationID,
-		DateOfBirth: pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		UserID:       user.ID,
+		FirstName:    util.RandomString(8),
+		LastName:     util.RandomString(10),
+		Email:        util.RandomEmail(),
+		LocationID:   &locationID,
+		DateOfBirth:  pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		Gender:       EmployeeGenderEnumMale,
+		ContractType: EmployeeContractTypeEnumLoondienst,
 	})
 	if err != nil {
 		panic("failed to create random employee profile with location: " + err.Error())
@@ -692,11 +696,13 @@ func createRandomEmployeeProfileWithLocation(ctx context.Context, qtx *Queries, 
 func createRandomEmployeeProfileWithProfilePicture(ctx context.Context, qtx *Queries) EmployeeProfile {
 	user := createRandomUserWithProfilePicture(ctx, qtx)
 	profile, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
-		UserID:      user.ID,
-		FirstName:   util.RandomString(8),
-		LastName:    util.RandomString(10),
-		Email:       util.RandomEmail(),
-		DateOfBirth: pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		UserID:       user.ID,
+		FirstName:    util.RandomString(8),
+		LastName:     util.RandomString(10),
+		Email:        util.RandomEmail(),
+		DateOfBirth:  pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		Gender:       EmployeeGenderEnumMale,
+		ContractType: EmployeeContractTypeEnumLoondienst,
 	})
 	if err != nil {
 		panic("failed to create random employee profile with profile picture: " + err.Error())
@@ -715,4 +721,33 @@ func createRandomUserWithProfilePicture(ctx context.Context, qtx *Queries) Custo
 		panic("failed to create random user with profile picture: " + err.Error())
 	}
 	return user
+}
+
+func createRandomEmployeeProfileIsSubcontractor(ctx context.Context, qtx *Queries, isSubcontractor bool) EmployeeProfile {
+	user := createRandomUser(ctx, qtx)
+	location := createRandomLocation(ctx, qtx)
+	profile, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
+		UserID:                    user.ID,
+		FirstName:                 util.RandomString(8),
+		LastName:                  util.RandomString(10),
+		Position:                  util.StringPtr(util.RandomString(15)),
+		Department:                util.StringPtr(util.RandomString(12)),
+		EmployeeNumber:            util.StringPtr("EMP" + util.RandomString(5)),
+		EmploymentNumber:          util.StringPtr("EMPL" + util.RandomString(5)),
+		PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
+		Email:                     util.RandomEmail(),
+		AuthenticationPhoneNumber: util.StringPtr("+1" + util.RandomString(10)),
+		PrivatePhoneNumber:        util.StringPtr("+1" + util.RandomString(10)),
+		WorkPhoneNumber:           util.StringPtr("+1" + util.RandomString(10)),
+		DateOfBirth:               pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
+		HomeTelephoneNumber:       util.StringPtr("+1" + util.RandomString(10)),
+		IsSubcontractor:           util.BoolPtr(isSubcontractor),
+		Gender:                    EmployeeGenderEnumMale,
+		LocationID:                &location.ID,
+		ContractType:              EmployeeContractTypeEnumLoondienst,
+	})
+	if err != nil {
+		panic("failed to create random employee profile with isSubcontractor: " + err.Error())
+	}
+	return profile
 }

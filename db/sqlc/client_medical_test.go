@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"testing"
-	"time"
 
 	"maicare_go/util"
 
@@ -148,8 +147,9 @@ func TestGetClientDiagnosis(t *testing.T) {
 		{
 			name: "get diagnosis with all fields populated",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
-				diagnosis, err := testQueries.CreateClientDiagnosis(context.Background(), CreateClientDiagnosisParams{
-					ClientID:            uuid.New(),
+				client := createRandomClientDetails(ctx, qtx)
+				diagnosis, err := qtx.CreateClientDiagnosis(ctx, CreateClientDiagnosisParams{
+					ClientID:            client.ID,
 					Title:               util.StringPtr("Diabetes"),
 					DiagnosisCode:       "ICD-10-E11",
 					Description:         "Type 2 diabetes mellitus",
@@ -238,7 +238,7 @@ func TestUpdateClientDiagnosis(t *testing.T) {
 				}
 			},
 			checks: func(t *testing.T, diagnosis ClientDiagnosis, err error) {
-				require.NoError(t, err, "UpdateClientDiagnosis() should not error even for non-existent diagnosis")
+				require.Error(t, err, "UpdateClientDiagnosis() should error for non-existent diagnosis")
 			},
 		},
 		{
@@ -330,7 +330,8 @@ func TestListClientDiagnoses(t *testing.T) {
 		{
 			name: "list diagnoses for client with multiple diagnoses",
 			setup: func(ctx context.Context, qtx *Queries) ListClientDiagnosesParams {
-				clientID := uuid.New()
+				client := createRandomClientDetails(ctx, qtx)
+				clientID := client.ID
 				// Create multiple diagnoses for the same client
 				for i := 0; i < 3; i++ {
 					_, err := qtx.CreateClientDiagnosis(ctx, CreateClientDiagnosisParams{
@@ -356,7 +357,8 @@ func TestListClientDiagnoses(t *testing.T) {
 		{
 			name: "list diagnoses with pagination",
 			setup: func(ctx context.Context, qtx *Queries) ListClientDiagnosesParams {
-				clientID := uuid.New()
+				client := createRandomClientDetails(ctx, qtx)
+				clientID := client.ID
 				for i := 0; i < 5; i++ {
 					_, err := qtx.CreateClientDiagnosis(ctx, CreateClientDiagnosisParams{
 						ClientID:      clientID,
@@ -448,7 +450,7 @@ func TestCreateClientMedication(t *testing.T) {
 			name: "successful creation with all fields",
 			setup: func(ctx context.Context, qtx *Queries) CreateClientMedicationParams {
 				diagnosis := createRandomDiagnosis(ctx, qtx)
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				return CreateClientMedicationParams{
 					DiagnosisID:      &diagnosis.ID,
 					Name:             "Insulin",
@@ -523,7 +525,7 @@ func TestGetMedication(t *testing.T) {
 			name: "get medication with administered_by relationship",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
 				diagnosis := createRandomDiagnosis(ctx, qtx)
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				medication, err := qtx.CreateClientMedication(ctx, CreateClientMedicationParams{
 					DiagnosisID:      &diagnosis.ID,
 					Name:             "Medication with admin",
@@ -636,7 +638,7 @@ func TestUpdateClientMedication(t *testing.T) {
 				}
 			},
 			checks: func(t *testing.T, medication ClientMedication, err error) {
-				require.NoError(t, err, "UpdateClientMedication() should not error even for non-existent medication")
+				require.Error(t, err, "UpdateClientMedication() should error for non-existent medication")
 			},
 		},
 	}
@@ -884,8 +886,9 @@ func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 // Random data generators for tests
 
 func createRandomDiagnosis(ctx context.Context, qtx *Queries) ClientDiagnosis {
+	client := createRandomClientDetails(ctx, qtx)
 	diagnosis, err := qtx.CreateClientDiagnosis(ctx, CreateClientDiagnosisParams{
-		ClientID:            uuid.New(),
+		ClientID:            client.ID,
 		DiagnosisCode:       util.RandomString(10),
 		Description:         util.RandomString(20),
 		Status:              "ACTIVE",
@@ -916,33 +919,4 @@ func createRandomMedication(ctx context.Context, qtx *Queries) ClientMedication 
 		panic("failed to create random medication: " + err.Error())
 	}
 	return medication
-}
-
-func createRandomEmployee(ctx context.Context, qtx *Queries) EmployeeProfile {
-	user := createRandomUser(ctx, qtx)
-	location := createRandomLocation(ctx, qtx)
-	employee, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
-		UserID:                    user.ID,
-		FirstName:                 util.RandomString(8),
-		LastName:                  util.RandomString(10),
-		Position:                  util.StringPtr(util.RandomString(15)),
-		Department:                util.StringPtr(util.RandomString(12)),
-		EmployeeNumber:            util.StringPtr("EMP" + util.RandomString(5)),
-		EmploymentNumber:          util.StringPtr("EMPL" + util.RandomString(5)),
-		PrivateEmailAddress:       util.StringPtr(util.RandomEmail()),
-		Email:                     util.RandomEmail(),
-		AuthenticationPhoneNumber: util.StringPtr("+1" + util.RandomString(10)),
-		PrivatePhoneNumber:        util.StringPtr("+1" + util.RandomString(10)),
-		WorkPhoneNumber:           util.StringPtr("+1" + util.RandomString(10)),
-		DateOfBirth:               pgtype.Date{Time: time.Date(1990, 4, 4, 0, 0, 0, 0, time.UTC), Valid: true},
-		HomeTelephoneNumber:       util.StringPtr("+1" + util.RandomString(10)),
-		IsSubcontractor:           util.BoolPtr(util.RandomInt(0, 1) == 1),
-		Gender:                    EmployeeGenderEnumMale,
-		LocationID:                &location.ID,
-		ContractType:              EmployeeContractTypeEnumLoondienst,
-	})
-	if err != nil {
-		panic("failed to create random employee: " + err.Error())
-	}
-	return employee
 }

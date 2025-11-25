@@ -69,7 +69,7 @@ func TestCreateProgressReport(t *testing.T) {
 			name: "successful progress report creation",
 			setup: func(ctx context.Context, qtx *Queries) CreateProgressReportParams {
 				client := createRandomClientDetails(ctx, qtx)
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				return CreateProgressReportParams{
 					ClientID:   client.ID,
 					EmployeeID: &employee.ID,
@@ -79,14 +79,14 @@ func TestCreateProgressReport(t *testing.T) {
 						Valid: true,
 					},
 					ReportText:     util.RandomString(200),
-					Type:           ProgressReportTypeEnum("WEEKLY"),
-					EmotionalState: EmotionalStateEnum("POSITIVE"),
+					Type:           ProgressReportTypeEnumEveningReport,
+					EmotionalState: EmotionalStateEnumDepressed,
 				}
 			},
 			checks: func(t *testing.T, report ProgressReport, err error) {
 				require.NoError(t, err, "CreateProgressReport should not return an error")
 				require.NotZero(t, report.ID)
-				require.Equal(t, ProgressReportTypeEnum("WEEKLY"), report.Type)
+				require.Equal(t, ProgressReportTypeEnumEveningReport, report.Type)
 			},
 		},
 		{
@@ -102,8 +102,8 @@ func TestCreateProgressReport(t *testing.T) {
 						Valid: true,
 					},
 					ReportText:     util.RandomString(200),
-					Type:           ProgressReportTypeEnum("MONTHLY"),
-					EmotionalState: EmotionalStateEnum("NEUTRAL"),
+					Type:           ProgressReportTypeEnumMorningReport,
+					EmotionalState: EmotionalStateEnumAnxious,
 				}
 			},
 			checks: func(t *testing.T, report ProgressReport, err error) {
@@ -229,7 +229,7 @@ func TestUpdateProgressReport(t *testing.T) {
 			name: "update existing progress report",
 			setup: func(ctx context.Context, qtx *Queries) UpdateProgressReportParams {
 				report := createRandomProgressReport(ctx, qtx)
-				newEmployee := createRandomEmployee(ctx, qtx)
+				newEmployee := createRandomEmployeeProfile(ctx, qtx)
 				return UpdateProgressReportParams{
 					ID:         report.ID,
 					EmployeeID: &newEmployee.ID,
@@ -240,11 +240,11 @@ func TestUpdateProgressReport(t *testing.T) {
 					},
 					ReportText: randomStringPtr(250),
 					Type: NullProgressReportTypeEnum{
-						ProgressReportTypeEnum: ProgressReportTypeEnum("DAILY"),
+						ProgressReportTypeEnum: ProgressReportTypeEnumContactJournal,
 						Valid:                  true,
 					},
 					EmotionalState: NullEmotionalStateEnum{
-						EmotionalStateEnum: EmotionalStateEnum("IMPROVING"),
+						EmotionalStateEnum: EmotionalStateEnumDepressed,
 						Valid:              true,
 					},
 				}
@@ -257,7 +257,7 @@ func TestUpdateProgressReport(t *testing.T) {
 		{
 			name: "update non-existent progress report",
 			setup: func(ctx context.Context, qtx *Queries) UpdateProgressReportParams {
-				newEmployee := createRandomEmployee(ctx, qtx)
+				newEmployee := createRandomEmployeeProfile(ctx, qtx)
 				return UpdateProgressReportParams{
 					ID:         999999,
 					EmployeeID: &newEmployee.ID,
@@ -268,11 +268,11 @@ func TestUpdateProgressReport(t *testing.T) {
 					},
 					ReportText: randomStringPtr(250),
 					Type: NullProgressReportTypeEnum{
-						ProgressReportTypeEnum: ProgressReportTypeEnum("DAILY"),
+						ProgressReportTypeEnum: ProgressReportTypeEnumContactJournal,
 						Valid:                  true,
 					},
 					EmotionalState: NullEmotionalStateEnum{
-						EmotionalStateEnum: EmotionalStateEnum("IMPROVING"),
+						EmotionalStateEnum: EmotionalStateEnumDepressed,
 						Valid:              true,
 					},
 				}
@@ -570,7 +570,7 @@ func createRandomAiGeneratedReportForClient(ctx context.Context, qtx *Queries, c
 
 func createRandomProgressReport(ctx context.Context, qtx *Queries) ProgressReport {
 	client := createRandomClientDetails(ctx, qtx)
-	employee := createRandomEmployee(ctx, qtx)
+	employee := createRandomEmployeeProfile(ctx, qtx)
 	params := CreateProgressReportParams{
 		ClientID:   client.ID,
 		EmployeeID: &employee.ID,
@@ -580,8 +580,8 @@ func createRandomProgressReport(ctx context.Context, qtx *Queries) ProgressRepor
 			Valid: true,
 		},
 		ReportText:     util.RandomString(200),
-		Type:           ProgressReportTypeEnum("WEEKLY"),
-		EmotionalState: EmotionalStateEnum("POSITIVE"),
+		Type:           ProgressReportTypeEnumMorningReport,
+		EmotionalState: EmotionalStateEnumDepressed,
 	}
 	report, err := qtx.CreateProgressReport(ctx, params)
 	if err != nil {
@@ -591,7 +591,7 @@ func createRandomProgressReport(ctx context.Context, qtx *Queries) ProgressRepor
 }
 
 func createRandomProgressReportForClient(ctx context.Context, qtx *Queries, clientID uuid.UUID) ProgressReport {
-	employee := createRandomEmployee(ctx, qtx)
+	employee := createRandomEmployeeProfile(ctx, qtx)
 	params := CreateProgressReportParams{
 		ClientID:   clientID,
 		EmployeeID: &employee.ID,
@@ -601,8 +601,8 @@ func createRandomProgressReportForClient(ctx context.Context, qtx *Queries, clie
 			Valid: true,
 		},
 		ReportText:     util.RandomString(200),
-		Type:           ProgressReportTypeEnum("WEEKLY"),
-		EmotionalState: EmotionalStateEnum("POSITIVE"),
+		Type:           ProgressReportTypeEnumEveningReport,
+		EmotionalState: EmotionalStateEnumDepressed,
 	}
 	report, err := qtx.CreateProgressReport(ctx, params)
 	if err != nil {

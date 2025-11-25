@@ -213,7 +213,7 @@ WITH all_labels AS (
     ]) AS label
 ),
 client_labels AS (
-    SELECT label
+    SELECT label::text AS label
     FROM client_documents
     WHERE client_id = $1
 )
@@ -244,3 +244,17 @@ SET
     approved_rejected_at = NOW(),
     approved_rejected_by = $3
 WHERE id = $1;
+
+
+
+-- name: ListClientLocationTransfer :many
+SELECT 
+    t.*,
+    e.first_name AS mentor_first_name,
+    e.last_name AS mentor_last_name,
+    COUNT(*) OVER() AS total_count
+FROM client_location_transfer t
+LEFT JOIN employee_profile e ON t.new_mentor_id = e.id
+WHERE t.client_id = $1
+ORDER BY request_date DESC
+LIMIT $2 OFFSET $3;

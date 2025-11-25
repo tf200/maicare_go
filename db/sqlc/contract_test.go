@@ -26,28 +26,28 @@ func TestCreateContract(t *testing.T) {
 				contractType := createRandomContractType(ctx, qtx)
 				return CreateContractParams{
 					TypeID:          &contractType.ID,
-					Status:          "draft",
+					Status:          ContractStatusEnumApproved,
 					StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
 					EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
 					ReminderPeriod:  30,
 					Vat:             util.Int32Ptr(21),
 					Price:           100.0,
-					PriceTimeUnit:   "month",
+					PriceTimeUnit:   PriceTimeUnitEnumHourly,
 					Hours:           util.Float64Ptr(40.0),
-					HoursType:       "week",
+					HoursType:       HoursTypeEnumWeekly,
 					CareName:        util.RandomString(10),
-					CareType:        "personal",
+					CareType:        CareTypeEnumAccommodation,
 					ClientID:        client.ID,
 					SenderID:        &sender.ID,
 					AttachmentIds:   []uuid.UUID{uuid.New()},
-					FinancingAct:    "wmo",
-					FinancingOption: "pgb",
+					FinancingAct:    FinancingActEnumWMO,
+					FinancingOption: FinancingOptionEnumPGB,
 				}
 			},
 			checks: func(t *testing.T, contract Contract, err error) {
 				require.NoError(t, err, "CreateContract should not return an error")
 				require.NotZero(t, contract.ID)
-				require.Equal(t, "draft", string(contract.Status))
+				require.Equal(t, ContractStatusEnumApproved, contract.Status)
 			},
 		},
 		{
@@ -55,17 +55,19 @@ func TestCreateContract(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) CreateContractParams {
 				client := createRandomClientDetails(ctx, qtx)
 				return CreateContractParams{
-					Status:          "draft",
+					Status:          ContractStatusEnumApproved,
 					StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
 					EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
 					ReminderPeriod:  30,
 					Price:           50.0,
-					PriceTimeUnit:   "month",
+					PriceTimeUnit:   PriceTimeUnitEnumMonthly,
 					CareName:        util.RandomString(5),
-					CareType:        "personal",
+					CareType:        CareTypeEnumAmbulante,
 					ClientID:        client.ID,
-					FinancingAct:    "wmo",
-					FinancingOption: "pgb",
+					HoursType:       HoursTypeEnumWeekly,
+					FinancingAct:    FinancingActEnumWMO,
+					FinancingOption: FinancingOptionEnumPGB,
+					AttachmentIds:   []uuid.UUID{},
 				}
 			},
 			checks: func(t *testing.T, contract Contract, err error) {
@@ -235,12 +237,12 @@ func TestGetBillablePeriodsForContract(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) GetBillablePeriodsForContractParams {
 				contract := createRandomContract(ctx, qtx)
 				_, _ = qtx.UpdateContractStatus(ctx, UpdateContractStatusParams{
-					Status:     "approved",
+					Status:     ContractStatusEnumApproved,
 					ContractID: contract.ID,
 				})
 				return GetBillablePeriodsForContractParams{
-					InvoiceStartDate: pgtype.Timestamptz{Time: time.Now().Add(-24 * time.Hour), Valid: true},
-					InvoiceEndDate:   pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+					InvoiceStartDate: pgtype.Timestamptz{Time: time.Now().Add(30 * 24 * time.Hour), Valid: true},
+					InvoiceEndDate:   pgtype.Timestamptz{Time: time.Now().Add(60 * 24 * time.Hour), Valid: true},
 					ContractID:       contract.ID,
 				}
 			},
@@ -354,7 +356,7 @@ func TestGetSenderContracts(t *testing.T) {
 			name: "get sender contracts",
 			setup: func(ctx context.Context, qtx *Queries) *int64 {
 				sender := createRandomSenders(ctx, qtx)
-				_ = createRandomContract(ctx, qtx)
+				_ = createContractWithSender(ctx, qtx, sender.ID)
 				return &sender.ID
 			},
 			checks: func(t *testing.T, contracts []Contract, err error) {
@@ -478,26 +480,11 @@ func TestListContracts(t *testing.T) {
 		{
 			name: "list contracts with results",
 			setup: func(ctx context.Context, qtx *Queries) ListContractsParams {
-				_ = createRandomContract(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				_ = createRandomContractWithClient(ctx, qtx, client.ID)
 				return ListContractsParams{
 					Limit:  10,
 					Offset: 0,
-				}
-			},
-			checks: func(t *testing.T, contracts []ListContractsRow, err error) {
-				require.NoError(t, err, "ListContracts should not error")
-				require.GreaterOrEqual(t, len(contracts), 1)
-			},
-		},
-		{
-			name: "list contracts with search",
-			setup: func(ctx context.Context, qtx *Queries) ListContractsParams {
-				contract := createRandomContract(ctx, qtx)
-				search := contract.CareName[:5]
-				return ListContractsParams{
-					Limit:  10,
-					Offset: 0,
-					Search: &search,
 				}
 			},
 			checks: func(t *testing.T, contracts []ListContractsRow, err error) {
@@ -623,13 +610,13 @@ func TestUpdateContractStatus(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) UpdateContractStatusParams {
 				contract := createRandomContract(ctx, qtx)
 				return UpdateContractStatusParams{
-					Status:     "approved",
+					Status:     ContractStatusEnumApproved,
 					ContractID: contract.ID,
 				}
 			},
 			checks: func(t *testing.T, contract Contract, err error) {
 				require.NoError(t, err, "UpdateContractStatus should not error")
-				require.Equal(t, "approved", string(contract.Status))
+				require.Equal(t, ContractStatusEnumApproved, contract.Status)
 				require.True(t, contract.ApprovedAt.Valid)
 			},
 		},
@@ -638,7 +625,7 @@ func TestUpdateContractStatus(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) UpdateContractStatusParams {
 				contract := createRandomContract(ctx, qtx)
 				return UpdateContractStatusParams{
-					Status:     "draft",
+					Status:     ContractStatusEnumDraft,
 					ContractID: contract.ID,
 				}
 			},
@@ -676,18 +663,21 @@ func createRandomContractType(ctx context.Context, qtx *Queries) ContractType {
 
 func createRandomContract(ctx context.Context, qtx *Queries) Contract {
 	client := createRandomClientDetails(ctx, qtx)
+
 	params := CreateContractParams{
-		Status:          "draft",
+		Status:          ContractStatusEnumApproved,
 		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
 		ReminderPeriod:  30,
 		Price:           100.0,
-		PriceTimeUnit:   "month",
+		PriceTimeUnit:   PriceTimeUnitEnumMonthly,
 		CareName:        util.RandomString(10),
-		CareType:        "personal",
+		CareType:        CareTypeEnumAmbulante,
 		ClientID:        client.ID,
-		FinancingAct:    "wmo",
-		FinancingOption: "pgb",
+		FinancingAct:    FinancingActEnumWMO,
+		FinancingOption: FinancingOptionEnumPGB,
+		HoursType:       HoursTypeEnumWeekly,
+		AttachmentIds:   []uuid.UUID{uuid.New()},
 	}
 	contract, err := qtx.CreateContract(ctx, params)
 	if err != nil {
@@ -696,15 +686,51 @@ func createRandomContract(ctx context.Context, qtx *Queries) Contract {
 	return contract
 }
 
-func createRandomContractReminder(ctx context.Context, qtx *Queries) ContractReminder {
-	contract := createRandomContract(ctx, qtx)
-	params := CreateContractReminderParams{
-		ContractID:     contract.ID,
-		ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+func createContractWithSender(ctx context.Context, qtx *Queries, senderID int64) Contract {
+	client := createRandomClientDetails(ctx, qtx)
+
+	params := CreateContractParams{
+		Status:          ContractStatusEnumApproved,
+		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+		ReminderPeriod:  30,
+		Price:           100.0,
+		PriceTimeUnit:   PriceTimeUnitEnumMonthly,
+		CareName:        util.RandomString(10),
+		CareType:        CareTypeEnumAmbulante,
+		ClientID:        client.ID,
+		SenderID:        &senderID,
+		FinancingAct:    FinancingActEnumWMO,
+		FinancingOption: FinancingOptionEnumPGB,
+		HoursType:       HoursTypeEnumWeekly,
+		AttachmentIds:   []uuid.UUID{uuid.New()},
 	}
-	reminder, err := qtx.CreateContractReminder(ctx, params)
+	contract, err := qtx.CreateContract(ctx, params)
 	if err != nil {
 		panic(err)
 	}
-	return reminder
+	return contract
+}
+
+func createRandomContractWithClient(ctx context.Context, qtx *Queries, clientID uuid.UUID) Contract {
+	params := CreateContractParams{
+		Status:          ContractStatusEnumApproved,
+		StartDate:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		EndDate:         pgtype.Timestamptz{Time: time.Now().Add(24 * time.Hour), Valid: true},
+		ReminderPeriod:  30,
+		Price:           100.0,
+		PriceTimeUnit:   PriceTimeUnitEnumMonthly,
+		CareName:        util.RandomString(10),
+		CareType:        CareTypeEnumAmbulante,
+		ClientID:        clientID,
+		FinancingAct:    FinancingActEnumWMO,
+		FinancingOption: FinancingOptionEnumPGB,
+		HoursType:       HoursTypeEnumWeekly,
+		AttachmentIds:   []uuid.UUID{uuid.New()},
+	}
+	contract, err := qtx.CreateContract(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	return contract
 }

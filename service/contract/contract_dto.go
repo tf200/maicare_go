@@ -171,7 +171,7 @@ type UpdateContractStatusResponse struct {
 type GetClientContractResponse struct {
 	ID              int64       `json:"id"`
 	TypeID          *int64      `json:"type_id"`
-	TypeName        string      `json:"type_name"`
+	TypeName        *string     `json:"type_name"`
 	Status          string      `json:"status"`
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`

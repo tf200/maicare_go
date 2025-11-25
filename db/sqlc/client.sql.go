@@ -593,7 +593,7 @@ WITH all_labels AS (
     ]) AS label
 ),
 client_labels AS (
-    SELECT label
+    SELECT label::text AS label
     FROM client_documents
     WHERE client_id = $1
 )
@@ -870,6 +870,75 @@ func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumen
 			&i.Tag,
 			&i.Updated,
 			&i.Created,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClientLocationTransfer = `-- name: ListClientLocationTransfer :many
+SELECT 
+    t.id, t.client_id, t.from_location_id, t.to_location_id, t.new_mentor_id, t.request_date, t.status, t.approved_rejected_by, t.approved_rejected_at, t.reason,
+    e.first_name AS mentor_first_name,
+    e.last_name AS mentor_last_name,
+    COUNT(*) OVER() AS total_count
+FROM client_location_transfer t
+LEFT JOIN employee_profile e ON t.new_mentor_id = e.id
+WHERE t.client_id = $1
+ORDER BY request_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListClientLocationTransferParams struct {
+	ClientID uuid.UUID `json:"client_id"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
+}
+
+type ListClientLocationTransferRow struct {
+	ID                 int64                            `json:"id"`
+	ClientID           uuid.UUID                        `json:"client_id"`
+	FromLocationID     *int64                           `json:"from_location_id"`
+	ToLocationID       *int64                           `json:"to_location_id"`
+	NewMentorID        *uuid.UUID                       `json:"new_mentor_id"`
+	RequestDate        pgtype.Timestamptz               `json:"request_date"`
+	Status             ClientLocationTransferStatusEnum `json:"status"`
+	ApprovedRejectedBy *uuid.UUID                       `json:"approved_rejected_by"`
+	ApprovedRejectedAt pgtype.Timestamptz               `json:"approved_rejected_at"`
+	Reason             *string                          `json:"reason"`
+	MentorFirstName    *string                          `json:"mentor_first_name"`
+	MentorLastName     *string                          `json:"mentor_last_name"`
+	TotalCount         int64                            `json:"total_count"`
+}
+
+func (q *Queries) ListClientLocationTransfer(ctx context.Context, arg ListClientLocationTransferParams) ([]ListClientLocationTransferRow, error) {
+	rows, err := q.db.Query(ctx, listClientLocationTransfer, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListClientLocationTransferRow{}
+	for rows.Next() {
+		var i ListClientLocationTransferRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.FromLocationID,
+			&i.ToLocationID,
+			&i.NewMentorID,
+			&i.RequestDate,
+			&i.Status,
+			&i.ApprovedRejectedBy,
+			&i.ApprovedRejectedAt,
+			&i.Reason,
+			&i.MentorFirstName,
+			&i.MentorLastName,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

@@ -21,7 +21,7 @@ func TestCreateAppointment(t *testing.T) {
 		{
 			name: "successful appointment creation",
 			setup: func(ctx context.Context, qtx *Queries) CreateAppointmentParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				startTime := time.Now().Add(time.Hour)
 				endTime := startTime.Add(time.Hour)
 				return CreateAppointmentParams{
@@ -42,7 +42,7 @@ func TestCreateAppointment(t *testing.T) {
 			checks: func(t *testing.T, appointment ScheduledAppointment, err error) {
 				require.NoError(t, err, "CreateAppointment should not return an error")
 				require.NotZero(t, appointment.ID)
-				require.Equal(t, "SCHEDULED", string(appointment.Status))
+				require.Equal(t, "PENDING", string(appointment.Status))
 				require.False(t, appointment.IsConfirmed)
 			},
 		},
@@ -98,7 +98,7 @@ func TestCreateAppointmentTemplate(t *testing.T) {
 		{
 			name: "successful template creation",
 			setup: func(ctx context.Context, qtx *Queries) CreateAppointmentTemplateParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				startTime := time.Now().Add(time.Hour)
 				endTime := startTime.Add(time.Hour)
 				return CreateAppointmentTemplateParams{
@@ -361,7 +361,7 @@ func TestConfirmAppointment(t *testing.T) {
 			name: "confirm existing appointment",
 			setup: func(ctx context.Context, qtx *Queries) ConfirmAppointmentParams {
 				appointment := createRandomAppointment(ctx, qtx)
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				return ConfirmAppointmentParams{
 					ID:         appointment.ID,
 					EmployeeID: &employee.ID,
@@ -464,8 +464,8 @@ func TestBulkAddAppointmentParticipants(t *testing.T) {
 			name: "bulk add participants to appointment",
 			setup: func(ctx context.Context, qtx *Queries) BulkAddAppointmentParticipantsParams {
 				appointment := createRandomAppointment(ctx, qtx)
-				employee1 := createRandomEmployee(ctx, qtx)
-				employee2 := createRandomEmployee(ctx, qtx)
+				employee1 := createRandomEmployeeProfile(ctx, qtx)
+				employee2 := createRandomEmployeeProfile(ctx, qtx)
 				return BulkAddAppointmentParticipantsParams{
 					AppointmentID: appointment.ID,
 					EmployeeIds:   []uuid.UUID{employee1.ID, employee2.ID},
@@ -567,8 +567,8 @@ func TestGetAppointmentParticipants(t *testing.T) {
 			name: "get participants for existing appointment",
 			setup: func(ctx context.Context, qtx *Queries) []uuid.UUID {
 				appointment := createRandomAppointment(ctx, qtx)
-				employee1 := createRandomEmployee(ctx, qtx)
-				employee2 := createRandomEmployee(ctx, qtx)
+				employee1 := createRandomEmployeeProfile(ctx, qtx)
+				employee2 := createRandomEmployeeProfile(ctx, qtx)
 				qtx.BulkAddAppointmentParticipants(ctx, BulkAddAppointmentParticipantsParams{
 					AppointmentID: appointment.ID,
 					EmployeeIds:   []uuid.UUID{employee1.ID, employee2.ID},
@@ -666,7 +666,7 @@ func TestDeleteAppointmentParticipants(t *testing.T) {
 			name: "delete participants from existing appointment",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				appointment := createRandomAppointment(ctx, qtx)
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				qtx.BulkAddAppointmentParticipants(ctx, BulkAddAppointmentParticipantsParams{
 					AppointmentID: appointment.ID,
 					EmployeeIds:   []uuid.UUID{employee.ID},
@@ -759,7 +759,7 @@ func TestListClientAppointmentsInRange(t *testing.T) {
 
 // Helpers
 func createRandomAppointment(ctx context.Context, qtx *Queries) ScheduledAppointment {
-	employee := createRandomEmployee(ctx, qtx)
+	employee := createRandomEmployeeProfile(ctx, qtx)
 	startTime := time.Now().Add(time.Hour)
 	endTime := startTime.Add(time.Hour)
 	params := CreateAppointmentParams{
@@ -784,7 +784,7 @@ func createRandomAppointment(ctx context.Context, qtx *Queries) ScheduledAppoint
 }
 
 func createRandomAppointmentTemplate(ctx context.Context, qtx *Queries) AppointmentTemplate {
-	employee := createRandomEmployee(ctx, qtx)
+	employee := createRandomEmployeeProfile(ctx, qtx)
 	startTime := time.Now().Add(time.Hour)
 	endTime := startTime.Add(time.Hour)
 	params := CreateAppointmentTemplateParams{
