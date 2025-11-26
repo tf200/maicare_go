@@ -45,7 +45,7 @@ WITH client_contracts AS (
             cd.last_name AS client_last_name,
             s.name AS sender_name
     FROM contract c
-    JOIN contract_type ct ON c.type_id = ct.id
+    LEFT JOIN contract_type ct ON c.type_id = ct.id
     JOIN client_details cd ON c.client_id = cd.id
     LEFT JOIN sender s ON c.sender_id = s.id
     WHERE client_id = $1
@@ -84,8 +84,8 @@ RETURNING *;
 -- name: UpdateContractStatus :one
 UPDATE contract
 SET
-    status = @status::text,
-    approved_at = CASE WHEN @status::text = 'approved' THEN NOW() ELSE approved_at END
+    status = @status::contract_status_enum,
+    approved_at = CASE WHEN @status::contract_status_enum = 'approved' THEN NOW() ELSE approved_at END
 WHERE id = @contract_id::BIGINT
 RETURNING *;
 
@@ -96,7 +96,7 @@ SELECT c.*,
         cd.last_name AS client_last_name,
         s.name AS sender_name
 FROM contract c
-JOIN contract_type ct ON c.type_id = ct.id
+LEFT JOIN contract_type ct ON c.type_id = ct.id
 JOIN client_details cd ON c.client_id = cd.id
 LEFT JOIN sender s ON c.sender_id = s.id
 WHERE c.id = $1
@@ -137,13 +137,13 @@ WITH filtered_contracts AS (
             cd.first_name ILIKE '%' || sqlc.narg(search) || '%' OR
             cd.last_name ILIKE '%' || sqlc.narg(search) || '%')
     AND
-        (sqlc.narg(status)::varchar[] IS NULL OR c.status = ANY(sqlc.narg(status)))
+        (sqlc.narg(status)::contract_status_enum[] IS NULL OR c.status = ANY(sqlc.narg(status)))
     AND
-        (sqlc.narg(care_type)::varchar[] IS NULL OR c.care_type = ANY(sqlc.narg(care_type)))
+        (sqlc.narg(care_type)::care_type_enum[] IS NULL OR c.care_type = ANY(sqlc.narg(care_type)))
     AND
-        (sqlc.narg(financing_act)::varchar[] IS NULL OR c.financing_act = ANY(sqlc.narg(financing_act)))
+        (sqlc.narg(financing_act)::financing_act_enum[] IS NULL OR c.financing_act = ANY(sqlc.narg(financing_act)))
     AND
-        (sqlc.narg(financing_option)::varchar[] IS NULL OR c.financing_option = ANY(sqlc.narg(financing_option)))
+        (sqlc.narg(financing_option)::financing_option_enum[] IS NULL OR c.financing_option = ANY(sqlc.narg(financing_option)))
 )
 SELECT
     (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
@@ -206,8 +206,8 @@ INSERT INTO contract_reminder (
         SELECT 1 FROM contract_reminder
         WHERE contract_id = $1
         AND reminder_sent_at IS NOT NULL
-    ) THEN 'initial' 
-    ELSE 'follow_up' END
+    ) THEN 'initial'::contract_reminder_type_enum
+    ELSE 'follow_up'::contract_reminder_type_enum END
 )
 RETURNING *;
 
@@ -217,7 +217,7 @@ RETURNING *;
 -- name: GetBillablePeriodsForContract :many
 WITH raw_status_changes AS (
   SELECT
-    new_values->>'status' AS status,
+    (new_values->>'status')::contract_status_enum AS status,
     changed_at AS effective_date
   FROM contract_audit
   WHERE contract_id = sqlc.arg(contract_id)

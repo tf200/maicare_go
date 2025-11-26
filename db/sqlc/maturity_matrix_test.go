@@ -7,33 +7,32 @@ import (
 
 	"maicare_go/util"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
 func randomCarePlanStatus() CarePlanStatusEnum {
-	return "draft"
+	return CarePlanStatusEnumPending
 }
 
 func randomCarePlanTimeframe() CarePlanTimeframeEnum {
-	return "short_term"
+	return CarePlanTimeframeEnumShortTerm
 }
 
 func randomCarePlanObjectiveStatus() CarePlanObjectiveStatusEnum {
-	return "in_progress"
+	return CarePlanObjectiveStatusEnumInProgress
 }
 
 func randomCarePlanInterventionFrequency() CarePlanInterventionFrequencyEnum {
-	return "daily"
+	return CarePlanInterventionFrequencyEnumDaily
 }
 
 func randomCarePlanReportType() CarePlanReportTypeEnum {
-	return "progress"
+	return CarePlanReportTypeEnumProgress
 }
 
 func randomCarePlanRiskLevel() CarePlanRiskLevelEnum {
-	return "medium"
+	return CarePlanRiskLevelEnumMedium
 }
 
 func randomNullCarePlanTimeframe() NullCarePlanTimeframeEnum {
@@ -72,17 +71,11 @@ func randomNullCarePlanRiskLevel() NullCarePlanRiskLevelEnum {
 }
 
 func createRandomMaturityMatrix(ctx context.Context, t *testing.T, q *Queries) MaturityMatrix {
-	topicName := util.RandomString(20)
-	levelDesc := `[{"level": "1", "description": "Beginner"}, {"level": "2", "description": "Intermediate"}]`
-	var id int64
-	err := q.db.QueryRow(ctx, "INSERT INTO maturity_matrix (topic_name, level_description) VALUES ($1, $2) RETURNING id",
-		topicName, levelDesc).Scan(&id)
+	// Use one of the preset maturity matrix records (IDs 1-13 from seed data)
+	id := int64(util.RandomInt(1, 13))
+	maturityMatrix, err := q.GetMaturityMatrix(ctx, id)
 	require.NoError(t, err)
-	return MaturityMatrix{
-		ID:               id,
-		TopicName:        topicName,
-		LevelDescription: []byte(levelDesc),
-	}
+	return maturityMatrix
 }
 
 func createRandomClientMaturityMatrixAssessment(ctx context.Context, t *testing.T, q *Queries) CreateClientMaturityMatrixAssessmentRow {
@@ -104,12 +97,12 @@ func createRandomClientMaturityMatrixAssessment(ctx context.Context, t *testing.
 
 func createRandomCarePlan(ctx context.Context, t *testing.T, q *Queries) CarePlan {
 	assessment := createRandomClientMaturityMatrixAssessment(ctx, t, q)
-	employeeID := uuid.New()
+	employee := createRandomEmployeeProfile(ctx, q)
 	params := CreateCarePlanParams{
 		AssessmentID:          assessment.ID,
-		GeneratedByEmployeeID: &employeeID,
+		GeneratedByEmployeeID: &employee.ID,
 		AssessmentSummary:     util.RandomString(100),
-		RawLlmResponse:        []byte(util.RandomString(200)),
+		RawLlmResponse:        []byte(`{"response": "` + util.RandomString(200) + `"}`),
 		Status:                randomCarePlanStatus(),
 	}
 	carePlan, err := q.CreateCarePlan(ctx, params)
@@ -157,7 +150,7 @@ func createRandomCarePlanIntervention(ctx context.Context, t *testing.T, q *Quer
 
 func createRandomCarePlanReport(ctx context.Context, t *testing.T, q *Queries) CarePlanReport {
 	carePlan := createRandomCarePlan(ctx, t, q)
-	employee := createRandomEmployee(ctx, q)
+	employee := createRandomEmployeeProfile(ctx, q)
 	params := CreateCarePlanReportParams{
 		CarePlanID:          carePlan.ID,
 		ReportType:          randomCarePlanReportType(),

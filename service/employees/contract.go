@@ -29,6 +29,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 	contractDetails, err := s.Store.AddEmployeeContractDetails(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeContractDetails",
 			"Failed to add contract details to employee profile",
@@ -41,6 +42,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 	user, err := s.Store.GetUserByID(ctx, contractDetails.UserID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeContractDetails",
 			"Failed to get user by ID",
@@ -54,6 +56,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 	hashedPassword, err := util.HashPassword(password)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeContractDetails",
 			"Failed to hash password",
@@ -69,6 +72,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeContractDetails",
 			"Failed to update password",
@@ -86,6 +90,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 	}, ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeContractDetails",
 			"Failed to enqueue email delivery",
@@ -103,6 +108,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"AddEmployeeContractDetails",
 		"Successfully added contract details to employee profile",
@@ -118,6 +124,7 @@ func (s *employeeService) GetEmployeeContractDetails(
 	contractDetails, err := s.Store.GetEmployeeContractDetails(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetEmployeeContractDetails",
 			"Failed to get employee contract details",
@@ -137,6 +144,7 @@ func (s *employeeService) GetEmployeeContractDetails(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"GetEmployeeContractDetails",
 		"Successfully retrieved employee contract details",

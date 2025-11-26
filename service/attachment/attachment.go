@@ -28,7 +28,7 @@ func (s *attachmentService) UploadAttachment(ctx context.Context,
 ) (*UploadHandlerResponse, error) {
 	fileInfo, err := s.validateAndFinalizeFile(file, header)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UploadAttachment", "File validation failed", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UploadAttachment", "File validation failed", zap.Error(err))
 		return nil, err
 	}
 
@@ -36,7 +36,7 @@ func (s *attachmentService) UploadAttachment(ctx context.Context,
 
 	objectKey, size, err := s.B2Client.Upload(ctx, file, key, fileInfo.ContentType)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UploadAttachment", "File upload failed", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UploadAttachment", "File upload failed", zap.Error(err))
 		return nil, fmt.Errorf("file upload error: %v", err)
 	}
 
@@ -48,7 +48,7 @@ func (s *attachmentService) UploadAttachment(ctx context.Context,
 	}
 	attachment, err := s.Store.CreateAttachment(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UploadAttachment", "Failed to create attachment record", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UploadAttachment", "Failed to create attachment record", zap.Error(err))
 		return nil, fmt.Errorf("failed to create attachment record: %v", err)
 	}
 
@@ -63,7 +63,7 @@ func (s *attachmentService) UploadAttachment(ctx context.Context,
 func (s *attachmentService) GetAttachmentById(ctx context.Context, id uuid.UUID) (*GetAttachmentByIdResponse, error) {
 	attachment, err := s.Store.GetAttachmentById(ctx, id)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetAttachmentById", "Failed to get attachment by ID", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAttachmentById", "Failed to get attachment by ID", zap.Error(err))
 		return nil, fmt.Errorf("failed to get attachment")
 	}
 	url := s.GenerateResponsePresignedURL(&attachment.File, ctx)
@@ -81,40 +81,40 @@ func (s *attachmentService) GetAttachmentById(ctx context.Context, id uuid.UUID)
 func (s *attachmentService) DeleteAttachment(ctx context.Context, id uuid.UUID) (*DeleteAttachmentResponse, error) {
 	attachment, err := s.Store.GetAttachmentById(ctx, id)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAttachment", "Failed to get attachment by ID", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAttachment", "Failed to get attachment by ID", zap.Error(err))
 
 		return nil, fmt.Errorf("failed to get attachment")
 	}
 
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAttachment", "Failed to begin transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAttachment", "Failed to begin transaction", zap.Error(err))
 
 		return nil, fmt.Errorf("failed to begin transaction")
 	}
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAttachment", "Failed to rollback transaction", zap.Error(rollbackErr))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAttachment", "Failed to rollback transaction", zap.Error(rollbackErr))
 		}
 	}()
 	qtx := s.Store.WithTx(tx)
 
 	attachment, err = qtx.DeleteAttachment(ctx, id)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAttachment", "Failed to delete attachment record", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAttachment", "Failed to delete attachment record", zap.Error(err))
 
 		return nil, fmt.Errorf("failed to delete attachment record")
 	}
 
 	err = s.B2Client.Delete(ctx, attachment.File)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAttachment", "Failed to delete attachment from B2", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAttachment", "Failed to delete attachment from B2", zap.Error(err))
 		return nil, fmt.Errorf("failed to delete attachment from B2: %w", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteAttachment", "Failed to commit transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAttachment", "Failed to commit transaction", zap.Error(err))
 
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}

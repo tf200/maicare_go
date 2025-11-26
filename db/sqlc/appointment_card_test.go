@@ -94,7 +94,7 @@ func TestGetAppointmentCard(t *testing.T) {
 			name: "get existing appointment card",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
-				_ = createRandomAppointmentCard(ctx, qtx)
+				_ = createRandomAppointmentCard(ctx, qtx, client.ID)
 				return client.ID
 			},
 			checks: func(t *testing.T, row GetAppointmentCardRow, err error) {
@@ -140,7 +140,7 @@ func TestUpdateAppointmentCard(t *testing.T) {
 			name: "update existing appointment card",
 			setup: func(ctx context.Context, qtx *Queries) UpdateAppointmentCardParams {
 				client := createRandomClientDetails(ctx, qtx)
-				_ = createRandomAppointmentCard(ctx, qtx)
+				_ = createRandomAppointmentCard(ctx, qtx, client.ID)
 				return UpdateAppointmentCardParams{
 					ClientID:           client.ID,
 					GeneralInformation: []string{"updated info"},
@@ -192,7 +192,7 @@ func TestUpdateAppointmentCardUrl(t *testing.T) {
 			name: "update appointment card url",
 			setup: func(ctx context.Context, qtx *Queries) UpdateAppointmentCardUrlParams {
 				client := createRandomClientDetails(ctx, qtx)
-				_ = createRandomAppointmentCard(ctx, qtx)
+				_ = createRandomAppointmentCard(ctx, qtx, client.ID)
 				url := util.RandomString(10)
 				return UpdateAppointmentCardUrlParams{
 					ClientID: client.ID,
@@ -237,10 +237,10 @@ func TestUpdateAppointmentCardUrl(t *testing.T) {
 }
 
 // Helpers
-func createRandomAppointmentCard(ctx context.Context, qtx *Queries) AppointmentCard {
-	client := createRandomClientDetails(ctx, qtx)
+func createRandomAppointmentCard(ctx context.Context, qtx *Queries, clientID uuid.UUID) AppointmentCard {
+
 	params := CreateAppointmentCardParams{
-		ClientID:               client.ID,
+		ClientID:               clientID,
 		GeneralInformation:     []string{util.RandomString(5)},
 		ImportantContacts:      []string{util.RandomString(5)},
 		HouseholdInfo:          []string{util.RandomString(5)},

@@ -695,10 +695,10 @@ DECLARE
     new_row JSONB;
     changed_fields TEXT[] := '{}';
     field_name TEXT;
-    current_user_id BIGINT;
+    current_user_id UUID;
 BEGIN
     BEGIN
-        current_user_id := current_setting('myapp.current_employee_id')::BIGINT;
+        current_user_id := current_setting('myapp.current_employee_id')::UUID;
     EXCEPTION
         WHEN OTHERS THEN
             current_user_id := NULL;

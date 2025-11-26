@@ -16,7 +16,7 @@ import (
 func (s *senderService) CreateSender(ctx context.Context, req *CreateSenderRequest) (*CreateSenderResponse, error) {
 	contactsParam, err := json.Marshal(req.Contacts)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateSender", "Failed to marshal contacts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateSender", "Failed to marshal contacts", zap.Error(err))
 		return nil, err
 	}
 
@@ -34,12 +34,12 @@ func (s *senderService) CreateSender(ctx context.Context, req *CreateSenderReque
 		Contacts:     contactsParam,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateSender", "Failed to create sender", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateSender", "Failed to create sender", zap.Error(err))
 		return nil, err
 	}
 	contactsResp := make([]SenderContact, 0)
 	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateSender", "Failed to unmarshal contacts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateSender", "Failed to unmarshal contacts", zap.Error(err))
 		return nil, err
 	}
 
@@ -75,13 +75,13 @@ func (s *senderService) ListSenders(ctx *gin.Context, req *ListSendersRequest) (
 
 	senders, err := s.Store.ListSenders(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListSenders", "Failed to list senders", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListSenders", "Failed to list senders", zap.Error(err))
 		return nil, err
 	}
 
 	totalCount, err := s.Store.CountSenders(ctx, req.IncludeArchived)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListSenders", "Failed to count senders", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListSenders", "Failed to count senders", zap.Error(err))
 		return nil, err
 	}
 
@@ -89,7 +89,7 @@ func (s *senderService) ListSenders(ctx *gin.Context, req *ListSendersRequest) (
 	for _, sender := range senders {
 		contactsResp := make([]SenderContact, 0)
 		if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "ListSenders", "Failed to unmarshal contacts", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListSenders", "Failed to unmarshal contacts", zap.Error(err))
 			return nil, err
 		}
 
@@ -119,19 +119,19 @@ func (s *senderService) ListSenders(ctx *gin.Context, req *ListSendersRequest) (
 func (s *senderService) GetSenderByID(ctx context.Context, senderID int64) (*GetSenderByIdResponse, error) {
 	sender, err := s.Store.GetSenderById(ctx, senderID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetSenderByID", "Failed to get sender by ID", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetSenderByID", "Failed to get sender by ID", zap.Error(err))
 		return nil, err
 	}
 
 	contactsResp := []SenderContact{}
 	if err := json.Unmarshal(sender.Contacts, &contactsResp); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetSenderByID", "Failed to unmarshal contacts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetSenderByID", "Failed to unmarshal contacts", zap.Error(err))
 		return nil, err
 	}
 
 	tempIDs, err := s.Store.GetTemplateItemsBySourceTable(ctx, sender.InvoiceTemplate)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetSenderByID", "Failed to get template items", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetSenderByID", "Failed to get template items", zap.Error(err))
 		return nil, err
 	}
 
@@ -191,20 +191,20 @@ func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *U
 	if req.Contacts != nil {
 		contactsParam, err := json.Marshal(req.Contacts)
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateSender", "Failed to marshal contacts", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateSender", "Failed to marshal contacts", zap.Error(err))
 			return nil, err
 		}
 		arg.Contacts = contactsParam
 	}
 	updatedSender, err := s.Store.UpdateSender(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateSender", "Failed to update sender", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateSender", "Failed to update sender", zap.Error(err))
 		return nil, err
 	}
 
 	contactsResp := []SenderContact{}
 	if err := json.Unmarshal(updatedSender.Contacts, &contactsResp); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateSender", "Failed to unmarshal contacts", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateSender", "Failed to unmarshal contacts", zap.Error(err))
 		return nil, err
 	}
 
@@ -233,7 +233,7 @@ func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *U
 func (s *senderService) DeleteSender(ctx context.Context, senderID int64) error {
 	err := s.Store.DeleteSender(ctx, senderID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteSender", "Failed to delete sender", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteSender", "Failed to delete sender", zap.Error(err))
 		return err
 	}
 	return nil
@@ -242,7 +242,7 @@ func (s *senderService) DeleteSender(ctx context.Context, senderID int64) error 
 func (s *senderService) CreateSenderInvoiceTemplate(ctx context.Context, senderID int64, req *CreateSenderInvoiceTemplateRequest) error {
 	tmplids, err := s.Store.GetTemplateItemsByIds(ctx, req.InvoiceTemplateIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateSenderInvoiceTemplate", "Failed to get template items by IDs", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateSenderInvoiceTemplate", "Failed to get template items by IDs", zap.Error(err))
 		return err
 	}
 	_, err = s.Store.CreateSenderInvoiceTemplate(ctx, db.CreateSenderInvoiceTemplateParams{
@@ -250,7 +250,7 @@ func (s *senderService) CreateSenderInvoiceTemplate(ctx context.Context, senderI
 		InvoiceTemplate: tmplids,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateSenderInvoiceTemplate", "Failed to create sender invoice template", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateSenderInvoiceTemplate", "Failed to create sender invoice template", zap.Error(err))
 		return err
 	}
 	return nil

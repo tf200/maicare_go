@@ -13,7 +13,7 @@ import (
 func (s *organizationService) ListOrgLocations(ctx context.Context, organizationID int64) ([]ListLocationsResponse, error) {
 	locations, err := s.Store.ListLocations(ctx, organizationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListOrgLocationsApi", "Failed to list locations", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListOrgLocationsApi", "Failed to list locations", zap.Error(err))
 		return nil, fmt.Errorf("failed to list locations")
 	}
 
@@ -45,7 +45,7 @@ func (s *organizationService) ListOrgLocations(ctx context.Context, organization
 func (s *organizationService) ListAllLocations(ctx context.Context) ([]ListLocationsResponse, error) {
 	locations, err := s.Store.ListAllLocations(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAllLocationsApi", "Failed to list all locations", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllLocationsApi", "Failed to list all locations", zap.Error(err))
 		return nil, fmt.Errorf("failed to list all locations")
 	}
 
@@ -81,7 +81,7 @@ func (s *organizationService) CreateLocation(ctx context.Context, organizationID
 		Capacity:       req.Capacity,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateLocationApi", "Failed to create location", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateLocationApi", "Failed to create location", zap.Error(err))
 		return nil, fmt.Errorf("failed to create location")
 	}
 
@@ -101,7 +101,7 @@ func (s *organizationService) UpdateLocation(ctx context.Context, locationID int
 		ID:       locationID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateLocationApi", "Failed to update location", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateLocationApi", "Failed to update location", zap.Error(err))
 		return nil, fmt.Errorf("failed to update location")
 	}
 
@@ -116,7 +116,7 @@ func (s *organizationService) UpdateLocation(ctx context.Context, locationID int
 func (s *organizationService) DeleteLocation(ctx context.Context, locationID int64) (*DeleteLocationResponse, error) {
 	_, err := s.Store.DeleteLocation(ctx, locationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteLocationApi", "Failed to delete location", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteLocationApi", "Failed to delete location", zap.Error(err))
 		return nil, fmt.Errorf("failed to delete location")
 	}
 
@@ -128,7 +128,7 @@ func (s *organizationService) DeleteLocation(ctx context.Context, locationID int
 func (s *organizationService) GetLocationByID(ctx context.Context, locationID int64) (*GetLocationResponse, error) {
 	location, err := s.Store.GetLocation(ctx, locationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetLocationApi", "Failed to get location by ID", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetLocationApi", "Failed to get location by ID", zap.Error(err))
 		return nil, fmt.Errorf("failed to get location by ID")
 	}
 

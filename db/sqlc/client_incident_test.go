@@ -43,13 +43,21 @@ func TestCreateIncident(t *testing.T) {
 					Medicines:               false,
 					Organization:            false,
 					UseProhibitedSubstances: false,
+					NeededConsultation:      NeededConsultationEnumConsultGp,
 					OtherNotifications:      false,
+					PsychologicalDamage:     PsychologicalDamageEnumDrowsiness,
 					SeverityOfIncident:      SeverityOfIncidentEnumFatal,
 					RecurrenceRisk:          RecurrenceRiskEnumHigh,
 					PhysicalInjury:          PhysicalInjuryEnumBrokenBones,
 					ClientID:                client.ID,
 					EmployeeAbsenteeism:     "No",
 					Emails:                  []string{"report@example.com"},
+					Technical:               []string{"Initial assessment completed"},
+					Organizational:          []string{"Safety protocols reviewed"},
+					MeseWorker:              []string{"Jane Doe"},
+					ClientOptions:           []string{"Follow-up counseling"},
+					Succession:              []string{"Follow-up meeting scheduled"},
+					Other:                   false,
 				}
 			},
 			checks: func(t *testing.T, incident CreateIncidentRow, err error) {
@@ -154,6 +162,14 @@ func TestCreateIncident(t *testing.T) {
 					ClientID:                client.ID,
 					EmployeeAbsenteeism:     "Yes",
 					Emails:                  []string{},
+					Technical:               []string{"Initial assessment completed"},
+					Organizational:          []string{"Safety protocols reviewed"},
+					MeseWorker:              []string{"Jane Doe"},
+					ClientOptions:           []string{"Follow-up counseling"},
+					Succession:              []string{"Follow-up meeting scheduled"},
+					PhysicalInjury:          PhysicalInjuryEnumBrokenBones,
+					PsychologicalDamage:     PsychologicalDamageEnumDrowsiness,
+					NeededConsultation:      NeededConsultationEnumConsultGp,
 				}
 			},
 			checks: func(t *testing.T, incident CreateIncidentRow, err error) {
@@ -352,18 +368,6 @@ func TestConfirmIncident(t *testing.T) {
 			},
 		},
 		{
-			name: "confirm incident with file URL",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				incident := createRandomIncidentWithFileUrl(ctx, qtx)
-				return incident.ID
-			},
-			checks: func(t *testing.T, result ConfirmIncidentRow, err error) {
-				require.NoError(t, err)
-				require.True(t, result.IsConfirmed)
-				require.NotNil(t, result.FileUrl, "file URL should be present")
-			},
-		},
-		{
 			name: "confirm non-existent incident",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
 				return 99999
@@ -462,9 +466,18 @@ func createRandomIncident(ctx context.Context, qtx *Queries) CreateIncidentRow {
 		OtherNotifications:      false,
 		SeverityOfIncident:      SeverityOfIncidentEnumSerious,
 		RecurrenceRisk:          RecurrenceRiskEnumVeryLow,
+		PhysicalInjury:          PhysicalInjuryEnumBrokenBones,
+		PsychologicalDamage:     PsychologicalDamageEnumDrowsiness,
+		NeededConsultation:      NeededConsultationEnumConsultGp,
 		ClientID:                client.ID,
 		EmployeeAbsenteeism:     "No",
 		Emails:                  []string{"test@example.com"},
+		Technical:               []string{"Initial assessment"},
+		Organizational:          []string{"Policy reviewed"},
+		MeseWorker:              []string{"Test Worker"},
+		ClientOptions:           []string{"Follow-up"},
+		Succession:              []string{"Meeting scheduled"},
+		Other:                   false,
 	})
 	if err != nil {
 		panic("failed to create random incident: " + err.Error())
@@ -496,9 +509,18 @@ func createRandomIncidentForClient(ctx context.Context, qtx *Queries, clientID u
 		OtherNotifications:      false,
 		SeverityOfIncident:      SeverityOfIncidentEnumFatal,
 		RecurrenceRisk:          RecurrenceRiskEnumVeryHigh,
+		PhysicalInjury:          PhysicalInjuryEnumBrokenBones,
+		PsychologicalDamage:     PsychologicalDamageEnumDrowsiness,
+		NeededConsultation:      NeededConsultationEnumConsultGp,
 		ClientID:                clientID,
 		EmployeeAbsenteeism:     "No",
 		Emails:                  []string{},
+		Technical:               []string{"Assessment"},
+		Organizational:          []string{"Review"},
+		MeseWorker:              []string{"Worker"},
+		ClientOptions:           []string{"Follow-up"},
+		Succession:              []string{"Next steps"},
+		Other:                   false,
 	})
 	if err != nil {
 		panic("failed to create random incident for client: " + err.Error())
@@ -556,42 +578,6 @@ func createRandomIncidentWithAllFields(ctx context.Context, qtx *Queries) Create
 	})
 	if err != nil {
 		panic("failed to create random incident with all fields: " + err.Error())
-	}
-	return incident
-}
-
-func createRandomIncidentWithFileUrl(ctx context.Context, qtx *Queries) CreateIncidentRow {
-	employee := createRandomEmployeeProfile(ctx, qtx)
-	location := createRandomLocation(ctx, qtx)
-	client := createRandomClientDetails(ctx, qtx)
-
-	incident, err := qtx.CreateIncident(ctx, CreateIncidentParams{
-		EmployeeID:              employee.ID,
-		LocationID:              location.ID,
-		ReporterInvolvement:     IncidentReporterInvolvementEnumAlarmed,
-		InformWho:               []string{"Manager"},
-		IncidentDate:            pgtype.Date{Time: time.Now(), Valid: true},
-		RuntimeIncident:         "Incident with file URL",
-		IncidentType:            "With Documentation",
-		PassingAway:             false,
-		SelfHarm:                false,
-		Violence:                false,
-		FireWaterDamage:         false,
-		Accident:                false,
-		ClientAbsence:           false,
-		Medicines:               false,
-		Organization:            false,
-		UseProhibitedSubstances: false,
-		OtherNotifications:      false,
-		SeverityOfIncident:      SeverityOfIncidentEnumSerious,
-		IncidentExplanation:     util.StringPtr("Incident documented with file URL"),
-		RecurrenceRisk:          RecurrenceRiskEnumVeryHigh,
-		ClientID:                client.ID,
-		EmployeeAbsenteeism:     "No",
-		Emails:                  []string{},
-	})
-	if err != nil {
-		panic("failed to create random incident with file URL: " + err.Error())
 	}
 	return incident
 }

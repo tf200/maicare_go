@@ -28,18 +28,18 @@ func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateCli
 	}
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to begin transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDiagnosis", "Failed to begin transaction", zap.Error(err))
 		return nil, err
 	}
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, sql.ErrTxDone) {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to rollback transaction", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDiagnosis", "Failed to rollback transaction", zap.Error(err))
 		}
 	}()
 	qtx := s.Store.WithTx(tx)
 	diagnosis, err := qtx.CreateClientDiagnosis(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to create client diagnosis", zap.Error(err), zap.String("client_id", clientID.String()))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDiagnosis", "Failed to create client diagnosis", zap.Error(err), zap.String("client_id", clientID.String()))
 		return nil, err
 	}
 
@@ -58,13 +58,13 @@ func (s *clientService) CreateClientDiagnosis(ctx context.Context, req CreateCli
 			}
 			_, err := qtx.CreateClientMedication(ctx, medArg)
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to create diagnosis medication", zap.Error(err), zap.String("client_id", clientID.String()))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDiagnosis", "Failed to create diagnosis medication", zap.Error(err), zap.String("client_id", clientID.String()))
 				return nil, err
 			}
 		}
 	}
 	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientDiagnosis", "Failed to commit transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDiagnosis", "Failed to commit transaction", zap.Error(err))
 		return nil, err
 	}
 
@@ -94,12 +94,12 @@ func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiag
 
 	diagnoses, err := s.Store.ListClientDiagnoses(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list client diagnoses", zap.Error(err), zap.String("client_id", clientID.String()))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientDiagnoses", "Failed to list client diagnoses", zap.Error(err), zap.String("client_id", clientID.String()))
 		return nil, err
 	}
 
 	if len(diagnoses) == 0 {
-		s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListClientDiagnoses", "No diagnoses found for client", zap.String("client_id", clientID.String()))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListClientDiagnoses", "No diagnoses found for client", zap.String("client_id", clientID.String()))
 		pag := pagination.NewResponse(ctx, req.Request, []ListClientDiagnosesResponse{}, 0)
 		return &pag, nil
 	}
@@ -131,7 +131,7 @@ func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiag
 	// Fetch all related medications in a single database query.
 	medications, err := s.Store.ListMedicationsByDiagnosisIDs(ctx, diagnosisIDs)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientDiagnoses", "Failed to list medications by diagnosis IDs", zap.Error(err), zap.String("client_id", clientID.String()))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientDiagnoses", "Failed to list medications by diagnosis IDs", zap.Error(err), zap.String("client_id", clientID.String()))
 		return nil, err
 	}
 
@@ -160,7 +160,7 @@ func (s *clientService) ListClientDiagnoses(ctx *gin.Context, req ListClientDiag
 func (s *clientService) GetClientDiagnosis(ctx context.Context, diagnosisID int64) (*GetClientDiagnosisResponse, error) {
 	diagnosis, err := s.Store.GetClientDiagnosis(ctx, diagnosisID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientDiagnosis", "Failed to get client diagnosis", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientDiagnosis", "Failed to get client diagnosis", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
 		return nil, err
 	}
 
@@ -170,7 +170,7 @@ func (s *clientService) GetClientDiagnosis(ctx context.Context, diagnosisID int6
 		Offset:      0,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientDiagnosis", "Failed to list medications by diagnosis ID", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientDiagnosis", "Failed to list medications by diagnosis ID", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
 		return nil, err
 	}
 
@@ -222,7 +222,7 @@ func (s *clientService) UpdateClientDiagnosis(ctx context.Context, req UpdateCli
 
 	diagnosis, err := s.Store.UpdateClientDiagnosis(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientDiagnosis", "Failed to update client diagnosis", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientDiagnosis", "Failed to update client diagnosis", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
 		return nil, err
 	}
 
@@ -244,7 +244,7 @@ func (s *clientService) UpdateClientDiagnosis(ctx context.Context, req UpdateCli
 func (s *clientService) DeleteClientDiagnosis(ctx context.Context, diagnosisID int64) (*DeleteClientDiagnosisResponse, error) {
 	diag, err := s.Store.DeleteClientDiagnosis(ctx, diagnosisID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteClientDiagnosis", "Failed to delete client diagnosis", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteClientDiagnosis", "Failed to delete client diagnosis", zap.Error(err), zap.Int64("diagnosis_id", diagnosisID))
 		return nil, err
 	}
 	res := &DeleteClientDiagnosisResponse{
@@ -267,7 +267,7 @@ func (s *clientService) CreateClientMedication(ctx context.Context, req CreateCl
 	}
 	medication, err := s.Store.CreateClientMedication(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientMedication", "Failed to create client medication", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientMedication", "Failed to create client medication", zap.Error(err))
 		return nil, err
 	}
 	res := &CreateClientMedicationResponse{
@@ -296,7 +296,7 @@ func (s *clientService) ListMedicationsByDiagnosisID(ctx *gin.Context, req ListC
 	}
 	medications, err := s.Store.ListMedicationsByDiagnosisID(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListMedicationsByDiagnosisID", "Failed to list medications by diagnosis ID", zap.Error(err), zap.Int64("diagnosis_id", *diagnosisID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListMedicationsByDiagnosisID", "Failed to list medications by diagnosis ID", zap.Error(err), zap.Int64("diagnosis_id", *diagnosisID))
 		return nil, err
 	}
 	totalCount := medications[0].TotalMedications
@@ -325,7 +325,7 @@ func (s *clientService) ListMedicationsByDiagnosisID(ctx *gin.Context, req ListC
 func (s *clientService) GetClientMedication(ctx context.Context, medicationID int64) (*GetClientMedicationResponse, error) {
 	medication, err := s.Store.GetMedication(ctx, medicationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetClientMedication", "Failed to get client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientMedication", "Failed to get client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
 		return nil, err
 	}
 	res := &GetClientMedicationResponse{
@@ -361,7 +361,7 @@ func (s *clientService) UpdateClientMedication(ctx context.Context, req UpdateCl
 	}
 	medication, err := s.Store.UpdateClientMedication(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateClientMedication", "Failed to update client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientMedication", "Failed to update client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
 		return nil, err
 	}
 	res := &UpdateClientMedicationResponse{
@@ -384,7 +384,7 @@ func (s *clientService) UpdateClientMedication(ctx context.Context, req UpdateCl
 func (s *clientService) DeleteClientMedication(ctx context.Context, medicationID int64) error {
 	err := s.Store.DeleteClientMedication(ctx, medicationID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteClientMedication", "Failed to delete client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteClientMedication", "Failed to delete client medication", zap.Error(err), zap.Int64("medication_id", medicationID))
 		return err
 	}
 	return nil

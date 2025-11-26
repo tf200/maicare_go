@@ -25,6 +25,7 @@ func (s *invoiceService) CreateInvoice(
 	_, err := VerifyTotalAmount(req.InvoiceDetails, req.TotalAmount)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Total amount verification failed",
@@ -37,6 +38,7 @@ func (s *invoiceService) CreateInvoice(
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to begin transaction",
@@ -51,6 +53,7 @@ func (s *invoiceService) CreateInvoice(
 	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to set current employee ID",
@@ -63,6 +66,7 @@ func (s *invoiceService) CreateInvoice(
 	sender, err := qtx.GetClientSender(ctx, req.ClientID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to get client sender",
@@ -75,6 +79,7 @@ func (s *invoiceService) CreateInvoice(
 	invoiceNumber, invoiceSequence, err := s.GenerateInvoiceNumber(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to generate invoice number",
@@ -87,6 +92,7 @@ func (s *invoiceService) CreateInvoice(
 	invoiceDetailsBytes, err := json.Marshal(req.InvoiceDetails)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to marshal invoice details",
@@ -112,6 +118,7 @@ func (s *invoiceService) CreateInvoice(
 	invoice, err := qtx.CreateInvoice(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to create invoice",
@@ -123,6 +130,7 @@ func (s *invoiceService) CreateInvoice(
 
 	if err := tx.Commit(ctx); err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"CreateInvoice",
 			"Failed to commit transaction",
@@ -156,6 +164,7 @@ func (s *invoiceService) GetInvoiceByID(
 	inv, err := s.Store.GetInvoice(ctx, invoiceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetInvoiceByID",
 			"Failed to get invoice",
@@ -168,6 +177,7 @@ func (s *invoiceService) GetInvoiceByID(
 	var invoiceDetails []InvoiceDetails
 	if err := json.Unmarshal(inv.InvoiceDetails, &invoiceDetails); err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetInvoiceByID",
 			"Failed to unmarshal invoice details",
@@ -222,6 +232,7 @@ func (s *invoiceService) ListInvoices(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"ListInvoices",
 			"Failed to list invoices",
@@ -235,6 +246,7 @@ func (s *invoiceService) ListInvoices(
 		var invoiceDetails []InvoiceDetails
 		if err := json.Unmarshal(inv.InvoiceDetails, &invoiceDetails); err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"ListInvoices",
 				"Failed to unmarshal invoice details",
@@ -283,6 +295,7 @@ func (s *invoiceService) UpdateInvoice(
 	_, err := VerifyTotalAmount(req.InvoiceDetails, req.TotalAmount)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateInvoice",
 			"Total amount verification failed",
@@ -295,6 +308,7 @@ func (s *invoiceService) UpdateInvoice(
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateInvoice",
 			"Failed to begin transaction",
@@ -309,6 +323,7 @@ func (s *invoiceService) UpdateInvoice(
 	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateInvoice",
 			"Failed to set current employee ID",
@@ -321,6 +336,7 @@ func (s *invoiceService) UpdateInvoice(
 	invoiceDetailsBytes, err := json.Marshal(req.InvoiceDetails)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateInvoice",
 			"Failed to marshal invoice details",
@@ -346,6 +362,7 @@ func (s *invoiceService) UpdateInvoice(
 	updatedInv, err := qtx.UpdateInvoice(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateInvoice",
 			"Failed to update invoice",
@@ -357,6 +374,7 @@ func (s *invoiceService) UpdateInvoice(
 
 	if err := tx.Commit(ctx); err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateInvoice",
 			"Failed to commit transaction",
@@ -387,6 +405,7 @@ func (s *invoiceService) DeleteInvoice(ctx context.Context, invoiceID int64) err
 	err := s.Store.DeleteInvoice(ctx, invoiceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"DeleteInvoice",
 			"Failed to delete invoice",
@@ -405,6 +424,7 @@ func (s *invoiceService) GetInvoiceAuditLogs(
 	logs, err := s.Store.GetInvoiceAuditLogs(ctx, invoiceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetInvoiceAuditLog",
 			"Failed to get invoice audit logs",
@@ -441,6 +461,7 @@ func (s *invoiceService) GetInvoiceTemplateItemsApi(
 	templateItems, err := s.Store.GetAllTemplateItems(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GetInvoiceTemplateItems",
 			"Failed to get invoice template items",
@@ -470,6 +491,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 	invoiceData, err := s.Store.GetInvoice(ctx, invoiceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GenerateInvoicePdf",
 			"Failed to get invoice data",
@@ -488,6 +510,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 	err = json.Unmarshal(invoiceData.SenderContacts, &senderContacts)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GenerateInvoicePdf",
 			"Failed to unmarshal sender contacts",
@@ -521,6 +544,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 	var extraItems map[string]string
 	if err := json.Unmarshal(invoiceData.ExtraContent, &extraItems); err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GenerateInvoicePdf",
 			"Failed to unmarshal extra content",
@@ -545,6 +569,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 	key, size, err := s.PDFService.GenerateAndUploadInvoicePDF(ctx, pdfData)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GenerateInvoicePdf",
 			"Failed to generate and upload invoice PDF",
@@ -564,6 +589,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 	attachment, err := s.Store.CreateAttachment(ctx, fileArg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"GenerateInvoicePdf",
 			"Failed to create attachment",

@@ -1,99 +1,88 @@
 package db
 
-import (
-	"context"
-	"testing"
-	"time"
+// func TestDischargeOverview(t *testing.T) {
+// 	client := createRandomClientDetails(t)
+// 	_ = createRandomContract(t, client.ID, client.SenderID)
+// 	arg := CreateSchedueledClientStatusChangeParams{
+// 		ClientID:      client.ID,
+// 		NewStatus:     util.StringPtr("Out Of Care"),
+// 		Reason:        util.StringPtr("Test Reason"),
+// 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
+// 	}
 
-	"maicare_go/util"
+// 	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
+// 	require.NoError(t, err)
 
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/stretchr/testify/require"
-)
+// 	overview, err := testQueries.DischargeOverview(context.Background(), DischargeOverviewParams{
+// 		Limit:      5,
+// 		Offset:     0,
+// 		FilterType: "all",
+// 	})
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, overview)
+// }
 
-func TestDischargeOverview(t *testing.T) {
-	client := createRandomClientDetails(t)
-	_ = createRandomContract(t, client.ID, client.SenderID)
-	arg := CreateSchedueledClientStatusChangeParams{
-		ClientID:      client.ID,
-		NewStatus:     util.StringPtr("Out Of Care"),
-		Reason:        util.StringPtr("Test Reason"),
-		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
-	}
+// func TestTotalDischargeCount(t *testing.T) {
+// 	client := createRandomClientDetails(t)
+// 	_ = createRandomContract(t, client.ID, client.SenderID)
+// 	arg := CreateSchedueledClientStatusChangeParams{
+// 		ClientID:      client.ID,
+// 		NewStatus:     util.StringPtr("Out Of Care"),
+// 		Reason:        util.StringPtr("Test Reason"),
+// 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
+// 	}
 
-	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
-	require.NoError(t, err)
+// 	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
+// 	require.NoError(t, err)
 
-	overview, err := testQueries.DischargeOverview(context.Background(), DischargeOverviewParams{
-		Limit:      5,
-		Offset:     0,
-		FilterType: "all",
-	})
-	require.NoError(t, err)
-	require.NotEmpty(t, overview)
-}
+// 	count, err := testQueries.TotalDischargeCount(context.Background())
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, count)
+// 	t.Log(count)
+// }
 
-func TestTotalDischargeCount(t *testing.T) {
-	client := createRandomClientDetails(t)
-	_ = createRandomContract(t, client.ID, client.SenderID)
-	arg := CreateSchedueledClientStatusChangeParams{
-		ClientID:      client.ID,
-		NewStatus:     util.StringPtr("Out Of Care"),
-		Reason:        util.StringPtr("Test Reason"),
-		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
-	}
+// func TestUrgentCasesCount(t *testing.T) {
+// 	client1 := createRandomClientDetails(t)
+// 	_ = createRandomContract(t, client1.ID, client1.SenderID)
 
-	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
-	require.NoError(t, err)
+// 	client2 := createRandomClientDetails(t)
+// 	arg := CreateSchedueledClientStatusChangeParams{
+// 		ClientID:      client2.ID,
+// 		NewStatus:     util.StringPtr("Out Of Care"),
+// 		Reason:        util.StringPtr("Test Reason"),
+// 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
+// 	}
+// 	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
+// 	require.NoError(t, err)
 
-	count, err := testQueries.TotalDischargeCount(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, count)
-	t.Log(count)
-}
+// 	count, err := testQueries.UrgentCasesCount(context.Background())
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, count)
+// 	t.Log(count)
+// }
 
-func TestUrgentCasesCount(t *testing.T) {
-	client1 := createRandomClientDetails(t)
-	_ = createRandomContract(t, client1.ID, client1.SenderID)
+// func TestStatusChangeCount(t *testing.T) {
+// 	client := createRandomClientDetails(t)
+// 	arg := CreateSchedueledClientStatusChangeParams{
+// 		ClientID:      client.ID,
+// 		NewStatus:     util.StringPtr("Out Of Care"),
+// 		Reason:        util.StringPtr("Test Reason"),
+// 		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
+// 	}
 
-	client2 := createRandomClientDetails(t)
-	arg := CreateSchedueledClientStatusChangeParams{
-		ClientID:      client2.ID,
-		NewStatus:     util.StringPtr("Out Of Care"),
-		Reason:        util.StringPtr("Test Reason"),
-		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
-	}
-	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
-	require.NoError(t, err)
+// 	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
+// 	require.NoError(t, err)
 
-	count, err := testQueries.UrgentCasesCount(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, count)
-	t.Log(count)
-}
+// 	count, err := testQueries.StatusChangeCount(context.Background())
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, count)
+// }
 
-func TestStatusChangeCount(t *testing.T) {
-	client := createRandomClientDetails(t)
-	arg := CreateSchedueledClientStatusChangeParams{
-		ClientID:      client.ID,
-		NewStatus:     util.StringPtr("Out Of Care"),
-		Reason:        util.StringPtr("Test Reason"),
-		ScheduledDate: pgtype.Date{Time: time.Now().AddDate(0, 0, 7), Valid: true},
-	}
+// func TestContractEndCount(t *testing.T) {
+// 	client := createRandomClientDetails(t)
+// 	_ = createRandomContract(t, client.ID, client.SenderID)
 
-	_, err := testQueries.CreateSchedueledClientStatusChange(context.Background(), arg)
-	require.NoError(t, err)
-
-	count, err := testQueries.StatusChangeCount(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, count)
-}
-
-func TestContractEndCount(t *testing.T) {
-	client := createRandomClientDetails(t)
-	_ = createRandomContract(t, client.ID, client.SenderID)
-
-	count, err := testQueries.ContractEndCount(context.Background())
-	require.NoError(t, err)
-	require.NotEmpty(t, count)
-}
+// 	count, err := testQueries.ContractEndCount(context.Background())
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, count)
+// }

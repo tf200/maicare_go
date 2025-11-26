@@ -98,6 +98,7 @@ type ClientService interface {
 	// Location Transfer
 	RequestLocationTransfer(ctx context.Context, clientID uuid.UUID, req LocationTransferRequest) error
 	ApproveLocationTransfer(ctx context.Context, employeeID uuid.UUID, req ApproveOrRejectLocationTransferRequest) error
+	ListLocationTransferRequests(ctx *gin.Context, req ListLocationTransferRequestsRequest) (*pagination.Response[ListLocationTransferRequestsResponse], error)
 }
 
 type clientService struct {

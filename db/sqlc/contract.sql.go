@@ -117,8 +117,8 @@ INSERT INTO contract_reminder (
         SELECT 1 FROM contract_reminder
         WHERE contract_id = $1
         AND reminder_sent_at IS NOT NULL
-    ) THEN 'initial' 
-    ELSE 'follow_up' END
+    ) THEN 'initial'::contract_reminder_type_enum
+    ELSE 'follow_up'::contract_reminder_type_enum END
 )
 RETURNING id, contract_id, reminder_sent_at, reminder_type
 `
@@ -167,7 +167,7 @@ func (q *Queries) DeleteContractType(ctx context.Context, id int64) error {
 const getBillablePeriodsForContract = `-- name: GetBillablePeriodsForContract :many
 WITH raw_status_changes AS (
   SELECT
-    new_values->>'status' AS status,
+    (new_values->>'status')::contract_status_enum AS status,
     changed_at AS effective_date
   FROM contract_audit
   WHERE contract_id = $3
@@ -246,7 +246,7 @@ SELECT c.id, c.type_id, c.status, c.approved_at, c.start_date, c.end_date, c.rem
         cd.last_name AS client_last_name,
         s.name AS sender_name
 FROM contract c
-JOIN contract_type ct ON c.type_id = ct.id
+LEFT JOIN contract_type ct ON c.type_id = ct.id
 JOIN client_details cd ON c.client_id = cd.id
 LEFT JOIN sender s ON c.sender_id = s.id
 WHERE c.id = $1
@@ -277,7 +277,7 @@ type GetClientContractRow struct {
 	DepartureReport  *string             `json:"departure_report"`
 	UpdatedAt        pgtype.Timestamptz  `json:"updated_at"`
 	CreatedAt        pgtype.Timestamptz  `json:"created_at"`
-	ContractTypeName string              `json:"contract_type_name"`
+	ContractTypeName *string             `json:"contract_type_name"`
 	ClientFirstName  string              `json:"client_first_name"`
 	ClientLastName   string              `json:"client_last_name"`
 	SenderName       *string             `json:"sender_name"`
@@ -429,7 +429,7 @@ WITH client_contracts AS (
             cd.last_name AS client_last_name,
             s.name AS sender_name
     FROM contract c
-    JOIN contract_type ct ON c.type_id = ct.id
+    LEFT JOIN contract_type ct ON c.type_id = ct.id
     JOIN client_details cd ON c.client_id = cd.id
     LEFT JOIN sender s ON c.sender_id = s.id
     WHERE client_id = $1
@@ -474,7 +474,7 @@ type ListClientContractsRow struct {
 	DepartureReport  *string             `json:"departure_report"`
 	UpdatedAt        pgtype.Timestamptz  `json:"updated_at"`
 	CreatedAt        pgtype.Timestamptz  `json:"created_at"`
-	ContractTypeName string              `json:"contract_type_name"`
+	ContractTypeName *string             `json:"contract_type_name"`
 	ClientFirstName  string              `json:"client_first_name"`
 	ClientLastName   string              `json:"client_last_name"`
 	SenderName       *string             `json:"sender_name"`
@@ -584,13 +584,13 @@ WITH filtered_contracts AS (
             cd.first_name ILIKE '%' || $3 || '%' OR
             cd.last_name ILIKE '%' || $3 || '%')
     AND
-        ($4::varchar[] IS NULL OR c.status = ANY($4))
+        ($4::contract_status_enum[] IS NULL OR c.status = ANY($4))
     AND
-        ($5::varchar[] IS NULL OR c.care_type = ANY($5))
+        ($5::care_type_enum[] IS NULL OR c.care_type = ANY($5))
     AND
-        ($6::varchar[] IS NULL OR c.financing_act = ANY($6))
+        ($6::financing_act_enum[] IS NULL OR c.financing_act = ANY($6))
     AND
-        ($7::varchar[] IS NULL OR c.financing_option = ANY($7))
+        ($7::financing_option_enum[] IS NULL OR c.financing_option = ANY($7))
 )
 SELECT
     (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
@@ -604,13 +604,13 @@ OFFSET $2
 `
 
 type ListContractsParams struct {
-	Limit           int32    `json:"limit"`
-	Offset          int32    `json:"offset"`
-	Search          *string  `json:"search"`
-	Status          []string `json:"status"`
-	CareType        []string `json:"care_type"`
-	FinancingAct    []string `json:"financing_act"`
-	FinancingOption []string `json:"financing_option"`
+	Limit           int32                 `json:"limit"`
+	Offset          int32                 `json:"offset"`
+	Search          *string               `json:"search"`
+	Status          []ContractStatusEnum  `json:"status"`
+	CareType        []CareTypeEnum        `json:"care_type"`
+	FinancingAct    []FinancingActEnum    `json:"financing_act"`
+	FinancingOption []FinancingOptionEnum `json:"financing_option"`
 }
 
 type ListContractsRow struct {
@@ -855,15 +855,15 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 const updateContractStatus = `-- name: UpdateContractStatus :one
 UPDATE contract
 SET
-    status = $1::text,
-    approved_at = CASE WHEN $1::text = 'approved' THEN NOW() ELSE approved_at END
+    status = $1::contract_status_enum,
+    approved_at = CASE WHEN $1::contract_status_enum = 'approved' THEN NOW() ELSE approved_at END
 WHERE id = $2::BIGINT
 RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type UpdateContractStatusParams struct {
-	Status     string `json:"status"`
-	ContractID int64  `json:"contract_id"`
+	Status     ContractStatusEnum `json:"status"`
+	ContractID int64              `json:"contract_id"`
 }
 
 func (q *Queries) UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error) {

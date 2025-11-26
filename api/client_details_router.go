@@ -31,5 +31,6 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 
 		clientsGroup.POST("/:id/location_transfer", server.RBACMiddleware("CLIENT.UPDATE"), server.RequestLocationTransferApi)
 		clientsGroup.POST("/location_transfer/approve_reject", server.RBACMiddleware("CLIENT.UPDATE"), server.ApproveOrRejectClientLocationTransferApi)
+		clientsGroup.GET("/location_transfer", server.RBACMiddleware("CLIENT.VIEW"), server.ListLocationTransferRequestsApi)
 	}
 }

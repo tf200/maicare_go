@@ -179,7 +179,7 @@ func (s *clientService) CreateProgressReport(ctx context.Context, req *CreatePro
     arg := db.CreateProgressReportParams{...}
     report, err := s.Store.CreateProgressReport(ctx, arg)
     if err != nil {
-        s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateProgressReport", "Failed to create progress report", zap.Int64("client_id", clientID), zap.Error(err))
+        s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateProgressReport", "Failed to create progress report", zap.Int64("client_id", clientID), zap.Error(err))
         return nil, err
     }
 

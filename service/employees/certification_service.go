@@ -21,6 +21,7 @@ func (s *employeeService) AddEmployeeCertification(
 	parsedDate, err := time.Parse("2006-01-02", req.DateIssued)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeCertification",
 			"Failed to parse date issued",
@@ -39,6 +40,7 @@ func (s *employeeService) AddEmployeeCertification(
 	certification, err := s.Store.AddEmployeeCertification(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeCertification",
 			"Failed to add certification to employee profile",
@@ -58,6 +60,7 @@ func (s *employeeService) AddEmployeeCertification(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"AddEmployeeCertification",
 		"Successfully added certification to employee profile",
@@ -74,6 +77,7 @@ func (s *employeeService) ListEmployeeCertification(
 	certifications, err := s.Store.ListEmployeeCertifications(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"ListEmployeeCertification",
 			"Failed to list employee certifications",
@@ -95,6 +99,7 @@ func (s *employeeService) ListEmployeeCertification(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"ListEmployeeCertification",
 		"Successfully listed employee certifications",
@@ -115,6 +120,7 @@ func (s *employeeService) UpdateEmployeeCertification(
 		parsedDate, err = time.Parse("2006-01-02", *req.DateIssued)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"UpdateEmployeeCertification",
 				"Failed to parse date issued",
@@ -136,6 +142,7 @@ func (s *employeeService) UpdateEmployeeCertification(
 	)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateEmployeeCertification",
 			"Failed to update employee certification",
@@ -155,6 +162,7 @@ func (s *employeeService) UpdateEmployeeCertification(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"UpdateEmployeeCertification",
 		"Successfully updated employee certification",
@@ -170,6 +178,7 @@ func (s *employeeService) DeleteEmployeeCertification(
 	certification, err := s.Store.DeleteEmployeeCertification(ctx, certificationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"DeleteEmployeeCertification",
 			"Failed to delete employee certification",
@@ -189,6 +198,7 @@ func (s *employeeService) DeleteEmployeeCertification(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"DeleteEmployeeCertification",
 		"Successfully deleted employee certification",

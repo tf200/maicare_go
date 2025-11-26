@@ -21,7 +21,7 @@ import (
 func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, employeeID uuid.UUID, req *CreateClientCarePlanRequest) (*CreateClientCarePlanResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to begin transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to begin transaction", zap.Error(err))
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
@@ -40,13 +40,13 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 
 	clientAssessments, err := qtx.CreateClientMaturityMatrixAssessment(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to create client maturity matrix assessment", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to create client maturity matrix assessment", zap.Error(err))
 		return nil, fmt.Errorf("failed to create client maturity matrix assessment: %w", err)
 	}
 
 	details, err := s.getDetails(qtx, ctx, req.MaturityMatrixID, clientID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to get details", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to get details", zap.Error(err))
 		return nil, fmt.Errorf("failed to get details: %w", err)
 	}
 
@@ -72,55 +72,55 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 		},
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to generate care plan", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to generate care plan", zap.Error(err))
 		return nil, fmt.Errorf("failed to generate care plan: %w", err)
 	}
 
 	carePlanID, err := s.insertCarePlan(ctx, qtx, generatedCarePlan, clientAssessments.ID, employeeID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan: %w", err)
 	}
 
 	err = s.insertCarePlanObjectives(ctx, qtx, carePlanID, generatedCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan objectives", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan objectives", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan objectives: %w", err)
 	}
 
 	err = s.insertCarePlanInterventions(ctx, qtx, carePlanID, generatedCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan interventions", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan interventions", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan interventions: %w", err)
 	}
 
 	err = s.insertCarePlanSuccessMetrics(ctx, qtx, carePlanID, generatedCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan success metrics", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan success metrics", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan success metrics: %w", err)
 	}
 
 	err = s.insertCarePlanRiskFactors(ctx, qtx, carePlanID, generatedCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan risk factors", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan risk factors", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan risk factors: %w", err)
 	}
 
 	err = s.insertCarePlanSupportNetwork(ctx, qtx, carePlanID, generatedCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan support network", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan support network", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan support network: %w", err)
 	}
 
 	err = s.insertCarePlanResources(ctx, qtx, carePlanID, generatedCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan resources", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to insert care plan resources", zap.Error(err))
 		return nil, fmt.Errorf("failed to insert care plan resources: %w", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateClientCarePlan", "Failed to commit transaction", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to commit transaction", zap.Error(err))
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -138,7 +138,7 @@ func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID uuid.UU
 		Offset:   params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListClientCarePlans", "Failed to list client maturity matrix assessments", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientCarePlans", "Failed to list client maturity matrix assessments", zap.Error(err))
 		return nil, fmt.Errorf("failed to list client maturity matrix assessments: %w", err)
 	}
 
@@ -163,7 +163,7 @@ func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID uuid.UU
 func (s *carePlanService) GetCarePlanOverview(ctx *gin.Context, carePlanID int64) (*GetCarePlanOverviewResponse, error) {
 	carePlan, err := s.Store.GetCarePlanOverview(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanOverview", "Failed to get care plan overview", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanOverview", "Failed to get care plan overview", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan overview: %w", err)
 	}
 
@@ -187,7 +187,7 @@ func (s *carePlanService) UpdateCarePlanOverview(ctx context.Context, carePlanID
 		AssessmentSummary: req.AssessmentSummary,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpfateCarePlanOverveiw", "Failed to update care plan overview", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpfateCarePlanOverveiw", "Failed to update care plan overview", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan overview: %w", err)
 	}
 
@@ -203,7 +203,7 @@ func (s *carePlanService) UpdateCarePlanOverview(ctx context.Context, carePlanID
 func (s *carePlanService) DeleteCarePlan(ctx context.Context, carePlanID int64) error {
 	err := s.Store.DeleteCarePlan(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlan", "Failed to delete care plan", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlan", "Failed to delete care plan", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan: %w", err)
 	}
 	return nil
@@ -219,7 +219,7 @@ func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanI
 		GoalTitle:   req.GoalTitle,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanObjective", "Failed to create care plan objective", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanObjective", "Failed to create care plan objective", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan objective: %w", err)
 	}
 
@@ -243,7 +243,7 @@ func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanI
 func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, carePlanID int64) (*GetCarePlanObjectivesResponse, error) {
 	rows, err := s.Store.GetCarePlanObjectivesWithActions(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanObjectivesAndActions", "Failed to get care plan objectives and actions", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanObjectivesAndActions", "Failed to get care plan objectives and actions", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan objectives and actions: %w", err)
 	}
 
@@ -302,7 +302,7 @@ func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objective
 		Status:      db.NullCarePlanObjectiveStatusFromPtr(req.Status),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanObjective", "Failed to update care plan objective", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanObjective", "Failed to update care plan objective", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan objective: %w", err)
 	}
 
@@ -317,7 +317,7 @@ func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objective
 func (s *carePlanService) DeleteCarePlanObjective(ctx context.Context, objectiveID int64) error {
 	err := s.Store.DeleteCarePlanObjective(ctx, objectiveID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanObjective", "Failed to delete care plan objective", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanObjective", "Failed to delete care plan objective", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan objective: %w", err)
 	}
 	return nil
@@ -326,7 +326,7 @@ func (s *carePlanService) DeleteCarePlanObjective(ctx context.Context, objective
 func (s *carePlanService) CreateCarePlanAction(ctx context.Context, objectiveID int64, req *CreateCarePlanActionsRequest) (*CreateCarePlanActionsResponse, error) {
 	maxSortOrder, err := s.Store.GetCarePlanActionsMaxSortOrder(ctx, objectiveID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanAction", "Failed to get max sort order", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanAction", "Failed to get max sort order", zap.Error(err))
 		return nil, fmt.Errorf("failed to get max sort order: %w", err)
 	}
 
@@ -336,7 +336,7 @@ func (s *carePlanService) CreateCarePlanAction(ctx context.Context, objectiveID 
 		SortOrder:         maxSortOrder + 1,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanAction", "Failed to create care plan action", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanAction", "Failed to create care plan action", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan action: %w", err)
 	}
 
@@ -355,7 +355,7 @@ func (s *carePlanService) UpdateCarePlanAction(ctx context.Context, actionID int
 		ActionDescription: req.ActionDescription,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanAction", "Failed to update care plan action", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanAction", "Failed to update care plan action", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan action: %w", err)
 	}
 
@@ -371,7 +371,7 @@ func (s *carePlanService) UpdateCarePlanAction(ctx context.Context, actionID int
 func (s *carePlanService) DeleteCarePlanAction(ctx context.Context, actionID int64) error {
 	err := s.Store.DeleteCarePlanAction(ctx, actionID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanAction", "Failed to delete care plan action", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanAction", "Failed to delete care plan action", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan action: %w", err)
 	}
 	return nil
@@ -386,7 +386,7 @@ func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePl
 		InterventionDescription: req.InterventionDescription,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanIntervention", "Failed to create care plan intervention", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanIntervention", "Failed to create care plan intervention", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan intervention: %w", err)
 	}
 
@@ -402,7 +402,7 @@ func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePl
 func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlanID int64) (*GetCarePlanInterventionsResponse, error) {
 	interventions, err := s.Store.GetCarePlanInterventions(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanInterventions", "Failed to get care plan interventions", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanInterventions", "Failed to get care plan interventions", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan interventions: %w", err)
 	}
 
@@ -431,7 +431,7 @@ func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlan
 			})
 
 		default:
-			s.Logger.LogBusinessEvent(logger.LogLevelWarn, "GetCarePlanInterventions", "Unknown intervention frequency", zap.String("frequency", string(intervention.Frequency)))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "GetCarePlanInterventions", "Unknown intervention frequency", zap.String("frequency", string(intervention.Frequency)))
 		}
 	}
 
@@ -445,7 +445,7 @@ func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interv
 		InterventionDescription: req.InterventionDescription,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanIntervention", "Failed to update care plan intervention", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanIntervention", "Failed to update care plan intervention", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan intervention: %w", err)
 	}
 
@@ -461,7 +461,7 @@ func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interv
 func (s *carePlanService) DeleteCarePlanIntervention(ctx context.Context, interventionID int64) error {
 	err := s.Store.DeleteCarePlanIntervention(ctx, interventionID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanIntervention", "Failed to delete care plan intervention", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanIntervention", "Failed to delete care plan intervention", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan intervention: %w", err)
 	}
 	return nil
@@ -478,7 +478,7 @@ func (s *carePlanService) CreateCarePlanSuccessMetric(ctx context.Context, careP
 		MeasurementMethod: req.MeasurementMethod,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanSuccessMetric", "Failed to create care plan success metric", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanSuccessMetric", "Failed to create care plan success metric", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan success metric: %w", err)
 	}
 
@@ -495,7 +495,7 @@ func (s *carePlanService) CreateCarePlanSuccessMetric(ctx context.Context, careP
 func (s *carePlanService) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int64) ([]GetCarePlanSuccessMetricsResponse, error) {
 	metrics, err := s.Store.GetCarePlanSuccessMetrics(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanSuccessMetrics", "Failed to get care plan success metrics", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanSuccessMetrics", "Failed to get care plan success metrics", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan success metrics: %w", err)
 	}
 
@@ -522,7 +522,7 @@ func (s *carePlanService) UpdateCarePlanSuccessMetric(ctx context.Context, metri
 		CurrentValue:      req.CurrentValue,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanSuccessMetric", "Failed to update care plan success metric", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanSuccessMetric", "Failed to update care plan success metric", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan success metric: %w", err)
 	}
 
@@ -539,7 +539,7 @@ func (s *carePlanService) UpdateCarePlanSuccessMetric(ctx context.Context, metri
 func (s *carePlanService) DeleteCarePlanSuccessMetric(ctx context.Context, metricID int64) error {
 	err := s.Store.DeleteCarePlanSuccessMetric(ctx, metricID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanSuccessMetric", "Failed to delete care plan success metric", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanSuccessMetric", "Failed to delete care plan success metric", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan success metric: %w", err)
 	}
 	return nil
@@ -555,7 +555,7 @@ func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int
 		RiskLevel:          db.CarePlanRiskLevelEnum(req.RiskLevel),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanRiskFactor", "Failed to create care plan risk factor", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanRiskFactor", "Failed to create care plan risk factor", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan risk factor: %w", err)
 	}
 
@@ -571,7 +571,7 @@ func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int
 func (s *carePlanService) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]GetCarePlanRisksResponse, error) {
 	riskFactors, err := s.Store.GetCarePlanRisks(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanRiskFactors", "Failed to get care plan risk factors", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanRiskFactors", "Failed to get care plan risk factors", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan risk factors: %w", err)
 	}
 
@@ -596,7 +596,7 @@ func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, 
 		RiskLevel:          db.NullCarePlanRiskLevelFromPtr(req.RiskLevel),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanRiskFactor", "Failed to update care plan risk factor", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanRiskFactor", "Failed to update care plan risk factor", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan risk factor: %w", err)
 	}
 
@@ -612,7 +612,7 @@ func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, 
 func (s *carePlanService) DeleteCarePlanRisk(ctx context.Context, riskID int64) error {
 	err := s.Store.DeleteCarePlanRisk(ctx, riskID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanRiskFactor", "Failed to delete care plan risk factor", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanRiskFactor", "Failed to delete care plan risk factor", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan risk factor: %w", err)
 	}
 	return nil
@@ -627,7 +627,7 @@ func (s *carePlanService) CreateCarePlanSupportNetwork(ctx context.Context, care
 		ResponsibilityDescription: req.ResponsibilityDescription,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanSupportNetwork", "Failed to create care plan support network", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanSupportNetwork", "Failed to create care plan support network", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan support network: %w", err)
 	}
 
@@ -642,7 +642,7 @@ func (s *carePlanService) CreateCarePlanSupportNetwork(ctx context.Context, care
 func (s *carePlanService) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int64) ([]GetCarePlanSupportNetworkResponse, error) {
 	supportNetworks, err := s.Store.GetCarePlanSupportNetwork(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanSupportNetwork", "Failed to get care plan support network", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanSupportNetwork", "Failed to get care plan support network", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan support network: %w", err)
 	}
 
@@ -665,7 +665,7 @@ func (s *carePlanService) UpdateCarePlanSupportNetwork(ctx context.Context, supp
 		ResponsibilityDescription: req.ResponsibilityDescription,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanSupportNetwork", "Failed to update care plan support network", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanSupportNetwork", "Failed to update care plan support network", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan support network: %w", err)
 	}
 
@@ -680,7 +680,7 @@ func (s *carePlanService) UpdateCarePlanSupportNetwork(ctx context.Context, supp
 func (s *carePlanService) DeleteCarePlanSupportNetwork(ctx context.Context, supportNetworkID int64) error {
 	err := s.Store.DeleteCarePlanSupportNetwork(ctx, supportNetworkID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanSupportNetwork", "Failed to delete care plan support network", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanSupportNetwork", "Failed to delete care plan support network", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan support network: %w", err)
 	}
 	return nil
@@ -694,7 +694,7 @@ func (s *carePlanService) CreateCarePlanResource(ctx context.Context, carePlanID
 		ResourceDescription: req.ResourceDescription,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanResource", "Failed to create care plan resource", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanResource", "Failed to create care plan resource", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan resource: %w", err)
 	}
 
@@ -710,7 +710,7 @@ func (s *carePlanService) CreateCarePlanResource(ctx context.Context, carePlanID
 func (s *carePlanService) GetCarePlanResources(ctx context.Context, carePlanID int64) ([]GetCarePlanResourcesResponse, error) {
 	resources, err := s.Store.GetCarePlanResources(ctx, carePlanID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetCarePlanResources", "Failed to get care plan resources", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanResources", "Failed to get care plan resources", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan resources: %w", err)
 	}
 
@@ -734,7 +734,7 @@ func (s *carePlanService) UpdateCarePlanResource(ctx context.Context, resourceID
 		ObtainedDate:        pgtype.Date{Time: req.ObtainedDate, Valid: true},
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanResource", "Failed to update care plan resource", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanResource", "Failed to update care plan resource", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan resource: %w", err)
 	}
 
@@ -750,7 +750,7 @@ func (s *carePlanService) UpdateCarePlanResource(ctx context.Context, resourceID
 func (s *carePlanService) DeleteCarePlanResource(ctx context.Context, resourceID int64) error {
 	err := s.Store.DeleteCarePlanResource(ctx, resourceID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanResource", "Failed to delete care plan resource", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanResource", "Failed to delete care plan resource", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan resource: %w", err)
 	}
 	return nil
@@ -767,7 +767,7 @@ func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID i
 		CreatedByEmployeeID: employeeID,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateCarePlanReport", "Failed to create care plan report", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanReport", "Failed to create care plan report", zap.Error(err))
 		return nil, fmt.Errorf("failed to create care plan report: %w", err)
 	}
 
@@ -790,7 +790,7 @@ func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID int64
 		Offset:     params.Offset,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListCarePlanReports", "Failed to list care plan reports", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListCarePlanReports", "Failed to list care plan reports", zap.Error(err))
 		return nil, fmt.Errorf("failed to list care plan reports: %w", err)
 	}
 
@@ -820,7 +820,7 @@ func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int
 		IsCritical:    req.IsCritical,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateCarePlanReport", "Failed to update care plan report", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateCarePlanReport", "Failed to update care plan report", zap.Error(err))
 		return nil, fmt.Errorf("failed to update care plan report: %w", err)
 	}
 
@@ -837,7 +837,7 @@ func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int
 func (s *carePlanService) DeleteCarePlanReport(ctx context.Context, reportID int64) error {
 	err := s.Store.DeleteCarePlanReport(ctx, reportID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteCarePlanReport", "Failed to delete care plan report", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanReport", "Failed to delete care plan report", zap.Error(err))
 		return fmt.Errorf("failed to delete care plan report: %w", err)
 	}
 	return nil
@@ -853,20 +853,20 @@ func (s *carePlanService) getDetails(
 ) (*Details, error) {
 	topicDescription, err := qtx.GetMaturityMatrix(ctx, topicID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "getDetails", "Failed to get maturity matrix", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "getDetails", "Failed to get maturity matrix", zap.Error(err))
 		return nil, fmt.Errorf("failed to get maturity matrix: %w", err)
 	}
 
 	var levelDescription []Level
 	err = json.Unmarshal(topicDescription.LevelDescription, &levelDescription)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "getDetails", "Failed to unmarshal level description", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "getDetails", "Failed to unmarshal level description", zap.Error(err))
 		return nil, fmt.Errorf("failed to unmarshal level description: %w", err)
 	}
 
 	clientDetails, err := qtx.GetClientDetails(ctx, clientID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "getDetails", "Failed to get client details", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "getDetails", "Failed to get client details", zap.Error(err))
 		return nil, fmt.Errorf("failed to get client details: %w", err)
 	}
 	details := &Details{
@@ -895,7 +895,7 @@ func (s *carePlanService) insertCarePlan(
 ) (carePlanID int64, err error) {
 	rawllmResp, err := json.Marshal(genCarePlan)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlan", "Failed to marshal care plan", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlan", "Failed to marshal care plan", zap.Error(err))
 		return 0, err
 	}
 	arg := db.CreateCarePlanParams{
@@ -908,11 +908,11 @@ func (s *carePlanService) insertCarePlan(
 
 	carePlan, err := qtx.CreateCarePlan(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlan", "Failed to create care plan", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlan", "Failed to create care plan", zap.Error(err))
 		return 0, err
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "insertCarePlan", "Care plan created successfully", zap.Int64("carePlanID", carePlan.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "insertCarePlan", "Care plan created successfully", zap.Int64("carePlanID", carePlan.ID))
 	return carePlan.ID, nil
 }
 
@@ -932,7 +932,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true},
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanObjectives", "Failed to create short term goal", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create short term goal", zap.Error(err))
 			return err
 		}
 		for i, action := range obj.SpecificActions {
@@ -942,7 +942,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 				SortOrder:         int32(i + 1),
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for short term goal", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for short term goal", zap.Error(err))
 				return err
 			}
 		}
@@ -958,7 +958,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true},
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanObjectives", "Failed to create medium term goal", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create medium term goal", zap.Error(err))
 			return err
 		}
 		for i, action := range obj.SpecificActions {
@@ -968,7 +968,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 				SortOrder:         int32(i + 1),
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for medium term goal", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for medium term goal", zap.Error(err))
 				return err
 			}
 		}
@@ -983,7 +983,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true},
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanObjectives", "Failed to create long term goal", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create long term goal", zap.Error(err))
 			return err
 		}
 		for i, action := range obj.SpecificActions {
@@ -993,7 +993,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 				SortOrder:         int32(i + 1),
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for long term goal", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for long term goal", zap.Error(err))
 				return err
 			}
 		}
@@ -1014,7 +1014,7 @@ func (s *carePlanService) insertCarePlanInterventions(
 			InterventionDescription: intervention,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
 			return err
 		}
 	}
@@ -1026,7 +1026,7 @@ func (s *carePlanService) insertCarePlanInterventions(
 			InterventionDescription: intervention,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
 			return err
 		}
 	}
@@ -1038,7 +1038,7 @@ func (s *carePlanService) insertCarePlanInterventions(
 			InterventionDescription: intervention,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
 			return err
 		}
 	}
@@ -1060,7 +1060,7 @@ func (s *carePlanService) insertCarePlanSuccessMetrics(
 			MeasurementMethod: metric.MeasurementMethod,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanSuccessMetrics", "Failed to create care plan success metric", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanSuccessMetrics", "Failed to create care plan success metric", zap.Error(err))
 			return err
 		}
 	}
@@ -1082,7 +1082,7 @@ func (s *carePlanService) insertCarePlanRiskFactors(
 			RiskLevel:          db.CarePlanRiskLevelEnum(risk.RiskLevel), // Use pointer to allow NULL values
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanRiskFactors", "Failed to create care plan risk factor", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanRiskFactors", "Failed to create care plan risk factor", zap.Error(err))
 			return err
 		}
 	}
@@ -1103,7 +1103,7 @@ func (s *carePlanService) insertCarePlanSupportNetwork(
 			ResponsibilityDescription: network.Responsibility,
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanSupportNetworks", "Failed to create care plan support network", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanSupportNetworks", "Failed to create care plan support network", zap.Error(err))
 			return err
 		}
 	}
@@ -1125,7 +1125,7 @@ func (s *carePlanService) insertCarePlanResources(
 			ObtainedDate:        pgtype.Date{Time: time.Now(), Valid: false},
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(logger.LogLevelError, "insertCarePlanResources", "Failed to create care plan resource", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanResources", "Failed to create care plan resource", zap.Error(err))
 			return err
 		}
 	}

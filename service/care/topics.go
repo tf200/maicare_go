@@ -12,7 +12,7 @@ import (
 func (s *carePlanService) ListCarePlanTopics(ctx context.Context) ([]ListCarePlanTopics, error) {
 	topics, err := s.Store.ListMaturityMatrix(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListCarePlanTopics", "Failed to list care plan topics", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListCarePlanTopics", "Failed to list care plan topics", zap.Error(err))
 		return nil, fmt.Errorf("failed to list care plan topics")
 	}
 
@@ -24,6 +24,6 @@ func (s *carePlanService) ListCarePlanTopics(ctx context.Context) ([]ListCarePla
 		})
 	}
 
-	s.Logger.LogBusinessEvent(logger.LogLevelInfo, "ListCarePlanTopics", "Successfully listed care plan topics")
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListCarePlanTopics", "Successfully listed care plan topics")
 	return reponse, nil
 }

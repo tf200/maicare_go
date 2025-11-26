@@ -1611,6 +1611,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-clientp_ListLocationTransferRequestsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListLocationTransferRequestsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-clientp_ListRegistrationFormsResponse:
     properties:
       data:
@@ -5119,6 +5128,33 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.ListLocationTransferRequestsResponse:
+    properties:
+      approved_rejected_at:
+        type: string
+      approved_rejected_by:
+        type: string
+      client_id:
+        type: string
+      from_location_id:
+        type: integer
+      id:
+        type: integer
+      mentor_first_name:
+        type: string
+      mentor_last_name:
+        type: string
+      new_mentor_id:
+        type: string
+      reason:
+        type: string
+      request_date:
+        type: string
+      status:
+        $ref: '#/definitions/db.ClientLocationTransferStatusEnum'
+      to_location_id:
+        type: integer
+    type: object
   clientp.ListProgressReportsResponse:
     properties:
       client_id:
@@ -6763,6 +6799,16 @@ definitions:
       status:
         type: string
     type: object
+  db.ClientLocationTransferStatusEnum:
+    enum:
+    - pending
+    - approved
+    - rejected
+    type: string
+    x-enum-varnames:
+    - ClientLocationTransferStatusEnumPending
+    - ClientLocationTransferStatusEnumApproved
+    - ClientLocationTransferStatusEnumRejected
   ecr.DischargeOverviewResponse:
     properties:
       contract_end_date:
@@ -8718,6 +8764,21 @@ definitions:
       results:
         items:
           $ref: '#/definitions/clientp.ListIncidentsResponse'
+        type: array
+    type: object
+  pagination.Response-clientp_ListLocationTransferRequestsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListLocationTransferRequestsResponse'
         type: array
     type: object
   pagination.Response-clientp_ListRegistrationFormsResponse:
@@ -12888,6 +12949,39 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Get the count of clients
+      tags:
+      - clients
+  /clients/location_transfer:
+    get:
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListLocationTransferRequestsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List location transfer requests for a client
       tags:
       - clients
   /clients/location_transfer/approve_reject:

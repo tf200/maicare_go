@@ -21,7 +21,7 @@ func TestAssignEmployee(t *testing.T) {
 		{
 			name: "successful assignment",
 			setup: func(ctx context.Context, qtx *Queries) AssignEmployeeParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				client := createRandomClientDetails(ctx, qtx)
 				return AssignEmployeeParams{
 					ClientID:   client.ID,
@@ -43,7 +43,7 @@ func TestAssignEmployee(t *testing.T) {
 		{
 			name: "assignment with different role",
 			setup: func(ctx context.Context, qtx *Queries) AssignEmployeeParams {
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				client := createRandomClientDetails(ctx, qtx)
 				return AssignEmployeeParams{
 					ClientID:   client.ID,
@@ -208,7 +208,8 @@ func TestGetEmergencyContact(t *testing.T) {
 		{
 			name: "get existing contact",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
-				contact := createRandomEmergencyContact(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				contact := createRandomEmergencyContact(ctx, qtx, client.ID)
 				return contact.ID
 			},
 			checks: func(t *testing.T, contact ClientEmergencyContact, err error) {
@@ -250,7 +251,8 @@ func TestUpdateEmergencyContact(t *testing.T) {
 		{
 			name: "update existing contact",
 			setup: func(ctx context.Context, qtx *Queries) UpdateEmergencyContactParams {
-				contact := createRandomEmergencyContact(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				contact := createRandomEmergencyContact(ctx, qtx, client.ID)
 				newEmail := util.RandomEmail()
 				return UpdateEmergencyContactParams{
 					ID:    contact.ID,
@@ -272,7 +274,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 				}
 			},
 			checks: func(t *testing.T, contact ClientEmergencyContact, params UpdateEmergencyContactParams, err error) {
-				require.NoError(t, err, "UpdateEmergencyContact should not error for non-existent ID")
+				require.Error(t, err, "UpdateEmergencyContact should error for non-existent ID")
 			},
 		},
 	}
@@ -302,7 +304,8 @@ func TestDeleteEmergencyContact(t *testing.T) {
 		{
 			name: "delete existing contact",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
-				contact := createRandomEmergencyContact(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				contact := createRandomEmergencyContact(ctx, qtx, client.ID)
 				return contact.ID
 			},
 			checks: func(t *testing.T, contact ClientEmergencyContact, err error) {
@@ -314,7 +317,7 @@ func TestDeleteEmergencyContact(t *testing.T) {
 			name:  "delete non-existent contact",
 			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
 			checks: func(t *testing.T, contact ClientEmergencyContact, err error) {
-				require.NoError(t, err, "DeleteEmergencyContact should not error for non-existent ID")
+				require.Error(t, err, "DeleteEmergencyContact should error for non-existent ID")
 			},
 		},
 	}
@@ -345,8 +348,8 @@ func TestListEmergencyContacts(t *testing.T) {
 			name: "list contacts with results",
 			setup: func(ctx context.Context, qtx *Queries) ListEmergencyContactsParams {
 				client := createRandomClientDetails(ctx, qtx)
-				_ = createRandomEmergencyContact(ctx, qtx)
-				_ = createRandomEmergencyContact(ctx, qtx)
+				_ = createRandomEmergencyContact(ctx, qtx, client.ID)
+				_ = createRandomEmergencyContact(ctx, qtx, client.ID)
 				return ListEmergencyContactsParams{
 					ClientID: client.ID,
 					Limit:    10,
@@ -363,7 +366,7 @@ func TestListEmergencyContacts(t *testing.T) {
 			name: "list contacts with search",
 			setup: func(ctx context.Context, qtx *Queries) ListEmergencyContactsParams {
 				client := createRandomClientDetails(ctx, qtx)
-				contact := createRandomEmergencyContact(ctx, qtx)
+				contact := createRandomEmergencyContact(ctx, qtx, client.ID)
 				return ListEmergencyContactsParams{
 					ClientID: client.ID,
 					Limit:    10,
@@ -403,7 +406,8 @@ func TestGetAssignedEmployee(t *testing.T) {
 		{
 			name: "get existing assigned employee",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
-				assigned := createRandomAssignedEmployee(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				assigned := createRandomAssignedEmployee(ctx, qtx, client.ID)
 				return assigned.ID
 			},
 			checks: func(t *testing.T, row GetAssignedEmployeeRow, err error) {
@@ -445,7 +449,8 @@ func TestUpdateAssignedEmployee(t *testing.T) {
 		{
 			name: "update existing assigned employee",
 			setup: func(ctx context.Context, qtx *Queries) UpdateAssignedEmployeeParams {
-				assigned := createRandomAssignedEmployee(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				assigned := createRandomAssignedEmployee(ctx, qtx, client.ID)
 				return UpdateAssignedEmployeeParams{
 					ID:   assigned.ID,
 					Role: util.StringPtr("Updated Role"),
@@ -465,7 +470,7 @@ func TestUpdateAssignedEmployee(t *testing.T) {
 				}
 			},
 			checks: func(t *testing.T, assigned AssignedEmployee, err error) {
-				require.NoError(t, err, "UpdateAssignedEmployee should not error for non-existent ID")
+				require.Error(t, err, "UpdateAssignedEmployee should error for non-existent ID")
 			},
 		},
 	}
@@ -495,7 +500,8 @@ func TestDeleteAssignedEmployee(t *testing.T) {
 		{
 			name: "delete existing assigned employee",
 			setup: func(ctx context.Context, qtx *Queries) int64 {
-				assigned := createRandomAssignedEmployee(ctx, qtx)
+				client := createRandomClientDetails(ctx, qtx)
+				assigned := createRandomAssignedEmployee(ctx, qtx, client.ID)
 				return assigned.ID
 			},
 			checks: func(t *testing.T, assigned AssignedEmployee, err error) {
@@ -507,7 +513,7 @@ func TestDeleteAssignedEmployee(t *testing.T) {
 			name:  "delete non-existent assigned employee",
 			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
 			checks: func(t *testing.T, assigned AssignedEmployee, err error) {
-				require.NoError(t, err, "DeleteAssignedEmployee should not error for non-existent ID")
+				require.Error(t, err, "DeleteAssignedEmployee should error for non-existent ID")
 			},
 		},
 	}
@@ -538,8 +544,8 @@ func TestListAssignedEmployees(t *testing.T) {
 			name: "list assigned employees with results",
 			setup: func(ctx context.Context, qtx *Queries) ListAssignedEmployeesParams {
 				client := createRandomClientDetails(ctx, qtx)
-				_ = createRandomAssignedEmployee(ctx, qtx)
-				_ = createRandomAssignedEmployee(ctx, qtx)
+				_ = createRandomAssignedEmployee(ctx, qtx, client.ID)
+				_ = createRandomAssignedEmployee(ctx, qtx, client.ID)
 				return ListAssignedEmployeesParams{
 					ClientID: client.ID,
 					Limit:    10,
@@ -594,7 +600,7 @@ func TestGetClientRelatedEmails(t *testing.T) {
 			name: "get related emails with data",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
-				employee := createRandomEmployee(ctx, qtx)
+				employee := createRandomEmployeeProfile(ctx, qtx)
 				_, _ = qtx.AssignEmployee(ctx, AssignEmployeeParams{ClientID: client.ID, EmployeeID: employee.ID, StartDate: pgtype.Date{Time: time.Now(), Valid: true}, Role: "Primary"})
 				_, _ = qtx.CreateEmemrgencyContact(ctx, CreateEmemrgencyContactParams{ClientID: client.ID, FirstName: util.StringPtr("Contact"), LastName: util.StringPtr("One"), Email: util.StringPtr(util.RandomEmail()), MedicalReports: true, IncidentsReports: false, GoalsReports: false})
 				return client.ID
@@ -681,10 +687,10 @@ func TestGetClientSender(t *testing.T) {
 }
 
 // Helpers
-func createRandomEmergencyContact(ctx context.Context, qtx *Queries) ClientEmergencyContact {
-	client := createRandomClientDetails(ctx, qtx)
+func createRandomEmergencyContact(ctx context.Context, qtx *Queries, clientID uuid.UUID) ClientEmergencyContact {
+
 	params := CreateEmemrgencyContactParams{
-		ClientID:         client.ID,
+		ClientID:         clientID,
 		FirstName:        util.StringPtr(util.RandomString(5)),
 		LastName:         util.StringPtr(util.RandomString(5)),
 		Email:            util.StringPtr(util.RandomEmail()),
@@ -702,11 +708,10 @@ func createRandomEmergencyContact(ctx context.Context, qtx *Queries) ClientEmerg
 	return contact
 }
 
-func createRandomAssignedEmployee(ctx context.Context, qtx *Queries) AssignEmployeeRow {
-	employee := createRandomEmployee(ctx, qtx)
-	client := createRandomClientDetails(ctx, qtx)
+func createRandomAssignedEmployee(ctx context.Context, qtx *Queries, clientID uuid.UUID) AssignEmployeeRow {
+	employee := createRandomEmployeeProfile(ctx, qtx)
 	params := AssignEmployeeParams{
-		ClientID:   client.ID,
+		ClientID:   clientID,
 		EmployeeID: employee.ID,
 		StartDate:  pgtype.Date{Time: time.Now(), Valid: true},
 		Role:       "Random Role",

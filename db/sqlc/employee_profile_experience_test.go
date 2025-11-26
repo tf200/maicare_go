@@ -23,7 +23,7 @@ func TestAddEmployeeExperience(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeExperienceParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Software Engineer",
 					CompanyName: "Tech Corp",
 					StartDate: pgtype.Date{
@@ -54,7 +54,7 @@ func TestAddEmployeeExperience(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeExperienceParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Senior Developer",
 					CompanyName: "Innovation Labs",
 					StartDate: pgtype.Date{
@@ -80,7 +80,7 @@ func TestAddEmployeeExperience(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeExperienceParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Registered Nurse",
 					CompanyName: "City Medical Center",
 					StartDate: pgtype.Date{
@@ -105,7 +105,7 @@ func TestAddEmployeeExperience(t *testing.T) {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				longDesc := "Responsible for managing the entire software development lifecycle including requirements gathering, architecture design, implementation, testing, and deployment. Worked with cross-functional teams to deliver high-quality solutions."
 				return AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Project Manager",
 					CompanyName: "Global Consulting Group",
 					StartDate: pgtype.Date{
@@ -129,7 +129,7 @@ func TestAddEmployeeExperience(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeExperienceParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Solutions Architect",
 					CompanyName: "O'Reilly & Associates, Inc.",
 					StartDate: pgtype.Date{
@@ -228,7 +228,7 @@ func TestListEmployeeExperience(t *testing.T) {
 
 				// Create first experience
 				_, err := qtx.AddEmployeeExperience(ctx, AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Junior Developer",
 					CompanyName: "StartUp Inc",
 					StartDate: pgtype.Date{
@@ -245,7 +245,7 @@ func TestListEmployeeExperience(t *testing.T) {
 
 				// Create second experience
 				_, err = qtx.AddEmployeeExperience(ctx, AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Mid-level Developer",
 					CompanyName: "Tech Solutions",
 					StartDate: pgtype.Date{
@@ -262,7 +262,7 @@ func TestListEmployeeExperience(t *testing.T) {
 
 				// Create third experience
 				_, err = qtx.AddEmployeeExperience(ctx, AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Senior Developer",
 					CompanyName: "Enterprise Corp",
 					StartDate: pgtype.Date{
@@ -277,7 +277,7 @@ func TestListEmployeeExperience(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, experiences []EmployeeExperience, err error) {
 				require.NoError(t, err, "ListEmployeeExperience() should not error")
@@ -304,7 +304,7 @@ func TestListEmployeeExperience(t *testing.T) {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 
 				_, err := qtx.AddEmployeeExperience(ctx, AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Healthcare Coordinator",
 					CompanyName: "Medical Clinic",
 					StartDate: pgtype.Date{
@@ -319,7 +319,7 @@ func TestListEmployeeExperience(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, experiences []EmployeeExperience, err error) {
 				require.NoError(t, err, "ListEmployeeExperience() should not error")
@@ -511,7 +511,7 @@ func TestUpdateEmployeeExperience(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) UpdateEmployeeExperienceParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				exp, err := qtx.AddEmployeeExperience(ctx, AddEmployeeExperienceParams{
-					EmployeeID:  employee.UserID,
+					EmployeeID:  employee.ID,
 					JobTitle:    "Developer",
 					CompanyName: "Company",
 					StartDate: pgtype.Date{
@@ -566,7 +566,7 @@ func createRandomExperience(ctx context.Context, qtx *Queries) EmployeeExperienc
 	employee := createRandomEmployeeProfile(ctx, qtx)
 
 	exp, err := qtx.AddEmployeeExperience(ctx, AddEmployeeExperienceParams{
-		EmployeeID:  employee.UserID,
+		EmployeeID:  employee.ID,
 		JobTitle:    "Software Engineer",
 		CompanyName: "Tech Corp",
 		StartDate: pgtype.Date{

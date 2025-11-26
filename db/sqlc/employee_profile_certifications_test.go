@@ -23,7 +23,7 @@ func TestAddEmployeeCertification(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeCertificationParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeCertificationParams{
-					EmployeeID: employee.UserID,
+					EmployeeID: employee.ID,
 					Name:       "AWS Certified Solutions Architect",
 					IssuedBy:   "Amazon Web Services",
 					DateIssued: pgtype.Date{
@@ -46,7 +46,7 @@ func TestAddEmployeeCertification(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeCertificationParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeCertificationParams{
-					EmployeeID: employee.UserID,
+					EmployeeID: employee.ID,
 					Name:       "Certified Nursing Assistant",
 					IssuedBy:   "National Healthcare Board",
 					DateIssued: pgtype.Date{
@@ -65,7 +65,7 @@ func TestAddEmployeeCertification(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEmployeeCertificationParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEmployeeCertificationParams{
-					EmployeeID: employee.UserID,
+					EmployeeID: employee.ID,
 					Name:       "Microsoft Certified: Azure Solutions Architect Expert",
 					IssuedBy:   "Microsoft Learning",
 					DateIssued: pgtype.Date{
@@ -158,7 +158,7 @@ func TestListEmployeeCertifications(t *testing.T) {
 
 				// Create multiple certifications
 				_, err := qtx.AddEmployeeCertification(ctx, AddEmployeeCertificationParams{
-					EmployeeID: employee.UserID,
+					EmployeeID: employee.ID,
 					Name:       "AWS Certified Solutions Architect",
 					IssuedBy:   "Amazon Web Services",
 					DateIssued: pgtype.Date{
@@ -169,7 +169,7 @@ func TestListEmployeeCertifications(t *testing.T) {
 				require.NoError(t, err)
 
 				_, err = qtx.AddEmployeeCertification(ctx, AddEmployeeCertificationParams{
-					EmployeeID: employee.UserID,
+					EmployeeID: employee.ID,
 					Name:       "Kubernetes Administrator",
 					IssuedBy:   "Cloud Native Computing Foundation",
 					DateIssued: pgtype.Date{
@@ -179,7 +179,7 @@ func TestListEmployeeCertifications(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, certs []Certification, err error) {
 				require.NoError(t, err, "ListEmployeeCertifications() should not error")
@@ -192,7 +192,7 @@ func TestListEmployeeCertifications(t *testing.T) {
 			name: "list certifications for employee with no certifications",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				employee := createRandomEmployeeProfile(ctx, qtx)
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, certs []Certification, err error) {
 				require.NoError(t, err, "ListEmployeeCertifications() should not error")
@@ -205,7 +205,7 @@ func TestListEmployeeCertifications(t *testing.T) {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 
 				_, err := qtx.AddEmployeeCertification(ctx, AddEmployeeCertificationParams{
-					EmployeeID: employee.UserID,
+					EmployeeID: employee.ID,
 					Name:       "Certified Nursing Assistant",
 					IssuedBy:   "National Healthcare Board",
 					DateIssued: pgtype.Date{
@@ -215,7 +215,7 @@ func TestListEmployeeCertifications(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, certs []Certification, err error) {
 				require.NoError(t, err, "ListEmployeeCertifications() should not error")
@@ -362,7 +362,7 @@ func createRandomCertification(ctx context.Context, qtx *Queries) Certification 
 	employee := createRandomEmployeeProfile(ctx, qtx)
 
 	cert, err := qtx.AddEmployeeCertification(ctx, AddEmployeeCertificationParams{
-		EmployeeID: employee.UserID,
+		EmployeeID: employee.ID,
 		Name:       "AWS Certified Solutions Architect",
 		IssuedBy:   "Amazon Web Services",
 		DateIssued: pgtype.Date{

@@ -21,6 +21,7 @@ func (s *employeeService) AddEducationToEmployeeProfile(
 	parsedStartDate, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEducationToEmployeeProfile",
 			"Failed to parse start date",
@@ -32,6 +33,7 @@ func (s *employeeService) AddEducationToEmployeeProfile(
 	parsedEndDate, err := time.Parse("2006-01-02", req.EndDate)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEducationToEmployeeProfile",
 			"Failed to parse end date",
@@ -52,6 +54,7 @@ func (s *employeeService) AddEducationToEmployeeProfile(
 	education, err := s.Store.AddEducationToEmployeeProfile(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEducationToEmployeeProfile",
 			"Failed to add education to employee profile",
@@ -72,6 +75,7 @@ func (s *employeeService) AddEducationToEmployeeProfile(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"AddEducationToEmployeeProfile",
 		"Successfully added education to employee profile",
@@ -88,6 +92,7 @@ func (s *employeeService) ListEmployeeEducation(
 	educations, err := s.Store.ListEducations(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"ListEmployeeEducation",
 			"Failed to list employee education",
@@ -111,6 +116,7 @@ func (s *employeeService) ListEmployeeEducation(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"ListEmployeeEducation",
 		"Successfully listed employee education",
@@ -131,6 +137,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 		parsedStartDate, err = time.Parse("2006-01-02", *req.StartDate)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"UpdateEmployeeEducation",
 				"Failed to parse start date",
@@ -145,6 +152,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 		parsedEndDate, err = time.Parse("2006-01-02", *req.EndDate)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"UpdateEmployeeEducation",
 				"Failed to parse end date",
@@ -165,6 +173,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateEmployeeEducation",
 			"Failed to update employee education",
@@ -184,6 +193,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"UpdateEmployeeEducation",
 		"Successfully updated employee education",
@@ -199,6 +209,7 @@ func (s *employeeService) DeleteEmployeeEducation(
 	education, err := s.Store.DeleteEmployeeEducation(ctx, educationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"DeleteEmployeeEducation",
 			"Failed to delete employee education",
@@ -218,6 +229,7 @@ func (s *employeeService) DeleteEmployeeEducation(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"DeleteEmployeeEducation",
 		"Successfully deleted employee education",

@@ -119,11 +119,12 @@ func seedLocations(ctx context.Context, store *db.Store, organisations []db.Orga
 			locationType := locationTypes[j%len(locationTypes)]
 
 			locationName := gofakeit.Word()
-			if locationType == db.LocationTypeEnumCareHome {
+			switch locationType {
+			case db.LocationTypeEnumCareHome:
 				locationName += " Care Home"
-			} else if locationType == db.LocationTypeEnumOffice {
+			case db.LocationTypeEnumOffice:
 				locationName += " Office"
-			} else {
+			default:
 				locationName += " Facility"
 			}
 

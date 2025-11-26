@@ -21,6 +21,7 @@ func (s *employeeService) AddEmployeeExperience(
 	parsedStartDate, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeExperience",
 			"Failed to parse start date",
@@ -32,6 +33,7 @@ func (s *employeeService) AddEmployeeExperience(
 	parsedEndDate, err := time.Parse("2006-01-02", req.EndDate)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeExperience",
 			"Failed to parse end date",
@@ -52,6 +54,7 @@ func (s *employeeService) AddEmployeeExperience(
 	experience, err := s.Store.AddEmployeeExperience(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"AddEmployeeExperience",
 			"Failed to add experience to employee profile",
@@ -73,6 +76,7 @@ func (s *employeeService) AddEmployeeExperience(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"AddEmployeeExperience",
 		"Successfully added experience to employee profile",
@@ -89,6 +93,7 @@ func (s *employeeService) ListEmployeeExperience(
 	experiences, err := s.Store.ListEmployeeExperience(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"ListEmployeeExperience",
 			"Failed to list employee experience",
@@ -113,6 +118,7 @@ func (s *employeeService) ListEmployeeExperience(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"ListEmployeeExperience",
 		"Successfully listed employee experience",
@@ -133,6 +139,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 		parsedStartDate, err = time.Parse("2006-01-02", *req.StartDate)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"UpdateEmployeeExperience",
 				"Failed to parse start date",
@@ -147,6 +154,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 		parsedEndDate, err = time.Parse("2006-01-02", *req.EndDate)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
+				ctx,
 				logger.LogLevelError,
 				"UpdateEmployeeExperience",
 				"Failed to parse end date",
@@ -167,6 +175,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"UpdateEmployeeExperience",
 			"Failed to update employee experience",
@@ -188,6 +197,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"UpdateEmployeeExperience",
 		"Successfully updated employee experience",
@@ -203,6 +213,7 @@ func (s *employeeService) DeleteEmployeeExperience(
 	experience, err := s.Store.DeleteEmployeeExperience(ctx, experienceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
+			ctx,
 			logger.LogLevelError,
 			"DeleteEmployeeExperience",
 			"Failed to delete employee experience",
@@ -224,6 +235,7 @@ func (s *employeeService) DeleteEmployeeExperience(
 	}
 
 	s.Logger.LogBusinessEvent(
+		ctx,
 		logger.LogLevelInfo,
 		"DeleteEmployeeExperience",
 		"Successfully deleted employee experience",

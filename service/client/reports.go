@@ -29,7 +29,7 @@ func (s *clientService) CreateProgressReport(ctx context.Context, req *CreatePro
 
 	report, err := s.Store.CreateProgressReport(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "CreateProgressReport", "Failed to create progress report", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateProgressReport", "Failed to create progress report", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &CreateProgressReportResponse{
@@ -55,7 +55,7 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 	}
 	reports, err := s.Store.ListProgressReports(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListProgressReports", "Failed to list progress reports", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListProgressReports", "Failed to list progress reports", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 	if len(reports) == 0 {
@@ -89,7 +89,7 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 func (s *clientService) GetProgressReport(ctx context.Context, reportID int64) (*GetProgressReportResponse, error) {
 	report, err := s.Store.GetProgressReport(ctx, reportID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetProgressReport", "Failed to get progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetProgressReport", "Failed to get progress report", zap.Int64("report_id", reportID), zap.Error(err))
 		return nil, err
 	}
 	return &GetProgressReportResponse{
@@ -121,7 +121,7 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 
 	report, err := s.Store.UpdateProgressReport(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateProgressReport", "Failed to update progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateProgressReport", "Failed to update progress report", zap.Int64("report_id", reportID), zap.Error(err))
 		return nil, err
 	}
 	return &GetProgressReportResponse{
@@ -140,7 +140,7 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 func (s *clientService) DeleteProgressReport(ctx context.Context, reportID int64) error {
 	err := s.Store.DeleteProgressReport(ctx, reportID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteProgressReport", "Failed to delete progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteProgressReport", "Failed to delete progress report", zap.Int64("report_id", reportID), zap.Error(err))
 		return err
 	}
 	return nil
@@ -156,7 +156,7 @@ func (s *clientService) GenerateAutoReports(ctx context.Context, req *GenerateAu
 	}
 	reports, err := s.Store.GetProgressReportsByDateRange(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateAutoReports", "Failed to get progress reports for auto report generation", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAutoReports", "Failed to get progress reports for auto report generation", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -175,7 +175,7 @@ func (s *clientService) GenerateAutoReports(ctx context.Context, req *GenerateAu
 		Text: text,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GenerateAutoReports", "Failed to generate auto reports via gRPC", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAutoReports", "Failed to generate auto reports via gRPC", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -193,7 +193,7 @@ func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uu
 	}
 	createdProgressReport, err := s.Store.CreateAiGeneratedReport(ctx, progressReport)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.Int64("report_id", reportID), zap.Error(err))
 		return nil, err
 	}
 	return &ConfirmProgressReportResponse{
@@ -216,7 +216,7 @@ func (s *clientService) ListAiGeneratedReports(ctx *gin.Context, req *ListAiGene
 	}
 	reports, err := s.Store.ListAiGeneratedReports(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "ListAiGeneratedReports", "Failed to list AI generated reports", zap.String("client_id", clientID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAiGeneratedReports", "Failed to list AI generated reports", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 

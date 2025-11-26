@@ -509,15 +509,18 @@ func TestSetClientProfilePicture(t *testing.T) {
 func TestCreateClientDocument(t *testing.T) {
 	tests := []struct {
 		name   string
-		params CreateClientDocumentParams
+		setup  func(ctx context.Context, qtx *Queries) CreateClientDocumentParams
 		checks func(t *testing.T, doc ClientDocument)
 	}{
 		{
 			name: "create registration form document",
-			params: CreateClientDocumentParams{
-				ClientID:       uuid.New(),
-				AttachmentUuid: nil,
-				Label:          ClientDocumentLabelEnumRegistrationForm,
+			setup: func(ctx context.Context, qtx *Queries) CreateClientDocumentParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientDocumentParams{
+					ClientID:       client.ID,
+					AttachmentUuid: nil,
+					Label:          ClientDocumentLabelEnumRegistrationForm,
+				}
 			},
 			checks: func(t *testing.T, doc ClientDocument) {
 				require.Nil(t, doc.AttachmentUuid)
@@ -526,10 +529,13 @@ func TestCreateClientDocument(t *testing.T) {
 		},
 		{
 			name: "create intake form document",
-			params: CreateClientDocumentParams{
-				ClientID:       uuid.New(),
-				AttachmentUuid: nil,
-				Label:          ClientDocumentLabelEnumIntakeForm,
+			setup: func(ctx context.Context, qtx *Queries) CreateClientDocumentParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientDocumentParams{
+					ClientID:       client.ID,
+					AttachmentUuid: nil,
+					Label:          ClientDocumentLabelEnumIntakeForm,
+				}
 			},
 			checks: func(t *testing.T, doc ClientDocument) {
 				require.Equal(t, ClientDocumentLabelEnumIntakeForm, doc.Label)
@@ -537,13 +543,16 @@ func TestCreateClientDocument(t *testing.T) {
 		},
 		{
 			name: "create document with attachment UUID",
-			params: CreateClientDocumentParams{
-				ClientID: uuid.New(),
-				AttachmentUuid: func() *uuid.UUID {
-					u := uuid.New()
-					return &u
-				}(),
-				Label: ClientDocumentLabelEnumConsentForm,
+			setup: func(ctx context.Context, qtx *Queries) CreateClientDocumentParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientDocumentParams{
+					ClientID: client.ID,
+					AttachmentUuid: func() *uuid.UUID {
+						u := uuid.New()
+						return &u
+					}(),
+					Label: ClientDocumentLabelEnumConsentForm,
+				}
 			},
 			checks: func(t *testing.T, doc ClientDocument) {
 				require.NotNil(t, doc.AttachmentUuid)
@@ -561,8 +570,9 @@ func TestCreateClientDocument(t *testing.T) {
 			defer tx.Rollback(ctx)
 
 			qtx := testQueries.WithTx(tx)
+			params := tt.setup(ctx, qtx)
 
-			doc, err := qtx.CreateClientDocument(ctx, tt.params)
+			doc, err := qtx.CreateClientDocument(ctx, params)
 			require.NoError(t, err, "CreateClientDocument() should not error")
 
 			tt.checks(t, doc)
@@ -624,16 +634,19 @@ func TestDeleteClientDocument(t *testing.T) {
 func TestCreateClientStatusHistory(t *testing.T) {
 	tests := []struct {
 		name   string
-		params CreateClientStatusHistoryParams
+		setup  func(ctx context.Context, qtx *Queries) CreateClientStatusHistoryParams
 		checks func(t *testing.T, history ClientStatusHistory)
 	}{
 		{
 			name: "create status history with old and new status",
-			params: CreateClientStatusHistoryParams{
-				ClientID:  uuid.New(),
-				OldStatus: util.StringPtr("On Waiting List"),
-				NewStatus: "In Care",
-				Reason:    util.StringPtr("Client accepted into program"),
+			setup: func(ctx context.Context, qtx *Queries) CreateClientStatusHistoryParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientStatusHistoryParams{
+					ClientID:  client.ID,
+					OldStatus: util.StringPtr("On Waiting List"),
+					NewStatus: "In Care",
+					Reason:    util.StringPtr("Client accepted into program"),
+				}
 			},
 			checks: func(t *testing.T, history ClientStatusHistory) {
 				require.NotNil(t, history.OldStatus)
@@ -644,11 +657,14 @@ func TestCreateClientStatusHistory(t *testing.T) {
 		},
 		{
 			name: "create status history with nil old status",
-			params: CreateClientStatusHistoryParams{
-				ClientID:  uuid.New(),
-				OldStatus: nil,
-				NewStatus: "On Waiting List",
-				Reason:    util.StringPtr("Initial status assignment"),
+			setup: func(ctx context.Context, qtx *Queries) CreateClientStatusHistoryParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientStatusHistoryParams{
+					ClientID:  client.ID,
+					OldStatus: nil,
+					NewStatus: "On Waiting List",
+					Reason:    util.StringPtr("Initial status assignment"),
+				}
 			},
 			checks: func(t *testing.T, history ClientStatusHistory) {
 				require.Nil(t, history.OldStatus)
@@ -657,11 +673,14 @@ func TestCreateClientStatusHistory(t *testing.T) {
 		},
 		{
 			name: "create status history with nil reason",
-			params: CreateClientStatusHistoryParams{
-				ClientID:  uuid.New(),
-				OldStatus: util.StringPtr("In Care"),
-				NewStatus: "Out Of Care",
-				Reason:    nil,
+			setup: func(ctx context.Context, qtx *Queries) CreateClientStatusHistoryParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientStatusHistoryParams{
+					ClientID:  client.ID,
+					OldStatus: util.StringPtr("In Care"),
+					NewStatus: "Out Of Care",
+					Reason:    nil,
+				}
 			},
 			checks: func(t *testing.T, history ClientStatusHistory) {
 				require.Nil(t, history.Reason)
@@ -679,8 +698,9 @@ func TestCreateClientStatusHistory(t *testing.T) {
 			defer tx.Rollback(ctx)
 
 			qtx := testQueries.WithTx(tx)
+			params := tt.setup(ctx, qtx)
 
-			history, err := qtx.CreateClientStatusHistory(ctx, tt.params)
+			history, err := qtx.CreateClientStatusHistory(ctx, params)
 			require.NoError(t, err, "CreateClientStatusHistory() should not error")
 
 			tt.checks(t, history)
@@ -697,10 +717,11 @@ func TestListClientStatusHistory(t *testing.T) {
 		{
 			name: "list status history for client with multiple entries",
 			setup: func(ctx context.Context, qtx *Queries) (uuid.UUID, int32, int32) {
-				clientID := uuid.New()
+				client := createRandomClientDetails(ctx, qtx)
+				clientID := client.ID
 				for i := 0; i < 3; i++ {
 					_, _ = qtx.CreateClientStatusHistory(ctx, CreateClientStatusHistoryParams{
-						ClientID:  clientID,
+						ClientID:  client.ID,
 						OldStatus: nil,
 						NewStatus: "In Care",
 						Reason:    util.StringPtr("Test"),
@@ -716,15 +737,15 @@ func TestListClientStatusHistory(t *testing.T) {
 		{
 			name: "list status history with pagination",
 			setup: func(ctx context.Context, qtx *Queries) (uuid.UUID, int32, int32) {
-				clientID := uuid.New()
+				client := createRandomClientDetails(ctx, qtx)
 				for i := 0; i < 5; i++ {
 					_, _ = qtx.CreateClientStatusHistory(ctx, CreateClientStatusHistoryParams{
-						ClientID:  clientID,
+						ClientID:  client.ID,
 						OldStatus: nil,
 						NewStatus: "In Care",
 					})
 				}
-				return clientID, 2, 0
+				return client.ID, 2, 0
 			},
 			checks: func(t *testing.T, histories []ClientStatusHistory, err error) {
 				require.NoError(t, err)
@@ -832,21 +853,24 @@ func TestCreateSchedueledClientStatusChange(t *testing.T) {
 func TestCreateClientLocationTransfer(t *testing.T) {
 	tests := []struct {
 		name   string
-		params CreateClientLocationTransferParams
+		setup  func(ctx context.Context, qtx *Queries) CreateClientLocationTransferParams
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "successful location transfer creation",
-			params: CreateClientLocationTransferParams{
-				ClientID:       uuid.New(),
-				FromLocationID: util.IntPtr(1),
-				ToLocationID:   util.IntPtr(2),
-				RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
-				NewMentorID: func() *uuid.UUID {
-					u := uuid.New()
-					return &u
-				}(),
-				Reason: util.StringPtr("Better location for client"),
+			setup: func(ctx context.Context, qtx *Queries) CreateClientLocationTransferParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientLocationTransferParams{
+					ClientID:       client.ID,
+					FromLocationID: util.IntPtr(1),
+					ToLocationID:   util.IntPtr(2),
+					RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
+					NewMentorID: func() *uuid.UUID {
+						u := uuid.New()
+						return &u
+					}(),
+					Reason: util.StringPtr("Better location for client"),
+				}
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "CreateClientLocationTransfer() should not error")
@@ -854,13 +878,16 @@ func TestCreateClientLocationTransfer(t *testing.T) {
 		},
 		{
 			name: "location transfer with minimal fields",
-			params: CreateClientLocationTransferParams{
-				ClientID:       uuid.New(),
-				FromLocationID: nil,
-				ToLocationID:   nil,
-				RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
-				NewMentorID:    nil,
-				Reason:         nil,
+			setup: func(ctx context.Context, qtx *Queries) CreateClientLocationTransferParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientLocationTransferParams{
+					ClientID:       client.ID,
+					FromLocationID: nil,
+					ToLocationID:   nil,
+					RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
+					NewMentorID:    nil,
+					Reason:         nil,
+				}
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -868,13 +895,16 @@ func TestCreateClientLocationTransfer(t *testing.T) {
 		},
 		{
 			name: "location transfer with reason but no new mentor",
-			params: CreateClientLocationTransferParams{
-				ClientID:       uuid.New(),
-				FromLocationID: util.IntPtr(3),
-				ToLocationID:   util.IntPtr(4),
-				RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
-				NewMentorID:    nil,
-				Reason:         util.StringPtr("Relocation"),
+			setup: func(ctx context.Context, qtx *Queries) CreateClientLocationTransferParams {
+				client := createRandomClientDetails(ctx, qtx)
+				return CreateClientLocationTransferParams{
+					ClientID:       client.ID,
+					FromLocationID: util.IntPtr(3),
+					ToLocationID:   util.IntPtr(4),
+					RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
+					NewMentorID:    nil,
+					Reason:         util.StringPtr("Relocation"),
+				}
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -892,7 +922,8 @@ func TestCreateClientLocationTransfer(t *testing.T) {
 
 			qtx := testQueries.WithTx(tx)
 
-			err = qtx.CreateClientLocationTransfer(ctx, tt.params)
+			params := tt.setup(ctx, qtx)
+			err = qtx.CreateClientLocationTransfer(ctx, params)
 			tt.checks(t, err)
 		})
 	}

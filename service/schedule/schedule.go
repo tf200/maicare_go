@@ -44,7 +44,7 @@ func (s *scheduleService) GetMonthlySchedulesByLocation(ctx context.Context, loc
 	}
 	schedules, err := s.Store.GetMonthlySchedulesByLocation(ctx, atg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetMonthlySchedulesByLocation", "Failed to get monthly schedules by location", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetMonthlySchedulesByLocation", "Failed to get monthly schedules by location", zap.Error(err))
 		return nil, fmt.Errorf("failed to get monthly schedules by location: %w", err)
 	}
 
@@ -93,7 +93,7 @@ func (s *scheduleService) GetDailySchedulesByLocation(ctx context.Context, locat
 	}
 	schedules, err := s.Store.GetDailySchedulesByLocation(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetDailySchedulesByLocation", "Failed to get daily schedules by location", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetDailySchedulesByLocation", "Failed to get daily schedules by location", zap.Error(err))
 		return nil, fmt.Errorf("failed to get daily schedules by location: %w", err)
 	}
 
@@ -136,7 +136,7 @@ func (s *scheduleService) GetDailySchedulesByLocation(ctx context.Context, locat
 func (s *scheduleService) GetScheduleByID(ctx context.Context, scheduleID uuid.UUID) (*GetScheduleByIdResponse, error) {
 	schedule, err := s.Store.GetScheduleById(ctx, scheduleID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "GetScheduleByID", "Failed to get schedule by ID", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetScheduleByID", "Failed to get schedule by ID", zap.Error(err))
 		return nil, fmt.Errorf("failed to get schedule by ID: %w", err)
 	}
 	return &GetScheduleByIdResponse{
@@ -164,7 +164,7 @@ func (s *scheduleService) UpdateSchedule(ctx context.Context, scheduleID uuid.UU
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("schedule not found")
 		}
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "UpdateSchedule", "Failed to fetch existing schedule", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateSchedule", "Failed to fetch existing schedule", zap.Error(err))
 		return nil, fmt.Errorf("failed to fetch existing schedule: %w", err)
 	}
 
@@ -193,7 +193,7 @@ func (s *scheduleService) UpdateSchedule(ctx context.Context, scheduleID uuid.UU
 func (s *scheduleService) DeleteSchedule(ctx context.Context, scheduleID uuid.UUID) error {
 	err := s.Store.DeleteSchedule(ctx, scheduleID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "DeleteSchedule", "Failed to delete schedule", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteSchedule", "Failed to delete schedule", zap.Error(err))
 		return fmt.Errorf("failed to delete schedule: %w", err)
 	}
 	return nil
@@ -227,7 +227,7 @@ func (s *scheduleService) validatePresetSchedule(req *CreateScheduleRequest) err
 func (s *scheduleService) createCustomSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
 	err := s.validateCustomSchedule(req)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createCustomSchedule", "Custom schedule validation failed", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createCustomSchedule", "Custom schedule validation failed", zap.Error(err))
 		return nil, err
 	}
 	arg := db.CreateScheduleParams{
@@ -242,7 +242,7 @@ func (s *scheduleService) createCustomSchedule(ctx context.Context, employeeID u
 	}
 	schedule, err := s.Store.CreateSchedule(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createCustomSchedule", "Failed to create custom schedule", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createCustomSchedule", "Failed to create custom schedule", zap.Error(err))
 		return nil, fmt.Errorf("failed to create custom schedule: %w", err)
 	}
 	return &CreateScheduleResponse{
@@ -262,23 +262,23 @@ func (s *scheduleService) createCustomSchedule(ctx context.Context, employeeID u
 func (s *scheduleService) createPresetSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) (*CreateScheduleResponse, error) {
 	err := s.validatePresetSchedule(req)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createPresetSchedule", "Preset schedule validation failed", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Preset schedule validation failed", zap.Error(err))
 		return nil, err
 	}
 	locationShift, err := s.Store.GetShiftByID(ctx, *req.LocationShiftID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createPresetSchedule", "Failed to fetch location shift", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Failed to fetch location shift", zap.Error(err))
 		return nil, fmt.Errorf("failed to fetch location shift: %w", err)
 	}
 
 	if locationShift.LocationID != req.LocationID {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createPresetSchedule", "Location shift does not belong to the specified location", zap.Int64("location_shift_id", *req.LocationShiftID), zap.Int64("location_id", req.LocationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Location shift does not belong to the specified location", zap.Int64("location_shift_id", *req.LocationShiftID), zap.Int64("location_id", req.LocationID))
 		return nil, fmt.Errorf("location shift does not belong to the specified location")
 	}
 
 	shiftDate, err := time.Parse("2006-01-02", *req.ShiftDate)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createPresetSchedule", "Invalid shift_date format", zap.String("shift_date", *req.ShiftDate), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Invalid shift_date format", zap.String("shift_date", *req.ShiftDate), zap.Error(err))
 		return nil, fmt.Errorf("invalid shift_date format: %w", err)
 	}
 
@@ -315,7 +315,7 @@ func (s *scheduleService) createPresetSchedule(ctx context.Context, employeeID u
 	}
 	schedule, err := s.Store.CreateSchedule(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "createPresetSchedule", "Failed to create preset schedule", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Failed to create preset schedule", zap.Error(err))
 		return nil, fmt.Errorf("failed to create preset schedule: %w", err)
 	}
 	return &CreateScheduleResponse{
@@ -349,7 +349,7 @@ func (s *scheduleService) sendNotificationForNewSchedule(ctx context.Context, sc
 		Message:          notifData.NewScheduleMessage(),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "sendNotificationForNewSchedule", "Failed to enqueue new schedule notification", zap.Error(err), zap.String("schedule_id", scheduleID.String()))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "sendNotificationForNewSchedule", "Failed to enqueue new schedule notification", zap.Error(err), zap.String("schedule_id", scheduleID.String()))
 	}
 }
 
@@ -382,7 +382,7 @@ func (s *scheduleService) updateCustomSchedule(ctx context.Context, scheduleID u
 	// Validate custom schedule update
 	err := s.validateCustomScheduleUpdate(req)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updateCustomSchedule", "Custom schedule validation failed", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updateCustomSchedule", "Custom schedule validation failed", zap.Error(err))
 		return nil, err
 	}
 
@@ -412,7 +412,7 @@ func (s *scheduleService) updateCustomSchedule(ctx context.Context, scheduleID u
 
 	// Validate datetime order
 	if startDatetime.After(endDatetime) {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updateCustomSchedule", "start_datetime must be before end_datetime", zap.Time("start", startDatetime), zap.Time("end", endDatetime))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updateCustomSchedule", "start_datetime must be before end_datetime", zap.Time("start", startDatetime), zap.Time("end", endDatetime))
 		return nil, fmt.Errorf("start_datetime must be before end_datetime")
 	}
 
@@ -429,7 +429,7 @@ func (s *scheduleService) updateCustomSchedule(ctx context.Context, scheduleID u
 
 	schedule, err := s.Store.UpdateSchedule(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updateCustomSchedule", "Failed to update custom schedule", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updateCustomSchedule", "Failed to update custom schedule", zap.Error(err))
 		return nil, fmt.Errorf("failed to update custom schedule: %w", err)
 	}
 
@@ -475,7 +475,7 @@ func (s *scheduleService) updatePresetSchedule(ctx context.Context, scheduleID u
 	} else if existingSchedule.LocationShiftID != nil {
 		shiftIDToUse = *existingSchedule.LocationShiftID
 	} else {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updatePresetSchedule", "location_shift_id is required for preset shift schedules")
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "location_shift_id is required for preset shift schedules")
 		return nil, fmt.Errorf("location_shift_id is required for preset shift schedules")
 	}
 
@@ -489,20 +489,20 @@ func (s *scheduleService) updatePresetSchedule(ctx context.Context, scheduleID u
 	// Get the location_shift details
 	locationShift, err := s.Store.GetShiftByID(ctx, shiftIDToUse)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updatePresetSchedule", "Failed to fetch location shift", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "Failed to fetch location shift", zap.Error(err))
 		return nil, fmt.Errorf("invalid location_shift_id: %w", err)
 	}
 
 	// Verify the shift belongs to the specified location
 	if locationShift.LocationID != locationID {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updatePresetSchedule", "Location shift does not belong to the specified location", zap.Int64("location_shift_id", shiftIDToUse), zap.Int64("location_id", locationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "Location shift does not belong to the specified location", zap.Int64("location_shift_id", shiftIDToUse), zap.Int64("location_id", locationID))
 		return nil, fmt.Errorf("location_shift_id does not belong to the specified location")
 	}
 
 	// Parse the shift date
 	shiftDate, err := time.Parse("2006-01-02", shiftDateToUse)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updatePresetSchedule", "Invalid shift_date format", zap.String("shift_date", shiftDateToUse), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "Invalid shift_date format", zap.String("shift_date", shiftDateToUse), zap.Error(err))
 		return nil, fmt.Errorf("invalid shift_date format, expected YYYY-MM-DD: %w", err)
 	}
 
@@ -541,7 +541,7 @@ func (s *scheduleService) updatePresetSchedule(ctx context.Context, scheduleID u
 
 	schedule, err := s.Store.UpdateSchedule(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "updatePresetSchedule", "Failed to update preset schedule", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "Failed to update preset schedule", zap.Error(err))
 		return nil, fmt.Errorf("failed to update preset schedule: %w", err)
 	}
 
@@ -583,6 +583,6 @@ func (s *scheduleService) sendNotificationForUpdatedSchedule(ctx context.Context
 		Message:          notifData.UpdatedScheduleMessage(),
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(logger.LogLevelError, "sendNotificationForUpdatedSchedule", "Failed to enqueue notification task", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "sendNotificationForUpdatedSchedule", "Failed to enqueue notification task", zap.Error(err))
 	}
 }

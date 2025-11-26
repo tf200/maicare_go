@@ -414,7 +414,7 @@ func TestUpdateOrganisation(t *testing.T) {
 				}
 			},
 			checks: func(t *testing.T, err error) {
-				require.NoError(t, err, "UpdateOrganisation() should not error even for non-existent organisation")
+				require.Error(t, err, "UpdateOrganisation() should error for non-existent organisation")
 			},
 		},
 	}
@@ -430,7 +430,7 @@ func TestUpdateOrganisation(t *testing.T) {
 			qtx := testQueries.WithTx(tx)
 
 			params := tt.setup(ctx, qtx)
-			_,err = qtx.UpdateOrganisation(ctx, params)
+			_, err = qtx.UpdateOrganisation(ctx, params)
 			tt.checks(t, err)
 		})
 	}
@@ -713,7 +713,7 @@ func TestUpdateLocation(t *testing.T) {
 				}
 			},
 			checks: func(t *testing.T, err error) {
-				require.NoError(t, err, "UpdateLocation() should not error even for non-existent location")
+				require.Error(t, err, "UpdateLocation() should error for non-existent location")
 			},
 		},
 	}

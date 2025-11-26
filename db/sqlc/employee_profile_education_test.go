@@ -23,7 +23,7 @@ func TestAddEducationToEmployeeProfile(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEducationToEmployeeProfileParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "Stanford University",
 					Degree:          "Bachelor of Science",
 					FieldOfStudy:    "Computer Science",
@@ -54,7 +54,7 @@ func TestAddEducationToEmployeeProfile(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEducationToEmployeeProfileParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "MIT",
 					Degree:          "Master of Science",
 					FieldOfStudy:    "Electrical Engineering",
@@ -79,7 +79,7 @@ func TestAddEducationToEmployeeProfile(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEducationToEmployeeProfileParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "Harvard University",
 					Degree:          "Ph.D.",
 					FieldOfStudy:    "Biology",
@@ -104,7 +104,7 @@ func TestAddEducationToEmployeeProfile(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) AddEducationToEmployeeProfileParams {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				return AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "Oxford University",
 					Degree:          "Bachelor of Arts",
 					FieldOfStudy:    "English Literature & Linguistics",
@@ -202,7 +202,7 @@ func TestListEducations(t *testing.T) {
 
 				// Create first education
 				_, err := qtx.AddEducationToEmployeeProfile(ctx, AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "Stanford University",
 					Degree:          "Bachelor of Science",
 					FieldOfStudy:    "Computer Science",
@@ -219,7 +219,7 @@ func TestListEducations(t *testing.T) {
 
 				// Create second education
 				_, err = qtx.AddEducationToEmployeeProfile(ctx, AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "MIT",
 					Degree:          "Master of Science",
 					FieldOfStudy:    "Electrical Engineering",
@@ -234,7 +234,7 @@ func TestListEducations(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, educations []EmployeeEducation, err error) {
 				require.NoError(t, err, "ListEducations() should not error")
@@ -247,7 +247,7 @@ func TestListEducations(t *testing.T) {
 			name: "list educations for employee with no education records",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				employee := createRandomEmployeeProfile(ctx, qtx)
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, educations []EmployeeEducation, err error) {
 				require.NoError(t, err, "ListEducations() should not error")
@@ -260,7 +260,7 @@ func TestListEducations(t *testing.T) {
 				employee := createRandomEmployeeProfile(ctx, qtx)
 
 				_, err := qtx.AddEducationToEmployeeProfile(ctx, AddEducationToEmployeeProfileParams{
-					EmployeeID:      employee.UserID,
+					EmployeeID:      employee.ID,
 					InstitutionName: "Harvard University",
 					Degree:          "Ph.D.",
 					FieldOfStudy:    "Biology",
@@ -275,7 +275,7 @@ func TestListEducations(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return employee.UserID
+				return employee.ID
 			},
 			checks: func(t *testing.T, educations []EmployeeEducation, err error) {
 				require.NoError(t, err, "ListEducations() should not error")
@@ -468,7 +468,7 @@ func createRandomEducation(ctx context.Context, qtx *Queries) EmployeeEducation 
 	employee := createRandomEmployeeProfile(ctx, qtx)
 
 	edu, err := qtx.AddEducationToEmployeeProfile(ctx, AddEducationToEmployeeProfileParams{
-		EmployeeID:      employee.UserID,
+		EmployeeID:      employee.ID,
 		InstitutionName: "Stanford University",
 		Degree:          "Bachelor of Science",
 		FieldOfStudy:    "Computer Science",
