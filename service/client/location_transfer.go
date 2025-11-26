@@ -42,13 +42,12 @@ func (s *clientService) ApproveLocationTransfer(ctx context.Context, employeeID 
 	return nil
 }
 
-func (s *clientService) ListLocationTransferRequests(ctx *gin.Context, req ListLocationTransferRequestsRequest, clientID uuid.UUID) (*pagination.Response[ListLocationTransferRequestsResponse], error) {
+func (s *clientService) ListLocationTransferRequests(ctx *gin.Context, req ListLocationTransferRequestsRequest) (*pagination.Response[ListLocationTransferRequestsResponse], error) {
 	params := req.GetParams()
 
 	transferRequests, err := s.Store.ListClientLocationTransfer(ctx, db.ListClientLocationTransferParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
+		Limit:  params.Limit,
+		Offset: params.Offset,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListLocationTransferRequestsApi", "Failed to list location transfer requests", zap.Error(err))

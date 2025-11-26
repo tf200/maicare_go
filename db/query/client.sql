@@ -255,6 +255,5 @@ SELECT
     COUNT(*) OVER() AS total_count
 FROM client_location_transfer t
 LEFT JOIN employee_profile e ON t.new_mentor_id = e.id
-WHERE t.client_id = $1
 ORDER BY request_date DESC
-LIMIT $2 OFFSET $3;
+LIMIT $1 OFFSET $2;

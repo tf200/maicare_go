@@ -2399,6 +2399,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/location_transfer": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "List location transfer requests for a client",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListLocationTransferRequestsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/location_transfer/approve_reject": {
             "post": {
                 "consumes": [
@@ -14114,6 +14165,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-clientp_ListLocationTransferRequestsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListLocationTransferRequestsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-clientp_ListRegistrationFormsResponse": {
             "type": "object",
             "properties": {
@@ -19398,6 +19463,47 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ListLocationTransferRequestsResponse": {
+            "type": "object",
+            "properties": {
+                "approved_rejected_at": {
+                    "type": "string"
+                },
+                "approved_rejected_by": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "from_location_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mentor_first_name": {
+                    "type": "string"
+                },
+                "mentor_last_name": {
+                    "type": "string"
+                },
+                "new_mentor_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "request_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.ClientLocationTransferStatusEnum"
+                },
+                "to_location_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.ListProgressReportsResponse": {
             "type": "object",
             "properties": {
@@ -21861,6 +21967,19 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "db.ClientLocationTransferStatusEnum": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "approved",
+                "rejected"
+            ],
+            "x-enum-varnames": [
+                "ClientLocationTransferStatusEnumPending",
+                "ClientLocationTransferStatusEnumApproved",
+                "ClientLocationTransferStatusEnumRejected"
+            ]
         },
         "ecr.DischargeOverviewResponse": {
             "type": "object",
@@ -24811,6 +24930,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/clientp.ListIncidentsResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-clientp_ListLocationTransferRequestsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListLocationTransferRequestsResponse"
                     }
                 }
             }

@@ -890,15 +890,13 @@ SELECT
     COUNT(*) OVER() AS total_count
 FROM client_location_transfer t
 LEFT JOIN employee_profile e ON t.new_mentor_id = e.id
-WHERE t.client_id = $1
 ORDER BY request_date DESC
-LIMIT $2 OFFSET $3
+LIMIT $1 OFFSET $2
 `
 
 type ListClientLocationTransferParams struct {
-	ClientID uuid.UUID `json:"client_id"`
-	Limit    int32     `json:"limit"`
-	Offset   int32     `json:"offset"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
 }
 
 type ListClientLocationTransferRow struct {
@@ -918,7 +916,7 @@ type ListClientLocationTransferRow struct {
 }
 
 func (q *Queries) ListClientLocationTransfer(ctx context.Context, arg ListClientLocationTransferParams) ([]ListClientLocationTransferRow, error) {
-	rows, err := q.db.Query(ctx, listClientLocationTransfer, arg.ClientID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listClientLocationTransfer, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
