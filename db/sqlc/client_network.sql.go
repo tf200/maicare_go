@@ -49,7 +49,7 @@ type AssignEmployeeParams struct {
 }
 
 type AssignEmployeeRow struct {
-	ID                 int64              `json:"id"`
+	ID                 uuid.UUID          `json:"id"`
 	ClientID           uuid.UUID          `json:"client_id"`
 	EmployeeID         uuid.UUID          `json:"employee_id"`
 	StartDate          pgtype.Date        `json:"start_date"`
@@ -93,8 +93,8 @@ RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, st
 `
 
 type AssignSenderParams struct {
-	SenderID *int64    `json:"sender_id"`
-	ID       uuid.UUID `json:"id"`
+	SenderID *uuid.UUID `json:"sender_id"`
+	ID       uuid.UUID  `json:"id"`
 }
 
 func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error) {
@@ -234,7 +234,7 @@ WHERE id = $1
 RETURNING id, client_id, employee_id, start_date, role, created_at
 `
 
-func (q *Queries) DeleteAssignedEmployee(ctx context.Context, id int64) (AssignedEmployee, error) {
+func (q *Queries) DeleteAssignedEmployee(ctx context.Context, id uuid.UUID) (AssignedEmployee, error) {
 	row := q.db.QueryRow(ctx, deleteAssignedEmployee, id)
 	var i AssignedEmployee
 	err := row.Scan(
@@ -254,7 +254,7 @@ WHERE id = $1
 RETURNING id, client_id, first_name, last_name, email, phone_number, address, relationship, relation_status, created_at, is_verified, medical_reports, incidents_reports, goals_reports
 `
 
-func (q *Queries) DeleteEmergencyContact(ctx context.Context, id int64) (ClientEmergencyContact, error) {
+func (q *Queries) DeleteEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error) {
 	row := q.db.QueryRow(ctx, deleteEmergencyContact, id)
 	var i ClientEmergencyContact
 	err := row.Scan(
@@ -287,7 +287,7 @@ WHERE ae.id = $1 LIMIT 1
 `
 
 type GetAssignedEmployeeRow struct {
-	ID                int64              `json:"id"`
+	ID                uuid.UUID          `json:"id"`
 	ClientID          uuid.UUID          `json:"client_id"`
 	EmployeeID        uuid.UUID          `json:"employee_id"`
 	StartDate         pgtype.Date        `json:"start_date"`
@@ -297,7 +297,7 @@ type GetAssignedEmployeeRow struct {
 	EmployeeLastName  string             `json:"employee_last_name"`
 }
 
-func (q *Queries) GetAssignedEmployee(ctx context.Context, id int64) (GetAssignedEmployeeRow, error) {
+func (q *Queries) GetAssignedEmployee(ctx context.Context, id uuid.UUID) (GetAssignedEmployeeRow, error) {
 	row := q.db.QueryRow(ctx, getAssignedEmployee, id)
 	var i GetAssignedEmployeeRow
 	err := row.Scan(
@@ -387,7 +387,7 @@ SELECT id, client_id, first_name, last_name, email, phone_number, address, relat
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetEmergencyContact(ctx context.Context, id int64) (ClientEmergencyContact, error) {
+func (q *Queries) GetEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error) {
 	row := q.db.QueryRow(ctx, getEmergencyContact, id)
 	var i ClientEmergencyContact
 	err := row.Scan(
@@ -433,7 +433,7 @@ type ListAssignedEmployeesParams struct {
 }
 
 type ListAssignedEmployeesRow struct {
-	ID                int64              `json:"id"`
+	ID                uuid.UUID          `json:"id"`
 	ClientID          uuid.UUID          `json:"client_id"`
 	EmployeeID        uuid.UUID          `json:"employee_id"`
 	StartDate         pgtype.Date        `json:"start_date"`
@@ -497,7 +497,7 @@ type ListEmergencyContactsParams struct {
 }
 
 type ListEmergencyContactsRow struct {
-	ID               int64                  `json:"id"`
+	ID               uuid.UUID              `json:"id"`
 	ClientID         uuid.UUID              `json:"client_id"`
 	FirstName        *string                `json:"first_name"`
 	LastName         *string                `json:"last_name"`
@@ -566,7 +566,7 @@ RETURNING id, client_id, employee_id, start_date, role, created_at
 `
 
 type UpdateAssignedEmployeeParams struct {
-	ID         int64       `json:"id"`
+	ID         uuid.UUID   `json:"id"`
 	EmployeeID *uuid.UUID  `json:"employee_id"`
 	StartDate  pgtype.Date `json:"start_date"`
 	Role       *string     `json:"role"`
@@ -609,7 +609,7 @@ RETURNING id, client_id, first_name, last_name, email, phone_number, address, re
 `
 
 type UpdateEmergencyContactParams struct {
-	ID               int64                  `json:"id"`
+	ID               uuid.UUID              `json:"id"`
 	FirstName        *string                `json:"first_name"`
 	LastName         *string                `json:"last_name"`
 	Email            *string                `json:"email"`

@@ -364,7 +364,7 @@ DELETE FROM registration_form
 WHERE id = $1
 `
 
-func (q *Queries) DeleteRegistrationForm(ctx context.Context, id int64) error {
+func (q *Queries) DeleteRegistrationForm(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteRegistrationForm, id)
 	return err
 }
@@ -375,7 +375,7 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetRegistrationForm(ctx context.Context, id int64) (RegistrationForm, error) {
+func (q *Queries) GetRegistrationForm(ctx context.Context, id uuid.UUID) (RegistrationForm, error) {
 	row := q.db.QueryRow(ctx, getRegistrationForm, id)
 	var i RegistrationForm
 	err := row.Scan(
@@ -750,7 +750,7 @@ type UpdateRegistrationFormParams struct {
 	DocumentIDCopy                *uuid.UUID                   `json:"document_id_copy"`
 	ApplicationDate               pgtype.Date                  `json:"application_date"`
 	ReferrerSignature             *bool                        `json:"referrer_signature"`
-	ID                            int64                        `json:"id"`
+	ID                            uuid.UUID                    `json:"id"`
 }
 
 func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistrationFormParams) (RegistrationForm, error) {
@@ -922,7 +922,7 @@ RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gen
 `
 
 type UpdateRegistrationFormStatusParams struct {
-	ID                        int64              `json:"id"`
+	ID                        uuid.UUID          `json:"id"`
 	FormStatus                FormStatusEnum     `json:"form_status"`
 	ProcessedByEmployeeID     *uuid.UUID         `json:"processed_by_employee_id"`
 	IntakeAppointmentDatetime pgtype.Timestamptz `json:"intake_appointment_datetime"`

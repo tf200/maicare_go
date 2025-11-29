@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,7 +52,7 @@ func TestSendCredentials(t *testing.T) {
 
 func TestSendIncident(t *testing.T) {
 	arg := Incident{
-		IncidentID:   1,
+		IncidentID:   uuid.NewString(),
 		ReportedBy:   "John Doe",
 		ClientName:   "Johny Doe",
 		IncidentType: "workplace_accident",
@@ -77,10 +78,10 @@ func TestSendAcceptedRegistrationForm(t *testing.T) {
 
 func TestSendClientContractReminder(t *testing.T) {
 	arg := ClientContractReminder{
-		ClientID:           1,
+		ClientID:           uuid.NewString(),
 		ClientFirstName:    "Alice",
 		ClientLastName:     "Doe",
-		ContractID:         12345,
+		ContractID:         uuid.NewString(),
 		CareType:           "ambulante",
 		ContractStartDate:  time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC),
 		ContractEndDate:    time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),

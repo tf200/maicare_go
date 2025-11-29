@@ -1,7 +1,9 @@
 package care
 
+import "github.com/google/uuid"
+
 // ListCarePlanTopics represents a maturity matrix in the list
 type ListCarePlanTopics struct {
-	ID        int64  `json:"id"`
-	TopicName string `json:"topic_name"`
+	ID        uuid.UUID `json:"id"`
+	TopicName string    `json:"topic_name"`
 }

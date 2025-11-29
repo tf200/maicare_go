@@ -16,24 +16,24 @@ type CreateContractTypeRequest struct {
 
 // CreateContractTypeResponse defines the response for CreateContractType handler
 type CreateContractTypeResponse struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 // ListContractTypesResponse defines the response for ListContractTypes handler
 type ListContractTypesResponse struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 // DeleteContractTypeResponse defines the response for DeleteContractType handler
 type DeleteContractTypeResponse struct {
-	ID int64 `json:"id"`
+	ID uuid.UUID `json:"id"`
 }
 
 // CreateContractRequest defines the request for CreateContract handler
 type CreateContractRequest struct {
-	TypeID          *int64      `json:"type_id" example:"1"`
+	TypeID          *uuid.UUID  `json:"type_id" example:"1"`
 	StartDate       time.Time   `json:"start_date" example:"2023-01-01T00:00:00Z"`
 	EndDate         time.Time   `json:"end_date" example:"2023-12-31T00:00:00Z"`
 	ReminderPeriod  int32       `json:"reminder_period" example:"30"`
@@ -44,7 +44,7 @@ type CreateContractRequest struct {
 	HoursType       string      `json:"hours_type" enum:"weekly,all_period" binding:"required,oneof=weekly all_period" example:"weekly"`
 	CareName        string      `json:"care_name" example:"Home Care"`
 	CareType        string      `json:"care_type" binding:"required,oneof=ambulante accommodation" example:"ambulante" enum:"ambulante,accommodation"`
-	SenderID        *int64      `json:"sender_id" example:"2"`
+	SenderID        *uuid.UUID  `json:"sender_id" example:"afc465cc-cddb-440b-9472-615bb07ec1d8"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    string      `json:"financing_act" binding:"required,oneof=WMO ZVW WLZ JW WPG" example:"WMO" enum:"WMO,ZVW,WLZ,JW,WPG"`
 	FinancingOption string      `json:"financing_option" binding:"required,oneof=ZIN PGB" example:"ZIN" enum:"ZIN,PGB"`
@@ -52,8 +52,8 @@ type CreateContractRequest struct {
 
 // CreateContractResponse defines the response for CreateContract handler
 type CreateContractResponse struct {
-	ID              int64              `json:"id"`
-	TypeID          *int64             `json:"type_id"`
+	ID              uuid.UUID          `json:"id"`
+	TypeID          *uuid.UUID         `json:"type_id"`
 	Status          string             `json:"status"`
 	StartDate       time.Time          `json:"start_date"`
 	EndDate         time.Time          `json:"end_date"`
@@ -66,7 +66,7 @@ type CreateContractResponse struct {
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        uuid.UUID          `json:"client_id"`
-	SenderID        *int64             `json:"sender_id"`
+	SenderID        *uuid.UUID         `json:"sender_id"`
 	AttachmentIds   []uuid.UUID        `json:"attachment_ids"`
 	FinancingAct    string             `json:"financing_act"`
 	FinancingOption string             `json:"financing_option"`
@@ -83,8 +83,8 @@ type ListClientContractsRequest struct {
 
 // ListClientContractsResponse defines the response for ListClientContracts handler
 type ListClientContractsResponse struct {
-	ID              int64       `json:"id"`
-	TypeID          *int64      `json:"type_id"`
+	ID              uuid.UUID   `json:"id"`
+	TypeID          *uuid.UUID  `json:"type_id"`
 	Status          string      `json:"status"`
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
@@ -99,7 +99,7 @@ type ListClientContractsResponse struct {
 	ClientID        uuid.UUID   `json:"client_id"`
 	ClientFirstName string      `json:"client_first_name"`
 	ClientLastName  string      `json:"client_last_name"`
-	SenderID        *int64      `json:"sender_id"`
+	SenderID        *uuid.UUID  `json:"sender_id"`
 	SenderName      *string     `json:"sender_name"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    string      `json:"financing_act"`
@@ -112,7 +112,7 @@ type ListClientContractsResponse struct {
 
 // UpdateContractRequest defines the request for UpdateContract handler
 type UpdateContractRequest struct {
-	TypeID          *int64      `json:"type_id"`
+	TypeID          *uuid.UUID  `json:"type_id"`
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
 	ReminderPeriod  *int32      `json:"reminder_period"`
@@ -123,7 +123,7 @@ type UpdateContractRequest struct {
 	HoursType       *string     `json:"hours_type"`
 	CareName        *string     `json:"care_name"`
 	CareType        *string     `json:"care_type"`
-	SenderID        *int64      `json:"sender_id"`
+	SenderID        *uuid.UUID  `json:"sender_id"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    *string     `json:"financing_act"`
 	FinancingOption *string     `json:"financing_option"`
@@ -132,8 +132,8 @@ type UpdateContractRequest struct {
 
 // UpdateContractResponse defines the response for UpdateContract handler
 type UpdateContractResponse struct {
-	ID              int64       `json:"id"`
-	TypeID          *int64      `json:"type_id"`
+	ID              uuid.UUID   `json:"id"`
+	TypeID          *uuid.UUID  `json:"type_id"`
 	Status          string      `json:"status"`
 	StartDate       time.Time   `json:"start_date"`
 	EndDate         time.Time   `json:"end_date"`
@@ -146,7 +146,7 @@ type UpdateContractResponse struct {
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        uuid.UUID   `json:"client_id"`
-	SenderID        *int64      `json:"sender_id"`
+	SenderID        *uuid.UUID  `json:"sender_id"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    string      `json:"financing_act"`
 	FinancingOption string      `json:"financing_option"`
@@ -163,14 +163,14 @@ type UpdateContractStatusRequest struct {
 
 // UpdateContractStatusResponse defines the response for UpdateContractStatus handler
 type UpdateContractStatusResponse struct {
-	ID     int64  `json:"id"`
-	Status string `json:"status"`
+	ID     uuid.UUID `json:"id"`
+	Status string    `json:"status"`
 }
 
 // GetClientContractResponse defines the response for GetContract handler
 type GetClientContractResponse struct {
-	ID              int64       `json:"id"`
-	TypeID          *int64      `json:"type_id"`
+	ID              uuid.UUID   `json:"id"`
+	TypeID          *uuid.UUID  `json:"type_id"`
 	TypeName        *string     `json:"type_name"`
 	Status          string      `json:"status"`
 	StartDate       time.Time   `json:"start_date"`
@@ -186,7 +186,7 @@ type GetClientContractResponse struct {
 	ClientID        uuid.UUID   `json:"client_id"`
 	ClientFirstName string      `json:"client_first_name"`
 	ClientLastName  string      `json:"client_last_name"`
-	SenderID        *int64      `json:"sender_id"`
+	SenderID        *uuid.UUID  `json:"sender_id"`
 	SenderName      *string     `json:"sender_name"`
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    string      `json:"financing_act"`
@@ -209,28 +209,28 @@ type ListContractsRequest struct {
 
 // ListContractsResponse defines the response for ListContracts handler
 type ListContractsResponse struct {
-	ID              int64     `json:"id"`
-	ClientID        uuid.UUID `json:"client_id"`
-	Status          string    `json:"status"`
-	StartDate       time.Time `json:"start_date"`
-	EndDate         time.Time `json:"end_date"`
-	Price           float64   `json:"price"`
-	PriceTimeUnit   string    `json:"price_time_unit"`
-	CareName        string    `json:"care_name"`
-	CareType        string    `json:"care_type"`
-	FinancingAct    string    `json:"financing_act"`
-	FinancingOption string    `json:"financing_option"`
-	CreatedAt       time.Time `json:"created_at"`
-	SenderID        *int64    `json:"sender_id"`
-	SenderName      *string   `json:"sender_name"`
-	ClientFirstName string    `json:"client_first_name"`
-	ClientLastName  string    `json:"client_last_name"`
+	ID              uuid.UUID  `json:"id"`
+	ClientID        uuid.UUID  `json:"client_id"`
+	Status          string     `json:"status"`
+	StartDate       time.Time  `json:"start_date"`
+	EndDate         time.Time  `json:"end_date"`
+	Price           float64    `json:"price"`
+	PriceTimeUnit   string     `json:"price_time_unit"`
+	CareName        string     `json:"care_name"`
+	CareType        string     `json:"care_type"`
+	FinancingAct    string     `json:"financing_act"`
+	FinancingOption string     `json:"financing_option"`
+	CreatedAt       time.Time  `json:"created_at"`
+	SenderID        *uuid.UUID `json:"sender_id"`
+	SenderName      *string    `json:"sender_name"`
+	ClientFirstName string     `json:"client_first_name"`
+	ClientLastName  string     `json:"client_last_name"`
 }
 
 // GetContractAuditLogResponse defines the response for GetContractAuditLog handler
 type GetContractAuditLogResponse struct {
-	AuditID            int64              `json:"audit_id"`
-	ContractID         int64              `json:"contract_id"`
+	AuditID            uuid.UUID          `json:"audit_id"`
+	ContractID         uuid.UUID          `json:"contract_id"`
 	Operation          string             `json:"operation"`
 	ChangedBy          *uuid.UUID         `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz `json:"changed_at"`

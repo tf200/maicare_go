@@ -23,7 +23,7 @@ type CreateAppointmentCardRequest struct {
 
 // CreateAppointmentCardResponse represents a response to a create appointment card request
 type CreateAppointmentCardResponse struct {
-	ID                     int64     `json:"id"`
+	ID                     uuid.UUID `json:"id"`
 	ClientID               uuid.UUID `json:"client_id"`
 	GeneralInformation     []string  `json:"general_information"`
 	ImportantContacts      []string  `json:"important_contacts"`
@@ -43,7 +43,7 @@ type CreateAppointmentCardResponse struct {
 
 // GetAppointmentCardResponse represents a response to a get appointment card request
 type GetAppointmentCardResponse struct {
-	ID                     int64     `json:"id"`
+	ID                     uuid.UUID `json:"id"`
 	ClientID               uuid.UUID `json:"client_id"`
 	GeneralInformation     []string  `json:"general_information"`
 	ImportantContacts      []string  `json:"important_contacts"`
@@ -78,7 +78,7 @@ type UpdateAppointmentCardRequest struct {
 
 // UpdateAppointmentCardResponse represents a response to an update appointment card request
 type UpdateAppointmentCardResponse struct {
-	ID                     int64     `json:"id"`
+	ID                     uuid.UUID `json:"id"`
 	ClientID               uuid.UUID `json:"client_id"`
 	GeneralInformation     []string  `json:"general_information"`
 	ImportantContacts      []string  `json:"important_contacts"`

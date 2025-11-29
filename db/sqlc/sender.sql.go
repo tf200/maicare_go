@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const countSenders = `-- name: CountSenders :one
@@ -109,13 +111,13 @@ RETURNING invoice_template
 `
 
 type CreateSenderInvoiceTemplateParams struct {
-	InvoiceTemplate []int64 `json:"invoice_template"`
-	ID              int64   `json:"id"`
+	InvoiceTemplate []uuid.UUID `json:"invoice_template"`
+	ID              uuid.UUID   `json:"id"`
 }
 
-func (q *Queries) CreateSenderInvoiceTemplate(ctx context.Context, arg CreateSenderInvoiceTemplateParams) ([]int64, error) {
+func (q *Queries) CreateSenderInvoiceTemplate(ctx context.Context, arg CreateSenderInvoiceTemplateParams) ([]uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createSenderInvoiceTemplate, arg.InvoiceTemplate, arg.ID)
-	var invoice_template []int64
+	var invoice_template []uuid.UUID
 	err := row.Scan(&invoice_template)
 	return invoice_template, err
 }
@@ -129,7 +131,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) DeleteSender(ctx context.Context, id int64) error {
+func (q *Queries) DeleteSender(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteSender, id)
 	return err
 }
@@ -139,7 +141,7 @@ SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber,
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetSenderById(ctx context.Context, id int64) (Sender, error) {
+func (q *Queries) GetSenderById(ctx context.Context, id uuid.UUID) (Sender, error) {
 	row := q.db.QueryRow(ctx, getSenderById, id)
 	var i Sender
 	err := row.Scan(
@@ -171,9 +173,9 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetSenderInvoiceTemplate(ctx context.Context, id int64) ([]int64, error) {
+func (q *Queries) GetSenderInvoiceTemplate(ctx context.Context, id uuid.UUID) ([]uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, getSenderInvoiceTemplate, id)
-	var invoice_template []int64
+	var invoice_template []uuid.UUID
 	err := row.Scan(&invoice_template)
 	return invoice_template, err
 }
@@ -273,7 +275,7 @@ type UpdateSenderParams struct {
 	Contacts     []byte              `json:"contacts"`
 	IsArchived   *bool               `json:"is_archived"`
 	Types        NullSenderTypesEnum `json:"types"`
-	ID           int64               `json:"id"`
+	ID           uuid.UUID           `json:"id"`
 }
 
 func (q *Queries) UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sender, error) {

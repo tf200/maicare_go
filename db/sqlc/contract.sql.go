@@ -38,7 +38,7 @@ RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_perio
 `
 
 type CreateContractParams struct {
-	TypeID          *int64              `json:"type_id"`
+	TypeID          *uuid.UUID          `json:"type_id"`
 	Status          ContractStatusEnum  `json:"status"`
 	StartDate       pgtype.Timestamptz  `json:"start_date"`
 	EndDate         pgtype.Timestamptz  `json:"end_date"`
@@ -51,7 +51,7 @@ type CreateContractParams struct {
 	CareName        string              `json:"care_name"`
 	CareType        CareTypeEnum        `json:"care_type"`
 	ClientID        uuid.UUID           `json:"client_id"`
-	SenderID        *int64              `json:"sender_id"`
+	SenderID        *uuid.UUID          `json:"sender_id"`
 	AttachmentIds   []uuid.UUID         `json:"attachment_ids"`
 	FinancingAct    FinancingActEnum    `json:"financing_act"`
 	FinancingOption FinancingOptionEnum `json:"financing_option"`
@@ -124,7 +124,7 @@ RETURNING id, contract_id, reminder_sent_at, reminder_type
 `
 
 type CreateContractReminderParams struct {
-	ContractID     int64              `json:"contract_id"`
+	ContractID     uuid.UUID          `json:"contract_id"`
 	ReminderSentAt pgtype.Timestamptz `json:"reminder_sent_at"`
 }
 
@@ -159,7 +159,7 @@ DELETE FROM contract_type
 WHERE id = $1
 `
 
-func (q *Queries) DeleteContractType(ctx context.Context, id int64) error {
+func (q *Queries) DeleteContractType(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteContractType, id)
 	return err
 }
@@ -210,7 +210,7 @@ WHERE period_start < $2
 type GetBillablePeriodsForContractParams struct {
 	InvoiceStartDate pgtype.Timestamptz `json:"invoice_start_date"`
 	InvoiceEndDate   pgtype.Timestamptz `json:"invoice_end_date"`
-	ContractID       int64              `json:"contract_id"`
+	ContractID       uuid.UUID          `json:"contract_id"`
 }
 
 type GetBillablePeriodsForContractRow struct {
@@ -254,8 +254,8 @@ limit 1
 `
 
 type GetClientContractRow struct {
-	ID               int64               `json:"id"`
-	TypeID           *int64              `json:"type_id"`
+	ID               uuid.UUID           `json:"id"`
+	TypeID           *uuid.UUID          `json:"type_id"`
 	Status           ContractStatusEnum  `json:"status"`
 	ApprovedAt       pgtype.Timestamptz  `json:"approved_at"`
 	StartDate        pgtype.Timestamptz  `json:"start_date"`
@@ -269,7 +269,7 @@ type GetClientContractRow struct {
 	CareName         string              `json:"care_name"`
 	CareType         CareTypeEnum        `json:"care_type"`
 	ClientID         uuid.UUID           `json:"client_id"`
-	SenderID         *int64              `json:"sender_id"`
+	SenderID         *uuid.UUID          `json:"sender_id"`
 	AttachmentIds    []uuid.UUID         `json:"attachment_ids"`
 	FinancingAct     FinancingActEnum    `json:"financing_act"`
 	FinancingOption  FinancingOptionEnum `json:"financing_option"`
@@ -283,7 +283,7 @@ type GetClientContractRow struct {
 	SenderName       *string             `json:"sender_name"`
 }
 
-func (q *Queries) GetClientContract(ctx context.Context, id int64) (GetClientContractRow, error) {
+func (q *Queries) GetClientContract(ctx context.Context, id uuid.UUID) (GetClientContractRow, error) {
 	row := q.db.QueryRow(ctx, getClientContract, id)
 	var i GetClientContractRow
 	err := row.Scan(
@@ -329,8 +329,8 @@ ORDER BY ca.changed_at DESC
 `
 
 type GetContractAuditRow struct {
-	AuditID            int64                      `json:"audit_id"`
-	ContractID         int64                      `json:"contract_id"`
+	AuditID            uuid.UUID                  `json:"audit_id"`
+	ContractID         uuid.UUID                  `json:"contract_id"`
 	Operation          ContractAuditOperationEnum `json:"operation"`
 	ChangedBy          *uuid.UUID                 `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz         `json:"changed_at"`
@@ -341,7 +341,7 @@ type GetContractAuditRow struct {
 	ChangedByLastName  *string                    `json:"changed_by_last_name"`
 }
 
-func (q *Queries) GetContractAudit(ctx context.Context, contractID int64) ([]GetContractAuditRow, error) {
+func (q *Queries) GetContractAudit(ctx context.Context, contractID uuid.UUID) ([]GetContractAuditRow, error) {
 	rows, err := q.db.Query(ctx, getContractAudit, contractID)
 	if err != nil {
 		return nil, err
@@ -377,7 +377,7 @@ SELECT id, type_id, status, approved_at, start_date, end_date, reminder_period, 
 WHERE sender_id = $1
 `
 
-func (q *Queries) GetSenderContracts(ctx context.Context, senderID *int64) ([]Contract, error) {
+func (q *Queries) GetSenderContracts(ctx context.Context, senderID *uuid.UUID) ([]Contract, error) {
 	rows, err := q.db.Query(ctx, getSenderContracts, senderID)
 	if err != nil {
 		return nil, err
@@ -451,8 +451,8 @@ type ListClientContractsParams struct {
 
 type ListClientContractsRow struct {
 	TotalCount       int64               `json:"total_count"`
-	ID               int64               `json:"id"`
-	TypeID           *int64              `json:"type_id"`
+	ID               uuid.UUID           `json:"id"`
+	TypeID           *uuid.UUID          `json:"type_id"`
 	Status           ContractStatusEnum  `json:"status"`
 	ApprovedAt       pgtype.Timestamptz  `json:"approved_at"`
 	StartDate        pgtype.Timestamptz  `json:"start_date"`
@@ -466,7 +466,7 @@ type ListClientContractsRow struct {
 	CareName         string              `json:"care_name"`
 	CareType         CareTypeEnum        `json:"care_type"`
 	ClientID         uuid.UUID           `json:"client_id"`
-	SenderID         *int64              `json:"sender_id"`
+	SenderID         *uuid.UUID          `json:"sender_id"`
 	AttachmentIds    []uuid.UUID         `json:"attachment_ids"`
 	FinancingAct     FinancingActEnum    `json:"financing_act"`
 	FinancingOption  FinancingOptionEnum `json:"financing_option"`
@@ -615,7 +615,7 @@ type ListContractsParams struct {
 
 type ListContractsRow struct {
 	TotalCount      int64               `json:"total_count"`
-	ID              int64               `json:"id"`
+	ID              uuid.UUID           `json:"id"`
 	Status          ContractStatusEnum  `json:"status"`
 	StartDate       pgtype.Timestamptz  `json:"start_date"`
 	EndDate         pgtype.Timestamptz  `json:"end_date"`
@@ -628,7 +628,7 @@ type ListContractsRow struct {
 	CreatedAt       pgtype.Timestamptz  `json:"created_at"`
 	SenderName      *string             `json:"sender_name"`
 	ClientID        uuid.UUID           `json:"client_id"`
-	SenderID        *int64              `json:"sender_id"`
+	SenderID        *uuid.UUID          `json:"sender_id"`
 	ClientFirstName string              `json:"client_first_name"`
 	ClientLastName  string              `json:"client_last_name"`
 }
@@ -715,7 +715,7 @@ ORDER BY c.end_date ASC
 `
 
 type ListContractsTobeRemindedRow struct {
-	ID               int64              `json:"id"`
+	ID               uuid.UUID          `json:"id"`
 	CareName         string             `json:"care_name"`
 	ClientID         uuid.UUID          `json:"client_id"`
 	StartDate        pgtype.Timestamptz `json:"start_date"`
@@ -786,8 +786,8 @@ RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_perio
 `
 
 type UpdateContractParams struct {
-	ID              int64                   `json:"id"`
-	TypeID          *int64                  `json:"type_id"`
+	ID              uuid.UUID               `json:"id"`
+	TypeID          *uuid.UUID              `json:"type_id"`
 	StartDate       pgtype.Timestamptz      `json:"start_date"`
 	EndDate         pgtype.Timestamptz      `json:"end_date"`
 	ReminderPeriod  *int32                  `json:"reminder_period"`
@@ -798,7 +798,7 @@ type UpdateContractParams struct {
 	HoursType       NullHoursTypeEnum       `json:"hours_type"`
 	CareName        *string                 `json:"care_name"`
 	CareType        NullCareTypeEnum        `json:"care_type"`
-	SenderID        *int64                  `json:"sender_id"`
+	SenderID        *uuid.UUID              `json:"sender_id"`
 	AttachmentIds   []uuid.UUID             `json:"attachment_ids"`
 	FinancingAct    NullFinancingActEnum    `json:"financing_act"`
 	FinancingOption NullFinancingOptionEnum `json:"financing_option"`
@@ -857,13 +857,13 @@ UPDATE contract
 SET
     status = $1::contract_status_enum,
     approved_at = CASE WHEN $1::contract_status_enum = 'approved' THEN NOW() ELSE approved_at END
-WHERE id = $2::BIGINT
+WHERE id = $2::uuid
 RETURNING id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at
 `
 
 type UpdateContractStatusParams struct {
 	Status     ContractStatusEnum `json:"status"`
-	ContractID int64              `json:"contract_id"`
+	ContractID uuid.UUID          `json:"contract_id"`
 }
 
 func (q *Queries) UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error) {

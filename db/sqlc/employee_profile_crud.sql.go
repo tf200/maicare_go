@@ -32,11 +32,11 @@ WHERE
 `
 
 type CountEmployeeProfileParams struct {
-	IncludeArchived     *bool   `json:"include_archived"`
-	IncludeOutOfService *bool   `json:"include_out_of_service"`
-	Department          *string `json:"department"`
-	Position            *string `json:"position"`
-	LocationID          *int64  `json:"location_id"`
+	IncludeArchived     *bool      `json:"include_archived"`
+	IncludeOutOfService *bool      `json:"include_out_of_service"`
+	Department          *string    `json:"department"`
+	Position            *string    `json:"position"`
+	LocationID          *uuid.UUID `json:"location_id"`
 }
 
 func (q *Queries) CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error) {
@@ -95,7 +95,7 @@ type CreateEmployeeProfileParams struct {
 	HomeTelephoneNumber       *string                  `json:"home_telephone_number"`
 	IsSubcontractor           *bool                    `json:"is_subcontractor"`
 	Gender                    EmployeeGenderEnum       `json:"gender"`
-	LocationID                *int64                   `json:"location_id"`
+	LocationID                *uuid.UUID               `json:"location_id"`
 	ContractType              EmployeeContractTypeEnum `json:"contract_type"`
 }
 
@@ -181,7 +181,7 @@ type GetEmployeeProfileByIDRow struct {
 	CreatedAt                 pgtype.Timestamptz       `json:"created_at"`
 	IsSubcontractor           *bool                    `json:"is_subcontractor"`
 	Gender                    EmployeeGenderEnum       `json:"gender"`
-	LocationID                *int64                   `json:"location_id"`
+	LocationID                *uuid.UUID               `json:"location_id"`
 	HasBorrowed               bool                     `json:"has_borrowed"`
 	OutOfService              *bool                    `json:"out_of_service"`
 	IsArchived                bool                     `json:"is_archived"`
@@ -313,14 +313,14 @@ LIMIT $1 OFFSET $2
 `
 
 type ListEmployeeProfileParams struct {
-	Limit               int32   `json:"limit"`
-	Offset              int32   `json:"offset"`
-	IncludeArchived     *bool   `json:"include_archived"`
-	IncludeOutOfService *bool   `json:"include_out_of_service"`
-	Department          *string `json:"department"`
-	Position            *string `json:"position"`
-	LocationID          *int64  `json:"location_id"`
-	Search              *string `json:"search"`
+	Limit               int32      `json:"limit"`
+	Offset              int32      `json:"offset"`
+	IncludeArchived     *bool      `json:"include_archived"`
+	IncludeOutOfService *bool      `json:"include_out_of_service"`
+	Department          *string    `json:"department"`
+	Position            *string    `json:"position"`
+	LocationID          *uuid.UUID `json:"location_id"`
+	Search              *string    `json:"search"`
 }
 
 type ListEmployeeProfileRow struct {
@@ -342,7 +342,7 @@ type ListEmployeeProfileRow struct {
 	CreatedAt                 pgtype.Timestamptz       `json:"created_at"`
 	IsSubcontractor           *bool                    `json:"is_subcontractor"`
 	Gender                    EmployeeGenderEnum       `json:"gender"`
-	LocationID                *int64                   `json:"location_id"`
+	LocationID                *uuid.UUID               `json:"location_id"`
 	HasBorrowed               bool                     `json:"has_borrowed"`
 	OutOfService              *bool                    `json:"out_of_service"`
 	IsArchived                bool                     `json:"is_archived"`
@@ -352,7 +352,7 @@ type ListEmployeeProfileRow struct {
 	ContractType              EmployeeContractTypeEnum `json:"contract_type"`
 	ContractRate              *float64                 `json:"contract_rate"`
 	ProfilePicture            *string                  `json:"profile_picture"`
-	RoleID                    *int32                   `json:"role_id"`
+	RoleID                    *uuid.UUID               `json:"role_id"`
 	RoleName                  *string                  `json:"role_name"`
 }
 
@@ -458,7 +458,7 @@ type UpdateEmployeeProfileParams struct {
 	HomeTelephoneNumber       *string                `json:"home_telephone_number"`
 	IsSubcontractor           *bool                  `json:"is_subcontractor"`
 	Gender                    NullEmployeeGenderEnum `json:"gender"`
-	LocationID                *int64                 `json:"location_id"`
+	LocationID                *uuid.UUID             `json:"location_id"`
 	HasBorrowed               *bool                  `json:"has_borrowed"`
 	OutOfService              *bool                  `json:"out_of_service"`
 	IsArchived                *bool                  `json:"is_archived"`

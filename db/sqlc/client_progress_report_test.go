@@ -133,12 +133,12 @@ func TestCreateProgressReport(t *testing.T) {
 func TestGetAiGeneratedReport(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, report AiGeneratedReport, err error)
 	}{
 		{
 			name: "get existing AI report",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				report := createRandomAiGeneratedReport(ctx, qtx)
 				return report.ID
 			},
@@ -149,8 +149,8 @@ func TestGetAiGeneratedReport(t *testing.T) {
 		},
 		{
 			name: "get non-existent AI report",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, report AiGeneratedReport, err error) {
 				require.Error(t, err, "GetAiGeneratedReport should error for non-existent report")
@@ -177,12 +177,12 @@ func TestGetAiGeneratedReport(t *testing.T) {
 func TestGetProgressReport(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, report GetProgressReportRow, err error)
 	}{
 		{
 			name: "get existing progress report",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				report := createRandomProgressReport(ctx, qtx)
 				return report.ID
 			},
@@ -194,8 +194,8 @@ func TestGetProgressReport(t *testing.T) {
 		},
 		{
 			name: "get non-existent progress report",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, report GetProgressReportRow, err error) {
 				require.Error(t, err, "GetProgressReport should error for non-existent report")
@@ -259,7 +259,7 @@ func TestUpdateProgressReport(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) UpdateProgressReportParams {
 				newEmployee := createRandomEmployeeProfile(ctx, qtx)
 				return UpdateProgressReportParams{
-					ID:         999999,
+					ID:         uuid.New(),
 					EmployeeID: &newEmployee.ID,
 					Title:      randomStringPtr(25),
 					Date: pgtype.Timestamptz{
@@ -302,12 +302,12 @@ func TestUpdateProgressReport(t *testing.T) {
 func TestDeleteProgressReport(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "delete existing progress report",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				report := createRandomProgressReport(ctx, qtx)
 				return report.ID
 			},
@@ -317,8 +317,8 @@ func TestDeleteProgressReport(t *testing.T) {
 		},
 		{
 			name: "delete non-existent progress report",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteProgressReport should not error for non-existent report")

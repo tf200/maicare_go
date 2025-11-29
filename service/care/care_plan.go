@@ -145,7 +145,7 @@ func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID uuid.UU
 	carePlans := []ListClientCarePlansResponse{}
 	for _, assessment := range clientAssessments {
 		carePlans = append(carePlans, ListClientCarePlansResponse{
-			CarePlanID:   util.DerefInt64(assessment.CarePlanID),
+			CarePlanID:   util.DerefUUID(assessment.CarePlanID),
 			TopicName:    assessment.TopicName,
 			ClientID:     assessment.ClientID,
 			StartDate:    assessment.StartDate,
@@ -160,7 +160,7 @@ func (s *carePlanService) ListClientCarePlans(ctx *gin.Context, clientID uuid.UU
 	return &paginationResponse, nil
 }
 
-func (s *carePlanService) GetCarePlanOverview(ctx *gin.Context, carePlanID int64) (*GetCarePlanOverviewResponse, error) {
+func (s *carePlanService) GetCarePlanOverview(ctx *gin.Context, carePlanID uuid.UUID) (*GetCarePlanOverviewResponse, error) {
 	carePlan, err := s.Store.GetCarePlanOverview(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanOverview", "Failed to get care plan overview", zap.Error(err))
@@ -181,7 +181,7 @@ func (s *carePlanService) GetCarePlanOverview(ctx *gin.Context, carePlanID int64
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanOverview(ctx context.Context, carePlanID int64, req *UpdateCarePlanOverviewRequest) (*UpdateCarePlanOverviewResponse, error) {
+func (s *carePlanService) UpdateCarePlanOverview(ctx context.Context, carePlanID uuid.UUID, req *UpdateCarePlanOverviewRequest) (*UpdateCarePlanOverviewResponse, error) {
 	carePlan, err := s.Store.UpdateCarePlanOverview(ctx, db.UpdateCarePlanOverviewParams{
 		ID:                carePlanID,
 		AssessmentSummary: req.AssessmentSummary,
@@ -200,7 +200,7 @@ func (s *carePlanService) UpdateCarePlanOverview(ctx context.Context, carePlanID
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlan(ctx context.Context, carePlanID int64) error {
+func (s *carePlanService) DeleteCarePlan(ctx context.Context, carePlanID uuid.UUID) error {
 	err := s.Store.DeleteCarePlan(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlan", "Failed to delete care plan", zap.Error(err))
@@ -211,7 +211,7 @@ func (s *carePlanService) DeleteCarePlan(ctx context.Context, carePlanID int64) 
 
 // =========================== Care plan objectives and actions ===========================
 
-func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanID int64, req *CreateCarePlanObjectiveRequest) (*CreateCarePlanObjectiveResponse, error) {
+func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanID uuid.UUID, req *CreateCarePlanObjectiveRequest) (*CreateCarePlanObjectiveResponse, error) {
 	createdObj, err := s.Store.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
 		CarePlanID:  carePlanID,
 		Description: req.Description,
@@ -240,14 +240,14 @@ func (s *carePlanService) CreateCarePlanObjective(ctx context.Context, carePlanI
 	return response, nil
 }
 
-func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, carePlanID int64) (*GetCarePlanObjectivesResponse, error) {
+func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, carePlanID uuid.UUID) (*GetCarePlanObjectivesResponse, error) {
 	rows, err := s.Store.GetCarePlanObjectivesWithActions(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanObjectivesAndActions", "Failed to get care plan objectives and actions", zap.Error(err))
 		return nil, fmt.Errorf("failed to get care plan objectives and actions: %w", err)
 	}
 
-	objectiveMap := make(map[int64]*CarePlanObjectives)
+	objectiveMap := make(map[uuid.UUID]*CarePlanObjectives)
 	for _, row := range rows {
 		objective, exists := objectiveMap[row.ObjectiveID]
 		if !exists {
@@ -293,7 +293,7 @@ func (s *carePlanService) GetCarePlanObjectivesAndActions(ctx context.Context, c
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objectiveID int64, req *UpdateCarePlanObjectiveRequest) (*UpdateCarePlanObjectiveResponse, error) {
+func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objectiveID uuid.UUID, req *UpdateCarePlanObjectiveRequest) (*UpdateCarePlanObjectiveResponse, error) {
 	objective, err := s.Store.UpdateCarePlanObjective(ctx, db.UpdateCarePlanObjectiveParams{
 		ID:          objectiveID,
 		Timeframe:   db.NullCarePlanTimeframeFromPtr(req.TimeFrame),
@@ -314,7 +314,7 @@ func (s *carePlanService) UpdateCarePlanObjective(ctx context.Context, objective
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanObjective(ctx context.Context, objectiveID int64) error {
+func (s *carePlanService) DeleteCarePlanObjective(ctx context.Context, objectiveID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanObjective(ctx, objectiveID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanObjective", "Failed to delete care plan objective", zap.Error(err))
@@ -323,7 +323,7 @@ func (s *carePlanService) DeleteCarePlanObjective(ctx context.Context, objective
 	return nil
 }
 
-func (s *carePlanService) CreateCarePlanAction(ctx context.Context, objectiveID int64, req *CreateCarePlanActionsRequest) (*CreateCarePlanActionsResponse, error) {
+func (s *carePlanService) CreateCarePlanAction(ctx context.Context, objectiveID uuid.UUID, req *CreateCarePlanActionsRequest) (*CreateCarePlanActionsResponse, error) {
 	maxSortOrder, err := s.Store.GetCarePlanActionsMaxSortOrder(ctx, objectiveID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateCarePlanAction", "Failed to get max sort order", zap.Error(err))
@@ -349,7 +349,7 @@ func (s *carePlanService) CreateCarePlanAction(ctx context.Context, objectiveID 
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanAction(ctx context.Context, actionID int64, req *UpdateCarePlanActionsRequest) (*UpdateCarePlanActionsResponse, error) {
+func (s *carePlanService) UpdateCarePlanAction(ctx context.Context, actionID uuid.UUID, req *UpdateCarePlanActionsRequest) (*UpdateCarePlanActionsResponse, error) {
 	action, err := s.Store.UpdateCarePlanAction(ctx, db.UpdateCarePlanActionParams{
 		ID:                actionID,
 		ActionDescription: req.ActionDescription,
@@ -368,7 +368,7 @@ func (s *carePlanService) UpdateCarePlanAction(ctx context.Context, actionID int
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanAction(ctx context.Context, actionID int64) error {
+func (s *carePlanService) DeleteCarePlanAction(ctx context.Context, actionID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanAction(ctx, actionID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanAction", "Failed to delete care plan action", zap.Error(err))
@@ -379,7 +379,7 @@ func (s *carePlanService) DeleteCarePlanAction(ctx context.Context, actionID int
 
 // ========================== Care plan interventions ===========================
 
-func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePlanID int64, req *CreateCarePlanInterventionRequest) (*CreateCarePlanInterventionResponse, error) {
+func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePlanID uuid.UUID, req *CreateCarePlanInterventionRequest) (*CreateCarePlanInterventionResponse, error) {
 	intervention, err := s.Store.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
 		CarePlanID:              carePlanID,
 		Frequency:               db.CarePlanInterventionFrequencyEnum(req.Frequency),
@@ -399,7 +399,7 @@ func (s *carePlanService) CreateCarePlanIntervention(ctx context.Context, carePl
 	return response, nil
 }
 
-func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlanID int64) (*GetCarePlanInterventionsResponse, error) {
+func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlanID uuid.UUID) (*GetCarePlanInterventionsResponse, error) {
 	interventions, err := s.Store.GetCarePlanInterventions(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanInterventions", "Failed to get care plan interventions", zap.Error(err))
@@ -438,7 +438,7 @@ func (s *carePlanService) GetCarePlanInterventions(ctx context.Context, carePlan
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interventionID int64, req *UpdateCarePlanInterventionRequest) (*UpdateCarePlanInterventionResponse, error) {
+func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interventionID uuid.UUID, req *UpdateCarePlanInterventionRequest) (*UpdateCarePlanInterventionResponse, error) {
 	intervention, err := s.Store.UpdateCarePlanIntervention(ctx, db.UpdateCarePlanInterventionParams{
 		ID:                      interventionID,
 		Frequency:               db.NullCarePlanInterventionFrequencyFromPtr(req.Frequency),
@@ -458,7 +458,7 @@ func (s *carePlanService) UpdateCarePlanIntervention(ctx context.Context, interv
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanIntervention(ctx context.Context, interventionID int64) error {
+func (s *carePlanService) DeleteCarePlanIntervention(ctx context.Context, interventionID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanIntervention(ctx, interventionID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanIntervention", "Failed to delete care plan intervention", zap.Error(err))
@@ -469,7 +469,7 @@ func (s *carePlanService) DeleteCarePlanIntervention(ctx context.Context, interv
 
 // ==================== CarePlan Success Metrics ====================
 
-func (s *carePlanService) CreateCarePlanSuccessMetric(ctx context.Context, carePlanID int64, req *CreateCarePlanSuccessMetricsRequest) (*CreateCarePlanSuccessMetricsResponse, error) {
+func (s *carePlanService) CreateCarePlanSuccessMetric(ctx context.Context, carePlanID uuid.UUID, req *CreateCarePlanSuccessMetricsRequest) (*CreateCarePlanSuccessMetricsResponse, error) {
 	metric, err := s.Store.CreateCarePlanSuccessMetric(ctx, db.CreateCarePlanSuccessMetricParams{
 		CarePlanID:        carePlanID,
 		MetricName:        req.MetricName,
@@ -492,7 +492,7 @@ func (s *carePlanService) CreateCarePlanSuccessMetric(ctx context.Context, careP
 	return response, nil
 }
 
-func (s *carePlanService) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int64) ([]GetCarePlanSuccessMetricsResponse, error) {
+func (s *carePlanService) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID uuid.UUID) ([]GetCarePlanSuccessMetricsResponse, error) {
 	metrics, err := s.Store.GetCarePlanSuccessMetrics(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanSuccessMetrics", "Failed to get care plan success metrics", zap.Error(err))
@@ -513,7 +513,7 @@ func (s *carePlanService) GetCarePlanSuccessMetrics(ctx context.Context, carePla
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanSuccessMetric(ctx context.Context, metricID int64, req *UpdateCarePlanSuccessMetricsRequest) (*UpdateCarePlanSuccessMetricsResponse, error) {
+func (s *carePlanService) UpdateCarePlanSuccessMetric(ctx context.Context, metricID uuid.UUID, req *UpdateCarePlanSuccessMetricsRequest) (*UpdateCarePlanSuccessMetricsResponse, error) {
 	metric, err := s.Store.UpdateCarePlanSuccessMetric(ctx, db.UpdateCarePlanSuccessMetricParams{
 		ID:                metricID,
 		MetricName:        req.MetricName,
@@ -536,7 +536,7 @@ func (s *carePlanService) UpdateCarePlanSuccessMetric(ctx context.Context, metri
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanSuccessMetric(ctx context.Context, metricID int64) error {
+func (s *carePlanService) DeleteCarePlanSuccessMetric(ctx context.Context, metricID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanSuccessMetric(ctx, metricID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanSuccessMetric", "Failed to delete care plan success metric", zap.Error(err))
@@ -547,7 +547,7 @@ func (s *carePlanService) DeleteCarePlanSuccessMetric(ctx context.Context, metri
 
 // ========================== Care plan risk factors ===========================
 
-func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int64, req *CreateCarePlanRisksRequest) (*CreateCarePlanRisksResponse, error) {
+func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID uuid.UUID, req *CreateCarePlanRisksRequest) (*CreateCarePlanRisksResponse, error) {
 	riskFactor, err := s.Store.CreateCarePlanRisk(ctx, db.CreateCarePlanRiskParams{
 		CarePlanID:         carePlanID,
 		RiskDescription:    req.RiskDescription,
@@ -568,7 +568,7 @@ func (s *carePlanService) CreateCarePlanRisk(ctx context.Context, carePlanID int
 	return response, nil
 }
 
-func (s *carePlanService) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]GetCarePlanRisksResponse, error) {
+func (s *carePlanService) GetCarePlanRisks(ctx context.Context, carePlanID uuid.UUID) ([]GetCarePlanRisksResponse, error) {
 	riskFactors, err := s.Store.GetCarePlanRisks(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanRiskFactors", "Failed to get care plan risk factors", zap.Error(err))
@@ -588,7 +588,7 @@ func (s *carePlanService) GetCarePlanRisks(ctx context.Context, carePlanID int64
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, req *UpdateCarePlanRisksRequest) (*UpdateCarePlanRisksResponse, error) {
+func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID uuid.UUID, req *UpdateCarePlanRisksRequest) (*UpdateCarePlanRisksResponse, error) {
 	riskFactor, err := s.Store.UpdateCarePlanRisk(ctx, db.UpdateCarePlanRiskParams{
 		ID:                 riskID,
 		RiskDescription:    req.RiskDescription,
@@ -609,7 +609,7 @@ func (s *carePlanService) UpdateCarePlanRisk(ctx context.Context, riskID int64, 
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanRisk(ctx context.Context, riskID int64) error {
+func (s *carePlanService) DeleteCarePlanRisk(ctx context.Context, riskID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanRisk(ctx, riskID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanRiskFactor", "Failed to delete care plan risk factor", zap.Error(err))
@@ -620,7 +620,7 @@ func (s *carePlanService) DeleteCarePlanRisk(ctx context.Context, riskID int64) 
 
 // ========================== Care plan support network ===========================
 
-func (s *carePlanService) CreateCarePlanSupportNetwork(ctx context.Context, carePlanID int64, req *CreateCarePlanSupportNetworkRequest) (*CreateCarePlanSupportNetworkResponse, error) {
+func (s *carePlanService) CreateCarePlanSupportNetwork(ctx context.Context, carePlanID uuid.UUID, req *CreateCarePlanSupportNetworkRequest) (*CreateCarePlanSupportNetworkResponse, error) {
 	support, err := s.Store.CreateCarePlanSupportNetwork(ctx, db.CreateCarePlanSupportNetworkParams{
 		CarePlanID:                carePlanID,
 		RoleTitle:                 req.RoleTitle,
@@ -639,7 +639,7 @@ func (s *carePlanService) CreateCarePlanSupportNetwork(ctx context.Context, care
 	return response, nil
 }
 
-func (s *carePlanService) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int64) ([]GetCarePlanSupportNetworkResponse, error) {
+func (s *carePlanService) GetCarePlanSupportNetwork(ctx context.Context, carePlanID uuid.UUID) ([]GetCarePlanSupportNetworkResponse, error) {
 	supportNetworks, err := s.Store.GetCarePlanSupportNetwork(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanSupportNetwork", "Failed to get care plan support network", zap.Error(err))
@@ -658,7 +658,7 @@ func (s *carePlanService) GetCarePlanSupportNetwork(ctx context.Context, carePla
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanSupportNetwork(ctx context.Context, supportNetworkID int64, req *UpdateCarePlanSupportNetworkRequest) (*UpdateCarePlanSupportNetworkResponse, error) {
+func (s *carePlanService) UpdateCarePlanSupportNetwork(ctx context.Context, supportNetworkID uuid.UUID, req *UpdateCarePlanSupportNetworkRequest) (*UpdateCarePlanSupportNetworkResponse, error) {
 	support, err := s.Store.UpdateCarePlanSupportNetwork(ctx, db.UpdateCarePlanSupportNetworkParams{
 		ID:                        supportNetworkID,
 		RoleTitle:                 req.RoleTitle,
@@ -677,7 +677,7 @@ func (s *carePlanService) UpdateCarePlanSupportNetwork(ctx context.Context, supp
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanSupportNetwork(ctx context.Context, supportNetworkID int64) error {
+func (s *carePlanService) DeleteCarePlanSupportNetwork(ctx context.Context, supportNetworkID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanSupportNetwork(ctx, supportNetworkID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanSupportNetwork", "Failed to delete care plan support network", zap.Error(err))
@@ -688,7 +688,7 @@ func (s *carePlanService) DeleteCarePlanSupportNetwork(ctx context.Context, supp
 
 // ========================= Care plan resources ===========================
 
-func (s *carePlanService) CreateCarePlanResource(ctx context.Context, carePlanID int64, req *CreateCarePlanResourcesRequest) (*CreateCarePlanResourcesResponse, error) {
+func (s *carePlanService) CreateCarePlanResource(ctx context.Context, carePlanID uuid.UUID, req *CreateCarePlanResourcesRequest) (*CreateCarePlanResourcesResponse, error) {
 	resource, err := s.Store.CreateCarePlanResources(ctx, db.CreateCarePlanResourcesParams{
 		CarePlanID:          carePlanID,
 		ResourceDescription: req.ResourceDescription,
@@ -707,7 +707,7 @@ func (s *carePlanService) CreateCarePlanResource(ctx context.Context, carePlanID
 	return response, nil
 }
 
-func (s *carePlanService) GetCarePlanResources(ctx context.Context, carePlanID int64) ([]GetCarePlanResourcesResponse, error) {
+func (s *carePlanService) GetCarePlanResources(ctx context.Context, carePlanID uuid.UUID) ([]GetCarePlanResourcesResponse, error) {
 	resources, err := s.Store.GetCarePlanResources(ctx, carePlanID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetCarePlanResources", "Failed to get care plan resources", zap.Error(err))
@@ -726,7 +726,7 @@ func (s *carePlanService) GetCarePlanResources(ctx context.Context, carePlanID i
 	return response, nil
 }
 
-func (s *carePlanService) UpdateCarePlanResource(ctx context.Context, resourceID int64, req *UpdateCarePlanResourcesRequest) (*UpdateCarePlanResourcesResponse, error) {
+func (s *carePlanService) UpdateCarePlanResource(ctx context.Context, resourceID uuid.UUID, req *UpdateCarePlanResourcesRequest) (*UpdateCarePlanResourcesResponse, error) {
 	resource, err := s.Store.UpdateCarePlanResource(ctx, db.UpdateCarePlanResourceParams{
 		ID:                  resourceID,
 		ResourceDescription: req.ResourceDescription,
@@ -747,7 +747,7 @@ func (s *carePlanService) UpdateCarePlanResource(ctx context.Context, resourceID
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanResource(ctx context.Context, resourceID int64) error {
+func (s *carePlanService) DeleteCarePlanResource(ctx context.Context, resourceID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanResource(ctx, resourceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanResource", "Failed to delete care plan resource", zap.Error(err))
@@ -758,7 +758,7 @@ func (s *carePlanService) DeleteCarePlanResource(ctx context.Context, resourceID
 
 // ========================== Care plan Reports ===========================
 
-func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID int64, employeeID uuid.UUID, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error) {
+func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID uuid.UUID, employeeID uuid.UUID, req *CreateCarePlanReportRequest) (*CreateCarePlanReportResponse, error) {
 	report, err := s.Store.CreateCarePlanReport(ctx, db.CreateCarePlanReportParams{
 		CarePlanID:          carePlanID,
 		ReportType:          db.CarePlanReportTypeEnum(req.ReportType),
@@ -782,7 +782,7 @@ func (s *carePlanService) CreateCarePlanReport(ctx context.Context, carePlanID i
 	return response, nil
 }
 
-func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID int64, req *ListCarePlanReportsRequest) (*pagination.Response[ListCarePlanReportsResponse], error) {
+func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID uuid.UUID, req *ListCarePlanReportsRequest) (*pagination.Response[ListCarePlanReportsResponse], error) {
 	params := req.GetParams()
 	reports, err := s.Store.ListCarePlanReports(ctx, db.ListCarePlanReportsParams{
 		CarePlanID: carePlanID,
@@ -812,7 +812,7 @@ func (s *carePlanService) ListCarePlanReports(ctx *gin.Context, carePlanID int64
 	return &paginationResponse, nil
 }
 
-func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int64, req *UpdateCarePlanReportRequest) (*UpdateCarePlanReportResponse, error) {
+func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID uuid.UUID, req *UpdateCarePlanReportRequest) (*UpdateCarePlanReportResponse, error) {
 	report, err := s.Store.UpdateCarePlanReport(ctx, db.UpdateCarePlanReportParams{
 		ID:            reportID,
 		ReportType:    db.NullCarePlanReportTypeFromPtr(req.ReportType),
@@ -834,7 +834,7 @@ func (s *carePlanService) UpdateCarePlanReport(ctx context.Context, reportID int
 	return response, nil
 }
 
-func (s *carePlanService) DeleteCarePlanReport(ctx context.Context, reportID int64) error {
+func (s *carePlanService) DeleteCarePlanReport(ctx context.Context, reportID uuid.UUID) error {
 	err := s.Store.DeleteCarePlanReport(ctx, reportID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteCarePlanReport", "Failed to delete care plan report", zap.Error(err))
@@ -848,7 +848,7 @@ func (s *carePlanService) DeleteCarePlanReport(ctx context.Context, reportID int
 func (s *carePlanService) getDetails(
 	qtx *db.Queries,
 	ctx context.Context,
-	topicID int64,
+	topicID uuid.UUID,
 	clientID uuid.UUID,
 ) (*Details, error) {
 	topicDescription, err := qtx.GetMaturityMatrix(ctx, topicID)
@@ -890,13 +890,13 @@ func (s *carePlanService) insertCarePlan(
 	ctx context.Context,
 	qtx *db.Queries,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
-	assessmentID int64,
+	assessmentID uuid.UUID,
 	emplpoyeeID uuid.UUID,
-) (carePlanID int64, err error) {
+) (carePlanID uuid.UUID, err error) {
 	rawllmResp, err := json.Marshal(genCarePlan)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlan", "Failed to marshal care plan", zap.Error(err))
-		return 0, err
+		return uuid.Nil, err
 	}
 	arg := db.CreateCarePlanParams{
 		AssessmentID:          assessmentID,
@@ -909,17 +909,17 @@ func (s *carePlanService) insertCarePlan(
 	carePlan, err := qtx.CreateCarePlan(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlan", "Failed to create care plan", zap.Error(err))
-		return 0, err
+		return uuid.Nil, err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "insertCarePlan", "Care plan created successfully", zap.Int64("carePlanID", carePlan.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "insertCarePlan", "Care plan created successfully", zap.String("carePlanID", carePlan.ID.String()))
 	return carePlan.ID, nil
 }
 
 func (s *carePlanService) insertCarePlanObjectives(
 	ctx context.Context,
 	qtx *db.Queries,
-	carePlanID int64,
+	carePlanID uuid.UUID,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 ) error {
 	// short term goals
@@ -1004,7 +1004,7 @@ func (s *carePlanService) insertCarePlanObjectives(
 func (s *carePlanService) insertCarePlanInterventions(
 	ctx context.Context,
 	qtx *db.Queries,
-	carePlanID int64,
+	carePlanID uuid.UUID,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 ) error {
 	for _, intervention := range genCarePlan.Interventions.DailyActivities {
@@ -1049,7 +1049,7 @@ func (s *carePlanService) insertCarePlanInterventions(
 func (s *carePlanService) insertCarePlanSuccessMetrics(
 	ctx context.Context,
 	qtx *db.Queries,
-	carePlanID int64,
+	carePlanID uuid.UUID,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 ) error {
 	for _, metric := range genCarePlan.SuccessMetrics {
@@ -1071,7 +1071,7 @@ func (s *carePlanService) insertCarePlanSuccessMetrics(
 func (s *carePlanService) insertCarePlanRiskFactors(
 	ctx context.Context,
 	qtx *db.Queries,
-	carePlanID int64,
+	carePlanID uuid.UUID,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 ) error {
 	for _, risk := range genCarePlan.RiskFactors {
@@ -1093,7 +1093,7 @@ func (s *carePlanService) insertCarePlanRiskFactors(
 func (s *carePlanService) insertCarePlanSupportNetwork(
 	ctx context.Context,
 	qtx *db.Queries,
-	carePlanID int64,
+	carePlanID uuid.UUID,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 ) error {
 	for _, network := range genCarePlan.SupportNetwork {
@@ -1114,7 +1114,7 @@ func (s *carePlanService) insertCarePlanSupportNetwork(
 func (s *carePlanService) insertCarePlanResources(
 	ctx context.Context,
 	qtx *db.Queries,
-	carePlanID int64,
+	carePlanID uuid.UUID,
 	genCarePlan *grpclient.PersonalizedCarePlanResponse,
 ) error {
 	for _, resource := range genCarePlan.ResourcesRequired {

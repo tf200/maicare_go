@@ -4,9 +4,9 @@ import (
 	_ "maicare_go/pagination"
 	"maicare_go/service/sender"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateSenderApi creates a new sender.
@@ -71,13 +71,13 @@ func (server *Server) ListSendersAPI(ctx *gin.Context) {
 // @Description Get a sender
 // @Tags senders
 // @Produce json
-// @Param id path int true "Sender ID"
+// @Param id path uuid true "Sender ID"
 // @Success 200 {object} Response[sender.GetSenderByIdResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /senders/{id} [get]
 func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
 	id := ctx.Param("id")
-	senderID, err := strconv.ParseInt(id, 10, 64)
+	senderID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -99,14 +99,14 @@ func (server *Server) GetSenderByIdAPI(ctx *gin.Context) {
 // @Tags senders
 // @Accept json
 // @Produce json
-// @Param id path int true "Sender ID"
+// @Param id path uuid true "Sender ID"
 // @Param request body sender.UpdateSenderRequest true "Sender data"
 // @Success 200 {object} Response[sender.UpdateSenderResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /senders/{id} [put]
 func (server *Server) UpdateSenderApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	senderID, err := strconv.ParseInt(id, 10, 64)
+	senderID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -140,7 +140,7 @@ func (server *Server) UpdateSenderApi(ctx *gin.Context) {
 // @Router /senders/{id} [delete]
 func (server *Server) DeleteSenderApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	senderID, err := strconv.ParseInt(id, 10, 64)
+	senderID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -169,7 +169,7 @@ func (server *Server) DeleteSenderApi(ctx *gin.Context) {
 // @Router /senders/{id}/invoice_template [post]
 func (server *Server) CreateSenderInvoiceTemplateApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	senderID, err := strconv.ParseInt(id, 10, 64)
+	senderID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

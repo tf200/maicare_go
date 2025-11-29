@@ -69,7 +69,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.Int64("IncidentID", incident.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.String("IncidentID", incident.ID.String()))
 
 	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
@@ -288,7 +288,7 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 	return &paginatedResponse, nil
 }
 
-func (s *clientService) GetIncident(ctx context.Context, incidentID int64) (*GetIncidentResponse, error) {
+func (s *clientService) GetIncident(ctx context.Context, incidentID uuid.UUID) (*GetIncidentResponse, error) {
 	incident, err := s.Store.GetIncident(ctx, incidentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIncident", "Failed to get incident", zap.Error(err))
@@ -349,7 +349,7 @@ func (s *clientService) GetIncident(ctx context.Context, incidentID int64) (*Get
 	return response, nil
 }
 
-func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRequest, incidentID int64) (*UpdateIncidentResponse, error) {
+func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRequest, incidentID uuid.UUID) (*UpdateIncidentResponse, error) {
 	arg := db.UpdateIncidentParams{
 		ID:                      incidentID,
 		EmployeeID:              req.EmployeeID,
@@ -399,7 +399,7 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.Int64("IncidentID", incident.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.String("IncidentID", incident.ID.String()))
 	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
@@ -501,18 +501,18 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 	return response, nil
 }
 
-func (s *clientService) DeleteIncident(ctx context.Context, incidentID int64) error {
+func (s *clientService) DeleteIncident(ctx context.Context, incidentID uuid.UUID) error {
 	err := s.Store.DeleteIncident(ctx, incidentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteIncident", "Failed to delete incident", zap.Error(err))
 		return err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "DeleteIncident", "Incident deleted successfully", zap.Int64("IncidentID", incidentID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "DeleteIncident", "Incident deleted successfully", zap.String("IncidentID", incidentID.String()))
 	return nil
 }
 
-func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error) {
+func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uuid.UUID) (*GenerateIncidentFileResponse, error) {
 	incident, err := s.Store.GetIncident(ctx, incidentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
@@ -588,14 +588,14 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID int
 	return response, nil
 }
 
-func (s *clientService) ConfirmIncident(ctx context.Context, incidentID int64) (*ConfirmIncidentResponse, error) {
+func (s *clientService) ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (*ConfirmIncidentResponse, error) {
 	incident, err := s.Store.ConfirmIncident(ctx, incidentID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmIncident", "Failed to confirm incident", zap.Error(err))
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ConfirmIncident", "Incident confirmed successfully", zap.Int64("IncidentID", incidentID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ConfirmIncident", "Incident confirmed successfully", zap.String("IncidentID", incidentID.String()))
 	return &ConfirmIncidentResponse{
 		FileUrl: s.GenerateResponsePresignedURL(incident.FileUrl, ctx),
 		ID:      incident.ID,

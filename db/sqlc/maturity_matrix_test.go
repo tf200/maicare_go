@@ -71,8 +71,12 @@ func randomNullCarePlanRiskLevel() NullCarePlanRiskLevelEnum {
 }
 
 func createRandomMaturityMatrix(ctx context.Context, t *testing.T, q *Queries) MaturityMatrix {
-	// Use one of the preset maturity matrix records (IDs 1-13 from seed data)
-	id := int64(util.RandomInt(1, 13))
+	// List all maturity matrix records
+	maturityMatrices, err := q.ListMaturityMatrix(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, maturityMatrices)
+	// Select a random maturity matrix record uuid
+	id := maturityMatrices[int(util.RandomInt(0, int64(len(maturityMatrices)-1)))].ID
 	maturityMatrix, err := q.GetMaturityMatrix(ctx, id)
 	require.NoError(t, err)
 	return maturityMatrix

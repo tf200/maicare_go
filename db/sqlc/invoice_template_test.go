@@ -6,6 +6,7 @@ import (
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,19 +91,19 @@ func TestGetAllTemplateItems(t *testing.T) {
 func TestGetTemplateItemsByIds(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) ([]int64, []int64)
-		checks func(t *testing.T, ids []int64, expected []int64, err error)
+		setup  func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []uuid.UUID)
+		checks func(t *testing.T, ids []uuid.UUID, expected []uuid.UUID, err error)
 	}{
 		{
 			name: "successful get by ids",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []int64) {
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []uuid.UUID) {
 				item1 := createRandomTemplateItem(ctx, t, qtx)
 				item2 := createRandomTemplateItem(ctx, t, qtx)
-				inputIds := []int64{item1.ID, item2.ID}
-				expected := []int64{item1.ID, item2.ID}
+				inputIds := []uuid.UUID{item1.ID, item2.ID}
+				expected := []uuid.UUID{item1.ID, item2.ID}
 				return inputIds, expected
 			},
-			checks: func(t *testing.T, ids []int64, expected []int64, err error) {
+			checks: func(t *testing.T, ids []uuid.UUID, expected []uuid.UUID, err error) {
 				require.NoError(t, err)
 				require.Len(t, ids, len(expected))
 				require.ElementsMatch(t, ids, expected)
@@ -110,13 +111,13 @@ func TestGetTemplateItemsByIds(t *testing.T) {
 		},
 		{
 			name: "some ids not found",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []int64) {
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []uuid.UUID) {
 				item1 := createRandomTemplateItem(ctx, t, qtx)
-				inputIds := []int64{item1.ID, 99999} // 99999 doesn't exist
-				expected := []int64{item1.ID}
+				inputIds := []uuid.UUID{item1.ID, uuid.New()} // 99999 doesn't exist
+				expected := []uuid.UUID{item1.ID}
 				return inputIds, expected
 			},
-			checks: func(t *testing.T, ids []int64, expected []int64, err error) {
+			checks: func(t *testing.T, ids []uuid.UUID, expected []uuid.UUID, err error) {
 				require.NoError(t, err)
 				require.Len(t, ids, len(expected))
 				require.ElementsMatch(t, ids, expected)
@@ -124,24 +125,24 @@ func TestGetTemplateItemsByIds(t *testing.T) {
 		},
 		{
 			name: "no ids found",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []int64) {
-				inputIds := []int64{99999, 88888}
-				expected := []int64{}
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []uuid.UUID) {
+				inputIds := []uuid.UUID{uuid.New(), uuid.New()}
+				expected := []uuid.UUID{}
 				return inputIds, expected
 			},
-			checks: func(t *testing.T, ids []int64, expected []int64, err error) {
+			checks: func(t *testing.T, ids []uuid.UUID, expected []uuid.UUID, err error) {
 				require.NoError(t, err)
 				require.Len(t, ids, 0)
 			},
 		},
 		{
 			name: "empty ids",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []int64) {
-				inputIds := []int64{}
-				expected := []int64{}
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []uuid.UUID) {
+				inputIds := []uuid.UUID{}
+				expected := []uuid.UUID{}
 				return inputIds, expected
 			},
-			checks: func(t *testing.T, ids []int64, expected []int64, err error) {
+			checks: func(t *testing.T, ids []uuid.UUID, expected []uuid.UUID, err error) {
 				require.NoError(t, err)
 				require.Len(t, ids, 0)
 			},
@@ -168,16 +169,16 @@ func TestGetTemplateItemsByIds(t *testing.T) {
 func TestGetTemplateItemsBySourceTable(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) ([]int64, []TemplateItem)
+		setup  func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []TemplateItem)
 		checks func(t *testing.T, items []TemplateItem, expected []TemplateItem, err error)
 	}{
 		{
 			name: "successful get by source table",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []TemplateItem) {
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []TemplateItem) {
 				item1 := createRandomTemplateItem(ctx, t, qtx)
 				item2 := createRandomTemplateItem(ctx, t, qtx)
 				item3 := createRandomTemplateItem(ctx, t, qtx)
-				inputIds := []int64{item1.ID, item2.ID, item3.ID}
+				inputIds := []uuid.UUID{item1.ID, item2.ID, item3.ID}
 				expected := []TemplateItem{item1, item2, item3}
 				return inputIds, expected
 			},
@@ -204,9 +205,9 @@ func TestGetTemplateItemsBySourceTable(t *testing.T) {
 		},
 		{
 			name: "some ids not found",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []TemplateItem) {
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []TemplateItem) {
 				item1 := createRandomTemplateItem(ctx, t, qtx)
-				inputIds := []int64{item1.ID, 99999}
+				inputIds := []uuid.UUID{item1.ID, uuid.New()}
 				expected := []TemplateItem{item1}
 				return inputIds, expected
 			},
@@ -222,8 +223,8 @@ func TestGetTemplateItemsBySourceTable(t *testing.T) {
 		},
 		{
 			name: "no ids found",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []TemplateItem) {
-				inputIds := []int64{99999}
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []TemplateItem) {
+				inputIds := []uuid.UUID{uuid.New()}
 				expected := []TemplateItem{}
 				return inputIds, expected
 			},
@@ -234,8 +235,8 @@ func TestGetTemplateItemsBySourceTable(t *testing.T) {
 		},
 		{
 			name: "empty ids",
-			setup: func(ctx context.Context, qtx *Queries) ([]int64, []TemplateItem) {
-				inputIds := []int64{}
+			setup: func(ctx context.Context, qtx *Queries) ([]uuid.UUID, []TemplateItem) {
+				inputIds := []uuid.UUID{}
 				expected := []TemplateItem{}
 				return inputIds, expected
 			},

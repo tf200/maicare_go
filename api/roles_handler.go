@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/auth"
 
@@ -50,18 +49,18 @@ func (server *Server) ListAllPermissionsApi(ctx *gin.Context) {
 // @Description List all permissions associated with a specific role
 // @Tags roles
 // @Produce json
-// @Param role_id path int true "Role ID"
+// @Param role_id path uuid true "Role ID"
 // @Success 200 {object} Response[[]auth.ListAllRolePermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/{role_id}/permissions [get]
 func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
-	roleID, err := strconv.ParseInt(ctx.Param("role_id"), 10, 32)
+	roleID, err := uuid.Parse(ctx.Param("role_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid role_id parameter")))
 		return
 	}
 
-	response, err := server.businessService.AuthService.ListAllRolePermissions(ctx, int32(roleID))
+	response, err := server.businessService.AuthService.ListAllRolePermissions(ctx, roleID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list role permissions")))
 		return
@@ -185,13 +184,13 @@ func (server *Server) CreateRoleApi(ctx *gin.Context) {
 // @Tags roles
 // @Accept json
 // @Produce json
-// @Param role_id path int true "Role ID"
+// @Param role_id path uuid true "Role ID"
 // @Param input body auth.AddPermissionsToRoleRequest true "Add permissions to role"
 // @Success 200 {object} Response[auth.AddPermissionsToRoleResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/{role_id}/permissions [post]
 func (server *Server) AddPermissionsToRoleApi(ctx *gin.Context) {
-	roleID, err := strconv.ParseInt(ctx.Param("role_id"), 10, 32)
+	roleID, err := uuid.Parse(ctx.Param("role_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid role_id parameter")))
 		return
@@ -202,7 +201,7 @@ func (server *Server) AddPermissionsToRoleApi(ctx *gin.Context) {
 		return
 	}
 
-	response, err := server.businessService.AuthService.AddPermissionsToRole(ctx, int32(roleID), &req)
+	response, err := server.businessService.AuthService.AddPermissionsToRole(ctx, roleID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add permissions to role")))
 		return

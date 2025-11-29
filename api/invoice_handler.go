@@ -3,13 +3,13 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	_ "maicare_go/pagination"
 
 	invserv "maicare_go/service/invoice"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -79,7 +79,7 @@ func (server *Server) GenerateInvoiceApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/credit [post]
 func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", ctx.Param("id"))))
 		return
@@ -137,7 +137,7 @@ func (server *Server) ListInvoicesApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id} [get]
 func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID")))
 		return
@@ -163,7 +163,7 @@ func (server *Server) GetInvoiceByIDApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id} [put]
 func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -199,7 +199,7 @@ func (server *Server) UpdateInvoiceApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id} [delete]
 func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -224,10 +224,9 @@ func (server *Server) DeleteInvoiceApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/generate_pdf [get]
 func (server *Server) GenerateInvoicePdfApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	invoiceID, err := strconv.ParseInt(id, 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", id)))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", ctx.Param("id"))))
 		return
 	}
 
@@ -269,7 +268,7 @@ func (server *Server) GetInvoiceTemplateItemsApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/send_reminder [post]
 func (server *Server) SendInvoiceReminderApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", ctx.Param("id"))))
 		return
@@ -296,7 +295,7 @@ func (server *Server) SendInvoiceReminderApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/audit [get]
 func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -328,10 +327,9 @@ func (server *Server) GetInvoiceAuditLogApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/payments [post]
 func (server *Server) CreatePaymentApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	invoiceID, err := strconv.ParseInt(id, 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", id)))
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", ctx.Param("id"))))
 		return
 	}
 	var req invserv.CreatePaymentRequest
@@ -358,12 +356,12 @@ func (server *Server) CreatePaymentApi(ctx *gin.Context) {
 // @Description List all payments for a specific invoice.
 // @Tags Invoice
 // @Produce json
-// @Param id path int64 true "Invoice ID"
+// @Param id path uuid true "Invoice ID"
 // @Success 200 {object} Response[[]invserv.ListPaymentsResponse] "Successful response with
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/payments [get]
 func (server *Server) ListPaymentsApi(ctx *gin.Context) {
-	invoiceID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", ctx.Param("id"))))
 		return
@@ -387,7 +385,7 @@ func (server *Server) ListPaymentsApi(ctx *gin.Context) {
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{id}/payments/{payment_id} [get]
 func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
-	paymentID, err := strconv.ParseInt(ctx.Param("payment_id"), 10, 64)
+	paymentID, err := uuid.Parse(ctx.Param("payment_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", ctx.Param("id"))))
 		return
@@ -406,8 +404,8 @@ func (server *Server) GetPaymentByIDApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Accept json
 // @Produce json
-// @Param invoice_id path int64 true "Invoice ID"
-// @Param payment_id path int64 true "Payment ID"
+// @Param invoice_id path uuid true "Invoice ID"
+// @Param payment_id path uuid true "Payment ID"
 // @Param request body invserv.UpdatePaymentRequest true "Update Payment Request"
 // @Success 200 {object} Response[invserv.UpdatePaymentResponse] "Successful response with updated payment"
 // @Failure 400,401,404,500 {object} Response[any]
@@ -416,13 +414,13 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 	invoiceIDStr := ctx.Param("id")
 	paymentIDStr := ctx.Param("payment_id")
 
-	invoiceID, err := strconv.ParseInt(invoiceIDStr, 10, 64)
+	invoiceID, err := uuid.Parse(invoiceIDStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", invoiceIDStr)))
 		return
 	}
 
-	paymentID, err := strconv.ParseInt(paymentIDStr, 10, 64)
+	paymentID, err := uuid.Parse(paymentIDStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", paymentIDStr)))
 		return
@@ -454,8 +452,8 @@ func (server *Server) UpdatePaymentApi(ctx *gin.Context) {
 // @Tags Invoice
 // @Accept json
 // @Produce json
-// @Param invoice_id path int64 true "Invoice ID"
-// @Param payment_id path int64 true "Payment ID"
+// @Param invoice_id path uuid true "Invoice ID"
+// @Param payment_id path uuid true "Payment ID"
 // @Success 200 {object} Response[invserv.DeletePaymentResponse] "Successful response with deletion details"
 // @Failure 400,401,404,500 {object} Response[any]
 // @Router /invoices/{invoice_id}/payments/{payment_id} [delete]
@@ -463,13 +461,13 @@ func (server *Server) DeletePaymentApi(ctx *gin.Context) {
 	invoiceIDStr := ctx.Param("invoice_id")
 	paymentIDStr := ctx.Param("payment_id")
 
-	invoiceID, err := strconv.ParseInt(invoiceIDStr, 10, 64)
+	invoiceID, err := uuid.Parse(invoiceIDStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid invoice ID: %s", invoiceIDStr)))
 		return
 	}
 
-	paymentID, err := strconv.ParseInt(paymentIDStr, 10, 64)
+	paymentID, err := uuid.Parse(paymentIDStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment ID: %s", paymentIDStr)))
 		return

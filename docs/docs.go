@@ -650,15 +650,6 @@ const docTemplate = `{
                     "attachments"
                 ],
                 "summary": "Get an attachment by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Attachment ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -695,15 +686,6 @@ const docTemplate = `{
                     "attachments"
                 ],
                 "summary": "Delete an attachment by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Attachment ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2559,13 +2541,6 @@ const docTemplate = `{
                 "summary": "Update a client",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Client details",
                         "name": "request",
                         "in": "body",
@@ -2612,15 +2587,6 @@ const docTemplate = `{
                     "clients"
                 ],
                 "summary": "Get a client addresses",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2659,13 +2625,6 @@ const docTemplate = `{
                 ],
                 "summary": "List all AI generated reports for a client",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "Page number",
@@ -2714,13 +2673,6 @@ const docTemplate = `{
                 "summary": "Generate auto reports",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Request body",
                         "name": "request",
                         "in": "body",
@@ -2753,13 +2705,6 @@ const docTemplate = `{
                 ],
                 "summary": "Confirm a progress report for a client",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Progress Report Request",
                         "name": "request",
@@ -2802,15 +2747,6 @@ const docTemplate = `{
                     "appointment_cards"
                 ],
                 "summary": "Get an appointment card by client ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2833,13 +2769,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update an appointment card by client ID",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Request body",
                         "name": "request",
@@ -2873,13 +2802,6 @@ const docTemplate = `{
                 "summary": "Create a new appointment card",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Request body",
                         "name": "request",
                         "in": "body",
@@ -2909,15 +2831,6 @@ const docTemplate = `{
                     "appointment_cards"
                 ],
                 "summary": "Generate an appointment card document by client ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2942,13 +2855,6 @@ const docTemplate = `{
                 ],
                 "summary": "List appointments for a client in a date range",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "List appointments request",
                         "name": "request",
@@ -3120,13 +3026,6 @@ const docTemplate = `{
                 "summary": "List contracts for a client",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -3160,13 +3059,6 @@ const docTemplate = `{
                 ],
                 "summary": "Create a new contract",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Create Contract Request",
                         "name": "request",
@@ -3233,13 +3125,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -3285,13 +3170,6 @@ const docTemplate = `{
                 "summary": "Create a client diagnosis",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Client diagnosis data",
                         "name": "request",
                         "in": "body",
@@ -3332,22 +3210,6 @@ const docTemplate = `{
                     "client_Medical"
                 ],
                 "summary": "Get a client diagnosis",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3381,20 +3243,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a client diagnosis",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Client diagnosis data",
                         "name": "request",
@@ -3434,22 +3282,6 @@ const docTemplate = `{
                     "client_Medical"
                 ],
                 "summary": "Delete a client diagnosis",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3485,20 +3317,6 @@ const docTemplate = `{
                 ],
                 "summary": "List all client medications",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "Page number",
@@ -3546,20 +3364,6 @@ const docTemplate = `{
                 "summary": "Create a client medication",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Client medication data",
                         "name": "request",
                         "in": "body",
@@ -3600,29 +3404,6 @@ const docTemplate = `{
                     "client_Medical"
                 ],
                 "summary": "Get a client medication",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Medication ID",
-                        "name": "medication_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3656,27 +3437,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a client medication",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Medication ID",
-                        "name": "medication_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Client medication data",
                         "name": "request",
@@ -3719,13 +3479,6 @@ const docTemplate = `{
                 ],
                 "summary": "List documents of a client",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "Page number",
@@ -3779,13 +3532,6 @@ const docTemplate = `{
                 "summary": "Add a document to a client",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Client document",
                         "name": "request",
                         "in": "body",
@@ -3836,13 +3582,6 @@ const docTemplate = `{
                 ],
                 "summary": "Delete a client document",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "Document ID",
@@ -3900,13 +3639,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -3958,13 +3690,6 @@ const docTemplate = `{
                 "summary": "Create a client emergency contact",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Client emergency contact data",
                         "name": "request",
                         "in": "body",
@@ -4005,22 +3730,6 @@ const docTemplate = `{
                     "client_network"
                 ],
                 "summary": "Get a client emergency contact",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Contact ID",
-                        "name": "contact_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4054,20 +3763,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a client emergency contact",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Contact ID",
-                        "name": "contact_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Client emergency contact data",
                         "name": "request",
@@ -4107,22 +3802,6 @@ const docTemplate = `{
                     "client_network"
                 ],
                 "summary": "Delete a client emergency contact",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Contact ID",
-                        "name": "contact_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4157,13 +3836,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -4196,13 +3868,6 @@ const docTemplate = `{
                 ],
                 "summary": "Create an incident",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Incident data",
                         "name": "request",
@@ -4250,22 +3915,6 @@ const docTemplate = `{
                     "incidents"
                 ],
                 "summary": "Retrieve an incident",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Incident ID",
-                        "name": "incident_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4302,20 +3951,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update an incident",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Incident ID",
-                        "name": "incident_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Incident",
                         "name": "incident",
@@ -4361,22 +3996,6 @@ const docTemplate = `{
                     "incidents"
                 ],
                 "summary": "Delete an incident",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Incident ID",
-                        "name": "incident_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4414,22 +4033,6 @@ const docTemplate = `{
                     "incidents"
                 ],
                 "summary": "Generate an incident file",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Incident ID",
-                        "name": "incident_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4468,13 +4071,6 @@ const docTemplate = `{
                 ],
                 "summary": "List all assigned employees",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "Page number",
@@ -4522,13 +4118,6 @@ const docTemplate = `{
                 "summary": "Assign an employee to a client",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Employee assignment data",
                         "name": "request",
                         "in": "body",
@@ -4569,22 +4158,6 @@ const docTemplate = `{
                     "client_network"
                 ],
                 "summary": "Get an assigned employee",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Assignment ID",
-                        "name": "assign_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4618,20 +4191,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update an assigned employee",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Assignment ID",
-                        "name": "assign_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Assigned employee data",
                         "name": "request",
@@ -4671,22 +4230,6 @@ const docTemplate = `{
                     "client_network"
                 ],
                 "summary": "Delete an assigned employee",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Assignment ID",
-                        "name": "assign_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4722,13 +4265,6 @@ const docTemplate = `{
                 ],
                 "summary": "Request a location transfer for a client",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Location transfer request",
                         "name": "request",
@@ -4776,29 +4312,6 @@ const docTemplate = `{
                     "client_Medical"
                 ],
                 "summary": "Delete a client medication",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Diagnosis ID",
-                        "name": "diagnosis_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Medication ID",
-                        "name": "medication_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4830,15 +4343,6 @@ const docTemplate = `{
                     "clients"
                 ],
                 "summary": "Get missing documents of a client",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4880,13 +4384,6 @@ const docTemplate = `{
                 ],
                 "summary": "Set a client profile picture",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Client profile picture",
                         "name": "request",
@@ -4937,13 +4434,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -4989,13 +4479,6 @@ const docTemplate = `{
                 "summary": "Create a new progress report for a client",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Progress Report Request",
                         "name": "request",
                         "in": "body",
@@ -5036,22 +4519,6 @@ const docTemplate = `{
                     "progress_reports"
                 ],
                 "summary": "Retrieve a progress report for a client",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Progress Report ID",
-                        "name": "report_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5085,20 +4552,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a progress report for a client",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Progress Report ID",
-                        "name": "report_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Progress Report Request",
                         "name": "request",
@@ -5138,22 +4591,6 @@ const docTemplate = `{
                     "progress_reports"
                 ],
                 "summary": "Delete a progress report for a client",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Progress Report ID",
-                        "name": "report_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5185,15 +4622,6 @@ const docTemplate = `{
                     "client_network"
                 ],
                 "summary": "Get client related emails",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5225,15 +4653,6 @@ const docTemplate = `{
                     "client_network"
                 ],
                 "summary": "Get a client sender",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5269,13 +4688,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a client",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Client status",
                         "name": "request",
@@ -5323,15 +4735,6 @@ const docTemplate = `{
                     "clients"
                 ],
                 "summary": "List status history of a client",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Client ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6356,15 +5759,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "Update employee profile by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6420,13 +5814,6 @@ const docTemplate = `{
                 "summary": "List appointments for an employee in a date range",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "List appointments request",
                         "name": "request",
                         "in": "body",
@@ -6480,15 +5867,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "List certifications for employee profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6538,13 +5916,6 @@ const docTemplate = `{
                 ],
                 "summary": "Add certification to employee profile",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Certification details",
                         "name": "request",
@@ -6607,20 +5978,6 @@ const docTemplate = `{
                 "summary": "Update certification for employee profile",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Certification ID",
-                        "name": "certification_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Certification details",
                         "name": "request",
                         "in": "body",
@@ -6678,22 +6035,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "Delete certification for employee profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Certification ID",
-                        "name": "certification_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6744,15 +6085,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "Get employee contract details by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6805,13 +6137,6 @@ const docTemplate = `{
                 ],
                 "summary": "Add contract details to employee profile",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Contract details",
                         "name": "request",
@@ -6872,15 +6197,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "List education for employee profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6933,13 +6249,6 @@ const docTemplate = `{
                 ],
                 "summary": "Add education to employee profile",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Education details",
                         "name": "request",
@@ -7002,20 +6311,6 @@ const docTemplate = `{
                 "summary": "Update education for employee profile",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Education ID",
-                        "name": "education_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Education details",
                         "name": "request",
                         "in": "body",
@@ -7073,22 +6368,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "Delete education for employee profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Education ID",
-                        "name": "education_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7139,15 +6418,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "List experience for employee profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7197,13 +6467,6 @@ const docTemplate = `{
                 ],
                 "summary": "Add experience to employee profile",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Experience details",
                         "name": "request",
@@ -7266,20 +6529,6 @@ const docTemplate = `{
                 "summary": "Update experience for employee profile",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Experience ID",
-                        "name": "experience_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Experience details",
                         "name": "request",
                         "in": "body",
@@ -7337,22 +6586,6 @@ const docTemplate = `{
                     "employees"
                 ],
                 "summary": "Delete experience for employee profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Experience ID",
-                        "name": "experience_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7407,13 +6640,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update employee's subcontractor status",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Subcontractor status details",
                         "name": "request",
@@ -7478,13 +6704,6 @@ const docTemplate = `{
                 ],
                 "summary": "Set employee profile picture by ID",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Profile picture details",
                         "name": "request",
@@ -7654,15 +6873,6 @@ const docTemplate = `{
                     "incidents"
                 ],
                 "summary": "Confirm an incident",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Incident ID",
-                        "name": "incident_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7678,6 +6888,111 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_forms": {
+            "get": {
+                "description": "Retrieve a paginated list of intake forms with optional search and sorting.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Intake Forms"
+                ],
+                "summary": "List Intake Forms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search term to filter intake forms",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc or desc)",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page for pagination",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pagination.Response-clientp_ListIntakeFormsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new intake form with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Intake Forms"
+                ],
+                "summary": "Create Intake Form",
+                "parameters": [
+                    {
+                        "description": "Intake Form Details",
+                        "name": "intake_form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.CreateIntakeFormRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/clientp.CreateIntakeFormResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -8391,16 +7706,6 @@ const docTemplate = `{
                     "Invoice"
                 ],
                 "summary": "List Payments",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Successful response with",
@@ -8622,22 +7927,6 @@ const docTemplate = `{
                 "summary": "Update Payment",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Payment ID",
-                        "name": "payment_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Update Payment Request",
                         "name": "request",
                         "in": "body",
@@ -8692,24 +7981,6 @@ const docTemplate = `{
                     "Invoice"
                 ],
                 "summary": "Delete Payment",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Payment ID",
-                        "name": "payment_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Successful response with deletion details",
@@ -8938,13 +8209,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Location ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
                         "description": "Year",
                         "name": "year",
                         "in": "query",
@@ -9000,13 +8264,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Location ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
                         "description": "Year",
                         "name": "year",
                         "in": "query",
@@ -9052,15 +8309,6 @@ const docTemplate = `{
                     "Shifts"
                 ],
                 "summary": "List shifts by location ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Location ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -9101,13 +8349,6 @@ const docTemplate = `{
                 ],
                 "summary": "Create a new shift",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Location ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Shift creation request",
                         "name": "request",
@@ -9155,20 +8396,6 @@ const docTemplate = `{
                 "summary": "Update an existing shift",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Location ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Shift ID",
-                        "name": "shift_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "Shift update request",
                         "name": "request",
                         "in": "body",
@@ -9214,15 +8441,6 @@ const docTemplate = `{
                     "Shifts"
                 ],
                 "summary": "Delete a shift by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Shift ID",
-                        "name": "shift_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -10162,15 +9380,6 @@ const docTemplate = `{
                     "Registration Form"
                 ],
                 "summary": "Get Registration Form",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Registration Form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -10211,13 +9420,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update Registration Form",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Registration Form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Update Registration Form Request",
                         "name": "request",
@@ -10264,15 +9466,6 @@ const docTemplate = `{
                     "Registration Form"
                 ],
                 "summary": "Delete Registration Form",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Registration Form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -10312,13 +9505,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update Registration Form Status",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Registration Form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Update Registration Form Status Request",
                         "name": "request",
@@ -10663,15 +9849,6 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "List all permissions for a role",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Role ID",
-                        "name": "role_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -10712,13 +9889,6 @@ const docTemplate = `{
                 ],
                 "summary": "Add permissions to a role",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Role ID",
-                        "name": "role_id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Add permissions to role",
                         "name": "input",
@@ -11159,15 +10329,6 @@ const docTemplate = `{
                     "senders"
                 ],
                 "summary": "Get a sender",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Sender ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -11208,13 +10369,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a sender",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Sender ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Sender data",
                         "name": "request",
@@ -14902,7 +14056,7 @@ const docTemplate = `{
                 "permission_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -14913,11 +14067,11 @@ const docTemplate = `{
                 "permission_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -14928,7 +14082,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -14936,7 +14090,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -14973,7 +14127,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -14994,7 +14148,7 @@ const docTemplate = `{
                 "permission_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -15008,7 +14162,7 @@ const docTemplate = `{
                 "permission_ids": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -15017,7 +14171,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "permission_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "permission_name": {
                     "type": "string"
@@ -15031,7 +14185,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "permission_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "permission_name": {
                     "type": "string"
@@ -15040,7 +14194,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15048,7 +14202,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "permission_count": {
                     "type": "integer"
@@ -15067,7 +14221,7 @@ const docTemplate = `{
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string"
                             },
                             "name": {
                                 "type": "string"
@@ -15082,7 +14236,7 @@ const docTemplate = `{
                     "type": "object",
                     "properties": {
                         "id": {
-                            "type": "integer"
+                            "type": "string"
                         },
                         "name": {
                             "type": "string"
@@ -15185,7 +14339,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "action_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_completed": {
                     "type": "boolean"
@@ -15211,7 +14365,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "objective_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -15242,10 +14396,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "action_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "objective_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15273,7 +14427,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "frequency": {
                     "type": "string"
@@ -15282,7 +14436,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "intervention_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15314,7 +14468,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "completion_date": {
                     "type": "string"
@@ -15332,7 +14486,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -15370,13 +14524,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -15410,7 +14564,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_obtained": {
                     "type": "boolean"
@@ -15451,7 +14605,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "risk_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risk_level": {
                     "type": "string"
@@ -15491,7 +14645,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metric_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "metric_name": {
                     "type": "string"
@@ -15525,7 +14679,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "support_network_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15536,7 +14690,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "maturity_matrix_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "target_level": {
                     "type": "integer"
@@ -15547,7 +14701,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_id": {
                     "type": "string"
@@ -15616,7 +14770,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "raw_llm_response": {
                     "type": "string"
@@ -15633,7 +14787,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_obtained": {
                     "type": "boolean"
@@ -15656,7 +14810,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "risk_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risk_level": {
                     "type": "string"
@@ -15673,7 +14827,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metric_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "metric_name": {
                     "type": "string"
@@ -15693,7 +14847,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "support_network_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15704,7 +14858,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "intervention_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15712,7 +14866,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -15724,7 +14878,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -15741,7 +14895,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "topic_name": {
                     "type": "string"
@@ -15752,7 +14906,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_id": {
                     "type": "string"
@@ -15792,10 +14946,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "action_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "objective_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15819,7 +14973,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "frequency": {
                     "type": "string"
@@ -15828,7 +14982,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "intervention_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15864,10 +15018,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "goal_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15883,13 +15037,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "assessment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "assessment_summary": {
                     "type": "string"
                 },
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -15911,13 +15065,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "care_plan_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -15948,7 +15102,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_obtained": {
                     "type": "boolean"
@@ -15985,7 +15139,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "risk_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risk_level": {
                     "type": "string"
@@ -16020,7 +15174,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "metric_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "metric_name": {
                     "type": "string"
@@ -16051,7 +15205,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "support_network_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -16086,7 +15240,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_used": {
                     "type": "boolean"
@@ -16146,7 +15300,7 @@ const docTemplate = `{
                     ]
                 },
                 "transfer_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -16177,7 +15331,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -16194,7 +15348,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -16230,7 +15384,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -16336,7 +15490,7 @@ const docTemplate = `{
                     }
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "important_contacts": {
                     "type": "array",
@@ -16499,16 +15653,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "organization_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "source": {
                     "type": "string"
@@ -16553,7 +15707,7 @@ const docTemplate = `{
                 },
                 "bsn_verified_by": {
                     "description": "needs to be checked",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created": {
                     "type": "string"
@@ -16625,10 +15779,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "organization_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"
@@ -16637,7 +15791,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "source": {
                     "type": "string"
@@ -16719,7 +15873,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "notes": {
                     "type": "string"
@@ -16792,7 +15946,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incidents_reports": {
                     "type": "boolean"
@@ -16856,7 +16010,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "diagnosis_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -16865,7 +16019,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -16954,7 +16108,7 @@ const docTemplate = `{
                     }
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -17118,7 +16272,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incident_date": {
                     "type": "string"
@@ -17142,7 +16296,7 @@ const docTemplate = `{
                     }
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -17236,6 +16390,109 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.CreateIntakeFormRequest": {
+            "type": "object",
+            "properties": {
+                "care_type": {
+                    "$ref": "#/definitions/db.IntakeCareTypeEnum"
+                },
+                "date_of_intake": {
+                    "type": "string"
+                },
+                "family_situation": {
+                    "type": "string"
+                },
+                "goals": {
+                    "type": "string"
+                },
+                "intake_conclusion": {
+                    "$ref": "#/definitions/db.IntakeConclusionEnum"
+                },
+                "intake_conclusion_notes": {
+                    "type": "string"
+                },
+                "intake_participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.IntakeParticipantsEnum"
+                    }
+                },
+                "maturity_matrix_id": {
+                    "type": "string"
+                },
+                "psychological_state": {
+                    "type": "string"
+                },
+                "registration_form_id": {
+                    "type": "string"
+                },
+                "risk_assessment": {
+                    "type": "string"
+                },
+                "self_sufficiency": {
+                    "type": "integer"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.CreateIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "care_type": {
+                    "$ref": "#/definitions/db.IntakeCareTypeEnum"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "date_of_intake": {
+                    "type": "string"
+                },
+                "family_situation": {
+                    "type": "string"
+                },
+                "goals": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "intake_conclusion": {
+                    "$ref": "#/definitions/db.IntakeConclusionEnum"
+                },
+                "intake_conclusion_notes": {
+                    "type": "string"
+                },
+                "intake_participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.IntakeParticipantsEnum"
+                    }
+                },
+                "maturity_matrix_id": {
+                    "type": "string"
+                },
+                "psychological_state": {
+                    "type": "string"
+                },
+                "registration_form_id": {
+                    "type": "string"
+                },
+                "risk_assessment": {
+                    "type": "string"
+                },
+                "self_sufficiency": {
+                    "type": "integer"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
         "clientp.CreateProgressReportRequest": {
             "type": "object",
             "required": [
@@ -17302,7 +16559,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -17648,7 +16905,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "processed_at": {
                     "type": "string"
@@ -17746,7 +17003,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -17768,7 +17025,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -17776,7 +17033,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -17819,7 +17076,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "diagnosis_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -17828,7 +17085,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -17891,7 +17148,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "incident_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -17920,7 +17177,7 @@ const docTemplate = `{
                     }
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "important_contacts": {
                     "type": "array",
@@ -17997,7 +17254,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -18109,13 +17366,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
                 "organization_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"
@@ -18124,7 +17381,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "source": {
                     "type": "string"
@@ -18177,7 +17434,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medications": {
                     "type": "array",
@@ -18221,7 +17478,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incidents_reports": {
                     "type": "boolean"
@@ -18262,7 +17519,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "diagnosis_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -18271,7 +17528,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -18329,7 +17586,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_archived": {
                     "type": "boolean"
@@ -18426,7 +17683,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incident_date": {
                     "type": "string"
@@ -18453,7 +17710,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
@@ -18589,7 +17846,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -18742,7 +17999,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "intake_appointment_date": {
                     "type": "string"
@@ -18852,7 +18109,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -18914,7 +18171,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incident_date": {
                     "type": "string"
@@ -18935,7 +18192,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -19021,7 +18278,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -19050,7 +18307,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medications": {
                     "type": "array",
@@ -19088,7 +18345,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_used": {
                     "type": "boolean"
@@ -19135,7 +18392,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incidents_reports": {
                     "type": "boolean"
@@ -19170,7 +18427,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "diagnosis_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -19179,7 +18436,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -19262,13 +18519,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
                 "organization_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"
@@ -19277,7 +18534,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "source": {
                     "type": "string"
@@ -19339,7 +18596,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incident_date": {
                     "type": "string"
@@ -19366,7 +18623,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
@@ -19463,6 +18720,71 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ListIntakeFormsResponse": {
+            "type": "object",
+            "properties": {
+                "care_type": {
+                    "$ref": "#/definitions/db.IntakeCareTypeEnum"
+                },
+                "client_bsn_number": {
+                    "type": "string"
+                },
+                "client_first_name": {
+                    "type": "string"
+                },
+                "client_last_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "date_of_intake": {
+                    "type": "string"
+                },
+                "family_situation": {
+                    "type": "string"
+                },
+                "goals": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "intake_conclusion": {
+                    "$ref": "#/definitions/db.IntakeConclusionEnum"
+                },
+                "intake_conclusion_notes": {
+                    "type": "string"
+                },
+                "intake_participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.IntakeParticipantsEnum"
+                    }
+                },
+                "maturity_matrix_id": {
+                    "type": "string"
+                },
+                "psychological_state": {
+                    "type": "string"
+                },
+                "registration_form_id": {
+                    "type": "string"
+                },
+                "risk_assessment": {
+                    "type": "string"
+                },
+                "self_sufficiency": {
+                    "type": "integer"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
         "clientp.ListLocationTransferRequestsResponse": {
             "type": "object",
             "properties": {
@@ -19476,10 +18798,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "from_location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "mentor_first_name": {
                     "type": "string"
@@ -19500,7 +18822,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/db.ClientLocationTransferStatusEnum"
                 },
                 "to_location_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -19532,7 +18854,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -19682,7 +19004,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "intake_appointment_date": {
                     "type": "string"
@@ -19789,13 +19111,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "changed_by": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "client_id": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "new_status": {
                     "type": "string"
@@ -19817,7 +19139,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "from_location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "new_mentor_id": {
                     "type": "string"
@@ -19826,7 +19148,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "to_location_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -19959,7 +19281,7 @@ const docTemplate = `{
                     }
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "important_contacts": {
                     "type": "array",
@@ -20047,7 +19369,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -20133,10 +19455,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "organization_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"
@@ -20145,7 +19467,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "source": {
                     "type": "string"
@@ -20237,10 +19559,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "organization_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "phone_number": {
                     "type": "string"
@@ -20249,7 +19571,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "source": {
                     "type": "string"
@@ -20310,7 +19632,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "notes": {
                     "type": "string"
@@ -20383,7 +19705,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incidents_reports": {
                     "type": "boolean"
@@ -20447,7 +19769,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "diagnosis_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "dosage": {
                     "type": "string"
@@ -20456,7 +19778,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_critical": {
                     "type": "boolean"
@@ -20546,7 +19868,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incident_date": {
                     "type": "string"
@@ -20570,7 +19892,7 @@ const docTemplate = `{
                     }
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -20701,7 +20023,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "incident_date": {
                     "type": "string"
@@ -20728,7 +20050,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "medicines": {
                     "type": "boolean"
@@ -20867,7 +20189,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "report_text": {
                     "type": "string"
@@ -21213,7 +20535,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "processed_at": {
                     "type": "string"
@@ -21427,16 +20749,16 @@ const docTemplate = `{
                     "example": 30
                 },
                 "sender_id": {
-                    "type": "integer",
-                    "example": 2
+                    "type": "string",
+                    "example": "afc465cc-cddb-440b-9472-615bb07ec1d8"
                 },
                 "start_date": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
                 "type_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 }
             }
         },
@@ -21486,7 +20808,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number"
@@ -21498,7 +20820,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "start_date": {
                     "type": "string"
@@ -21507,7 +20829,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
@@ -21526,7 +20848,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -21537,7 +20859,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -21593,7 +20915,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number"
@@ -21605,7 +20927,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "sender_name": {
                     "type": "string"
@@ -21617,7 +20939,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "type_name": {
                     "type": "string"
@@ -21631,7 +20953,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "audit_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "changed_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
@@ -21652,7 +20974,7 @@ const docTemplate = `{
                     }
                 },
                 "contract_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "new_values": {},
                 "old_values": {},
@@ -21713,7 +21035,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number"
@@ -21725,7 +21047,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "sender_name": {
                     "type": "string"
@@ -21737,7 +21059,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -21748,7 +21070,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -21786,7 +21108,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number"
@@ -21795,7 +21117,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "sender_name": {
                     "type": "string"
@@ -21851,7 +21173,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "start_date": {
                     "type": "string"
@@ -21860,7 +21182,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -21910,7 +21232,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "price": {
                     "type": "number"
@@ -21922,7 +21244,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "start_date": {
                     "type": "string"
@@ -21931,7 +21253,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -21961,7 +21283,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -21979,6 +21301,57 @@ const docTemplate = `{
                 "ClientLocationTransferStatusEnumPending",
                 "ClientLocationTransferStatusEnumApproved",
                 "ClientLocationTransferStatusEnumRejected"
+            ]
+        },
+        "db.IntakeCareTypeEnum": {
+            "type": "string",
+            "enum": [
+                "protected_living",
+                "training_center",
+                "supported_independent_living",
+                "ambulatory_support",
+                "other"
+            ],
+            "x-enum-varnames": [
+                "IntakeCareTypeEnumProtectedLiving",
+                "IntakeCareTypeEnumTrainingCenter",
+                "IntakeCareTypeEnumSupportedIndependentLiving",
+                "IntakeCareTypeEnumAmbulatorySupport",
+                "IntakeCareTypeEnumOther"
+            ]
+        },
+        "db.IntakeConclusionEnum": {
+            "type": "string",
+            "enum": [
+                "suitable",
+                "unsuitable",
+                "further_investigation",
+                "possible_palcement_date",
+                "other"
+            ],
+            "x-enum-varnames": [
+                "IntakeConclusionEnumSuitable",
+                "IntakeConclusionEnumUnsuitable",
+                "IntakeConclusionEnumFurtherInvestigation",
+                "IntakeConclusionEnumPossiblePalcementDate",
+                "IntakeConclusionEnumOther"
+            ]
+        },
+        "db.IntakeParticipantsEnum": {
+            "type": "string",
+            "enum": [
+                "client",
+                "referrer",
+                "parents/guardians",
+                "care_coordinator",
+                "other"
+            ],
+            "x-enum-varnames": [
+                "IntakeParticipantsEnumClient",
+                "IntakeParticipantsEnumReferrer",
+                "IntakeParticipantsEnumParentsGuardians",
+                "IntakeParticipantsEnumCareCoordinator",
+                "IntakeParticipantsEnumOther"
             ]
         },
         "ecr.DischargeOverviewResponse": {
@@ -22067,7 +21440,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_number": {
                     "type": "string"
@@ -22166,7 +21539,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "institution_name": {
                     "type": "string"
@@ -22203,7 +21576,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "issued_by": {
                     "type": "string"
@@ -22300,7 +21673,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "job_title": {
                     "type": "string"
@@ -22370,8 +21743,8 @@ const docTemplate = `{
                     "example": "joe"
                 },
                 "location_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "position": {
                     "type": "string",
@@ -22386,8 +21759,8 @@ const docTemplate = `{
                     "example": "1234567890"
                 },
                 "role_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "work_phone_number": {
                     "type": "string",
@@ -22449,7 +21822,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "out_of_service": {
                     "type": "boolean"
@@ -22484,7 +21857,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "issued_by": {
                     "type": "string"
@@ -22507,7 +21880,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "institution_name": {
                     "type": "string"
@@ -22536,7 +21909,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "job_title": {
                     "type": "string"
@@ -22639,7 +22012,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "out_of_service": {
                     "type": "boolean"
@@ -22657,7 +22030,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "user_id": {
                     "type": "string"
@@ -22692,7 +22065,7 @@ const docTemplate = `{
                     }
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "two_factor_enabled": {
                     "type": "boolean"
@@ -22712,7 +22085,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "issued_by": {
                     "type": "string"
@@ -22738,7 +22111,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "institution_name": {
                     "type": "string"
@@ -22767,7 +22140,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "job_title": {
                     "type": "string"
@@ -22829,7 +22202,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "out_of_service": {
                     "type": "boolean"
@@ -22847,7 +22220,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role_name": {
                     "type": "string"
@@ -22912,7 +22285,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "method": {
                     "type": "string"
@@ -23015,7 +22388,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "issued_by": {
                     "type": "string"
@@ -23058,7 +22431,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "institution_name": {
                     "type": "string"
@@ -23107,7 +22480,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "job_title": {
                     "type": "string"
@@ -23203,7 +22576,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "out_of_service": {
                     "type": "boolean"
@@ -23247,7 +22620,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "start_time": {
                     "type": "string"
@@ -23331,7 +22704,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -23352,7 +22725,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -23419,7 +22792,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_status_changed": {
                     "type": "boolean"
@@ -23431,7 +22804,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "payment_method": {
                     "type": "string"
@@ -23451,7 +22824,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -23465,13 +22838,13 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "deleted_payment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "deleted_payment_status": {
                     "type": "string"
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_status_changed": {
                     "type": "boolean"
@@ -23524,7 +22897,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -23542,7 +22915,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -23559,7 +22932,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "audit_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "changed_at": {
                     "type": "string"
@@ -23580,7 +22953,7 @@ const docTemplate = `{
                     }
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "new_values": {
                     "$ref": "#/definitions/util.JSONObject"
@@ -23615,7 +22988,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -23633,7 +23006,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "original_invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "payment_completion_prc": {
                     "type": "number"
@@ -23645,7 +23018,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "sender_kvknumber": {
                     "type": "string"
@@ -23671,7 +23044,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "item_tag": {
                     "type": "string"
@@ -23694,7 +23067,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "notes": {
                     "type": "string"
@@ -23703,7 +23076,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "payment_method": {
                     "type": "string"
@@ -23732,7 +23105,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "contract_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "contract_name": {
                     "type": "string"
@@ -23805,7 +23178,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -23823,13 +23196,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "original_invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "pdf_attachment_id": {
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "sender_name": {
                     "type": "string"
@@ -23858,7 +23231,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "notes": {
                     "type": "string"
@@ -23867,7 +23240,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "payment_method": {
                     "type": "string"
@@ -23937,7 +23310,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/util.JSONObject"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_details": {
                     "type": "array",
@@ -23955,7 +23328,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sender_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -24001,7 +23374,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "invoice_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_status_changed": {
                     "type": "boolean"
@@ -24013,7 +23386,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "payment_method": {
                     "type": "string"
@@ -24055,7 +23428,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "contract_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "contract_start": {
                     "type": "string"
@@ -24171,10 +23544,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
@@ -24252,7 +23625,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -24307,7 +23680,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "kvk_number": {
                     "type": "string"
@@ -24341,10 +23714,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift": {
                     "type": "string"
@@ -24358,7 +23731,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -24366,7 +23739,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -24380,7 +23753,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -24400,7 +23773,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "organisation_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "organisation_name": {
                     "type": "string"
@@ -24426,7 +23799,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "kvk_number": {
                     "type": "string"
@@ -24461,7 +23834,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -24490,7 +23863,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "kvk_number": {
                     "type": "string"
@@ -24513,10 +23886,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift": {
                     "type": "string"
@@ -24550,7 +23923,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -24599,7 +23972,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "kvk_number": {
                     "type": "string"
@@ -24633,10 +24006,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift": {
                     "type": "string"
@@ -24934,6 +24307,29 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-clientp_ListIntakeFormsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListIntakeFormsResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-clientp_ListLocationTransferRequestsResponse": {
             "type": "object",
             "properties": {
@@ -25150,7 +24546,7 @@ const docTemplate = `{
                     }
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "week": {
                     "description": "e.g., \"2024-W27\"",
@@ -25212,12 +24608,12 @@ const docTemplate = `{
                     "example": true
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_shift_id": {
                     "description": "For preset shift-based schedules (required when is_custom = false)",
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "shift_date": {
                     "description": "Date to apply the shift",
@@ -25250,14 +24646,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
                 "location_shift_id": {
                     "description": "Additional info if created from preset shift",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift_name": {
                     "type": "string"
@@ -25362,14 +24758,14 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
                 "location_shift_id": {
                     "description": "Optional field for preset shift",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift_name": {
                     "description": "Optional field for shift name",
@@ -25459,7 +24855,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "scheduled_shifts": {
                     "type": "array",
@@ -25496,7 +24892,7 @@ const docTemplate = `{
                 },
                 "shift_id": {
                     "description": "e.g., 1",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift_name": {
                     "description": "e.g., \"Morning Shift\"",
@@ -25532,11 +24928,11 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_shift_id": {
                     "description": "Optional field for preset shift",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift_id": {
                     "type": "string"
@@ -25569,12 +24965,12 @@ const docTemplate = `{
                     "example": true
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_shift_id": {
                     "description": "For preset shift-based schedules (required when is_custom = false)",
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
                 },
                 "shift_date": {
                     "description": "Date to apply the shift",
@@ -25607,14 +25003,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
                 "location_shift_id": {
                     "description": "Additional info if updated from preset shift",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "shift_name": {
                     "type": "string"
@@ -25636,7 +25032,7 @@ const docTemplate = `{
                 "invoice_template": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -25717,7 +25113,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "land": {
                     "type": "string"
@@ -25770,7 +25166,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "invoice_template_items": {
                     "type": "array",
@@ -25829,7 +25225,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "land": {
                     "type": "string"
@@ -25875,7 +25271,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "item_tag": {
                     "type": "string"
@@ -25969,7 +25365,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_archived": {
                     "type": "boolean"

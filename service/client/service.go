@@ -37,25 +37,25 @@ type ClientService interface {
 	// Client Incidents
 	CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID uuid.UUID) (*CreateIncidentResponse, error)
 	ListIncidents(ctx *gin.Context, req ListIncidentsRequest, clientID uuid.UUID) (*pagination.Response[ListIncidentsResponse], error)
-	GetIncident(ctx context.Context, incidentID int64) (*GetIncidentResponse, error)
-	UpdateIncident(ctx context.Context, req UpdateIncidentRequest, incidentID int64) (*UpdateIncidentResponse, error)
-	DeleteIncident(ctx context.Context, incidentID int64) error
-	GenerateIncidentFile(ctx context.Context, incidentID int64) (*GenerateIncidentFileResponse, error)
-	ConfirmIncident(ctx context.Context, incidentID int64) (*ConfirmIncidentResponse, error)
+	GetIncident(ctx context.Context, incidentID uuid.UUID) (*GetIncidentResponse, error)
+	UpdateIncident(ctx context.Context, req UpdateIncidentRequest, incidentID uuid.UUID) (*UpdateIncidentResponse, error)
+	DeleteIncident(ctx context.Context, incidentID uuid.UUID) error
+	GenerateIncidentFile(ctx context.Context, incidentID uuid.UUID) (*GenerateIncidentFileResponse, error)
+	ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (*ConfirmIncidentResponse, error)
 	ListAllIncidents(ctx *gin.Context, req *ListAllIncidentsRequest) (*pagination.Response[ListAllIncidentsResponse], error)
 
 	// Client Diagnoses
 	CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID uuid.UUID) (*CreateClientDiagnosisResponse, error)
 	ListClientDiagnoses(ctx *gin.Context, req ListClientDiagnosesRequest, clientID uuid.UUID) (*pagination.Response[ListClientDiagnosesResponse], error)
-	GetClientDiagnosis(ctx context.Context, diagnosisID int64) (*GetClientDiagnosisResponse, error)
-	UpdateClientDiagnosis(ctx context.Context, req UpdateClientDiagnosisRequest, diagnosisID int64) (*UpdateClientDiagnosisResponse, error)
-	DeleteClientDiagnosis(ctx context.Context, diagnosisID int64) (*DeleteClientDiagnosisResponse, error)
+	GetClientDiagnosis(ctx context.Context, diagnosisID uuid.UUID) (*GetClientDiagnosisResponse, error)
+	UpdateClientDiagnosis(ctx context.Context, req UpdateClientDiagnosisRequest, diagnosisID uuid.UUID) (*UpdateClientDiagnosisResponse, error)
+	DeleteClientDiagnosis(ctx context.Context, diagnosisID uuid.UUID) (*DeleteClientDiagnosisResponse, error)
 	// Client Medications
-	CreateClientMedication(ctx context.Context, req CreateClientMedicationRequest, diagnosisID *int64) (*CreateClientMedicationResponse, error)
-	ListMedicationsByDiagnosisID(ctx *gin.Context, req ListClientMedicationsRequest, diagnosisID *int64) (*pagination.Response[ListClientMedicationsResponse], error)
-	GetClientMedication(ctx context.Context, medicationID int64) (*GetClientMedicationResponse, error)
-	UpdateClientMedication(ctx context.Context, req UpdateClientMedicationRequest, medicationID int64) (*UpdateClientMedicationResponse, error)
-	DeleteClientMedication(ctx context.Context, medicationID int64) error
+	CreateClientMedication(ctx context.Context, req CreateClientMedicationRequest, diagnosisID *uuid.UUID) (*CreateClientMedicationResponse, error)
+	ListMedicationsByDiagnosisID(ctx *gin.Context, req ListClientMedicationsRequest, diagnosisID *uuid.UUID) (*pagination.Response[ListClientMedicationsResponse], error)
+	GetClientMedication(ctx context.Context, medicationID uuid.UUID) (*GetClientMedicationResponse, error)
+	UpdateClientMedication(ctx context.Context, req UpdateClientMedicationRequest, medicationID uuid.UUID) (*UpdateClientMedicationResponse, error)
+	DeleteClientMedication(ctx context.Context, medicationID uuid.UUID) error
 
 	// Client Sender
 	GetClientSender(ctx context.Context, clientID uuid.UUID) (*GetClientSenderResponse, error)
@@ -63,16 +63,16 @@ type ClientService interface {
 	// Client Emergency Contacts
 	CreateClientEmergencyContact(ctx context.Context, req CreateClientEmergencyContactParams, clientID uuid.UUID) (*CreateClientEmergencyContactResponse, error)
 	ListClientEmergencyContacts(ctx *gin.Context, req ListClientEmergencyContactsRequest, clientID uuid.UUID) (*pagination.Response[ListClientEmergencyContactsResponse], error)
-	GetClientEmergencyContact(ctx context.Context, contactID int64) (*GetClientEmergencyContactResponse, error)
-	UpdateClientEmergencyContact(ctx context.Context, req UpdateClientEmergencyContactParams, contactID int64) (*UpdateClientEmergencyContactResponse, error)
-	DeleteClientEmergencyContact(ctx context.Context, contactID int64) (*DeleteClientEmergencyContactResponse, error)
+	GetClientEmergencyContact(ctx context.Context, contactID uuid.UUID) (*GetClientEmergencyContactResponse, error)
+	UpdateClientEmergencyContact(ctx context.Context, req UpdateClientEmergencyContactParams, contactID uuid.UUID) (*UpdateClientEmergencyContactResponse, error)
+	DeleteClientEmergencyContact(ctx context.Context, contactID uuid.UUID) (*DeleteClientEmergencyContactResponse, error)
 
 	// Client Involved employees
 	AssignEmployeeToClient(ctx context.Context, req AssignEmployeeRequest, clientID uuid.UUID) (*AssignEmployeeResponse, error)
 	ListAssignedEmployees(ctx *gin.Context, req ListAssignedEmployeesRequest, clientID uuid.UUID) (*pagination.Response[ListAssignedEmployeesResponse], error)
-	GetAssignedEmployee(ctx context.Context, assignmentID int64) (*GetAssignedEmployeeResponse, error)
-	UpdateAssignedEmployee(ctx context.Context, req UpdateAssignedEmployeeRequest, assignmentID int64) (*UpdateAssignedEmployeeResponse, error)
-	DeleteAssignedEmployee(ctx context.Context, assignmentID int64) (*DeleteAssignedEmployeeResponse, error)
+	GetAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*GetAssignedEmployeeResponse, error)
+	UpdateAssignedEmployee(ctx context.Context, req UpdateAssignedEmployeeRequest, assignmentID uuid.UUID) (*UpdateAssignedEmployeeResponse, error)
+	DeleteAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*DeleteAssignedEmployeeResponse, error)
 
 	// Client Network Emails
 	GetClientRelatedEmail(ctx context.Context, clientID uuid.UUID) (*GetClientRelatedEmailsResponse, error)
@@ -80,20 +80,24 @@ type ClientService interface {
 	// Client Progress Reports
 	CreateProgressReport(ctx context.Context, req *CreateProgressReportRequest, clientID uuid.UUID) (*CreateProgressReportResponse, error)
 	ListProgressReports(ctx *gin.Context, req *ListProgressReportsRequest, clientID uuid.UUID) (*pagination.Response[ListProgressReportsResponse], error)
-	GetProgressReport(ctx context.Context, reportID int64) (*GetProgressReportResponse, error)
-	UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error)
-	DeleteProgressReport(ctx context.Context, reportID int64) error
+	GetProgressReport(ctx context.Context, reportID uuid.UUID) (*GetProgressReportResponse, error)
+	UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID uuid.UUID) (*GetProgressReportResponse, error)
+	DeleteProgressReport(ctx context.Context, reportID uuid.UUID) error
 	GenerateAutoReports(ctx context.Context, req *GenerateAutoReportsRequest, clientID uuid.UUID) (*GenerateAutoReportsResponse, error)
-	ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest, reportID int64) (*ConfirmProgressReportResponse, error)
+	ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest, reportID uuid.UUID) (*ConfirmProgressReportResponse, error)
 	ListAiGeneratedReports(ctx *gin.Context, req *ListAiGeneratedReportsRequest, clientID uuid.UUID) (*pagination.Response[ListAiGeneratedReportsResponse], error)
 
 	// Registration Form
 	CreateRegistrationForm(ctx context.Context, req *CreateRegistrationFormRequest) (*CreateRegistrationFormResponse, error)
 	ListRegistrationForms(ctx *gin.Context, req *ListRegistrationFormsRequest) (*pagination.Response[ListRegistrationFormsResponse], error)
-	GetRegistrationFormB(tx context.Context, formID int64) (*GetRegistrationFormResponse, error)
-	UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID int64) (*UpdateRegistrationFormResponse, error)
-	DeleteRegistrationForm(ctx context.Context, formID int64) error
-	UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID int64, employeeID uuid.UUID) error
+	GetRegistrationFormB(tx context.Context, formID uuid.UUID) (*GetRegistrationFormResponse, error)
+	UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID uuid.UUID) (*UpdateRegistrationFormResponse, error)
+	DeleteRegistrationForm(ctx context.Context, formID uuid.UUID) error
+	UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID uuid.UUID, employeeID uuid.UUID) error
+
+	// Intake Form
+	CreateIntakeForm(ctx context.Context, req *CreateIntakeFormRequest) (*CreateIntakeFormResponse, error)
+	ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRequest) (*pagination.Response[ListIntakeFormsResponse], error)
 
 	// Location Transfer
 	RequestLocationTransfer(ctx context.Context, clientID uuid.UUID, req LocationTransferRequest) error

@@ -50,12 +50,12 @@ func TestCreateRegistrationForm(t *testing.T) {
 func TestGetRegistrationForm(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, form RegistrationForm, err error)
 	}{
 		{
 			name: "get existing registration form",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				form := createRandomRegistrationForm(ctx, qtx)
 				return form.ID
 			},
@@ -66,8 +66,8 @@ func TestGetRegistrationForm(t *testing.T) {
 		},
 		{
 			name: "get non-existent registration form",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, form RegistrationForm, err error) {
 				require.Error(t, err, "GetRegistrationForm should error for non-existent form")
@@ -185,7 +185,7 @@ func TestUpdateRegistrationForm(t *testing.T) {
 			name: "update non-existent registration form",
 			setup: func(ctx context.Context, qtx *Queries) UpdateRegistrationFormParams {
 				return UpdateRegistrationFormParams{
-					ID:              999999,
+					ID:              uuid.New(),
 					ClientFirstName: randomStringPtr(10),
 				}
 			},
@@ -214,12 +214,12 @@ func TestUpdateRegistrationForm(t *testing.T) {
 func TestDeleteRegistrationForm(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "delete existing registration form",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				form := createRandomRegistrationForm(ctx, qtx)
 				return form.ID
 			},
@@ -229,8 +229,8 @@ func TestDeleteRegistrationForm(t *testing.T) {
 		},
 		{
 			name: "delete non-existent registration form",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteRegistrationForm should not error for non-existent form")

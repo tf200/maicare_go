@@ -130,7 +130,7 @@ func (server *Server) AddClientToAppointmentApi(ctx *gin.Context) {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Employee ID"
+// @Param id path uuid true "Employee ID"
 // @Param request body appointment.ListAppointmentsForEmployeeInRangeRequest true "List appointments request"
 // @Success 200 {object} Response[appointment.ListAppointmentsForEmployeeInRangeResponse]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
@@ -166,7 +166,7 @@ func (server *Server) ListAppointmentsForEmployee(ctx *gin.Context) {
 // @Tags appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body appointment.ListAppointmentsForClientRequest true "List appointments request"
 // @Success 200 {object} Response[appointment.ListAppointmentsForClientResponse]
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"

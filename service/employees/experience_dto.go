@@ -17,7 +17,7 @@ type AddEmployeeExperienceRequest struct {
 
 // AddEmployeeExperienceResponse represents the response for AddEmployeeExperience
 type AddEmployeeExperienceResponse struct {
-	ID          int64     `json:"id"`
+	ID          uuid.UUID `json:"id"`
 	EmployeeID  uuid.UUID `json:"employee_id"`
 	JobTitle    string    `json:"job_title"`
 	CompanyName string    `json:"company_name"`
@@ -29,7 +29,7 @@ type AddEmployeeExperienceResponse struct {
 
 // ListEmployeeExperienceResponse represents the response for ListEmployeeExperience
 type ListEmployeeExperienceResponse struct {
-	ID          int64     `json:"id"`
+	ID          uuid.UUID `json:"id"`
 	EmployeeID  uuid.UUID `json:"employee_id"`
 	JobTitle    string    `json:"job_title"`
 	CompanyName string    `json:"company_name"`
@@ -50,7 +50,7 @@ type UpdateEmployeeExperienceRequest struct {
 
 // UpdateEmployeeExperienceResponse represents the response for UpdateEmployeeExperience
 type UpdateEmployeeExperienceResponse struct {
-	ID          int64     `json:"id"`
+	ID          uuid.UUID `json:"id"`
 	EmployeeID  uuid.UUID `json:"employee_id"`
 	JobTitle    string    `json:"job_title"`
 	CompanyName string    `json:"company_name"`
@@ -62,7 +62,7 @@ type UpdateEmployeeExperienceResponse struct {
 
 // DeleteEmployeeExperienceResponse represents the response for DeleteEmployeeExperience
 type DeleteEmployeeExperienceResponse struct {
-	ID          int64     `json:"id"`
+	ID          uuid.UUID `json:"id"`
 	EmployeeID  uuid.UUID `json:"employee_id"`
 	JobTitle    string    `json:"job_title"`
 	CompanyName string    `json:"company_name"`

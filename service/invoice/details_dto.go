@@ -23,7 +23,7 @@ type CreateInvoiceRequest struct {
 
 // CreateInvoiceResponse represents the response body for creating an invoice.
 type CreateInvoiceResponse struct {
-	ID              int64            `json:"id"`
+	ID              uuid.UUID        `json:"id"`
 	InvoiceNumber   string           `json:"invoice_number"`
 	IssueDate       time.Time        `json:"issue_date"`
 	DueDate         time.Time        `json:"due_date"`
@@ -33,7 +33,7 @@ type CreateInvoiceResponse struct {
 	PdfAttachmentID *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject  `json:"extra_content"`
 	ClientID        uuid.UUID        `json:"client_id"`
-	SenderID        *int64           `json:"sender_id"`
+	SenderID        *uuid.UUID       `json:"sender_id"`
 	InvoiceType     string           `json:"invoice_type"`
 	UpdatedAt       time.Time        `json:"updated_at"`
 	CreatedAt       time.Time        `json:"created_at"`
@@ -41,7 +41,7 @@ type CreateInvoiceResponse struct {
 
 // GetInvoiceByIDResponse represents the response body for getting an invoice by ID.
 type GetInvoiceByIDResponse struct {
-	ID                   int64            `json:"id"`
+	ID                   uuid.UUID        `json:"id"`
 	InvoiceNumber        string           `json:"invoice_number"`
 	IssueDate            time.Time        `json:"issue_date"`
 	DueDate              time.Time        `json:"due_date"`
@@ -51,9 +51,9 @@ type GetInvoiceByIDResponse struct {
 	PdfAttachmentID      *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent         util.JSONObject  `json:"extra_content"`
 	ClientID             uuid.UUID        `json:"client_id"`
-	SenderID             *int64           `json:"sender_id"`
+	SenderID             *uuid.UUID       `json:"sender_id"`
 	InvoiceType          string           `json:"invoice_type"`
-	OriginalInvoiceID    *int64           `json:"original_invoice_id"`
+	OriginalInvoiceID    *uuid.UUID       `json:"original_invoice_id"`
 	UpdatedAt            time.Time        `json:"updated_at"`
 	CreatedAt            time.Time        `json:"created_at"`
 	SenderName           *string          `json:"sender_name"`
@@ -67,7 +67,7 @@ type GetInvoiceByIDResponse struct {
 // ListInvoicesRequest represents the request parameters for listing invoices.
 type ListInvoicesRequest struct {
 	ClientID  *uuid.UUID `form:"client_id"`
-	SenderID  *int64     `form:"sender_id"`
+	SenderID  *uuid.UUID `form:"sender_id"`
 	Status    *string    `form:"status" binding:"omitempty,oneof=outstanding partially_paid paid expired overpaid imported concept"`
 	StartDate time.Time  `form:"start_date"`
 	EndDate   time.Time  `form:"end_date"`
@@ -76,7 +76,7 @@ type ListInvoicesRequest struct {
 
 // ListInvoicesResponse represents the response body for listing invoices.
 type ListInvoicesResponse struct {
-	ID                int64            `json:"id"`
+	ID                uuid.UUID        `json:"id"`
 	InvoiceNumber     string           `json:"invoice_number"`
 	IssueDate         time.Time        `json:"issue_date"`
 	DueDate           time.Time        `json:"due_date"`
@@ -86,9 +86,9 @@ type ListInvoicesResponse struct {
 	PdfAttachmentID   *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent      util.JSONObject  `json:"extra_content"`
 	ClientID          uuid.UUID        `json:"client_id"`
-	SenderID          *int64           `json:"sender_id"`
+	SenderID          *uuid.UUID       `json:"sender_id"`
 	InvoiceType       string           `json:"invoice_type"`
-	OriginalInvoiceID *int64           `json:"original_invoice_id"`
+	OriginalInvoiceID *uuid.UUID       `json:"original_invoice_id"`
 	UpdatedAt         time.Time        `json:"updated_at"`
 	CreatedAt         time.Time        `json:"created_at"`
 	SenderName        *string          `json:"sender_name"`
@@ -110,7 +110,7 @@ type UpdateInvoiceRequest struct {
 
 // UpdateInvoiceResponse represents the response body for updating an invoice.
 type UpdateInvoiceResponse struct {
-	ID              int64            `json:"id"`
+	ID              uuid.UUID        `json:"id"`
 	InvoiceNumber   string           `json:"invoice_number"`
 	IssueDate       time.Time        `json:"issue_date"`
 	DueDate         time.Time        `json:"due_date"`
@@ -120,15 +120,15 @@ type UpdateInvoiceResponse struct {
 	PdfAttachmentID *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject  `json:"extra_content"`
 	ClientID        uuid.UUID        `json:"client_id"`
-	SenderID        *int64           `json:"sender_id"`
+	SenderID        *uuid.UUID       `json:"sender_id"`
 	UpdatedAt       time.Time        `json:"updated_at"`
 	CreatedAt       time.Time        `json:"created_at"`
 }
 
 // GetInvoiceAuditLogResponse represents the response body for getting invoice audit logs.
 type GetInvoiceAuditLogResponse struct {
-	AuditID            int64           `json:"audit_id"`
-	InvoiceID          int64           `json:"invoice_id"`
+	AuditID            uuid.UUID       `json:"audit_id"`
+	InvoiceID          uuid.UUID       `json:"invoice_id"`
 	Operation          string          `json:"operation"`
 	ChangedBy          *uuid.UUID      `json:"changed_by"`
 	ChangedAt          time.Time       `json:"changed_at"`
@@ -141,11 +141,11 @@ type GetInvoiceAuditLogResponse struct {
 
 // GetInvoiceTemplateItemsResponse represents the response body for getting invoice template items.
 type GetInvoiceTemplateItemsResponse struct {
-	ID           int64  `json:"id"`
-	ItemTag      string `json:"item_tag"`
-	Description  string `json:"description"`
-	SourceTable  string `json:"source_table"`
-	SourceColumn string `json:"source_column"`
+	ID           uuid.UUID `json:"id"`
+	ItemTag      string    `json:"item_tag"`
+	Description  string    `json:"description"`
+	SourceTable  string    `json:"source_table"`
+	SourceColumn string    `json:"source_column"`
 }
 
 // GenerateInvoicePDFResponse represents the response body for generating an invoice PDF.

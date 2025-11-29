@@ -7,6 +7,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -62,7 +63,7 @@ func (s *organizationService) ListOrganizations(ctx context.Context) ([]ListOrga
 	return response, nil
 }
 
-func (s *organizationService) GetOrganizationByID(ctx context.Context, organizationID int64) (*GetOrganisationResponse, error) {
+func (s *organizationService) GetOrganizationByID(ctx context.Context, organizationID uuid.UUID) (*GetOrganisationResponse, error) {
 	organization, err := s.Store.GetOrganisation(ctx, organizationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetOrganisationApi", "Failed to get organisation by ID", zap.Error(err))
@@ -84,7 +85,7 @@ func (s *organizationService) GetOrganizationByID(ctx context.Context, organizat
 	}, nil
 }
 
-func (s *organizationService) GetOrganizationCounts(ctx context.Context, organizationID int64) (*GetOrganisationCountResponse, error) {
+func (s *organizationService) GetOrganizationCounts(ctx context.Context, organizationID uuid.UUID) (*GetOrganisationCountResponse, error) {
 	counts, err := s.Store.GetOrganisationCounts(ctx, organizationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetOrganisationCountsApi", "Failed to get organisation counts", zap.Error(err))
@@ -100,7 +101,7 @@ func (s *organizationService) GetOrganizationCounts(ctx context.Context, organiz
 	}, nil
 }
 
-func (s *organizationService) UpdateOrganization(ctx context.Context, organizationID int64, req UpdateOrganisationRequest) (*GetOrganisationResponse, error) {
+func (s *organizationService) UpdateOrganization(ctx context.Context, organizationID uuid.UUID, req UpdateOrganisationRequest) (*GetOrganisationResponse, error) {
 	organization, err := s.Store.UpdateOrganisation(ctx, db.UpdateOrganisationParams{
 		ID:         organizationID,
 		Name:       req.Name,
@@ -128,7 +129,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, organizati
 	}, nil
 }
 
-func (s *organizationService) DeleteOrganization(ctx context.Context, organizationID int64) (*DeleteOrganisationResponse, error) {
+func (s *organizationService) DeleteOrganization(ctx context.Context, organizationID uuid.UUID) (*DeleteOrganisationResponse, error) {
 	_, err := s.Store.DeleteOrganisation(ctx, organizationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteOrganisationApi", "Failed to delete organisation", zap.Error(err))

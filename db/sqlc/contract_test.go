@@ -188,12 +188,12 @@ func TestCreateContractType(t *testing.T) {
 func TestDeleteContractType(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "delete existing contract type",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				contractType := createRandomContractType(ctx, qtx)
 				return contractType.ID
 			},
@@ -203,7 +203,7 @@ func TestDeleteContractType(t *testing.T) {
 		},
 		{
 			name:  "delete non-existent contract type",
-			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID { return uuid.New() },
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteContractType should not error for non-existent ID")
 			},
@@ -272,12 +272,12 @@ func TestGetBillablePeriodsForContract(t *testing.T) {
 func TestGetClientContract(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, row GetClientContractRow, err error)
 	}{
 		{
 			name: "get existing client contract",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				contract := createRandomContract(ctx, qtx)
 				return contract.ID
 			},
@@ -288,7 +288,7 @@ func TestGetClientContract(t *testing.T) {
 		},
 		{
 			name:  "get non-existent client contract",
-			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID { return uuid.New() },
 			checks: func(t *testing.T, row GetClientContractRow, err error) {
 				require.Error(t, err, "GetClientContract should error for non-existent ID")
 			},
@@ -314,12 +314,12 @@ func TestGetClientContract(t *testing.T) {
 func TestGetContractAudit(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, audits []GetContractAuditRow, err error)
 	}{
 		{
 			name: "get contract audit",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				contract := createRandomContract(ctx, qtx)
 				return contract.ID
 			},
@@ -349,12 +349,12 @@ func TestGetContractAudit(t *testing.T) {
 func TestGetSenderContracts(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) *int64
+		setup  func(ctx context.Context, qtx *Queries) *uuid.UUID
 		checks func(t *testing.T, contracts []Contract, err error)
 	}{
 		{
 			name: "get sender contracts",
-			setup: func(ctx context.Context, qtx *Queries) *int64 {
+			setup: func(ctx context.Context, qtx *Queries) *uuid.UUID {
 				sender := createRandomSenders(ctx, qtx)
 				_ = createContractWithSender(ctx, qtx, sender.ID)
 				return &sender.ID
@@ -573,7 +573,7 @@ func TestUpdateContract(t *testing.T) {
 			name: "update non-existent contract",
 			setup: func(ctx context.Context, qtx *Queries) UpdateContractParams {
 				return UpdateContractParams{
-					ID:       999999,
+					ID:       uuid.New(),
 					CareName: util.StringPtr(util.RandomString(5)),
 				}
 			},
@@ -686,7 +686,7 @@ func createRandomContract(ctx context.Context, qtx *Queries) Contract {
 	return contract
 }
 
-func createContractWithSender(ctx context.Context, qtx *Queries, senderID int64) Contract {
+func createContractWithSender(ctx context.Context, qtx *Queries, senderID uuid.UUID) Contract {
 	client := createRandomClientDetails(ctx, qtx)
 
 	params := CreateContractParams{

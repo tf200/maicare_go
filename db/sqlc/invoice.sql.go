@@ -39,7 +39,7 @@ type CreateInvoiceParams struct {
 	TotalAmount     float64         `json:"total_amount"`
 	ExtraContent    []byte          `json:"extra_content"`
 	ClientID        uuid.UUID       `json:"client_id"`
-	SenderID        *int64          `json:"sender_id"`
+	SenderID        *uuid.UUID      `json:"sender_id"`
 	WarningCount    int32           `json:"warning_count"`
 	InvoiceType     InvoiceTypeEnum `json:"invoice_type"`
 }
@@ -98,7 +98,7 @@ INSERT INTO invoice_payment_history (
 `
 
 type CreatePaymentParams struct {
-	InvoiceID        int64             `json:"invoice_id"`
+	InvoiceID        uuid.UUID         `json:"invoice_id"`
 	PaymentMethod    PaymentMethodEnum `json:"payment_method"`
 	PaymentStatus    PaymentStatusEnum `json:"payment_status"`
 	Amount           float64           `json:"amount"`
@@ -142,7 +142,7 @@ DELETE FROM invoice
 WHERE id = $1
 `
 
-func (q *Queries) DeleteInvoice(ctx context.Context, id int64) error {
+func (q *Queries) DeleteInvoice(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteInvoice, id)
 	return err
 }
@@ -153,7 +153,7 @@ WHERE id = $1
 RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
 `
 
-func (q *Queries) DeletePayment(ctx context.Context, id int64) (InvoicePaymentHistory, error) {
+func (q *Queries) DeletePayment(ctx context.Context, id uuid.UUID) (InvoicePaymentHistory, error) {
 	row := q.db.QueryRow(ctx, deletePayment, id)
 	var i InvoicePaymentHistory
 	err := row.Scan(
@@ -179,7 +179,7 @@ WHERE invoice_id = $1
   AND payment_status = 'completed'
 `
 
-func (q *Queries) GetCompletedPaymentSum(ctx context.Context, invoiceID int64) (float64, error) {
+func (q *Queries) GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error) {
 	row := q.db.QueryRow(ctx, getCompletedPaymentSum, invoiceID)
 	var total_completed_amount float64
 	err := row.Scan(&total_completed_amount)
@@ -209,20 +209,20 @@ LIMIT 1
 `
 
 type GetInvoiceRow struct {
-	ID                int64              `json:"id"`
+	ID                uuid.UUID          `json:"id"`
 	InvoiceNumber     string             `json:"invoice_number"`
 	InvoiceSequence   int64              `json:"invoice_sequence"`
 	IssueDate         pgtype.Date        `json:"issue_date"`
 	DueDate           pgtype.Date        `json:"due_date"`
 	Status            InvoiceStatusEnum  `json:"status"`
 	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
-	OriginalInvoiceID *int64             `json:"original_invoice_id"`
+	OriginalInvoiceID *uuid.UUID         `json:"original_invoice_id"`
 	InvoiceDetails    []byte             `json:"invoice_details"`
 	TotalAmount       float64            `json:"total_amount"`
 	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent      []byte             `json:"extra_content"`
 	ClientID          uuid.UUID          `json:"client_id"`
-	SenderID          *int64             `json:"sender_id"`
+	SenderID          *uuid.UUID         `json:"sender_id"`
 	WarningCount      int32              `json:"warning_count"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
@@ -236,7 +236,7 @@ type GetInvoiceRow struct {
 	ClientLastName    string             `json:"client_last_name"`
 }
 
-func (q *Queries) GetInvoice(ctx context.Context, id int64) (GetInvoiceRow, error) {
+func (q *Queries) GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, error) {
 	row := q.db.QueryRow(ctx, getInvoice, id)
 	var i GetInvoiceRow
 	err := row.Scan(
@@ -285,8 +285,8 @@ ORDER BY
 `
 
 type GetInvoiceAuditLogsRow struct {
-	AuditID            int64                     `json:"audit_id"`
-	InvoiceID          int64                     `json:"invoice_id"`
+	AuditID            uuid.UUID                 `json:"audit_id"`
+	InvoiceID          uuid.UUID                 `json:"invoice_id"`
 	Operation          InvoiceAuditOperationEnum `json:"operation"`
 	ChangedBy          *uuid.UUID                `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz        `json:"changed_at"`
@@ -297,7 +297,7 @@ type GetInvoiceAuditLogsRow struct {
 	ChangedByLastName  *string                   `json:"changed_by_last_name"`
 }
 
-func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]GetInvoiceAuditLogsRow, error) {
+func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]GetInvoiceAuditLogsRow, error) {
 	rows, err := q.db.Query(ctx, getInvoiceAuditLogs, invoiceID)
 	if err != nil {
 		return nil, err
@@ -334,9 +334,9 @@ FROM invoice
 WHERE id = $1
 `
 
-func (q *Queries) GetInvoiceSenderID(ctx context.Context, id int64) (*int64, error) {
+func (q *Queries) GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, getInvoiceSenderID, id)
-	var sender_id *int64
+	var sender_id *uuid.UUID
 	err := row.Scan(&sender_id)
 	return sender_id, err
 }
@@ -369,8 +369,8 @@ LIMIT 1
 `
 
 type GetPaymentRow struct {
-	ID                  int64              `json:"id"`
-	InvoiceID           int64              `json:"invoice_id"`
+	ID                  uuid.UUID          `json:"id"`
+	InvoiceID           uuid.UUID          `json:"invoice_id"`
 	PaymentMethod       PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus       PaymentStatusEnum  `json:"payment_status"`
 	Amount              float64            `json:"amount"`
@@ -384,7 +384,7 @@ type GetPaymentRow struct {
 	RecordedByLastName  *string            `json:"recorded_by_last_name"`
 }
 
-func (q *Queries) GetPayment(ctx context.Context, id int64) (GetPaymentRow, error) {
+func (q *Queries) GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, error) {
 	row := q.db.QueryRow(ctx, getPayment, id)
 	var i GetPaymentRow
 	err := row.Scan(
@@ -416,8 +416,8 @@ WHERE p.id = $1
 `
 
 type GetPaymentWithInvoiceRow struct {
-	ID                 int64              `json:"id"`
-	InvoiceID          int64              `json:"invoice_id"`
+	ID                 uuid.UUID          `json:"id"`
+	InvoiceID          uuid.UUID          `json:"invoice_id"`
 	PaymentMethod      PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus      PaymentStatusEnum  `json:"payment_status"`
 	Amount             float64            `json:"amount"`
@@ -431,7 +431,7 @@ type GetPaymentWithInvoiceRow struct {
 	InvoiceStatus      InvoiceStatusEnum  `json:"invoice_status"`
 }
 
-func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id int64) (GetPaymentWithInvoiceRow, error) {
+func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id uuid.UUID) (GetPaymentWithInvoiceRow, error) {
 	row := q.db.QueryRow(ctx, getPaymentWithInvoice, id)
 	var i GetPaymentWithInvoiceRow
 	err := row.Scan(
@@ -460,7 +460,7 @@ WHERE invoice_id = $1
   AND payment_status = 'completed'
 `
 
-func (q *Queries) GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID int64) (float64, error) {
+func (q *Queries) GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID uuid.UUID) (float64, error) {
 	row := q.db.QueryRow(ctx, getTotalPaidAmountByInvoice, invoiceID)
 	var total_paid float64
 	err := row.Scan(&total_paid)
@@ -477,7 +477,7 @@ RETURNING invoice.pdf_attachment_id
 `
 
 type InsertIncoicePdfUrlParams struct {
-	ID              int64      `json:"id"`
+	ID              uuid.UUID  `json:"id"`
 	PdfAttachmentID *uuid.UUID `json:"pdf_attachment_id"`
 }
 
@@ -529,7 +529,7 @@ OFFSET $6
 
 type ListInvoicesParams struct {
 	ClientID  *uuid.UUID            `json:"client_id"`
-	SenderID  *int64                `json:"sender_id"`
+	SenderID  *uuid.UUID            `json:"sender_id"`
 	Status    NullInvoiceStatusEnum `json:"status"`
 	StartDate pgtype.Date           `json:"start_date"`
 	EndDate   pgtype.Date           `json:"end_date"`
@@ -538,20 +538,20 @@ type ListInvoicesParams struct {
 }
 
 type ListInvoicesRow struct {
-	ID                int64              `json:"id"`
+	ID                uuid.UUID          `json:"id"`
 	InvoiceNumber     string             `json:"invoice_number"`
 	InvoiceSequence   int64              `json:"invoice_sequence"`
 	IssueDate         pgtype.Date        `json:"issue_date"`
 	DueDate           pgtype.Date        `json:"due_date"`
 	Status            InvoiceStatusEnum  `json:"status"`
 	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
-	OriginalInvoiceID *int64             `json:"original_invoice_id"`
+	OriginalInvoiceID *uuid.UUID         `json:"original_invoice_id"`
 	InvoiceDetails    []byte             `json:"invoice_details"`
 	TotalAmount       float64            `json:"total_amount"`
 	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent      []byte             `json:"extra_content"`
 	ClientID          uuid.UUID          `json:"client_id"`
-	SenderID          *int64             `json:"sender_id"`
+	SenderID          *uuid.UUID         `json:"sender_id"`
 	WarningCount      int32              `json:"warning_count"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
@@ -627,8 +627,8 @@ ORDER BY
 `
 
 type ListPaymentsRow struct {
-	ID                  int64              `json:"id"`
-	InvoiceID           int64              `json:"invoice_id"`
+	ID                  uuid.UUID          `json:"id"`
+	InvoiceID           uuid.UUID          `json:"invoice_id"`
 	PaymentMethod       PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus       PaymentStatusEnum  `json:"payment_status"`
 	Amount              float64            `json:"amount"`
@@ -642,7 +642,7 @@ type ListPaymentsRow struct {
 	RecordedByLastName  *string            `json:"recorded_by_last_name"`
 }
 
-func (q *Queries) ListPayments(ctx context.Context, invoiceID int64) ([]ListPaymentsRow, error) {
+func (q *Queries) ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]ListPaymentsRow, error) {
 	rows, err := q.db.Query(ctx, listPayments, invoiceID)
 	if err != nil {
 		return nil, err
@@ -691,7 +691,7 @@ RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, in
 `
 
 type UpdateInvoiceParams struct {
-	ID             int64                 `json:"id"`
+	ID             uuid.UUID             `json:"id"`
 	IssueDate      pgtype.Date           `json:"issue_date"`
 	DueDate        pgtype.Date           `json:"due_date"`
 	InvoiceDetails []byte                `json:"invoice_details"`
@@ -745,7 +745,7 @@ RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, in
 `
 
 type UpdateInvoiceStatusParams struct {
-	ID     int64             `json:"id"`
+	ID     uuid.UUID         `json:"id"`
 	Status InvoiceStatusEnum `json:"status"`
 }
 
@@ -797,7 +797,7 @@ type UpdatePaymentParams struct {
 	PaymentReference *string               `json:"payment_reference"`
 	Notes            *string               `json:"notes"`
 	RecordedBy       *uuid.UUID            `json:"recorded_by"`
-	ID               int64                 `json:"id"`
+	ID               uuid.UUID             `json:"id"`
 }
 
 func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (InvoicePaymentHistory, error) {

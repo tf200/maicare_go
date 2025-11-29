@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	_ "maicare_go/pagination" // for swagger documentation
 	"maicare_go/service/contract"
@@ -63,7 +62,7 @@ func (server *Server) ListContractTypesApi(ctx *gin.Context) {
 // @Router /contract_types/{id} [delete]
 func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	contractTypeID, err := strconv.ParseInt(id, 10, 64)
+	contractTypeID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -84,7 +83,7 @@ func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 // @Tags contracts
 // @Accept json
 // @Produce json
-// @Param id path string true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body contract.CreateContractRequest true "Create Contract Request"
 // @Success 200 {object} Response[contract.CreateContractResponse]
 // @Router /clients/{id}/contracts [post]
@@ -116,7 +115,7 @@ func (server *Server) CreateContractApi(ctx *gin.Context) {
 // @Summary List contracts for a client
 // @Tags contracts
 // @Produce json
-// @Param id path string true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[[]contract.ListClientContractsResponse]]
@@ -156,7 +155,7 @@ func (server *Server) ListClientContractsApi(ctx *gin.Context) {
 // @Router /contracts/{id} [put]
 func (server *Server) UpdateContractApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	contractID, err := strconv.ParseInt(id, 10, 64)
+	contractID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -195,7 +194,7 @@ func (server *Server) UpdateContractApi(ctx *gin.Context) {
 // @Router /contracts/{id}/status [put]
 func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	contractID, err := strconv.ParseInt(id, 10, 64)
+	contractID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -233,7 +232,7 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 // @Router /clients/{id}/contracts/{contract_id} [get]
 func (server *Server) GetClientContractApi(ctx *gin.Context) {
 	id := ctx.Param("contract_id")
-	contractID, err := strconv.ParseInt(id, 10, 64)
+	contractID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -289,7 +288,7 @@ func (server *Server) ListContractsApi(ctx *gin.Context) {
 // @Router /contracts/{id}/audit [get]
 func (server *Server) GetContractAuditLogApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	contractID, err := strconv.ParseInt(id, 10, 64)
+	contractID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

@@ -15,7 +15,7 @@ type AddEmployeeCertificationRequest struct {
 
 // AddEmployeeCertificationResponse represents the response for AddEmployeeCertification
 type AddEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
@@ -25,7 +25,7 @@ type AddEmployeeCertificationResponse struct {
 
 // ListEmployeeCertificationResponse represents the response for ListEmployeeCertification
 type ListEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
@@ -41,7 +41,7 @@ type UpdateEmployeeCertificationRequest struct {
 
 // UpdateEmployeeCertificationResponse represents the response for UpdateEmployeeCertification
 type UpdateEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`
@@ -51,7 +51,7 @@ type UpdateEmployeeCertificationResponse struct {
 
 // DeleteEmployeeCertificationResponse represents the response for DeleteEmployeeCertification
 type DeleteEmployeeCertificationResponse struct {
-	ID         int64     `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 	Name       string    `json:"name"`
 	IssuedBy   string    `json:"issued_by"`

@@ -12,10 +12,11 @@ import (
 	"maicare_go/bucket"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
+	"github.com/google/uuid"
 )
 
 type InvoicePDFData struct {
-	ID                   int64
+	ID                   uuid.UUID
 	SenderName           string
 	SenderContactPerson  string
 	SenderAddressLine1   string
@@ -117,10 +118,10 @@ func (s *pdfService) generateInvoicePDF(invoiceData InvoicePDFData) (multipart.F
 }
 
 // UploadInvoicePDF uploads a PDF to B2 with a generated filename
-func (s *pdfService) uploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID int64) (string, int64, error) {
+func (s *pdfService) uploadInvoicePDF(ctx context.Context, pdfFile multipart.File, invoiceID uuid.UUID) (string, int64, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("invoice_reports/%s/invoice_report_%d.pdf", timestamp, invoiceID)
+	filename := fmt.Sprintf("invoice_reports/%s/invoice_report_%s.pdf", timestamp, invoiceID.String())
 
 	// Upload to B2
 	key, size, err := s.bucketClient.Upload(ctx, pdfFile, filename, "application/pdf")

@@ -4,9 +4,9 @@ import (
 	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Create Registration Form
@@ -76,14 +76,14 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 // @Description Get a registration form by ID
 // @Tags Registration Form
 // @Produce json
-// @Param id path int true "Registration Form ID"
+// @Param id path uuid true "Registration Form ID"
 // @Success 200 {object} Response[clientp.GetRegistrationFormResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /registration_form/{id} [get]
 func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
-	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -103,7 +103,7 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 // @Tags Registration Form
 // @Accept json
 // @Produce json
-// @Param id path int true "Registration Form ID"
+// @Param id path uuid true "Registration Form ID"
 // @Param request body clientp.UpdateRegistrationFormRequest true "Update Registration Form Request"
 // @Success 200 {object} Response[clientp.UpdateRegistrationFormResponse]
 // @Failure 400 {object} Response[any]
@@ -111,7 +111,7 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any]
 // @Router /registration_form/{id} [put]
 func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
-	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -136,14 +136,14 @@ func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 // @Description Delete a registration form by ID
 // @Tags Registration Form
 // @Produce json
-// @Param id path int true "Registration Form ID"
+// @Param id path uuid true "Registration Form ID"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /registration_form/{id} [delete]
 func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
-	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -163,7 +163,7 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 // @Description Update the status of a registration form by ID
 // @Tags Registration Form
 // @Produce json
-// @Param id path int true "Registration Form ID"
+// @Param id path uuid true "Registration Form ID"
 // @Param request body clientp.UpdateRegistrationFormStatusRequest true "Update Registration Form Status Request"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any]
@@ -184,7 +184,7 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 		return
 	}
 
-	rfId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

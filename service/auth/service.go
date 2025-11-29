@@ -34,11 +34,11 @@ type AuthService interface {
 	// role methods
 	ListRoles(ctx context.Context) ([]ListRolesApiResponse, error)
 	ListAllPermissions(ctx context.Context) ([]ListAllPermissionsApiResponse, error)
-	ListAllRolePermissions(ctx context.Context, roleID int32) ([]ListAllRolePermissionsApiResponse, error)
+	ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]ListAllRolePermissionsApiResponse, error)
 	AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, req *AssignRoleToEmployeeParams) (*AssignRoleToEmployeeApiResponse, error)
 	ListUserRolesAndPermissionsApi(ctx context.Context, employeeID uuid.UUID) (*ListUserRolesAndPermissionsApiResponse, error)
 	GrantUserPermission(ctx context.Context, employeeID uuid.UUID, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error)
-	AddPermissionsToRole(ctx context.Context, roleID int32, req *AddPermissionsToRoleRequest) (*AddPermissionsToRoleResponse, error)
+	AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, req *AddPermissionsToRoleRequest) (*AddPermissionsToRoleResponse, error)
 	CreateRole(ctx context.Context, req *CreateRoleRequest) (*CreateRoleResponse, error)
 	HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error)
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error)

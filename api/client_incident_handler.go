@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
@@ -20,7 +19,7 @@ import (
 // @Tags incidents
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.CreateIncidentRequest true "Incident data"
 // @Success 201 {object} Response[clientp.CreateIncidentResponse]
 // @Failure 400,404,500 {object} Response[any]
@@ -55,7 +54,7 @@ func (server *Server) CreateIncidentApi(ctx *gin.Context) {
 // @Summary List all incidents
 // @Tags incidents
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[clientp.ListIncidentsResponse]]
@@ -89,14 +88,14 @@ func (server *Server) ListIncidentsApi(ctx *gin.Context) {
 // @Summary Retrieve an incident
 // @Tags incidents
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param incident_id path int true "Incident ID"
+// @Param id path uuid true "Client ID"
+// @Param incident_id path uuid true "Incident ID"
 // @Success 200 {object} Response[clientp.GetIncidentResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/incidents/{incident_id} [get]
 func (server *Server) GetIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
-	incidentID, err := strconv.ParseInt(id, 10, 64)
+	incidentID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
@@ -117,15 +116,15 @@ func (server *Server) GetIncidentApi(ctx *gin.Context) {
 // @Summary Update an incident
 // @Tags incidents
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param incident_id path int true "Incident ID"
+// @Param id path uuid true "Client ID"
+// @Param incident_id path uuid true "Incident ID"
 // @Param incident body clientp.UpdateIncidentRequest true "Incident"
 // @Success 200 {object} Response[clientp.UpdateIncidentResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/incidents/{incident_id} [put]
 func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
-	incidentID, err := strconv.ParseInt(id, 10, 64)
+	incidentID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
@@ -152,14 +151,14 @@ func (server *Server) UpdateIncidentApi(ctx *gin.Context) {
 // @Summary Delete an incident
 // @Tags incidents
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param incident_id path int true "Incident ID"
+// @Param id path uuid true "Client ID"
+// @Param incident_id path uuid true "Incident ID"
 // @Success 200 {object} Response[any]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/incidents/{incident_id} [delete]
 func (server *Server) DeleteIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
-	incidentID, err := strconv.ParseInt(id, 10, 64)
+	incidentID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
@@ -178,14 +177,14 @@ func (server *Server) DeleteIncidentApi(ctx *gin.Context) {
 // @Summary Generate an incident file
 // @Tags incidents
 // @Produce json
-// @Param incident_id path int true "Incident ID"
-// @Param id path int true "Client ID"
+// @Param incident_id path uuid true "Incident ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GenerateIncidentFileResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/incidents/{incident_id}/file [get]
 func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
-	incidentID, err := strconv.ParseInt(id, 10, 64)
+	incidentID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return
@@ -205,13 +204,13 @@ func (server *Server) GenerateIncidentFileApi(ctx *gin.Context) {
 // @Summary Confirm an incident
 // @Tags incidents
 // @Produce json
-// @Param incident_id path int true "Incident ID"
+// @Param incident_id path uuid true "Incident ID"
 // @Success 200 {object} Response[clientp.ConfirmIncidentResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /incidents/{incident_id}/confirm [put]
 func (server *Server) ConfirmIncidentApi(ctx *gin.Context) {
 	id := ctx.Param("incident_id")
-	incidentID, err := strconv.ParseInt(id, 10, 64)
+	incidentID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid incident ID")))
 		return

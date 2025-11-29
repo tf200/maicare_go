@@ -18,8 +18,8 @@ type CreatePaymentRequest struct {
 
 // CreatePaymentResponse represents the response body for creating a payment.
 type CreatePaymentResponse struct {
-	PaymentID            int64      `json:"payment_id"`
-	InvoiceID            int64      `json:"invoice_id"`
+	PaymentID            uuid.UUID  `json:"payment_id"`
+	InvoiceID            uuid.UUID  `json:"invoice_id"`
 	PaymentMethod        string     `json:"payment_method"`
 	PaymentStatus        string     `json:"payment_status"`
 	Amount               float64    `json:"amount"`
@@ -33,8 +33,8 @@ type CreatePaymentResponse struct {
 
 // ListPaymentsResponse represents the response body for listing payments.
 type ListPaymentsResponse struct {
-	PaymentID           int64      `json:"payment_id"`
-	InvoiceID           int64      `json:"invoice_id"`
+	PaymentID           uuid.UUID  `json:"payment_id"`
+	InvoiceID           uuid.UUID  `json:"invoice_id"`
 	PaymentMethod       string     `json:"payment_method"`
 	PaymentStatus       string     `json:"payment_status"`
 	Amount              float64    `json:"amount"`
@@ -50,8 +50,8 @@ type ListPaymentsResponse struct {
 
 // GetPaymentByIDResponse represents the response body for getting a payment by ID.
 type GetPaymentByIDResponse struct {
-	PaymentID           int64      `json:"payment_id"`
-	InvoiceID           int64      `json:"invoice_id"`
+	PaymentID           uuid.UUID  `json:"payment_id"`
+	InvoiceID           uuid.UUID  `json:"invoice_id"`
 	PaymentMethod       string     `json:"payment_method"`
 	PaymentStatus       string     `json:"payment_status"`
 	Amount              float64    `json:"amount"`
@@ -77,8 +77,8 @@ type UpdatePaymentRequest struct {
 
 // UpdatePaymentResponse represents the response body for updating a payment.
 type UpdatePaymentResponse struct {
-	PaymentID             int64      `json:"payment_id"`
-	InvoiceID             int64      `json:"invoice_id"`
+	PaymentID             uuid.UUID  `json:"payment_id"`
+	InvoiceID             uuid.UUID  `json:"invoice_id"`
 	PaymentMethod         string     `json:"payment_method"`
 	PaymentStatus         string     `json:"payment_status"`
 	Amount                float64    `json:"amount"`
@@ -93,11 +93,11 @@ type UpdatePaymentResponse struct {
 
 // DeletePaymentResponse represents the response body for deleting a payment.
 type DeletePaymentResponse struct {
-	DeletedPaymentID      int64   `json:"deleted_payment_id"`
-	InvoiceID             int64   `json:"invoice_id"`
-	DeletedAmount         float64 `json:"deleted_amount"`
-	DeletedPaymentStatus  string  `json:"deleted_payment_status"`
-	InvoiceStatusChanged  bool    `json:"invoice_status_changed"`
-	CurrentInvoiceStatus  string  `json:"current_invoice_status"`
-	PreviousInvoiceStatus string  `json:"previous_invoice_status"`
+	DeletedPaymentID      uuid.UUID `json:"deleted_payment_id"`
+	InvoiceID             uuid.UUID `json:"invoice_id"`
+	DeletedAmount         float64   `json:"deleted_amount"`
+	DeletedPaymentStatus  string    `json:"deleted_payment_status"`
+	InvoiceStatusChanged  bool      `json:"invoice_status_changed"`
+	CurrentInvoiceStatus  string    `json:"current_invoice_status"`
+	PreviousInvoiceStatus string    `json:"previous_invoice_status"`
 }

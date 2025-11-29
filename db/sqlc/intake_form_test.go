@@ -2,266 +2,300 @@ package db
 
 import (
 	"context"
+	"maicare_go/util"
 	"testing"
 	"time"
 
-	"maicare_go/util"
-
-	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomIntakeForm(t *testing.T) IntakeForm {
-	// Helper function to get random enum value
-	getRandomEnum := func(values []string) string {
-		r, _ := faker.RandomInt(0, len(values)-1)
-		return values[r[0]]
-	}
-
-	idTypes := []string{"passport", "id_card", "residence_permit"}
-	signedByOptions := []string{"Referrer", "Parent/Guardian", "Client"}
-	lawTypes := []string{"Youth Act", "WLZ", "WMO", "Other"}
-	registrationTypes := []string{"Protected Living", "Supervised Independent Living", "Outpatient Guidance"}
-	livingSituations := []string{"Home", "Foster care", "Youth care institution", "Other"}
-
-	arg := CreateIntakeFormParams{
-		FirstName: faker.FirstName(),
-		LastName:  faker.LastName(),
-		DateOfBirth: pgtype.Date{
-			Time:  time.Now().AddDate(-20, 0, 0), // 20 years ago
-			Valid: true,
-		},
-		Nationality: faker.Word(),
-		Bsn:         faker.CCNumber(),
-		Address:     faker.GetRealAddress().Address,
-		City:        faker.GetRealAddress().City,
-		PostalCode:  faker.GetRealAddress().PostalCode,
-		PhoneNumber: faker.Phonenumber(),
-		Gender:      faker.Gender(),
-		Email:       faker.Email(),
-		IDType:      getRandomEnum(idTypes),
-		IDNumber:    faker.CCNumber(),
-
-		ReferrerName:         util.StringPtr(faker.Name()),
-		ReferrerOrganization: util.StringPtr(faker.Name()),
-		ReferrerFunction:     util.StringPtr(faker.NAME),
-		ReferrerPhone:        util.StringPtr(faker.Phonenumber()),
-		ReferrerEmail:        util.StringPtr(faker.Email()),
-		SignedBy:             util.StringPtr(getRandomEnum(signedByOptions)),
-
-		HasValidIndication:  true,
-		LawType:             util.StringPtr(getRandomEnum(lawTypes)),
-		MainProviderName:    util.StringPtr(faker.Name()),
-		MainProviderContact: util.StringPtr(faker.Phonenumber()),
-		IndicationStartDate: pgtype.Date{
-			Time:  time.Now(),
-			Valid: true,
-		},
-		IndicationEndDate: pgtype.Date{
-			Time:  time.Now().AddDate(1, 0, 0),
-			Valid: true,
-		},
-		RegistrationReason: util.StringPtr(faker.Sentence()),
-		GuidanceGoals:      util.StringPtr(faker.Sentence()),
-		RegistrationType:   util.StringPtr(getRandomEnum(registrationTypes)),
-
-		LivingSituation:   util.StringPtr(getRandomEnum(livingSituations)),
-		ParentalAuthority: false,
-		CurrentSchool:     util.StringPtr(faker.Word()),
-		MentorName:        util.StringPtr(faker.Name()),
-		MentorPhone:       util.StringPtr(faker.Phonenumber()),
-		MentorEmail:       util.StringPtr(faker.Email()),
-		PreviousCare:      util.StringPtr(faker.Sentence()),
-
-		GuardianDetails: []byte(`[{
-			"first_name": "` + faker.FirstName() + `",
-			"last_name": "` + faker.LastName() + `",
-			"phone_number": "` + faker.Phonenumber() + `",
-			"email": "` + faker.Email() + `",
-			"address": "` + faker.GetRealAddress().City + `"
-		}]`),
-
-		UsesMedication:      util.RandomBool(),
-		AddictionIssues:     util.RandomBool(),
-		JudicialInvolvement: util.RandomBool(),
-		UrgencyScore:        "low",
-
-		RiskAggression:       util.RandomBool(),
-		RiskSuicidality:      util.RandomBool(),
-		RiskRunningAway:      util.RandomBool(),
-		RiskSelfHarm:         util.RandomBool(),
-		RiskWeaponPossession: util.RandomBool(),
-		RiskDrugDealing:      util.RandomBool(),
-		OtherRisks:           util.StringPtr(faker.Sentence()),
-
-		SharingPermission: util.RandomBool(),
-		TruthDeclaration:  util.RandomBool(),
-		ClientSignature:   util.RandomBool(),
-		GuardianSignature: util.BoolPtr(util.RandomBool()),
-		ReferrerSignature: util.BoolPtr(util.RandomBool()),
-		SignatureDate: pgtype.Date{
-			Time:  time.Now(),
-			Valid: true,
-		},
-	}
-
-	form, err := testQueries.CreateIntakeForm(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, form)
-	require.NotEmpty(t, form.ID)
-	require.Equal(t, arg.FirstName, form.FirstName)
-	require.Equal(t, arg.LastName, form.LastName)
-	require.Equal(t, arg.Email, form.Email)
-	return form
-}
-
 func TestCreateIntakeForm(t *testing.T) {
-	createRandomIntakeForm(t)
+	tests := []struct {
+		name   string
+		params func(ctx context.Context, qtx *Queries) CreateIntakeFormParams
+		checks func(t *testing.T, intakeForm IntakeForm)
+	}{
+		{
+			name: "Successful Creation",
+			params: func(ctx context.Context, qtx *Queries) CreateIntakeFormParams {
+				regForm := createRandomRegistrationForm(ctx, qtx)
+				maturityMatrix := createRandomMaturityMatrix(ctx, t, qtx)
+				return CreateIntakeFormParams{
+					RegistrationFormID:    regForm.ID,
+					DateOfIntake:          pgtype.Timestamptz{Valid: true, Time: time.Now()},
+					CareType:              IntakeCareTypeEnumAmbulatorySupport,
+					IntakeParticipants:    []IntakeParticipantsEnum{IntakeParticipantsEnumClient, IntakeParticipantsEnumReferrer},
+					FamilySituation:       util.StringPtr("Stable family situation"),
+					PsychologicalState:    util.StringPtr("Good psychological state"),
+					SelfSufficiency:       4,
+					MaturityMatrixID:      &maturityMatrix.ID,
+					Goals:                 util.StringPtr("Improve self-sufficiency"),
+					RiskAssessment:        util.StringPtr("Low risk"),
+					IntakeConclusion:      IntakeConclusionEnumFurtherInvestigation,
+					IntakeConclusionNotes: util.StringPtr("Needs further assessment"),
+					Signature:             util.StringPtr("Client Signature"),
+				}
+			},
+			checks: func(t *testing.T, intakeForm IntakeForm) {
+				require.NotZero(t, intakeForm.ID)
+				require.Equal(t, IntakeCareTypeEnumAmbulatorySupport, intakeForm.CareType)
+				require.Equal(t, 4, intakeForm.SelfSufficiency)
+				require.Equal(t, IntakeConclusionEnumFurtherInvestigation, intakeForm.IntakeConclusion)
+				require.NotNil(t, intakeForm.FamilySituation)
+				require.Equal(t, "Stable family situation", *intakeForm.FamilySituation)
+				require.True(t, intakeForm.CreatedAt.Valid)
+			},
+		},
+		{
+			name: "Successful Creation with Minimal Fields",
+			params: func(ctx context.Context, qtx *Queries) CreateIntakeFormParams {
+				regForm := createRandomRegistrationForm(ctx, qtx)
+				return CreateIntakeFormParams{
+					RegistrationFormID: regForm.ID,
+					DateOfIntake:       pgtype.Timestamptz{Valid: true, Time: time.Now()},
+					CareType:           IntakeCareTypeEnumProtectedLiving,
+					IntakeParticipants: []IntakeParticipantsEnum{IntakeParticipantsEnumClient},
+					SelfSufficiency:    2,
+					IntakeConclusion:   IntakeConclusionEnumSuitable,
+				}
+			},
+			checks: func(t *testing.T, intakeForm IntakeForm) {
+				require.NotZero(t, intakeForm.ID)
+				require.Equal(t, IntakeCareTypeEnumProtectedLiving, intakeForm.CareType)
+				require.Equal(t, 2, intakeForm.SelfSufficiency)
+				require.Equal(t, IntakeConclusionEnumSuitable, intakeForm.IntakeConclusion)
+				require.Nil(t, intakeForm.FamilySituation)
+				require.Nil(t, intakeForm.Goals)
+			},
+		},
+		{
+			name: "Successful Creation with All Optional Fields Nil",
+			params: func(ctx context.Context, qtx *Queries) CreateIntakeFormParams {
+				regForm := createRandomRegistrationForm(ctx, qtx)
+				return CreateIntakeFormParams{
+					RegistrationFormID:    regForm.ID,
+					DateOfIntake:          pgtype.Timestamptz{Valid: true, Time: time.Now()},
+					CareType:              IntakeCareTypeEnumTrainingCenter,
+					IntakeParticipants:    []IntakeParticipantsEnum{IntakeParticipantsEnumReferrer},
+					SelfSufficiency:       5,
+					IntakeConclusion:      IntakeConclusionEnumUnsuitable,
+					FamilySituation:       nil,
+					PsychologicalState:    nil,
+					MaturityMatrixID:      nil,
+					Goals:                 nil,
+					RiskAssessment:        nil,
+					IntakeConclusionNotes: nil,
+					Signature:             nil,
+				}
+			},
+			checks: func(t *testing.T, intakeForm IntakeForm) {
+				require.NotZero(t, intakeForm.ID)
+				require.Equal(t, IntakeCareTypeEnumTrainingCenter, intakeForm.CareType)
+				require.Equal(t, 5, intakeForm.SelfSufficiency)
+				require.Equal(t, IntakeConclusionEnumUnsuitable, intakeForm.IntakeConclusion)
+				require.Nil(t, intakeForm.FamilySituation)
+				require.Nil(t, intakeForm.PsychologicalState)
+				require.Nil(t, intakeForm.MaturityMatrixID)
+			},
+		},
+		{
+			name: "Successful Creation with Maturity Matrix",
+			params: func(ctx context.Context, qtx *Queries) CreateIntakeFormParams {
+				regForm := createRandomRegistrationForm(ctx, qtx)
+				maturityMatrix := createRandomMaturityMatrix(ctx, t, qtx)
+				return CreateIntakeFormParams{
+					RegistrationFormID:    regForm.ID,
+					DateOfIntake:          pgtype.Timestamptz{Valid: true, Time: time.Now()},
+					CareType:              IntakeCareTypeEnumSupportedIndependentLiving,
+					IntakeParticipants:    []IntakeParticipantsEnum{IntakeParticipantsEnumClient, IntakeParticipantsEnumParentsGuardians},
+					FamilySituation:       util.StringPtr("Complex family dynamics"),
+					PsychologicalState:    util.StringPtr("Requires monitoring"),
+					SelfSufficiency:       3,
+					MaturityMatrixID:      &maturityMatrix.ID,
+					Goals:                 util.StringPtr("Build independence"),
+					RiskAssessment:        util.StringPtr("Medium risk"),
+					IntakeConclusion:      IntakeConclusionEnumFurtherInvestigation,
+					IntakeConclusionNotes: util.StringPtr("Monitor progress closely"),
+					Signature:             util.StringPtr("Authorized Signature"),
+				}
+			},
+			checks: func(t *testing.T, intakeForm IntakeForm) {
+				require.NotZero(t, intakeForm.ID)
+				require.Equal(t, IntakeCareTypeEnumSupportedIndependentLiving, intakeForm.CareType)
+				require.Equal(t, 3, intakeForm.SelfSufficiency)
+				require.Equal(t, IntakeConclusionEnumFurtherInvestigation, intakeForm.IntakeConclusion)
+				require.NotNil(t, intakeForm.MaturityMatrixID)
+				require.Equal(t, "Complex family dynamics", *intakeForm.FamilySituation)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			params := tt.params(ctx, qtx)
+			intakeForm, err := qtx.CreateIntakeForm(ctx, params)
+			require.NoError(t, err)
+
+			tt.checks(t, intakeForm)
+		})
+	}
 }
 
 func TestListIntakeForms(t *testing.T) {
-	urgencyScore := []string{"low", "medium", "high"}
-	for i := 0; i < 10; i++ {
-		form := createRandomIntakeForm(t)
-		testQueries.AddUrgencyScore(context.Background(), AddUrgencyScoreParams{
-			ID:           form.ID,
-			UrgencyScore: util.RandomEnum(urgencyScore),
-		})
-	}
-
-	testCases := []struct {
-		name      string
-		sortBy    string
-		sortOrder string
-		checkSort func([]ListIntakeFormsRow) bool
+	tests := []struct {
+		name   string
+		setup  func(ctx context.Context, qtx *Queries) []IntakeForm
+		params ListIntakeFormsParams
+		checks func(t *testing.T, rows []ListIntakeFormsRow, created []IntakeForm)
 	}{
 		{
-			name:      "Default sort",
-			sortBy:    "",
-			sortOrder: "",
-			// Default sort is by ID DESC
-			checkSort: func(forms []ListIntakeFormsRow) bool {
-				for i := 0; i < len(forms)-1; i++ {
-					if forms[i].ID < forms[i+1].ID {
-						return false
-					}
+			name: "list all intake forms without search",
+			setup: func(ctx context.Context, qtx *Queries) []IntakeForm {
+				var forms []IntakeForm
+				for i := 0; i < 3; i++ {
+					regForm := createRandomRegistrationForm(ctx, qtx)
+					form, err := qtx.CreateIntakeForm(ctx, CreateIntakeFormParams{
+						RegistrationFormID: regForm.ID,
+						DateOfIntake:       pgtype.Timestamptz{Valid: true, Time: time.Now()},
+						CareType:           IntakeCareTypeEnumAmbulatorySupport,
+						IntakeParticipants: []IntakeParticipantsEnum{IntakeParticipantsEnumClient},
+						SelfSufficiency:    3,
+						IntakeConclusion:   IntakeConclusionEnumSuitable,
+					})
+					require.NoError(t, err)
+					forms = append(forms, form)
 				}
-				return true
+				return forms
 			},
-		},
-		{
-			name:      "Sort by urgency_score desc",
-			sortBy:    "urgency_score",
-			sortOrder: "desc",
-			checkSort: func(forms []ListIntakeFormsRow) bool {
-				// for i := 0; i < len(forms)-1; i++ {
-				// 	if *forms[i].UrgencyScore < *forms[i+1].UrgencyScore {
-				// 		return false
-				// 	}
-				// }
-				return true
+			params: ListIntakeFormsParams{
+				Limit:     10,
+				Offset:    0,
+				Search:    "",
+				SortBy:    "",
+				SortOrder: "",
 			},
-		},
-		{
-			name:      "Sort by urgency_score asc",
-			sortBy:    "urgency_score",
-			sortOrder: "asc",
-			checkSort: func(forms []ListIntakeFormsRow) bool {
-				// for i := 0; i < len(forms)-1; i++ {
-				// 	if *forms[i].UrgencyScore > *forms[i+1].UrgencyScore {
-				// 		return false
-				// 	}
-				// }
-				return true
-			},
-		},
-		{
-			name:      "Sort by created_at desc",
-			sortBy:    "created_at",
-			sortOrder: "desc",
-			checkSort: func(forms []ListIntakeFormsRow) bool {
-				for i := 0; i < len(forms)-1; i++ {
-					if forms[i].CreatedAt.Time.Before(forms[i+1].CreatedAt.Time) {
-						return false
-					}
+			checks: func(t *testing.T, rows []ListIntakeFormsRow, created []IntakeForm) {
+				require.Len(t, rows, 3)
+				require.Equal(t, int64(3), rows[0].TotalCount)
+				// Check that all created forms are in the list
+				ids := make(map[uuid.UUID]bool)
+				for _, row := range rows {
+					ids[row.ID] = true
 				}
-				return true
+				for _, form := range created {
+					require.True(t, ids[form.ID])
+				}
 			},
 		},
 		{
-			name:      "Sort by created_at asc",
-			sortBy:    "created_at",
-			sortOrder: "asc",
-			checkSort: func(forms []ListIntakeFormsRow) bool {
-				for i := 0; i < len(forms)-1; i++ {
-					if forms[i].CreatedAt.Time.After(forms[i+1].CreatedAt.Time) {
-						return false
-					}
+			name: "list intake forms with limit and offset",
+			setup: func(ctx context.Context, qtx *Queries) []IntakeForm {
+				var forms []IntakeForm
+				for i := 0; i < 5; i++ {
+					regForm := createRandomRegistrationForm(ctx, qtx)
+					form, err := qtx.CreateIntakeForm(ctx, CreateIntakeFormParams{
+						RegistrationFormID: regForm.ID,
+						DateOfIntake:       pgtype.Timestamptz{Valid: true, Time: time.Now()},
+						CareType:           IntakeCareTypeEnumProtectedLiving,
+						IntakeParticipants: []IntakeParticipantsEnum{IntakeParticipantsEnumClient},
+						SelfSufficiency:    4,
+						IntakeConclusion:   IntakeConclusionEnumFurtherInvestigation,
+					})
+					require.NoError(t, err)
+					forms = append(forms, form)
 				}
-				return true
+				return forms
+			},
+			params: ListIntakeFormsParams{
+				Limit:     2,
+				Offset:    1,
+				Search:    "",
+				SortBy:    "",
+				SortOrder: "",
+			},
+			checks: func(t *testing.T, rows []ListIntakeFormsRow, created []IntakeForm) {
+				require.Len(t, rows, 2)
+				require.Equal(t, int64(5), rows[0].TotalCount)
+			},
+		},
+		{
+			name: "list intake forms sorted by created_at desc",
+			setup: func(ctx context.Context, qtx *Queries) []IntakeForm {
+				var forms []IntakeForm
+				for i := 0; i < 3; i++ {
+					regForm := createRandomRegistrationForm(ctx, qtx)
+					form, err := qtx.CreateIntakeForm(ctx, CreateIntakeFormParams{
+						RegistrationFormID: regForm.ID,
+						DateOfIntake:       pgtype.Timestamptz{Valid: true, Time: time.Now()},
+						CareType:           IntakeCareTypeEnumTrainingCenter,
+						IntakeParticipants: []IntakeParticipantsEnum{IntakeParticipantsEnumReferrer},
+						SelfSufficiency:    2,
+						IntakeConclusion:   IntakeConclusionEnumUnsuitable,
+					})
+					require.NoError(t, err)
+					forms = append(forms, form)
+					// Small delay to ensure different created_at times
+					time.Sleep(1 * time.Millisecond)
+				}
+				return forms
+			},
+			params: ListIntakeFormsParams{
+				Limit:     10,
+				Offset:    0,
+				Search:    "",
+				SortBy:    "created_at",
+				SortOrder: "desc",
+			},
+			checks: func(t *testing.T, rows []ListIntakeFormsRow, created []IntakeForm) {
+				require.Len(t, rows, 3)
+				// Check that rows are sorted by created_at desc (most recent first)
+				require.True(t, rows[0].CreatedAt.Time.After(rows[1].CreatedAt.Time) || rows[0].CreatedAt.Time.Equal(rows[1].CreatedAt.Time))
+				require.True(t, rows[1].CreatedAt.Time.After(rows[2].CreatedAt.Time) || rows[1].CreatedAt.Time.Equal(rows[2].CreatedAt.Time))
+			},
+		},
+		{
+			name: "list intake forms with empty result",
+			setup: func(ctx context.Context, qtx *Queries) []IntakeForm {
+				return []IntakeForm{} // No forms created
+			},
+			params: ListIntakeFormsParams{
+				Limit:     10,
+				Offset:    0,
+				Search:    "",
+				SortBy:    "",
+				SortOrder: "",
+			},
+			checks: func(t *testing.T, rows []ListIntakeFormsRow, created []IntakeForm) {
+				require.Len(t, rows, 0)
 			},
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			arg := ListIntakeFormsParams{
-				Limit:     5,
-				Offset:    0,
-				SortBy:    tc.sortBy,
-				SortOrder: tc.sortOrder,
-			}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
 
-			forms, err := testQueries.ListIntakeForms(context.Background(), arg)
+			tx, err := testDB.Begin(ctx)
+			require.NoError(t, err, "failed to begin transaction")
+			defer tx.Rollback(ctx)
+
+			qtx := testQueries.WithTx(tx)
+
+			created := tt.setup(ctx, qtx)
+			rows, err := qtx.ListIntakeForms(ctx, tt.params)
 			require.NoError(t, err)
-			require.NotEmpty(t, forms)
 
-			// Check sorting is correct
-			if len(forms) > 1 {
-				require.True(t, tc.checkSort(forms), "Sort order is incorrect for %s", tc.name)
-			}
-
-			// Make sure we're getting results with correct total count
-			if len(forms) > 0 {
-				require.True(t, forms[0].TotalCount >= int64(len(forms)))
-			}
+			tt.checks(t, rows, created)
 		})
 	}
-
-	// Original pagination test
-	paginationArg := ListIntakeFormsParams{
-		Limit:  5,
-		Offset: 5,
-	}
-
-	paginatedForms, err := testQueries.ListIntakeForms(context.Background(), paginationArg)
-	require.NoError(t, err)
-	require.Len(t, paginatedForms, 5)
-}
-
-func TestGetIntakeForm(t *testing.T) {
-	form1 := createRandomIntakeForm(t)
-	form2, err := testQueries.GetIntakeForm(context.Background(), form1.ID)
-	require.NoError(t, err)
-	require.NotEmpty(t, form2)
-	require.Equal(t, form1.ID, form2.ID)
-	require.Equal(t, form1.FirstName, form2.FirstName)
-	require.Equal(t, form1.LastName, form2.LastName)
-	require.Equal(t, form1.Email, form2.Email)
-}
-
-func TestAddUrgencyScore(t *testing.T) {
-	urgencyScore := []string{"low", "medium", "high"}
-	form := createRandomIntakeForm(t)
-	arg := AddUrgencyScoreParams{
-		ID:           form.ID,
-		UrgencyScore: util.RandomEnum(urgencyScore),
-	}
-	_, err := testQueries.AddUrgencyScore(context.Background(), arg)
-	require.NoError(t, err)
-
-	form2, err := testQueries.GetIntakeForm(context.Background(), form.ID)
-	require.NoError(t, err)
-	require.Equal(t, arg.UrgencyScore, form2.UrgencyScore)
 }

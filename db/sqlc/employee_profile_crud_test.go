@@ -675,7 +675,7 @@ func createRandomEmployeeProfileWithDepartment(ctx context.Context, qtx *Queries
 	return profile
 }
 
-func createRandomEmployeeProfileWithLocation(ctx context.Context, qtx *Queries, locationID int64) EmployeeProfile {
+func createRandomEmployeeProfileWithLocation(ctx context.Context, qtx *Queries, locationID uuid.UUID) EmployeeProfile {
 	user := createRandomUser(ctx, qtx)
 	profile, err := qtx.CreateEmployeeProfile(ctx, CreateEmployeeProfileParams{
 		UserID:       user.ID,

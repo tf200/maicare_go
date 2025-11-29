@@ -102,7 +102,7 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *asynq.
 	}
 
 	err = processor.brevoConf.SendIncident(ctx, p.To, email.Incident{
-		IncidentID:   p.ID,
+		IncidentID:   p.ID.String(),
 		IncidentType: p.IncidentType,
 		Severity:     p.SeverityOfIncident,
 		Location:     p.LocationName,

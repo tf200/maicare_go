@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const getAllTemplateItems = `-- name: GetAllTemplateItems :many
@@ -44,18 +46,18 @@ func (q *Queries) GetAllTemplateItems(ctx context.Context) ([]TemplateItem, erro
 const getTemplateItemsByIds = `-- name: GetTemplateItemsByIds :many
 SELECT id
 FROM template_items
-WHERE id = ANY($1::bigint[])
+WHERE id = ANY($1::uuid[])
 `
 
-func (q *Queries) GetTemplateItemsByIds(ctx context.Context, dollar_1 []int64) ([]int64, error) {
+func (q *Queries) GetTemplateItemsByIds(ctx context.Context, dollar_1 []uuid.UUID) ([]uuid.UUID, error) {
 	rows, err := q.db.Query(ctx, getTemplateItemsByIds, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []int64{}
+	items := []uuid.UUID{}
 	for rows.Next() {
-		var id int64
+		var id uuid.UUID
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
@@ -70,11 +72,11 @@ func (q *Queries) GetTemplateItemsByIds(ctx context.Context, dollar_1 []int64) (
 const getTemplateItemsBySourceTable = `-- name: GetTemplateItemsBySourceTable :many
 SELECT id, item_tag, description, source_table, source_column
 FROM template_items
-WHERE id = ANY($1::bigint[])
+WHERE id = ANY($1::uuid[])
 ORDER BY source_table
 `
 
-func (q *Queries) GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []int64) ([]TemplateItem, error) {
+func (q *Queries) GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []uuid.UUID) ([]TemplateItem, error) {
 	rows, err := q.db.Query(ctx, getTemplateItemsBySourceTable, dollar_1)
 	if err != nil {
 		return nil, err

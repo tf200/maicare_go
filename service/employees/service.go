@@ -43,20 +43,20 @@ type EmployeeService interface {
 	// Education methods
 	AddEducationToEmployeeProfile(req AddEducationToEmployeeProfileRequest, employeeID uuid.UUID, ctx context.Context) (*AddEducationToEmployeeProfileResponse, error)
 	ListEmployeeEducation(employeeID uuid.UUID, ctx context.Context) ([]ListEmployeeEducationResponse, error)
-	UpdateEmployeeEducation(req UpdateEmployeeEducationRequest, educationID int64, ctx context.Context) (*UpdateEmployeeEducationResponse, error)
-	DeleteEmployeeEducation(educationID int64, ctx context.Context) (*DeleteEmployeeEducationResponse, error)
+	UpdateEmployeeEducation(req UpdateEmployeeEducationRequest, educationID uuid.UUID, ctx context.Context) (*UpdateEmployeeEducationResponse, error)
+	DeleteEmployeeEducation(educationID uuid.UUID, ctx context.Context) (*DeleteEmployeeEducationResponse, error)
 
 	// Experience methods
 	AddEmployeeExperience(req AddEmployeeExperienceRequest, employeeID uuid.UUID, ctx context.Context) (*AddEmployeeExperienceResponse, error)
 	ListEmployeeExperience(employeeID uuid.UUID, ctx context.Context) ([]ListEmployeeExperienceResponse, error)
-	UpdateEmployeeExperience(req UpdateEmployeeExperienceRequest, experienceID int64, ctx context.Context) (*UpdateEmployeeExperienceResponse, error)
-	DeleteEmployeeExperience(experienceID int64, ctx context.Context) (*DeleteEmployeeExperienceResponse, error)
+	UpdateEmployeeExperience(req UpdateEmployeeExperienceRequest, experienceID uuid.UUID, ctx context.Context) (*UpdateEmployeeExperienceResponse, error)
+	DeleteEmployeeExperience(experienceID uuid.UUID, ctx context.Context) (*DeleteEmployeeExperienceResponse, error)
 
 	// Certification methods
 	AddEmployeeCertification(req AddEmployeeCertificationRequest, employeeID uuid.UUID, ctx context.Context) (*AddEmployeeCertificationResponse, error)
 	ListEmployeeCertification(employeeID uuid.UUID, ctx context.Context) ([]ListEmployeeCertificationResponse, error)
-	UpdateEmployeeCertification(req UpdateEmployeeCertificationRequest, certificationID int64, ctx context.Context) (*UpdateEmployeeCertificationResponse, error)
-	DeleteEmployeeCertification(certificationID int64, ctx context.Context) (*DeleteEmployeeCertificationResponse, error)
+	UpdateEmployeeCertification(req UpdateEmployeeCertificationRequest, certificationID uuid.UUID, ctx context.Context) (*UpdateEmployeeCertificationResponse, error)
+	DeleteEmployeeCertification(certificationID uuid.UUID, ctx context.Context) (*DeleteEmployeeCertificationResponse, error)
 
 	// Working hours methods
 	ListWorkingHours(ctx context.Context, employeeID uuid.UUID, req *ListWorkingHoursRequest) (*ListWorkingHoursResponse, error)

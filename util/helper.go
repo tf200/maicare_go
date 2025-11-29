@@ -134,11 +134,11 @@ func DerefInt32(i *int32) int32 {
 	return *i
 }
 
-func DerefUUID(u *uuid.UUID) string {
+func DerefUUID(u *uuid.UUID) uuid.UUID {
 	if u == nil {
-		return ""
+		return uuid.Nil
 	}
-	return u.String()
+	return *u
 }
 
 func GetStartAndEndOfISOWeek(year int, week int) (time.Time, time.Time, error) {

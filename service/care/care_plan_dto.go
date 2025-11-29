@@ -11,15 +11,15 @@ import (
 
 // CreateClientMaturityMatrixAssessmentRequest represents a request to create a client maturity matrix assessment
 type CreateClientCarePlanRequest struct {
-	MaturityMatrixID int64 `json:"maturity_matrix_id"`
-	InitialLevel     int32 `json:"initial_level"`
-	TargetLevel      int32 `json:"target_level"`
+	MaturityMatrixID uuid.UUID `json:"maturity_matrix_id"`
+	InitialLevel     int32     `json:"initial_level"`
+	TargetLevel      int32     `json:"target_level"`
 }
 
 // CreateClientMaturityMatrixAssessmentResponse represents a response for CreateClientMaturityMatrixAssessmentApi
 type CreateClientCarePlanResponse struct {
 	ClientID   uuid.UUID `json:"client_id"`
-	CarePlanID int64     `json:"care_plan_id"`
+	CarePlanID uuid.UUID `json:"care_plan_id"`
 }
 
 type Level struct {
@@ -43,7 +43,7 @@ type ListClientCarePlansRequest struct {
 
 // ListClientMaturityMatrixAssessmentsResponse represents a response for ListClientMaturityMatrixAssessmentsApi
 type ListClientCarePlansResponse struct {
-	CarePlanID   int64       `json:"care_plan_id"`
+	CarePlanID   uuid.UUID   `json:"care_plan_id"`
 	ClientID     uuid.UUID   `json:"client_id"`
 	StartDate    pgtype.Date `json:"start_date"`
 	EndDate      pgtype.Date `json:"end_date"`
@@ -55,7 +55,7 @@ type ListClientCarePlansResponse struct {
 
 // care_plan represents the response for the GetCarePlanOverview API
 type GetCarePlanOverviewResponse struct {
-	ID                int64     `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	Domain            string    `json:"domain"`
 	CurrentLevel      int32     `json:"current_level"`
 	TargetLevel       int32     `json:"target_level"`
@@ -72,9 +72,9 @@ type UpdateCarePlanOverviewRequest struct {
 
 // UpdateCarePlanOverviewResponse represents the response for the UpdateCarePlanOverview API
 type UpdateCarePlanOverviewResponse struct {
-	CarePlanID        int64  `json:"care_plan_id"`
-	AssessmentID      int64  `json:"assessment_id"`
-	AssessmentSummary string `json:"assessment_summary"`
+	CarePlanID        uuid.UUID `json:"care_plan_id"`
+	AssessmentID      uuid.UUID `json:"assessment_id"`
+	AssessmentSummary string    `json:"assessment_summary"`
 }
 
 // =============================== Care Plan Objectives and Actions ===============================
@@ -88,8 +88,8 @@ type CreateCarePlanObjectiveRequest struct {
 
 // CreateCarePlanObjectiveResponse represents the response for the CreateCarePlanObjective API
 type CreateCarePlanObjectiveResponse struct {
-	ID              int64     `json:"id"`
-	CarePlanID      int64     `json:"care_plan_id"`
+	ID              uuid.UUID `json:"id"`
+	CarePlanID      uuid.UUID `json:"care_plan_id"`
 	Timeframe       string    `json:"timeframe"`
 	GoalTitle       string    `json:"goal_title"`
 	Description     string    `json:"description"`
@@ -103,16 +103,16 @@ type CreateCarePlanObjectiveResponse struct {
 
 // CarePlanActions represents the actions in a care plan objective
 type CarePlanActions struct {
-	ActionID          int64  `json:"action_id"`
-	SortOrder         int32  `json:"sort_order"`
-	ActionDescription string `json:"action_description"`
-	IsCompleted       bool   `json:"is_completed"`
-	Notes             string `json:"notes"`
+	ActionID          uuid.UUID `json:"action_id"`
+	SortOrder         int32     `json:"sort_order"`
+	ActionDescription string    `json:"action_description"`
+	IsCompleted       bool      `json:"is_completed"`
+	Notes             string    `json:"notes"`
 }
 
 // CarePlanObjectives represents the objectives in a care plan
 type CarePlanObjectives struct {
-	ObjectiveID int64             `json:"objective_id"`
+	ObjectiveID uuid.UUID         `json:"objective_id"`
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
 	TimeFrame   string            `json:"timeframe"`
@@ -137,8 +137,8 @@ type UpdateCarePlanObjectiveRequest struct {
 
 // UpdateCarePlanObjectiveResponse represents the response for the UpdateCarePlanObjective API
 type UpdateCarePlanObjectiveResponse struct {
-	ObjectiveID int64 `json:"goal_id"`
-	CarePlanId  int64 `json:"care_plan_id"`
+	ObjectiveID uuid.UUID `json:"goal_id"`
+	CarePlanId  uuid.UUID `json:"care_plan_id"`
 }
 
 // CreateCarePlanActionsRequest represents the request body for creating a care plan action
@@ -148,9 +148,9 @@ type CreateCarePlanActionsRequest struct {
 
 // CreateCarePlanActionsResponse represents the response for the CreateCarePlanActions API
 type CreateCarePlanActionsResponse struct {
-	ActionID          int64  `json:"action_id"`
-	ObjectiveID       int64  `json:"objective_id"`
-	ActionDescription string `json:"action_description"`
+	ActionID          uuid.UUID `json:"action_id"`
+	ObjectiveID       uuid.UUID `json:"objective_id"`
+	ActionDescription string    `json:"action_description"`
 }
 
 // UpdateCarePlanActionsRequest represents the request body for updating a care plan action
@@ -160,9 +160,9 @@ type UpdateCarePlanActionsRequest struct {
 
 // UpdateCarePlanActionsResponse represents the response for the UpdateCarePlanActions API
 type UpdateCarePlanActionsResponse struct {
-	ActionID          int64  `json:"action_id"`
-	ObjectiveID       int64  `json:"objective_id"`
-	ActionDescription string `json:"action_description"`
+	ActionID          uuid.UUID `json:"action_id"`
+	ObjectiveID       uuid.UUID `json:"objective_id"`
+	ActionDescription string    `json:"action_description"`
 }
 
 // CreateCarePlanInterventionRequest represents the request body for creating a care plan intervention
@@ -173,15 +173,15 @@ type CreateCarePlanInterventionRequest struct {
 
 // CreateCarePlanInterventionResponse represents the response for the CreateCarePlanIntervention API
 type CreateCarePlanInterventionResponse struct {
-	InterventionID          int64  `json:"intervention_id"`
-	CarePlanID              int64  `json:"care_plan_id"`
-	Frequency               string `json:"frequency"`
-	InterventionDescription string `json:"intervention_description"`
+	InterventionID          uuid.UUID `json:"intervention_id"`
+	CarePlanID              uuid.UUID `json:"care_plan_id"`
+	Frequency               string    `json:"frequency"`
+	InterventionDescription string    `json:"intervention_description"`
 }
 
 type Intervention struct {
-	InterventionID          int64  `json:"intervention_id"`
-	InterventionDescription string `json:"intervention_description"`
+	InterventionID          uuid.UUID `json:"intervention_id"`
+	InterventionDescription string    `json:"intervention_description"`
 }
 
 // GetCarePlanInterventionsResponse represents the response for the GetCarePlanInterventions API
@@ -199,10 +199,10 @@ type UpdateCarePlanInterventionRequest struct {
 
 // UpdateCarePlanInterventionApi updates a care plan intervention by its ID
 type UpdateCarePlanInterventionResponse struct {
-	InterventionID          int64  `json:"intervention_id"`
-	CarePlanID              int64  `json:"care_plan_id"`
-	Frequency               string `json:"frequency"`
-	InterventionDescription string `json:"intervention_description"`
+	InterventionID          uuid.UUID `json:"intervention_id"`
+	CarePlanID              uuid.UUID `json:"care_plan_id"`
+	Frequency               string    `json:"frequency"`
+	InterventionDescription string    `json:"intervention_description"`
 }
 
 // CreateCarePlanSuccessMetricsRequest represents the request body for creating a care plan success metric
@@ -215,20 +215,20 @@ type CreateCarePlanSuccessMetricsRequest struct {
 
 // CreateCarePlanSuccessMetricsResponse represents the response for the CreateCarePlanSuccessMetrics API
 type CreateCarePlanSuccessMetricsResponse struct {
-	MetricID          int64   `json:"metric_id"`
-	MetricName        string  `json:"metric_name"`
-	CurrentValue      *string `json:"current_value"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
+	MetricID          uuid.UUID `json:"metric_id"`
+	MetricName        string    `json:"metric_name"`
+	CurrentValue      *string   `json:"current_value"`
+	TargetValue       string    `json:"target_value"`
+	MeasurementMethod string    `json:"measurement_method"`
 }
 
 // GetCarePlanSuccessMetricsResponse represents the response for the GetCarePlanSuccessMetrics AP
 type GetCarePlanSuccessMetricsResponse struct {
-	MetricID          int64   `json:"metric_id"`
-	MetricName        string  `json:"metric_name"`
-	CurrentValue      *string `json:"current_value"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
+	MetricID          uuid.UUID `json:"metric_id"`
+	MetricName        string    `json:"metric_name"`
+	CurrentValue      *string   `json:"current_value"`
+	TargetValue       string    `json:"target_value"`
+	MeasurementMethod string    `json:"measurement_method"`
 }
 
 // UpdateCarePlanSuccessMetricsRequest represents the request body for updating a care plan success metric
@@ -241,11 +241,11 @@ type UpdateCarePlanSuccessMetricsRequest struct {
 
 // UpdateCarePlanSuccessMetricsResponse represents the response for the UpdateCarePlanSuccessMetrics API
 type UpdateCarePlanSuccessMetricsResponse struct {
-	MetricID          int64   `json:"metric_id"`
-	MetricName        string  `json:"metric_name"`
-	CurrentValue      *string `json:"current_value"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
+	MetricID          uuid.UUID `json:"metric_id"`
+	MetricName        string    `json:"metric_name"`
+	CurrentValue      *string   `json:"current_value"`
+	TargetValue       string    `json:"target_value"`
+	MeasurementMethod string    `json:"measurement_method"`
 }
 
 // CreateCarePlanRisksRequest represents the request body for creating a care plan risk
@@ -257,18 +257,18 @@ type CreateCarePlanRisksRequest struct {
 
 // CreateCarePlanRisksResponse represents the response for the CreateCarePlanRisks API
 type CreateCarePlanRisksResponse struct {
-	RiskID             int64  `json:"risk_id"`
-	RiskDescription    string `json:"risk_description"`
-	MitigationStrategy string `json:"mitigation_strategy"`
-	RiskLevel          string `json:"risk_level"`
+	RiskID             uuid.UUID `json:"risk_id"`
+	RiskDescription    string    `json:"risk_description"`
+	MitigationStrategy string    `json:"mitigation_strategy"`
+	RiskLevel          string    `json:"risk_level"`
 }
 
 // GetCarePlanRisksResponse represents the response for the GetCarePlanRisks API
 type GetCarePlanRisksResponse struct {
-	RiskID             int64  `json:"risk_id"`
-	RiskDescription    string `json:"risk_description"`
-	MitigationStrategy string `json:"mitigation_strategy"`
-	RiskLevel          string `json:"risk_level"`
+	RiskID             uuid.UUID `json:"risk_id"`
+	RiskDescription    string    `json:"risk_description"`
+	MitigationStrategy string    `json:"mitigation_strategy"`
+	RiskLevel          string    `json:"risk_level"`
 }
 
 // UpdateCarePlanRisksRequest represents the request body for updating a care plan risk
@@ -280,10 +280,10 @@ type UpdateCarePlanRisksRequest struct {
 
 // UpdateCarePlanRisksResponse represents the response for the UpdateCarePlanRisks API
 type UpdateCarePlanRisksResponse struct {
-	RiskID             int64  `json:"risk_id"`
-	RiskDescription    string `json:"risk_description"`
-	MitigationStrategy string `json:"mitigation_strategy"`
-	RiskLevel          string `json:"risk_level"`
+	RiskID             uuid.UUID `json:"risk_id"`
+	RiskDescription    string    `json:"risk_description"`
+	MitigationStrategy string    `json:"mitigation_strategy"`
+	RiskLevel          string    `json:"risk_level"`
 }
 
 // CreateCarePlanSupportNetworkRequest represents the request body for creating a care plan support network
@@ -294,16 +294,16 @@ type CreateCarePlanSupportNetworkRequest struct {
 
 // CreateCarePlanSupportNetworkResponse represents the response for the CreateCarePlanSupportNetwork API
 type CreateCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64  `json:"support_network_id"`
-	RoleTitle                 string `json:"role_title"`
-	ResponsibilityDescription string `json:"responsibility_description"`
+	SupportNetworkID          uuid.UUID `json:"support_network_id"`
+	RoleTitle                 string    `json:"role_title"`
+	ResponsibilityDescription string    `json:"responsibility_description"`
 }
 
 // GetCarePlanSupportNetworkResponse represents the response for the GetCarePlanSupportNetwork API
 type GetCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64   `json:"support_network_id"`
-	RoleTitle                 string  `json:"role_title"`
-	ResponsibilityDescription *string `json:"responsibility_description"`
+	SupportNetworkID          uuid.UUID `json:"support_network_id"`
+	RoleTitle                 string    `json:"role_title"`
+	ResponsibilityDescription *string   `json:"responsibility_description"`
 }
 
 // UpdateCarePlanSupportNetworkRequest represents the request body for updating a care plan support network
@@ -314,9 +314,9 @@ type UpdateCarePlanSupportNetworkRequest struct {
 
 // UpdateCarePlanSupportNetworkResponse represents the response for the UpdateCarePlanSupportNetwork API
 type UpdateCarePlanSupportNetworkResponse struct {
-	SupportNetworkID          int64  `json:"support_network_id"`
-	RoleTitle                 string `json:"role_title"`
-	ResponsibilityDescription string `json:"responsibility_description"`
+	SupportNetworkID          uuid.UUID `json:"support_network_id"`
+	RoleTitle                 string    `json:"role_title"`
+	ResponsibilityDescription string    `json:"responsibility_description"`
 }
 
 // CreateCarePlanResourcesRequest represents the request body for creating a care plan resource
@@ -328,7 +328,7 @@ type CreateCarePlanResourcesRequest struct {
 
 // CreateCarePlanResourcesResponse represents the response for the CreateCarePlanResources API
 type CreateCarePlanResourcesResponse struct {
-	ID                  int64      `json:"id"`
+	ID                  uuid.UUID  `json:"id"`
 	ResourceDescription string     `json:"resource_description"`
 	IsObtained          bool       `json:"is_obtained"`
 	ObtainedDate        *time.Time `json:"obtained_date"`
@@ -336,7 +336,7 @@ type CreateCarePlanResourcesResponse struct {
 
 // GetCarePlanResourcesResponse represents the response for the GetCarePlanResources API
 type GetCarePlanResourcesResponse struct {
-	ID                  int64      `json:"id"`
+	ID                  uuid.UUID  `json:"id"`
 	ResourceDescription string     `json:"resource_description"`
 	IsObtained          bool       `json:"is_obtained"`
 	ObtainedDate        *time.Time `json:"obtained_date"`
@@ -351,7 +351,7 @@ type UpdateCarePlanResourcesRequest struct {
 
 // UpdateCarePlanResourcesResponse represents the response for the UpdateCarePlanResources API
 type UpdateCarePlanResourcesResponse struct {
-	ID                  int64     `json:"id"`
+	ID                  uuid.UUID `json:"id"`
 	ResourceDescription string    `json:"resource_description"`
 	IsObtained          bool      `json:"is_obtained"`
 	ObtainedDate        time.Time `json:"obtained_date"`
@@ -366,8 +366,8 @@ type CreateCarePlanReportRequest struct {
 
 // CreateCarePlanReportResponse represents the response for the CreateCarePlanReport API
 type CreateCarePlanReportResponse struct {
-	ID            int64     `json:"id"`
-	CarePlanID    int64     `json:"care_plan_id"`
+	ID            uuid.UUID `json:"id"`
+	CarePlanID    uuid.UUID `json:"care_plan_id"`
 	ReportType    string    `json:"report_type"`
 	ReportContent string    `json:"report_content"`
 	IsCritical    bool      `json:"is_critical"`
@@ -381,8 +381,8 @@ type ListCarePlanReportsRequest struct {
 
 // CarePlanReportsResponse represents the response for the ListCarePlanReports API
 type ListCarePlanReportsResponse struct {
-	ID                 int64     `json:"id"`
-	CarePlanID         int64     `json:"care_plan_id"`
+	ID                 uuid.UUID `json:"id"`
+	CarePlanID         uuid.UUID `json:"care_plan_id"`
 	ReportType         string    `json:"report_type"`
 	ReportContent      string    `json:"report_content"`
 	CreatedByFirstName string    `json:"created_by_first_name"`
@@ -400,8 +400,8 @@ type UpdateCarePlanReportRequest struct {
 
 // UpdateCarePlanReportResponse represents the response for the UpdateCarePlanReport API
 type UpdateCarePlanReportResponse struct {
-	ID            int64     `json:"id"`
-	CarePlanID    int64     `json:"care_plan_id"`
+	ID            uuid.UUID `json:"id"`
+	CarePlanID    uuid.UUID `json:"care_plan_id"`
 	ReportType    string    `json:"report_type"`
 	ReportContent string    `json:"report_content"`
 	IsCritical    bool      `json:"is_critical"`

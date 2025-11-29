@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
@@ -16,7 +15,7 @@ import (
 // @Tags progress_reports
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.CreateProgressReportRequest true "Progress Report Request"
 // @Success 201 {object} Response[clientp.CreateProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
@@ -48,7 +47,7 @@ func (server *Server) CreateProgressReportApi(ctx *gin.Context) {
 // @Summary List all progress reports for a client
 // @Tags progress_reports
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[[]clientp.ListProgressReportsResponse]]
@@ -81,14 +80,14 @@ func (server *Server) ListProgressReportsApi(ctx *gin.Context) {
 // @Summary Retrieve a progress report for a client
 // @Tags progress_reports
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param report_id path int true "Progress Report ID"
+// @Param id path uuid true "Client ID"
+// @Param report_id path uuid true "Progress Report ID"
 // @Success 200 {object} Response[clientp.GetProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/progress_reports/{report_id} [get]
 func (server *Server) GetProgressReportApi(ctx *gin.Context) {
 	id := ctx.Param("report_id")
-	reportID, err := strconv.ParseInt(id, 10, 64)
+	reportID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -110,15 +109,15 @@ func (server *Server) GetProgressReportApi(ctx *gin.Context) {
 // @Tags progress_reports
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param report_id path int true "Progress Report ID"
+// @Param id path uuid true "Client ID"
+// @Param report_id path uuid true "Progress Report ID"
 // @Param request body clientp.UpdateProgressReportRequest true "Progress Report Request"
 // @Success 200 {object} Response[clientp.UpdateProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/progress_reports/{report_id} [put]
 func (server *Server) UpdateProgressReportApi(ctx *gin.Context) {
 	id := ctx.Param("report_id")
-	reportID, err := strconv.ParseInt(id, 10, 64)
+	reportID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -144,14 +143,14 @@ func (server *Server) UpdateProgressReportApi(ctx *gin.Context) {
 // @Summary Delete a progress report for a client
 // @Tags progress_reports
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param report_id path int true "Progress Report ID"
+// @Param id path uuid true "Client ID"
+// @Param report_id path uuid true "Progress Report ID"
 // @Success 200 {object} Response[any]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/progress_reports/{report_id} [delete]
 func (server *Server) DeleteProgressReportApi(ctx *gin.Context) {
 	id := ctx.Param("report_id")
-	reportID, err := strconv.ParseInt(id, 10, 64)
+	reportID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -172,7 +171,7 @@ func (server *Server) DeleteProgressReportApi(ctx *gin.Context) {
 // @Tags progress_reports
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.GenerateAutoReportsRequest true "Request body"
 // @Success 200 {object} Response[clientp.GenerateAutoReportsResponse]
 // @Router /clients/{id}/ai_progress_reports [post]
@@ -206,7 +205,7 @@ func (server *Server) GenerateAutoReportsApi(ctx *gin.Context) {
 // @Tags progress_reports
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.ConfirmProgressReportRequest true "Progress Report Request"
 // @Success 201 {object} Response[clientp.ConfirmProgressReportResponse]
 // @Failure 400,404 {object} Response[any]
@@ -225,7 +224,7 @@ func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.businessService.ClientService.ConfirmAiProgressReport(ctx, clientID, &req, 0)
+	result, err := server.businessService.ClientService.ConfirmAiProgressReport(ctx, clientID, &req, uuid.Nil)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -240,7 +239,7 @@ func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
 // @Summary List all AI generated reports for a client
 // @Tags progress_reports
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[[]clientp.ListAiGeneratedReportsResponse]]

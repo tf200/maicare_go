@@ -102,12 +102,12 @@ func TestAddEmployeeCertification(t *testing.T) {
 func TestDeleteEmployeeCertification(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, cert Certification, err error)
 	}{
 		{
 			name: "successful deletion of existing certification",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				cert := createRandomCertification(ctx, qtx)
 				return cert.ID
 			},
@@ -119,8 +119,8 @@ func TestDeleteEmployeeCertification(t *testing.T) {
 		},
 		{
 			name: "delete non-existent certification",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999 // Non-existent ID
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Non-existent ID
 			},
 			checks: func(t *testing.T, cert Certification, err error) {
 				require.Error(t, err, "DeleteEmployeeCertification() should error for non-existent ID")
@@ -307,7 +307,7 @@ func TestUpdateEmployeeCertification(t *testing.T) {
 			name: "update non-existent certification",
 			setup: func(ctx context.Context, qtx *Queries) UpdateEmployeeCertificationParams {
 				return UpdateEmployeeCertificationParams{
-					ID:       99999,
+					ID:       uuid.New(),
 					Name:     util.StringPtr("Updated Name"),
 					IssuedBy: util.StringPtr("Updated Issuer"),
 					DateIssued: pgtype.Date{

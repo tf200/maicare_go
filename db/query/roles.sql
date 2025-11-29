@@ -21,6 +21,12 @@ INSERT INTO roles (name)
 VALUES ($1)
 RETURNING *;
 
+-- name: GetAdminRoleId :one
+/* Returns the ID of the admin role. */
+SELECT id
+FROM roles
+WHERE name = 'admin';
+
 -- name: ListRoles :many
 /* Returns every role ordered by id with count of permissions. */
 SELECT 
@@ -55,7 +61,7 @@ ORDER BY p.id;
 -- name: AddPermissionsToRole :exec
 /* Bulk-insert permission IDs into a role (idempotent). */
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT sqlc.arg('role_id'), unnest(sqlc.arg('permission_ids')::int[])
+SELECT sqlc.arg('role_id'), unnest(sqlc.arg('permission_ids')::uuid[])
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
 -- name: RemovePermissionsFromRole :exec
@@ -100,7 +106,7 @@ ORDER BY p.id;
 -- name: GrantUserPermissions :exec
 /* Bulk-insert permission IDs for a user (idempotent). */
 INSERT INTO user_permissions (user_id, permission_id)
-SELECT sqlc.arg('user_id'), unnest(sqlc.arg('permission_ids')::int[])
+SELECT sqlc.arg('user_id'), unnest(sqlc.arg('permission_ids')::uuid[])
 ON CONFLICT (user_id, permission_id) DO NOTHING;
 
 -- name: DeleteUserPermissions :exec

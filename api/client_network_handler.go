@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
@@ -15,7 +14,7 @@ import (
 // @Summary Get a client sender
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GetClientSenderResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/sender [get]
@@ -42,7 +41,7 @@ func (server *Server) GetClientSenderApi(ctx *gin.Context) {
 // @Tags client_network
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.CreateClientEmergencyContactParams true "Client emergency contact data"
 // @Success 201 {object} Response[clientp.CreateClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
@@ -73,7 +72,7 @@ func (server *Server) CreateClientEmergencyContactApi(ctx *gin.Context) {
 // @Summary List all client emergency contacts
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Param search query string false "Search query"
@@ -107,14 +106,14 @@ func (server *Server) ListClientEmergencyContactsApi(ctx *gin.Context) {
 // @Summary Get a client emergency contact
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param contact_id path int true "Contact ID"
+// @Param id path uuid true "Client ID"
+// @Param contact_id path uuid true "Contact ID"
 // @Success 200 {object} Response[clientp.GetClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts/{contact_id} [get]
 func (server *Server) GetClientEmergencyContactApi(ctx *gin.Context) {
 	id := ctx.Param("contact_id")
-	contactID, err := strconv.ParseInt(id, 10, 64)
+	contactID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -135,15 +134,15 @@ func (server *Server) GetClientEmergencyContactApi(ctx *gin.Context) {
 // @Tags client_network
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param contact_id path int true "Contact ID"
+// @Param id path uuid true "Client ID"
+// @Param contact_id path uuid true "Contact ID"
 // @Param request body clientp.UpdateClientEmergencyContactParams true "Client emergency contact data"
 // @Success 200 {object} Response[clientp.UpdateClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts/{contact_id} [put]
 func (server *Server) UpdateClientEmergencyContactApi(ctx *gin.Context) {
 	id := ctx.Param("contact_id")
-	contactID, err := strconv.ParseInt(id, 10, 64)
+	contactID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -168,14 +167,14 @@ func (server *Server) UpdateClientEmergencyContactApi(ctx *gin.Context) {
 // @Summary Delete a client emergency contact
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param contact_id path int true "Contact ID"
+// @Param id path uuid true "Client ID"
+// @Param contact_id path uuid true "Contact ID"
 // @Success 200 {object} Response[clientp.DeleteClientEmergencyContactResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/emergency_contacts/{contact_id} [delete]
 func (server *Server) DeleteClientEmergencyContactApi(ctx *gin.Context) {
 	id := ctx.Param("contact_id")
-	contactID, err := strconv.ParseInt(id, 10, 64)
+	contactID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -194,7 +193,7 @@ func (server *Server) DeleteClientEmergencyContactApi(ctx *gin.Context) {
 // @Tags client_network
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.AssignEmployeeRequest true "Employee assignment data"
 // @Success 201 {object} Response[clientp.AssignEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
@@ -224,7 +223,7 @@ func (server *Server) AssignEmployeeApi(ctx *gin.Context) {
 // @Summary List all assigned employees
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[clientp.ListAssignedEmployeesResponse]]
@@ -256,14 +255,14 @@ func (server *Server) ListAssignedEmployeesApi(ctx *gin.Context) {
 // @Summary Get an assigned employee
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param assign_id path int true "Assignment ID"
+// @Param id path uuid true "Client ID"
+// @Param assign_id path uuid true "Assignment ID"
 // @Success 200 {object} Response[clientp.GetAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees/{assign_id} [get]
 func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("assign_id")
-	assignID, err := strconv.ParseInt(id, 10, 64)
+	assignID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -283,15 +282,15 @@ func (server *Server) GetAssignedEmployeeApi(ctx *gin.Context) {
 // @Tags client_network
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param assign_id path int true "Assignment ID"
+// @Param id path uuid true "Client ID"
+// @Param assign_id path uuid true "Assignment ID"
 // @Param request body clientp.UpdateAssignedEmployeeRequest true "Assigned employee data"
 // @Success 200 {object} Response[clientp.UpdateAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees/{assign_id} [put]
 func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("assign_id")
-	assignID, err := strconv.ParseInt(id, 10, 64)
+	assignID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -317,14 +316,14 @@ func (server *Server) UpdateAssignedEmployeeApi(ctx *gin.Context) {
 // @Summary Delete an assigned employee
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param assign_id path int true "Assignment ID"
+// @Param id path uuid true "Client ID"
+// @Param assign_id path uuid true "Assignment ID"
 // @Success 200 {object} Response[clientp.DeleteAssignedEmployeeResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/involved_employees/{assign_id} [delete]
 func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
 	id := ctx.Param("assign_id")
-	assignID, err := strconv.ParseInt(id, 10, 64)
+	assignID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -345,7 +344,7 @@ func (server *Server) DeleteAssignedEmployeeApi(ctx *gin.Context) {
 // @Summary Get client related emails
 // @Tags client_network
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GetClientRelatedEmailsResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/related_emails [get]

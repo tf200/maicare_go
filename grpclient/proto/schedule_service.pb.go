@@ -159,7 +159,7 @@ func (x *Employee) GetTargetHours() float64 {
 
 type Shift struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	ShiftName     string                 `protobuf:"bytes,2,opt,name=shift_name,json=shiftName,proto3" json:"shift_name,omitempty"`
 	StartTime     string                 `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"` // Time in HH:MM format (e.g., "08:00")
 	EndTime       string                 `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`       // Time in HH:MM format (e.g., "16:00")
@@ -197,11 +197,11 @@ func (*Shift) Descriptor() ([]byte, []int) {
 	return file_proto_schedule_service_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Shift) GetId() int32 {
+func (x *Shift) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *Shift) GetShiftName() string {
@@ -314,7 +314,7 @@ type ScheduledShift struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`                      // ISO format: "2025-02-03"
 	DayName       string                 `protobuf:"bytes,2,opt,name=day_name,json=dayName,proto3" json:"day_name,omitempty"` // "Monday", "Tuesday", etc.
-	ShiftId       int32                  `protobuf:"varint,3,opt,name=shift_id,json=shiftId,proto3" json:"shift_id,omitempty"`
+	ShiftId       string                 `protobuf:"bytes,3,opt,name=shift_id,json=shiftId,proto3" json:"shift_id,omitempty"`
 	ShiftName     string                 `protobuf:"bytes,4,opt,name=shift_name,json=shiftName,proto3" json:"shift_name,omitempty"`
 	StartTime     string                 `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"` // ISO 8601 datetime string
 	EndTime       string                 `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`       // ISO 8601 datetime string
@@ -368,11 +368,11 @@ func (x *ScheduledShift) GetDayName() string {
 	return ""
 }
 
-func (x *ScheduledShift) GetShiftId() int32 {
+func (x *ScheduledShift) GetShiftId() string {
 	if x != nil {
 		return x.ShiftId
 	}
-	return 0
+	return ""
 }
 
 func (x *ScheduledShift) GetShiftName() string {
@@ -760,7 +760,7 @@ const file_proto_schedule_service_proto_rawDesc = "" +
 	"\tlast_name\x18\x03 \x01(\tR\blastName\x12!\n" +
 	"\ftarget_hours\x18\x04 \x01(\x01R\vtargetHours\"p\n" +
 	"\x05Shift\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1d\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"shift_name\x18\x02 \x01(\tR\tshiftName\x12\x1d\n" +
 	"\n" +
@@ -776,7 +776,7 @@ const file_proto_schedule_service_proto_rawDesc = "" +
 	"\x0eScheduledShift\x12\x12\n" +
 	"\x04date\x18\x01 \x01(\tR\x04date\x12\x19\n" +
 	"\bday_name\x18\x02 \x01(\tR\adayName\x12\x19\n" +
-	"\bshift_id\x18\x03 \x01(\x05R\ashiftId\x12\x1d\n" +
+	"\bshift_id\x18\x03 \x01(\tR\ashiftId\x12\x1d\n" +
 	"\n" +
 	"shift_name\x18\x04 \x01(\tR\tshiftName\x12\x1d\n" +
 	"\n" +

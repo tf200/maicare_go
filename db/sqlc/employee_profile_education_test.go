@@ -146,12 +146,12 @@ func TestAddEducationToEmployeeProfile(t *testing.T) {
 func TestDeleteEmployeeEducation(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, education EmployeeEducation, err error)
 	}{
 		{
 			name: "successful deletion of existing education",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				edu := createRandomEducation(ctx, qtx)
 				return edu.ID
 			},
@@ -163,8 +163,8 @@ func TestDeleteEmployeeEducation(t *testing.T) {
 		},
 		{
 			name: "delete non-existent education",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999 // Non-existent ID
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Non-existent ID
 			},
 			checks: func(t *testing.T, education EmployeeEducation, err error) {
 				require.Error(t, err, "DeleteEmployeeEducation() should error for non-existent ID")
@@ -405,7 +405,7 @@ func TestUpdateEmployeeEducation(t *testing.T) {
 			name: "update non-existent education",
 			setup: func(ctx context.Context, qtx *Queries) UpdateEmployeeEducationParams {
 				return UpdateEmployeeEducationParams{
-					ID:              99999,
+					ID:              uuid.New(),
 					InstitutionName: util.StringPtr("Updated University"),
 					Degree:          util.StringPtr("Master of Science"),
 					FieldOfStudy:    util.StringPtr("Data Science"),

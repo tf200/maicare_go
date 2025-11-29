@@ -81,7 +81,7 @@ func (s *employeeService) AddEmployeeExperience(
 		"AddEmployeeExperience",
 		"Successfully added experience to employee profile",
 		zap.String("EmployeeID", employeeID.String()),
-		zap.Int64("ExperienceID", experience.ID),
+		zap.String("ExperienceID", experience.ID.String()),
 	)
 	return res, nil
 }
@@ -130,7 +130,7 @@ func (s *employeeService) ListEmployeeExperience(
 
 func (s *employeeService) UpdateEmployeeExperience(
 	req UpdateEmployeeExperienceRequest,
-	experienceID int64,
+	experienceID uuid.UUID,
 	ctx context.Context,
 ) (*UpdateEmployeeExperienceResponse, error) {
 	var parsedStartDate time.Time
@@ -144,7 +144,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 				"UpdateEmployeeExperience",
 				"Failed to parse start date",
 				zap.Error(err),
-				zap.Int64("ExperienceID", experienceID),
+				zap.String("ExperienceID", experienceID.String()),
 			)
 			return nil, fmt.Errorf("invalid start date format: %w", err)
 		}
@@ -159,7 +159,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 				"UpdateEmployeeExperience",
 				"Failed to parse end date",
 				zap.Error(err),
-				zap.Int64("ExperienceID", experienceID),
+				zap.String("ExperienceID", experienceID.String()),
 			)
 			return nil, fmt.Errorf("invalid end date format: %w", err)
 		}
@@ -180,7 +180,7 @@ func (s *employeeService) UpdateEmployeeExperience(
 			"UpdateEmployeeExperience",
 			"Failed to update employee experience",
 			zap.Error(err),
-			zap.Int64("ExperienceID", experienceID),
+			zap.String("ExperienceID", experienceID.String()),
 		)
 		return nil, fmt.Errorf("failed to update experience: %w", err)
 	}
@@ -201,13 +201,13 @@ func (s *employeeService) UpdateEmployeeExperience(
 		logger.LogLevelInfo,
 		"UpdateEmployeeExperience",
 		"Successfully updated employee experience",
-		zap.Int64("ExperienceID", experienceID),
+		zap.String("ExperienceID", experienceID.String()),
 	)
 	return res, nil
 }
 
 func (s *employeeService) DeleteEmployeeExperience(
-	experienceID int64,
+	experienceID uuid.UUID,
 	ctx context.Context,
 ) (*DeleteEmployeeExperienceResponse, error) {
 	experience, err := s.Store.DeleteEmployeeExperience(ctx, experienceID)
@@ -218,7 +218,7 @@ func (s *employeeService) DeleteEmployeeExperience(
 			"DeleteEmployeeExperience",
 			"Failed to delete employee experience",
 			zap.Error(err),
-			zap.Int64("ExperienceID", experienceID),
+			zap.String("ExperienceID", experienceID.String()),
 		)
 		return nil, fmt.Errorf("failed to delete experience: %w", err)
 	}
@@ -239,7 +239,7 @@ func (s *employeeService) DeleteEmployeeExperience(
 		logger.LogLevelInfo,
 		"DeleteEmployeeExperience",
 		"Successfully deleted employee experience",
-		zap.Int64("ExperienceID", experienceID),
+		zap.String("ExperienceID", experienceID.String()),
 	)
 	return res, nil
 }

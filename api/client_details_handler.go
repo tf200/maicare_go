@@ -114,7 +114,7 @@ func (server *Server) GetClientApi(ctx *gin.Context) {
 // @Summary Get a client addresses
 // @Tags clients
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GetClientAddressesApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/addresses [get]
@@ -141,7 +141,7 @@ func (server *Server) GetClientAddressesApi(ctx *gin.Context) {
 // @Tags clients
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.UpdateClientDetailsRequest true "Client details"
 // @Success 200 {object} Response[clientp.UpdateClientDetailsResponse]
 // @Failure 400,404,500 {object} Response[any]
@@ -174,7 +174,7 @@ func (server *Server) UpdateClientApi(ctx *gin.Context) {
 // @Tags clients
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.UpdateClientStatusRequest true "Client status"
 // @Success 200 {object} Response[clientp.UpdateClientStatusResponse]
 // @Failure 400,404,500 {object} Response[any]
@@ -207,7 +207,7 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 // @Summary List status history of a client
 // @Tags clients
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[[]clientp.ListStatusHistoryApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/status_history [get]
@@ -234,7 +234,7 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 // @Tags clients
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.SetClientProfilePictureRequest true "Client profile picture"
 // @Success 200 {object} Response[clientp.SetClientProfilePictureResponse]
 // @Failure 400,404,500 {object} Response[any]
@@ -267,7 +267,7 @@ func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
 // @Tags clients
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.AddClientDocumentApiRequest true "Client document"
 // @Success 201 {object} Response[clientp.AddClientDocumentApiResponse]
 // @Failure 400,404,500 {object} Response[any]
@@ -300,7 +300,7 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 // @Summary List documents of a client
 // @Tags clients
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[clientp.ListClientDocumentsApiResponse]]
@@ -335,7 +335,7 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 // @Tags clients
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param document_id path int true "Document ID"
 // @Param request body clientp.DeleteClientDocumentApiRequest true "Client document"
 // @Success 200 {object} Response[clientp.DeleteClientDocumentApiResponse]
@@ -367,7 +367,7 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 // @Summary Get missing documents of a client
 // @Tags clients
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GetMissingClientDocumentsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/missing_documents [get]
@@ -394,7 +394,7 @@ func (server *Server) GetMissingClientDocumentsApi(ctx *gin.Context) {
 // @Tags clients
 // @Accept json
 // @Produce json
-// @Param id path string true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.LocationTransferRequest true "Location transfer request"
 // @Success 200 {object} Response[any]
 // @Failure 400,404,500 {object} Response[any]

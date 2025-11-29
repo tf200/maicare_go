@@ -51,7 +51,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 		HomeTelephoneNumber:       util.StringPtr(util.RandomString(5)),
 		IsSubcontractor:           util.BoolPtr(isSubcontractor),
 		Gender:                    db.EmployeeGenderEnumMale,
-		LocationID:                util.IntPtr(location.ID),
+		LocationID:                &location.ID,
 		ContractType:              contractType,
 	}
 
@@ -95,7 +95,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 	require.NotZero(t, employee.CreatedAt)
 
 	// Verify foreign key constraints
-	require.Equal(t, util.IntPtr(location.ID), employee.LocationID)
+	require.Equal(t, location.ID, employee.LocationID)
 	return employee, user
 }
 
@@ -115,10 +115,12 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
+				roleID, err := testStore.GetAdminRoleId(context.Background())
+				require.NoError(t, err)
 				Empreq := employees.CreateEmployeeProfileRequest{
 					EmployeeNumber:            nil, // util.StringPtr(fmt.Sprintf("EMP%d", util.RandomInt(1000, 9999))),
 					EmploymentNumber:          util.StringPtr(fmt.Sprintf("EN%d", util.RandomInt(10000, 99999))),
-					LocationID:                util.IntPtr(locationID),
+					LocationID:                &locationID,
 					IsSubcontractor:           util.BoolPtr(util.RandomBool()),
 					FirstName:                 util.RandomString(6),
 					LastName:                  util.RandomString(8),
@@ -130,7 +132,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 					WorkPhoneNumber:           util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					PrivatePhoneNumber:        util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
 					HomeTelephoneNumber:       util.StringPtr(fmt.Sprintf("+%d%d", util.RandomInt(1, 99), util.RandomInt(1000000000, 9999999999))),
-					RoleID:                    1,
+					RoleID:                    roleID,
 				}
 				data, err := json.Marshal(Empreq)
 				require.NoError(t, err)
@@ -527,7 +529,7 @@ func createRandomEducation(t *testing.T) (uuid.UUID, uuid.UUID) {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildRequest  func() (*http.Request, error)
-		checkResponse func(recorder *httptest.ResponseRecorder) int64
+		checkResponse func(recorder *httptest.ResponseRecorder) uuid.UUID
 	}{
 		{
 			name: "OK",
@@ -550,7 +552,7 @@ func createRandomEducation(t *testing.T) (uuid.UUID, uuid.UUID) {
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) int64 {
+			checkResponse: func(recorder *httptest.ResponseRecorder) uuid.UUID {
 				require.Equal(t, http.StatusCreated, recorder.Code)
 
 				var response Response[employees.AddEducationToEmployeeProfileResponse]

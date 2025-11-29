@@ -298,10 +298,10 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 	return &paginationResponse, nil
 }
 
-func (s *clientService) GetRegistrationFormB(ctx context.Context, formID int64) (*GetRegistrationFormResponse, error) {
+func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UUID) (*GetRegistrationFormResponse, error) {
 	registrationForm, err := s.Store.GetRegistrationForm(ctx, formID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetRegistrationFormB", "Failed to get registration form B", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetRegistrationFormB", "Failed to get registration form B", zap.Error(err), zap.String("FormID", formID.String()))
 		return nil, fmt.Errorf("failed to get registration form B: %w", err)
 	}
 	response := &GetRegistrationFormResponse{
@@ -386,7 +386,7 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID int64) 
 	return response, nil
 }
 
-func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID int64) (*UpdateRegistrationFormResponse, error) {
+func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID uuid.UUID) (*UpdateRegistrationFormResponse, error) {
 	arg := db.UpdateRegistrationFormParams{
 		ID:                         formID,
 		ClientFirstName:            req.ClientFirstName,
@@ -456,7 +456,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 	}
 	registrationForm, err := s.Store.UpdateRegistrationForm(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationForm", "Failed to update registration form", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationForm", "Failed to update registration form", zap.Error(err), zap.String("FormID", formID.String()))
 		return nil, fmt.Errorf("failed to update registration form: %w", err)
 	}
 	response := &UpdateRegistrationFormResponse{
@@ -538,16 +538,16 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 	return response, nil
 }
 
-func (s *clientService) DeleteRegistrationForm(ctx context.Context, formID int64) error {
+func (s *clientService) DeleteRegistrationForm(ctx context.Context, formID uuid.UUID) error {
 	err := s.Store.DeleteRegistrationForm(ctx, formID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteRegistrationForm", "Failed to delete registration form", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteRegistrationForm", "Failed to delete registration form", zap.Error(err), zap.String("FormID", formID.String()))
 		return fmt.Errorf("failed to delete registration form: %w", err)
 	}
 	return nil
 }
 
-func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID int64, employeeID uuid.UUID) error {
+func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID uuid.UUID, employeeID uuid.UUID) error {
 	arg := db.UpdateRegistrationFormStatusParams{
 		ID:                        formID,
 		FormStatus:                db.FormStatusEnum(req.Status),
@@ -557,7 +557,7 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 	}
 	updatedForm, err := s.Store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to update registration form status", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to update registration form status", zap.Error(err), zap.String("FormID", formID.String()))
 		return fmt.Errorf("failed to update registration form status: %w", err)
 	}
 	if req.Status == "approved" {
@@ -571,7 +571,7 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 		})
 	}
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to enqueue accepted registration email", zap.Error(err), zap.Int64("FormID", formID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to enqueue accepted registration email", zap.Error(err), zap.String("FormID", formID.String()))
 	}
 	return nil
 }

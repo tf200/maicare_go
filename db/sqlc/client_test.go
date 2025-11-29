@@ -860,16 +860,16 @@ func TestCreateClientLocationTransfer(t *testing.T) {
 			name: "successful location transfer creation",
 			setup: func(ctx context.Context, qtx *Queries) CreateClientLocationTransferParams {
 				client := createRandomClientDetails(ctx, qtx)
+				fromLocationID := uuid.New()
+				toLocationID := uuid.New()
+				newMentorID := uuid.New()
 				return CreateClientLocationTransferParams{
 					ClientID:       client.ID,
-					FromLocationID: util.IntPtr(1),
-					ToLocationID:   util.IntPtr(2),
+					FromLocationID: &fromLocationID,
+					ToLocationID:   &toLocationID,
 					RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
-					NewMentorID: func() *uuid.UUID {
-						u := uuid.New()
-						return &u
-					}(),
-					Reason: util.StringPtr("Better location for client"),
+					NewMentorID:    &newMentorID,
+					Reason:         util.StringPtr("Better location for client"),
 				}
 			},
 			checks: func(t *testing.T, err error) {
@@ -897,10 +897,12 @@ func TestCreateClientLocationTransfer(t *testing.T) {
 			name: "location transfer with reason but no new mentor",
 			setup: func(ctx context.Context, qtx *Queries) CreateClientLocationTransferParams {
 				client := createRandomClientDetails(ctx, qtx)
+				fromLocationID := uuid.New()
+				toLocationID := uuid.New()
 				return CreateClientLocationTransferParams{
 					ClientID:       client.ID,
-					FromLocationID: util.IntPtr(3),
-					ToLocationID:   util.IntPtr(4),
+					FromLocationID: &fromLocationID,
+					ToLocationID:   &toLocationID,
 					RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
 					NewMentorID:    nil,
 					Reason:         util.StringPtr("Relocation"),
@@ -938,8 +940,9 @@ func TestApproveOrRejectClientLocationTransfer(t *testing.T) {
 		{
 			name: "approve location transfer",
 			setup: func(ctx context.Context, qtx *Queries) ApproveOrRejectClientLocationTransferParams {
+				transfer := createRandomClientLocationTransfer(ctx, qtx)
 				return ApproveOrRejectClientLocationTransferParams{
-					ID:                 1,
+					ID:                 transfer.ID,
 					Status:             ClientLocationTransferStatusEnumApproved,
 					ApprovedRejectedBy: func() *uuid.UUID { u := uuid.New(); return &u }(),
 				}
@@ -951,8 +954,9 @@ func TestApproveOrRejectClientLocationTransfer(t *testing.T) {
 		{
 			name: "reject location transfer",
 			setup: func(ctx context.Context, qtx *Queries) ApproveOrRejectClientLocationTransferParams {
+				transfer := createRandomClientLocationTransfer(ctx, qtx)
 				return ApproveOrRejectClientLocationTransferParams{
-					ID:                 2,
+					ID:                 transfer.ID,
 					Status:             ClientLocationTransferStatusEnumRejected,
 					ApprovedRejectedBy: func() *uuid.UUID { u := uuid.New(); return &u }(),
 				}
@@ -1321,4 +1325,19 @@ func createRandomClientDetails(ctx context.Context, qtx *Queries) ClientDetail {
 		panic("failed to create random client: " + err.Error())
 	}
 	return client
+}
+
+func createRandomClientLocationTransfer(ctx context.Context, qtx *Queries) ClientLocationTransfer {
+	client := createRandomClientDetails(ctx, qtx)
+	fromLocationID := uuid.New()
+	toLocationID := uuid.New()
+	newMentorID := uuid.New()
+	return ClientLocationTransfer{
+		ClientID:       client.ID,
+		FromLocationID: &fromLocationID,
+		ToLocationID:   &toLocationID,
+		RequestDate:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		NewMentorID:    &newMentorID,
+		Reason:         util.StringPtr("Better location for client"),
+	}
 }

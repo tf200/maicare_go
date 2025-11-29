@@ -43,7 +43,7 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 	var shifts []*grpclient.Shift
 	for _, ls := range locationShifts {
 		shifts = append(shifts, &grpclient.Shift{
-			Id:        int32(ls.ID),
+			Id:        ls.ID.String(),
 			ShiftName: ls.ShiftName,
 			StartTime: util.MicrosecondsToTimeString(ls.StartTime.Microseconds),
 			EndTime:   util.MicrosecondsToTimeString(ls.EndTime.Microseconds),
@@ -78,7 +78,7 @@ func (s *scheduleService) AutoGenerateSchedules(ctx context.Context, req *AutoGe
 		scheduledShifts[i] = ScheduledShift{
 			Date:      shift.Date,
 			DayName:   shift.DayName,
-			ShiftId:   shift.ShiftId,
+			ShiftId:   uuid.MustParse(shift.ShiftId),
 			ShiftName: shift.ShiftName,
 			StartTime: shift.StartTime,
 			EndTime:   shift.EndTime,
@@ -149,8 +149,8 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 		return nil
 	}
 
-	shiftIDSet := make(map[int32]struct{})
-	shiftIDs := make([]int32, 0)
+	shiftIDSet := make(map[uuid.UUID]struct{})
+	shiftIDs := make([]uuid.UUID, 0)
 
 	for _, sch := range req.ScheduledShifts {
 		if _, exists := shiftIDSet[sch.ShiftId]; !exists {
@@ -169,7 +169,7 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 		return err
 	}
 	if !exist {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "One or more shift IDs do not exist", zap.Int32s("ShiftIDs", shiftIDs))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SaveGeneratedSchedules", "One or more shift IDs do not exist")
 		return fmt.Errorf("one or more shift IDs do not exist")
 	}
 
@@ -200,7 +200,7 @@ func (s *scheduleService) SaveGeneratedSchedules(ctx context.Context, creatorID 
 			}
 			_, err = s.Store.CreateSchedule(ctx, db.CreateScheduleParams{
 				EmployeeID:          emp.EmployeeID,
-				LocationShiftID:     util.IntPtr(int64(sch.ShiftId)),
+				LocationShiftID:     &sch.ShiftId,
 				LocationID:          req.LocationID,
 				IsCustom:            false,
 				CreatedByEmployeeID: creatorID,

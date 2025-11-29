@@ -20,12 +20,12 @@ RETURNING id, is_confirmed, file_url
 `
 
 type ConfirmIncidentRow struct {
-	ID          int64   `json:"id"`
-	IsConfirmed bool    `json:"is_confirmed"`
-	FileUrl     *string `json:"file_url"`
+	ID          uuid.UUID `json:"id"`
+	IsConfirmed bool      `json:"is_confirmed"`
+	FileUrl     *string   `json:"file_url"`
 }
 
-func (q *Queries) ConfirmIncident(ctx context.Context, id int64) (ConfirmIncidentRow, error) {
+func (q *Queries) ConfirmIncident(ctx context.Context, id uuid.UUID) (ConfirmIncidentRow, error) {
 	row := q.db.QueryRow(ctx, confirmIncident, id)
 	var i ConfirmIncidentRow
 	err := row.Scan(&i.ID, &i.IsConfirmed, &i.FileUrl)
@@ -98,7 +98,7 @@ LEFT JOIN location l ON i.location_id = l.id
 
 type CreateIncidentParams struct {
 	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              int64                           `json:"location_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
 	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                        `json:"inform_who"`
 	IncidentDate            pgtype.Date                     `json:"incident_date"`
@@ -141,9 +141,9 @@ type CreateIncidentParams struct {
 }
 
 type CreateIncidentRow struct {
-	ID                      int64                           `json:"id"`
+	ID                      uuid.UUID                       `json:"id"`
 	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              int64                           `json:"location_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
 	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                        `json:"inform_who"`
 	IncidentDate            pgtype.Date                     `json:"incident_date"`
@@ -302,7 +302,7 @@ DELETE FROM incident
 WHERE id = $1
 `
 
-func (q *Queries) DeleteIncident(ctx context.Context, id int64) error {
+func (q *Queries) DeleteIncident(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteIncident, id)
 	return err
 }
@@ -323,9 +323,9 @@ WHERE i.id = $1 LIMIT 1
 `
 
 type GetIncidentRow struct {
-	ID                      int64                           `json:"id"`
+	ID                      uuid.UUID                       `json:"id"`
 	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              int64                           `json:"location_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
 	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                        `json:"inform_who"`
 	IncidentDate            pgtype.Date                     `json:"incident_date"`
@@ -377,7 +377,7 @@ type GetIncidentRow struct {
 	ClientLastName          string                          `json:"client_last_name"`
 }
 
-func (q *Queries) GetIncident(ctx context.Context, id int64) (GetIncidentRow, error) {
+func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error) {
 	row := q.db.QueryRow(ctx, getIncident, id)
 	var i GetIncidentRow
 	err := row.Scan(
@@ -461,9 +461,9 @@ type ListIncidentsParams struct {
 }
 
 type ListIncidentsRow struct {
-	ID                      int64                           `json:"id"`
+	ID                      uuid.UUID                       `json:"id"`
 	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              int64                           `json:"location_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
 	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                        `json:"inform_who"`
 	IncidentDate            pgtype.Date                     `json:"incident_date"`
@@ -636,9 +636,9 @@ RETURNING id, employee_id, location_id, reporter_involvement, inform_who, incide
 `
 
 type UpdateIncidentParams struct {
-	ID                      int64                               `json:"id"`
+	ID                      uuid.UUID                           `json:"id"`
 	EmployeeID              *uuid.UUID                          `json:"employee_id"`
-	LocationID              *int64                              `json:"location_id"`
+	LocationID              *uuid.UUID                          `json:"location_id"`
 	ReporterInvolvement     NullIncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                            `json:"inform_who"`
 	IncidentDate            pgtype.Date                         `json:"incident_date"`
@@ -784,8 +784,8 @@ RETURNING file_url
 `
 
 type UpdateIncidentFileUrlParams struct {
-	ID      int64   `json:"id"`
-	FileUrl *string `json:"file_url"`
+	ID      uuid.UUID `json:"id"`
+	FileUrl *string   `json:"file_url"`
 }
 
 func (q *Queries) UpdateIncidentFileUrl(ctx context.Context, arg UpdateIncidentFileUrlParams) (*string, error) {

@@ -33,7 +33,7 @@ type CreateClientDiagnosisRequest struct {
 
 // CreateClientDiagnosisResponse defines the response for creating a client diagnosis
 type CreateClientDiagnosisResponse struct {
-	ID                  int64     `json:"id"`
+	ID                  uuid.UUID `json:"id"`
 	Title               *string   `json:"title"`
 	ClientID            uuid.UUID `json:"client_id"`
 	DiagnosisCode       string    `json:"diagnosis_code"`
@@ -51,8 +51,8 @@ type ListClientDiagnosesRequest struct {
 }
 
 type DiagnosisMedicationList struct {
-	ID               int64      `json:"id"`
-	DiagnosisID      *int64     `json:"diagnosis_id"`
+	ID               uuid.UUID  `json:"id"`
+	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
 	Name             string     `json:"name"`
 	Dosage           string     `json:"dosage"`
 	StartDate        time.Time  `json:"start_date"`
@@ -67,7 +67,7 @@ type DiagnosisMedicationList struct {
 
 // ListClientDiagnosesResponse defines the response for listing client diagnoses
 type ListClientDiagnosesResponse struct {
-	ID                  int64                     `json:"id"`
+	ID                  uuid.UUID                 `json:"id"`
 	Title               *string                   `json:"title"`
 	ClientID            uuid.UUID                 `json:"client_id"`
 	DiagnosisCode       string                    `json:"diagnosis_code"`
@@ -82,7 +82,7 @@ type ListClientDiagnosesResponse struct {
 
 // GetClientDiagnosisResponse defines the response for getting a client diagnosis
 type GetClientDiagnosisResponse struct {
-	ID                  int64                     `json:"id"`
+	ID                  uuid.UUID                 `json:"id"`
 	Title               *string                   `json:"title"`
 	ClientID            uuid.UUID                 `json:"client_id"`
 	DiagnosisCode       string                    `json:"diagnosis_code"`
@@ -110,7 +110,7 @@ type UpdateClientDiagnosisRequest struct {
 
 // UpdateClientDiagnosisApi updates a client diagnosis
 type UpdateClientDiagnosisResponse struct {
-	ID                  int64     `json:"id"`
+	ID                  uuid.UUID `json:"id"`
 	Title               *string   `json:"title"`
 	ClientID            uuid.UUID `json:"client_id"`
 	DiagnosisCode       string    `json:"diagnosis_code"`
@@ -124,7 +124,7 @@ type UpdateClientDiagnosisResponse struct {
 
 // DeleteClientDiagnosisResponse defines the response for deleting a client diagnosis
 type DeleteClientDiagnosisResponse struct {
-	ID int64 `json:"id"`
+	ID uuid.UUID `json:"id"`
 }
 
 // CreateclientMedicationRequest defines the request for creating a client medication
@@ -141,8 +141,8 @@ type CreateClientMedicationRequest struct {
 
 // CreateClientMedicationResponse defines the response for creating a client medication
 type CreateClientMedicationResponse struct {
-	ID               int64      `json:"id"`
-	DiagnosisID      *int64     `json:"diagnosis_id"`
+	ID               uuid.UUID  `json:"id"`
+	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
 	Name             string     `json:"name"`
 	Dosage           string     `json:"dosage"`
 	StartDate        time.Time  `json:"start_date"`
@@ -162,8 +162,8 @@ type ListClientMedicationsRequest struct {
 
 // ListClientMedicationsResponse defines the response for listing client medications
 type ListClientMedicationsResponse struct {
-	ID               int64      `json:"id"`
-	DiagnosisID      *int64     `json:"diagnosis_id"`
+	ID               uuid.UUID  `json:"id"`
+	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
 	Name             string     `json:"name"`
 	Dosage           string     `json:"dosage"`
 	StartDate        time.Time  `json:"start_date"`
@@ -178,14 +178,14 @@ type ListClientMedicationsResponse struct {
 
 // GetClientMedicationResponse defines the response for getting a client medication
 type GetClientMedicationResponse struct {
-	ID                      int64      `json:"id"`
+	ID                      uuid.UUID  `json:"id"`
 	Name                    string     `json:"name"`
 	Dosage                  string     `json:"dosage"`
 	StartDate               time.Time  `json:"start_date"`
 	EndDate                 time.Time  `json:"end_date"`
 	Notes                   *string    `json:"notes"`
 	SelfAdministered        bool       `json:"self_administered"`
-	DiagnosisID             *int64     `json:"diagnosis_id"`
+	DiagnosisID             *uuid.UUID `json:"diagnosis_id"`
 	AdministeredByID        *uuid.UUID `json:"administered_by_id"`
 	IsCritical              bool       `json:"is_critical"`
 	UpdatedAt               time.Time  `json:"updated_at"`
@@ -208,14 +208,14 @@ type UpdateClientMedicationRequest struct {
 
 // UpdateClientMedicationResponse defines the response for updating a client medication
 type UpdateClientMedicationResponse struct {
-	ID               int64      `json:"id"`
+	ID               uuid.UUID  `json:"id"`
 	Name             string     `json:"name"`
 	Dosage           string     `json:"dosage"`
 	StartDate        time.Time  `json:"start_date"`
 	EndDate          time.Time  `json:"end_date"`
 	Notes            *string    `json:"notes"`
 	SelfAdministered bool       `json:"self_administered"`
-	DiagnosisID      *int64     `json:"diagnosis_id"`
+	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
 	AdministeredByID *uuid.UUID `json:"administered_by_id"`
 	IsCritical       bool       `json:"is_critical"`
 	UpdatedAt        time.Time  `json:"updated_at"`

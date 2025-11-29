@@ -12,448 +12,127 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addUrgencyScore = `-- name: AddUrgencyScore :one
-UPDATE intake_forms
-SET urgency_score = $2
-WHERE id = $1
-RETURNING id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, status, urgency_score, description, attachement_ids, is_in_waiting_list, created_at
-`
-
-type AddUrgencyScoreParams struct {
-	ID           int64  `json:"id"`
-	UrgencyScore string `json:"urgency_score"`
-}
-
-func (q *Queries) AddUrgencyScore(ctx context.Context, arg AddUrgencyScoreParams) (IntakeForm, error) {
-	row := q.db.QueryRow(ctx, addUrgencyScore, arg.ID, arg.UrgencyScore)
-	var i IntakeForm
-	err := row.Scan(
-		&i.ID,
-		&i.FirstName,
-		&i.LastName,
-		&i.DateOfBirth,
-		&i.Nationality,
-		&i.Bsn,
-		&i.Address,
-		&i.City,
-		&i.PostalCode,
-		&i.PhoneNumber,
-		&i.Gender,
-		&i.Email,
-		&i.IDType,
-		&i.IDNumber,
-		&i.ReferrerName,
-		&i.ReferrerOrganization,
-		&i.ReferrerFunction,
-		&i.ReferrerPhone,
-		&i.ReferrerEmail,
-		&i.SignedBy,
-		&i.HasValidIndication,
-		&i.LawType,
-		&i.OtherLawSpecification,
-		&i.MainProviderName,
-		&i.MainProviderContact,
-		&i.IndicationStartDate,
-		&i.IndicationEndDate,
-		&i.RegistrationReason,
-		&i.GuidanceGoals,
-		&i.RegistrationType,
-		&i.LivingSituation,
-		&i.OtherLivingSituation,
-		&i.ParentalAuthority,
-		&i.CurrentSchool,
-		&i.MentorName,
-		&i.MentorPhone,
-		&i.MentorEmail,
-		&i.PreviousCare,
-		&i.GuardianDetails,
-		&i.Diagnoses,
-		&i.UsesMedication,
-		&i.MedicationDetails,
-		&i.AddictionIssues,
-		&i.JudicialInvolvement,
-		&i.RiskAggression,
-		&i.RiskSuicidality,
-		&i.RiskRunningAway,
-		&i.RiskSelfHarm,
-		&i.RiskWeaponPossession,
-		&i.RiskDrugDealing,
-		&i.OtherRisks,
-		&i.SharingPermission,
-		&i.TruthDeclaration,
-		&i.ClientSignature,
-		&i.GuardianSignature,
-		&i.ReferrerSignature,
-		&i.SignatureDate,
-		&i.Status,
-		&i.UrgencyScore,
-		&i.Description,
-		&i.AttachementIds,
-		&i.IsInWaitingList,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const createIntakeForm = `-- name: CreateIntakeForm :one
 INSERT INTO intake_forms (
-    first_name,
-    last_name,
-    date_of_birth,
-    nationality,
-    bsn,
-    address,
-    city,
-    postal_code,
-    phone_number,
-    gender,
-    email,
-    id_type,
-    id_number,
-    referrer_name,
-    referrer_organization,
-    referrer_function,
-    referrer_phone,
-    referrer_email,
-    signed_by,
-    has_valid_indication,
-    law_type,
-    other_law_specification,
-    main_provider_name,
-    main_provider_contact,
-    indication_start_date,
-    indication_end_date,
-    registration_reason,
-    guidance_goals,
-    registration_type,
-    living_situation,
-    other_living_situation,
-    parental_authority,
-    current_school,
-    mentor_name,
-    mentor_phone,
-    mentor_email,
-    previous_care,
-    guardian_details,
-    diagnoses,
-    uses_medication,
-    medication_details,
-    addiction_issues,
-    judicial_involvement,
-    risk_aggression,
-    risk_suicidality,
-    risk_running_away,
-    risk_self_harm,
-    risk_weapon_possession,
-    risk_drug_dealing,
-    other_risks,
-    sharing_permission,
-    truth_declaration,
-    client_signature,
-    guardian_signature,
-    referrer_signature,
-    signature_date,
-    attachement_ids,
-    urgency_score
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    maturity_matrix_id,
+    goals,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    signature
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
-    $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-    $51, $52, $53, $54, $55, $56, $57, $58
-) RETURNING id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, status, urgency_score, description, attachement_ids, is_in_waiting_list, created_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+) RETURNING id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, maturity_matrix_id, goals, risk_assessment, intake_conclusion, intake_conclusion_notes, signature, created_at, updated_at
 `
 
 type CreateIntakeFormParams struct {
-	FirstName             string      `json:"first_name"`
-	LastName              string      `json:"last_name"`
-	DateOfBirth           pgtype.Date `json:"date_of_birth"`
-	Nationality           string      `json:"nationality"`
-	Bsn                   string      `json:"bsn"`
-	Address               string      `json:"address"`
-	City                  string      `json:"city"`
-	PostalCode            string      `json:"postal_code"`
-	PhoneNumber           string      `json:"phone_number"`
-	Gender                string      `json:"gender"`
-	Email                 string      `json:"email"`
-	IDType                string      `json:"id_type"`
-	IDNumber              string      `json:"id_number"`
-	ReferrerName          *string     `json:"referrer_name"`
-	ReferrerOrganization  *string     `json:"referrer_organization"`
-	ReferrerFunction      *string     `json:"referrer_function"`
-	ReferrerPhone         *string     `json:"referrer_phone"`
-	ReferrerEmail         *string     `json:"referrer_email"`
-	SignedBy              *string     `json:"signed_by"`
-	HasValidIndication    bool        `json:"has_valid_indication"`
-	LawType               *string     `json:"law_type"`
-	OtherLawSpecification *string     `json:"other_law_specification"`
-	MainProviderName      *string     `json:"main_provider_name"`
-	MainProviderContact   *string     `json:"main_provider_contact"`
-	IndicationStartDate   pgtype.Date `json:"indication_start_date"`
-	IndicationEndDate     pgtype.Date `json:"indication_end_date"`
-	RegistrationReason    *string     `json:"registration_reason"`
-	GuidanceGoals         *string     `json:"guidance_goals"`
-	RegistrationType      *string     `json:"registration_type"`
-	LivingSituation       *string     `json:"living_situation"`
-	OtherLivingSituation  *string     `json:"other_living_situation"`
-	ParentalAuthority     bool        `json:"parental_authority"`
-	CurrentSchool         *string     `json:"current_school"`
-	MentorName            *string     `json:"mentor_name"`
-	MentorPhone           *string     `json:"mentor_phone"`
-	MentorEmail           *string     `json:"mentor_email"`
-	PreviousCare          *string     `json:"previous_care"`
-	GuardianDetails       []byte      `json:"guardian_details"`
-	Diagnoses             *string     `json:"diagnoses"`
-	UsesMedication        bool        `json:"uses_medication"`
-	MedicationDetails     *string     `json:"medication_details"`
-	AddictionIssues       bool        `json:"addiction_issues"`
-	JudicialInvolvement   bool        `json:"judicial_involvement"`
-	RiskAggression        bool        `json:"risk_aggression"`
-	RiskSuicidality       bool        `json:"risk_suicidality"`
-	RiskRunningAway       bool        `json:"risk_running_away"`
-	RiskSelfHarm          bool        `json:"risk_self_harm"`
-	RiskWeaponPossession  bool        `json:"risk_weapon_possession"`
-	RiskDrugDealing       bool        `json:"risk_drug_dealing"`
-	OtherRisks            *string     `json:"other_risks"`
-	SharingPermission     bool        `json:"sharing_permission"`
-	TruthDeclaration      bool        `json:"truth_declaration"`
-	ClientSignature       bool        `json:"client_signature"`
-	GuardianSignature     *bool       `json:"guardian_signature"`
-	ReferrerSignature     *bool       `json:"referrer_signature"`
-	SignatureDate         pgtype.Date `json:"signature_date"`
-	AttachementIds        []uuid.UUID `json:"attachement_ids"`
-	UrgencyScore          string      `json:"urgency_score"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       int32                    `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
 }
 
 func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error) {
 	row := q.db.QueryRow(ctx, createIntakeForm,
-		arg.FirstName,
-		arg.LastName,
-		arg.DateOfBirth,
-		arg.Nationality,
-		arg.Bsn,
-		arg.Address,
-		arg.City,
-		arg.PostalCode,
-		arg.PhoneNumber,
-		arg.Gender,
-		arg.Email,
-		arg.IDType,
-		arg.IDNumber,
-		arg.ReferrerName,
-		arg.ReferrerOrganization,
-		arg.ReferrerFunction,
-		arg.ReferrerPhone,
-		arg.ReferrerEmail,
-		arg.SignedBy,
-		arg.HasValidIndication,
-		arg.LawType,
-		arg.OtherLawSpecification,
-		arg.MainProviderName,
-		arg.MainProviderContact,
-		arg.IndicationStartDate,
-		arg.IndicationEndDate,
-		arg.RegistrationReason,
-		arg.GuidanceGoals,
-		arg.RegistrationType,
-		arg.LivingSituation,
-		arg.OtherLivingSituation,
-		arg.ParentalAuthority,
-		arg.CurrentSchool,
-		arg.MentorName,
-		arg.MentorPhone,
-		arg.MentorEmail,
-		arg.PreviousCare,
-		arg.GuardianDetails,
-		arg.Diagnoses,
-		arg.UsesMedication,
-		arg.MedicationDetails,
-		arg.AddictionIssues,
-		arg.JudicialInvolvement,
-		arg.RiskAggression,
-		arg.RiskSuicidality,
-		arg.RiskRunningAway,
-		arg.RiskSelfHarm,
-		arg.RiskWeaponPossession,
-		arg.RiskDrugDealing,
-		arg.OtherRisks,
-		arg.SharingPermission,
-		arg.TruthDeclaration,
-		arg.ClientSignature,
-		arg.GuardianSignature,
-		arg.ReferrerSignature,
-		arg.SignatureDate,
-		arg.AttachementIds,
-		arg.UrgencyScore,
+		arg.RegistrationFormID,
+		arg.DateOfIntake,
+		arg.CareType,
+		arg.IntakeParticipants,
+		arg.FamilySituation,
+		arg.PsychologicalState,
+		arg.SelfSufficiency,
+		arg.MaturityMatrixID,
+		arg.Goals,
+		arg.RiskAssessment,
+		arg.IntakeConclusion,
+		arg.IntakeConclusionNotes,
+		arg.Signature,
 	)
 	var i IntakeForm
 	err := row.Scan(
 		&i.ID,
-		&i.FirstName,
-		&i.LastName,
-		&i.DateOfBirth,
-		&i.Nationality,
-		&i.Bsn,
-		&i.Address,
-		&i.City,
-		&i.PostalCode,
-		&i.PhoneNumber,
-		&i.Gender,
-		&i.Email,
-		&i.IDType,
-		&i.IDNumber,
-		&i.ReferrerName,
-		&i.ReferrerOrganization,
-		&i.ReferrerFunction,
-		&i.ReferrerPhone,
-		&i.ReferrerEmail,
-		&i.SignedBy,
-		&i.HasValidIndication,
-		&i.LawType,
-		&i.OtherLawSpecification,
-		&i.MainProviderName,
-		&i.MainProviderContact,
-		&i.IndicationStartDate,
-		&i.IndicationEndDate,
-		&i.RegistrationReason,
-		&i.GuidanceGoals,
-		&i.RegistrationType,
-		&i.LivingSituation,
-		&i.OtherLivingSituation,
-		&i.ParentalAuthority,
-		&i.CurrentSchool,
-		&i.MentorName,
-		&i.MentorPhone,
-		&i.MentorEmail,
-		&i.PreviousCare,
-		&i.GuardianDetails,
-		&i.Diagnoses,
-		&i.UsesMedication,
-		&i.MedicationDetails,
-		&i.AddictionIssues,
-		&i.JudicialInvolvement,
-		&i.RiskAggression,
-		&i.RiskSuicidality,
-		&i.RiskRunningAway,
-		&i.RiskSelfHarm,
-		&i.RiskWeaponPossession,
-		&i.RiskDrugDealing,
-		&i.OtherRisks,
-		&i.SharingPermission,
-		&i.TruthDeclaration,
-		&i.ClientSignature,
-		&i.GuardianSignature,
-		&i.ReferrerSignature,
-		&i.SignatureDate,
-		&i.Status,
-		&i.UrgencyScore,
-		&i.Description,
-		&i.AttachementIds,
-		&i.IsInWaitingList,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.MaturityMatrixID,
+		&i.Goals,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.Signature,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getIntakeForm = `-- name: GetIntakeForm :one
-SELECT id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, status, urgency_score, description, attachement_ids, is_in_waiting_list, created_at FROM intake_forms
+SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, maturity_matrix_id, goals, risk_assessment, intake_conclusion, intake_conclusion_notes, signature, created_at, updated_at FROM intake_forms
 WHERE id = $1
 `
 
-func (q *Queries) GetIntakeForm(ctx context.Context, id int64) (IntakeForm, error) {
+func (q *Queries) GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, error) {
 	row := q.db.QueryRow(ctx, getIntakeForm, id)
 	var i IntakeForm
 	err := row.Scan(
 		&i.ID,
-		&i.FirstName,
-		&i.LastName,
-		&i.DateOfBirth,
-		&i.Nationality,
-		&i.Bsn,
-		&i.Address,
-		&i.City,
-		&i.PostalCode,
-		&i.PhoneNumber,
-		&i.Gender,
-		&i.Email,
-		&i.IDType,
-		&i.IDNumber,
-		&i.ReferrerName,
-		&i.ReferrerOrganization,
-		&i.ReferrerFunction,
-		&i.ReferrerPhone,
-		&i.ReferrerEmail,
-		&i.SignedBy,
-		&i.HasValidIndication,
-		&i.LawType,
-		&i.OtherLawSpecification,
-		&i.MainProviderName,
-		&i.MainProviderContact,
-		&i.IndicationStartDate,
-		&i.IndicationEndDate,
-		&i.RegistrationReason,
-		&i.GuidanceGoals,
-		&i.RegistrationType,
-		&i.LivingSituation,
-		&i.OtherLivingSituation,
-		&i.ParentalAuthority,
-		&i.CurrentSchool,
-		&i.MentorName,
-		&i.MentorPhone,
-		&i.MentorEmail,
-		&i.PreviousCare,
-		&i.GuardianDetails,
-		&i.Diagnoses,
-		&i.UsesMedication,
-		&i.MedicationDetails,
-		&i.AddictionIssues,
-		&i.JudicialInvolvement,
-		&i.RiskAggression,
-		&i.RiskSuicidality,
-		&i.RiskRunningAway,
-		&i.RiskSelfHarm,
-		&i.RiskWeaponPossession,
-		&i.RiskDrugDealing,
-		&i.OtherRisks,
-		&i.SharingPermission,
-		&i.TruthDeclaration,
-		&i.ClientSignature,
-		&i.GuardianSignature,
-		&i.ReferrerSignature,
-		&i.SignatureDate,
-		&i.Status,
-		&i.UrgencyScore,
-		&i.Description,
-		&i.AttachementIds,
-		&i.IsInWaitingList,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.MaturityMatrixID,
+		&i.Goals,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.Signature,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const listIntakeForms = `-- name: ListIntakeForms :many
-SELECT id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, status, urgency_score, description, attachement_ids, is_in_waiting_list, created_at, COUNT(*) OVER() AS total_count FROM intake_forms
-WHERE (
-    LOWER(first_name) LIKE LOWER(CONCAT('%', COALESCE($3::text, ''), '%')) OR
-    LOWER(last_name) LIKE LOWER(CONCAT('%', COALESCE($3::text, ''), '%'))
-)
+SELECT 
+    i.id, i.registration_form_id, i.date_of_intake, i.care_type, i.intake_participants, i.family_situation, i.psychological_state, i.self_sufficiency, i.maturity_matrix_id, i.goals, i.risk_assessment, i.intake_conclusion, i.intake_conclusion_notes, i.signature, i.created_at, i.updated_at,
+    r.client_first_name,
+    r.client_last_name,
+    r.client_bsn_number,
+    COUNT(*) OVER() AS total_count 
+FROM intake_forms i
+JOIN registration_form r ON i.registration_form_id = r.id
+WHERE
+    $3::text IS NULL
+    OR $3::text = ''
+    OR r.client_first_name ILIKE '%' || $3::text || '%'
+    OR r.client_last_name ILIKE '%' || $3::text || '%'
 ORDER BY
-    CASE 
-        WHEN $4::text = 'created_at' AND $5::text = 'asc' THEN created_at
-    END ASC,
-    CASE 
-        WHEN $4::text = 'created_at' AND $5::text = 'desc' THEN created_at
-    END DESC,
-    CASE 
-        WHEN $4::text = 'urgency_score' AND $5::text = 'asc' THEN urgency_score
-    END ASC,
-    CASE 
-        WHEN $4::text = 'urgency_score' AND $5::text = 'desc' THEN urgency_score
-    END DESC,
-    CASE
-        WHEN $4::text IS NULL OR $4::text = '' THEN id
-    END DESC
+    CASE WHEN $4::text = 'created_at' AND $5::text = 'asc' THEN created_at END ASC,
+    CASE WHEN $4::text = 'created_at' AND $5::text = 'desc' THEN created_at END DESC,
+    CASE WHEN $4 IS NULL OR $4 = '' THEN id END DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -466,70 +145,26 @@ type ListIntakeFormsParams struct {
 }
 
 type ListIntakeFormsRow struct {
-	ID                    int64              `json:"id"`
-	FirstName             string             `json:"first_name"`
-	LastName              string             `json:"last_name"`
-	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
-	Nationality           string             `json:"nationality"`
-	Bsn                   string             `json:"bsn"`
-	Address               string             `json:"address"`
-	City                  string             `json:"city"`
-	PostalCode            string             `json:"postal_code"`
-	PhoneNumber           string             `json:"phone_number"`
-	Gender                string             `json:"gender"`
-	Email                 string             `json:"email"`
-	IDType                string             `json:"id_type"`
-	IDNumber              string             `json:"id_number"`
-	ReferrerName          *string            `json:"referrer_name"`
-	ReferrerOrganization  *string            `json:"referrer_organization"`
-	ReferrerFunction      *string            `json:"referrer_function"`
-	ReferrerPhone         *string            `json:"referrer_phone"`
-	ReferrerEmail         *string            `json:"referrer_email"`
-	SignedBy              *string            `json:"signed_by"`
-	HasValidIndication    bool               `json:"has_valid_indication"`
-	LawType               *string            `json:"law_type"`
-	OtherLawSpecification *string            `json:"other_law_specification"`
-	MainProviderName      *string            `json:"main_provider_name"`
-	MainProviderContact   *string            `json:"main_provider_contact"`
-	IndicationStartDate   pgtype.Date        `json:"indication_start_date"`
-	IndicationEndDate     pgtype.Date        `json:"indication_end_date"`
-	RegistrationReason    *string            `json:"registration_reason"`
-	GuidanceGoals         *string            `json:"guidance_goals"`
-	RegistrationType      *string            `json:"registration_type"`
-	LivingSituation       *string            `json:"living_situation"`
-	OtherLivingSituation  *string            `json:"other_living_situation"`
-	ParentalAuthority     bool               `json:"parental_authority"`
-	CurrentSchool         *string            `json:"current_school"`
-	MentorName            *string            `json:"mentor_name"`
-	MentorPhone           *string            `json:"mentor_phone"`
-	MentorEmail           *string            `json:"mentor_email"`
-	PreviousCare          *string            `json:"previous_care"`
-	GuardianDetails       []byte             `json:"guardian_details"`
-	Diagnoses             *string            `json:"diagnoses"`
-	UsesMedication        bool               `json:"uses_medication"`
-	MedicationDetails     *string            `json:"medication_details"`
-	AddictionIssues       bool               `json:"addiction_issues"`
-	JudicialInvolvement   bool               `json:"judicial_involvement"`
-	RiskAggression        bool               `json:"risk_aggression"`
-	RiskSuicidality       bool               `json:"risk_suicidality"`
-	RiskRunningAway       bool               `json:"risk_running_away"`
-	RiskSelfHarm          bool               `json:"risk_self_harm"`
-	RiskWeaponPossession  bool               `json:"risk_weapon_possession"`
-	RiskDrugDealing       bool               `json:"risk_drug_dealing"`
-	OtherRisks            *string            `json:"other_risks"`
-	SharingPermission     bool               `json:"sharing_permission"`
-	TruthDeclaration      bool               `json:"truth_declaration"`
-	ClientSignature       bool               `json:"client_signature"`
-	GuardianSignature     *bool              `json:"guardian_signature"`
-	ReferrerSignature     *bool              `json:"referrer_signature"`
-	SignatureDate         pgtype.Date        `json:"signature_date"`
-	Status                string             `json:"status"`
-	UrgencyScore          string             `json:"urgency_score"`
-	Description           *string            `json:"description"`
-	AttachementIds        []uuid.UUID        `json:"attachement_ids"`
-	IsInWaitingList       bool               `json:"is_in_waiting_list"`
-	CreatedAt             pgtype.Timestamptz `json:"created_at"`
-	TotalCount            int64              `json:"total_count"`
+	ID                    uuid.UUID                `json:"id"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       int32                    `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
+	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	ClientFirstName       string                   `json:"client_first_name"`
+	ClientLastName        string                   `json:"client_last_name"`
+	ClientBsnNumber       string                   `json:"client_bsn_number"`
+	TotalCount            int64                    `json:"total_count"`
 }
 
 func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error) {
@@ -549,68 +184,24 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		var i ListIntakeFormsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.FirstName,
-			&i.LastName,
-			&i.DateOfBirth,
-			&i.Nationality,
-			&i.Bsn,
-			&i.Address,
-			&i.City,
-			&i.PostalCode,
-			&i.PhoneNumber,
-			&i.Gender,
-			&i.Email,
-			&i.IDType,
-			&i.IDNumber,
-			&i.ReferrerName,
-			&i.ReferrerOrganization,
-			&i.ReferrerFunction,
-			&i.ReferrerPhone,
-			&i.ReferrerEmail,
-			&i.SignedBy,
-			&i.HasValidIndication,
-			&i.LawType,
-			&i.OtherLawSpecification,
-			&i.MainProviderName,
-			&i.MainProviderContact,
-			&i.IndicationStartDate,
-			&i.IndicationEndDate,
-			&i.RegistrationReason,
-			&i.GuidanceGoals,
-			&i.RegistrationType,
-			&i.LivingSituation,
-			&i.OtherLivingSituation,
-			&i.ParentalAuthority,
-			&i.CurrentSchool,
-			&i.MentorName,
-			&i.MentorPhone,
-			&i.MentorEmail,
-			&i.PreviousCare,
-			&i.GuardianDetails,
-			&i.Diagnoses,
-			&i.UsesMedication,
-			&i.MedicationDetails,
-			&i.AddictionIssues,
-			&i.JudicialInvolvement,
-			&i.RiskAggression,
-			&i.RiskSuicidality,
-			&i.RiskRunningAway,
-			&i.RiskSelfHarm,
-			&i.RiskWeaponPossession,
-			&i.RiskDrugDealing,
-			&i.OtherRisks,
-			&i.SharingPermission,
-			&i.TruthDeclaration,
-			&i.ClientSignature,
-			&i.GuardianSignature,
-			&i.ReferrerSignature,
-			&i.SignatureDate,
-			&i.Status,
-			&i.UrgencyScore,
-			&i.Description,
-			&i.AttachementIds,
-			&i.IsInWaitingList,
+			&i.RegistrationFormID,
+			&i.DateOfIntake,
+			&i.CareType,
+			&i.IntakeParticipants,
+			&i.FamilySituation,
+			&i.PsychologicalState,
+			&i.SelfSufficiency,
+			&i.MaturityMatrixID,
+			&i.Goals,
+			&i.RiskAssessment,
+			&i.IntakeConclusion,
+			&i.IntakeConclusionNotes,
+			&i.Signature,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ClientFirstName,
+			&i.ClientLastName,
+			&i.ClientBsnNumber,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -621,82 +212,4 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		return nil, err
 	}
 	return items, nil
-}
-
-const moveToWaitingList = `-- name: MoveToWaitingList :one
-UPDATE intake_forms
-SET is_in_waiting_list = true
-WHERE id = $1
-RETURNING id, first_name, last_name, date_of_birth, nationality, bsn, address, city, postal_code, phone_number, gender, email, id_type, id_number, referrer_name, referrer_organization, referrer_function, referrer_phone, referrer_email, signed_by, has_valid_indication, law_type, other_law_specification, main_provider_name, main_provider_contact, indication_start_date, indication_end_date, registration_reason, guidance_goals, registration_type, living_situation, other_living_situation, parental_authority, current_school, mentor_name, mentor_phone, mentor_email, previous_care, guardian_details, diagnoses, uses_medication, medication_details, addiction_issues, judicial_involvement, risk_aggression, risk_suicidality, risk_running_away, risk_self_harm, risk_weapon_possession, risk_drug_dealing, other_risks, sharing_permission, truth_declaration, client_signature, guardian_signature, referrer_signature, signature_date, status, urgency_score, description, attachement_ids, is_in_waiting_list, created_at
-`
-
-func (q *Queries) MoveToWaitingList(ctx context.Context, id int64) (IntakeForm, error) {
-	row := q.db.QueryRow(ctx, moveToWaitingList, id)
-	var i IntakeForm
-	err := row.Scan(
-		&i.ID,
-		&i.FirstName,
-		&i.LastName,
-		&i.DateOfBirth,
-		&i.Nationality,
-		&i.Bsn,
-		&i.Address,
-		&i.City,
-		&i.PostalCode,
-		&i.PhoneNumber,
-		&i.Gender,
-		&i.Email,
-		&i.IDType,
-		&i.IDNumber,
-		&i.ReferrerName,
-		&i.ReferrerOrganization,
-		&i.ReferrerFunction,
-		&i.ReferrerPhone,
-		&i.ReferrerEmail,
-		&i.SignedBy,
-		&i.HasValidIndication,
-		&i.LawType,
-		&i.OtherLawSpecification,
-		&i.MainProviderName,
-		&i.MainProviderContact,
-		&i.IndicationStartDate,
-		&i.IndicationEndDate,
-		&i.RegistrationReason,
-		&i.GuidanceGoals,
-		&i.RegistrationType,
-		&i.LivingSituation,
-		&i.OtherLivingSituation,
-		&i.ParentalAuthority,
-		&i.CurrentSchool,
-		&i.MentorName,
-		&i.MentorPhone,
-		&i.MentorEmail,
-		&i.PreviousCare,
-		&i.GuardianDetails,
-		&i.Diagnoses,
-		&i.UsesMedication,
-		&i.MedicationDetails,
-		&i.AddictionIssues,
-		&i.JudicialInvolvement,
-		&i.RiskAggression,
-		&i.RiskSuicidality,
-		&i.RiskRunningAway,
-		&i.RiskSelfHarm,
-		&i.RiskWeaponPossession,
-		&i.RiskDrugDealing,
-		&i.OtherRisks,
-		&i.SharingPermission,
-		&i.TruthDeclaration,
-		&i.ClientSignature,
-		&i.GuardianSignature,
-		&i.ReferrerSignature,
-		&i.SignatureDate,
-		&i.Status,
-		&i.UrgencyScore,
-		&i.Description,
-		&i.AttachementIds,
-		&i.IsInWaitingList,
-		&i.CreatedAt,
-	)
-	return i, err
 }

@@ -12,7 +12,6 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/service/schedule"
 	"maicare_go/token"
-	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -88,13 +87,15 @@ func TestCreateScheduleApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now().Format("2006-01-02")
+				locationShift, err := testStore.GetShiftsByLocationID(context.Background(), location.ID)
+				require.NoError(t, err)
 				createScheduleReq := schedule.CreateScheduleRequest{
 					EmployeeID:      employee.ID,
 					LocationID:      location.ID,
 					IsCustom:        false,
 					StartDatetime:   nil,
 					EndDatetime:     nil,
-					LocationShiftID: util.IntPtr(1),
+					LocationShiftID: &locationShift[0].ID,
 					ShiftDate:       &now,
 				}
 				data, err := json.Marshal(createScheduleReq)

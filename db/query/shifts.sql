@@ -38,4 +38,4 @@ WHERE location_id = $1;
 -- name: CheckAllShiftsExist :one
 SELECT COUNT(*) = sqlc.arg(expected_count)::int AS all_exist
 FROM location_shift
-WHERE id = ANY(sqlc.arg(ids)::int[]);
+WHERE id = ANY(sqlc.arg(ids)::uuid[]);

@@ -2096,7 +2096,7 @@ definitions:
     properties:
       permission_ids:
         items:
-          type: integer
+          type: string
         type: array
     required:
     - permission_ids
@@ -2105,22 +2105,22 @@ definitions:
     properties:
       permission_ids:
         items:
-          type: integer
+          type: string
         type: array
       role_id:
-        type: integer
+        type: string
     type: object
   auth.AssignRoleToEmployeeApiResponse:
     properties:
       employee_id:
         type: string
       role_id:
-        type: integer
+        type: string
     type: object
   auth.AssignRoleToEmployeeParams:
     properties:
       role_id:
-        type: integer
+        type: string
     type: object
   auth.ChangePasswordRequest:
     properties:
@@ -2144,7 +2144,7 @@ definitions:
       name:
         type: string
       role_id:
-        type: integer
+        type: string
     type: object
   auth.Enable2FARequest:
     properties:
@@ -2157,7 +2157,7 @@ definitions:
     properties:
       permission_ids:
         items:
-          type: integer
+          type: string
         type: array
     type: object
   auth.GrantUserPermissionsResponse:
@@ -2166,13 +2166,13 @@ definitions:
         type: string
       permission_ids:
         items:
-          type: integer
+          type: string
         type: array
     type: object
   auth.ListAllPermissionsApiResponse:
     properties:
       permission_id:
-        type: integer
+        type: string
       permission_name:
         type: string
       permission_resource:
@@ -2181,18 +2181,18 @@ definitions:
   auth.ListAllRolePermissionsApiResponse:
     properties:
       permission_id:
-        type: integer
+        type: string
       permission_name:
         type: string
       permission_resource:
         type: string
       role_id:
-        type: integer
+        type: string
     type: object
   auth.ListRolesApiResponse:
     properties:
       id:
-        type: integer
+        type: string
       permission_count:
         type: integer
       role_name:
@@ -2204,7 +2204,7 @@ definitions:
         items:
           properties:
             id:
-              type: integer
+              type: string
             name:
               type: string
             resource:
@@ -2214,7 +2214,7 @@ definitions:
       roles:
         properties:
           id:
-            type: integer
+            type: string
           name:
             type: string
         type: object
@@ -2284,7 +2284,7 @@ definitions:
       action_description:
         type: string
       action_id:
-        type: integer
+        type: string
       is_completed:
         type: boolean
       notes:
@@ -2301,7 +2301,7 @@ definitions:
       description:
         type: string
       objective_id:
-        type: integer
+        type: string
       status:
         type: string
       timeframe:
@@ -2321,9 +2321,9 @@ definitions:
       action_description:
         type: string
       action_id:
-        type: integer
+        type: string
       objective_id:
-        type: integer
+        type: string
     type: object
   care.CreateCarePlanInterventionRequest:
     properties:
@@ -2342,13 +2342,13 @@ definitions:
   care.CreateCarePlanInterventionResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       frequency:
         type: string
       intervention_description:
         type: string
       intervention_id:
-        type: integer
+        type: string
     type: object
   care.CreateCarePlanObjectiveRequest:
     properties:
@@ -2370,7 +2370,7 @@ definitions:
   care.CreateCarePlanObjectiveResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       completion_date:
         type: string
       completion_notes:
@@ -2382,7 +2382,7 @@ definitions:
       goal_title:
         type: string
       id:
-        type: integer
+        type: string
       status:
         type: string
       target_date:
@@ -2407,11 +2407,11 @@ definitions:
   care.CreateCarePlanReportResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       created_at:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       report_content:
@@ -2433,7 +2433,7 @@ definitions:
   care.CreateCarePlanResourcesResponse:
     properties:
       id:
-        type: integer
+        type: string
       is_obtained:
         type: boolean
       obtained_date:
@@ -2460,7 +2460,7 @@ definitions:
       risk_description:
         type: string
       risk_id:
-        type: integer
+        type: string
       risk_level:
         type: string
     type: object
@@ -2487,7 +2487,7 @@ definitions:
       measurement_method:
         type: string
       metric_id:
-        type: integer
+        type: string
       metric_name:
         type: string
       target_value:
@@ -2509,21 +2509,21 @@ definitions:
       role_title:
         type: string
       support_network_id:
-        type: integer
+        type: string
     type: object
   care.CreateClientCarePlanRequest:
     properties:
       initial_level:
         type: integer
       maturity_matrix_id:
-        type: integer
+        type: string
       target_level:
         type: integer
     type: object
   care.CreateClientCarePlanResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       client_id:
         type: string
     type: object
@@ -2568,7 +2568,7 @@ definitions:
       generated_at:
         type: string
       id:
-        type: integer
+        type: string
       raw_llm_response:
         type: string
       status:
@@ -2579,7 +2579,7 @@ definitions:
   care.GetCarePlanResourcesResponse:
     properties:
       id:
-        type: integer
+        type: string
       is_obtained:
         type: boolean
       obtained_date:
@@ -2594,7 +2594,7 @@ definitions:
       risk_description:
         type: string
       risk_id:
-        type: integer
+        type: string
       risk_level:
         type: string
     type: object
@@ -2605,7 +2605,7 @@ definitions:
       measurement_method:
         type: string
       metric_id:
-        type: integer
+        type: string
       metric_name:
         type: string
       target_value:
@@ -2618,19 +2618,19 @@ definitions:
       role_title:
         type: string
       support_network_id:
-        type: integer
+        type: string
     type: object
   care.Intervention:
     properties:
       intervention_description:
         type: string
       intervention_id:
-        type: integer
+        type: string
     type: object
   care.ListCarePlanReportsResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       created_at:
         type: string
       created_by_first_name:
@@ -2638,7 +2638,7 @@ definitions:
       created_by_last_name:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       report_content:
@@ -2649,14 +2649,14 @@ definitions:
   care.ListCarePlanTopics:
     properties:
       id:
-        type: integer
+        type: string
       topic_name:
         type: string
     type: object
   care.ListClientCarePlansResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       client_id:
         type: string
       current_level:
@@ -2682,9 +2682,9 @@ definitions:
       action_description:
         type: string
       action_id:
-        type: integer
+        type: string
       objective_id:
-        type: integer
+        type: string
     type: object
   care.UpdateCarePlanInterventionRequest:
     properties:
@@ -2700,13 +2700,13 @@ definitions:
   care.UpdateCarePlanInterventionResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       frequency:
         type: string
       intervention_description:
         type: string
       intervention_id:
-        type: integer
+        type: string
     type: object
   care.UpdateCarePlanObjectiveRequest:
     properties:
@@ -2731,9 +2731,9 @@ definitions:
   care.UpdateCarePlanObjectiveResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       goal_id:
-        type: integer
+        type: string
     type: object
   care.UpdateCarePlanOverviewRequest:
     properties:
@@ -2743,11 +2743,11 @@ definitions:
   care.UpdateCarePlanOverviewResponse:
     properties:
       assessment_id:
-        type: integer
+        type: string
       assessment_summary:
         type: string
       care_plan_id:
-        type: integer
+        type: string
     type: object
   care.UpdateCarePlanReportRequest:
     properties:
@@ -2761,11 +2761,11 @@ definitions:
   care.UpdateCarePlanReportResponse:
     properties:
       care_plan_id:
-        type: integer
+        type: string
       created_at:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       report_content:
@@ -2785,7 +2785,7 @@ definitions:
   care.UpdateCarePlanResourcesResponse:
     properties:
       id:
-        type: integer
+        type: string
       is_obtained:
         type: boolean
       obtained_date:
@@ -2809,7 +2809,7 @@ definitions:
       risk_description:
         type: string
       risk_id:
-        type: integer
+        type: string
       risk_level:
         type: string
     type: object
@@ -2832,7 +2832,7 @@ definitions:
       measurement_method:
         type: string
       metric_id:
-        type: integer
+        type: string
       metric_name:
         type: string
       target_value:
@@ -2852,7 +2852,7 @@ definitions:
       role_title:
         type: string
       support_network_id:
-        type: integer
+        type: string
     type: object
   clientp.AddClientDocumentApiRequest:
     properties:
@@ -2875,7 +2875,7 @@ definitions:
       file:
         type: string
       id:
-        type: integer
+        type: string
       is_used:
         type: boolean
       label:
@@ -2912,7 +2912,7 @@ definitions:
         - rejected
         type: string
       transfer_id:
-        type: integer
+        type: string
     required:
     - status
     - transfer_id
@@ -2935,7 +2935,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       role:
         type: string
       start_date:
@@ -2946,7 +2946,7 @@ definitions:
       file_url:
         type: string
       id:
-        type: integer
+        type: string
     type: object
   clientp.ConfirmProgressReportRequest:
     properties:
@@ -2970,7 +2970,7 @@ definitions:
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       report_text:
         type: string
       start_date:
@@ -3040,7 +3040,7 @@ definitions:
           type: string
         type: array
       id:
-        type: integer
+        type: string
       important_contacts:
         items:
           type: string
@@ -3144,13 +3144,13 @@ definitions:
       living_situation_notes:
         type: string
       location_id:
-        type: integer
+        type: string
       organization_id:
-        type: integer
+        type: string
       phone_number:
         type: string
       sender_id:
-        type: integer
+        type: string
       source:
         type: string
       work_additional_notes:
@@ -3190,7 +3190,7 @@ definitions:
         type: string
       bsn_verified_by:
         description: needs to be checked
-        type: integer
+        type: string
       created:
         type: string
       date_of_birth:
@@ -3238,15 +3238,15 @@ definitions:
       living_situation_notes:
         type: string
       location_id:
-        type: integer
+        type: string
       organization_id:
-        type: integer
+        type: string
       phone_number:
         type: string
       profile_picture:
         type: string
       sender_id:
-        type: integer
+        type: string
       source:
         type: string
       status:
@@ -3300,7 +3300,7 @@ definitions:
       diagnosis_code:
         type: string
       id:
-        type: integer
+        type: string
       notes:
         type: string
       severity:
@@ -3348,7 +3348,7 @@ definitions:
       goals_reports:
         type: boolean
       id:
-        type: integer
+        type: string
       incidents_reports:
         type: boolean
       is_verified:
@@ -3390,13 +3390,13 @@ definitions:
       created_at:
         type: string
       diagnosis_id:
-        type: integer
+        type: string
       dosage:
         type: string
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       name:
@@ -3449,7 +3449,7 @@ definitions:
           type: string
         type: array
       location_id:
-        type: integer
+        type: string
       medicines:
         type: boolean
       mese_worker:
@@ -3572,7 +3572,7 @@ definitions:
       fire_water_damage:
         type: boolean
       id:
-        type: integer
+        type: string
       incident_date:
         type: string
       incident_explanation:
@@ -3588,7 +3588,7 @@ definitions:
           type: string
         type: array
       location_id:
-        type: integer
+        type: string
       medicines:
         type: boolean
       mese_worker:
@@ -3650,6 +3650,74 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.CreateIntakeFormRequest:
+    properties:
+      care_type:
+        $ref: '#/definitions/db.IntakeCareTypeEnum'
+      date_of_intake:
+        type: string
+      family_situation:
+        type: string
+      goals:
+        type: string
+      intake_conclusion:
+        $ref: '#/definitions/db.IntakeConclusionEnum'
+      intake_conclusion_notes:
+        type: string
+      intake_participants:
+        items:
+          $ref: '#/definitions/db.IntakeParticipantsEnum'
+        type: array
+      maturity_matrix_id:
+        type: string
+      psychological_state:
+        type: string
+      registration_form_id:
+        type: string
+      risk_assessment:
+        type: string
+      self_sufficiency:
+        type: integer
+      signature:
+        type: string
+    type: object
+  clientp.CreateIntakeFormResponse:
+    properties:
+      care_type:
+        $ref: '#/definitions/db.IntakeCareTypeEnum'
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_intake:
+        type: string
+      family_situation:
+        type: string
+      goals:
+        type: string
+      id:
+        type: string
+      intake_conclusion:
+        $ref: '#/definitions/db.IntakeConclusionEnum'
+      intake_conclusion_notes:
+        type: string
+      intake_participants:
+        items:
+          $ref: '#/definitions/db.IntakeParticipantsEnum'
+        type: array
+      maturity_matrix_id:
+        type: string
+      psychological_state:
+        type: string
+      registration_form_id:
+        type: string
+      risk_assessment:
+        type: string
+      self_sufficiency:
+        type: integer
+      signature:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
   clientp.CreateProgressReportRequest:
     properties:
       date:
@@ -3699,7 +3767,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       report_text:
         type: string
       title:
@@ -3929,7 +3997,7 @@ definitions:
       guardian2_relationship:
         type: string
       id:
-        type: integer
+        type: string
       processed_at:
         type: string
       processed_by_employee_id:
@@ -3994,7 +4062,7 @@ definitions:
   clientp.DeleteAssignedEmployeeResponse:
     properties:
       id:
-        type: integer
+        type: string
     type: object
   clientp.DeleteClientDocumentApiRequest:
     properties:
@@ -4008,12 +4076,12 @@ definitions:
       attachment_id:
         type: string
       id:
-        type: integer
+        type: string
     type: object
   clientp.DeleteClientEmergencyContactResponse:
     properties:
       id:
-        type: integer
+        type: string
     type: object
   clientp.DiagnosisMedicationCreate:
     properties:
@@ -4041,13 +4109,13 @@ definitions:
       created_at:
         type: string
       diagnosis_id:
-        type: integer
+        type: string
       dosage:
         type: string
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       name:
@@ -4088,7 +4156,7 @@ definitions:
       file_url:
         type: string
       incident_id:
-        type: integer
+        type: string
     type: object
   clientp.GetAppointmentCardResponse:
     properties:
@@ -4107,7 +4175,7 @@ definitions:
           type: string
         type: array
       id:
-        type: integer
+        type: string
       important_contacts:
         items:
           type: string
@@ -4158,7 +4226,7 @@ definitions:
       employee_name:
         type: string
       id:
-        type: integer
+        type: string
       role:
         type: string
       start_date:
@@ -4232,17 +4300,17 @@ definitions:
       living_situation_notes:
         type: string
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       organization_id:
-        type: integer
+        type: string
       phone_number:
         type: string
       profile_picture:
         type: string
       sender_id:
-        type: integer
+        type: string
       source:
         type: string
       status:
@@ -4277,7 +4345,7 @@ definitions:
       diagnosis_code:
         type: string
       id:
-        type: integer
+        type: string
       medications:
         items:
           $ref: '#/definitions/clientp.DiagnosisMedicationList'
@@ -4306,7 +4374,7 @@ definitions:
       goals_reports:
         type: boolean
       id:
-        type: integer
+        type: string
       incidents_reports:
         type: boolean
       is_verified:
@@ -4333,13 +4401,13 @@ definitions:
       created_at:
         type: string
       diagnosis_id:
-        type: integer
+        type: string
       dosage:
         type: string
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       name:
@@ -4377,7 +4445,7 @@ definitions:
       email_address:
         type: string
       id:
-        type: integer
+        type: string
       is_archived:
         type: boolean
       kvknumber:
@@ -4441,7 +4509,7 @@ definitions:
       fire_water_damage:
         type: boolean
       id:
-        type: integer
+        type: string
       incident_date:
         type: string
       incident_explanation:
@@ -4459,7 +4527,7 @@ definitions:
       is_confirmed:
         type: boolean
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       medicines:
@@ -4549,7 +4617,7 @@ definitions:
       employee_profile_picture:
         type: string
       id:
-        type: integer
+        type: string
       report_text:
         type: string
       title:
@@ -4651,7 +4719,7 @@ definitions:
       guardian2_relationship:
         type: string
       id:
-        type: integer
+        type: string
       intake_appointment_date:
         type: string
       processed_at:
@@ -4724,7 +4792,7 @@ definitions:
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       report_text:
         type: string
       start_date:
@@ -4765,7 +4833,7 @@ definitions:
       fire_water_damage:
         type: boolean
       id:
-        type: integer
+        type: string
       incident_date:
         type: string
       incident_explanation:
@@ -4779,7 +4847,7 @@ definitions:
       is_confirmed:
         type: boolean
       location_id:
-        type: integer
+        type: string
       medicines:
         type: boolean
       needed_consultation:
@@ -4836,7 +4904,7 @@ definitions:
       employee_name:
         type: string
       id:
-        type: integer
+        type: string
       role:
         type: string
       start_date:
@@ -4855,7 +4923,7 @@ definitions:
       diagnosis_code:
         type: string
       id:
-        type: integer
+        type: string
       medications:
         items:
           $ref: '#/definitions/clientp.DiagnosisMedicationList'
@@ -4880,7 +4948,7 @@ definitions:
       file:
         type: string
       id:
-        type: integer
+        type: string
       is_used:
         type: boolean
       label:
@@ -4911,7 +4979,7 @@ definitions:
       goals_reports:
         type: boolean
       id:
-        type: integer
+        type: string
       incidents_reports:
         type: boolean
       is_verified:
@@ -4934,13 +5002,13 @@ definitions:
       created_at:
         type: string
       diagnosis_id:
-        type: integer
+        type: string
       dosage:
         type: string
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       name:
@@ -4995,17 +5063,17 @@ definitions:
       legal_measure:
         type: string
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       organization_id:
-        type: integer
+        type: string
       phone_number:
         type: string
       profile_picture:
         type: string
       sender_id:
-        type: integer
+        type: string
       source:
         type: string
       status:
@@ -5046,7 +5114,7 @@ definitions:
       fire_water_damage:
         type: boolean
       id:
-        type: integer
+        type: string
       incident_date:
         type: string
       incident_explanation:
@@ -5064,7 +5132,7 @@ definitions:
       is_confirmed:
         type: boolean
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       medicines:
@@ -5128,6 +5196,49 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.ListIntakeFormsResponse:
+    properties:
+      care_type:
+        $ref: '#/definitions/db.IntakeCareTypeEnum'
+      client_bsn_number:
+        type: string
+      client_first_name:
+        type: string
+      client_last_name:
+        type: string
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      date_of_intake:
+        type: string
+      family_situation:
+        type: string
+      goals:
+        type: string
+      id:
+        type: string
+      intake_conclusion:
+        $ref: '#/definitions/db.IntakeConclusionEnum'
+      intake_conclusion_notes:
+        type: string
+      intake_participants:
+        items:
+          $ref: '#/definitions/db.IntakeParticipantsEnum'
+        type: array
+      maturity_matrix_id:
+        type: string
+      psychological_state:
+        type: string
+      registration_form_id:
+        type: string
+      risk_assessment:
+        type: string
+      self_sufficiency:
+        type: integer
+      signature:
+        type: string
+      updated_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
   clientp.ListLocationTransferRequestsResponse:
     properties:
       approved_rejected_at:
@@ -5137,9 +5248,9 @@ definitions:
       client_id:
         type: string
       from_location_id:
-        type: integer
+        type: string
       id:
-        type: integer
+        type: string
       mentor_first_name:
         type: string
       mentor_last_name:
@@ -5153,7 +5264,7 @@ definitions:
       status:
         $ref: '#/definitions/db.ClientLocationTransferStatusEnum'
       to_location_id:
-        type: integer
+        type: string
     type: object
   clientp.ListProgressReportsResponse:
     properties:
@@ -5174,7 +5285,7 @@ definitions:
       employee_profile_picture:
         type: string
       id:
-        type: integer
+        type: string
       report_text:
         type: string
       title:
@@ -5274,7 +5385,7 @@ definitions:
       guardian2_relationship:
         type: string
       id:
-        type: integer
+        type: string
       intake_appointment_date:
         type: string
       processed_at:
@@ -5345,11 +5456,11 @@ definitions:
       changed_at:
         type: string
       changed_by:
-        type: integer
+        type: string
       client_id:
         type: string
       id:
-        type: integer
+        type: string
       new_status:
         type: string
       old_status:
@@ -5360,13 +5471,13 @@ definitions:
   clientp.LocationTransferRequest:
     properties:
       from_location_id:
-        type: integer
+        type: string
       new_mentor_id:
         type: string
       reason:
         type: string
       to_location_id:
-        type: integer
+        type: string
     required:
     - from_location_id
     - reason
@@ -5457,7 +5568,7 @@ definitions:
           type: string
         type: array
       id:
-        type: integer
+        type: string
       important_contacts:
         items:
           type: string
@@ -5515,7 +5626,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       role:
         type: string
       start_date:
@@ -5572,15 +5683,15 @@ definitions:
       living_situation_notes:
         type: string
       location_id:
-        type: integer
+        type: string
       organization_id:
-        type: integer
+        type: string
       phone_number:
         type: string
       profile_picture:
         type: string
       sender_id:
-        type: integer
+        type: string
       source:
         type: string
       work_additional_notes:
@@ -5641,15 +5752,15 @@ definitions:
       legal_measure:
         type: string
       location_id:
-        type: integer
+        type: string
       organization_id:
-        type: integer
+        type: string
       phone_number:
         type: string
       profile_picture:
         type: string
       sender_id:
-        type: integer
+        type: string
       source:
         type: string
       status:
@@ -5689,7 +5800,7 @@ definitions:
       diagnosis_code:
         type: string
       id:
-        type: integer
+        type: string
       notes:
         type: string
       severity:
@@ -5737,7 +5848,7 @@ definitions:
       goals_reports:
         type: boolean
       id:
-        type: integer
+        type: string
       incidents_reports:
         type: boolean
       is_verified:
@@ -5779,13 +5890,13 @@ definitions:
       created_at:
         type: string
       diagnosis_id:
-        type: integer
+        type: string
       dosage:
         type: string
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       is_critical:
         type: boolean
       name:
@@ -5844,7 +5955,7 @@ definitions:
       fire_water_damage:
         type: boolean
       id:
-        type: integer
+        type: string
       incident_date:
         type: string
       incident_explanation:
@@ -5860,7 +5971,7 @@ definitions:
           type: string
         type: array
       location_id:
-        type: integer
+        type: string
       medicines:
         type: boolean
       mese_worker:
@@ -5947,7 +6058,7 @@ definitions:
       fire_water_damage:
         type: boolean
       id:
-        type: integer
+        type: string
       incident_date:
         type: string
       incident_explanation:
@@ -5965,7 +6076,7 @@ definitions:
       is_confirmed:
         type: boolean
       location_id:
-        type: integer
+        type: string
       medicines:
         type: boolean
       mese_worker:
@@ -6057,7 +6168,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       report_text:
         type: string
       title:
@@ -6287,7 +6398,7 @@ definitions:
       guardian2_relationship:
         type: string
       id:
-        type: integer
+        type: string
       processed_at:
         type: string
       processed_by_employee_id:
@@ -6434,14 +6545,14 @@ definitions:
         example: 30
         type: integer
       sender_id:
-        example: 2
-        type: integer
+        example: afc465cc-cddb-440b-9472-615bb07ec1d8
+        type: string
       start_date:
         example: "2023-01-01T00:00:00Z"
         type: string
       type_id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
     required:
     - care_type
     - financing_act
@@ -6480,7 +6591,7 @@ definitions:
       hours_type:
         type: string
       id:
-        type: integer
+        type: string
       price:
         type: number
       price_time_unit:
@@ -6488,13 +6599,13 @@ definitions:
       reminder_period:
         type: integer
       sender_id:
-        type: integer
+        type: string
       start_date:
         type: string
       status:
         type: string
       type_id:
-        type: integer
+        type: string
       updated_at:
         $ref: '#/definitions/pgtype.Timestamptz'
     type: object
@@ -6506,14 +6617,14 @@ definitions:
   contract.CreateContractTypeResponse:
     properties:
       id:
-        type: integer
+        type: string
       name:
         type: string
     type: object
   contract.DeleteContractTypeResponse:
     properties:
       id:
-        type: integer
+        type: string
     type: object
   contract.GetClientContractResponse:
     properties:
@@ -6550,7 +6661,7 @@ definitions:
       hours_type:
         type: string
       id:
-        type: integer
+        type: string
       price:
         type: number
       price_time_unit:
@@ -6558,7 +6669,7 @@ definitions:
       reminder_period:
         type: integer
       sender_id:
-        type: integer
+        type: string
       sender_name:
         type: string
       start_date:
@@ -6566,7 +6677,7 @@ definitions:
       status:
         type: string
       type_id:
-        type: integer
+        type: string
       type_name:
         type: string
       updated_at:
@@ -6575,7 +6686,7 @@ definitions:
   contract.GetContractAuditLogResponse:
     properties:
       audit_id:
-        type: integer
+        type: string
       changed_at:
         $ref: '#/definitions/pgtype.Timestamptz'
       changed_by:
@@ -6589,7 +6700,7 @@ definitions:
           type: string
         type: array
       contract_id:
-        type: integer
+        type: string
       new_values: {}
       old_values: {}
       operation:
@@ -6630,7 +6741,7 @@ definitions:
       hours_type:
         type: string
       id:
-        type: integer
+        type: string
       price:
         type: number
       price_time_unit:
@@ -6638,7 +6749,7 @@ definitions:
       reminder_period:
         type: integer
       sender_id:
-        type: integer
+        type: string
       sender_name:
         type: string
       start_date:
@@ -6646,14 +6757,14 @@ definitions:
       status:
         type: string
       type_id:
-        type: integer
+        type: string
       updated_at:
         type: string
     type: object
   contract.ListContractTypesResponse:
     properties:
       id:
-        type: integer
+        type: string
       name:
         type: string
     type: object
@@ -6678,13 +6789,13 @@ definitions:
       financing_option:
         type: string
       id:
-        type: integer
+        type: string
       price:
         type: number
       price_time_unit:
         type: string
       sender_id:
-        type: integer
+        type: string
       sender_name:
         type: string
       start_date:
@@ -6721,13 +6832,13 @@ definitions:
       reminder_period:
         type: integer
       sender_id:
-        type: integer
+        type: string
       start_date:
         type: string
       status:
         type: string
       type_id:
-        type: integer
+        type: string
     type: object
   contract.UpdateContractResponse:
     properties:
@@ -6760,7 +6871,7 @@ definitions:
       hours_type:
         type: string
       id:
-        type: integer
+        type: string
       price:
         type: number
       price_frequency:
@@ -6768,13 +6879,13 @@ definitions:
       reminder_period:
         type: integer
       sender_id:
-        type: integer
+        type: string
       start_date:
         type: string
       status:
         type: string
       type_id:
-        type: integer
+        type: string
       updated_at:
         type: string
     type: object
@@ -6795,7 +6906,7 @@ definitions:
   contract.UpdateContractStatusResponse:
     properties:
       id:
-        type: integer
+        type: string
       status:
         type: string
     type: object
@@ -6809,6 +6920,48 @@ definitions:
     - ClientLocationTransferStatusEnumPending
     - ClientLocationTransferStatusEnumApproved
     - ClientLocationTransferStatusEnumRejected
+  db.IntakeCareTypeEnum:
+    enum:
+    - protected_living
+    - training_center
+    - supported_independent_living
+    - ambulatory_support
+    - other
+    type: string
+    x-enum-varnames:
+    - IntakeCareTypeEnumProtectedLiving
+    - IntakeCareTypeEnumTrainingCenter
+    - IntakeCareTypeEnumSupportedIndependentLiving
+    - IntakeCareTypeEnumAmbulatorySupport
+    - IntakeCareTypeEnumOther
+  db.IntakeConclusionEnum:
+    enum:
+    - suitable
+    - unsuitable
+    - further_investigation
+    - possible_palcement_date
+    - other
+    type: string
+    x-enum-varnames:
+    - IntakeConclusionEnumSuitable
+    - IntakeConclusionEnumUnsuitable
+    - IntakeConclusionEnumFurtherInvestigation
+    - IntakeConclusionEnumPossiblePalcementDate
+    - IntakeConclusionEnumOther
+  db.IntakeParticipantsEnum:
+    enum:
+    - client
+    - referrer
+    - parents/guardians
+    - care_coordinator
+    - other
+    type: string
+    x-enum-varnames:
+    - IntakeParticipantsEnumClient
+    - IntakeParticipantsEnumReferrer
+    - IntakeParticipantsEnumParentsGuardians
+    - IntakeParticipantsEnumCareCoordinator
+    - IntakeParticipantsEnumOther
   ecr.DischargeOverviewResponse:
     properties:
       contract_end_date:
@@ -6866,7 +7019,7 @@ definitions:
       amount:
         type: number
       invoice_id:
-        type: integer
+        type: string
       invoice_number:
         type: string
       payment_date:
@@ -6932,7 +7085,7 @@ definitions:
       field_of_study:
         type: string
       id:
-        type: integer
+        type: string
       institution_name:
         type: string
       start_date:
@@ -6956,7 +7109,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       issued_by:
         type: string
       name:
@@ -7021,7 +7174,7 @@ definitions:
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       job_title:
         type: string
       start_date:
@@ -7067,8 +7220,8 @@ definitions:
         example: joe
         type: string
       location_id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       position:
         example: developer
         type: string
@@ -7079,8 +7232,8 @@ definitions:
         example: "1234567890"
         type: string
       role_id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       work_phone_number:
         example: "1234567890"
         type: string
@@ -7128,7 +7281,7 @@ definitions:
       last_name:
         type: string
       location_id:
-        type: integer
+        type: string
       out_of_service:
         type: boolean
       position:
@@ -7151,7 +7304,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       issued_by:
         type: string
       name:
@@ -7166,7 +7319,7 @@ definitions:
       field_of_study:
         type: string
       id:
-        type: integer
+        type: string
       institution_name:
         type: string
       start_date:
@@ -7185,7 +7338,7 @@ definitions:
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       job_title:
         type: string
       start_date:
@@ -7253,7 +7406,7 @@ definitions:
       last_name:
         type: string
       location_id:
-        type: integer
+        type: string
       out_of_service:
         type: boolean
       position:
@@ -7265,7 +7418,7 @@ definitions:
       profile_picture:
         type: string
       role_id:
-        type: integer
+        type: string
       user_id:
         type: string
       work_phone_number:
@@ -7288,7 +7441,7 @@ definitions:
           $ref: '#/definitions/employees.Permission'
         type: array
       role_id:
-        type: integer
+        type: string
       two_factor_enabled:
         type: boolean
       user_id:
@@ -7301,7 +7454,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       issued_by:
         type: string
       name:
@@ -7318,7 +7471,7 @@ definitions:
       field_of_study:
         type: string
       id:
-        type: integer
+        type: string
       institution_name:
         type: string
       start_date:
@@ -7337,7 +7490,7 @@ definitions:
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       job_title:
         type: string
       start_date:
@@ -7378,7 +7531,7 @@ definitions:
       last_name:
         type: string
       location_id:
-        type: integer
+        type: string
       out_of_service:
         type: boolean
       position:
@@ -7390,7 +7543,7 @@ definitions:
       profile_picture:
         type: string
       role_id:
-        type: integer
+        type: string
       role_name:
         type: string
       user_id:
@@ -7432,7 +7585,7 @@ definitions:
   employees.Permission:
     properties:
       id:
-        type: integer
+        type: string
       method:
         type: string
       name:
@@ -7499,7 +7652,7 @@ definitions:
       employee_id:
         type: string
       id:
-        type: integer
+        type: string
       issued_by:
         type: string
       name:
@@ -7527,7 +7680,7 @@ definitions:
       field_of_study:
         type: string
       id:
-        type: integer
+        type: string
       institution_name:
         type: string
       start_date:
@@ -7559,7 +7712,7 @@ definitions:
       end_date:
         type: string
       id:
-        type: integer
+        type: string
       job_title:
         type: string
       start_date:
@@ -7622,7 +7775,7 @@ definitions:
       last_name:
         type: string
       location_id:
-        type: integer
+        type: string
       out_of_service:
         type: boolean
       position:
@@ -7651,7 +7804,7 @@ definitions:
       location:
         type: string
       location_id:
-        type: integer
+        type: string
       start_time:
         type: string
       status:
@@ -7711,7 +7864,7 @@ definitions:
       extra_content:
         $ref: '#/definitions/util.JSONObject'
       id:
-        type: integer
+        type: string
       invoice_details:
         items:
           $ref: '#/definitions/invoice.InvoiceDetails'
@@ -7725,7 +7878,7 @@ definitions:
       pdf_attachment_id:
         type: string
       sender_id:
-        type: integer
+        type: string
       status:
         type: string
       total_amount:
@@ -7773,7 +7926,7 @@ definitions:
       current_invoice_status:
         type: string
       invoice_id:
-        type: integer
+        type: string
       invoice_status_changed:
         type: boolean
       notes:
@@ -7781,7 +7934,7 @@ definitions:
       payment_date:
         type: string
       payment_id:
-        type: integer
+        type: string
       payment_method:
         type: string
       payment_reference:
@@ -7794,7 +7947,7 @@ definitions:
   invoice.CreditInvoiceResponse:
     properties:
       id:
-        type: integer
+        type: string
     type: object
   invoice.DeletePaymentResponse:
     properties:
@@ -7803,11 +7956,11 @@ definitions:
       deleted_amount:
         type: number
       deleted_payment_id:
-        type: integer
+        type: string
       deleted_payment_status:
         type: string
       invoice_id:
-        type: integer
+        type: string
       invoice_status_changed:
         type: boolean
       previous_invoice_status:
@@ -7842,7 +7995,7 @@ definitions:
       extra_content:
         $ref: '#/definitions/util.JSONObject'
       id:
-        type: integer
+        type: string
       invoice_details:
         items:
           $ref: '#/definitions/invoice.InvoiceDetails'
@@ -7854,7 +8007,7 @@ definitions:
       pdf_attachment_id:
         type: string
       sender_id:
-        type: integer
+        type: string
       status:
         type: string
       total_amount:
@@ -7865,7 +8018,7 @@ definitions:
   invoice.GetInvoiceAuditLogResponse:
     properties:
       audit_id:
-        type: integer
+        type: string
       changed_at:
         type: string
       changed_by:
@@ -7879,7 +8032,7 @@ definitions:
           type: string
         type: array
       invoice_id:
-        type: integer
+        type: string
       new_values:
         $ref: '#/definitions/util.JSONObject'
       old_values:
@@ -7902,7 +8055,7 @@ definitions:
       extra_content:
         $ref: '#/definitions/util.JSONObject'
       id:
-        type: integer
+        type: string
       invoice_details:
         items:
           $ref: '#/definitions/invoice.InvoiceDetails'
@@ -7914,7 +8067,7 @@ definitions:
       issue_date:
         type: string
       original_invoice_id:
-        type: integer
+        type: string
       payment_completion_prc:
         type: number
       pdf_attachment_id:
@@ -7922,7 +8075,7 @@ definitions:
       sender_btwnumber:
         type: string
       sender_id:
-        type: integer
+        type: string
       sender_kvknumber:
         type: string
       sender_name:
@@ -7939,7 +8092,7 @@ definitions:
       description:
         type: string
       id:
-        type: integer
+        type: string
       item_tag:
         type: string
       source_column:
@@ -7954,13 +8107,13 @@ definitions:
       created_at:
         type: string
       invoice_id:
-        type: integer
+        type: string
       notes:
         type: string
       payment_date:
         type: string
       payment_id:
-        type: integer
+        type: string
       payment_method:
         type: string
       payment_reference:
@@ -7979,7 +8132,7 @@ definitions:
   invoice.InvoiceDetails:
     properties:
       contract_id:
-        type: integer
+        type: string
       contract_name:
         type: string
       periods:
@@ -8027,7 +8180,7 @@ definitions:
       extra_content:
         $ref: '#/definitions/util.JSONObject'
       id:
-        type: integer
+        type: string
       invoice_details:
         items:
           $ref: '#/definitions/invoice.InvoiceDetails'
@@ -8039,11 +8192,11 @@ definitions:
       issue_date:
         type: string
       original_invoice_id:
-        type: integer
+        type: string
       pdf_attachment_id:
         type: string
       sender_id:
-        type: integer
+        type: string
       sender_name:
         type: string
       status:
@@ -8062,13 +8215,13 @@ definitions:
       created_at:
         type: string
       invoice_id:
-        type: integer
+        type: string
       notes:
         type: string
       payment_date:
         type: string
       payment_id:
-        type: integer
+        type: string
       payment_method:
         type: string
       payment_reference:
@@ -8114,7 +8267,7 @@ definitions:
       extra_content:
         $ref: '#/definitions/util.JSONObject'
       id:
-        type: integer
+        type: string
       invoice_details:
         items:
           $ref: '#/definitions/invoice.InvoiceDetails'
@@ -8126,7 +8279,7 @@ definitions:
       pdf_attachment_id:
         type: string
       sender_id:
-        type: integer
+        type: string
       status:
         type: string
       total_amount:
@@ -8156,7 +8309,7 @@ definitions:
       current_invoice_status:
         type: string
       invoice_id:
-        type: integer
+        type: string
       invoice_status_changed:
         type: boolean
       notes:
@@ -8164,7 +8317,7 @@ definitions:
       payment_date:
         type: string
       payment_id:
-        type: integer
+        type: string
       payment_method:
         type: string
       payment_reference:
@@ -8192,7 +8345,7 @@ definitions:
       contract_end:
         type: string
       contract_id:
-        type: integer
+        type: string
       contract_start:
         type: string
       last_reminder_sent_at:
@@ -8268,9 +8421,9 @@ definitions:
       employee_last_name:
         type: string
       id:
-        type: integer
+        type: string
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       severity_of_incident:
@@ -8321,7 +8474,7 @@ definitions:
       capacity:
         type: integer
       id:
-        type: integer
+        type: string
       name:
         type: string
     type: object
@@ -8358,7 +8511,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       kvk_number:
         type: string
       name:
@@ -8380,9 +8533,9 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       location_id:
-        type: integer
+        type: string
       shift:
         type: string
       start_time:
@@ -8391,12 +8544,12 @@ definitions:
   organization.DeleteLocationResponse:
     properties:
       id:
-        type: integer
+        type: string
     type: object
   organization.DeleteOrganisationResponse:
     properties:
       id:
-        type: integer
+        type: string
     type: object
   organization.GetLocationResponse:
     properties:
@@ -8405,7 +8558,7 @@ definitions:
       capacity:
         type: integer
       id:
-        type: integer
+        type: string
       name:
         type: string
     type: object
@@ -8418,7 +8571,7 @@ definitions:
       location_count:
         type: integer
       organisation_id:
-        type: integer
+        type: string
       organisation_name:
         type: string
     type: object
@@ -8435,7 +8588,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       kvk_number:
         type: string
       location_count:
@@ -8458,7 +8611,7 @@ definitions:
       created_at:
         type: string
       id:
-        type: integer
+        type: string
       name:
         type: string
       occupied:
@@ -8477,7 +8630,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       kvk_number:
         type: string
       location_count:
@@ -8492,9 +8645,9 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       location_id:
-        type: integer
+        type: string
       shift:
         type: string
       start_time:
@@ -8516,7 +8669,7 @@ definitions:
       capacity:
         type: integer
       id:
-        type: integer
+        type: string
       name:
         type: string
     type: object
@@ -8548,7 +8701,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       kvk_number:
         type: string
       name:
@@ -8570,9 +8723,9 @@ definitions:
       end_time:
         type: string
       id:
-        type: integer
+        type: string
       location_id:
-        type: integer
+        type: string
       shift:
         type: string
       start_time:
@@ -8766,6 +8919,21 @@ definitions:
           $ref: '#/definitions/clientp.ListIncidentsResponse'
         type: array
     type: object
+  pagination.Response-clientp_ListIntakeFormsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListIntakeFormsResponse'
+        type: array
+    type: object
   pagination.Response-clientp_ListLocationTransferRequestsResponse:
     properties:
       count:
@@ -8909,7 +9077,7 @@ definitions:
           type: string
         type: array
       location_id:
-        type: integer
+        type: string
       week:
         description: e.g., "2024-W27"
         type: integer
@@ -8952,11 +9120,11 @@ definitions:
         example: true
         type: boolean
       location_id:
-        type: integer
+        type: string
       location_shift_id:
         description: For preset shift-based schedules (required when is_custom = false)
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       shift_date:
         description: Date to apply the shift
         example: "2023-10-01"
@@ -8979,12 +9147,12 @@ definitions:
       id:
         type: string
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       location_shift_id:
         description: Additional info if created from preset shift
-        type: integer
+        type: string
       shift_name:
         type: string
       start_datetime:
@@ -9054,12 +9222,12 @@ definitions:
         description: Indicates if this is a custom schedule
         type: boolean
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       location_shift_id:
         description: Optional field for preset shift
-        type: integer
+        type: string
       shift_name:
         description: Optional field for shift name
         type: string
@@ -9121,7 +9289,7 @@ definitions:
   schedule.SaveGeneratedSchedulesRequest:
     properties:
       location_id:
-        type: integer
+        type: string
       scheduled_shifts:
         items:
           $ref: '#/definitions/schedule.ScheduledShift'
@@ -9147,7 +9315,7 @@ definitions:
         type: number
       shift_id:
         description: e.g., 1
-        type: integer
+        type: string
       shift_name:
         description: e.g., "Morning Shift"
         type: string
@@ -9172,10 +9340,10 @@ definitions:
         description: Indicates if this is a custom schedule
         type: boolean
       location_id:
-        type: integer
+        type: string
       location_shift_id:
         description: Optional field for preset shift
-        type: integer
+        type: string
       shift_id:
         type: string
       shift_name:
@@ -9198,11 +9366,11 @@ definitions:
         example: true
         type: boolean
       location_id:
-        type: integer
+        type: string
       location_shift_id:
         description: For preset shift-based schedules (required when is_custom = false)
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       shift_date:
         description: Date to apply the shift
         example: "2023-10-01"
@@ -9225,12 +9393,12 @@ definitions:
       id:
         type: string
       location_id:
-        type: integer
+        type: string
       location_name:
         type: string
       location_shift_id:
         description: Additional info if updated from preset shift
-        type: integer
+        type: string
       shift_name:
         type: string
       start_datetime:
@@ -9242,7 +9410,7 @@ definitions:
     properties:
       invoice_template:
         items:
-          type: integer
+          type: string
         type: array
     required:
     - invoice_template
@@ -9299,7 +9467,7 @@ definitions:
       created_at:
         type: string
       id:
-        type: integer
+        type: string
       land:
         type: string
       name:
@@ -9334,7 +9502,7 @@ definitions:
       email_address:
         type: string
       id:
-        type: integer
+        type: string
       invoice_template_items:
         items:
           $ref: '#/definitions/sender.TemplateItem'
@@ -9373,7 +9541,7 @@ definitions:
       created_at:
         type: string
       id:
-        type: integer
+        type: string
       land:
         type: string
       name:
@@ -9403,7 +9571,7 @@ definitions:
       description:
         type: string
       id:
-        type: integer
+        type: string
       item_tag:
         type: string
       source_column:
@@ -9466,7 +9634,7 @@ definitions:
       email_address:
         type: string
       id:
-        type: integer
+        type: string
       is_archived:
         type: boolean
       land:
@@ -9889,12 +10057,6 @@ paths:
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
-      parameters:
-      - description: Attachment ID
-        in: path
-        name: id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -9919,12 +10081,6 @@ paths:
       - attachments
     get:
       description: Get an attachment by its ID
-      parameters:
-      - description: Attachment ID
-        in: path
-        name: id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -11074,11 +11230,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Client details
         in: body
         name: request
@@ -11109,12 +11260,6 @@ paths:
       - clients
   /clients/{id}/addresses:
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -11140,11 +11285,6 @@ paths:
   /clients/{id}/ai_progress_reports:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -11176,11 +11316,6 @@ paths:
       - application/json
       description: Generate auto reports
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Request body
         in: body
         name: request
@@ -11202,11 +11337,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Progress Report Request
         in: body
         name: request
@@ -11234,12 +11364,6 @@ paths:
   /clients/{id}/appointment_cards:
     get:
       description: Get an appointment card by client ID
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -11255,11 +11379,6 @@ paths:
       - application/json
       description: Create a new appointment card
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Request body
         in: body
         name: request
@@ -11281,11 +11400,6 @@ paths:
       - application/json
       description: Update an appointment card by client ID
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Request body
         in: body
         name: request
@@ -11305,12 +11419,6 @@ paths:
   /clients/{id}/appointment_cards/generate_document:
     post:
       description: Generate an appointment card document by client ID
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -11327,11 +11435,6 @@ paths:
       - application/json
       description: List appointments for a client in a date range
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: List appointments request
         in: body
         name: request
@@ -11444,11 +11547,6 @@ paths:
   /clients/{id}/contracts:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: string
       - description: Page number
         in: query
         name: page
@@ -11471,11 +11569,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: string
       - description: Create Contract Request
         in: body
         name: request
@@ -11517,11 +11610,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -11552,11 +11640,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Client diagnosis data
         in: body
         name: request
@@ -11583,17 +11666,6 @@ paths:
       - client_Medical
   /clients/{id}/diagnosis/{diagnosis_id}:
     delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -11613,17 +11685,6 @@ paths:
       tags:
       - client_Medical
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -11646,16 +11707,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
       - description: Client diagnosis data
         in: body
         name: request
@@ -11685,16 +11736,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -11725,16 +11766,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
       - description: Client medication data
         in: body
         name: request
@@ -11761,22 +11792,6 @@ paths:
       - client_Medical
   /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id}:
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Medication ID
-        in: path
-        name: medication_id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -11799,21 +11814,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
-      - description: Medication ID
-        in: path
-        name: medication_id
-        required: true
-        type: integer
       - description: Client medication data
         in: body
         name: request
@@ -11841,11 +11841,6 @@ paths:
   /clients/{id}/documents:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -11880,11 +11875,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Client document
         in: body
         name: request
@@ -11918,11 +11908,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Document ID
         in: path
         name: document_id
@@ -11959,11 +11944,6 @@ paths:
   /clients/{id}/emergency_contacts:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -11998,11 +11978,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Client emergency contact data
         in: body
         name: request
@@ -12029,17 +12004,6 @@ paths:
       - client_network
   /clients/{id}/emergency_contacts/{contact_id}:
     delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Contact ID
-        in: path
-        name: contact_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12059,17 +12023,6 @@ paths:
       tags:
       - client_network
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Contact ID
-        in: path
-        name: contact_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12092,16 +12045,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Contact ID
-        in: path
-        name: contact_id
-        required: true
-        type: integer
       - description: Client emergency contact data
         in: body
         name: request
@@ -12129,11 +12072,6 @@ paths:
   /clients/{id}/incidents:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -12156,11 +12094,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Incident data
         in: body
         name: request
@@ -12191,17 +12124,6 @@ paths:
       - incidents
   /clients/{id}/incidents/{incident_id}:
     delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Incident ID
-        in: path
-        name: incident_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12225,17 +12147,6 @@ paths:
       tags:
       - incidents
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Incident ID
-        in: path
-        name: incident_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12260,16 +12171,6 @@ paths:
       - incidents
     put:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Incident ID
-        in: path
-        name: incident_id
-        required: true
-        type: integer
       - description: Incident
         in: body
         name: incident
@@ -12300,17 +12201,6 @@ paths:
       - incidents
   /clients/{id}/incidents/{incident_id}/file:
     get:
-      parameters:
-      - description: Incident ID
-        in: path
-        name: incident_id
-        required: true
-        type: integer
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12336,11 +12226,6 @@ paths:
   /clients/{id}/involved_employees:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -12371,11 +12256,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Employee assignment data
         in: body
         name: request
@@ -12402,17 +12282,6 @@ paths:
       - client_network
   /clients/{id}/involved_employees/{assign_id}:
     delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Assignment ID
-        in: path
-        name: assign_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12432,17 +12301,6 @@ paths:
       tags:
       - client_network
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Assignment ID
-        in: path
-        name: assign_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12465,16 +12323,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Assignment ID
-        in: path
-        name: assign_id
-        required: true
-        type: integer
       - description: Assigned employee data
         in: body
         name: request
@@ -12504,11 +12352,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: string
       - description: Location transfer request
         in: body
         name: request
@@ -12539,22 +12382,6 @@ paths:
       - clients
   /clients/{id}/medications/{medication_id}:
     delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Diagnosis ID
-        in: path
-        name: diagnosis_id
-        required: true
-        type: integer
-      - description: Medication ID
-        in: path
-        name: medication_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12575,12 +12402,6 @@ paths:
       - client_Medical
   /clients/{id}/missing_documents:
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12608,11 +12429,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Client profile picture
         in: body
         name: request
@@ -12644,11 +12460,6 @@ paths:
   /clients/{id}/progress_reports:
     get:
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Page number
         in: query
         name: page
@@ -12679,11 +12490,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Progress Report Request
         in: body
         name: request
@@ -12710,17 +12516,6 @@ paths:
       - progress_reports
   /clients/{id}/progress_reports/{report_id}:
     delete:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Progress Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12740,17 +12535,6 @@ paths:
       tags:
       - progress_reports
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Progress Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12773,16 +12557,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Progress Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
       - description: Progress Report Request
         in: body
         name: request
@@ -12809,12 +12583,6 @@ paths:
       - progress_reports
   /clients/{id}/related_emails:
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12835,12 +12603,6 @@ paths:
       - client_network
   /clients/{id}/sender:
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -12864,11 +12626,6 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Client status
         in: body
         name: request
@@ -12899,12 +12656,6 @@ paths:
       - clients
   /clients/{id}/status_history:
     get:
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -13568,12 +13319,6 @@ paths:
       - employees
     put:
       description: Update employee profile by ID
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -13610,11 +13355,6 @@ paths:
       - application/json
       description: List appointments for an employee in a date range
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: List appointments request
         in: body
         name: request
@@ -13650,12 +13390,6 @@ paths:
   /employees/{id}/certification:
     get:
       description: Get a list of certifications for employee profile
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -13689,11 +13423,6 @@ paths:
     post:
       description: Add certification to employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Certification details
         in: body
         name: request
@@ -13733,17 +13462,6 @@ paths:
   /employees/{id}/certification/{certification_id}:
     delete:
       description: Delete certification for employee profile
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Certification ID
-        in: path
-        name: certification_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -13777,16 +13495,6 @@ paths:
     put:
       description: Update certification for employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Certification ID
-        in: path
-        name: certification_id
-        required: true
-        type: integer
       - description: Certification details
         in: body
         name: request
@@ -13826,12 +13534,6 @@ paths:
   /employees/{id}/contract_details:
     get:
       description: Get employee contract details by ID
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -13867,11 +13569,6 @@ paths:
       - application/json
       description: Add contract details to employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Contract details
         in: body
         name: request
@@ -13911,12 +13608,6 @@ paths:
   /employees/{id}/education:
     get:
       description: Get a list of education for employee profile
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -13952,11 +13643,6 @@ paths:
       - application/json
       description: Add education to employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Education details
         in: body
         name: request
@@ -13996,17 +13682,6 @@ paths:
   /employees/{id}/education/{education_id}:
     delete:
       description: Delete education for employee profile
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Education ID
-        in: path
-        name: education_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -14040,16 +13715,6 @@ paths:
     put:
       description: Update education for employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Education ID
-        in: path
-        name: education_id
-        required: true
-        type: integer
       - description: Education details
         in: body
         name: request
@@ -14089,12 +13754,6 @@ paths:
   /employees/{id}/experience:
     get:
       description: Get a list of experience for employee profile
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -14128,11 +13787,6 @@ paths:
     post:
       description: Add experience to employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Experience details
         in: body
         name: request
@@ -14172,17 +13826,6 @@ paths:
   /employees/{id}/experience/{experience_id}:
     delete:
       description: Delete experience for employee profile
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Experience ID
-        in: path
-        name: experience_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -14216,16 +13859,6 @@ paths:
     put:
       description: Update experience for employee profile
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Experience ID
-        in: path
-        name: experience_id
-        required: true
-        type: integer
       - description: Experience details
         in: body
         name: request
@@ -14269,11 +13902,6 @@ paths:
       description: Update an employee's subcontractor status and adjust contract details
         accordingly
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Subcontractor status details
         in: body
         name: request
@@ -14316,11 +13944,6 @@ paths:
       - application/json
       description: Set employee profile picture by ID
       parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Profile picture details
         in: body
         name: request
@@ -14538,12 +14161,6 @@ paths:
       - incidents
   /incidents/{incident_id}/confirm:
     put:
-      parameters:
-      - description: Incident ID
-        in: path
-        name: incident_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -14566,6 +14183,76 @@ paths:
       summary: Confirm an incident
       tags:
       - incidents
+  /intake_forms:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated list of intake forms with optional search
+        and sorting.
+      parameters:
+      - description: Search term to filter intake forms
+        in: query
+        name: search
+        type: string
+      - description: Sort order (asc or desc)
+        in: query
+        name: sort_order
+        type: string
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page for pagination
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Response-clientp_ListIntakeFormsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List Intake Forms
+      tags:
+      - Intake Forms
+    post:
+      consumes:
+      - application/json
+      description: Create a new intake form with the provided details.
+      parameters:
+      - description: Intake Form Details
+        in: body
+        name: intake_form
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.CreateIntakeFormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/clientp.CreateIntakeFormResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create Intake Form
+      tags:
+      - Intake Forms
   /interventions/{intervention_id}:
     delete:
       description: Delete a care plan intervention by its ID
@@ -14959,13 +14646,6 @@ paths:
   /invoices/{id}/payments:
     get:
       description: List all payments for a specific invoice.
-      parameters:
-      - description: Invoice ID
-        format: int64
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -15112,19 +14792,6 @@ paths:
       consumes:
       - application/json
       description: Delete a payment from an invoice.
-      parameters:
-      - description: Invoice ID
-        format: int64
-        in: path
-        name: invoice_id
-        required: true
-        type: integer
-      - description: Payment ID
-        format: int64
-        in: path
-        name: payment_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -15156,18 +14823,6 @@ paths:
       - application/json
       description: Update a payment for an invoice.
       parameters:
-      - description: Invoice ID
-        format: int64
-        in: path
-        name: invoice_id
-        required: true
-        type: integer
-      - description: Payment ID
-        format: int64
-        in: path
-        name: payment_id
-        required: true
-        type: integer
       - description: Update Payment Request
         in: body
         name: request
@@ -15395,11 +15050,6 @@ paths:
     get:
       description: Get all schedules for a specific location for a given day
       parameters:
-      - description: Location ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Year
         in: query
         name: year
@@ -15438,11 +15088,6 @@ paths:
       description: Get all schedules for a specific location for a given month and
         year
       parameters:
-      - description: Location ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Year
         in: query
         name: year
@@ -15474,12 +15119,6 @@ paths:
   /locations/{id}/shifts:
     get:
       description: List all shifts for a specific location
-      parameters:
-      - description: Location ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -15507,11 +15146,6 @@ paths:
       - application/json
       description: Create a new shift for a specific location
       parameters:
-      - description: Location ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Shift creation request
         in: body
         name: request
@@ -15539,12 +15173,6 @@ paths:
   /locations/{id}/shifts/{shift_id}:
     delete:
       description: Delete a shift by its ID
-      parameters:
-      - description: Shift ID
-        in: path
-        name: shift_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -15572,16 +15200,6 @@ paths:
       - application/json
       description: Update an existing shift by ID
       parameters:
-      - description: Location ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Shift ID
-        in: path
-        name: shift_id
-        required: true
-        type: integer
       - description: Shift update request
         in: body
         name: request
@@ -16211,12 +15829,6 @@ paths:
   /registration_form/{id}:
     delete:
       description: Delete a registration form by ID
-      parameters:
-      - description: Registration Form ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -16241,12 +15853,6 @@ paths:
       - Registration Form
     get:
       description: Get a registration form by ID
-      parameters:
-      - description: Registration Form ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -16274,11 +15880,6 @@ paths:
       - application/json
       description: Update a registration form by ID
       parameters:
-      - description: Registration Form ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Update Registration Form Request
         in: body
         name: request
@@ -16311,11 +15912,6 @@ paths:
     post:
       description: Update the status of a registration form by ID
       parameters:
-      - description: Registration Form ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Update Registration Form Status Request
         in: body
         name: request
@@ -16543,12 +16139,6 @@ paths:
   /roles/{role_id}/permissions:
     get:
       description: List all permissions associated with a specific role
-      parameters:
-      - description: Role ID
-        in: path
-        name: role_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -16576,11 +16166,6 @@ paths:
       - application/json
       description: Add specific permissions to a role by role ID
       parameters:
-      - description: Role ID
-        in: path
-        name: role_id
-        required: true
-        type: integer
       - description: Add permissions to role
         in: body
         name: input
@@ -16909,12 +16494,6 @@ paths:
       - senders
     get:
       description: Get a sender
-      parameters:
-      - description: Sender ID
-        in: path
-        name: id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
@@ -16942,11 +16521,6 @@ paths:
       - application/json
       description: Update a sender
       parameters:
-      - description: Sender ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Sender data
         in: body
         name: request

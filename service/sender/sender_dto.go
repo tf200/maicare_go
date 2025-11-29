@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"maicare_go/pagination"
+
+	"github.com/google/uuid"
 )
 
 // Contact represents a contact information.
@@ -30,7 +32,7 @@ type CreateSenderRequest struct {
 
 // CreateSenderResponse represents a response to a request to create a new sender.
 type CreateSenderResponse struct {
-	ID           int64           `json:"id"`
+	ID           uuid.UUID       `json:"id"`
 	Types        string          `json:"types"`
 	Name         string          `json:"name"`
 	Address      *string         `json:"address"`
@@ -55,7 +57,7 @@ type ListSendersRequest struct {
 
 // GetSenderResponse represents a response to a request to get a sender by ID.
 type ListSendersResponse struct {
-	ID           int64           `json:"id"`
+	ID           uuid.UUID       `json:"id"`
 	Types        string          `json:"types"`
 	Name         string          `json:"name"`
 	Address      *string         `json:"address"`
@@ -72,16 +74,16 @@ type ListSendersResponse struct {
 }
 
 type TemplateItem struct {
-	ID           int64  `json:"id"`
-	ItemTag      string `json:"item_tag"`
-	Description  string `json:"description"`
-	SourceTable  string `json:"source_table"`
-	SourceColumn string `json:"source_column"`
+	ID           uuid.UUID `json:"id"`
+	ItemTag      string    `json:"item_tag"`
+	Description  string    `json:"description"`
+	SourceTable  string    `json:"source_table"`
+	SourceColumn string    `json:"source_column"`
 }
 
 // GetSenderByIdResponse represents a response to a request to get a sender by ID.
 type GetSenderByIdResponse struct {
-	ID                   int64           `json:"id"`
+	ID                   uuid.UUID       `json:"id"`
 	Types                string          `json:"types"`
 	Name                 string          `json:"name"`
 	Address              *string         `json:"address"`
@@ -119,7 +121,7 @@ type UpdateSenderRequest struct {
 
 // UpdateSenderResponse represents a response to a request to update a sender.
 type UpdateSenderResponse struct {
-	ID           int64           `json:"id"`
+	ID           uuid.UUID       `json:"id"`
 	Types        string          `json:"types"`
 	Name         string          `json:"name"`
 	Address      *string         `json:"address"`
@@ -139,5 +141,5 @@ type UpdateSenderResponse struct {
 
 // CreateSenderInvoiceTemplateRequest represents a request to create a new sender invoice template.
 type CreateSenderInvoiceTemplateRequest struct {
-	InvoiceTemplateIDs []int64 `json:"invoice_template" binding:"required"`
+	InvoiceTemplateIDs []uuid.UUID `json:"invoice_template" binding:"required"`
 }

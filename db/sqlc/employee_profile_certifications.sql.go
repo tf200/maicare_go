@@ -54,7 +54,7 @@ const deleteEmployeeCertification = `-- name: DeleteEmployeeCertification :one
 DELETE FROM certification WHERE id = $1 RETURNING id, employee_id, name, issued_by, date_issued, created_at
 `
 
-func (q *Queries) DeleteEmployeeCertification(ctx context.Context, id int64) (Certification, error) {
+func (q *Queries) DeleteEmployeeCertification(ctx context.Context, id uuid.UUID) (Certification, error) {
 	row := q.db.QueryRow(ctx, deleteEmployeeCertification, id)
 	var i Certification
 	err := row.Scan(
@@ -110,7 +110,7 @@ RETURNING id, employee_id, name, issued_by, date_issued, created_at
 `
 
 type UpdateEmployeeCertificationParams struct {
-	ID         int64       `json:"id"`
+	ID         uuid.UUID   `json:"id"`
 	Name       *string     `json:"name"`
 	IssuedBy   *string     `json:"issued_by"`
 	DateIssued pgtype.Date `json:"date_issued"`

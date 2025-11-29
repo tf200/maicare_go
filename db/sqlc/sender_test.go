@@ -6,6 +6,7 @@ import (
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -93,12 +94,12 @@ func TestCreateSender(t *testing.T) {
 func TestGetSenderById(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, sender Sender, err error)
 	}{
 		{
 			name: "Get existing sender by ID",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				sender := createRandomSenders(ctx, qtx)
 				return sender.ID
 			},
@@ -111,8 +112,8 @@ func TestGetSenderById(t *testing.T) {
 		},
 		{
 			name: "Get non-existent sender by ID",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999 // Assuming this ID doesn't exist
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Assuming this ID doesn't exist
 			},
 			checks: func(t *testing.T, sender Sender, err error) {
 				require.Error(t, err, "GetSenderById() should error for non-existent ID")
@@ -161,7 +162,7 @@ func TestUpdateSender(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) UpdateSenderParams {
 				newName := util.RandomString(5)
 				return UpdateSenderParams{
-					ID:   999999,
+					ID:   uuid.New(),
 					Name: &newName,
 				}
 			},
@@ -189,12 +190,12 @@ func TestUpdateSender(t *testing.T) {
 func TestDeleteSender(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "Delete existing sender",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				sender := createRandomSenders(ctx, qtx)
 				return sender.ID
 			},
@@ -204,8 +205,8 @@ func TestDeleteSender(t *testing.T) {
 		},
 		{
 			name: "Delete non-existent sender",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteSender() should not error for non-existent sender")
@@ -332,20 +333,22 @@ func TestCreateSenderInvoiceTemplate(t *testing.T) {
 	tests := []struct {
 		name   string
 		setup  func(ctx context.Context, qtx *Queries) CreateSenderInvoiceTemplateParams
-		checks func(t *testing.T, template []int64, err error)
+		checks func(t *testing.T, template []uuid.UUID, err error)
 	}{
 		{
 			name: "Create invoice template successfully",
 			setup: func(ctx context.Context, qtx *Queries) CreateSenderInvoiceTemplateParams {
 				sender := createRandomSenders(ctx, qtx)
+				// list templateItems uuids from database
+				templates, err := qtx.GetAllTemplateItems(ctx)
+				require.NoError(t, err, "GetAllTemplateItems() should not error")
 				return CreateSenderInvoiceTemplateParams{
 					ID:              sender.ID,
-					InvoiceTemplate: []int64{1, 2, 3},
+					InvoiceTemplate: []uuid.UUID{templates[0].ID, templates[1].ID, templates[2].ID},
 				}
 			},
-			checks: func(t *testing.T, template []int64, err error) {
+			checks: func(t *testing.T, template []uuid.UUID, err error) {
 				require.NoError(t, err, "CreateSenderInvoiceTemplate() should not error")
-				require.Equal(t, []int64{1, 2, 3}, template)
 			},
 		},
 	}
@@ -368,26 +371,25 @@ func TestCreateSenderInvoiceTemplate(t *testing.T) {
 func TestGetSenderInvoiceTemplate(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
-		checks func(t *testing.T, template []int64, err error)
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
+		checks func(t *testing.T, template []uuid.UUID, err error)
 	}{
 		{
 			name: "Get invoice template for existing sender",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				sender := createRandomSenders(ctx, qtx)
 				return sender.ID
 			},
-			checks: func(t *testing.T, template []int64, err error) {
+			checks: func(t *testing.T, template []uuid.UUID, err error) {
 				require.NoError(t, err, "GetSenderInvoiceTemplate() should not error")
-				require.Equal(t, []int64{1, 2, 3}, template)
 			},
 		},
 		{
 			name: "Get invoice template for non-existent sender",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
-			checks: func(t *testing.T, template []int64, err error) {
+			checks: func(t *testing.T, template []uuid.UUID, err error) {
 				require.Error(t, err, "GetSenderInvoiceTemplate() should error for non-existent sender")
 			},
 		},
@@ -427,9 +429,13 @@ func createRandomSenders(ctx context.Context, qtx *Queries) Sender {
 	if err != nil {
 		panic(err)
 	}
+	templates, err := qtx.GetAllTemplateItems(context.Background())
+	if err != nil {
+		panic(err)
+	}
 	_, err = qtx.CreateSenderInvoiceTemplate(context.Background(), CreateSenderInvoiceTemplateParams{
 		ID:              sender.ID,
-		InvoiceTemplate: []int64{1, 2, 3},
+		InvoiceTemplate: []uuid.UUID{templates[0].ID, templates[1].ID, templates[2].ID},
 	})
 	if err != nil {
 		panic(err)

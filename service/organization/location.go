@@ -7,10 +7,11 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func (s *organizationService) ListOrgLocations(ctx context.Context, organizationID int64) ([]ListLocationsResponse, error) {
+func (s *organizationService) ListOrgLocations(ctx context.Context, organizationID uuid.UUID) ([]ListLocationsResponse, error) {
 	locations, err := s.Store.ListLocations(ctx, organizationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListOrgLocationsApi", "Failed to list locations", zap.Error(err))
@@ -73,7 +74,7 @@ func (s *organizationService) ListAllLocations(ctx context.Context) ([]ListLocat
 	return response, nil
 }
 
-func (s *organizationService) CreateLocation(ctx context.Context, organizationID int64, req CreateLocationRequest) (*CreateLocationResponse, error) {
+func (s *organizationService) CreateLocation(ctx context.Context, organizationID uuid.UUID, req CreateLocationRequest) (*CreateLocationResponse, error) {
 	location, err := s.Store.CreateLocation(ctx, db.CreateLocationParams{
 		OrganisationID: organizationID,
 		Name:           req.Name,
@@ -93,7 +94,7 @@ func (s *organizationService) CreateLocation(ctx context.Context, organizationID
 	}, nil
 }
 
-func (s *organizationService) UpdateLocation(ctx context.Context, locationID int64, req UpdateLocationRequest) (*UpdateLocationResponse, error) {
+func (s *organizationService) UpdateLocation(ctx context.Context, locationID uuid.UUID, req UpdateLocationRequest) (*UpdateLocationResponse, error) {
 	location, err := s.Store.UpdateLocation(ctx, db.UpdateLocationParams{
 		Name:     req.Name,
 		Address:  req.Address,
@@ -113,7 +114,7 @@ func (s *organizationService) UpdateLocation(ctx context.Context, locationID int
 	}, nil
 }
 
-func (s *organizationService) DeleteLocation(ctx context.Context, locationID int64) (*DeleteLocationResponse, error) {
+func (s *organizationService) DeleteLocation(ctx context.Context, locationID uuid.UUID) (*DeleteLocationResponse, error) {
 	_, err := s.Store.DeleteLocation(ctx, locationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteLocationApi", "Failed to delete location", zap.Error(err))
@@ -125,7 +126,7 @@ func (s *organizationService) DeleteLocation(ctx context.Context, locationID int
 	}, nil
 }
 
-func (s *organizationService) GetLocationByID(ctx context.Context, locationID int64) (*GetLocationResponse, error) {
+func (s *organizationService) GetLocationByID(ctx context.Context, locationID uuid.UUID) (*GetLocationResponse, error) {
 	location, err := s.Store.GetLocation(ctx, locationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetLocationApi", "Failed to get location by ID", zap.Error(err))

@@ -61,7 +61,7 @@ const deleteEmployeeEducation = `-- name: DeleteEmployeeEducation :one
 DELETE FROM employee_education WHERE id = $1 RETURNING id, employee_id, institution_name, degree, field_of_study, start_date, end_date, created_at
 `
 
-func (q *Queries) DeleteEmployeeEducation(ctx context.Context, id int64) (EmployeeEducation, error) {
+func (q *Queries) DeleteEmployeeEducation(ctx context.Context, id uuid.UUID) (EmployeeEducation, error) {
 	row := q.db.QueryRow(ctx, deleteEmployeeEducation, id)
 	var i EmployeeEducation
 	err := row.Scan(
@@ -123,7 +123,7 @@ RETURNING id, employee_id, institution_name, degree, field_of_study, start_date,
 `
 
 type UpdateEmployeeEducationParams struct {
-	ID              int64       `json:"id"`
+	ID              uuid.UUID   `json:"id"`
 	InstitutionName *string     `json:"institution_name"`
 	Degree          *string     `json:"degree"`
 	FieldOfStudy    *string     `json:"field_of_study"`
