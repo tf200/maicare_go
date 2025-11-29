@@ -26,7 +26,7 @@ INSERT INTO care_plans (
 `
 
 type CreateCarePlanParams struct {
-	AssessmentID          int64              `json:"assessment_id"`
+	AssessmentID          uuid.UUID          `json:"assessment_id"`
 	GeneratedByEmployeeID *uuid.UUID         `json:"generated_by_employee_id"`
 	AssessmentSummary     string             `json:"assessment_summary"`
 	RawLlmResponse        []byte             `json:"raw_llm_response"`
@@ -72,9 +72,9 @@ RETURNING id, objective_id, action_description, is_completed, completed_at, comp
 `
 
 type CreateCarePlanActionParams struct {
-	ObjectiveID       int64  `json:"objective_id"`
-	ActionDescription string `json:"action_description"`
-	SortOrder         int32  `json:"sort_order"`
+	ObjectiveID       uuid.UUID `json:"objective_id"`
+	ActionDescription string    `json:"action_description"`
+	SortOrder         int32     `json:"sort_order"`
 }
 
 func (q *Queries) CreateCarePlanAction(ctx context.Context, arg CreateCarePlanActionParams) (CarePlanAction, error) {
@@ -105,7 +105,7 @@ RETURNING id, care_plan_id, frequency, intervention_description, is_active, last
 `
 
 type CreateCarePlanInterventionParams struct {
-	CarePlanID              int64                             `json:"care_plan_id"`
+	CarePlanID              uuid.UUID                         `json:"care_plan_id"`
 	Frequency               CarePlanInterventionFrequencyEnum `json:"frequency"`
 	InterventionDescription string                            `json:"intervention_description"`
 }
@@ -144,7 +144,7 @@ RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, sta
 `
 
 type CreateCarePlanObjectiveParams struct {
-	CarePlanID  int64                 `json:"care_plan_id"`
+	CarePlanID  uuid.UUID             `json:"care_plan_id"`
 	Timeframe   CarePlanTimeframeEnum `json:"timeframe"`
 	GoalTitle   string                `json:"goal_title"`
 	Description string                `json:"description"`
@@ -190,7 +190,7 @@ INSERT INTO care_plan_reports (
 `
 
 type CreateCarePlanReportParams struct {
-	CarePlanID          int64                  `json:"care_plan_id"`
+	CarePlanID          uuid.UUID              `json:"care_plan_id"`
 	ReportType          CarePlanReportTypeEnum `json:"report_type"`
 	ReportContent       string                 `json:"report_content"`
 	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
@@ -234,7 +234,7 @@ RETURNING id, care_plan_id, resource_description, is_obtained, obtained_date, co
 `
 
 type CreateCarePlanResourcesParams struct {
-	CarePlanID          int64       `json:"care_plan_id"`
+	CarePlanID          uuid.UUID   `json:"care_plan_id"`
 	ResourceDescription string      `json:"resource_description"`
 	IsObtained          bool        `json:"is_obtained"`
 	ObtainedDate        pgtype.Date `json:"obtained_date"`
@@ -277,7 +277,7 @@ RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, i
 `
 
 type CreateCarePlanRiskParams struct {
-	CarePlanID         int64                 `json:"care_plan_id"`
+	CarePlanID         uuid.UUID             `json:"care_plan_id"`
 	RiskDescription    string                `json:"risk_description"`
 	MitigationStrategy string                `json:"mitigation_strategy"`
 	RiskLevel          CarePlanRiskLevelEnum `json:"risk_level"`
@@ -320,11 +320,11 @@ RETURNING id, care_plan_id, metric_name, target_value, measurement_method, curre
 `
 
 type CreateCarePlanSuccessMetricParams struct {
-	CarePlanID        int64   `json:"care_plan_id"`
-	MetricName        string  `json:"metric_name"`
-	TargetValue       string  `json:"target_value"`
-	MeasurementMethod string  `json:"measurement_method"`
-	CurrentValue      *string `json:"current_value"`
+	CarePlanID        uuid.UUID `json:"care_plan_id"`
+	MetricName        string    `json:"metric_name"`
+	TargetValue       string    `json:"target_value"`
+	MeasurementMethod string    `json:"measurement_method"`
+	CurrentValue      *string   `json:"current_value"`
 }
 
 // ==================== care plan success metrics ====================
@@ -365,9 +365,9 @@ RETURNING id, care_plan_id, role_title, responsibility_description, contact_pers
 `
 
 type CreateCarePlanSupportNetworkParams struct {
-	CarePlanID                int64  `json:"care_plan_id"`
-	RoleTitle                 string `json:"role_title"`
-	ResponsibilityDescription string `json:"responsibility_description"`
+	CarePlanID                uuid.UUID `json:"care_plan_id"`
+	RoleTitle                 string    `json:"role_title"`
+	ResponsibilityDescription string    `json:"responsibility_description"`
 }
 
 // ===================== care plan support network ====================
@@ -412,7 +412,7 @@ JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id
 
 type CreateClientMaturityMatrixAssessmentParams struct {
 	ClientID         uuid.UUID   `json:"client_id"`
-	MaturityMatrixID int64       `json:"maturity_matrix_id"`
+	MaturityMatrixID uuid.UUID   `json:"maturity_matrix_id"`
 	StartDate        pgtype.Date `json:"start_date"`
 	EndDate          pgtype.Date `json:"end_date"`
 	TargetLevel      int32       `json:"target_level"`
@@ -421,9 +421,9 @@ type CreateClientMaturityMatrixAssessmentParams struct {
 }
 
 type CreateClientMaturityMatrixAssessmentRow struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -468,7 +468,7 @@ DELETE FROM care_plans
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlan(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlan(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlan, id)
 	return err
 }
@@ -478,7 +478,7 @@ DELETE FROM care_plan_actions
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanAction(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanAction(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanAction, id)
 	return err
 }
@@ -488,7 +488,7 @@ DELETE FROM care_plan_interventions
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanIntervention(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanIntervention(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanIntervention, id)
 	return err
 }
@@ -498,7 +498,7 @@ DELETE FROM care_plan_objectives
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanObjective(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanObjective(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanObjective, id)
 	return err
 }
@@ -508,7 +508,7 @@ DELETE FROM care_plan_reports
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanReport(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanReport(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanReport, id)
 	return err
 }
@@ -518,7 +518,7 @@ DELETE FROM care_plan_resources
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanResource(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanResource(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanResource, id)
 	return err
 }
@@ -528,7 +528,7 @@ DELETE FROM care_plan_risks
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanRisk(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanRisk(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanRisk, id)
 	return err
 }
@@ -538,7 +538,7 @@ DELETE FROM care_plan_metrics
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanSuccessMetric(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanSuccessMetric(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanSuccessMetric, id)
 	return err
 }
@@ -548,7 +548,7 @@ DELETE FROM care_plan_support_network
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCarePlanSupportNetwork(ctx context.Context, id int64) error {
+func (q *Queries) DeleteCarePlanSupportNetwork(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCarePlanSupportNetwork, id)
 	return err
 }
@@ -559,7 +559,7 @@ FROM care_plan_actions
 WHERE objective_id = $1
 `
 
-func (q *Queries) GetCarePlanActionsMaxSortOrder(ctx context.Context, objectiveID int64) (int32, error) {
+func (q *Queries) GetCarePlanActionsMaxSortOrder(ctx context.Context, objectiveID uuid.UUID) (int32, error) {
 	row := q.db.QueryRow(ctx, getCarePlanActionsMaxSortOrder, objectiveID)
 	var max_sort_order int32
 	err := row.Scan(&max_sort_order)
@@ -577,7 +577,7 @@ ORDER BY
     END
 `
 
-func (q *Queries) GetCarePlanInterventions(ctx context.Context, carePlanID int64) ([]CarePlanIntervention, error) {
+func (q *Queries) GetCarePlanInterventions(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanIntervention, error) {
 	rows, err := q.db.Query(ctx, getCarePlanInterventions, carePlanID)
 	if err != nil {
 		return nil, err
@@ -632,19 +632,19 @@ ORDER BY
 `
 
 type GetCarePlanObjectivesWithActionsRow struct {
-	ObjectiveID          int64                       `json:"objective_id"`
+	ObjectiveID          uuid.UUID                   `json:"objective_id"`
 	ObjectiveTitle       string                      `json:"objective_title"`
 	ObjectiveDescription string                      `json:"objective_description"`
 	ObjectiveTimeframe   CarePlanTimeframeEnum       `json:"objective_timeframe"`
 	ObjectiveStatus      CarePlanObjectiveStatusEnum `json:"objective_status"`
-	ActionID             *int64                      `json:"action_id"`
+	ActionID             *uuid.UUID                  `json:"action_id"`
 	ActionDescription    *string                     `json:"action_description"`
 	IsCompleted          *bool                       `json:"is_completed"`
 	ActionNotes          *string                     `json:"action_notes"`
 	SortOrder            *int32                      `json:"sort_order"`
 }
 
-func (q *Queries) GetCarePlanObjectivesWithActions(ctx context.Context, carePlanID int64) ([]GetCarePlanObjectivesWithActionsRow, error) {
+func (q *Queries) GetCarePlanObjectivesWithActions(ctx context.Context, carePlanID uuid.UUID) ([]GetCarePlanObjectivesWithActionsRow, error) {
 	rows, err := q.db.Query(ctx, getCarePlanObjectivesWithActions, carePlanID)
 	if err != nil {
 		return nil, err
@@ -692,8 +692,8 @@ WHERE cp.id = $1
 `
 
 type GetCarePlanOverviewRow struct {
-	ID                    int64              `json:"id"`
-	AssessmentID          int64              `json:"assessment_id"`
+	ID                    uuid.UUID          `json:"id"`
+	AssessmentID          uuid.UUID          `json:"assessment_id"`
 	GeneratedAt           pgtype.Timestamp   `json:"generated_at"`
 	GeneratedByEmployeeID *uuid.UUID         `json:"generated_by_employee_id"`
 	ApprovedByEmployeeID  *uuid.UUID         `json:"approved_by_employee_id"`
@@ -712,7 +712,7 @@ type GetCarePlanOverviewRow struct {
 	LastName              string             `json:"last_name"`
 }
 
-func (q *Queries) GetCarePlanOverview(ctx context.Context, id int64) (GetCarePlanOverviewRow, error) {
+func (q *Queries) GetCarePlanOverview(ctx context.Context, id uuid.UUID) (GetCarePlanOverviewRow, error) {
 	row := q.db.QueryRow(ctx, getCarePlanOverview, id)
 	var i GetCarePlanOverviewRow
 	err := row.Scan(
@@ -749,8 +749,8 @@ WHERE cpr.id = $1
 `
 
 type GetCarePlanReportRow struct {
-	ID                  int64                  `json:"id"`
-	CarePlanID          int64                  `json:"care_plan_id"`
+	ID                  uuid.UUID              `json:"id"`
+	CarePlanID          uuid.UUID              `json:"care_plan_id"`
 	ReportType          CarePlanReportTypeEnum `json:"report_type"`
 	ReportContent       string                 `json:"report_content"`
 	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
@@ -761,7 +761,7 @@ type GetCarePlanReportRow struct {
 	CreatedByLastName   string                 `json:"created_by_last_name"`
 }
 
-func (q *Queries) GetCarePlanReport(ctx context.Context, id int64) (GetCarePlanReportRow, error) {
+func (q *Queries) GetCarePlanReport(ctx context.Context, id uuid.UUID) (GetCarePlanReportRow, error) {
 	row := q.db.QueryRow(ctx, getCarePlanReport, id)
 	var i GetCarePlanReportRow
 	err := row.Scan(
@@ -785,7 +785,7 @@ WHERE care_plan_id = $1
 ORDER BY is_obtained, created_at
 `
 
-func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID int64) ([]CarePlanResource, error) {
+func (q *Queries) GetCarePlanResources(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanResource, error) {
 	rows, err := q.db.Query(ctx, getCarePlanResources, carePlanID)
 	if err != nil {
 		return nil, err
@@ -826,7 +826,7 @@ ORDER BY
     END
 `
 
-func (q *Queries) GetCarePlanRisks(ctx context.Context, carePlanID int64) ([]CarePlanRisk, error) {
+func (q *Queries) GetCarePlanRisks(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanRisk, error) {
 	rows, err := q.db.Query(ctx, getCarePlanRisks, carePlanID)
 	if err != nil {
 		return nil, err
@@ -861,7 +861,7 @@ WHERE care_plan_id = $1
 ORDER BY created_at
 `
 
-func (q *Queries) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID int64) ([]CarePlanMetric, error) {
+func (q *Queries) GetCarePlanSuccessMetrics(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanMetric, error) {
 	rows, err := q.db.Query(ctx, getCarePlanSuccessMetrics, carePlanID)
 	if err != nil {
 		return nil, err
@@ -898,7 +898,7 @@ WHERE care_plan_id = $1 AND is_active = true
 ORDER BY created_at
 `
 
-func (q *Queries) GetCarePlanSupportNetwork(ctx context.Context, carePlanID int64) ([]CarePlanSupportNetwork, error) {
+func (q *Queries) GetCarePlanSupportNetwork(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanSupportNetwork, error) {
 	rows, err := q.db.Query(ctx, getCarePlanSupportNetwork, carePlanID)
 	if err != nil {
 		return nil, err
@@ -938,9 +938,9 @@ WHERE cma.id = $1
 `
 
 type GetClientMaturityMatrixAssessmentRow struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -952,7 +952,7 @@ type GetClientMaturityMatrixAssessmentRow struct {
 	TopicName           string             `json:"topic_name"`
 }
 
-func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id int64) (GetClientMaturityMatrixAssessmentRow, error) {
+func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id uuid.UUID) (GetClientMaturityMatrixAssessmentRow, error) {
 	row := q.db.QueryRow(ctx, getClientMaturityMatrixAssessment, id)
 	var i GetClientMaturityMatrixAssessmentRow
 	err := row.Scan(
@@ -981,8 +981,8 @@ WHERE id = $1
 `
 
 type GetLevelDescriptionParams struct {
-	ID    int64  `json:"id"`
-	Level string `json:"level"`
+	ID    uuid.UUID `json:"id"`
+	Level string    `json:"level"`
 }
 
 type GetLevelDescriptionRow struct {
@@ -1001,7 +1001,7 @@ const getMaturityMatrix = `-- name: GetMaturityMatrix :one
 SELECT id, topic_name, level_description FROM maturity_matrix WHERE id = $1
 `
 
-func (q *Queries) GetMaturityMatrix(ctx context.Context, id int64) (MaturityMatrix, error) {
+func (q *Queries) GetMaturityMatrix(ctx context.Context, id uuid.UUID) (MaturityMatrix, error) {
 	row := q.db.QueryRow(ctx, getMaturityMatrix, id)
 	var i MaturityMatrix
 	err := row.Scan(&i.ID, &i.TopicName, &i.LevelDescription)
@@ -1022,14 +1022,14 @@ LIMIT $2 OFFSET $3
 `
 
 type ListCarePlanReportsParams struct {
-	CarePlanID int64 `json:"care_plan_id"`
-	Limit      int32 `json:"limit"`
-	Offset     int32 `json:"offset"`
+	CarePlanID uuid.UUID `json:"care_plan_id"`
+	Limit      int32     `json:"limit"`
+	Offset     int32     `json:"offset"`
 }
 
 type ListCarePlanReportsRow struct {
-	ID                  int64                  `json:"id"`
-	CarePlanID          int64                  `json:"care_plan_id"`
+	ID                  uuid.UUID              `json:"id"`
+	CarePlanID          uuid.UUID              `json:"care_plan_id"`
 	ReportType          CarePlanReportTypeEnum `json:"report_type"`
 	ReportContent       string                 `json:"report_content"`
 	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
@@ -1095,9 +1095,9 @@ type ListClientMaturityMatrixAssessmentsParams struct {
 }
 
 type ListClientMaturityMatrixAssessmentsRow struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -1107,7 +1107,7 @@ type ListClientMaturityMatrixAssessmentsRow struct {
 	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
 	IsActive            bool               `json:"is_active"`
 	TopicName           string             `json:"topic_name"`
-	CarePlanID          *int64             `json:"care_plan_id"`
+	CarePlanID          *uuid.UUID         `json:"care_plan_id"`
 	TotalCount          int64              `json:"total_count"`
 }
 
@@ -1179,8 +1179,8 @@ RETURNING id, objective_id, action_description, is_completed, completed_at, comp
 `
 
 type UpdateCarePlanActionParams struct {
-	ID                int64   `json:"id"`
-	ActionDescription *string `json:"action_description"`
+	ID                uuid.UUID `json:"id"`
+	ActionDescription *string   `json:"action_description"`
 }
 
 func (q *Queries) UpdateCarePlanAction(ctx context.Context, arg UpdateCarePlanActionParams) (CarePlanAction, error) {
@@ -1210,7 +1210,7 @@ RETURNING id, care_plan_id, frequency, intervention_description, is_active, last
 `
 
 type UpdateCarePlanInterventionParams struct {
-	ID                      int64                                 `json:"id"`
+	ID                      uuid.UUID                             `json:"id"`
 	Frequency               NullCarePlanInterventionFrequencyEnum `json:"frequency"`
 	InterventionDescription *string                               `json:"intervention_description"`
 }
@@ -1245,7 +1245,7 @@ RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, sta
 `
 
 type UpdateCarePlanObjectiveParams struct {
-	ID          int64                           `json:"id"`
+	ID          uuid.UUID                       `json:"id"`
 	Timeframe   NullCarePlanTimeframeEnum       `json:"timeframe"`
 	GoalTitle   *string                         `json:"goal_title"`
 	Description *string                         `json:"description"`
@@ -1286,8 +1286,8 @@ RETURNING id, assessment_id, generated_at, generated_by_employee_id, approved_by
 `
 
 type UpdateCarePlanOverviewParams struct {
-	ID                int64   `json:"id"`
-	AssessmentSummary *string `json:"assessment_summary"`
+	ID                uuid.UUID `json:"id"`
+	AssessmentSummary *string   `json:"assessment_summary"`
 }
 
 func (q *Queries) UpdateCarePlanOverview(ctx context.Context, arg UpdateCarePlanOverviewParams) (CarePlan, error) {
@@ -1322,7 +1322,7 @@ RETURNING id, care_plan_id, report_type, report_content, created_by_employee_id,
 `
 
 type UpdateCarePlanReportParams struct {
-	ID            int64                      `json:"id"`
+	ID            uuid.UUID                  `json:"id"`
 	ReportType    NullCarePlanReportTypeEnum `json:"report_type"`
 	ReportContent *string                    `json:"report_content"`
 	IsCritical    *bool                      `json:"is_critical"`
@@ -1361,7 +1361,7 @@ RETURNING id, care_plan_id, resource_description, is_obtained, obtained_date, co
 `
 
 type UpdateCarePlanResourceParams struct {
-	ID                  int64       `json:"id"`
+	ID                  uuid.UUID   `json:"id"`
 	ResourceDescription *string     `json:"resource_description"`
 	IsObtained          *bool       `json:"is_obtained"`
 	ObtainedDate        pgtype.Date `json:"obtained_date"`
@@ -1401,7 +1401,7 @@ RETURNING id, care_plan_id, risk_description, mitigation_strategy, risk_level, i
 `
 
 type UpdateCarePlanRiskParams struct {
-	ID                 int64                     `json:"id"`
+	ID                 uuid.UUID                 `json:"id"`
 	RiskDescription    *string                   `json:"risk_description"`
 	MitigationStrategy *string                   `json:"mitigation_strategy"`
 	RiskLevel          NullCarePlanRiskLevelEnum `json:"risk_level"`
@@ -1441,11 +1441,11 @@ RETURNING id, care_plan_id, metric_name, target_value, measurement_method, curre
 `
 
 type UpdateCarePlanSuccessMetricParams struct {
-	ID                int64   `json:"id"`
-	MetricName        *string `json:"metric_name"`
-	TargetValue       *string `json:"target_value"`
-	MeasurementMethod *string `json:"measurement_method"`
-	CurrentValue      *string `json:"current_value"`
+	ID                uuid.UUID `json:"id"`
+	MetricName        *string   `json:"metric_name"`
+	TargetValue       *string   `json:"target_value"`
+	MeasurementMethod *string   `json:"measurement_method"`
+	CurrentValue      *string   `json:"current_value"`
 }
 
 func (q *Queries) UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCarePlanSuccessMetricParams) (CarePlanMetric, error) {
@@ -1483,9 +1483,9 @@ RETURNING id, care_plan_id, role_title, responsibility_description, contact_pers
 `
 
 type UpdateCarePlanSupportNetworkParams struct {
-	ID                        int64   `json:"id"`
-	RoleTitle                 *string `json:"role_title"`
-	ResponsibilityDescription *string `json:"responsibility_description"`
+	ID                        uuid.UUID `json:"id"`
+	RoleTitle                 *string   `json:"role_title"`
+	ResponsibilityDescription *string   `json:"responsibility_description"`
 }
 
 func (q *Queries) UpdateCarePlanSupportNetwork(ctx context.Context, arg UpdateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error) {

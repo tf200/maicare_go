@@ -171,12 +171,12 @@ func TestAddEmployeeExperience(t *testing.T) {
 func TestDeleteEmployeeExperience(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, experience EmployeeExperience, err error)
 	}{
 		{
 			name: "successful deletion of existing experience",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				exp := createRandomExperience(ctx, qtx)
 				return exp.ID
 			},
@@ -189,8 +189,8 @@ func TestDeleteEmployeeExperience(t *testing.T) {
 		},
 		{
 			name: "delete non-existent experience",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999 // Non-existent ID
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Non-existent ID
 			},
 			checks: func(t *testing.T, experience EmployeeExperience, err error) {
 				require.Error(t, err, "DeleteEmployeeExperience() should error for non-existent ID")
@@ -469,7 +469,7 @@ func TestUpdateEmployeeExperience(t *testing.T) {
 			name: "update non-existent experience",
 			setup: func(ctx context.Context, qtx *Queries) UpdateEmployeeExperienceParams {
 				return UpdateEmployeeExperienceParams{
-					ID:          99999,
+					ID:          uuid.New(),
 					JobTitle:    util.StringPtr("Senior Architect"),
 					CompanyName: util.StringPtr("Fortune 500 Company"),
 					StartDate: pgtype.Date{

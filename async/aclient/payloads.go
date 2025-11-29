@@ -7,11 +7,11 @@ import (
 )
 
 type IncidentPayload struct {
-	ID                      int64     `json:"id"`
+	ID                      uuid.UUID `json:"id"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`

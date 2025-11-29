@@ -80,7 +80,7 @@ func (s *employeeService) AddEducationToEmployeeProfile(
 		"AddEducationToEmployeeProfile",
 		"Successfully added education to employee profile",
 		zap.String("EmployeeID", employeeID.String()),
-		zap.Int64("EducationID", education.ID),
+		zap.String("EducationID", education.ID.String()),
 	)
 	return res, nil
 }
@@ -128,7 +128,7 @@ func (s *employeeService) ListEmployeeEducation(
 
 func (s *employeeService) UpdateEmployeeEducation(
 	req UpdateEmployeeEducationRequest,
-	educationID int64,
+	educationID uuid.UUID,
 	ctx context.Context,
 ) (*UpdateEmployeeEducationResponse, error) {
 	var parsedStartDate time.Time
@@ -142,7 +142,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 				"UpdateEmployeeEducation",
 				"Failed to parse start date",
 				zap.Error(err),
-				zap.Int64("EducationID", educationID),
+				zap.String("EducationID", educationID.String()),
 			)
 			return nil, fmt.Errorf("invalid start date format: %w", err)
 		}
@@ -157,7 +157,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 				"UpdateEmployeeEducation",
 				"Failed to parse end date",
 				zap.Error(err),
-				zap.Int64("EducationID", educationID),
+				zap.String("EducationID", educationID.String()),
 			)
 			return nil, fmt.Errorf("invalid end date format: %w", err)
 		}
@@ -178,7 +178,7 @@ func (s *employeeService) UpdateEmployeeEducation(
 			"UpdateEmployeeEducation",
 			"Failed to update employee education",
 			zap.Error(err),
-			zap.Int64("EducationID", educationID),
+			zap.String("EducationID", educationID.String()),
 		)
 		return nil, fmt.Errorf("failed to update education: %w", err)
 	}
@@ -197,13 +197,13 @@ func (s *employeeService) UpdateEmployeeEducation(
 		logger.LogLevelInfo,
 		"UpdateEmployeeEducation",
 		"Successfully updated employee education",
-		zap.Int64("EducationID", educationID),
+		zap.String("EducationID", educationID.String()),
 	)
 	return res, nil
 }
 
 func (s *employeeService) DeleteEmployeeEducation(
-	educationID int64,
+	educationID uuid.UUID,
 	ctx context.Context,
 ) (*DeleteEmployeeEducationResponse, error) {
 	education, err := s.Store.DeleteEmployeeEducation(ctx, educationID)
@@ -214,7 +214,7 @@ func (s *employeeService) DeleteEmployeeEducation(
 			"DeleteEmployeeEducation",
 			"Failed to delete employee education",
 			zap.Error(err),
-			zap.Int64("EducationID", educationID),
+			zap.String("EducationID", educationID.String()),
 		)
 		return nil, fmt.Errorf("failed to delete education: %w", err)
 	}
@@ -233,7 +233,7 @@ func (s *employeeService) DeleteEmployeeEducation(
 		logger.LogLevelInfo,
 		"DeleteEmployeeEducation",
 		"Successfully deleted employee education",
-		zap.Int64("EducationID", educationID),
+		zap.String("EducationID", educationID.String()),
 	)
 	return res, nil
 }

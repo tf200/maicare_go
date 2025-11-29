@@ -22,7 +22,7 @@ WHERE id = $1
 `
 
 type ApproveOrRejectClientLocationTransferParams struct {
-	ID                 int64                            `json:"id"`
+	ID                 uuid.UUID                        `json:"id"`
 	Status             ClientLocationTransferStatusEnum `json:"status"`
 	ApprovedRejectedBy *uuid.UUID                       `json:"approved_rejected_by"`
 }
@@ -80,7 +80,7 @@ INSERT INTO client_details (
 `
 
 type CreateClientDetailsParams struct {
-	IntakeFormID               *int64                        `json:"intake_form_id"`
+	IntakeFormID               *uuid.UUID                    `json:"intake_form_id"`
 	FirstName                  string                        `json:"first_name"`
 	LastName                   string                        `json:"last_name"`
 	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
@@ -91,14 +91,14 @@ type CreateClientDetailsParams struct {
 	Birthplace                 *string                       `json:"birthplace"`
 	Email                      string                        `json:"email"`
 	PhoneNumber                *string                       `json:"phone_number"`
-	OrganizationID             *int64                        `json:"organization_id"`
+	OrganizationID             *uuid.UUID                    `json:"organization_id"`
 	Departement                *string                       `json:"departement"`
 	Gender                     ClientGenderEnum              `json:"gender"`
 	Filenumber                 string                        `json:"filenumber"`
 	ProfilePicture             *string                       `json:"profile_picture"`
 	Infix                      *string                       `json:"infix"`
-	SenderID                   *int64                        `json:"sender_id"`
-	LocationID                 *int64                        `json:"location_id"`
+	SenderID                   *uuid.UUID                    `json:"sender_id"`
+	LocationID                 *uuid.UUID                    `json:"location_id"`
 	DepartureReason            *string                       `json:"departure_reason"`
 	DepartureReport            *string                       `json:"departure_report"`
 	Addresses                  []byte                        `json:"addresses"`
@@ -269,8 +269,8 @@ INSERT INTO client_location_transfer (
 
 type CreateClientLocationTransferParams struct {
 	ClientID       uuid.UUID          `json:"client_id"`
-	FromLocationID *int64             `json:"from_location_id"`
-	ToLocationID   *int64             `json:"to_location_id"`
+	FromLocationID *uuid.UUID         `json:"from_location_id"`
+	ToLocationID   *uuid.UUID         `json:"to_location_id"`
 	RequestDate    pgtype.Timestamptz `json:"request_date"`
 	NewMentorID    *uuid.UUID         `json:"new_mentor_id"`
 	Reason         *string            `json:"reason"`
@@ -457,7 +457,7 @@ WHERE c.id = $1 LIMIT 1
 
 type GetClientDetailsRow struct {
 	ID                         uuid.UUID                     `json:"id"`
-	IntakeFormID               *int64                        `json:"intake_form_id"`
+	IntakeFormID               *uuid.UUID                    `json:"intake_form_id"`
 	FirstName                  string                        `json:"first_name"`
 	LastName                   string                        `json:"last_name"`
 	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
@@ -469,15 +469,15 @@ type GetClientDetailsRow struct {
 	Birthplace                 *string                       `json:"birthplace"`
 	Email                      string                        `json:"email"`
 	PhoneNumber                *string                       `json:"phone_number"`
-	OrganizationID             *int64                        `json:"organization_id"`
+	OrganizationID             *uuid.UUID                    `json:"organization_id"`
 	Departement                *string                       `json:"departement"`
 	Gender                     ClientGenderEnum              `json:"gender"`
 	Filenumber                 string                        `json:"filenumber"`
 	ProfilePicture             *string                       `json:"profile_picture"`
 	Infix                      *string                       `json:"infix"`
 	CreatedAt                  pgtype.Timestamptz            `json:"created_at"`
-	SenderID                   *int64                        `json:"sender_id"`
-	LocationID                 *int64                        `json:"location_id"`
+	SenderID                   *uuid.UUID                    `json:"sender_id"`
+	LocationID                 *uuid.UUID                    `json:"location_id"`
 	DepartureReason            *string                       `json:"departure_reason"`
 	DepartureReport            *string                       `json:"departure_report"`
 	GpsPosition                []byte                        `json:"gps_position"`
@@ -645,7 +645,7 @@ LIMIT $5 OFFSET $4
 
 type ListClientDetailsParams struct {
 	Status     NullClientStatusEnum `json:"status"`
-	LocationID *int64               `json:"location_id"`
+	LocationID *uuid.UUID           `json:"location_id"`
 	Search     *string              `json:"search"`
 	Offset     int32                `json:"offset"`
 	Limit      int32                `json:"limit"`
@@ -653,7 +653,7 @@ type ListClientDetailsParams struct {
 
 type ListClientDetailsRow struct {
 	ID                         uuid.UUID                     `json:"id"`
-	IntakeFormID               *int64                        `json:"intake_form_id"`
+	IntakeFormID               *uuid.UUID                    `json:"intake_form_id"`
 	FirstName                  string                        `json:"first_name"`
 	LastName                   string                        `json:"last_name"`
 	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
@@ -665,15 +665,15 @@ type ListClientDetailsRow struct {
 	Birthplace                 *string                       `json:"birthplace"`
 	Email                      string                        `json:"email"`
 	PhoneNumber                *string                       `json:"phone_number"`
-	OrganizationID             *int64                        `json:"organization_id"`
+	OrganizationID             *uuid.UUID                    `json:"organization_id"`
 	Departement                *string                       `json:"departement"`
 	Gender                     ClientGenderEnum              `json:"gender"`
 	Filenumber                 string                        `json:"filenumber"`
 	ProfilePicture             *string                       `json:"profile_picture"`
 	Infix                      *string                       `json:"infix"`
 	CreatedAt                  pgtype.Timestamptz            `json:"created_at"`
-	SenderID                   *int64                        `json:"sender_id"`
-	LocationID                 *int64                        `json:"location_id"`
+	SenderID                   *uuid.UUID                    `json:"sender_id"`
+	LocationID                 *uuid.UUID                    `json:"location_id"`
 	DepartureReason            *string                       `json:"departure_reason"`
 	DepartureReport            *string                       `json:"departure_report"`
 	GpsPosition                []byte                        `json:"gps_position"`
@@ -709,8 +709,8 @@ type ListClientDetailsRow struct {
 	RiskOther                  *bool                         `json:"risk_other"`
 	RiskOtherDescription       *string                       `json:"risk_other_description"`
 	RiskAdditionalNotes        *string                       `json:"risk_additional_notes"`
-	ID_2                       *int64                        `json:"id_2"`
-	OrganisationID             *int64                        `json:"organisation_id"`
+	ID_2                       *uuid.UUID                    `json:"id_2"`
+	OrganisationID             *uuid.UUID                    `json:"organisation_id"`
 	Name                       *string                       `json:"name"`
 	Address                    *string                       `json:"address"`
 	Capacity                   *int32                        `json:"capacity"`
@@ -833,7 +833,7 @@ type ListClientDocumentsParams struct {
 }
 
 type ListClientDocumentsRow struct {
-	ID             int64                   `json:"id"`
+	ID             uuid.UUID               `json:"id"`
 	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
 	ClientID       uuid.UUID               `json:"client_id"`
 	Label          ClientDocumentLabelEnum `json:"label"`
@@ -900,10 +900,10 @@ type ListClientLocationTransferParams struct {
 }
 
 type ListClientLocationTransferRow struct {
-	ID                 int64                            `json:"id"`
+	ID                 uuid.UUID                        `json:"id"`
 	ClientID           uuid.UUID                        `json:"client_id"`
-	FromLocationID     *int64                           `json:"from_location_id"`
-	ToLocationID       *int64                           `json:"to_location_id"`
+	FromLocationID     *uuid.UUID                       `json:"from_location_id"`
+	ToLocationID       *uuid.UUID                       `json:"to_location_id"`
 	NewMentorID        *uuid.UUID                       `json:"new_mentor_id"`
 	RequestDate        pgtype.Timestamptz               `json:"request_date"`
 	Status             ClientLocationTransferStatusEnum `json:"status"`
@@ -1124,14 +1124,14 @@ type UpdateClientDetailsParams struct {
 	Birthplace                 *string                       `json:"birthplace"`
 	Email                      *string                       `json:"email"`
 	PhoneNumber                *string                       `json:"phone_number"`
-	OrganizationID             *int64                        `json:"organization_id"`
+	OrganizationID             *uuid.UUID                    `json:"organization_id"`
 	Departement                *string                       `json:"departement"`
 	Gender                     NullClientGenderEnum          `json:"gender"`
 	Filenumber                 *string                       `json:"filenumber"`
 	ProfilePicture             *string                       `json:"profile_picture"`
 	Infix                      *string                       `json:"infix"`
-	SenderID                   *int64                        `json:"sender_id"`
-	LocationID                 *int64                        `json:"location_id"`
+	SenderID                   *uuid.UUID                    `json:"sender_id"`
+	LocationID                 *uuid.UUID                    `json:"location_id"`
 	DepartureReason            *string                       `json:"departure_reason"`
 	DepartureReport            *string                       `json:"departure_report"`
 	LegalMeasure               *string                       `json:"legal_measure"`

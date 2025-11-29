@@ -61,9 +61,9 @@ type ListAllIncidentsParams struct {
 }
 
 type ListAllIncidentsRow struct {
-	ID                      int64                           `json:"id"`
+	ID                      uuid.UUID                       `json:"id"`
 	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              int64                           `json:"location_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
 	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                        `json:"inform_who"`
 	IncidentDate            pgtype.Date                     `json:"incident_date"`

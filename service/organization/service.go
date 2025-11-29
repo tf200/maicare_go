@@ -4,29 +4,31 @@ import (
 	"context"
 
 	"maicare_go/service/deps"
+
+	"github.com/google/uuid"
 )
 
 type OrganizationService interface {
 	// Organization methods
 	CreateOrganization(ctx context.Context, req CreateOrganisationRequest) (*CreateOrganisationResponse, error)
 	ListOrganizations(ctx context.Context) ([]ListOrganisationsResponse, error)
-	GetOrganizationByID(ctx context.Context, organizationID int64) (*GetOrganisationResponse, error)
-	GetOrganizationCounts(ctx context.Context, organizationID int64) (*GetOrganisationCountResponse, error)
-	UpdateOrganization(ctx context.Context, organizationID int64, req UpdateOrganisationRequest) (*GetOrganisationResponse, error)
-	DeleteOrganization(ctx context.Context, organizationID int64) (*DeleteOrganisationResponse, error)
+	GetOrganizationByID(ctx context.Context, organizationID uuid.UUID) (*GetOrganisationResponse, error)
+	GetOrganizationCounts(ctx context.Context, organizationID uuid.UUID) (*GetOrganisationCountResponse, error)
+	UpdateOrganization(ctx context.Context, organizationID uuid.UUID, req UpdateOrganisationRequest) (*GetOrganisationResponse, error)
+	DeleteOrganization(ctx context.Context, organizationID uuid.UUID) (*DeleteOrganisationResponse, error)
 	// Location methods
-	ListOrgLocations(ctx context.Context, organizationID int64) ([]ListLocationsResponse, error)
+	ListOrgLocations(ctx context.Context, organizationID uuid.UUID) ([]ListLocationsResponse, error)
 	ListAllLocations(ctx context.Context) ([]ListLocationsResponse, error)
-	CreateLocation(ctx context.Context, organizationID int64, req CreateLocationRequest) (*CreateLocationResponse, error)
-	UpdateLocation(ctx context.Context, locationID int64, req UpdateLocationRequest) (*UpdateLocationResponse, error)
-	DeleteLocation(ctx context.Context, locationID int64) (*DeleteLocationResponse, error)
-	GetLocationByID(ctx context.Context, locationID int64) (*GetLocationResponse, error)
+	CreateLocation(ctx context.Context, organizationID uuid.UUID, req CreateLocationRequest) (*CreateLocationResponse, error)
+	UpdateLocation(ctx context.Context, locationID uuid.UUID, req UpdateLocationRequest) (*UpdateLocationResponse, error)
+	DeleteLocation(ctx context.Context, locationID uuid.UUID) (*DeleteLocationResponse, error)
+	GetLocationByID(ctx context.Context, locationID uuid.UUID) (*GetLocationResponse, error)
 
 	// Location Shift methods
-	CreateShift(ctx context.Context, req *CreateShiftApiRequest, locationID int64) (*CreateShiftApiResponse, error)
-	UpdateShift(ctx context.Context, shiftID int64, req *UpdateShiftApiRequest) (*UpdateShiftApiResponse, error)
-	DeleteShift(ctx context.Context, shiftID int64) error
-	ListShiftsByLocationID(ctx context.Context, locationID int64) ([]ListShiftsByLocationIDResponse, error)
+	CreateShift(ctx context.Context, req *CreateShiftApiRequest, locationID uuid.UUID) (*CreateShiftApiResponse, error)
+	UpdateShift(ctx context.Context, shiftID uuid.UUID, req *UpdateShiftApiRequest) (*UpdateShiftApiResponse, error)
+	DeleteShift(ctx context.Context, shiftID uuid.UUID) error
+	ListShiftsByLocationID(ctx context.Context, locationID uuid.UUID) ([]ListShiftsByLocationIDResponse, error)
 }
 
 type organizationService struct {

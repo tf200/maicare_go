@@ -1,10 +1,14 @@
 package organization
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // ListLocationsResponse represents a location in the list
 type ListLocationsResponse struct {
-	ID        int64     `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	Address   string    `json:"address"`
 	Capacity  *int32    `json:"capacity"`
@@ -23,10 +27,10 @@ type CreateLocationRequest struct {
 
 // CreateLocationResponse represents a response for CreateLocationApi
 type CreateLocationResponse struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Address  string    `json:"address"`
+	Capacity *int32    `json:"capacity"`
 }
 
 // UpdateLocationRequest represents a request to update a location
@@ -38,21 +42,21 @@ type UpdateLocationRequest struct {
 
 // UpdateLocationResponse represents a response for UpdateLocationApi
 type UpdateLocationResponse struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Address  string    `json:"address"`
+	Capacity *int32    `json:"capacity"`
 }
 
 // DeleteLocationResponse represents a response for DeleteLocationApi
 type DeleteLocationResponse struct {
-	ID int64 `json:"id"`
+	ID uuid.UUID `json:"id"`
 }
 
 // GetLocationResponse represents a response for GetLocationApi
 type GetLocationResponse struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	Capacity *int32 `json:"capacity"`
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Address  string    `json:"address"`
+	Capacity *int32    `json:"capacity"`
 }

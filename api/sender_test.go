@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
@@ -56,10 +57,13 @@ func createRandomSender(t *testing.T) db.Sender {
 	createdSender, err := testStore.CreateSender(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, createdSender)
+	items, err := testStore.GetAllTemplateItems(context.Background())
+	require.NoError(t, err)
+	require.NotEmpty(t, items)
 
 	templateItems, err := testStore.CreateSenderInvoiceTemplate(context.Background(), db.CreateSenderInvoiceTemplateParams{
 		ID:              createdSender.ID,
-		InvoiceTemplate: []int64{1, 2, 3},
+		InvoiceTemplate: []uuid.UUID{items[0].ID, items[1].ID, items[2].ID},
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, templateItems)

@@ -3,11 +3,11 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/organization"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Create an organisation
@@ -68,7 +68,7 @@ func (server *Server) ListOrganisationsApi(ctx *gin.Context) {
 // @Router /organisations/{id} [get]
 func (server *Server) GetOrganisationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	organisationID, err := strconv.ParseInt(id, 10, 64)
+	organisationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
 		return
@@ -95,7 +95,7 @@ func (server *Server) GetOrganisationApi(ctx *gin.Context) {
 // @Router /organisations/{id}/counts [get]
 func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	organisationID, err := strconv.ParseInt(id, 10, 64)
+	organisationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
 		return
@@ -121,7 +121,7 @@ func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
 // @Router /organisations/{id} [put]
 func (server *Server) UpdateOrganisationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	organisationID, err := strconv.ParseInt(id, 10, 64)
+	organisationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
 		return
@@ -154,7 +154,7 @@ func (server *Server) UpdateOrganisationApi(ctx *gin.Context) {
 // @Router /organisations/{id} [delete]
 func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	organisationID, err := strconv.ParseInt(id, 10, 64)
+	organisationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
 		return
@@ -181,7 +181,7 @@ func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /organisations/{id}/locations [get]
 func (server *Server) ListLocationsApi(ctx *gin.Context) {
-	organizationID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	organizationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
 		return
@@ -228,7 +228,7 @@ func (server *Server) ListAllLocationsApi(ctx *gin.Context) {
 // @Failure 400,404,500 {object} Response[any]
 // @Router /organisations/{id}/locations [post]
 func (server *Server) CreateLocationApi(ctx *gin.Context) {
-	organisationID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	organisationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid organisation ID"))
 		return
@@ -259,7 +259,7 @@ func (server *Server) CreateLocationApi(ctx *gin.Context) {
 // @Router /locations/{id} [put]
 func (server *Server) UpdateLocationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	locationID, err := strconv.ParseInt(id, 10, 64)
+	locationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid location ID"))
 		return
@@ -290,7 +290,7 @@ func (server *Server) UpdateLocationApi(ctx *gin.Context) {
 // @Router /locations/{id} [delete]
 func (server *Server) DeleteLocationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	locationID, err := strconv.ParseInt(id, 10, 64)
+	locationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid location ID"))
 		return
@@ -315,7 +315,7 @@ func (server *Server) DeleteLocationApi(ctx *gin.Context) {
 // @Router /locations/{id} [get]
 func (server *Server) GetLocationApi(ctx *gin.Context) {
 	id := ctx.Param("id")
-	locationID, err := strconv.ParseInt(id, 10, 64)
+	locationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid location ID"))
 		return

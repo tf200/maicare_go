@@ -483,7 +483,7 @@ func TestGetMonthlySchedulesByLocation(t *testing.T) {
 }
 
 // Helpers
-func createRandomSchedule(ctx context.Context, qtx *Queries, locationID int64) CreateScheduleRow {
+func createRandomSchedule(ctx context.Context, qtx *Queries, locationID uuid.UUID) CreateScheduleRow {
 	employee := createRandomEmployeeProfile(ctx, qtx)
 	creator := createRandomEmployeeProfile(ctx, qtx)
 	startTime := time.Now().Add(time.Hour)

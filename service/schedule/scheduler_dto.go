@@ -4,7 +4,7 @@ import "github.com/google/uuid"
 
 // AutoGenerateSchedulesRequest is the request struct for the AutoGenerateSchedules
 type AutoGenerateSchedulesRequest struct {
-	LocationID  int64       `json:"location_id"`
+	LocationID  uuid.UUID   `json:"location_id"`
 	Week        int32       `json:"week"` // e.g., "2024-W27"
 	Year        int32       `json:"year"` // e.g., 2024
 	EmployeeIDs []uuid.UUID `json:"employee_ids"`
@@ -22,14 +22,14 @@ type AutoGenerateSchedulesResponse struct {
 
 // SaveGeneratedSchedulesRequest is the request struct for saving generated schedules
 type SaveGeneratedSchedulesRequest struct {
-	LocationID      int64            `json:"location_id"`
+	LocationID      uuid.UUID        `json:"location_id"`
 	ScheduledShifts []ScheduledShift `json:"scheduled_shifts"`
 }
 
 type ScheduledShift struct {
 	Date      string             `json:"date"`       // e.g., "2024-07-01"
 	DayName   string             `json:"day_name"`   // e.g., "Monday"
-	ShiftId   int32              `json:"shift_id"`   // e.g., 1
+	ShiftId   uuid.UUID          `json:"shift_id"`   // e.g., 1
 	ShiftName string             `json:"shift_name"` // e.g., "Morning Shift"
 	StartTime string             `json:"start_time"` // e.g., "09:00"
 	EndTime   string             `json:"end_time"`   // e.g., "17:00"

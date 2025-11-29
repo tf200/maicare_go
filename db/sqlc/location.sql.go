@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -23,10 +24,10 @@ INSERT INTO location (
 `
 
 type CreateLocationParams struct {
-	OrganisationID int64  `json:"organisation_id"`
-	Name           string `json:"name"`
-	Address        string `json:"address"`
-	Capacity       *int32 `json:"capacity"`
+	OrganisationID uuid.UUID `json:"organisation_id"`
+	Name           string    `json:"name"`
+	Address        string    `json:"address"`
+	Capacity       *int32    `json:"capacity"`
 }
 
 func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error) {
@@ -110,7 +111,7 @@ WHERE id = $1
 RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
 `
 
-func (q *Queries) DeleteLocation(ctx context.Context, id int64) (Location, error) {
+func (q *Queries) DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error) {
 	row := q.db.QueryRow(ctx, deleteLocation, id)
 	var i Location
 	err := row.Scan(
@@ -132,7 +133,7 @@ WHERE id = $1
 RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
 `
 
-func (q *Queries) DeleteOrganisation(ctx context.Context, id int64) (Organisation, error) {
+func (q *Queries) DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organisation, error) {
 	row := q.db.QueryRow(ctx, deleteOrganisation, id)
 	var i Organisation
 	err := row.Scan(
@@ -156,7 +157,7 @@ SELECT id, organisation_id, name, address, capacity, location_type, created_at, 
 WHERE id = $1
 `
 
-func (q *Queries) GetLocation(ctx context.Context, id int64) (Location, error) {
+func (q *Queries) GetLocation(ctx context.Context, id uuid.UUID) (Location, error) {
 	row := q.db.QueryRow(ctx, getLocation, id)
 	var i Location
 	err := row.Scan(
@@ -182,7 +183,7 @@ GROUP BY o.id
 `
 
 type GetOrganisationRow struct {
-	ID            int64              `json:"id"`
+	ID            uuid.UUID          `json:"id"`
 	Name          string             `json:"name"`
 	Address       string             `json:"address"`
 	PostalCode    string             `json:"postal_code"`
@@ -196,7 +197,7 @@ type GetOrganisationRow struct {
 	LocationCount int64              `json:"location_count"`
 }
 
-func (q *Queries) GetOrganisation(ctx context.Context, id int64) (GetOrganisationRow, error) {
+func (q *Queries) GetOrganisation(ctx context.Context, id uuid.UUID) (GetOrganisationRow, error) {
 	row := q.db.QueryRow(ctx, getOrganisation, id)
 	var i GetOrganisationRow
 	err := row.Scan(
@@ -235,14 +236,14 @@ GROUP BY
 `
 
 type GetOrganisationCountsRow struct {
-	OrganisationID   int64  `json:"organisation_id"`
-	OrganisationName string `json:"organisation_name"`
-	LocationCount    int64  `json:"location_count"`
-	ClientCount      int64  `json:"client_count"`
-	EmployeeCount    int64  `json:"employee_count"`
+	OrganisationID   uuid.UUID `json:"organisation_id"`
+	OrganisationName string    `json:"organisation_name"`
+	LocationCount    int64     `json:"location_count"`
+	ClientCount      int64     `json:"client_count"`
+	EmployeeCount    int64     `json:"employee_count"`
 }
 
-func (q *Queries) GetOrganisationCounts(ctx context.Context, id int64) (GetOrganisationCountsRow, error) {
+func (q *Queries) GetOrganisationCounts(ctx context.Context, id uuid.UUID) (GetOrganisationCountsRow, error) {
 	row := q.db.QueryRow(ctx, getOrganisationCounts, id)
 	var i GetOrganisationCountsRow
 	err := row.Scan(
@@ -265,8 +266,8 @@ ORDER BY l.name
 `
 
 type ListAllLocationsRow struct {
-	ID             int64              `json:"id"`
-	OrganisationID int64              `json:"organisation_id"`
+	ID             uuid.UUID          `json:"id"`
+	OrganisationID uuid.UUID          `json:"organisation_id"`
 	Name           string             `json:"name"`
 	Address        string             `json:"address"`
 	Capacity       *int32             `json:"capacity"`
@@ -316,8 +317,8 @@ GROUP BY l.id
 `
 
 type ListLocationsRow struct {
-	ID             int64              `json:"id"`
-	OrganisationID int64              `json:"organisation_id"`
+	ID             uuid.UUID          `json:"id"`
+	OrganisationID uuid.UUID          `json:"organisation_id"`
 	Name           string             `json:"name"`
 	Address        string             `json:"address"`
 	Capacity       *int32             `json:"capacity"`
@@ -327,7 +328,7 @@ type ListLocationsRow struct {
 	ClientCount    int64              `json:"client_count"`
 }
 
-func (q *Queries) ListLocations(ctx context.Context, organisationID int64) ([]ListLocationsRow, error) {
+func (q *Queries) ListLocations(ctx context.Context, organisationID uuid.UUID) ([]ListLocationsRow, error) {
 	rows, err := q.db.Query(ctx, listLocations, organisationID)
 	if err != nil {
 		return nil, err
@@ -367,7 +368,7 @@ ORDER BY o.name
 `
 
 type ListOrganisationsRow struct {
-	ID            int64              `json:"id"`
+	ID            uuid.UUID          `json:"id"`
 	Name          string             `json:"name"`
 	Address       string             `json:"address"`
 	PostalCode    string             `json:"postal_code"`
@@ -425,10 +426,10 @@ RETURNING id, organisation_id, name, address, capacity, location_type, created_a
 `
 
 type UpdateLocationParams struct {
-	ID       int64   `json:"id"`
-	Name     *string `json:"name"`
-	Address  *string `json:"address"`
-	Capacity *int32  `json:"capacity"`
+	ID       uuid.UUID `json:"id"`
+	Name     *string   `json:"name"`
+	Address  *string   `json:"address"`
+	Capacity *int32    `json:"capacity"`
 }
 
 func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) (Location, error) {
@@ -469,15 +470,15 @@ RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number,
 `
 
 type UpdateOrganisationParams struct {
-	ID          int64   `json:"id"`
-	Name        *string `json:"name"`
-	Address     *string `json:"address"`
-	PostalCode  *string `json:"postal_code"`
-	City        *string `json:"city"`
-	PhoneNumber *string `json:"phone_number"`
-	Email       *string `json:"email"`
-	KvkNumber   *string `json:"kvk_number"`
-	BtwNumber   *string `json:"btw_number"`
+	ID          uuid.UUID `json:"id"`
+	Name        *string   `json:"name"`
+	Address     *string   `json:"address"`
+	PostalCode  *string   `json:"postal_code"`
+	City        *string   `json:"city"`
+	PhoneNumber *string   `json:"phone_number"`
+	Email       *string   `json:"email"`
+	KvkNumber   *string   `json:"kvk_number"`
+	BtwNumber   *string   `json:"btw_number"`
 }
 
 func (q *Queries) UpdateOrganisation(ctx context.Context, arg UpdateOrganisationParams) (Organisation, error) {

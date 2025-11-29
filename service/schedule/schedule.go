@@ -36,7 +36,7 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, employeeID uuid.UU
 	return res, nil
 }
 
-func (s *scheduleService) GetMonthlySchedulesByLocation(ctx context.Context, locationID int64, req *GetMonthlySchedulesByLocationRequest) ([]GetMonthlySchedulesByLocationResponse, error) {
+func (s *scheduleService) GetMonthlySchedulesByLocation(ctx context.Context, locationID uuid.UUID, req *GetMonthlySchedulesByLocationRequest) ([]GetMonthlySchedulesByLocationResponse, error) {
 	atg := db.GetMonthlySchedulesByLocationParams{
 		LocationID: locationID,
 		Year:       req.Year,
@@ -84,7 +84,7 @@ func (s *scheduleService) GetMonthlySchedulesByLocation(ctx context.Context, loc
 	return response, nil
 }
 
-func (s *scheduleService) GetDailySchedulesByLocation(ctx context.Context, locationID int64, req *GetDailySchedulesByLocationRequest) (*GetDailySchedulesByLocationResponse, error) {
+func (s *scheduleService) GetDailySchedulesByLocation(ctx context.Context, locationID uuid.UUID, req *GetDailySchedulesByLocationRequest) (*GetDailySchedulesByLocationResponse, error) {
 	arg := db.GetDailySchedulesByLocationParams{
 		Year:       req.Year,
 		Month:      req.Month,
@@ -272,7 +272,7 @@ func (s *scheduleService) createPresetSchedule(ctx context.Context, employeeID u
 	}
 
 	if locationShift.LocationID != req.LocationID {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Location shift does not belong to the specified location", zap.Int64("location_shift_id", *req.LocationShiftID), zap.Int64("location_id", req.LocationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "createPresetSchedule", "Location shift does not belong to the specified location", zap.String("location_shift_id", req.LocationShiftID.String()), zap.String("location_id", req.LocationID.String()))
 		return nil, fmt.Errorf("location shift does not belong to the specified location")
 	}
 
@@ -466,7 +466,7 @@ func (s *scheduleService) updatePresetSchedule(ctx context.Context, scheduleID u
 	}
 
 	// Determine shift ID and date to use
-	var shiftIDToUse int64
+	var shiftIDToUse uuid.UUID
 	var shiftDateToUse string
 
 	// Use existing values if not provided
@@ -495,7 +495,7 @@ func (s *scheduleService) updatePresetSchedule(ctx context.Context, scheduleID u
 
 	// Verify the shift belongs to the specified location
 	if locationShift.LocationID != locationID {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "Location shift does not belong to the specified location", zap.Int64("location_shift_id", shiftIDToUse), zap.Int64("location_id", locationID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "updatePresetSchedule", "Location shift does not belong to the specified location", zap.String("location_shift_id", shiftIDToUse.String()), zap.String("location_id", locationID.String()))
 		return nil, fmt.Errorf("location_shift_id does not belong to the specified location")
 	}
 

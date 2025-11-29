@@ -7,10 +7,11 @@ import (
 	"maicare_go/logger"
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftApiRequest, locationID int64) (*CreateShiftApiResponse, error) {
+func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftApiRequest, locationID uuid.UUID) (*CreateShiftApiResponse, error) {
 	startTime, err := util.StringToPgTime(req.StartTime)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateShift", "Invalid start time format", zap.Error(err))
@@ -34,7 +35,7 @@ func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftA
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateShift", "Shift created successfully", zap.Int64("shift_id", shift.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateShift", "Shift created successfully", zap.String("shift_id", shift.ID.String()))
 
 	return &CreateShiftApiResponse{
 		ID:         shift.ID,
@@ -45,7 +46,7 @@ func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftA
 	}, nil
 }
 
-func (s *organizationService) UpdateShift(ctx context.Context, shiftID int64, req *UpdateShiftApiRequest) (*UpdateShiftApiResponse, error) {
+func (s *organizationService) UpdateShift(ctx context.Context, shiftID uuid.UUID, req *UpdateShiftApiRequest) (*UpdateShiftApiResponse, error) {
 	startTime, err := util.StringToPgTime(req.StartTime)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateShift", "Invalid start time format", zap.Error(err))
@@ -69,7 +70,7 @@ func (s *organizationService) UpdateShift(ctx context.Context, shiftID int64, re
 		return nil, err
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateShift", "Shift updated successfully", zap.Int64("shift_id", shift.ID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateShift", "Shift updated successfully", zap.String("shift_id", shift.ID.String()))
 
 	return &UpdateShiftApiResponse{
 		ID:         shift.ID,
@@ -80,7 +81,7 @@ func (s *organizationService) UpdateShift(ctx context.Context, shiftID int64, re
 	}, nil
 }
 
-func (s *organizationService) DeleteShift(ctx context.Context, shiftID int64) error {
+func (s *organizationService) DeleteShift(ctx context.Context, shiftID uuid.UUID) error {
 	err := s.Store.DeleteShift(ctx, shiftID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteShift", "Failed to delete shift", zap.Error(err))
@@ -89,7 +90,7 @@ func (s *organizationService) DeleteShift(ctx context.Context, shiftID int64) er
 	return nil
 }
 
-func (s *organizationService) ListShiftsByLocationID(ctx context.Context, locationID int64) ([]ListShiftsByLocationIDResponse, error) {
+func (s *organizationService) ListShiftsByLocationID(ctx context.Context, locationID uuid.UUID) ([]ListShiftsByLocationIDResponse, error) {
 	shifts, err := s.Store.GetShiftsByLocationID(ctx, locationID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListShiftsByLocationID", "Failed to list shifts", zap.Error(err))
@@ -107,7 +108,7 @@ func (s *organizationService) ListShiftsByLocationID(ctx context.Context, locati
 		})
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListShiftsByLocationID", "Shifts listed successfully", zap.Int64("location_id", locationID))
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ListShiftsByLocationID", "Shifts listed successfully", zap.String("location_id", locationID.String()))
 
 	return response, nil
 }

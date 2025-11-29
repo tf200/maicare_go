@@ -128,10 +128,10 @@ func (s *clientService) ListClientEmergencyContacts(ctx *gin.Context, req ListCl
 	return &pag, nil
 }
 
-func (s *clientService) GetClientEmergencyContact(ctx context.Context, contactID int64) (*GetClientEmergencyContactResponse, error) {
+func (s *clientService) GetClientEmergencyContact(ctx context.Context, contactID uuid.UUID) (*GetClientEmergencyContactResponse, error) {
 	contact, err := s.Store.GetEmergencyContact(ctx, contactID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientEmergencyContact", "Failed to get client emergency contact", zap.Int64("contact_id", contactID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientEmergencyContact", "Failed to get client emergency contact", zap.String("contact_id", contactID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -154,7 +154,7 @@ func (s *clientService) GetClientEmergencyContact(ctx context.Context, contactID
 	return response, nil
 }
 
-func (s *clientService) UpdateClientEmergencyContact(ctx context.Context, req UpdateClientEmergencyContactParams, contactID int64) (*UpdateClientEmergencyContactResponse, error) {
+func (s *clientService) UpdateClientEmergencyContact(ctx context.Context, req UpdateClientEmergencyContactParams, contactID uuid.UUID) (*UpdateClientEmergencyContactResponse, error) {
 	arg := db.UpdateEmergencyContactParams{
 		FirstName:        req.FirstName,
 		LastName:         req.LastName,
@@ -170,7 +170,7 @@ func (s *clientService) UpdateClientEmergencyContact(ctx context.Context, req Up
 	}
 	clientEmergencyContact, err := s.Store.UpdateEmergencyContact(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientEmergencyContact", "Failed to update client emergency contact", zap.Int64("contact_id", contactID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientEmergencyContact", "Failed to update client emergency contact", zap.String("contact_id", contactID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -193,10 +193,10 @@ func (s *clientService) UpdateClientEmergencyContact(ctx context.Context, req Up
 	return response, nil
 }
 
-func (s *clientService) DeleteClientEmergencyContact(ctx context.Context, contactID int64) (*DeleteClientEmergencyContactResponse, error) {
+func (s *clientService) DeleteClientEmergencyContact(ctx context.Context, contactID uuid.UUID) (*DeleteClientEmergencyContactResponse, error) {
 	contact, err := s.Store.DeleteEmergencyContact(ctx, contactID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteClientEmergencyContact", "Failed to delete client emergency contact", zap.Int64("contact_id", contactID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteClientEmergencyContact", "Failed to delete client emergency contact", zap.String("contact_id", contactID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &DeleteClientEmergencyContactResponse{ID: contact.ID}, nil
@@ -279,10 +279,10 @@ func (s *clientService) ListAssignedEmployees(ctx *gin.Context, req ListAssigned
 	return &pag, nil
 }
 
-func (s *clientService) GetAssignedEmployee(ctx context.Context, assignmentID int64) (*GetAssignedEmployeeResponse, error) {
+func (s *clientService) GetAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*GetAssignedEmployeeResponse, error) {
 	assignment, err := s.Store.GetAssignedEmployee(ctx, assignmentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAssignedEmployee", "Failed to get assigned employee", zap.Int64("assignment_id", assignmentID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAssignedEmployee", "Failed to get assigned employee", zap.String("assignment_id", assignmentID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -298,7 +298,7 @@ func (s *clientService) GetAssignedEmployee(ctx context.Context, assignmentID in
 	return response, nil
 }
 
-func (s *clientService) UpdateAssignedEmployee(ctx context.Context, req UpdateAssignedEmployeeRequest, assignmentID int64) (*UpdateAssignedEmployeeResponse, error) {
+func (s *clientService) UpdateAssignedEmployee(ctx context.Context, req UpdateAssignedEmployeeRequest, assignmentID uuid.UUID) (*UpdateAssignedEmployeeResponse, error) {
 	arg := db.UpdateAssignedEmployeeParams{
 		ID:         assignmentID,
 		EmployeeID: req.EmployeeID,
@@ -307,7 +307,7 @@ func (s *clientService) UpdateAssignedEmployee(ctx context.Context, req UpdateAs
 	}
 	assign, err := s.Store.UpdateAssignedEmployee(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAssignedEmployee", "Failed to update assigned employee", zap.Int64("assignment_id", assignmentID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAssignedEmployee", "Failed to update assigned employee", zap.String("assignment_id", assignmentID.String()), zap.Error(err))
 		return nil, err
 	}
 
@@ -322,10 +322,10 @@ func (s *clientService) UpdateAssignedEmployee(ctx context.Context, req UpdateAs
 	return response, nil
 }
 
-func (s *clientService) DeleteAssignedEmployee(ctx context.Context, assignmentID int64) (*DeleteAssignedEmployeeResponse, error) {
+func (s *clientService) DeleteAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*DeleteAssignedEmployeeResponse, error) {
 	assignment, err := s.Store.DeleteAssignedEmployee(ctx, assignmentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAssignedEmployee", "Failed to delete assigned employee", zap.Int64("assignment_id", assignmentID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteAssignedEmployee", "Failed to delete assigned employee", zap.String("assignment_id", assignmentID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &DeleteAssignedEmployeeResponse{ID: assignment.ID}, nil

@@ -141,7 +141,7 @@ var (
 	FinancingOption = []string{"ZIN", "PGB"}
 )
 
-func createRandomContract(t *testing.T, clientID uuid.UUID, senderID *int64) db.Contract {
+func createRandomContract(t *testing.T, clientID uuid.UUID, senderID *uuid.UUID) db.Contract {
 	contractType := createRandomContractType(t)
 	attachment := createRandomAttachmentFile(t)
 

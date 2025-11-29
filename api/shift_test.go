@@ -14,11 +14,12 @@ import (
 	"maicare_go/token"
 
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomShift(t *testing.T, locationID int64) db.LocationShift {
+func createRandomShift(t *testing.T, locationID uuid.UUID) db.LocationShift {
 	arg := db.CreateShiftParams{
 		LocationID: locationID,
 		ShiftName:  "Slaapdienst of Waakdienst",

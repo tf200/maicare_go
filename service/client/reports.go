@@ -86,10 +86,10 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 	return &pag, nil
 }
 
-func (s *clientService) GetProgressReport(ctx context.Context, reportID int64) (*GetProgressReportResponse, error) {
+func (s *clientService) GetProgressReport(ctx context.Context, reportID uuid.UUID) (*GetProgressReportResponse, error) {
 	report, err := s.Store.GetProgressReport(ctx, reportID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetProgressReport", "Failed to get progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetProgressReport", "Failed to get progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &GetProgressReportResponse{
@@ -108,7 +108,7 @@ func (s *clientService) GetProgressReport(ctx context.Context, reportID int64) (
 	}, nil
 }
 
-func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID int64) (*GetProgressReportResponse, error) {
+func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdateProgressReportRequest, reportID uuid.UUID) (*GetProgressReportResponse, error) {
 	arg := db.UpdateProgressReportParams{
 		ID:             reportID,
 		EmployeeID:     req.EmployeeID,
@@ -121,7 +121,7 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 
 	report, err := s.Store.UpdateProgressReport(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateProgressReport", "Failed to update progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateProgressReport", "Failed to update progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &GetProgressReportResponse{
@@ -137,10 +137,10 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 	}, nil
 }
 
-func (s *clientService) DeleteProgressReport(ctx context.Context, reportID int64) error {
+func (s *clientService) DeleteProgressReport(ctx context.Context, reportID uuid.UUID) error {
 	err := s.Store.DeleteProgressReport(ctx, reportID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteProgressReport", "Failed to delete progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteProgressReport", "Failed to delete progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return err
 	}
 	return nil
@@ -184,7 +184,7 @@ func (s *clientService) GenerateAutoReports(ctx context.Context, req *GenerateAu
 	}, nil
 }
 
-func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest, reportID int64) (*ConfirmProgressReportResponse, error) {
+func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest, reportID uuid.UUID) (*ConfirmProgressReportResponse, error) {
 	progressReport := db.CreateAiGeneratedReportParams{
 		ClientID:   clientID,
 		ReportText: req.ReportText,
@@ -193,7 +193,7 @@ func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uu
 	}
 	createdProgressReport, err := s.Store.CreateAiGeneratedReport(ctx, progressReport)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.Int64("report_id", reportID), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &ConfirmProgressReportResponse{

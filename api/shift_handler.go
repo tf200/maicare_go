@@ -2,11 +2,11 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/organization"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateShiftApi handles the creation of a new shift for a specific location
@@ -15,14 +15,14 @@ import (
 // @Tags Shifts
 // @Accept json
 // @Produce json
-// @Param id path int true "Location ID"
+// @Param id path uuid true "Location ID"
 // @Param request body organization.CreateShiftApiRequest true "Shift creation request"
 // @Success 201 {object} Response[organization.CreateShiftApiResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /locations/{id}/shifts [post]
 func (server *Server) CreateShiftApi(ctx *gin.Context) {
-	locationID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	locationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -51,8 +51,8 @@ func (server *Server) CreateShiftApi(ctx *gin.Context) {
 // @Tags Shifts
 // @Accept json
 // @Produce json
-// @Param id path int true "Location ID"
-// @Param shift_id path int true "Shift ID"
+// @Param id path uuid true "Location ID"
+// @Param shift_id path uuid true "Shift ID"
 // @Param request body organization.UpdateShiftApiRequest true "Shift update request"
 // @Success 200 {object} Response[organization.UpdateShiftApiResponse]
 // @Failure 400 {object} Response[any]
@@ -60,7 +60,7 @@ func (server *Server) CreateShiftApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any]
 // @Router /locations/{id}/shifts/{shift_id} [put]
 func (server *Server) UpdateShiftApi(ctx *gin.Context) {
-	shiftID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	shiftID, err := uuid.Parse(ctx.Param("shift_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -88,14 +88,14 @@ func (server *Server) UpdateShiftApi(ctx *gin.Context) {
 // @Description Delete a shift by its ID
 // @Tags Shifts
 // @Produce json
-// @Param shift_id path int true "Shift ID"
+// @Param shift_id path uuid true "Shift ID"
 // @Success 200 {object} Response[any]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /locations/{id}/shifts/{shift_id} [delete]
 func (server *Server) DeleteShiftApi(ctx *gin.Context) {
-	shiftID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	shiftID, err := uuid.Parse(ctx.Param("shift_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -116,14 +116,14 @@ func (server *Server) DeleteShiftApi(ctx *gin.Context) {
 // @Description List all shifts for a specific location
 // @Tags Shifts
 // @Produce json
-// @Param id path int true "Location ID"
+// @Param id path uuid true "Location ID"
 // @Success 200 {object} Response[[]organization.ListShiftsByLocationIDResponse]
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
 // @Router /locations/{id}/shifts [get]
 func (server *Server) ListShiftByLocationID(ctx *gin.Context) {
-	locationID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	locationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

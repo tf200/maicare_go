@@ -4,7 +4,6 @@ import (
 	"fmt"
 	_ "maicare_go/pagination"
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/care"
 
@@ -129,7 +128,7 @@ func (server *Server) ListClientMaturityMatrixAssessmentsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id} [get]
 func (server *Server) GetCarePlanOverviewApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -160,7 +159,7 @@ func (server *Server) GetCarePlanOverviewApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id} [put]
 func (server *Server) UpdateCarePlanOverviewApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -195,7 +194,7 @@ func (server *Server) UpdateCarePlanOverviewApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plan/{care_plan_id} [delete]
 func (server *Server) DeleteCarePlanApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -227,7 +226,7 @@ func (server *Server) DeleteCarePlanApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/objectives [post]
 func (server *Server) CreateCarePlanObjectiveApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -262,7 +261,7 @@ func (server *Server) CreateCarePlanObjectiveApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/objectives [get]
 func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -291,7 +290,7 @@ func (server *Server) GetCarePlanObjectivesApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /objectives/{objective_id} [put]
 func (server *Server) UpdateCarePlanObjectiveApi(ctx *gin.Context) {
-	objectiveId, err := strconv.ParseInt(ctx.Param("objective_id"), 10, 64)
+	objectiveId, err := uuid.Parse(ctx.Param("objective_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid objective ID")))
 		return
@@ -326,7 +325,7 @@ func (server *Server) UpdateCarePlanObjectiveApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /objectives/{objective_id} [delete]
 func (server *Server) DeleteCarePlanObjectiveApi(ctx *gin.Context) {
-	objectiveId, err := strconv.ParseInt(ctx.Param("objective_id"), 10, 64)
+	objectiveId, err := uuid.Parse(ctx.Param("objective_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid objective ID")))
 		return
@@ -356,7 +355,7 @@ func (server *Server) DeleteCarePlanObjectiveApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /objectives/{objective_id}/actions [post]
 func (server *Server) CreateCarePlanActionsApi(ctx *gin.Context) {
-	objectiveID, err := strconv.ParseInt(ctx.Param("objective_id"), 10, 64)
+	objectiveID, err := uuid.Parse(ctx.Param("objective_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid objective ID")))
 		return
@@ -393,7 +392,7 @@ func (server *Server) CreateCarePlanActionsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /actions/{action_id} [put]
 func (server *Server) UpdateCarePlanActionsApi(ctx *gin.Context) {
-	actionID, err := strconv.ParseInt(ctx.Param("action_id"), 10, 64)
+	actionID, err := uuid.Parse(ctx.Param("action_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid action ID")))
 		return
@@ -427,7 +426,7 @@ func (server *Server) UpdateCarePlanActionsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /actions/{action_id} [delete]
 func (server *Server) DeleteCarePlanActionApi(ctx *gin.Context) {
-	actionID, err := strconv.ParseInt(ctx.Param("action_id"), 10, 64)
+	actionID, err := uuid.Parse(ctx.Param("action_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid action ID")))
 		return
@@ -459,7 +458,7 @@ func (server *Server) DeleteCarePlanActionApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/interventions [post]
 func (server *Server) CreateCarePlanInterventionApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -494,7 +493,7 @@ func (server *Server) CreateCarePlanInterventionApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/interventions [get]
 func (server *Server) GetCarePlanInterventionsApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -523,7 +522,7 @@ func (server *Server) GetCarePlanInterventionsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /interventions/{intervention_id} [put]
 func (server *Server) UpdateCarePlanInterventionApi(ctx *gin.Context) {
-	interventionID, err := strconv.ParseInt(ctx.Param("intervention_id"), 10, 64)
+	interventionID, err := uuid.Parse(ctx.Param("intervention_id"))
 	if err != nil {
 
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid intervention ID")))
@@ -559,7 +558,7 @@ func (server *Server) UpdateCarePlanInterventionApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /interventions/{intervention_id} [delete]
 func (server *Server) DeleteCarePlanInterventionApi(ctx *gin.Context) {
-	interventionID, err := strconv.ParseInt(ctx.Param("intervention_id"), 10, 64)
+	interventionID, err := uuid.Parse(ctx.Param("intervention_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid intervention ID")))
 		return
@@ -598,7 +597,7 @@ func (server *Server) DeleteCarePlanInterventionApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/success_metrics [post]
 func (server *Server) CreateCarePlanSuccessMetricsApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -633,7 +632,7 @@ func (server *Server) CreateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/success_metrics [get]
 func (server *Server) GetCarePlanSuccessMetricsApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -663,7 +662,7 @@ func (server *Server) GetCarePlanSuccessMetricsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /success_metrics/{metric_id} [put]
 func (server *Server) UpdateCarePlanSuccessMetricsApi(ctx *gin.Context) {
-	metricID, err := strconv.ParseInt(ctx.Param("metric_id"), 10, 64)
+	metricID, err := uuid.Parse(ctx.Param("metric_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid metric ID")))
 		return
@@ -698,7 +697,7 @@ func (server *Server) UpdateCarePlanSuccessMetricsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /success_metrics/{metric_id} [delete]
 func (server *Server) DeleteCarePlanSuccessMetricApi(ctx *gin.Context) {
-	metricID, err := strconv.ParseInt(ctx.Param("metric_id"), 10, 64)
+	metricID, err := uuid.Parse(ctx.Param("metric_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid metric ID")))
 		return
@@ -730,7 +729,7 @@ func (server *Server) DeleteCarePlanSuccessMetricApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/risks [post]
 func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -765,7 +764,7 @@ func (server *Server) CreateCarePlanRisksApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plan/{care_plan_id}/risks [get]
 func (server *Server) GetCarePlanRisksApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -794,7 +793,7 @@ func (server *Server) GetCarePlanRisksApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /risks/{risk_id} [put]
 func (server *Server) UpdateCarePlanRisksApi(ctx *gin.Context) {
-	riskID, err := strconv.ParseInt(ctx.Param("risk_id"), 10, 64)
+	riskID, err := uuid.Parse(ctx.Param("risk_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid risk ID")))
 		return
@@ -829,7 +828,7 @@ func (server *Server) UpdateCarePlanRisksApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /risks/{risk_id} [delete]
 func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
-	riskID, err := strconv.ParseInt(ctx.Param("risk_id"), 10, 64)
+	riskID, err := uuid.Parse(ctx.Param("risk_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid risk ID")))
 		return
@@ -868,7 +867,7 @@ func (server *Server) DeleteCarePlanRiskApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/support_network [post]
 func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "CreateCareplanSupportNetworkApi", "Invalid care plan ID", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
@@ -903,7 +902,7 @@ func (server *Server) CreateCareplanSupportNetworkApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/support_network [get]
 func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -932,7 +931,7 @@ func (server *Server) GetCarePlanSupportNetworkApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /support_network/{support_network_id} [put]
 func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
-	supportNetworkID, err := strconv.ParseInt(ctx.Param("support_network_id"), 10, 64)
+	supportNetworkID, err := uuid.Parse(ctx.Param("support_network_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid support network ID")))
 		return
@@ -967,7 +966,7 @@ func (server *Server) UpdateCarePlanSupportNetworkApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /support_network/{support_network_id} [delete]
 func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
-	supportNetworkID, err := strconv.ParseInt(ctx.Param("support_network_id"), 10, 64)
+	supportNetworkID, err := uuid.Parse(ctx.Param("support_network_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid support network ID")))
 		return
@@ -1007,7 +1006,7 @@ func (server *Server) DeleteCarePlanSupportNetworkApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plan/{care_plan_id}/resources [post]
 func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -1042,7 +1041,7 @@ func (server *Server) CreateCarePlanResourcesApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plan/{care_plan_id}/resources [get]
 func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -1072,7 +1071,7 @@ func (server *Server) GetCarePlanResourcesApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /resources/{resource_id} [put]
 func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
-	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
+	resourceID, err := uuid.Parse(ctx.Param("resource_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid resource ID")))
 		return
@@ -1107,7 +1106,7 @@ func (server *Server) UpdateCarePlanResourcesApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /resources/{resource_id} [delete]
 func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
-	resourceID, err := strconv.ParseInt(ctx.Param("resource_id"), 10, 64)
+	resourceID, err := uuid.Parse(ctx.Param("resource_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid resource ID")))
 		return
@@ -1143,7 +1142,7 @@ func (server *Server) DeleteCarePlanResourcesApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/reports [post]
 func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -1185,7 +1184,7 @@ func (server *Server) CreateCarePlanReportApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/{care_plan_id}/reports [get]
 func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
-	carePlanID, err := strconv.ParseInt(ctx.Param("care_plan_id"), 10, 64)
+	carePlanID, err := uuid.Parse(ctx.Param("care_plan_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid care plan ID")))
 		return
@@ -1221,7 +1220,7 @@ func (server *Server) ListCarePlanReportsApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/reports/{report_id} [put]
 func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
-	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
+	reportID, err := uuid.Parse(ctx.Param("report_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid report ID")))
 		return
@@ -1256,7 +1255,7 @@ func (server *Server) UpdateCarePlanReportApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal server error"
 // @Router /care_plans/reports/{report_id} [delete]
 func (server *Server) DeleteCarePlanReportApi(ctx *gin.Context) {
-	reportID, err := strconv.ParseInt(ctx.Param("report_id"), 10, 64)
+	reportID, err := uuid.Parse(ctx.Param("report_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid report ID")))
 		return

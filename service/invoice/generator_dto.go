@@ -10,7 +10,7 @@ import (
 
 // InvoiceDetails contains details for each contract in the invoice
 type InvoiceDetails struct {
-	ContractID    int64           `json:"contract_id"`
+	ContractID    uuid.UUID       `json:"contract_id"`
 	ContractType  string          `json:"contract_name"`
 	Periods       []InvoicePeriod `json:"periods"`
 	PreVatTotal   float64         `json:"pre_vat_total_price"`
@@ -29,7 +29,7 @@ type GenerateInvoiceRequest struct {
 
 // GenerateInvoiceResponse represents the response body for generating an invoice.
 type GenerateInvoiceResponse struct {
-	ID              int64            `json:"id"`
+	ID              uuid.UUID        `json:"id"`
 	InvoiceNumber   string           `json:"invoice_number"`
 	IssueDate       time.Time        `json:"issue_date"`
 	DueDate         time.Time        `json:"due_date"`
@@ -39,7 +39,7 @@ type GenerateInvoiceResponse struct {
 	PdfAttachmentID *uuid.UUID       `json:"pdf_attachment_id"`
 	ExtraContent    util.JSONObject  `json:"extra_content"`
 	ClientID        uuid.UUID        `json:"client_id"`
-	SenderID        *int64           `json:"sender_id"`
+	SenderID        *uuid.UUID       `json:"sender_id"`
 	UpdatedAt       time.Time        `json:"updated_at"`
 	CreatedAt       time.Time        `json:"created_at"`
 }

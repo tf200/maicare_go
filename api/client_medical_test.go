@@ -338,7 +338,7 @@ func TestDeleteClientDiagnosisApi(t *testing.T) {
 	}
 }
 
-func createRandomClientMedication(t *testing.T, diagnosisID int64, employeeID uuid.UUID) db.ClientMedication {
+func createRandomClientMedication(t *testing.T, diagnosisID uuid.UUID, employeeID uuid.UUID) db.ClientMedication {
 	arg := db.CreateClientMedicationParams{
 		DiagnosisID:      &diagnosisID,
 		Name:             "test name",

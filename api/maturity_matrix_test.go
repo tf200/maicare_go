@@ -22,21 +22,23 @@ import (
 )
 
 type RandomCarePlan struct {
-	CarePlanID       int64 `json:"care_plan_id"`
-	ObjectiveID      int64 `json:"objective_id"`
-	ActionID         int64 `json:"action_id"`
-	InterventionID   int64 `json:"intervention_id"`
-	SuccessMetricID  int64 `json:"success_metric_id"`
-	RiskID           int64 `json:"risk_id"`
-	SupportNetworkID int64 `json:"support_network_id"`
-	ResourceID       int64 `json:"resource_id"`
-	ReportID         int64 `json:"report_id"`
+	CarePlanID       uuid.UUID `json:"care_plan_id"`
+	ObjectiveID      uuid.UUID `json:"objective_id"`
+	ActionID         uuid.UUID `json:"action_id"`
+	InterventionID   uuid.UUID `json:"intervention_id"`
+	SuccessMetricID  uuid.UUID `json:"success_metric_id"`
+	RiskID           uuid.UUID `json:"risk_id"`
+	SupportNetworkID uuid.UUID `json:"support_network_id"`
+	ResourceID       uuid.UUID `json:"resource_id"`
+	ReportID         uuid.UUID `json:"report_id"`
 }
 
 func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
+	maturityMatrix, err := testStore.ListMaturityMatrix(context.Background())
+	require.NoError(t, err)
 	clientAssessments, err := testStore.CreateClientMaturityMatrixAssessment(context.Background(), db.CreateClientMaturityMatrixAssessmentParams{
 		ClientID:         clientID,
-		MaturityMatrixID: 1,
+		MaturityMatrixID: maturityMatrix[0].ID,
 		InitialLevel:     1,
 		CurrentLevel:     1,
 		TargetLevel:      2,
@@ -47,7 +49,6 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 	mockLLmResp := CreateMockGrpcClient().CarePlanResponse
 	mockLLmRespBytes, err := json.Marshal(mockLLmResp)
 	require.NoError(t, err)
-	require.NoError(t, err)
 	carePlan, err := testStore.CreateCarePlan(context.Background(), db.CreateCarePlanParams{
 		AssessmentID:          clientAssessments.ID,
 		GeneratedByEmployeeID: nil,
@@ -56,8 +57,8 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 		Status:                "draft",
 	})
 	require.NoError(t, err)
-	var randomObjectiveID int64
-	var randomActionID int64
+	var randomObjectiveID uuid.UUID
+	var randomActionID uuid.UUID
 	for _, objective := range mockLLmResp.CarePlanObjectives.ShortTermGoals {
 		createdObj, err := testStore.CreateCarePlanObjective(context.Background(), db.CreateCarePlanObjectiveParams{
 			CarePlanID:  carePlan.ID,
@@ -119,7 +120,7 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 
 		}
 	}
-	var interventionID int64
+	var interventionID uuid.UUID
 	for _, intervention := range mockLLmResp.Interventions.DailyActivities {
 		intervention, err := testStore.CreateCarePlanIntervention(context.Background(), db.CreateCarePlanInterventionParams{
 			CarePlanID:              carePlan.ID,
@@ -137,7 +138,7 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 		})
 		require.NoError(t, err)
 	}
-	var successMetricID int64
+	var successMetricID uuid.UUID
 	for _, successMetric := range mockLLmResp.SuccessMetrics {
 		successMetric, err := testStore.CreateCarePlanSuccessMetric(context.Background(), db.CreateCarePlanSuccessMetricParams{
 			CarePlanID:        carePlan.ID,
@@ -149,7 +150,7 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 		require.NoError(t, err)
 	}
 
-	var randomRiskID int64
+	var randomRiskID uuid.UUID
 	for _, risk := range mockLLmResp.RiskFactors {
 		risk, err := testStore.CreateCarePlanRisk(context.Background(), db.CreateCarePlanRiskParams{
 			CarePlanID:         carePlan.ID,
@@ -160,7 +161,7 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 		randomRiskID = risk.ID
 		require.NoError(t, err)
 	}
-	var supportNetworkID int64
+	var supportNetworkID uuid.UUID
 	for _, supportNetwork := range mockLLmResp.SupportNetwork {
 		network, err := testStore.CreateCarePlanSupportNetwork(context.Background(), db.CreateCarePlanSupportNetworkParams{
 			CarePlanID:                carePlan.ID,
@@ -170,7 +171,7 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 		supportNetworkID = network.ID
 		require.NoError(t, err)
 	}
-	var resourceID int64
+	var resourceID uuid.UUID
 	for _, resource := range mockLLmResp.ResourcesRequired {
 		resource, err := testStore.CreateCarePlanResources(context.Background(), db.CreateCarePlanResourcesParams{
 			CarePlanID:          carePlan.ID,
@@ -221,8 +222,10 @@ func TestCreateClientMaturityMatrixAssessmentApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
+				maturityMatrix, err := testStore.ListMaturityMatrix(context.Background())
+				require.NoError(t, err)
 				assessmentReq := care.CreateClientCarePlanRequest{
-					MaturityMatrixID: 1,
+					MaturityMatrixID: maturityMatrix[0].ID,
 					InitialLevel:     1,
 					TargetLevel:      3,
 				}

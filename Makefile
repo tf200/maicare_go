@@ -25,9 +25,10 @@ swagger:
 	swag init --parseDependency --output ./docs --generalInfo server.go --dir ./api
 
 roles:
-	cd roles && g++ -std=c++17 -o rbac_sync rbac_sync.cpp -lpqxx -lpq -lyaml-cpp && ./rbac_sync && cd ..
+	go run cmd/roles/main.go
+
 admin:
-	cd admin && g++ -o admin admin.cpp -lpqxx -lssl -lcrypto -l:bcrypt.a && ./admin && cd ..
+	go run cmd/admin/main.go
 
 
 push:

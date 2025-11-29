@@ -86,7 +86,7 @@ UPDATE contract
 SET
     status = @status::contract_status_enum,
     approved_at = CASE WHEN @status::contract_status_enum = 'approved' THEN NOW() ELSE approved_at END
-WHERE id = @contract_id::BIGINT
+WHERE id = @contract_id::uuid
 RETURNING *;
 
 -- name: GetClientContract :one

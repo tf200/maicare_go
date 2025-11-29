@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	_ "maicare_go/pagination"
@@ -17,7 +16,7 @@ import (
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.CreateClientDiagnosisRequest true "Client diagnosis data"
 // @Success 201 {object} Response[clientp.CreateClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
@@ -52,7 +51,7 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[clientp.ListClientDiagnosesResponse]]
@@ -86,14 +85,14 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 // @Summary Get a client diagnosis
 // @Tags client_Medical
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Success 200 {object} Response[clientp.GetClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/diagnosis/{diagnosis_id} [get]
 func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := strconv.ParseInt(id, 10, 64)
+	diagnosisID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -114,15 +113,15 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Param request body clientp.UpdateClientDiagnosisRequest true "Client diagnosis data"
 // @Success 200 {object} Response[clientp.UpdateClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/diagnosis/{diagnosis_id} [put]
 func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
 	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := strconv.ParseInt(id, 10, 64)
+	diagnosisID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -149,14 +148,14 @@ func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
 // @Summary Delete a client diagnosis
 // @Tags client_Medical
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Success 200 {object} Response[any]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/diagnosis/{diagnosis_id} [delete]
 func (server *Server) DeleteClientDiagnosisApi(ctx *gin.Context) {
 	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := strconv.ParseInt(id, 10, 64)
+	diagnosisID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -178,15 +177,15 @@ func (server *Server) DeleteClientDiagnosisApi(ctx *gin.Context) {
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Param request body clientp.CreateClientMedicationRequest true "Client medication data"
 // @Success 201 {object} Response[clientp.CreateClientMedicationResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/diagnosis/{diagnosis_id}/medications [post]
 func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
 	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := strconv.ParseInt(id, 10, 64)
+	diagnosisID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -229,8 +228,8 @@ type ListClientMedicationsResponse struct {
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
 // @Success 200 {object} Response[pagination.Response[clientp.ListClientMedicationsResponse]]
@@ -238,7 +237,7 @@ type ListClientMedicationsResponse struct {
 // @Router /clients/{id}/diagnosis/{diagnosis_id}/medications [get]
 func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
 	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := strconv.ParseInt(id, 10, 64)
+	diagnosisID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -263,15 +262,15 @@ func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
 // @Summary Get a client medication
 // @Tags client_Medical
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param medication_id path int true "Medication ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
+// @Param id path uuid true "Client ID"
+// @Param medication_id path uuid true "Medication ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Success 200 {object} Response[clientp.GetClientMedicationResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id} [get]
 func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 	id := ctx.Param("medication_id")
-	medicationID, err := strconv.ParseInt(id, 10, 64)
+	medicationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -290,16 +289,16 @@ func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
 // @Tags client_Medical
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
-// @Param medication_id path int true "Medication ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
+// @Param medication_id path uuid true "Medication ID"
 // @Param request body clientp.UpdateClientMedicationRequest true "Client medication data"
 // @Success 200 {object} Response[clientp.UpdateClientMedicationResponse]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id} [put]
 func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
 	id := ctx.Param("medication_id")
-	medicationID, err := strconv.ParseInt(id, 10, 64)
+	medicationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -326,15 +325,15 @@ func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
 // @Summary Delete a client medication
 // @Tags client_Medical
 // @Produce json
-// @Param id path int true "Client ID"
-// @Param diagnosis_id path int true "Diagnosis ID"
-// @Param medication_id path int true "Medication ID"
+// @Param id path uuid true "Client ID"
+// @Param diagnosis_id path uuid true "Diagnosis ID"
+// @Param medication_id path uuid true "Medication ID"
 // @Success 200 {object} Response[any]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/medications/{medication_id} [delete]
 func (server *Server) DeleteClientMedicationApi(ctx *gin.Context) {
 	id := ctx.Param("medication_id")
-	medicationID, err := strconv.ParseInt(id, 10, 64)
+	medicationID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

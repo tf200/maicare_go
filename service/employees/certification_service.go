@@ -65,7 +65,7 @@ func (s *employeeService) AddEmployeeCertification(
 		"AddEmployeeCertification",
 		"Successfully added certification to employee profile",
 		zap.String("EmployeeID", employeeID.String()),
-		zap.Int64("CertificationID", certification.ID),
+		zap.String("CertificationID", certification.ID.String()),
 	)
 	return res, nil
 }
@@ -111,7 +111,7 @@ func (s *employeeService) ListEmployeeCertification(
 
 func (s *employeeService) UpdateEmployeeCertification(
 	req UpdateEmployeeCertificationRequest,
-	certificationID int64,
+	certificationID uuid.UUID,
 	ctx context.Context,
 ) (*UpdateEmployeeCertificationResponse, error) {
 	var parsedDate time.Time
@@ -125,7 +125,7 @@ func (s *employeeService) UpdateEmployeeCertification(
 				"UpdateEmployeeCertification",
 				"Failed to parse date issued",
 				zap.Error(err),
-				zap.Int64("CertificationID", certificationID),
+				zap.String("CertificationID", certificationID.String()),
 			)
 			return nil, fmt.Errorf("invalid date issued format: %w", err)
 		}
@@ -147,7 +147,7 @@ func (s *employeeService) UpdateEmployeeCertification(
 			"UpdateEmployeeCertification",
 			"Failed to update employee certification",
 			zap.Error(err),
-			zap.Int64("CertificationID", certificationID),
+			zap.String("CertificationID", certificationID.String()),
 		)
 		return nil, fmt.Errorf("failed to update certification: %w", err)
 	}
@@ -166,13 +166,13 @@ func (s *employeeService) UpdateEmployeeCertification(
 		logger.LogLevelInfo,
 		"UpdateEmployeeCertification",
 		"Successfully updated employee certification",
-		zap.Int64("CertificationID", certificationID),
+		zap.String("CertificationID", certificationID.String()),
 	)
 	return res, nil
 }
 
 func (s *employeeService) DeleteEmployeeCertification(
-	certificationID int64,
+	certificationID uuid.UUID,
 	ctx context.Context,
 ) (*DeleteEmployeeCertificationResponse, error) {
 	certification, err := s.Store.DeleteEmployeeCertification(ctx, certificationID)
@@ -183,7 +183,7 @@ func (s *employeeService) DeleteEmployeeCertification(
 			"DeleteEmployeeCertification",
 			"Failed to delete employee certification",
 			zap.Error(err),
-			zap.Int64("CertificationID", certificationID),
+			zap.String("CertificationID", certificationID.String()),
 		)
 		return nil, fmt.Errorf("failed to delete certification: %w", err)
 	}
@@ -202,7 +202,7 @@ func (s *employeeService) DeleteEmployeeCertification(
 		logger.LogLevelInfo,
 		"DeleteEmployeeCertification",
 		"Successfully deleted employee certification",
-		zap.Int64("CertificationID", certificationID),
+		zap.String("CertificationID", certificationID.String()),
 	)
 	return res, nil
 }

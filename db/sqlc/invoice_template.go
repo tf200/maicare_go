@@ -41,8 +41,8 @@ var (
 
 type FetchQueryData struct {
 	ClientID   uuid.UUID
-	ContractID int64
-	SenderID   int64
+	ContractID uuid.UUID
+	SenderID   uuid.UUID
 }
 
 func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQueryData) (map[string]string, error) {

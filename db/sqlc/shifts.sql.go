@@ -8,18 +8,19 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const checkAllShiftsExist = `-- name: CheckAllShiftsExist :one
 SELECT COUNT(*) = $1::int AS all_exist
 FROM location_shift
-WHERE id = ANY($2::int[])
+WHERE id = ANY($2::uuid[])
 `
 
 type CheckAllShiftsExistParams struct {
-	ExpectedCount int32   `json:"expected_count"`
-	Ids           []int32 `json:"ids"`
+	ExpectedCount int32       `json:"expected_count"`
+	Ids           []uuid.UUID `json:"ids"`
 }
 
 func (q *Queries) CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error) {
@@ -41,7 +42,7 @@ INSERT INTO location_shift (
 `
 
 type CreateShiftParams struct {
-	LocationID int64       `json:"location_id"`
+	LocationID uuid.UUID   `json:"location_id"`
 	ShiftName  string      `json:"shift_name"`
 	StartTime  pgtype.Time `json:"start_time"`
 	EndTime    pgtype.Time `json:"end_time"`
@@ -72,7 +73,7 @@ DELETE FROM location_shift
 WHERE id = $1
 `
 
-func (q *Queries) DeleteShift(ctx context.Context, id int64) error {
+func (q *Queries) DeleteShift(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteShift, id)
 	return err
 }
@@ -83,7 +84,7 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetShiftByID(ctx context.Context, id int64) (LocationShift, error) {
+func (q *Queries) GetShiftByID(ctx context.Context, id uuid.UUID) (LocationShift, error) {
 	row := q.db.QueryRow(ctx, getShiftByID, id)
 	var i LocationShift
 	err := row.Scan(
@@ -103,7 +104,7 @@ SELECT id, location_id, shift_name, start_time, end_time, created_at, updated_at
 WHERE location_id = $1
 `
 
-func (q *Queries) GetShiftsByLocationID(ctx context.Context, locationID int64) ([]LocationShift, error) {
+func (q *Queries) GetShiftsByLocationID(ctx context.Context, locationID uuid.UUID) ([]LocationShift, error) {
 	rows, err := q.db.Query(ctx, getShiftsByLocationID, locationID)
 	if err != nil {
 		return nil, err
@@ -143,7 +144,7 @@ RETURNING id, location_id, shift_name, start_time, end_time, created_at, updated
 `
 
 type UpdateShiftParams struct {
-	ID        int64       `json:"id"`
+	ID        uuid.UUID   `json:"id"`
 	ShiftName string      `json:"shift_name"`
 	StartTime pgtype.Time `json:"start_time"`
 	EndTime   pgtype.Time `json:"end_time"`

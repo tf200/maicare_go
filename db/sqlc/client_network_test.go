@@ -202,12 +202,12 @@ func TestCreateEmergencyContact(t *testing.T) {
 func TestGetEmergencyContact(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, contact ClientEmergencyContact, err error)
 	}{
 		{
 			name: "get existing contact",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
 				contact := createRandomEmergencyContact(ctx, qtx, client.ID)
 				return contact.ID
@@ -219,7 +219,7 @@ func TestGetEmergencyContact(t *testing.T) {
 		},
 		{
 			name:  "get non-existent contact",
-			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID { return uuid.New() },
 			checks: func(t *testing.T, contact ClientEmergencyContact, err error) {
 				require.Error(t, err, "GetEmergencyContact should error for non-existent ID")
 			},
@@ -269,7 +269,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			name: "update non-existent contact",
 			setup: func(ctx context.Context, qtx *Queries) UpdateEmergencyContactParams {
 				return UpdateEmergencyContactParams{
-					ID:    999999,
+					ID:    uuid.New(),
 					Email: util.StringPtr(util.RandomEmail()),
 				}
 			},
@@ -298,12 +298,12 @@ func TestUpdateEmergencyContact(t *testing.T) {
 func TestDeleteEmergencyContact(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, contact ClientEmergencyContact, err error)
 	}{
 		{
 			name: "delete existing contact",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
 				contact := createRandomEmergencyContact(ctx, qtx, client.ID)
 				return contact.ID
@@ -315,7 +315,7 @@ func TestDeleteEmergencyContact(t *testing.T) {
 		},
 		{
 			name:  "delete non-existent contact",
-			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID { return uuid.New() },
 			checks: func(t *testing.T, contact ClientEmergencyContact, err error) {
 				require.Error(t, err, "DeleteEmergencyContact should error for non-existent ID")
 			},
@@ -400,12 +400,12 @@ func TestListEmergencyContacts(t *testing.T) {
 func TestGetAssignedEmployee(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, row GetAssignedEmployeeRow, err error)
 	}{
 		{
 			name: "get existing assigned employee",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
 				assigned := createRandomAssignedEmployee(ctx, qtx, client.ID)
 				return assigned.ID
@@ -417,7 +417,7 @@ func TestGetAssignedEmployee(t *testing.T) {
 		},
 		{
 			name:  "get non-existent assigned employee",
-			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID { return uuid.New() },
 			checks: func(t *testing.T, row GetAssignedEmployeeRow, err error) {
 				require.Error(t, err, "GetAssignedEmployee should error for non-existent ID")
 			},
@@ -465,7 +465,7 @@ func TestUpdateAssignedEmployee(t *testing.T) {
 			name: "update non-existent assigned employee",
 			setup: func(ctx context.Context, qtx *Queries) UpdateAssignedEmployeeParams {
 				return UpdateAssignedEmployeeParams{
-					ID:   999999,
+					ID:   uuid.New(),
 					Role: util.StringPtr("Role"),
 				}
 			},
@@ -494,12 +494,12 @@ func TestUpdateAssignedEmployee(t *testing.T) {
 func TestDeleteAssignedEmployee(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, assigned AssignedEmployee, err error)
 	}{
 		{
 			name: "delete existing assigned employee",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
 				assigned := createRandomAssignedEmployee(ctx, qtx, client.ID)
 				return assigned.ID
@@ -511,7 +511,7 @@ func TestDeleteAssignedEmployee(t *testing.T) {
 		},
 		{
 			name:  "delete non-existent assigned employee",
-			setup: func(ctx context.Context, qtx *Queries) int64 { return 999999 },
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID { return uuid.New() },
 			checks: func(t *testing.T, assigned AssignedEmployee, err error) {
 				require.Error(t, err, "DeleteAssignedEmployee should error for non-existent ID")
 			},

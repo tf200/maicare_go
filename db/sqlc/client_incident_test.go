@@ -202,12 +202,12 @@ func TestCreateIncident(t *testing.T) {
 func TestGetIncident(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, incident GetIncidentRow, err error)
 	}{
 		{
 			name: "successfully retrieve existing incident",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				incident := createRandomIncident(ctx, qtx)
 				return incident.ID
 			},
@@ -220,8 +220,8 @@ func TestGetIncident(t *testing.T) {
 		},
 		{
 			name: "error retrieving non-existent incident",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, incident GetIncidentRow, err error) {
 				require.Error(t, err, "GetIncident() should error for non-existent incident")
@@ -229,7 +229,7 @@ func TestGetIncident(t *testing.T) {
 		},
 		{
 			name: "retrieve incident with all fields populated",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				incident := createRandomIncidentWithAllFields(ctx, qtx)
 				return incident.ID
 			},
@@ -352,12 +352,12 @@ func TestListIncidents(t *testing.T) {
 func TestConfirmIncident(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, result ConfirmIncidentRow, err error)
 	}{
 		{
 			name: "successfully confirm existing incident",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				incident := createRandomIncident(ctx, qtx)
 				return incident.ID
 			},
@@ -369,8 +369,8 @@ func TestConfirmIncident(t *testing.T) {
 		},
 		{
 			name: "confirm non-existent incident",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, result ConfirmIncidentRow, err error) {
 				require.Error(t, err, "ConfirmIncident() should error for non-existent incident")
@@ -398,12 +398,12 @@ func TestConfirmIncident(t *testing.T) {
 func TestDeleteIncident(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "successfully delete existing incident",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				incident := createRandomIncident(ctx, qtx)
 				return incident.ID
 			},
@@ -413,8 +413,8 @@ func TestDeleteIncident(t *testing.T) {
 		},
 		{
 			name: "delete non-existent incident does not error",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteIncident() should not error even for non-existent incident")

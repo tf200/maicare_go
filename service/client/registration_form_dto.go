@@ -80,7 +80,7 @@ type CreateRegistrationFormRequest struct {
 
 // CreateRegistrationFormResponse represents the response body for creating a registration form
 type CreateRegistrationFormResponse struct {
-	ID                            int64      `json:"id"`
+	ID                            uuid.UUID  `json:"id"`
 	ClientFirstName               string     `json:"client_first_name"`
 	ClientLastName                string     `json:"client_last_name"`
 	ClientBsnNumber               string     `json:"client_bsn_number"`
@@ -173,7 +173,7 @@ type ListRegistrationFormsRequest struct {
 
 // ListRegistrationFormsResponse represents the response body for listing registration forms
 type ListRegistrationFormsResponse struct {
-	ID                            int64      `json:"id"`
+	ID                            uuid.UUID  `json:"id"`
 	ClientFirstName               string     `json:"client_first_name"`
 	ClientLastName                string     `json:"client_last_name"`
 	ClientBsnNumber               string     `json:"client_bsn_number"`
@@ -253,7 +253,7 @@ type ListRegistrationFormsResponse struct {
 }
 
 type GetRegistrationFormResponse struct {
-	ID                            int64      `json:"id"`
+	ID                            uuid.UUID  `json:"id"`
 	ClientFirstName               string     `json:"client_first_name"`
 	ClientLastName                string     `json:"client_last_name"`
 	ClientBsnNumber               string     `json:"client_bsn_number"`
@@ -403,7 +403,7 @@ type UpdateRegistrationFormRequest struct {
 
 // UpdateRegistrationFormResponse represents the response body for updating a registration form
 type UpdateRegistrationFormResponse struct {
-	ID                            int64      `json:"id"`
+	ID                            uuid.UUID  `json:"id"`
 	ClientFirstName               string     `json:"client_first_name"`
 	ClientLastName                string     `json:"client_last_name"`
 	ClientBsnNumber               string     `json:"client_bsn_number"`

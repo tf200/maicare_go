@@ -16,24 +16,24 @@ const (
 	PAYMENT_TOLERANCE float64 = 50
 )
 
-func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req CreatePaymentRequest, employeeID uuid.UUID) (*CreatePaymentResponse, error) {
+func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID, req CreatePaymentRequest, employeeID uuid.UUID) (*CreatePaymentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to begin transaction", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to begin transaction", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to set current employee ID", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to set current employee ID", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
 	}
 	qtx := s.Store.WithTx(tx)
 
 	getInvoice, err := qtx.GetInvoice(ctx, invoiceID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to get invoice", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to get invoice", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to get invoice: %v", err)
 	}
 
@@ -50,7 +50,7 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 
 	payment, err := qtx.CreatePayment(ctx, paymentParams)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to create payment", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to create payment", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to create payment: %v", err)
 	}
 
@@ -60,13 +60,13 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 	if req.PaymentStatus == string(PaymentStatusCompleted) {
 		totalPaid, err := qtx.GetCompletedPaymentSum(ctx, invoiceID)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to get total completed payment", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to get total completed payment", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to get total completed payment: %v", err)
 		}
 
 		newInvoiceStatus, err = DetermineInvoiceStatus(getInvoice.TotalAmount, totalPaid)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to determine invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to determine invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
 		}
 
@@ -77,7 +77,7 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 				Status: newInvoiceStatus,
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to update invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to update invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 				return nil, fmt.Errorf("failed to update invoice status: %v", err)
 			}
 		}
@@ -85,7 +85,7 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to commit transaction", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to commit transaction", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
@@ -106,10 +106,10 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID int64, req
 	return response, nil
 }
 
-func (s *invoiceService) ListPayments(ctx context.Context, invoiceID int64) ([]ListPaymentsResponse, error) {
+func (s *invoiceService) ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]ListPaymentsResponse, error) {
 	payments, err := s.Store.ListPayments(ctx, invoiceID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListPayments", "Failed to list payments", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListPayments", "Failed to list payments", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to list payments: %v", err)
 	}
 
@@ -135,10 +135,10 @@ func (s *invoiceService) ListPayments(ctx context.Context, invoiceID int64) ([]L
 	return response, nil
 }
 
-func (s *invoiceService) GetPaymentByID(ctx context.Context, paymentID int64) (*GetPaymentByIDResponse, error) {
+func (s *invoiceService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*GetPaymentByIDResponse, error) {
 	payment, err := s.Store.GetPayment(ctx, paymentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetPaymentByID", "Failed to get payment by ID", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetPaymentByID", "Failed to get payment by ID", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to get payment by ID: %v", err)
 	}
 
@@ -161,23 +161,23 @@ func (s *invoiceService) GetPaymentByID(ctx context.Context, paymentID int64) (*
 	return response, nil
 }
 
-func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, employeeID uuid.UUID, paymentID int64, req UpdatePaymentRequest) (*UpdatePaymentResponse, error) {
+func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, paymentID uuid.UUID, req UpdatePaymentRequest) (*UpdatePaymentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to begin transaction", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to begin transaction", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to set current employee ID", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to set current employee ID", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
 	}
 	qtx := s.Store.WithTx(tx)
 	currentPayment, err := qtx.GetPaymentWithInvoice(ctx, paymentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to get current payment", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to get current payment", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to get current payment: %v", err)
 	}
 
@@ -201,7 +201,7 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 
 	updatedPayment, err := qtx.UpdatePayment(ctx, updateParams)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to update payment", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to update payment", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to update payment: %v", err)
 	}
 
@@ -212,13 +212,13 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 		currentPayment.PaymentStatus == db.PaymentStatusEnumCompleted {
 		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to get total paid amount", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to get total paid amount", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to get total paid amount: %v", err)
 		}
 
 		newStatus, err := DetermineInvoiceStatus(currentPayment.InvoiceTotalAmount, totalPaid)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to determine invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to determine invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
 		}
 
@@ -228,7 +228,7 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 				Status: db.NullInvoiceStatusEnum{InvoiceStatusEnum: newStatus, Valid: true},
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to update invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to update invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 				return nil, fmt.Errorf("failed to update invoice status: %v", err)
 			}
 			newInvoiceStatus = updatedInvoice.Status
@@ -242,7 +242,7 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to commit transaction", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to commit transaction", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
@@ -264,23 +264,23 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID int64, emp
 	return response, nil
 }
 
-func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID int64, employeeID uuid.UUID) (*DeletePaymentResponse, error) {
+func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID) (*DeletePaymentResponse, error) {
 	tx, err := s.Store.ConnPool.Begin(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to begin transaction", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to begin transaction", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
 	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to set current employee ID", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to set current employee ID", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
 	}
 	qtx := s.Store.WithTx(tx)
 
 	paymentToDelete, err := qtx.GetPaymentWithInvoice(ctx, paymentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to get payment to delete", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to get payment to delete", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to get payment to delete: %v", err)
 	}
 
@@ -293,7 +293,7 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 
 	deletedPayment, err := qtx.DeletePayment(ctx, paymentID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to delete payment", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to delete payment", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to delete payment: %v", err)
 	}
 
@@ -303,13 +303,13 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 	if deletedPayment.PaymentStatus == db.PaymentStatusEnumCompleted {
 		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to get total paid amount", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to get total paid amount", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to get total paid amount: %v", err)
 		}
 
 		newStatus, err := DetermineInvoiceStatus(paymentToDelete.InvoiceTotalAmount, totalPaid)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to determine invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to determine invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
 		}
 
@@ -319,7 +319,7 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 				Status: db.NullInvoiceStatusEnum{InvoiceStatusEnum: newStatus, Valid: true},
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to update invoice status", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to update invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 				return nil, fmt.Errorf("failed to update invoice status: %v", err)
 			}
 			newInvoiceStatus = updatedInvoice.Status
@@ -333,7 +333,7 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to commit transaction", zap.Error(err), zap.Int64("payment_id", paymentID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to commit transaction", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
@@ -369,14 +369,14 @@ func DetermineInvoiceStatus(invoiceTotal, totalPaid float64) (db.InvoiceStatusEn
 	return "", fmt.Errorf("could not determine invoice status for totalPaid: %f, invoiceTotal: %f", totalPaid, invoiceTotal)
 }
 
-func (s *invoiceService) calculatePaymentCompletionPercentage(ctx context.Context, totalAmount float64, invoiceID int64) float64 {
+func (s *invoiceService) calculatePaymentCompletionPercentage(ctx context.Context, totalAmount float64, invoiceID uuid.UUID) float64 {
 	if totalAmount == 0 {
 		return 0
 	}
 
 	totalPaid, err := s.Store.GetCompletedPaymentSum(ctx, invoiceID)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "calculatePaymentCompletionPercentage", "Failed to get total completed payment", zap.Error(err), zap.Int64("invoice_id", invoiceID))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "calculatePaymentCompletionPercentage", "Failed to get total completed payment", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return 0
 	}
 	return (totalPaid / totalAmount) * 100

@@ -6,6 +6,7 @@ import (
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -196,12 +197,12 @@ func TestListOrganisations(t *testing.T) {
 func TestGetOrganisation(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, organisation GetOrganisationRow, err error)
 	}{
 		{
 			name: "get existing organisation by ID",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				organisation, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
 					Name:       "Get Test Organisation",
 					Address:    "456 Get St",
@@ -219,8 +220,8 @@ func TestGetOrganisation(t *testing.T) {
 		},
 		{
 			name: "get non-existent organisation by ID",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999 // Use a very high ID that likely doesn't exist
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Use a very high ID that likely doesn't exist
 			},
 			checks: func(t *testing.T, organisation GetOrganisationRow, err error) {
 				require.Error(t, err, "GetOrganisation() should error for non-existent ID")
@@ -228,7 +229,7 @@ func TestGetOrganisation(t *testing.T) {
 		},
 		{
 			name: "get organisation with location count",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
 					Name:       "Org With Locations",
 					Address:    "789 Count St",
@@ -274,12 +275,12 @@ func TestGetOrganisation(t *testing.T) {
 func TestGetOrganisationCounts(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, counts GetOrganisationCountsRow, err error)
 	}{
 		{
 			name: "get counts for organisation with no entities",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
 					Name:       "Empty Org",
 					Address:    "123 Empty St",
@@ -298,7 +299,7 @@ func TestGetOrganisationCounts(t *testing.T) {
 		},
 		{
 			name: "get counts for organisation with locations",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
 					Name:       "Org With Locations",
 					Address:    "456 Location St",
@@ -328,8 +329,8 @@ func TestGetOrganisationCounts(t *testing.T) {
 		},
 		{
 			name: "get counts for non-existent organisation",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999 // Use a very high ID that likely doesn't exist
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Use a very high ID that likely doesn't exist
 			},
 			checks: func(t *testing.T, counts GetOrganisationCountsRow, err error) {
 				require.Error(t, err, "GetOrganisationCounts() should error for non-existent ID")
@@ -409,7 +410,7 @@ func TestUpdateOrganisation(t *testing.T) {
 			name: "update non-existent organisation",
 			setup: func(ctx context.Context, qtx *Queries) UpdateOrganisationParams {
 				return UpdateOrganisationParams{
-					ID:   99999,
+					ID:   uuid.New(),
 					Name: util.StringPtr("Non-existent Org"),
 				}
 			},
@@ -439,12 +440,12 @@ func TestUpdateOrganisation(t *testing.T) {
 func TestDeleteOrganisation(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, organisation Organisation, err error)
 	}{
 		{
 			name: "successful deletion",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org := createRandomOrganisation(ctx, qtx)
 				return org.ID
 			},
@@ -455,8 +456,8 @@ func TestDeleteOrganisation(t *testing.T) {
 		},
 		{
 			name: "delete non-existent organisation",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, organisation Organisation, err error) {
 				require.Error(t, err, "DeleteOrganisation() should error for non-existent ID")
@@ -546,12 +547,12 @@ func TestCreateLocation(t *testing.T) {
 func TestListLocations(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, locations []ListLocationsRow, err error)
 	}{
 		{
 			name: "list locations for organisation with multiple locations",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org := createRandomOrganisation(ctx, qtx)
 
 				// Create multiple locations
@@ -573,7 +574,7 @@ func TestListLocations(t *testing.T) {
 		},
 		{
 			name: "list locations for organisation with no locations",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org := createRandomOrganisation(ctx, qtx)
 				return org.ID
 			},
@@ -584,8 +585,8 @@ func TestListLocations(t *testing.T) {
 		},
 		{
 			name: "list locations for non-existent organisation",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, locations []ListLocationsRow, err error) {
 				require.NoError(t, err, "ListLocations() should not error even for non-existent organisation")
@@ -614,12 +615,12 @@ func TestListLocations(t *testing.T) {
 func TestGetLocation(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, location Location, err error)
 	}{
 		{
 			name: "get existing location by ID",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				location := createRandomLocation(ctx, qtx)
 				return location.ID
 			},
@@ -631,8 +632,8 @@ func TestGetLocation(t *testing.T) {
 		},
 		{
 			name: "get non-existent location by ID",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, location Location, err error) {
 				require.Error(t, err, "GetLocation() should error for non-existent ID")
@@ -708,7 +709,7 @@ func TestUpdateLocation(t *testing.T) {
 			name: "update non-existent location",
 			setup: func(ctx context.Context, qtx *Queries) UpdateLocationParams {
 				return UpdateLocationParams{
-					ID:   99999,
+					ID:   uuid.New(),
 					Name: util.StringPtr("Non-existent Location"),
 				}
 			},
@@ -738,12 +739,12 @@ func TestUpdateLocation(t *testing.T) {
 func TestDeleteLocation(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, location Location, err error)
 	}{
 		{
 			name: "successful deletion",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				location := createRandomLocation(ctx, qtx)
 				return location.ID
 			},
@@ -754,8 +755,8 @@ func TestDeleteLocation(t *testing.T) {
 		},
 		{
 			name: "delete non-existent location",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 99999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, location Location, err error) {
 				require.Error(t, err, "DeleteLocation() should error for non-existent ID")

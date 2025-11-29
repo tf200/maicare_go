@@ -69,7 +69,7 @@ type ClientContractReminderData struct {
 	ClientID           uuid.UUID  `json:"client_id"`
 	ClientFirstName    string     `json:"client_first_name"`
 	ClientLastName     string     `json:"client_last_name"`
-	ContractID         int64      `json:"contract_id"`
+	ContractID         uuid.UUID  `json:"contract_id"`
 	CareType           string     `json:"care_type"` // e.g., "ambulante", "accommodation"
 	ContractStart      time.Time  `json:"contract_start"`
 	ContractEnd        time.Time  `json:"contract_end"`
@@ -78,11 +78,11 @@ type ClientContractReminderData struct {
 }
 
 type NewIncidentReportData struct {
-	ID                 int64     `json:"id"`
+	ID                 uuid.UUID `json:"id"`
 	EmployeeID         uuid.UUID `json:"employee_id"`
 	EmployeeFirstName  string    `json:"employee_first_name"`
 	EmployeeLastName   string    `json:"employee_last_name"`
-	LocationID         int64     `json:"location_id"`
+	LocationID         uuid.UUID `json:"location_id"`
 	LocationName       string    `json:"location_name"`
 	ClientID           uuid.UUID `json:"client_id"`
 	ClientFirstName    string    `json:"client_first_name"`

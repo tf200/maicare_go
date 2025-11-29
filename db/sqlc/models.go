@@ -1109,6 +1109,141 @@ func (ns NullIncidentReporterInvolvementEnum) Value() (driver.Value, error) {
 	return string(ns.IncidentReporterInvolvementEnum), nil
 }
 
+type IntakeCareTypeEnum string
+
+const (
+	IntakeCareTypeEnumProtectedLiving            IntakeCareTypeEnum = "protected_living"
+	IntakeCareTypeEnumTrainingCenter             IntakeCareTypeEnum = "training_center"
+	IntakeCareTypeEnumSupportedIndependentLiving IntakeCareTypeEnum = "supported_independent_living"
+	IntakeCareTypeEnumAmbulatorySupport          IntakeCareTypeEnum = "ambulatory_support"
+	IntakeCareTypeEnumOther                      IntakeCareTypeEnum = "other"
+)
+
+func (e *IntakeCareTypeEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = IntakeCareTypeEnum(s)
+	case string:
+		*e = IntakeCareTypeEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for IntakeCareTypeEnum: %T", src)
+	}
+	return nil
+}
+
+type NullIntakeCareTypeEnum struct {
+	IntakeCareTypeEnum IntakeCareTypeEnum `json:"intake_care_type_enum"`
+	Valid              bool               `json:"valid"` // Valid is true if IntakeCareTypeEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullIntakeCareTypeEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.IntakeCareTypeEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.IntakeCareTypeEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullIntakeCareTypeEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.IntakeCareTypeEnum), nil
+}
+
+type IntakeConclusionEnum string
+
+const (
+	IntakeConclusionEnumSuitable              IntakeConclusionEnum = "suitable"
+	IntakeConclusionEnumUnsuitable            IntakeConclusionEnum = "unsuitable"
+	IntakeConclusionEnumFurtherInvestigation  IntakeConclusionEnum = "further_investigation"
+	IntakeConclusionEnumPossiblePalcementDate IntakeConclusionEnum = "possible_palcement_date"
+	IntakeConclusionEnumOther                 IntakeConclusionEnum = "other"
+)
+
+func (e *IntakeConclusionEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = IntakeConclusionEnum(s)
+	case string:
+		*e = IntakeConclusionEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for IntakeConclusionEnum: %T", src)
+	}
+	return nil
+}
+
+type NullIntakeConclusionEnum struct {
+	IntakeConclusionEnum IntakeConclusionEnum `json:"intake_conclusion_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if IntakeConclusionEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullIntakeConclusionEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.IntakeConclusionEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.IntakeConclusionEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullIntakeConclusionEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.IntakeConclusionEnum), nil
+}
+
+type IntakeParticipantsEnum string
+
+const (
+	IntakeParticipantsEnumClient           IntakeParticipantsEnum = "client"
+	IntakeParticipantsEnumReferrer         IntakeParticipantsEnum = "referrer"
+	IntakeParticipantsEnumParentsGuardians IntakeParticipantsEnum = "parents/guardians"
+	IntakeParticipantsEnumCareCoordinator  IntakeParticipantsEnum = "care_coordinator"
+	IntakeParticipantsEnumOther            IntakeParticipantsEnum = "other"
+)
+
+func (e *IntakeParticipantsEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = IntakeParticipantsEnum(s)
+	case string:
+		*e = IntakeParticipantsEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for IntakeParticipantsEnum: %T", src)
+	}
+	return nil
+}
+
+type NullIntakeParticipantsEnum struct {
+	IntakeParticipantsEnum IntakeParticipantsEnum `json:"intake_participants_enum"`
+	Valid                  bool                   `json:"valid"` // Valid is true if IntakeParticipantsEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullIntakeParticipantsEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.IntakeParticipantsEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.IntakeParticipantsEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullIntakeParticipantsEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.IntakeParticipantsEnum), nil
+}
+
 type InvoiceAuditOperationEnum string
 
 const (
@@ -1870,7 +2005,7 @@ func (ns NullSeverityOfIncidentEnum) Value() (driver.Value, error) {
 }
 
 type AiGeneratedReport struct {
-	ID         int64              `json:"id"`
+	ID         uuid.UUID          `json:"id"`
 	ReportText string             `json:"report_text"`
 	ClientID   uuid.UUID          `json:"client_id"`
 	StartDate  pgtype.Date        `json:"start_date"`
@@ -1879,7 +2014,7 @@ type AiGeneratedReport struct {
 }
 
 type AppointmentCard struct {
-	ID                     int64              `json:"id"`
+	ID                     uuid.UUID          `json:"id"`
 	ClientID               uuid.UUID          `json:"client_id"`
 	GeneralInformation     []string           `json:"general_information"`
 	ImportantContacts      []string           `json:"important_contacts"`
@@ -1898,14 +2033,14 @@ type AppointmentCard struct {
 }
 
 type AppointmentClient struct {
-	AppointmentClientID int64            `json:"appointment_client_id"`
+	AppointmentClientID uuid.UUID        `json:"appointment_client_id"`
 	AppointmentID       uuid.UUID        `json:"appointment_id"`
 	ClientID            uuid.UUID        `json:"client_id"`
 	AddedAt             pgtype.Timestamp `json:"added_at"`
 }
 
 type AppointmentParticipant struct {
-	AppointmentParticipantID int64            `json:"appointment_participant_id"`
+	AppointmentParticipantID uuid.UUID        `json:"appointment_participant_id"`
 	AppointmentID            uuid.UUID        `json:"appointment_id"`
 	EmployeeID               uuid.UUID        `json:"employee_id"`
 	AddedAt                  pgtype.Timestamp `json:"added_at"`
@@ -1927,7 +2062,7 @@ type AppointmentTemplate struct {
 }
 
 type AssignedEmployee struct {
-	ID         int64              `json:"id"`
+	ID         uuid.UUID          `json:"id"`
 	ClientID   uuid.UUID          `json:"client_id"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	StartDate  pgtype.Date        `json:"start_date"`
@@ -1936,7 +2071,7 @@ type AssignedEmployee struct {
 }
 
 type Assignment struct {
-	ID            int64              `json:"id"`
+	ID            uuid.UUID          `json:"id"`
 	EmployeeID    uuid.UUID          `json:"employee_id"`
 	ClientID      uuid.UUID          `json:"client_id"`
 	StartDatetime pgtype.Timestamptz `json:"start_datetime"`
@@ -1977,8 +2112,8 @@ type Audit struct {
 }
 
 type CarePlan struct {
-	ID                    int64              `json:"id"`
-	AssessmentID          int64              `json:"assessment_id"`
+	ID                    uuid.UUID          `json:"id"`
+	AssessmentID          uuid.UUID          `json:"assessment_id"`
 	GeneratedAt           pgtype.Timestamp   `json:"generated_at"`
 	GeneratedByEmployeeID *uuid.UUID         `json:"generated_by_employee_id"`
 	ApprovedByEmployeeID  *uuid.UUID         `json:"approved_by_employee_id"`
@@ -1992,8 +2127,8 @@ type CarePlan struct {
 }
 
 type CarePlanAction struct {
-	ID                    int64            `json:"id"`
-	ObjectiveID           int64            `json:"objective_id"`
+	ID                    uuid.UUID        `json:"id"`
+	ObjectiveID           uuid.UUID        `json:"objective_id"`
 	ActionDescription     string           `json:"action_description"`
 	IsCompleted           bool             `json:"is_completed"`
 	CompletedAt           pgtype.Timestamp `json:"completed_at"`
@@ -2003,8 +2138,8 @@ type CarePlanAction struct {
 }
 
 type CarePlanIntervention struct {
-	ID                      int64                             `json:"id"`
-	CarePlanID              int64                             `json:"care_plan_id"`
+	ID                      uuid.UUID                         `json:"id"`
+	CarePlanID              uuid.UUID                         `json:"care_plan_id"`
 	Frequency               CarePlanInterventionFrequencyEnum `json:"frequency"`
 	InterventionDescription string                            `json:"intervention_description"`
 	IsActive                bool                              `json:"is_active"`
@@ -2015,8 +2150,8 @@ type CarePlanIntervention struct {
 }
 
 type CarePlanMetric struct {
-	ID                int64            `json:"id"`
-	CarePlanID        int64            `json:"care_plan_id"`
+	ID                uuid.UUID        `json:"id"`
+	CarePlanID        uuid.UUID        `json:"care_plan_id"`
 	MetricName        string           `json:"metric_name"`
 	TargetValue       string           `json:"target_value"`
 	MeasurementMethod string           `json:"measurement_method"`
@@ -2028,8 +2163,8 @@ type CarePlanMetric struct {
 }
 
 type CarePlanObjective struct {
-	ID              int64                       `json:"id"`
-	CarePlanID      int64                       `json:"care_plan_id"`
+	ID              uuid.UUID                   `json:"id"`
+	CarePlanID      uuid.UUID                   `json:"care_plan_id"`
 	Timeframe       CarePlanTimeframeEnum       `json:"timeframe"`
 	GoalTitle       string                      `json:"goal_title"`
 	Description     string                      `json:"description"`
@@ -2042,8 +2177,8 @@ type CarePlanObjective struct {
 }
 
 type CarePlanReport struct {
-	ID                  int64                  `json:"id"`
-	CarePlanID          int64                  `json:"care_plan_id"`
+	ID                  uuid.UUID              `json:"id"`
+	CarePlanID          uuid.UUID              `json:"care_plan_id"`
 	ReportType          CarePlanReportTypeEnum `json:"report_type"`
 	ReportContent       string                 `json:"report_content"`
 	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
@@ -2053,8 +2188,8 @@ type CarePlanReport struct {
 }
 
 type CarePlanResource struct {
-	ID                  int64            `json:"id"`
-	CarePlanID          int64            `json:"care_plan_id"`
+	ID                  uuid.UUID        `json:"id"`
+	CarePlanID          uuid.UUID        `json:"care_plan_id"`
 	ResourceDescription string           `json:"resource_description"`
 	IsObtained          bool             `json:"is_obtained"`
 	ObtainedDate        pgtype.Date      `json:"obtained_date"`
@@ -2065,8 +2200,8 @@ type CarePlanResource struct {
 }
 
 type CarePlanRisk struct {
-	ID                 int64                 `json:"id"`
-	CarePlanID         int64                 `json:"care_plan_id"`
+	ID                 uuid.UUID             `json:"id"`
+	CarePlanID         uuid.UUID             `json:"care_plan_id"`
 	RiskDescription    string                `json:"risk_description"`
 	MitigationStrategy string                `json:"mitigation_strategy"`
 	RiskLevel          CarePlanRiskLevelEnum `json:"risk_level"`
@@ -2076,8 +2211,8 @@ type CarePlanRisk struct {
 }
 
 type CarePlanSupportNetwork struct {
-	ID                        int64            `json:"id"`
-	CarePlanID                int64            `json:"care_plan_id"`
+	ID                        uuid.UUID        `json:"id"`
+	CarePlanID                uuid.UUID        `json:"care_plan_id"`
 	RoleTitle                 string           `json:"role_title"`
 	ResponsibilityDescription string           `json:"responsibility_description"`
 	ContactPerson             *string          `json:"contact_person"`
@@ -2088,7 +2223,7 @@ type CarePlanSupportNetwork struct {
 }
 
 type Certification struct {
-	ID         int64              `json:"id"`
+	ID         uuid.UUID          `json:"id"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	Name       string             `json:"name"`
 	IssuedBy   string             `json:"issued_by"`
@@ -2097,15 +2232,15 @@ type Certification struct {
 }
 
 type ClientAgreement struct {
-	ID               int64              `json:"id"`
-	ContractID       int64              `json:"contract_id"`
+	ID               uuid.UUID          `json:"id"`
+	ContractID       uuid.UUID          `json:"contract_id"`
 	AgreementDetails string             `json:"agreement_details"`
 	Created          pgtype.Timestamptz `json:"created"`
 }
 
 type ClientDetail struct {
 	ID                         uuid.UUID                     `json:"id"`
-	IntakeFormID               *int64                        `json:"intake_form_id"`
+	IntakeFormID               *uuid.UUID                    `json:"intake_form_id"`
 	FirstName                  string                        `json:"first_name"`
 	LastName                   string                        `json:"last_name"`
 	DateOfBirth                pgtype.Date                   `json:"date_of_birth"`
@@ -2117,15 +2252,15 @@ type ClientDetail struct {
 	Birthplace                 *string                       `json:"birthplace"`
 	Email                      string                        `json:"email"`
 	PhoneNumber                *string                       `json:"phone_number"`
-	OrganizationID             *int64                        `json:"organization_id"`
+	OrganizationID             *uuid.UUID                    `json:"organization_id"`
 	Departement                *string                       `json:"departement"`
 	Gender                     ClientGenderEnum              `json:"gender"`
 	Filenumber                 string                        `json:"filenumber"`
 	ProfilePicture             *string                       `json:"profile_picture"`
 	Infix                      *string                       `json:"infix"`
 	CreatedAt                  pgtype.Timestamptz            `json:"created_at"`
-	SenderID                   *int64                        `json:"sender_id"`
-	LocationID                 *int64                        `json:"location_id"`
+	SenderID                   *uuid.UUID                    `json:"sender_id"`
+	LocationID                 *uuid.UUID                    `json:"location_id"`
 	DepartureReason            *string                       `json:"departure_reason"`
 	DepartureReport            *string                       `json:"departure_report"`
 	GpsPosition                []byte                        `json:"gps_position"`
@@ -2164,7 +2299,7 @@ type ClientDetail struct {
 }
 
 type ClientDiagnosis struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	Title               *string            `json:"title"`
 	ClientID            uuid.UUID          `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
@@ -2177,14 +2312,14 @@ type ClientDiagnosis struct {
 }
 
 type ClientDocument struct {
-	ID             int64                   `json:"id"`
+	ID             uuid.UUID               `json:"id"`
 	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
 	ClientID       uuid.UUID               `json:"client_id"`
 	Label          ClientDocumentLabelEnum `json:"label"`
 }
 
 type ClientEmergencyContact struct {
-	ID               int64                  `json:"id"`
+	ID               uuid.UUID              `json:"id"`
 	ClientID         uuid.UUID              `json:"client_id"`
 	FirstName        *string                `json:"first_name"`
 	LastName         *string                `json:"last_name"`
@@ -2201,10 +2336,10 @@ type ClientEmergencyContact struct {
 }
 
 type ClientLocationTransfer struct {
-	ID                 int64                            `json:"id"`
+	ID                 uuid.UUID                        `json:"id"`
 	ClientID           uuid.UUID                        `json:"client_id"`
-	FromLocationID     *int64                           `json:"from_location_id"`
-	ToLocationID       *int64                           `json:"to_location_id"`
+	FromLocationID     *uuid.UUID                       `json:"from_location_id"`
+	ToLocationID       *uuid.UUID                       `json:"to_location_id"`
 	NewMentorID        *uuid.UUID                       `json:"new_mentor_id"`
 	RequestDate        pgtype.Timestamptz               `json:"request_date"`
 	Status             ClientLocationTransferStatusEnum `json:"status"`
@@ -2214,9 +2349,9 @@ type ClientLocationTransfer struct {
 }
 
 type ClientMaturityMatrixAssessment struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    int64              `json:"maturity_matrix_id"`
+	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -2228,8 +2363,8 @@ type ClientMaturityMatrixAssessment struct {
 }
 
 type ClientMedication struct {
-	ID               int64              `json:"id"`
-	DiagnosisID      *int64             `json:"diagnosis_id"`
+	ID               uuid.UUID          `json:"id"`
+	DiagnosisID      *uuid.UUID         `json:"diagnosis_id"`
 	Name             string             `json:"name"`
 	Dosage           string             `json:"dosage"`
 	StartDate        pgtype.Date        `json:"start_date"`
@@ -2244,17 +2379,17 @@ type ClientMedication struct {
 }
 
 type ClientStatusHistory struct {
-	ID        int64              `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	ClientID  uuid.UUID          `json:"client_id"`
 	OldStatus *string            `json:"old_status"`
 	NewStatus string             `json:"new_status"`
 	ChangedAt pgtype.Timestamptz `json:"changed_at"`
-	ChangedBy *int64             `json:"changed_by"`
+	ChangedBy *uuid.UUID         `json:"changed_by"`
 	Reason    *string            `json:"reason"`
 }
 
 type CollaborationAgreement struct {
-	ID                                int64              `json:"id"`
+	ID                                uuid.UUID          `json:"id"`
 	ClientID                          uuid.UUID          `json:"client_id"`
 	ClientFullName                    string             `json:"client_full_name"`
 	ClientSkn                         string             `json:"client_skn"`
@@ -2275,7 +2410,7 @@ type CollaborationAgreement struct {
 }
 
 type ConsentDeclaration struct {
-	ID                            int64              `json:"id"`
+	ID                            uuid.UUID          `json:"id"`
 	YouthName                     string             `json:"youth_name"`
 	DateOfBirth                   pgtype.Date        `json:"date_of_birth"`
 	ParentGuardianName            string             `json:"parent_guardian_name"`
@@ -2297,22 +2432,15 @@ type ConsentDeclaration struct {
 	PdfAttachmentID               *uuid.UUID         `json:"pdf_attachment_id"`
 }
 
-type Contact struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phone_number"`
-	Email       string `json:"email"`
-}
-
 type ContactRelationship struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	SoftDelete bool   `json:"soft_delete"`
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	SoftDelete bool      `json:"soft_delete"`
 }
 
 type Contract struct {
-	ID              int64               `json:"id"`
-	TypeID          *int64              `json:"type_id"`
+	ID              uuid.UUID           `json:"id"`
+	TypeID          *uuid.UUID          `json:"type_id"`
 	Status          ContractStatusEnum  `json:"status"`
 	ApprovedAt      pgtype.Timestamptz  `json:"approved_at"`
 	StartDate       pgtype.Timestamptz  `json:"start_date"`
@@ -2326,7 +2454,7 @@ type Contract struct {
 	CareName        string              `json:"care_name"`
 	CareType        CareTypeEnum        `json:"care_type"`
 	ClientID        uuid.UUID           `json:"client_id"`
-	SenderID        *int64              `json:"sender_id"`
+	SenderID        *uuid.UUID          `json:"sender_id"`
 	AttachmentIds   []uuid.UUID         `json:"attachment_ids"`
 	FinancingAct    FinancingActEnum    `json:"financing_act"`
 	FinancingOption FinancingOptionEnum `json:"financing_option"`
@@ -2337,16 +2465,16 @@ type Contract struct {
 }
 
 type ContractAttachment struct {
-	ID         int64              `json:"id"`
-	ContractID int64              `json:"contract_id"`
+	ID         uuid.UUID          `json:"id"`
+	ContractID uuid.UUID          `json:"contract_id"`
 	Name       string             `json:"name"`
 	Attachment string             `json:"attachment"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type ContractAudit struct {
-	AuditID       int64                      `json:"audit_id"`
-	ContractID    int64                      `json:"contract_id"`
+	AuditID       uuid.UUID                  `json:"audit_id"`
+	ContractID    uuid.UUID                  `json:"contract_id"`
 	Operation     ContractAuditOperationEnum `json:"operation"`
 	ChangedBy     *uuid.UUID                 `json:"changed_by"`
 	ChangedAt     pgtype.Timestamptz         `json:"changed_at"`
@@ -2356,20 +2484,20 @@ type ContractAudit struct {
 }
 
 type ContractReminder struct {
-	ID             int64                    `json:"id"`
-	ContractID     int64                    `json:"contract_id"`
+	ID             uuid.UUID                `json:"id"`
+	ContractID     uuid.UUID                `json:"contract_id"`
 	ReminderSentAt pgtype.Timestamptz       `json:"reminder_sent_at"`
 	ReminderType   ContractReminderTypeEnum `json:"reminder_type"`
 }
 
 type ContractType struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 type ContractWorkingHour struct {
-	ID         int64              `json:"id"`
-	ContractID int64              `json:"contract_id"`
+	ID         uuid.UUID          `json:"id"`
+	ContractID uuid.UUID          `json:"contract_id"`
 	Minutes    int32              `json:"minutes"`
 	Datetime   pgtype.Timestamptz `json:"datetime"`
 	Notes      *string            `json:"notes"`
@@ -2390,7 +2518,7 @@ type CustomUser struct {
 }
 
 type DataSharingStatement struct {
-	ID                                     int64              `json:"id"`
+	ID                                     uuid.UUID          `json:"id"`
 	YouthName                              string             `json:"youth_name"`
 	DateOfBirth                            pgtype.Date        `json:"date_of_birth"`
 	ParentGuardianName                     string             `json:"parent_guardian_name"`
@@ -2417,7 +2545,7 @@ type DataSharingStatement struct {
 }
 
 type EmployeeEducation struct {
-	ID              int64              `json:"id"`
+	ID              uuid.UUID          `json:"id"`
 	EmployeeID      uuid.UUID          `json:"employee_id"`
 	InstitutionName string             `json:"institution_name"`
 	Degree          string             `json:"degree"`
@@ -2428,7 +2556,7 @@ type EmployeeEducation struct {
 }
 
 type EmployeeExperience struct {
-	ID          int64              `json:"id"`
+	ID          uuid.UUID          `json:"id"`
 	EmployeeID  uuid.UUID          `json:"employee_id"`
 	JobTitle    string             `json:"job_title"`
 	CompanyName string             `json:"company_name"`
@@ -2457,7 +2585,7 @@ type EmployeeProfile struct {
 	CreatedAt                 pgtype.Timestamptz       `json:"created_at"`
 	IsSubcontractor           *bool                    `json:"is_subcontractor"`
 	Gender                    EmployeeGenderEnum       `json:"gender"`
-	LocationID                *int64                   `json:"location_id"`
+	LocationID                *uuid.UUID               `json:"location_id"`
 	HasBorrowed               bool                     `json:"has_borrowed"`
 	OutOfService              *bool                    `json:"out_of_service"`
 	IsArchived                bool                     `json:"is_archived"`
@@ -2469,16 +2597,16 @@ type EmployeeProfile struct {
 }
 
 type FrameworkAgreement struct {
-	ID               int64              `json:"id"`
+	ID               uuid.UUID          `json:"id"`
 	ClientID         uuid.UUID          `json:"client_id"`
 	AgreementDetails string             `json:"agreement_details"`
 	Created          pgtype.Timestamptz `json:"created"`
 }
 
 type Incident struct {
-	ID                      int64                           `json:"id"`
+	ID                      uuid.UUID                       `json:"id"`
 	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              int64                           `json:"location_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
 	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
 	InformWho               []string                        `json:"inform_who"`
 	IncidentDate            pgtype.Date                     `json:"incident_date"`
@@ -2526,94 +2654,47 @@ type Incident struct {
 }
 
 type IntakeForm struct {
-	ID                    int64              `json:"id"`
-	FirstName             string             `json:"first_name"`
-	LastName              string             `json:"last_name"`
-	DateOfBirth           pgtype.Date        `json:"date_of_birth"`
-	Nationality           string             `json:"nationality"`
-	Bsn                   string             `json:"bsn"`
-	Address               string             `json:"address"`
-	City                  string             `json:"city"`
-	PostalCode            string             `json:"postal_code"`
-	PhoneNumber           string             `json:"phone_number"`
-	Gender                string             `json:"gender"`
-	Email                 string             `json:"email"`
-	IDType                string             `json:"id_type"`
-	IDNumber              string             `json:"id_number"`
-	ReferrerName          *string            `json:"referrer_name"`
-	ReferrerOrganization  *string            `json:"referrer_organization"`
-	ReferrerFunction      *string            `json:"referrer_function"`
-	ReferrerPhone         *string            `json:"referrer_phone"`
-	ReferrerEmail         *string            `json:"referrer_email"`
-	SignedBy              *string            `json:"signed_by"`
-	HasValidIndication    bool               `json:"has_valid_indication"`
-	LawType               *string            `json:"law_type"`
-	OtherLawSpecification *string            `json:"other_law_specification"`
-	MainProviderName      *string            `json:"main_provider_name"`
-	MainProviderContact   *string            `json:"main_provider_contact"`
-	IndicationStartDate   pgtype.Date        `json:"indication_start_date"`
-	IndicationEndDate     pgtype.Date        `json:"indication_end_date"`
-	RegistrationReason    *string            `json:"registration_reason"`
-	GuidanceGoals         *string            `json:"guidance_goals"`
-	RegistrationType      *string            `json:"registration_type"`
-	LivingSituation       *string            `json:"living_situation"`
-	OtherLivingSituation  *string            `json:"other_living_situation"`
-	ParentalAuthority     bool               `json:"parental_authority"`
-	CurrentSchool         *string            `json:"current_school"`
-	MentorName            *string            `json:"mentor_name"`
-	MentorPhone           *string            `json:"mentor_phone"`
-	MentorEmail           *string            `json:"mentor_email"`
-	PreviousCare          *string            `json:"previous_care"`
-	GuardianDetails       []byte             `json:"guardian_details"`
-	Diagnoses             *string            `json:"diagnoses"`
-	UsesMedication        bool               `json:"uses_medication"`
-	MedicationDetails     *string            `json:"medication_details"`
-	AddictionIssues       bool               `json:"addiction_issues"`
-	JudicialInvolvement   bool               `json:"judicial_involvement"`
-	RiskAggression        bool               `json:"risk_aggression"`
-	RiskSuicidality       bool               `json:"risk_suicidality"`
-	RiskRunningAway       bool               `json:"risk_running_away"`
-	RiskSelfHarm          bool               `json:"risk_self_harm"`
-	RiskWeaponPossession  bool               `json:"risk_weapon_possession"`
-	RiskDrugDealing       bool               `json:"risk_drug_dealing"`
-	OtherRisks            *string            `json:"other_risks"`
-	SharingPermission     bool               `json:"sharing_permission"`
-	TruthDeclaration      bool               `json:"truth_declaration"`
-	ClientSignature       bool               `json:"client_signature"`
-	GuardianSignature     *bool              `json:"guardian_signature"`
-	ReferrerSignature     *bool              `json:"referrer_signature"`
-	SignatureDate         pgtype.Date        `json:"signature_date"`
-	Status                string             `json:"status"`
-	UrgencyScore          string             `json:"urgency_score"`
-	Description           *string            `json:"description"`
-	AttachementIds        []uuid.UUID        `json:"attachement_ids"`
-	IsInWaitingList       bool               `json:"is_in_waiting_list"`
-	CreatedAt             pgtype.Timestamptz `json:"created_at"`
+	ID                    uuid.UUID                `json:"id"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       int32                    `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
+	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
 }
 
 type Invoice struct {
-	ID                int64              `json:"id"`
+	ID                uuid.UUID          `json:"id"`
 	InvoiceNumber     string             `json:"invoice_number"`
 	InvoiceSequence   int64              `json:"invoice_sequence"`
 	IssueDate         pgtype.Date        `json:"issue_date"`
 	DueDate           pgtype.Date        `json:"due_date"`
 	Status            InvoiceStatusEnum  `json:"status"`
 	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
-	OriginalInvoiceID *int64             `json:"original_invoice_id"`
+	OriginalInvoiceID *uuid.UUID         `json:"original_invoice_id"`
 	InvoiceDetails    []byte             `json:"invoice_details"`
 	TotalAmount       float64            `json:"total_amount"`
 	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent      []byte             `json:"extra_content"`
 	ClientID          uuid.UUID          `json:"client_id"`
-	SenderID          *int64             `json:"sender_id"`
+	SenderID          *uuid.UUID         `json:"sender_id"`
 	WarningCount      int32              `json:"warning_count"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 }
 
 type InvoiceAudit struct {
-	AuditID       int64                     `json:"audit_id"`
-	InvoiceID     int64                     `json:"invoice_id"`
+	AuditID       uuid.UUID                 `json:"audit_id"`
+	InvoiceID     uuid.UUID                 `json:"invoice_id"`
 	Operation     InvoiceAuditOperationEnum `json:"operation"`
 	ChangedBy     *uuid.UUID                `json:"changed_by"`
 	ChangedAt     pgtype.Timestamptz        `json:"changed_at"`
@@ -2623,9 +2704,9 @@ type InvoiceAudit struct {
 }
 
 type InvoiceContract struct {
-	ID          int64              `json:"id"`
-	InvoiceID   *int64             `json:"invoice_id"`
-	ContractID  *int64             `json:"contract_id"`
+	ID          uuid.UUID          `json:"id"`
+	InvoiceID   *uuid.UUID         `json:"invoice_id"`
+	ContractID  *uuid.UUID         `json:"contract_id"`
 	PreVatTotal float64            `json:"pre_vat_total"`
 	VatRate     float64            `json:"vat_rate"`
 	VatAmount   float64            `json:"vat_amount"`
@@ -2635,8 +2716,8 @@ type InvoiceContract struct {
 }
 
 type InvoicePaymentHistory struct {
-	ID               int64              `json:"id"`
-	InvoiceID        int64              `json:"invoice_id"`
+	ID               uuid.UUID          `json:"id"`
+	InvoiceID        uuid.UUID          `json:"invoice_id"`
 	PaymentMethod    PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus    PaymentStatusEnum  `json:"payment_status"`
 	Amount           float64            `json:"amount"`
@@ -2649,8 +2730,8 @@ type InvoicePaymentHistory struct {
 }
 
 type LevelHistory struct {
-	ID                               int64              `json:"id"`
-	ClientMaturityMatrixAssessmentID int64              `json:"client_maturity_matrix_assessment_id"`
+	ID                               uuid.UUID          `json:"id"`
+	ClientMaturityMatrixAssessmentID uuid.UUID          `json:"client_maturity_matrix_assessment_id"`
 	ChangeDate                       pgtype.Timestamptz `json:"change_date"`
 	OldLevel                         int32              `json:"old_level"`
 	NewLevel                         int32              `json:"new_level"`
@@ -2658,8 +2739,8 @@ type LevelHistory struct {
 }
 
 type Location struct {
-	ID             int64              `json:"id"`
-	OrganisationID int64              `json:"organisation_id"`
+	ID             uuid.UUID          `json:"id"`
+	OrganisationID uuid.UUID          `json:"organisation_id"`
 	Name           string             `json:"name"`
 	Address        string             `json:"address"`
 	Capacity       *int32             `json:"capacity"`
@@ -2669,8 +2750,8 @@ type Location struct {
 }
 
 type LocationShift struct {
-	ID         int64            `json:"id"`
-	LocationID int64            `json:"location_id"`
+	ID         uuid.UUID        `json:"id"`
+	LocationID uuid.UUID        `json:"location_id"`
 	ShiftName  string           `json:"shift_name"`
 	StartTime  pgtype.Time      `json:"start_time"`
 	EndTime    pgtype.Time      `json:"end_time"`
@@ -2679,9 +2760,9 @@ type LocationShift struct {
 }
 
 type MaturityMatrix struct {
-	ID               int64  `json:"id"`
-	TopicName        string `json:"topic_name"`
-	LevelDescription []byte `json:"level_description"`
+	ID               uuid.UUID `json:"id"`
+	TopicName        string    `json:"topic_name"`
+	LevelDescription []byte    `json:"level_description"`
 }
 
 type Notification struct {
@@ -2696,7 +2777,7 @@ type Notification struct {
 }
 
 type Organisation struct {
-	ID          int64              `json:"id"`
+	ID          uuid.UUID          `json:"id"`
 	Name        string             `json:"name"`
 	Address     string             `json:"address"`
 	PostalCode  string             `json:"postal_code"`
@@ -2710,14 +2791,14 @@ type Organisation struct {
 }
 
 type Permission struct {
-	ID       int32  `json:"id"`
-	Name     string `json:"name"`
-	Resource string `json:"resource"`
-	Method   string `json:"method"`
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Resource string    `json:"resource"`
+	Method   string    `json:"method"`
 }
 
 type ProgressReport struct {
-	ID             int64                  `json:"id"`
+	ID             uuid.UUID              `json:"id"`
 	ClientID       uuid.UUID              `json:"client_id"`
 	Date           pgtype.Timestamptz     `json:"date"`
 	Title          *string                `json:"title"`
@@ -2729,14 +2810,14 @@ type ProgressReport struct {
 }
 
 type Provision struct {
-	ID               int64              `json:"id"`
-	ContractID       int64              `json:"contract_id"`
+	ID               uuid.UUID          `json:"id"`
+	ContractID       uuid.UUID          `json:"contract_id"`
 	ProvisionDetails string             `json:"provision_details"`
 	Created          pgtype.Timestamptz `json:"created"`
 }
 
 type RegistrationForm struct {
-	ID                            int64                        `json:"id"`
+	ID                            uuid.UUID                    `json:"id"`
 	ClientFirstName               string                       `json:"client_first_name"`
 	ClientLastName                string                       `json:"client_last_name"`
 	ClientBsnNumber               string                       `json:"client_bsn_number"`
@@ -2818,7 +2899,7 @@ type RegistrationForm struct {
 }
 
 type RiskAssessment struct {
-	ID                             int64              `json:"id"`
+	ID                             uuid.UUID          `json:"id"`
 	ClientID                       uuid.UUID          `json:"client_id"`
 	DateOfBirth                    pgtype.Date        `json:"date_of_birth"`
 	Gender                         string             `json:"gender"`
@@ -2865,18 +2946,18 @@ type RiskAssessment struct {
 }
 
 type Role struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 type RolePermission struct {
-	RoleID       int32 `json:"role_id"`
-	PermissionID int32 `json:"permission_id"`
+	RoleID       uuid.UUID `json:"role_id"`
+	PermissionID uuid.UUID `json:"permission_id"`
 }
 
 type Room struct {
-	ID         int64            `json:"id"`
-	LocationID int64            `json:"location_id"`
+	ID         uuid.UUID        `json:"id"`
+	LocationID uuid.UUID        `json:"location_id"`
 	RoomNumber string           `json:"room_number"`
 	RoomName   *string          `json:"room_name"`
 	RoomType   *string          `json:"room_type"`
@@ -2890,8 +2971,8 @@ type Schedule struct {
 	ID                  uuid.UUID        `json:"id"`
 	EmployeeID          uuid.UUID        `json:"employee_id"`
 	Color               *string          `json:"color"`
-	LocationID          int64            `json:"location_id"`
-	LocationShiftID     *int64           `json:"location_shift_id"`
+	LocationID          uuid.UUID        `json:"location_id"`
+	LocationShiftID     *uuid.UUID       `json:"location_shift_id"`
 	IsCustom            bool             `json:"is_custom"`
 	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
 	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
@@ -2918,7 +2999,7 @@ type ScheduledAppointment struct {
 }
 
 type ScheduledStatusChange struct {
-	ID            int32              `json:"id"`
+	ID            uuid.UUID          `json:"id"`
 	ClientID      uuid.UUID          `json:"client_id"`
 	NewStatus     *string            `json:"new_status"`
 	Reason        *string            `json:"reason"`
@@ -2927,7 +3008,7 @@ type ScheduledStatusChange struct {
 }
 
 type Sender struct {
-	ID              int64              `json:"id"`
+	ID              uuid.UUID          `json:"id"`
 	Types           SenderTypesEnum    `json:"types"`
 	Name            string             `json:"name"`
 	Address         *string            `json:"address"`
@@ -2940,16 +3021,10 @@ type Sender struct {
 	ClientNumber    *string            `json:"client_number"`
 	EmailAddress    *string            `json:"email_address"`
 	Contacts        []byte             `json:"contacts"`
-	InvoiceTemplate []int64            `json:"invoice_template"`
+	InvoiceTemplate []uuid.UUID        `json:"invoice_template"`
 	IsArchived      bool               `json:"is_archived"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
-}
-
-type SenderContactRelation struct {
-	ID           int64 `json:"id"`
-	ClientTypeID int64 `json:"client_type_id"`
-	ContactID    int64 `json:"contact_id"`
 }
 
 type Session struct {
@@ -2964,11 +3039,11 @@ type Session struct {
 }
 
 type TemplateItem struct {
-	ID           int64  `json:"id"`
-	ItemTag      string `json:"item_tag"`
-	Description  string `json:"description"`
-	SourceTable  string `json:"source_table"`
-	SourceColumn string `json:"source_column"`
+	ID           uuid.UUID `json:"id"`
+	ItemTag      string    `json:"item_tag"`
+	Description  string    `json:"description"`
+	SourceTable  string    `json:"source_table"`
+	SourceColumn string    `json:"source_column"`
 }
 
 type TemporaryFile struct {
@@ -2979,16 +3054,16 @@ type TemporaryFile struct {
 
 type UserPermission struct {
 	UserID       uuid.UUID `json:"user_id"`
-	PermissionID int32     `json:"permission_id"`
+	PermissionID uuid.UUID `json:"permission_id"`
 }
 
 type UserRole struct {
 	UserID uuid.UUID `json:"user_id"`
-	RoleID int32     `json:"role_id"`
+	RoleID uuid.UUID `json:"role_id"`
 }
 
 type YouthCareIntake struct {
-	ID                          int64              `json:"id"`
+	ID                          uuid.UUID          `json:"id"`
 	ClientID                    uuid.UUID          `json:"client_id"`
 	Name                        string             `json:"name"`
 	DateOfBirth                 pgtype.Date        `json:"date_of_birth"`

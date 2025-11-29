@@ -49,7 +49,7 @@ func (server *Server) UploadHandlerApi(ctx *gin.Context) {
 // @Description Get an attachment by its ID
 // @Tags attachments
 // @Produce json
-// @Param id path string true "Attachment ID"
+// @Param id path uuid true "Attachment ID"
 // @Success 200 {object} Response[attachment.GetAttachmentByIdResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /attachments/{id} [get]
@@ -74,7 +74,7 @@ func (server *Server) GetAttachmentByIdApi(ctx *gin.Context) {
 // @Description Delete an attachment by its ID
 // @Tags attachments
 // @Produce json
-// @Param id path string true "Attachment ID"
+// @Param id path uuid true "Attachment ID"
 // @Success 200 {object} Response[attachment.DeleteAttachmentResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /attachments/{id} [delete]

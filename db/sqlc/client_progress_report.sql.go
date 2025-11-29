@@ -104,7 +104,7 @@ DELETE FROM progress_report
 WHERE id = $1
 `
 
-func (q *Queries) DeleteProgressReport(ctx context.Context, id int64) error {
+func (q *Queries) DeleteProgressReport(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteProgressReport, id)
 	return err
 }
@@ -116,7 +116,7 @@ FROM ai_generated_reports agr
 WHERE agr.id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAiGeneratedReport(ctx context.Context, id int64) (AiGeneratedReport, error) {
+func (q *Queries) GetAiGeneratedReport(ctx context.Context, id uuid.UUID) (AiGeneratedReport, error) {
 	row := q.db.QueryRow(ctx, getAiGeneratedReport, id)
 	var i AiGeneratedReport
 	err := row.Scan(
@@ -143,7 +143,7 @@ WHERE pr.id = $1 LIMIT 1
 `
 
 type GetProgressReportRow struct {
-	ID                     int64                  `json:"id"`
+	ID                     uuid.UUID              `json:"id"`
 	ClientID               uuid.UUID              `json:"client_id"`
 	Date                   pgtype.Timestamptz     `json:"date"`
 	Title                  *string                `json:"title"`
@@ -157,7 +157,7 @@ type GetProgressReportRow struct {
 	EmployeeProfilePicture *string                `json:"employee_profile_picture"`
 }
 
-func (q *Queries) GetProgressReport(ctx context.Context, id int64) (GetProgressReportRow, error) {
+func (q *Queries) GetProgressReport(ctx context.Context, id uuid.UUID) (GetProgressReportRow, error) {
 	row := q.db.QueryRow(ctx, getProgressReport, id)
 	var i GetProgressReportRow
 	err := row.Scan(
@@ -239,7 +239,7 @@ type ListAiGeneratedReportsParams struct {
 }
 
 type ListAiGeneratedReportsRow struct {
-	ID         int64              `json:"id"`
+	ID         uuid.UUID          `json:"id"`
 	ReportText string             `json:"report_text"`
 	ClientID   uuid.UUID          `json:"client_id"`
 	StartDate  pgtype.Date        `json:"start_date"`
@@ -298,7 +298,7 @@ type ListProgressReportsParams struct {
 }
 
 type ListProgressReportsRow struct {
-	ID                     int64                  `json:"id"`
+	ID                     uuid.UUID              `json:"id"`
 	ClientID               uuid.UUID              `json:"client_id"`
 	Date                   pgtype.Timestamptz     `json:"date"`
 	Title                  *string                `json:"title"`
@@ -361,7 +361,7 @@ RETURNING id, client_id, date, title, report_text, employee_id, type, emotional_
 `
 
 type UpdateProgressReportParams struct {
-	ID             int64                      `json:"id"`
+	ID             uuid.UUID                  `json:"id"`
 	EmployeeID     *uuid.UUID                 `json:"employee_id"`
 	Title          *string                    `json:"title"`
 	Date           pgtype.Timestamptz         `json:"date"`

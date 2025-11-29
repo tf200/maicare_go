@@ -8,16 +8,16 @@ import (
 
 // WorkingHourItem represents a single working hour item, which can be either a schedule or an appointment.
 type WorkingHourItem struct {
-	ID            uuid.UUID `json:"id"`
-	Type          string    `json:"type"`
-	StartTime     time.Time `json:"start_time"`
-	EndTime       time.Time `json:"end_time"`
-	DurationHours float64   `json:"duration_hours"`
-	Location      string    `json:"location"`
-	LocationID    *int64    `json:"location_id,omitempty"`
-	Description   *string   `json:"description,omitempty"`
-	Status        *string   `json:"status"`
-	Color         string    `json:"color"`
+	ID            uuid.UUID  `json:"id"`
+	Type          string     `json:"type"`
+	StartTime     time.Time  `json:"start_time"`
+	EndTime       time.Time  `json:"end_time"`
+	DurationHours float64    `json:"duration_hours"`
+	Location      string     `json:"location"`
+	LocationID    *uuid.UUID `json:"location_id,omitempty"`
+	Description   *string    `json:"description,omitempty"`
+	Status        *string    `json:"status"`
+	Color         string     `json:"color"`
 }
 
 // Summary contains the summary of working hours for an employee in a given period.

@@ -95,7 +95,7 @@ LIMIT 1
 `
 
 type GetAppointmentCardRow struct {
-	ID                     int64              `json:"id"`
+	ID                     uuid.UUID          `json:"id"`
 	ClientID               uuid.UUID          `json:"client_id"`
 	GeneralInformation     []string           `json:"general_information"`
 	ImportantContacts      []string           `json:"important_contacts"`

@@ -93,7 +93,7 @@ LIMIT $2 OFFSET $3;
 -- name: ListMedicationsByDiagnosisIDs :many
 SELECT *
 FROM client_medication
-WHERE diagnosis_id = ANY($1::bigint[]);
+WHERE diagnosis_id = ANY($1::uuid[]);
 
 
 -- name: GetMedication :one

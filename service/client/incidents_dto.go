@@ -11,7 +11,7 @@ import (
 // CreateIncidentRequest represents a request to create an incident
 type CreateIncidentRequest struct {
 	EmployeeID              uuid.UUID `json:"employee_id"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement" binding:"required" enums:"directly_involved,witness,found_afterwards,alarmed"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -54,9 +54,9 @@ type CreateIncidentRequest struct {
 
 // CreateIncidentResponse represents a response for CreateIncidentApi
 type CreateIncidentResponse struct {
-	ID                      int64     `json:"id"`
+	ID                      uuid.UUID `json:"id"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -108,11 +108,11 @@ type ListIncidentsRequest struct {
 
 // ListIncidentsResponse defines the response for listing incidents
 type ListIncidentsResponse struct {
-	ID                      int64     `json:"id"`
+	ID                      uuid.UUID `json:"id"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -162,11 +162,11 @@ type ListIncidentsResponse struct {
 
 // GetIncidentResponse represents a response for GetIncidentApi
 type GetIncidentResponse struct {
-	ID                      int64     `json:"id"`
+	ID                      uuid.UUID `json:"id"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
 	EmployeeFirstName       string    `json:"employee_first_name"`
 	EmployeeLastName        string    `json:"employee_last_name"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -215,9 +215,9 @@ type GetIncidentResponse struct {
 
 // UpdateIncidentRequest represents a request to update an incident
 type UpdateIncidentRequest struct {
-	ID                      int64      `json:"id"`
+	ID                      uuid.UUID  `json:"id"`
 	EmployeeID              *uuid.UUID `json:"employee_id"`
-	LocationID              *int64     `json:"location_id"`
+	LocationID              *uuid.UUID `json:"location_id"`
 	ReporterInvolvement     *string    `json:"reporter_involvement"`
 	InformWho               []string   `json:"inform_who"`
 	IncidentDate            time.Time  `json:"incident_date"`
@@ -260,9 +260,9 @@ type UpdateIncidentRequest struct {
 
 // UpdateIncidentResponse represents a response for UpdateIncidentApi
 type UpdateIncidentResponse struct {
-	ID                      int64     `json:"id"`
+	ID                      uuid.UUID `json:"id"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	InformWho               []string  `json:"inform_who"`
 	IncidentDate            time.Time `json:"incident_date"`
@@ -310,14 +310,14 @@ type UpdateIncidentResponse struct {
 
 // GenerateIncidentFileResponse represents a response for GenerateIncidentFileApi
 type GenerateIncidentFileResponse struct {
-	FileUrl *string `json:"file_url"`
-	ID      int64   `json:"incident_id"`
+	FileUrl *string   `json:"file_url"`
+	ID      uuid.UUID `json:"incident_id"`
 }
 
 // ConfirmIncidentResponse represents a response for ConfirmIncidentApi
 type ConfirmIncidentResponse struct {
-	ID      int64   `json:"id"`
-	FileUrl *string `json:"file_url"`
+	ID      uuid.UUID `json:"id"`
+	FileUrl *string   `json:"file_url"`
 }
 
 // ListAllIncidentsRequest represents the request body for listing all incidents
@@ -328,9 +328,9 @@ type ListAllIncidentsRequest struct {
 
 // ListAllIncidentsResponse represents the response body for listing all incidents
 type ListAllIncidentsResponse struct {
-	ID                      int64     `json:"id"`
+	ID                      uuid.UUID `json:"id"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
-	LocationID              int64     `json:"location_id"`
+	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
 	IncidentDate            time.Time `json:"incident_date"`
 	RuntimeIncident         string    `json:"runtime_incident"`

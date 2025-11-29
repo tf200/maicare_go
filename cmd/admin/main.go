@@ -171,13 +171,17 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 }
 
 func grantPermissions(ctx context.Context, store *db.Store, userID uuid.UUID) {
+	roleID, err := store.GetAdminRoleId(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get admin role ID: %v", err)
+	}
 	store.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
 		UserID: userID,
-		RoleID: 1, // Admin Role ID
+		RoleID: roleID,
 	})
 	store.GrantRolePermissionsToUser(ctx, db.GrantRolePermissionsToUserParams{
 		UserID: userID,
-		RoleID: 1, // Admin Role ID
+		RoleID: roleID,
 	})
 }
 

@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"maicare_go/service/schedule"
 
@@ -50,7 +49,7 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 // @Description Get all schedules for a specific location for a given month and year
 // @Tags Schedule
 // @Produce json
-// @Param id path int true "Location ID"
+// @Param id path uuid true "Location ID"
 // @Param year query int true "Year"
 // @Param month query int true "Month"
 // @Success 200 {object} Response[[]schedule.GetMonthlySchedulesByLocationResponse] "Monthly schedules retrieved successfully"
@@ -58,7 +57,7 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /locations/{id}/monthly_schedules [get]
 func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
-	locationID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	locationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -82,7 +81,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 // @Description Get all schedules for a specific location for a given day
 // @Tags Schedule
 // @Produce json
-// @Param id path int true "Location ID"
+// @Param id path uuid true "Location ID"
 // @Param year query int true "Year"
 // @Param month query int true "Month"
 // @Param day query int true "Day"
@@ -91,7 +90,7 @@ func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /locations/{id}/daily_schedules [get]
 func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
-	locationID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	locationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return

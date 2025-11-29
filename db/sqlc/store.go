@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -42,7 +43,7 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 type CreateEmployeeWithAccountTxParams struct {
 	CreateUserParams     CreateUserParams
 	CreateEmployeeParams CreateEmployeeProfileParams
-	RoleID               int32
+	RoleID               uuid.UUID
 }
 
 type CreateEmployeeWithAccountTxResult struct {

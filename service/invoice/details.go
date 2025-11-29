@@ -159,7 +159,7 @@ func (s *invoiceService) CreateInvoice(
 
 func (s *invoiceService) GetInvoiceByID(
 	ctx context.Context,
-	invoiceID int64,
+	invoiceID uuid.UUID,
 ) (*GetInvoiceByIDResponse, error) {
 	inv, err := s.Store.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *invoiceService) GetInvoiceByID(
 			"GetInvoiceByID",
 			"Failed to get invoice",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *invoiceService) GetInvoiceByID(
 			"GetInvoiceByID",
 			"Failed to unmarshal invoice details",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to unmarshal invoice details")
 	}
@@ -251,11 +251,11 @@ func (s *invoiceService) ListInvoices(
 				"ListInvoices",
 				"Failed to unmarshal invoice details",
 				zap.Error(err),
-				zap.Int64("invoice_id", inv.ID),
+				zap.String("invoice_id", inv.ID.String()),
 			)
 			return nil, fmt.Errorf(
-				"failed to unmarshal invoice details for invoice ID %d: %v",
-				inv.ID,
+				"failed to unmarshal invoice details for invoice ID %s: %v",
+				inv.ID.String(),
 				err,
 			)
 		}
@@ -288,7 +288,7 @@ func (s *invoiceService) ListInvoices(
 
 func (s *invoiceService) UpdateInvoice(
 	ctx context.Context,
-	invoiceID int64,
+	invoiceID uuid.UUID,
 	req UpdateInvoiceRequest,
 	employeeID uuid.UUID,
 ) (*UpdateInvoiceResponse, error) {
@@ -300,7 +300,7 @@ func (s *invoiceService) UpdateInvoice(
 			"UpdateInvoice",
 			"Total amount verification failed",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("total amount verification failed: %v", err)
 	}
@@ -313,7 +313,7 @@ func (s *invoiceService) UpdateInvoice(
 			"UpdateInvoice",
 			"Failed to begin transaction",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
@@ -328,7 +328,7 @@ func (s *invoiceService) UpdateInvoice(
 			"UpdateInvoice",
 			"Failed to set current employee ID",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
 	}
@@ -341,7 +341,7 @@ func (s *invoiceService) UpdateInvoice(
 			"UpdateInvoice",
 			"Failed to marshal invoice details",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to marshal invoice details: %v", err)
 	}
@@ -367,7 +367,7 @@ func (s *invoiceService) UpdateInvoice(
 			"UpdateInvoice",
 			"Failed to update invoice",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to update invoice: %v", err)
 	}
@@ -379,7 +379,7 @@ func (s *invoiceService) UpdateInvoice(
 			"UpdateInvoice",
 			"Failed to commit transaction",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
@@ -401,7 +401,7 @@ func (s *invoiceService) UpdateInvoice(
 	}, nil
 }
 
-func (s *invoiceService) DeleteInvoice(ctx context.Context, invoiceID int64) error {
+func (s *invoiceService) DeleteInvoice(ctx context.Context, invoiceID uuid.UUID) error {
 	err := s.Store.DeleteInvoice(ctx, invoiceID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(
@@ -410,7 +410,7 @@ func (s *invoiceService) DeleteInvoice(ctx context.Context, invoiceID int64) err
 			"DeleteInvoice",
 			"Failed to delete invoice",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return fmt.Errorf("failed to delete invoice: %v", err)
 	}
@@ -419,7 +419,7 @@ func (s *invoiceService) DeleteInvoice(ctx context.Context, invoiceID int64) err
 
 func (s *invoiceService) GetInvoiceAuditLogs(
 	ctx context.Context,
-	invoiceID int64,
+	invoiceID uuid.UUID,
 ) ([]GetInvoiceAuditLogResponse, error) {
 	logs, err := s.Store.GetInvoiceAuditLogs(ctx, invoiceID)
 	if err != nil {
@@ -429,7 +429,7 @@ func (s *invoiceService) GetInvoiceAuditLogs(
 			"GetInvoiceAuditLog",
 			"Failed to get invoice audit logs",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to get invoice audit logs: %v", err)
 	}
@@ -486,7 +486,7 @@ func (s *invoiceService) GetInvoiceTemplateItemsApi(
 
 func (s *invoiceService) GenerateInvoicePdf(
 	ctx context.Context,
-	invoiceID int64,
+	invoiceID uuid.UUID,
 ) (*GenerateInvoicePDFResponse, error) {
 	invoiceData, err := s.Store.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -496,7 +496,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 			"GenerateInvoicePdf",
 			"Failed to get invoice data",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to get invoice data: %v", err)
 	}
@@ -515,7 +515,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 			"GenerateInvoicePdf",
 			"Failed to unmarshal sender contacts",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to unmarshal sender contacts: %v", err)
 	}
@@ -549,7 +549,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 			"GenerateInvoicePdf",
 			"Failed to unmarshal extra content",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to unmarshal extra content: %v", err)
 	}
@@ -574,7 +574,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 			"GenerateInvoicePdf",
 			"Failed to generate and upload invoice PDF",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to generate and upload invoice PDF: %v", err)
 	}
@@ -594,7 +594,7 @@ func (s *invoiceService) GenerateInvoicePdf(
 			"GenerateInvoicePdf",
 			"Failed to create attachment",
 			zap.Error(err),
-			zap.Int64("invoice_id", invoiceID),
+			zap.String("invoice_id", invoiceID.String()),
 		)
 		return nil, fmt.Errorf("failed to create attachment: %v", err)
 	}

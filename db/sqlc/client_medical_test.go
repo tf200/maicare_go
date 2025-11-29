@@ -117,12 +117,12 @@ func TestCreateClientDiagnosis(t *testing.T) {
 func TestGetClientDiagnosis(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, diagnosis ClientDiagnosis, err error)
 	}{
 		{
 			name: "get existing diagnosis",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				diagnosis := createRandomDiagnosis(ctx, qtx)
 				return diagnosis.ID
 			},
@@ -137,8 +137,8 @@ func TestGetClientDiagnosis(t *testing.T) {
 		},
 		{
 			name: "get non-existent diagnosis",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999 // Non-existent ID
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Non-existent ID
 			},
 			checks: func(t *testing.T, diagnosis ClientDiagnosis, err error) {
 				require.Error(t, err, "GetClientDiagnosis() should error for non-existent diagnosis")
@@ -146,7 +146,7 @@ func TestGetClientDiagnosis(t *testing.T) {
 		},
 		{
 			name: "get diagnosis with all fields populated",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				client := createRandomClientDetails(ctx, qtx)
 				diagnosis, err := qtx.CreateClientDiagnosis(ctx, CreateClientDiagnosisParams{
 					ClientID:            client.ID,
@@ -233,7 +233,7 @@ func TestUpdateClientDiagnosis(t *testing.T) {
 			name: "update non-existent diagnosis",
 			setup: func(ctx context.Context, qtx *Queries) UpdateClientDiagnosisParams {
 				return UpdateClientDiagnosisParams{
-					ID:    999999,
+					ID:    uuid.New(),
 					Title: util.StringPtr("Non-existent"),
 				}
 			},
@@ -278,12 +278,12 @@ func TestUpdateClientDiagnosis(t *testing.T) {
 func TestDeleteClientDiagnosis(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, diagnosis ClientDiagnosis, err error)
 	}{
 		{
 			name: "successful delete existing diagnosis",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				diagnosis := createRandomDiagnosis(ctx, qtx)
 				return diagnosis.ID
 			},
@@ -294,8 +294,8 @@ func TestDeleteClientDiagnosis(t *testing.T) {
 		},
 		{
 			name: "delete non-existent diagnosis",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, diagnosis ClientDiagnosis, err error) {
 				require.Error(t, err, "DeleteClientDiagnosis() should error for non-existent diagnosis")
@@ -518,12 +518,12 @@ func TestCreateClientMedication(t *testing.T) {
 func TestGetMedication(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, medication GetMedicationRow, err error)
 	}{
 		{
 			name: "get medication with administered_by relationship",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				diagnosis := createRandomDiagnosis(ctx, qtx)
 				employee := createRandomEmployeeProfile(ctx, qtx)
 				medication, err := qtx.CreateClientMedication(ctx, CreateClientMedicationParams{
@@ -550,8 +550,8 @@ func TestGetMedication(t *testing.T) {
 		},
 		{
 			name: "get non-existent medication",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, medication GetMedicationRow, err error) {
 				require.Error(t, err, "GetMedication() should error for non-existent medication")
@@ -633,7 +633,7 @@ func TestUpdateClientMedication(t *testing.T) {
 			name: "update non-existent medication",
 			setup: func(ctx context.Context, qtx *Queries) UpdateClientMedicationParams {
 				return UpdateClientMedicationParams{
-					ID:   999999,
+					ID:   uuid.New(),
 					Name: util.StringPtr("Non-existent"),
 				}
 			},
@@ -664,12 +664,12 @@ func TestUpdateClientMedication(t *testing.T) {
 func TestDeleteClientMedication(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "successful delete existing medication",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				medication := createRandomMedication(ctx, qtx)
 				return medication.ID
 			},
@@ -679,8 +679,8 @@ func TestDeleteClientMedication(t *testing.T) {
 		},
 		{
 			name: "delete non-existent medication",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteClientMedication() should not error even for non-existent medication")
@@ -771,7 +771,7 @@ func TestListMedicationsByDiagnosisID(t *testing.T) {
 		{
 			name: "list medications for non-existent diagnosis",
 			setup: func(ctx context.Context, qtx *Queries) ListMedicationsByDiagnosisIDParams {
-				diagnosisID := int64(999999)
+				diagnosisID := uuid.New()
 				return ListMedicationsByDiagnosisIDParams{
 					DiagnosisID: &diagnosisID,
 					Limit:       10,
@@ -806,12 +806,12 @@ func TestListMedicationsByDiagnosisID(t *testing.T) {
 func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) []int64
+		setup  func(ctx context.Context, qtx *Queries) []uuid.UUID
 		checks func(t *testing.T, medications []ClientMedication, err error)
 	}{
 		{
 			name: "list medications for multiple diagnoses",
-			setup: func(ctx context.Context, qtx *Queries) []int64 {
+			setup: func(ctx context.Context, qtx *Queries) []uuid.UUID {
 				diagnosis1 := createRandomDiagnosis(ctx, qtx)
 				diagnosis2 := createRandomDiagnosis(ctx, qtx)
 
@@ -837,7 +837,7 @@ func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				return []int64{diagnosis1.ID, diagnosis2.ID}
+				return []uuid.UUID{diagnosis1.ID, diagnosis2.ID}
 			},
 			checks: func(t *testing.T, medications []ClientMedication, err error) {
 				require.NoError(t, err, "ListMedicationsByDiagnosisIDs() should not error")
@@ -846,8 +846,8 @@ func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 		},
 		{
 			name: "list medications with empty diagnosis IDs",
-			setup: func(ctx context.Context, qtx *Queries) []int64 {
-				return []int64{}
+			setup: func(ctx context.Context, qtx *Queries) []uuid.UUID {
+				return []uuid.UUID{}
 			},
 			checks: func(t *testing.T, medications []ClientMedication, err error) {
 				require.NoError(t, err)
@@ -856,8 +856,8 @@ func TestListMedicationsByDiagnosisIDs(t *testing.T) {
 		},
 		{
 			name: "list medications for non-existent diagnosis IDs",
-			setup: func(ctx context.Context, qtx *Queries) []int64 {
-				return []int64{999999, 999998}
+			setup: func(ctx context.Context, qtx *Queries) []uuid.UUID {
+				return []uuid.UUID{uuid.New(), uuid.New()}
 			},
 			checks: func(t *testing.T, medications []ClientMedication, err error) {
 				require.NoError(t, err)

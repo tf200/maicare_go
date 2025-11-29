@@ -35,7 +35,7 @@ func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, 
 		return nil, fmt.Errorf("failed to create appointment card")
 	}
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateAppointmentCard",
-		"Successfully created appointment card", zap.Int64("AppointmentCardID", appointmentCard.ID))
+		"Successfully created appointment card", zap.String("AppointmentCardID", appointmentCard.ID.String()))
 	return &CreateAppointmentCardResponse{
 		ID:                     appointmentCard.ID,
 		ClientID:               appointmentCard.ClientID,
@@ -71,7 +71,7 @@ func (s *clientService) GetAppointmentCard(ctx context.Context, clientID uuid.UU
 
 	}
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "GetAppointmentCard",
-		"Successfully retrieved appointment card", zap.Int64("AppointmentCardID", appointmentCard.ID))
+		"Successfully retrieved appointment card", zap.String("AppointmentCardID", appointmentCard.ID.String()))
 	return &GetAppointmentCardResponse{
 		ID:                     appointmentCard.ID,
 		ClientID:               appointmentCard.ClientID,
@@ -114,7 +114,7 @@ func (s *clientService) UpdateAppointmentCard(req UpdateAppointmentCardRequest, 
 		return nil, fmt.Errorf("failed to update appointment card")
 	}
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateAppointmentCard",
-		"Successfully updated appointment card", zap.Int64("AppointmentCardID", appointmentCard.ID))
+		"Successfully updated appointment card", zap.String("AppointmentCardID", appointmentCard.ID.String()))
 	return &UpdateAppointmentCardResponse{
 		ID:                     appointmentCard.ID,
 		ClientID:               appointmentCard.ClientID,

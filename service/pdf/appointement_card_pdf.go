@@ -12,13 +12,14 @@ import (
 	"maicare_go/bucket"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
+	"github.com/google/uuid"
 )
 
 //go:embed templates/appointment_card.html
 var appointmentCardTemplateFS embed.FS
 
 type AppointmentCard struct {
-	ID                     int64
+	ID                     uuid.UUID
 	ClientName             string
 	Date                   string
 	Mentor                 string
@@ -86,10 +87,10 @@ func (s *pdfService) generateAppointmentCardPDF(appointmentCardData AppointmentC
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
-func (s *pdfService) uploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID int64) (string, error) {
+func (s *pdfService) uploadAppointmentCardPDF(ctx context.Context, pdfFile multipart.File, appointmentCardID uuid.UUID) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("appointment_cards/%s/appointment_card_%d.pdf", timestamp, appointmentCardID)
+	filename := fmt.Sprintf("appointment_cards/%s/appointment_card_%s.pdf", timestamp, appointmentCardID.String())
 
 	// Upload to B2
 	key, _, err := s.bucketClient.Upload(ctx, pdfFile, filename, "application/pdf")

@@ -49,7 +49,7 @@ type Credentials struct {
 }
 
 type Incident struct {
-	IncidentID   int64
+	IncidentID   string
 	ReportedBy   string
 	ClientName   string
 	IncidentType string
@@ -67,10 +67,10 @@ type AcceptedRegitrationForm struct {
 }
 
 type ClientContractReminder struct {
-	ClientID           int64
+	ClientID           string
 	ClientFirstName    string
 	ClientLastName     string
-	ContractID         int64
+	ContractID         string
 	CareType           string
 	ContractStartDate  time.Time
 	ContractEndDate    time.Time

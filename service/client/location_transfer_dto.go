@@ -9,15 +9,15 @@ import (
 )
 
 type LocationTransferRequest struct {
-	FromLocationID int64      `json:"from_location_id" binding:"required"`
-	ToLocationID   int64      `json:"to_location_id" binding:"required"`
+	FromLocationID uuid.UUID  `json:"from_location_id" binding:"required"`
+	ToLocationID   uuid.UUID  `json:"to_location_id" binding:"required"`
 	Reason         string     `json:"reason" binding:"required"`
 	NewMentorID    *uuid.UUID `json:"new_mentor_id"`
 }
 
 type ApproveOrRejectLocationTransferRequest struct {
-	TransferID int64  `json:"transfer_id" binding:"required"`
-	Status     string `json:"status" binding:"required,oneof=approved rejected"`
+	TransferID uuid.UUID `json:"transfer_id" binding:"required"`
+	Status     string    `json:"status" binding:"required,oneof=approved rejected"`
 }
 
 type ListLocationTransferRequestsRequest struct {
@@ -25,10 +25,10 @@ type ListLocationTransferRequestsRequest struct {
 }
 
 type ListLocationTransferRequestsResponse struct {
-	ID                 int64                               `json:"id"`
+	ID                 uuid.UUID                           `json:"id"`
 	ClientID           uuid.UUID                           `json:"client_id"`
-	FromLocationID     *int64                              `json:"from_location_id"`
-	ToLocationID       *int64                              `json:"to_location_id"`
+	FromLocationID     *uuid.UUID                          `json:"from_location_id"`
+	ToLocationID       *uuid.UUID                          `json:"to_location_id"`
 	NewMentorID        *uuid.UUID                          `json:"new_mentor_id"`
 	RequestDate        time.Time                           `json:"request_date"`
 	Status             db.ClientLocationTransferStatusEnum `json:"status"`

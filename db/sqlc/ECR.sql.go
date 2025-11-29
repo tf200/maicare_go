@@ -263,7 +263,7 @@ LIMIT 10
 `
 
 type ListLatestPaymentsRow struct {
-	InvoiceID     int64              `json:"invoice_id"`
+	InvoiceID     uuid.UUID          `json:"invoice_id"`
 	InvoiceNumber string             `json:"invoice_number"`
 	PaymentMethod PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus PaymentStatusEnum  `json:"payment_status"`

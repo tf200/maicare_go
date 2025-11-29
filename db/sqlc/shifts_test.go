@@ -6,6 +6,7 @@ import (
 
 	"maicare_go/util"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -54,12 +55,12 @@ func TestCreateShift(t *testing.T) {
 func TestGetShiftByID(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, shift LocationShift, err error)
 	}{
 		{
 			name: "get existing shift",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				shift := createRandomShift(ctx, qtx)
 				return shift.ID
 			},
@@ -70,8 +71,8 @@ func TestGetShiftByID(t *testing.T) {
 		},
 		{
 			name: "get non-existent shift",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999 // Assuming this ID doesn't exist
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New() // Assuming this ID doesn't exist
 			},
 			checks: func(t *testing.T, shift LocationShift, err error) {
 				require.Error(t, err, "GetShiftByID should error for non-existent shift")
@@ -121,7 +122,7 @@ func TestUpdateShift(t *testing.T) {
 			name: "update non-existent shift",
 			setup: func(ctx context.Context, qtx *Queries) UpdateShiftParams {
 				return UpdateShiftParams{
-					ID:        999999,
+					ID:        uuid.New(),
 					ShiftName: util.RandomString(10),
 					StartTime: randomPgTime(),
 					EndTime:   randomPgTime(),
@@ -152,12 +153,12 @@ func TestUpdateShift(t *testing.T) {
 func TestDeleteShift(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, err error)
 	}{
 		{
 			name: "delete existing shift",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				shift := createRandomShift(ctx, qtx)
 				return shift.ID
 			},
@@ -167,8 +168,8 @@ func TestDeleteShift(t *testing.T) {
 		},
 		{
 			name: "delete non-existent shift",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
-				return 999999
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
+				return uuid.New()
 			},
 			checks: func(t *testing.T, err error) {
 				require.NoError(t, err, "DeleteShift should not error for non-existent shift")
@@ -195,12 +196,12 @@ func TestDeleteShift(t *testing.T) {
 func TestGetShiftsByLocationID(t *testing.T) {
 	tests := []struct {
 		name   string
-		setup  func(ctx context.Context, qtx *Queries) int64
+		setup  func(ctx context.Context, qtx *Queries) uuid.UUID
 		checks func(t *testing.T, shifts []LocationShift, err error)
 	}{
 		{
 			name: "get shifts for location with shifts",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				location := createRandomLocation(ctx, qtx)
 				// Create a shift for this location
 				createRandomShift(ctx, qtx)
@@ -213,7 +214,7 @@ func TestGetShiftsByLocationID(t *testing.T) {
 		},
 		{
 			name: "get shifts for location without shifts",
-			setup: func(ctx context.Context, qtx *Queries) int64 {
+			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				location := createRandomLocation(ctx, qtx)
 				return location.ID
 			},
@@ -253,7 +254,7 @@ func TestCheckAllShiftsExist(t *testing.T) {
 				shift2 := createRandomShift(ctx, qtx)
 				return CheckAllShiftsExistParams{
 					ExpectedCount: 2,
-					Ids:           []int32{int32(shift1.ID), int32(shift2.ID)},
+					Ids:           []uuid.UUID{shift1.ID, shift2.ID},
 				}
 			},
 			checks: func(t *testing.T, exists bool, err error) {
@@ -267,7 +268,7 @@ func TestCheckAllShiftsExist(t *testing.T) {
 				shift := createRandomShift(ctx, qtx)
 				return CheckAllShiftsExistParams{
 					ExpectedCount: 2,
-					Ids:           []int32{int32(shift.ID), 999999},
+					Ids:           []uuid.UUID{shift.ID, uuid.New()},
 				}
 			},
 			checks: func(t *testing.T, exists bool, err error) {

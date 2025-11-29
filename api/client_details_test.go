@@ -71,7 +71,7 @@ func createRandomClientDetails(t *testing.T) db.ClientDetail {
 		ProfilePicture:             util.StringPtr(util.GetRandomImageURL()),
 		Infix:                      util.StringPtr("van"),
 		SenderID:                   &sender.ID,
-		LocationID:                 util.IntPtr(location.ID),
+		LocationID:                 &location.ID,
 		DepartureReason:            util.StringPtr("test Reason"),
 		DepartureReport:            util.StringPtr("test report"),
 		Addresses:                  []byte("[]"),

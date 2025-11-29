@@ -20,7 +20,7 @@ type CreateProgressReportRequest struct {
 
 // CreateProgressReportResponse defines the response payload for CreateProgressReport API
 type CreateProgressReportResponse struct {
-	ID             int64      `json:"id"`
+	ID             uuid.UUID  `json:"id"`
 	ClientID       uuid.UUID  `json:"client_id"`
 	Date           time.Time  `json:"date"`
 	Title          *string    `json:"title"`
@@ -38,7 +38,7 @@ type ListProgressReportsRequest struct {
 
 // ListProgressReportsResponse defines the response payload for ListProgressReports API
 type ListProgressReportsResponse struct {
-	ID                     int64      `json:"id"`
+	ID                     uuid.UUID  `json:"id"`
 	ClientID               uuid.UUID  `json:"client_id"`
 	Date                   time.Time  `json:"date"`
 	Title                  *string    `json:"title"`
@@ -54,7 +54,7 @@ type ListProgressReportsResponse struct {
 
 // GetProgressReportResponse defines the response payload for GetProgressReport API
 type GetProgressReportResponse struct {
-	ID                     int64      `json:"id"`
+	ID                     uuid.UUID  `json:"id"`
 	ClientID               uuid.UUID  `json:"client_id"`
 	Date                   time.Time  `json:"date"`
 	Title                  *string    `json:"title"`
@@ -81,7 +81,7 @@ type UpdateProgressReportRequest struct {
 
 // UpdateProgressReportResponse defines the response payload for UpdateProgressReport API
 type UpdateProgressReportResponse struct {
-	ID             int64      `json:"id"`
+	ID             uuid.UUID  `json:"id"`
 	ClientID       uuid.UUID  `json:"client_id"`
 	Date           time.Time  `json:"date"`
 	Title          *string    `json:"title"`
@@ -112,7 +112,7 @@ type ConfirmProgressReportRequest struct {
 
 // ConfirmProgressReportResponse defines the response payload for ConfirmProgressReport API
 type ConfirmProgressReportResponse struct {
-	ID         int64     `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	ClientID   uuid.UUID `json:"client_id"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`
@@ -127,7 +127,7 @@ type ListAiGeneratedReportsRequest struct {
 
 // ListAiGeneratedReportsResponse defines the response payload for ListAiGeneratedReports API
 type ListAiGeneratedReportsResponse struct {
-	ID         int64     `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	ClientID   uuid.UUID `json:"client_id"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`

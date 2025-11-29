@@ -553,7 +553,7 @@ func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocu
 
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "AddClientDocument",
 		"Successfully added client document", zap.String("ClientID", clientID.String()),
-		zap.Int64("DocumentID", clientDoc.ClientDocument.ID))
+		zap.String("DocumentID", clientDoc.ClientDocument.ID.String()))
 	return &AddClientDocumentApiResponse{
 		ID:           clientDoc.ClientDocument.ID,
 		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,

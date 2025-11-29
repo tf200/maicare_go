@@ -61,7 +61,7 @@ const deleteEmployeeExperience = `-- name: DeleteEmployeeExperience :one
 DELETE FROM employee_experience WHERE id = $1 RETURNING id, employee_id, job_title, company_name, start_date, end_date, description, created_at
 `
 
-func (q *Queries) DeleteEmployeeExperience(ctx context.Context, id int64) (EmployeeExperience, error) {
+func (q *Queries) DeleteEmployeeExperience(ctx context.Context, id uuid.UUID) (EmployeeExperience, error) {
 	row := q.db.QueryRow(ctx, deleteEmployeeExperience, id)
 	var i EmployeeExperience
 	err := row.Scan(
@@ -123,7 +123,7 @@ RETURNING id, employee_id, job_title, company_name, start_date, end_date, descri
 `
 
 type UpdateEmployeeExperienceParams struct {
-	ID          int64       `json:"id"`
+	ID          uuid.UUID   `json:"id"`
 	JobTitle    *string     `json:"job_title"`
 	CompanyName *string     `json:"company_name"`
 	StartDate   pgtype.Date `json:"start_date"`

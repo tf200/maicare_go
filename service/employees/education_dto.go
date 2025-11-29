@@ -17,7 +17,7 @@ type AddEducationToEmployeeProfileRequest struct {
 
 // AddEducationToEmployeeProfileResponse represents the response for AddEducationToEmployeeProfile
 type AddEducationToEmployeeProfileResponse struct {
-	ID              int64     `json:"id"`
+	ID              uuid.UUID `json:"id"`
 	EmployeeID      uuid.UUID `json:"employee_id"`
 	InstitutionName string    `json:"institution_name"`
 	Degree          string    `json:"degree"`
@@ -28,7 +28,7 @@ type AddEducationToEmployeeProfileResponse struct {
 
 // ListEmployeeEducationResponse represents the response for ListEmployeeEducation
 type ListEmployeeEducationResponse struct {
-	ID              int64     `json:"id"`
+	ID              uuid.UUID `json:"id"`
 	EmployeeID      uuid.UUID `json:"employee_id"`
 	InstitutionName string    `json:"institution_name"`
 	Degree          string    `json:"degree"`
@@ -48,7 +48,7 @@ type UpdateEmployeeEducationRequest struct {
 
 // UpdateEmployeeEducationResponse represents the response for UpdateEmployeeEducation
 type UpdateEmployeeEducationResponse struct {
-	ID              int64     `json:"id"`
+	ID              uuid.UUID `json:"id"`
 	InstitutionName string    `json:"institution_name"`
 	Degree          string    `json:"degree"`
 	FieldOfStudy    string    `json:"field_of_study"`
@@ -58,7 +58,7 @@ type UpdateEmployeeEducationResponse struct {
 
 // DeleteEmployeeEducationResponse represents the response for DeleteEmployeeEducation
 type DeleteEmployeeEducationResponse struct {
-	ID              int64     `json:"id"`
+	ID              uuid.UUID `json:"id"`
 	InstitutionName string    `json:"institution_name"`
 	Degree          string    `json:"degree"`
 	FieldOfStudy    string    `json:"field_of_study"`

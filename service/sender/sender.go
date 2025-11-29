@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -116,7 +117,7 @@ func (s *senderService) ListSenders(ctx *gin.Context, req *ListSendersRequest) (
 	return &res, nil
 }
 
-func (s *senderService) GetSenderByID(ctx context.Context, senderID int64) (*GetSenderByIdResponse, error) {
+func (s *senderService) GetSenderByID(ctx context.Context, senderID uuid.UUID) (*GetSenderByIdResponse, error) {
 	sender, err := s.Store.GetSenderById(ctx, senderID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetSenderByID", "Failed to get sender by ID", zap.Error(err))
@@ -171,7 +172,7 @@ func (s *senderService) GetSenderByID(ctx context.Context, senderID int64) (*Get
 	return response, nil
 }
 
-func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *UpdateSenderRequest) (*UpdateSenderResponse, error) {
+func (s *senderService) UpdateSender(ctx context.Context, senderID uuid.UUID, req *UpdateSenderRequest) (*UpdateSenderResponse, error) {
 	arg := db.UpdateSenderParams{
 		ID:           senderID,
 		Name:         req.Name,
@@ -230,7 +231,7 @@ func (s *senderService) UpdateSender(ctx context.Context, senderID int64, req *U
 	return response, nil
 }
 
-func (s *senderService) DeleteSender(ctx context.Context, senderID int64) error {
+func (s *senderService) DeleteSender(ctx context.Context, senderID uuid.UUID) error {
 	err := s.Store.DeleteSender(ctx, senderID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteSender", "Failed to delete sender", zap.Error(err))
@@ -239,7 +240,7 @@ func (s *senderService) DeleteSender(ctx context.Context, senderID int64) error 
 	return nil
 }
 
-func (s *senderService) CreateSenderInvoiceTemplate(ctx context.Context, senderID int64, req *CreateSenderInvoiceTemplateRequest) error {
+func (s *senderService) CreateSenderInvoiceTemplate(ctx context.Context, senderID uuid.UUID, req *CreateSenderInvoiceTemplateRequest) error {
 	tmplids, err := s.Store.GetTemplateItemsByIds(ctx, req.InvoiceTemplateIDs)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateSenderInvoiceTemplate", "Failed to get template items by IDs", zap.Error(err))

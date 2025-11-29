@@ -55,7 +55,7 @@ type ListEmployeesByContractEndDateResponse struct {
 
 // ListLatestPaymentsResponse defines the response for the ListLatestPayments API.
 type ListLatestPaymentsResponse struct {
-	InvoiceID     int64     `json:"invoice_id"`
+	InvoiceID     uuid.UUID `json:"invoice_id"`
 	InvoiceNumber string    `json:"invoice_number"`
 	PaymentMethod string    `json:"payment_method"`
 	PaymentStatus string    `json:"payment_status"`

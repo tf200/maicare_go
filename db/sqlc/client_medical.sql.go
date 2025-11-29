@@ -82,7 +82,7 @@ INSERT INTO client_medication (
 `
 
 type CreateClientMedicationParams struct {
-	DiagnosisID      *int64      `json:"diagnosis_id"`
+	DiagnosisID      *uuid.UUID  `json:"diagnosis_id"`
 	Name             string      `json:"name"`
 	Dosage           string      `json:"dosage"`
 	StartDate        pgtype.Date `json:"start_date"`
@@ -130,7 +130,7 @@ WHERE id = $1
 RETURNING id, title, client_id, diagnosis_code, description, severity, status, diagnosing_clinician, notes, created_at
 `
 
-func (q *Queries) DeleteClientDiagnosis(ctx context.Context, id int64) (ClientDiagnosis, error) {
+func (q *Queries) DeleteClientDiagnosis(ctx context.Context, id uuid.UUID) (ClientDiagnosis, error) {
 	row := q.db.QueryRow(ctx, deleteClientDiagnosis, id)
 	var i ClientDiagnosis
 	err := row.Scan(
@@ -153,7 +153,7 @@ DELETE FROM client_medication
 WHERE id = $1
 `
 
-func (q *Queries) DeleteClientMedication(ctx context.Context, id int64) error {
+func (q *Queries) DeleteClientMedication(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteClientMedication, id)
 	return err
 }
@@ -164,7 +164,7 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetClientDiagnosis(ctx context.Context, id int64) (ClientDiagnosis, error) {
+func (q *Queries) GetClientDiagnosis(ctx context.Context, id uuid.UUID) (ClientDiagnosis, error) {
 	row := q.db.QueryRow(ctx, getClientDiagnosis, id)
 	var i ClientDiagnosis
 	err := row.Scan(
@@ -190,8 +190,8 @@ WHERE m.id = $1 LIMIT 1
 `
 
 type GetMedicationRow struct {
-	ID                      int64              `json:"id"`
-	DiagnosisID             *int64             `json:"diagnosis_id"`
+	ID                      uuid.UUID          `json:"id"`
+	DiagnosisID             *uuid.UUID         `json:"diagnosis_id"`
 	Name                    string             `json:"name"`
 	Dosage                  string             `json:"dosage"`
 	StartDate               pgtype.Date        `json:"start_date"`
@@ -207,7 +207,7 @@ type GetMedicationRow struct {
 	AdministeredByLastName  string             `json:"administered_by_last_name"`
 }
 
-func (q *Queries) GetMedication(ctx context.Context, id int64) (GetMedicationRow, error) {
+func (q *Queries) GetMedication(ctx context.Context, id uuid.UUID) (GetMedicationRow, error) {
 	row := q.db.QueryRow(ctx, getMedication, id)
 	var i GetMedicationRow
 	err := row.Scan(
@@ -246,7 +246,7 @@ type ListClientDiagnosesParams struct {
 }
 
 type ListClientDiagnosesRow struct {
-	ID                  int64              `json:"id"`
+	ID                  uuid.UUID          `json:"id"`
 	Title               *string            `json:"title"`
 	ClientID            uuid.UUID          `json:"client_id"`
 	DiagnosisCode       string             `json:"diagnosis_code"`
@@ -302,14 +302,14 @@ LIMIT $2 OFFSET $3
 `
 
 type ListMedicationsByDiagnosisIDParams struct {
-	DiagnosisID *int64 `json:"diagnosis_id"`
-	Limit       int32  `json:"limit"`
-	Offset      int32  `json:"offset"`
+	DiagnosisID *uuid.UUID `json:"diagnosis_id"`
+	Limit       int32      `json:"limit"`
+	Offset      int32      `json:"offset"`
 }
 
 type ListMedicationsByDiagnosisIDRow struct {
-	ID               int64              `json:"id"`
-	DiagnosisID      *int64             `json:"diagnosis_id"`
+	ID               uuid.UUID          `json:"id"`
+	DiagnosisID      *uuid.UUID         `json:"diagnosis_id"`
 	Name             string             `json:"name"`
 	Dosage           string             `json:"dosage"`
 	StartDate        pgtype.Date        `json:"start_date"`
@@ -362,10 +362,10 @@ func (q *Queries) ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedi
 const listMedicationsByDiagnosisIDs = `-- name: ListMedicationsByDiagnosisIDs :many
 SELECT id, diagnosis_id, name, dosage, start_date, end_date, notes, self_administered, slots, administered_by_id, is_critical, updated_at, created_at
 FROM client_medication
-WHERE diagnosis_id = ANY($1::bigint[])
+WHERE diagnosis_id = ANY($1::uuid[])
 `
 
-func (q *Queries) ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []int64) ([]ClientMedication, error) {
+func (q *Queries) ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]ClientMedication, error) {
 	rows, err := q.db.Query(ctx, listMedicationsByDiagnosisIDs, dollar_1)
 	if err != nil {
 		return nil, err
@@ -414,14 +414,14 @@ RETURNING id, title, client_id, diagnosis_code, description, severity, status, d
 `
 
 type UpdateClientDiagnosisParams struct {
-	ID                  int64   `json:"id"`
-	Title               *string `json:"title"`
-	DiagnosisCode       *string `json:"diagnosis_code"`
-	Description         *string `json:"description"`
-	Severity            *string `json:"severity"`
-	Status              *string `json:"status"`
-	DiagnosingClinician *string `json:"diagnosing_clinician"`
-	Notes               *string `json:"notes"`
+	ID                  uuid.UUID `json:"id"`
+	Title               *string   `json:"title"`
+	DiagnosisCode       *string   `json:"diagnosis_code"`
+	Description         *string   `json:"description"`
+	Severity            *string   `json:"severity"`
+	Status              *string   `json:"status"`
+	DiagnosingClinician *string   `json:"diagnosing_clinician"`
+	Notes               *string   `json:"notes"`
 }
 
 func (q *Queries) UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error) {
@@ -467,7 +467,7 @@ RETURNING id, diagnosis_id, name, dosage, start_date, end_date, notes, self_admi
 `
 
 type UpdateClientMedicationParams struct {
-	ID               int64       `json:"id"`
+	ID               uuid.UUID   `json:"id"`
 	Name             *string     `json:"name"`
 	Dosage           *string     `json:"dosage"`
 	StartDate        pgtype.Date `json:"start_date"`

@@ -15,10 +15,11 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomRole(t *testing.T) int32 {
+func createRandomRole(t *testing.T) uuid.UUID {
 	name := faker.Word()
 	t.Log(name)
 	role, err := testStore.CreateRole(context.Background(), name)
@@ -26,9 +27,11 @@ func createRandomRole(t *testing.T) int32 {
 	require.NotEmpty(t, role)
 	require.Equal(t, name, role.Name)
 	require.NotZero(t, role.ID)
+	permission, err := testStore.ListAllPermissions(context.Background())
+	require.NoError(t, err)
 	err = testStore.AddPermissionsToRole(context.Background(), db.AddPermissionsToRoleParams{
 		RoleID:        role.ID,
-		PermissionIds: []int32{1, 2},
+		PermissionIds: []uuid.UUID{permission[0].ID, permission[1].ID},
 	})
 	require.NoError(t, err)
 	return role.ID
@@ -184,8 +187,10 @@ func TestAddPermissionsToRoleApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
+				permission, err := testStore.ListAllPermissions(context.Background())
+				require.NoError(t, err)
 				req := auth.AddPermissionsToRoleRequest{
-					PermissionIDs: []int32{3, 4},
+					PermissionIDs: []uuid.UUID{permission[0].ID, permission[1].ID},
 				}
 
 				body, err := json.Marshal(req)

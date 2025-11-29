@@ -17,7 +17,7 @@ import (
 // @Tags appointment_cards
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.CreateAppointmentCardRequest true "Request body"
 // @Success 201 {object} Response[clientp.CreateAppointmentCardResponse]
 // @Router /clients/{id}/appointment_cards [post]
@@ -54,7 +54,7 @@ func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
 // @Description Get an appointment card by client ID
 // @Tags appointment_cards
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GetAppointmentCardResponse]
 // @Router /clients/{id}/appointment_cards [get]
 func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
@@ -87,7 +87,7 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 // @Tags appointment_cards
 // @Accept json
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Param request body clientp.UpdateAppointmentCardRequest true "Request body"
 // @Success 200 {object} Response[clientp.UpdateAppointmentCardResponse]
 // @Router /clients/{id}/appointment_cards [put]
@@ -125,7 +125,7 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 // @Description Generate an appointment card document by client ID
 // @Tags appointment_cards
 // @Produce json
-// @Param id path int true "Client ID"
+// @Param id path uuid true "Client ID"
 // @Success 200 {object} Response[clientp.GenerateAppointmentCardDocumentApiResponse]
 // @Router /clients/{id}/appointment_cards/generate_document [post]
 func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
