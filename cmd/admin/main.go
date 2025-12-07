@@ -191,6 +191,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot load config:", err)
 	}
+	if config.AdminEmail == "" || config.AdminPassword == "" {
+		log.Fatal("ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment variables")
+	}
 	ctx := context.Background()
 	connPool, err := pgxpool.New(ctx, config.DbSource)
 	if err != nil {

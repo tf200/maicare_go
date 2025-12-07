@@ -118,3 +118,7 @@ DROP TYPE IF EXISTS emotional_state_enum CASCADE;
 DROP TYPE IF EXISTS recurrence_type_enum CASCADE;
 DROP TYPE IF EXISTS appointment_status_enum CASCADE;
 DROP TYPE IF EXISTS form_status_enum CASCADE;
+DROP TYPE IF EXISTS  intake_care_type_enum CASCADE;
+DROP TYPE IF EXISTS intake_participants_enum CASCADE;
+DROP TYPE IF EXISTS intake_conclusion_enum CASCADE;
+
