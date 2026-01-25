@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"maicare_go/infra"
 	"maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
@@ -29,7 +30,7 @@ func TestListAllIncidentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, client.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, client.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/incidents"

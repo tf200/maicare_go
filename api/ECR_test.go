@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"maicare_go/infra"
 	"maicare_go/pagination"
 	"maicare_go/service/ecr"
 	"maicare_go/token"
@@ -28,7 +29,7 @@ func TestDischargeOverviewApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/ecr/discharge_overview?page=1&page_size=10&filter_type=all"
@@ -73,7 +74,7 @@ func TestListEmployeesByContractEndDateApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/ecr/employee_ending_contract?page=1&page_size=10"
@@ -117,7 +118,7 @@ func TestListUpcomingAppointmentsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/ecr/upcoming_appointments?page=1&page_size=10"

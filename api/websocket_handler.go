@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"maicare_go/hub"
+	"maicare_go/infra"
 	"maicare_go/token"
 
 	"github.com/gin-gonic/gin"
@@ -37,17 +38,17 @@ var upgrader = websocket.Upgrader{
 
 func (server *Server) handleWebSocket(ctx *gin.Context) {
 	// --- 1. Retrieve Authenticated User Payload ---
-	authPayloadValue, exists := ctx.Get(authorizationPayloadKey)
+	authPayloadValue, exists := ctx.Get(infra.AuthorizationPayloadKey)
 	if !exists {
 		// This should ideally not happen if AuthMiddleware is working correctly
-		log.Printf("Error: %s not found in context after AuthMiddleware", authorizationPayloadKey)
+		log.Printf("Error: %s not found in context after AuthMiddleware", infra.AuthorizationPayloadKey)
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("missing auth payload"))) // Define ErrAuthPayloadMissing if needed
 		return
 	}
 
 	authPayload, ok := authPayloadValue.(*token.Payload) // Adjust type assertion if your payload type is different
 	if !ok {
-		log.Printf("Error: Could not assert type of %s to *token.Payload", authorizationPayloadKey)
+		log.Printf("Error: Could not assert type of %s to *token.Payload", infra.AuthorizationPayloadKey)
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("wrong auth Payload"))) // Define ErrAuthPayloadType if needed
 		return
 	}

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"maicare_go/infra"
 	clientp "maicare_go/service/client"
 	"maicare_go/token"
 
@@ -28,7 +29,7 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				appointmentReq := clientp.CreateAppointmentCardRequest{

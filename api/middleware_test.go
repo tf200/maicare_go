@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"maicare_go/infra"
 	"maicare_go/token"
 
 	"github.com/google/uuid"
@@ -29,7 +30,7 @@ func addAuthorization(
 	require.NotEmpty(t, payload)
 
 	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, accessToken)
-	request.Header.Set(authorizationHeaderKey, authorizationHeader)
+	request.Header.Set(infra.AuthorizationHeaderKey, authorizationHeader)
 }
 
 func TestAuthMiddleware(t *testing.T) {
@@ -42,7 +43,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -77,7 +78,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "ExpiredToken",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, -time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, -time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -108,7 +109,7 @@ func TestRBACMiddleware(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -117,7 +118,7 @@ func TestRBACMiddleware(t *testing.T) {
 		// {
 		// 	name: "NoAuthorization",
 		// 	setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-		// 		addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 1, time.Minute, 2)
+		// 		addAuthorization(t, request, tokenMaker,infra.AuthorizationTypeBearer, 1, time.Minute, 2)
 		// 	},
 		// 	checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 		// 		t.Log(recorder.Body.String())

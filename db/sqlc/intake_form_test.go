@@ -162,7 +162,7 @@ func TestListIntakeForms(t *testing.T) {
 			name: "list all intake forms without search",
 			setup: func(ctx context.Context, qtx *Queries) []IntakeForm {
 				var forms []IntakeForm
-				for i := 0; i < 3; i++ {
+				for i := 0; i < 3;  i++ {
 					regForm := createRandomRegistrationForm(ctx, qtx)
 					form, err := qtx.CreateIntakeForm(ctx, CreateIntakeFormParams{
 						RegistrationFormID: regForm.ID,

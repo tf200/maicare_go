@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"maicare_go/infra"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -26,6 +27,18 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 	tx, err := store.ConnPool.Begin(ctx)
 	if err != nil {
 		return err
+	}
+
+	employeeID := infra.GetEmployeeID(ctx)
+
+	if employeeID != uuid.Nil {
+		_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+		if err != nil {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				return rbErr
+			}
+			return err
+		}
 	}
 
 	q := New(tx)

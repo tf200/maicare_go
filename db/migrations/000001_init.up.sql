@@ -1992,5 +1992,148 @@ CREATE TABLE audit (
     hash_self TEXT NOT NULL
 );
 
+-- ===============================================
+-- ROW LEVEL SECURITY (RLS)
+-- ===============================================
+
+-- Helper function to get current employee ID
+CREATE OR REPLACE FUNCTION get_current_employee_id() RETURNS UUID AS $$
+BEGIN
+    RETURN current_setting('myapp.current_employee_id', true)::UUID;
+EXCEPTION
+    WHEN OTHERS THEN RETURN NULL;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Check if current employee is Admin
+CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM user_roles ur
+        JOIN roles r ON ur.role_id = r.id
+        JOIN employee_profile ep ON ep.user_id = ur.user_id
+        WHERE ep.id = get_current_employee_id()
+        AND r.name = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+-- Check if current employee is Coordinator
+CREATE OR REPLACE FUNCTION is_coordinator() RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM user_roles ur
+        JOIN roles r ON ur.role_id = r.id
+        JOIN employee_profile ep ON ep.user_id = ur.user_id
+        WHERE ep.id = get_current_employee_id()
+        AND r.name = 'coordinator'
+    );
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+-- Check if current employee is assigned as coordinator to a client
+CREATE OR REPLACE FUNCTION is_assigned_coordinator(cid UUID) RETURNS BOOLEAN AS $$
+BEGIN
+    IF cid IS NULL THEN RETURN FALSE; END IF;
+    RETURN EXISTS (
+        SELECT 1 FROM assigned_employee
+        WHERE client_id = cid
+        AND employee_id = get_current_employee_id()
+        AND role = 'coordinator'
+    );
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+-- Helper to get client_id from various sub-tables
+CREATE OR REPLACE FUNCTION get_client_id_from_care_plan(cp_id UUID) RETURNS UUID AS $$
+    SELECT a.client_id FROM client_maturity_matrix_assessment a JOIN care_plans cp ON cp.assessment_id = a.id WHERE cp.id = cp_id;
+$$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION get_client_id_from_objective(obj_id UUID) RETURNS UUID AS $$
+    SELECT get_client_id_from_care_plan(care_plan_id) FROM care_plan_objectives WHERE id = obj_id;
+$$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION get_client_id_from_diagnosis(diag_id UUID) RETURNS UUID AS $$
+    SELECT client_id FROM client_diagnosis WHERE id = diag_id;
+$$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION get_client_id_from_contract(cont_id UUID) RETURNS UUID AS $$
+    SELECT client_id FROM contract WHERE id = cont_id;
+$$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION get_client_id_from_registration_form(reg_id UUID) RETURNS UUID AS $$
+    SELECT cd.id FROM client_details cd JOIN intake_forms iform ON iform.id = cd.intake_form_id WHERE iform.registration_form_id = reg_id;
+$$ LANGUAGE sql STABLE;
+
+-- Function to apply policies to a table with 'client_id' (or custom column)
+CREATE OR REPLACE FUNCTION apply_client_rls(table_name TEXT, client_id_col TEXT DEFAULT 'client_id') 
+RETURNS VOID AS $$
+BEGIN
+    EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
+    EXECUTE format('DROP POLICY IF EXISTS coordinator_select ON %I', table_name);
+    EXECUTE format('DROP POLICY IF EXISTS coordinator_insert ON %I', table_name);
+    EXECUTE format('DROP POLICY IF EXISTS coordinator_update ON %I', table_name);
+    EXECUTE format('DROP POLICY IF EXISTS coordinator_delete ON %I', table_name);
+    
+    EXECUTE format('CREATE POLICY coordinator_select ON %I FOR SELECT USING (is_admin() OR is_coordinator())', table_name);
+    EXECUTE format('CREATE POLICY coordinator_insert ON %I FOR INSERT WITH CHECK (is_admin() OR is_coordinator())', table_name);
+    EXECUTE format('CREATE POLICY coordinator_update ON %I FOR UPDATE USING (is_admin() OR is_coordinator()) WITH CHECK (is_admin() OR is_coordinator())', table_name);
+    EXECUTE format('CREATE POLICY coordinator_delete ON %I FOR DELETE USING (is_admin() OR is_assigned_coordinator(%I))', table_name, client_id_col);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply RLS to tables with direct client_id or id
+SELECT apply_client_rls('client_details', 'id');
+SELECT apply_client_rls('progress_report');
+SELECT apply_client_rls('incident');
+SELECT apply_client_rls('client_maturity_matrix_assessment');
+SELECT apply_client_rls('client_documents');
+SELECT apply_client_rls('client_status_history');
+SELECT apply_client_rls('scheduled_status_changes');
+SELECT apply_client_rls('client_diagnosis');
+SELECT apply_client_rls('client_emergency_contact');
+SELECT apply_client_rls('client_location_transfer');
+SELECT apply_client_rls('contract');
+SELECT apply_client_rls('invoice');
+SELECT apply_client_rls('assignment');
+SELECT apply_client_rls('assigned_employee');
+SELECT apply_client_rls('ai_generated_reports');
+SELECT apply_client_rls('appointment_clients');
+SELECT apply_client_rls('appointment_card');
+SELECT apply_client_rls('collaboration_agreement');
+SELECT apply_client_rls('risk_assessment');
+SELECT apply_client_rls('consent_declaration');
+SELECT apply_client_rls('youth_care_intake');
+SELECT apply_client_rls('data_sharing_statement');
+SELECT apply_client_rls('framework_agreement');
+
+-- Special cases for nested tables
+-- Registration and Intake
+SELECT apply_client_rls('registration_form', 'get_client_id_from_registration_form(id)');
+SELECT apply_client_rls('intake_forms', 'get_client_id_from_registration_form(registration_form_id)');
+
+-- Medication
+SELECT apply_client_rls('client_medication', 'get_client_id_from_diagnosis(diagnosis_id)');
+
+-- Contract sub-tables
+SELECT apply_client_rls('client_agreement', 'get_client_id_from_contract(contract_id)');
+SELECT apply_client_rls('provision', 'get_client_id_from_contract(contract_id)');
+
+-- Care Plans and sub-tables
+SELECT apply_client_rls('care_plans', '(SELECT client_id FROM client_maturity_matrix_assessment WHERE id = assessment_id)');
+SELECT apply_client_rls('care_plan_objectives', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_interventions', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_metrics', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_risks', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_support_network', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_resources', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_reports', 'get_client_id_from_care_plan(care_plan_id)');
+SELECT apply_client_rls('care_plan_actions', 'get_client_id_from_objective(objective_id)');
+SELECT apply_client_rls('level_history', '(SELECT client_id FROM client_maturity_matrix_assessment WHERE id = client_maturity_matrix_assessment_id)');
+
+-- Clean up helper functions if desired, or keep them for future use.
+-- DROP FUNCTION apply_client_rls(TEXT, TEXT);
+
+
 
 

@@ -2,7 +2,6 @@ package clientp
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -138,12 +137,17 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiParams) (*pagination.Response[ListClientsApiResponse], error) {
 	params := req.GetParams()
 
-	clients, err := s.Store.ListClientDetails(ctx, db.ListClientDetailsParams{
-		Limit:      params.Limit,
-		Offset:     params.Offset,
-		Status:     db.NullClientStatusFromPtr(req.Status),
-		LocationID: req.LocationID,
-		Search:     req.Search,
+	var clients []db.ListClientDetailsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		clients, err = q.ListClientDetails(ctx, db.ListClientDetailsParams{
+			Limit:      params.Limit,
+			Offset:     params.Offset,
+			Status:     db.NullClientStatusFromPtr(req.Status),
+			LocationID: req.LocationID,
+			Search:     req.Search,
+		})
+		return err
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientDetails",
@@ -202,7 +206,12 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 }
 
 func (s *clientService) GetClientsCount(ctx context.Context) (*GetClientsCountResponse, error) {
-	count, err := s.Store.GetClientCounts(ctx)
+	var count db.GetClientCountsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		count, err = q.GetClientCounts(ctx)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientsCount",
 			"Failed to get clients count", zap.Error(err))
@@ -219,7 +228,12 @@ func (s *clientService) GetClientsCount(ctx context.Context) (*GetClientsCountRe
 }
 
 func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error) {
-	client, err := s.Store.GetClientDetails(ctx, clientID)
+	var client db.GetClientDetailsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		client, err = q.GetClientDetails(ctx, clientID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientDetails",
 			"Failed to get client details", zap.Error(err), zap.String("ClientID", clientID.String()))
@@ -274,7 +288,12 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 }
 
 func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error) {
-	address, err := s.Store.GetClientAddresses(ctx, clientID)
+	var address []byte
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		address, err = q.GetClientAddresses(ctx, clientID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientAddresses",
 			"Failed to get client addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
@@ -295,45 +314,50 @@ func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UU
 }
 
 func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error) {
-	client, err := s.Store.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
-		ID:                         clientID,
-		FirstName:                  req.FirstName,
-		LastName:                   req.LastName,
-		DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
-		Identity:                   req.Identity,
-		Bsn:                        req.Bsn,
-		BsnVerifiedBy:              req.BsnVerifiedBy,
-		Source:                     req.Source,
-		Birthplace:                 req.Birthplace,
-		Email:                      req.Email,
-		PhoneNumber:                req.PhoneNumber,
-		OrganizationID:             req.OrganizationID,
-		Departement:                req.Departement,
-		Gender:                     db.NullClientGenderFromPtr(req.Gender),
-		Filenumber:                 req.Filenumber,
-		ProfilePicture:             req.ProfilePicture,
-		Infix:                      req.Infix,
-		SenderID:                   req.SenderID,
-		LocationID:                 req.LocationID,
-		DepartureReason:            req.DepartureReason,
-		DepartureReport:            req.DepartureReport,
-		LegalMeasure:               req.LegalMeasure,
-		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
-		EducationInstitution:       req.EducationInstitution,
-		EducationMentorName:        req.EducationMentorName,
-		EducationMentorPhone:       req.EducationMentorPhone,
-		EducationMentorEmail:       req.EducationMentorEmail,
-		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
-		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:        req.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:        req.WorkCurrentPosition,
-		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
-		WorkAdditionalNotes:        req.WorkAdditionalNotes,
-		LivingSituation:            db.NullClientLivingSituationFromPtr(req.LivingSituation),
-		LivingSituationNotes:       req.LivingSituationNotes,
+	var client db.ClientDetail
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		client, err = q.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
+			ID:                         clientID,
+			FirstName:                  req.FirstName,
+			LastName:                   req.LastName,
+			DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
+			Identity:                   req.Identity,
+			Bsn:                        req.Bsn,
+			BsnVerifiedBy:              req.BsnVerifiedBy,
+			Source:                     req.Source,
+			Birthplace:                 req.Birthplace,
+			Email:                      req.Email,
+			PhoneNumber:                req.PhoneNumber,
+			OrganizationID:             req.OrganizationID,
+			Departement:                req.Departement,
+			Gender:                     db.NullClientGenderFromPtr(req.Gender),
+			Filenumber:                 req.Filenumber,
+			ProfilePicture:             req.ProfilePicture,
+			Infix:                      req.Infix,
+			SenderID:                   req.SenderID,
+			LocationID:                 req.LocationID,
+			DepartureReason:            req.DepartureReason,
+			DepartureReport:            req.DepartureReport,
+			LegalMeasure:               req.LegalMeasure,
+			EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
+			EducationInstitution:       req.EducationInstitution,
+			EducationMentorName:        req.EducationMentorName,
+			EducationMentorPhone:       req.EducationMentorPhone,
+			EducationMentorEmail:       req.EducationMentorEmail,
+			EducationAdditionalNotes:   req.EducationAdditionalNotes,
+			EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
+			WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+			WorkCurrentEmployer:        req.WorkCurrentEmployer,
+			WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
+			WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
+			WorkCurrentPosition:        req.WorkCurrentPosition,
+			WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
+			WorkAdditionalNotes:        req.WorkAdditionalNotes,
+			LivingSituation:            db.NullClientLivingSituationFromPtr(req.LivingSituation),
+			LivingSituationNotes:       req.LivingSituationNotes,
+		})
+		return err
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientDetails",
@@ -397,11 +421,16 @@ func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req U
 		return nil, fmt.Errorf("scheduled time must be in the future")
 	}
 
-	schedueledChange, err := s.Store.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
-		ClientID:      clientID,
-		NewStatus:     &req.Status,
-		Reason:        &req.Reason,
-		ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
+	var schedueledChange db.ScheduledStatusChange
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		schedueledChange, err = q.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
+			ClientID:      clientID,
+			NewStatus:     &req.Status,
+			Reason:        &req.Reason,
+			ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
+		})
+		return err
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
@@ -429,7 +458,12 @@ func (s *clientService) ListStatusHistory(ctx context.Context, clientID uuid.UUI
 		Limit:    10,
 		Offset:   0,
 	}
-	histories, err := s.Store.ListClientStatusHistory(ctx, arg)
+	var histories []db.ClientStatusHistory
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		histories, err = q.ListClientStatusHistory(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListStatusHistory",
 			"Failed to list status history", zap.Error(err), zap.String("ClientID", clientID.String()))
@@ -456,64 +490,48 @@ func (s *clientService) ListStatusHistory(ctx context.Context, clientID uuid.UUI
 }
 
 func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID uuid.UUID) (*UpdateClientStatusResponse, error) {
-	tx, err := s.Store.ConnPool.Begin(ctx)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-			"Failed to begin transaction", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to begin transaction")
-	}
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-				"Failed to rollback transaction", zap.Error(rollbackErr), zap.String("ClientID", clientID.String()))
+	var result *UpdateClientStatusResponse
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		// 1. Fetch old details (automatically subject to RLS visibility)
+		oldClient, err := q.GetClientDetails(ctx, clientID)
+		if err != nil {
+			return fmt.Errorf("failed to get client details: %w", err)
 		}
-	}()
-
-	qtx := s.Store.WithTx(tx)
-
-	oldClient, err := qtx.GetClientDetails(ctx, clientID)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-			"Failed to get client details", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to get client details")
-	}
-
-	client, err := qtx.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
-		ID:     clientID,
-		Status: db.ClientStatusEnum(req.Status),
+		// 2. Perform the update (protected by RLS UPDATE policy)
+		client, err := q.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
+			ID:     clientID,
+			Status: db.ClientStatusEnum(req.Status),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update client status: %w", err)
+		}
+		// 3. Create history record (protected by RLS INSERT policy)
+		_, err = q.CreateClientStatusHistory(ctx, db.CreateClientStatusHistoryParams{
+			ClientID:  clientID,
+			OldStatus: util.StringPtr(string(oldClient.Status)),
+			NewStatus: req.Status,
+			Reason:    &req.Reason,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create client status history: %w", err)
+		}
+		// Prepare response object
+		result = &UpdateClientStatusResponse{
+			ID:     client.ID,
+			Status: string(client.Status),
+		}
+		return nil
 	})
 	if err != nil {
+		// Log the error returned by the transaction
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-			"Failed to update client status", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to update client status")
+			"Transaction failed", zap.Error(err), zap.String("ClientID", clientID.String()))
+		return nil, fmt.Errorf("failed to update client status: %v", err)
 	}
-
-	_, err = qtx.CreateClientStatusHistory(ctx, db.CreateClientStatusHistoryParams{
-		ClientID:  clientID,
-		OldStatus: util.StringPtr(string(oldClient.Status)),
-		NewStatus: req.Status,
-		Reason:    &req.Reason,
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-			"Failed to create client status history", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to create client status history")
-	}
-
-	if err = tx.Commit(ctx); err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-			"Failed to commit transaction", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to commit transaction")
-	}
-
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateClientStatus",
-		"Successfully updated client status", zap.String("ClientID", client.ID.String()),
+		"Successfully updated client status", zap.String("ClientID", clientID.String()),
 		zap.String("NewStatus", req.Status))
-
-	return &UpdateClientStatusResponse{
-		ID:     client.ID,
-		Status: string(client.Status),
-	}, nil
+	return result, nil
 }
 
 func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClientProfilePictureRequest, clientID uuid.UUID) (*SetClientProfilePictureResponse, error) {
@@ -571,10 +589,15 @@ func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocu
 
 func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocumentsApiRequest, clientID uuid.UUID) (*pagination.Response[ListClientDocumentsApiResponse], error) {
 	params := req.GetParams()
-	clientDocs, err := s.Store.ListClientDocuments(ctx, db.ListClientDocumentsParams{
-		ClientID: clientID,
-		Offset:   params.Offset,
-		Limit:    params.Limit,
+	var clientDocs []db.ListClientDocumentsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		clientDocs, err = q.ListClientDocuments(ctx, db.ListClientDocumentsParams{
+			ClientID: clientID,
+			Offset:   params.Offset,
+			Limit:    params.Limit,
+		})
+		return err
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientDocuments",
@@ -629,7 +652,12 @@ func (s *clientService) DeleteClientDocument(ctx context.Context, clientID uuid.
 }
 
 func (s *clientService) GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) (*GetMissingClientDocumentsApiResponse, error) {
-	missingDocs, err := s.Store.GetMissingClientDocuments(ctx, clientID)
+	var missingDocs []string
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		missingDocs, err = q.GetMissingClientDocuments(ctx, clientID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetMissingClientDocuments",
 			"Failed to get missing client documents", zap.Error(err), zap.String("ClientID", clientID.String()))

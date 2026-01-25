@@ -8,21 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"maicare_go/infra"
 	"maicare_go/service/audit"
 	"maicare_go/token"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-)
-
-// Authentication related constants
-const (
-	authorizationHeaderKey  = "Authorization" // Changed to proper HTTP header case
-	authorizationTypeBearer = "Bearer"        // Changed to proper case
-	authorizationPayloadKey = "authorization_payload"
-	actorRoleKey            = "actor_role"
-
-	authorizationQueryKey = "access_token" // You can change this query param name if needed (e.g., "token")
 )
 
 var (
@@ -54,7 +45,7 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 		var accessToken string
 
 		// 1. Try to get the token from the Authorization header (Primary Method)
-		authHeader := ctx.GetHeader(authorizationHeaderKey)
+		authHeader := ctx.GetHeader(infra.AuthorizationHeaderKey)
 		if authHeader != "" {
 			fields := strings.Fields(authHeader)
 			if len(fields) < 2 {
@@ -63,7 +54,7 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			}
 
 			authType := fields[0]
-			if !strings.EqualFold(authType, authorizationTypeBearer) {
+			if !strings.EqualFold(authType, infra.AuthorizationTypeBearer) {
 				err := fmt.Errorf("unsupported authorization type: %s", authType)
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 				return
@@ -75,7 +66,7 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			// 2. If Authorization header is missing, check if it's a WebSocket upgrade request
 			if isWebSocketUpgrade(ctx) {
 				// ONLY if it's a WS upgrade request, try getting token from query parameter
-				accessToken = ctx.Query(authorizationQueryKey)
+				accessToken = ctx.Query(infra.AuthorizationQueryKey)
 				// If accessToken is still "" here, the next check will handle ErrMissingToken
 			}
 			// If header is missing AND it's NOT a WS upgrade request,
@@ -105,17 +96,17 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set(actorRoleKey, roles)
+		ctx.Set(infra.ActorRoleKey, roles)
 
 		// 5. Store the payload in context and continue
-		ctx.Set(authorizationPayloadKey, payload)
+		ctx.Set(infra.AuthorizationPayloadKey, payload)
 		ctx.Next()
 	}
 }
 
 // GetAuthPayload retrieves the authorization payload from the context
 func GetAuthPayload(ctx *gin.Context) (*token.Payload, error) {
-	payload, exists := ctx.Get(authorizationPayloadKey)
+	payload, exists := ctx.Get(infra.AuthorizationPayloadKey)
 	if !exists {
 		return nil, errors.New("authorization payload not found")
 	}
@@ -219,7 +210,7 @@ func (s *Server) AuditMiddleware() gin.HandlerFunc {
 		}
 
 		// Calculate hash for this audit record
-		actorRoles, exists := ctx.Get(actorRoleKey)
+		actorRoles, exists := ctx.Get(infra.ActorRoleKey)
 		if !exists {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("actor roles not found in context")))
 			return

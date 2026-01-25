@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"maicare_go/infra"
 	"maicare_go/token"
 
 	"github.com/goccy/go-json"
@@ -24,7 +25,7 @@ func TestSpellCheckApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				reqBody := CorrectSpellingRequest{

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/infra"
 	"maicare_go/service/schedule"
 	"maicare_go/token"
 
@@ -51,7 +52,7 @@ func TestCreateScheduleApi(t *testing.T) {
 		{
 			name: "OK IS CUSTOM",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now()
@@ -83,7 +84,7 @@ func TestCreateScheduleApi(t *testing.T) {
 		{
 			name: "OK IS NOT CUSTOM",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				now := time.Now().Format("2006-01-02")
@@ -145,7 +146,7 @@ func TestGetMonthlySchedulesByLocationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/locations/%d/monthly_schedules?year=%d&month=%d", createdSchedule.LocationID, createdSchedule.StartDatetime.Time.Year(), createdSchedule.StartDatetime.Time.Month())
@@ -192,7 +193,7 @@ func TestGetDailySchedulesByLocationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/locations/%d/daily_schedules?year=%d&month=%d&day=%d", createdSchedule.LocationID,

@@ -15,6 +15,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/infra"
 	"maicare_go/pagination"
 	"maicare_go/service/employees"
 	"maicare_go/token"
@@ -112,7 +113,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				roleID, err := testStore.GetAdminRoleId(context.Background())
@@ -213,7 +214,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			setupMock: func(t *testing.T) {
 				testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("https://example.com", nil).AnyTimes()
@@ -245,7 +246,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 		{
 			name: "InvalidPageSize",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			setupMock: func(t *testing.T) {
 				// No mock setup needed for invalid request
@@ -261,7 +262,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 		{
 			name: "FilterByDepartment",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			setupMock: func(t *testing.T) {
 				testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("https://example.com", nil).AnyTimes()
@@ -285,7 +286,7 @@ func TestListEmployeeProfileApi(t *testing.T) {
 		{
 			name: "SecondPage",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			setupMock: func(t *testing.T) {
 				testb2Client.EXPECT().GeneratePresignedURL(gomock.Any(), gomock.Any(), gomock.Any()).Return("https://example.com", nil).AnyTimes()
@@ -333,7 +334,7 @@ func TestGetEmployeeProfileByIDApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/employees/%d", employee.ID)
@@ -382,7 +383,7 @@ func TestUpdateEmployeeProfileApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				updatereq := employees.UpdateEmployeeProfileRequest{
@@ -438,7 +439,7 @@ func TestGetEmployeeProfileApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				req, err := http.NewRequest(http.MethodGet, "/employees/profile", nil)
@@ -486,7 +487,7 @@ func TestSetEmployeeProfilePictureApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/employees/%d/profile_picture", employee.ID)
@@ -534,7 +535,7 @@ func createRandomEducation(t *testing.T) (uuid.UUID, uuid.UUID) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				addEducationReq := employees.AddEducationToEmployeeProfileRequest{
@@ -597,7 +598,7 @@ func TestListEmployeeEducationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, userID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := fmt.Sprintf("/employees/%d/education", employeeID)
@@ -645,7 +646,7 @@ func TestAddEmployeeExperienceApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				addExperienceReq := employees.AddEmployeeExperienceRequest{
@@ -704,7 +705,7 @@ func TestAddEmployeeCertificationApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				addCertificationReq := employees.AddEmployeeCertificationRequest{
@@ -762,7 +763,7 @@ func TestSearchEmployeesByNameOrEmailApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				url := "/employees/emails?search=John"
@@ -808,7 +809,7 @@ func TestAddEmployeeContractDetailsApi(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				addContractReq := employees.AddEmployeeContractDetailsRequest{

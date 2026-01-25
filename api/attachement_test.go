@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"maicare_go/infra"
 	"maicare_go/service/attachment"
 	"maicare_go/token"
 
@@ -48,7 +49,7 @@ func TestUploadHandler(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
@@ -91,7 +92,7 @@ func TestUploadHandler(t *testing.T) {
 		{
 			name: "NoFile",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
@@ -115,7 +116,7 @@ func TestUploadHandler(t *testing.T) {
 		{
 			name: "EmptyFile",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				body := &bytes.Buffer{}
@@ -171,7 +172,7 @@ func TestGetAttachmentById(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/attachments/%s", file.Uuid), nil)
@@ -194,7 +195,7 @@ func TestGetAttachmentById(t *testing.T) {
 		{
 			name: "NotFound",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, time.Minute)
+				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
 				req, err := http.NewRequest(http.MethodGet, "/attachment/00000000-0000-0000-0000-000000000000", nil)
