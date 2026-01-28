@@ -63,7 +63,12 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		Emails:                  req.Emails,
 	}
 
-	incident, err := s.Store.CreateIncident(ctx, arg)
+	var incident db.CreateIncidentRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incident, err = q.CreateIncident(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to create incident", zap.Error(err))
 		return nil, err
@@ -74,8 +79,8 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
-		EmployeeFirstName:       "",
-		EmployeeLastName:        "",
+		EmployeeFirstName:       util.DerefString(incident.EmployeeFirstName),
+		EmployeeLastName:        util.DerefString(incident.EmployeeLastName),
 		LocationID:              incident.LocationID,
 		ReporterInvolvement:     string(incident.ReporterInvolvement),
 		InformWho:               req.InformWho,
@@ -115,7 +120,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		AdditionalAppointments:  incident.AdditionalAppointments,
 		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
 		ClientID:                incident.ClientID,
-		LocationName:            "",
+		LocationName:            util.DerefString(incident.LocationName),
 		To:                      incident.Emails,
 	}, ctx)
 	if err != nil {
@@ -163,7 +168,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		EmployeeID:              incident.EmployeeID,
 		LocationID:              incident.LocationID,
 		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               req.InformWho,
+		InformWho:               incident.InformWho,
 		IncidentDate:            incident.IncidentDate.Time,
 		RuntimeIncident:         incident.RuntimeIncident,
 		IncidentType:            incident.IncidentType,
@@ -182,10 +187,10 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		RecurrenceRisk:          string(incident.RecurrenceRisk),
 		IncidentPreventSteps:    incident.IncidentPreventSteps,
 		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               req.Technical,
-		Organizational:          req.Organizational,
-		MeseWorker:              req.MeseWorker,
-		ClientOptions:           req.ClientOptions,
+		Technical:               incident.Technical,
+		Organizational:          incident.Organizational,
+		MeseWorker:              incident.MeseWorker,
+		ClientOptions:           incident.ClientOptions,
 		OtherCause:              incident.OtherCause,
 		CauseExplanation:        incident.CauseExplanation,
 		PhysicalInjury:          string(incident.PhysicalInjury),
@@ -193,7 +198,7 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		PsychologicalDamage:     string(incident.PsychologicalDamage),
 		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
 		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              req.Succession,
+		Succession:              incident.Succession,
 		SuccessionDesc:          incident.SuccessionDesc,
 		Other:                   incident.Other,
 		OtherDesc:               incident.OtherDesc,
@@ -211,10 +216,15 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest, clientID uuid.UUID) (*pagination.Response[ListIncidentsResponse], error) {
 	params := req.GetParams()
 
-	incidents, err := s.Store.ListIncidents(ctx, db.ListIncidentsParams{
-		ClientID: clientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
+	var incidents []db.ListIncidentsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incidents, err = q.ListIncidents(ctx, db.ListIncidentsParams{
+			ClientID: clientID,
+			Limit:    params.Limit,
+			Offset:   params.Offset,
+		})
+		return err
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListIncidents", "Failed to list incidents", zap.Error(err))
@@ -289,7 +299,12 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 }
 
 func (s *clientService) GetIncident(ctx context.Context, incidentID uuid.UUID) (*GetIncidentResponse, error) {
-	incident, err := s.Store.GetIncident(ctx, incidentID)
+	var incident db.GetIncidentRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incident, err = q.GetIncident(ctx, incidentID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIncident", "Failed to get incident", zap.Error(err))
 		return nil, err
@@ -393,7 +408,12 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 		MeseWorker:              req.MeseWorker,
 		ClientOptions:           req.ClientOptions,
 	}
-	incident, err := s.Store.UpdateIncident(ctx, arg)
+	var incident db.Incident
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incident, err = q.UpdateIncident(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateIncident", "Failed to update incident", zap.Error(err))
 		return nil, err
@@ -502,7 +522,9 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 }
 
 func (s *clientService) DeleteIncident(ctx context.Context, incidentID uuid.UUID) error {
-	err := s.Store.DeleteIncident(ctx, incidentID)
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		return q.DeleteIncident(ctx, incidentID)
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteIncident", "Failed to delete incident", zap.Error(err))
 		return err
@@ -513,7 +535,12 @@ func (s *clientService) DeleteIncident(ctx context.Context, incidentID uuid.UUID
 }
 
 func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uuid.UUID) (*GenerateIncidentFileResponse, error) {
-	incident, err := s.Store.GetIncident(ctx, incidentID)
+	var incident db.GetIncidentRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incident, err = q.GetIncident(ctx, incidentID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
 		return nil, err
@@ -573,9 +600,14 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uui
 		return nil, err
 	}
 
-	incidentWithUpdatedFileUrl, err := s.Store.UpdateIncidentFileUrl(ctx, db.UpdateIncidentFileUrlParams{
-		ID:      incident.ID,
-		FileUrl: &fileKey,
+	var incidentWithUpdatedFileUrl *string
+	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incidentWithUpdatedFileUrl, err = q.UpdateIncidentFileUrl(ctx, db.UpdateIncidentFileUrlParams{
+			ID:      incident.ID,
+			FileUrl: &fileKey,
+		})
+		return err
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to update incident file URL", zap.Error(err))
@@ -589,7 +621,12 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uui
 }
 
 func (s *clientService) ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (*ConfirmIncidentResponse, error) {
-	incident, err := s.Store.ConfirmIncident(ctx, incidentID)
+	var incident db.ConfirmIncidentRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incident, err = q.ConfirmIncident(ctx, incidentID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmIncident", "Failed to confirm incident", zap.Error(err))
 		return nil, err
@@ -610,15 +647,19 @@ func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidents
 		Offset:      params.Offset,
 		IsConfirmed: req.IsConfirmed,
 	}
-	incidents, err := s.Store.ListAllIncidents(ctx, arg)
+	var incidents []db.ListAllIncidentsRow
+	var count int64
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		incidents, err = q.ListAllIncidents(ctx, arg)
+		if err != nil {
+			return err
+		}
+		count, err = q.CountAllIncidents(ctx, req.IsConfirmed)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllIncidents", "Failed to list all incidents", zap.Error(err))
-		return nil, err
-	}
-
-	count, err := s.Store.CountAllIncidents(ctx, req.IsConfirmed)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllIncidents", "Failed to count all incidents", zap.Error(err))
 		return nil, err
 	}
 

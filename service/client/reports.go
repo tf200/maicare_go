@@ -27,7 +27,12 @@ func (s *clientService) CreateProgressReport(ctx context.Context, req *CreatePro
 		EmotionalState: db.EmotionalStateEnum(req.EmotionalState),
 	}
 
-	report, err := s.Store.CreateProgressReport(ctx, arg)
+	var report db.ProgressReport
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		report, err = q.CreateProgressReport(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateProgressReport", "Failed to create progress report", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
@@ -53,7 +58,12 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 		Limit:    params.Limit,
 		Offset:   params.Offset,
 	}
-	reports, err := s.Store.ListProgressReports(ctx, arg)
+	var reports []db.ListProgressReportsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		reports, err = q.ListProgressReports(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListProgressReports", "Failed to list progress reports", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
@@ -87,7 +97,12 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 }
 
 func (s *clientService) GetProgressReport(ctx context.Context, reportID uuid.UUID) (*GetProgressReportResponse, error) {
-	report, err := s.Store.GetProgressReport(ctx, reportID)
+	var report db.GetProgressReportRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		report, err = q.GetProgressReport(ctx, reportID)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetProgressReport", "Failed to get progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return nil, err
@@ -119,7 +134,12 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 		EmotionalState: db.NullEmotionalStateFromPtr(req.EmotionalState),
 	}
 
-	report, err := s.Store.UpdateProgressReport(ctx, arg)
+	var report db.ProgressReport
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		report, err = q.UpdateProgressReport(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateProgressReport", "Failed to update progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return nil, err
@@ -138,7 +158,9 @@ func (s *clientService) UpdateProgressReport(ctx context.Context, req *UpdatePro
 }
 
 func (s *clientService) DeleteProgressReport(ctx context.Context, reportID uuid.UUID) error {
-	err := s.Store.DeleteProgressReport(ctx, reportID)
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		return q.DeleteProgressReport(ctx, reportID)
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteProgressReport", "Failed to delete progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return err
@@ -154,7 +176,12 @@ func (s *clientService) GenerateAutoReports(ctx context.Context, req *GenerateAu
 		StartDate: pgtype.Timestamptz{Time: req.StartDate, Valid: true},
 		EndDate:   pgtype.Timestamptz{Time: req.EndDate, Valid: true},
 	}
-	reports, err := s.Store.GetProgressReportsByDateRange(ctx, arg)
+	var reports []db.ProgressReport
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		reports, err = q.GetProgressReportsByDateRange(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAutoReports", "Failed to get progress reports for auto report generation", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
@@ -191,7 +218,12 @@ func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uu
 		StartDate:  pgtype.Date{Time: req.Startdate, Valid: true},
 		EndDate:    pgtype.Date{Time: req.Enddate, Valid: true},
 	}
-	createdProgressReport, err := s.Store.CreateAiGeneratedReport(ctx, progressReport)
+	var createdProgressReport db.AiGeneratedReport
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		createdProgressReport, err = q.CreateAiGeneratedReport(ctx, progressReport)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.String("report_id", reportID.String()), zap.Error(err))
 		return nil, err
@@ -214,7 +246,12 @@ func (s *clientService) ListAiGeneratedReports(ctx *gin.Context, req *ListAiGene
 		Limit:    params.Limit,
 		Offset:   params.Offset,
 	}
-	reports, err := s.Store.ListAiGeneratedReports(ctx, arg)
+	var reports []db.ListAiGeneratedReportsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		reports, err = q.ListAiGeneratedReports(ctx, arg)
+		return err
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAiGeneratedReports", "Failed to list AI generated reports", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
