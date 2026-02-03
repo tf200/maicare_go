@@ -16,6 +16,7 @@ import (
 	reflect "reflect"
 
 	gin "github.com/gin-gonic/gin"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -44,7 +45,7 @@ func (m *MockEmployeeService) EXPECT() *MockEmployeeServiceMockRecorder {
 }
 
 // AddEducationToEmployeeProfile mocks base method.
-func (m *MockEmployeeService) AddEducationToEmployeeProfile(req employees.AddEducationToEmployeeProfileRequest, employeeID int64, ctx context.Context) (*employees.AddEducationToEmployeeProfileResponse, error) {
+func (m *MockEmployeeService) AddEducationToEmployeeProfile(req employees.AddEducationToEmployeeProfileRequest, employeeID uuid.UUID, ctx context.Context) (*employees.AddEducationToEmployeeProfileResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddEducationToEmployeeProfile", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.AddEducationToEmployeeProfileResponse)
@@ -59,7 +60,7 @@ func (mr *MockEmployeeServiceMockRecorder) AddEducationToEmployeeProfile(req, em
 }
 
 // AddEmployeeCertification mocks base method.
-func (m *MockEmployeeService) AddEmployeeCertification(req employees.AddEmployeeCertificationRequest, employeeID int64, ctx context.Context) (*employees.AddEmployeeCertificationResponse, error) {
+func (m *MockEmployeeService) AddEmployeeCertification(req employees.AddEmployeeCertificationRequest, employeeID uuid.UUID, ctx context.Context) (*employees.AddEmployeeCertificationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddEmployeeCertification", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.AddEmployeeCertificationResponse)
@@ -74,7 +75,7 @@ func (mr *MockEmployeeServiceMockRecorder) AddEmployeeCertification(req, employe
 }
 
 // AddEmployeeContractDetails mocks base method.
-func (m *MockEmployeeService) AddEmployeeContractDetails(req employees.AddEmployeeContractDetailsRequest, employeeID int64, ctx context.Context) (*employees.AddEmployeeContractDetailsResponse, error) {
+func (m *MockEmployeeService) AddEmployeeContractDetails(req employees.AddEmployeeContractDetailsRequest, employeeID uuid.UUID, ctx context.Context) (*employees.AddEmployeeContractDetailsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddEmployeeContractDetails", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.AddEmployeeContractDetailsResponse)
@@ -89,7 +90,7 @@ func (mr *MockEmployeeServiceMockRecorder) AddEmployeeContractDetails(req, emplo
 }
 
 // AddEmployeeExperience mocks base method.
-func (m *MockEmployeeService) AddEmployeeExperience(req employees.AddEmployeeExperienceRequest, employeeID int64, ctx context.Context) (*employees.AddEmployeeExperienceResponse, error) {
+func (m *MockEmployeeService) AddEmployeeExperience(req employees.AddEmployeeExperienceRequest, employeeID uuid.UUID, ctx context.Context) (*employees.AddEmployeeExperienceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddEmployeeExperience", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.AddEmployeeExperienceResponse)
@@ -119,7 +120,7 @@ func (mr *MockEmployeeServiceMockRecorder) CreateEmployee(req, ctx any) *gomock.
 }
 
 // DeleteEmployeeCertification mocks base method.
-func (m *MockEmployeeService) DeleteEmployeeCertification(certificationID int64, ctx context.Context) (*employees.DeleteEmployeeCertificationResponse, error) {
+func (m *MockEmployeeService) DeleteEmployeeCertification(certificationID uuid.UUID, ctx context.Context) (*employees.DeleteEmployeeCertificationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteEmployeeCertification", certificationID, ctx)
 	ret0, _ := ret[0].(*employees.DeleteEmployeeCertificationResponse)
@@ -134,7 +135,7 @@ func (mr *MockEmployeeServiceMockRecorder) DeleteEmployeeCertification(certifica
 }
 
 // DeleteEmployeeEducation mocks base method.
-func (m *MockEmployeeService) DeleteEmployeeEducation(educationID int64, ctx context.Context) (*employees.DeleteEmployeeEducationResponse, error) {
+func (m *MockEmployeeService) DeleteEmployeeEducation(educationID uuid.UUID, ctx context.Context) (*employees.DeleteEmployeeEducationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteEmployeeEducation", educationID, ctx)
 	ret0, _ := ret[0].(*employees.DeleteEmployeeEducationResponse)
@@ -149,7 +150,7 @@ func (mr *MockEmployeeServiceMockRecorder) DeleteEmployeeEducation(educationID, 
 }
 
 // DeleteEmployeeExperience mocks base method.
-func (m *MockEmployeeService) DeleteEmployeeExperience(experienceID int64, ctx context.Context) (*employees.DeleteEmployeeExperienceResponse, error) {
+func (m *MockEmployeeService) DeleteEmployeeExperience(experienceID uuid.UUID, ctx context.Context) (*employees.DeleteEmployeeExperienceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteEmployeeExperience", experienceID, ctx)
 	ret0, _ := ret[0].(*employees.DeleteEmployeeExperienceResponse)
@@ -164,7 +165,7 @@ func (mr *MockEmployeeServiceMockRecorder) DeleteEmployeeExperience(experienceID
 }
 
 // GetEmployeeContractDetails mocks base method.
-func (m *MockEmployeeService) GetEmployeeContractDetails(employeeID int64, ctx context.Context) (*employees.GetEmployeeContractDetailsResponse, error) {
+func (m *MockEmployeeService) GetEmployeeContractDetails(employeeID uuid.UUID, ctx context.Context) (*employees.GetEmployeeContractDetailsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmployeeContractDetails", employeeID, ctx)
 	ret0, _ := ret[0].(*employees.GetEmployeeContractDetailsResponse)
@@ -194,7 +195,7 @@ func (mr *MockEmployeeServiceMockRecorder) GetEmployeeCounts(ctx any) *gomock.Ca
 }
 
 // GetEmployeeProfile mocks base method.
-func (m *MockEmployeeService) GetEmployeeProfile(userID int64, ctx context.Context) (*employees.GetEmployeeProfileResponse, error) {
+func (m *MockEmployeeService) GetEmployeeProfile(userID uuid.UUID, ctx context.Context) (*employees.GetEmployeeProfileResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmployeeProfile", userID, ctx)
 	ret0, _ := ret[0].(*employees.GetEmployeeProfileResponse)
@@ -209,7 +210,7 @@ func (mr *MockEmployeeServiceMockRecorder) GetEmployeeProfile(userID, ctx any) *
 }
 
 // GetEmployeeProfileByID mocks base method.
-func (m *MockEmployeeService) GetEmployeeProfileByID(employeeID, currentUserID int64, ctx context.Context) (*employees.GetEmployeeProfileByIDResponse, error) {
+func (m *MockEmployeeService) GetEmployeeProfileByID(employeeID, currentUserID uuid.UUID, ctx context.Context) (*employees.GetEmployeeProfileByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmployeeProfileByID", employeeID, currentUserID, ctx)
 	ret0, _ := ret[0].(*employees.GetEmployeeProfileByIDResponse)
@@ -224,7 +225,7 @@ func (mr *MockEmployeeServiceMockRecorder) GetEmployeeProfileByID(employeeID, cu
 }
 
 // ListEmployeeCertification mocks base method.
-func (m *MockEmployeeService) ListEmployeeCertification(employeeID int64, ctx context.Context) ([]employees.ListEmployeeCertificationResponse, error) {
+func (m *MockEmployeeService) ListEmployeeCertification(employeeID uuid.UUID, ctx context.Context) ([]employees.ListEmployeeCertificationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEmployeeCertification", employeeID, ctx)
 	ret0, _ := ret[0].([]employees.ListEmployeeCertificationResponse)
@@ -239,7 +240,7 @@ func (mr *MockEmployeeServiceMockRecorder) ListEmployeeCertification(employeeID,
 }
 
 // ListEmployeeEducation mocks base method.
-func (m *MockEmployeeService) ListEmployeeEducation(employeeID int64, ctx context.Context) ([]employees.ListEmployeeEducationResponse, error) {
+func (m *MockEmployeeService) ListEmployeeEducation(employeeID uuid.UUID, ctx context.Context) ([]employees.ListEmployeeEducationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEmployeeEducation", employeeID, ctx)
 	ret0, _ := ret[0].([]employees.ListEmployeeEducationResponse)
@@ -254,7 +255,7 @@ func (mr *MockEmployeeServiceMockRecorder) ListEmployeeEducation(employeeID, ctx
 }
 
 // ListEmployeeExperience mocks base method.
-func (m *MockEmployeeService) ListEmployeeExperience(employeeID int64, ctx context.Context) ([]employees.ListEmployeeExperienceResponse, error) {
+func (m *MockEmployeeService) ListEmployeeExperience(employeeID uuid.UUID, ctx context.Context) ([]employees.ListEmployeeExperienceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEmployeeExperience", employeeID, ctx)
 	ret0, _ := ret[0].([]employees.ListEmployeeExperienceResponse)
@@ -284,7 +285,7 @@ func (mr *MockEmployeeServiceMockRecorder) ListEmployees(req, ctx any) *gomock.C
 }
 
 // ListWorkingHours mocks base method.
-func (m *MockEmployeeService) ListWorkingHours(ctx context.Context, employeeID int64, req *employees.ListWorkingHoursRequest) (*employees.ListWorkingHoursResponse, error) {
+func (m *MockEmployeeService) ListWorkingHours(ctx context.Context, employeeID uuid.UUID, req *employees.ListWorkingHoursRequest) (*employees.ListWorkingHoursResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWorkingHours", ctx, employeeID, req)
 	ret0, _ := ret[0].(*employees.ListWorkingHoursResponse)
@@ -314,7 +315,7 @@ func (mr *MockEmployeeServiceMockRecorder) SearchEmployeesByNameOrEmail(req, ctx
 }
 
 // SetEmployeeProfilePicture mocks base method.
-func (m *MockEmployeeService) SetEmployeeProfilePicture(req employees.SetEmployeeProfilePictureRequest, employeeID int64, ctx context.Context) (*employees.SetEmployeeProfilePictureResponse, error) {
+func (m *MockEmployeeService) SetEmployeeProfilePicture(req employees.SetEmployeeProfilePictureRequest, employeeID uuid.UUID, ctx context.Context) (*employees.SetEmployeeProfilePictureResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetEmployeeProfilePicture", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.SetEmployeeProfilePictureResponse)
@@ -329,7 +330,7 @@ func (mr *MockEmployeeServiceMockRecorder) SetEmployeeProfilePicture(req, employ
 }
 
 // UpdateEmployeeCertification mocks base method.
-func (m *MockEmployeeService) UpdateEmployeeCertification(req employees.UpdateEmployeeCertificationRequest, certificationID int64, ctx context.Context) (*employees.UpdateEmployeeCertificationResponse, error) {
+func (m *MockEmployeeService) UpdateEmployeeCertification(req employees.UpdateEmployeeCertificationRequest, certificationID uuid.UUID, ctx context.Context) (*employees.UpdateEmployeeCertificationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEmployeeCertification", req, certificationID, ctx)
 	ret0, _ := ret[0].(*employees.UpdateEmployeeCertificationResponse)
@@ -344,7 +345,7 @@ func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeCertification(req, cert
 }
 
 // UpdateEmployeeEducation mocks base method.
-func (m *MockEmployeeService) UpdateEmployeeEducation(req employees.UpdateEmployeeEducationRequest, educationID int64, ctx context.Context) (*employees.UpdateEmployeeEducationResponse, error) {
+func (m *MockEmployeeService) UpdateEmployeeEducation(req employees.UpdateEmployeeEducationRequest, educationID uuid.UUID, ctx context.Context) (*employees.UpdateEmployeeEducationResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEmployeeEducation", req, educationID, ctx)
 	ret0, _ := ret[0].(*employees.UpdateEmployeeEducationResponse)
@@ -359,7 +360,7 @@ func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeEducation(req, educatio
 }
 
 // UpdateEmployeeExperience mocks base method.
-func (m *MockEmployeeService) UpdateEmployeeExperience(req employees.UpdateEmployeeExperienceRequest, experienceID int64, ctx context.Context) (*employees.UpdateEmployeeExperienceResponse, error) {
+func (m *MockEmployeeService) UpdateEmployeeExperience(req employees.UpdateEmployeeExperienceRequest, experienceID uuid.UUID, ctx context.Context) (*employees.UpdateEmployeeExperienceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEmployeeExperience", req, experienceID, ctx)
 	ret0, _ := ret[0].(*employees.UpdateEmployeeExperienceResponse)
@@ -374,7 +375,7 @@ func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeExperience(req, experie
 }
 
 // UpdateEmployeeIsSubcontractor mocks base method.
-func (m *MockEmployeeService) UpdateEmployeeIsSubcontractor(req employees.UpdateEmployeeIsSubcontractorRequest, employeeID int64, ctx context.Context) (*employees.UpdateEmployeeIsSubcontractorResponse, error) {
+func (m *MockEmployeeService) UpdateEmployeeIsSubcontractor(req employees.UpdateEmployeeIsSubcontractorRequest, employeeID uuid.UUID, ctx context.Context) (*employees.UpdateEmployeeIsSubcontractorResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEmployeeIsSubcontractor", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.UpdateEmployeeIsSubcontractorResponse)
@@ -389,7 +390,7 @@ func (mr *MockEmployeeServiceMockRecorder) UpdateEmployeeIsSubcontractor(req, em
 }
 
 // UpdateEmployeeProfile mocks base method.
-func (m *MockEmployeeService) UpdateEmployeeProfile(req employees.UpdateEmployeeProfileRequest, employeeID int64, ctx context.Context) (*employees.UpdateEmployeeProfileResponse, error) {
+func (m *MockEmployeeService) UpdateEmployeeProfile(req employees.UpdateEmployeeProfileRequest, employeeID uuid.UUID, ctx context.Context) (*employees.UpdateEmployeeProfileResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEmployeeProfile", req, employeeID, ctx)
 	ret0, _ := ret[0].(*employees.UpdateEmployeeProfileResponse)

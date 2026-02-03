@@ -14,6 +14,7 @@ import (
 	auth "maicare_go/service/auth"
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,7 +43,7 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // AddPermissionsToRole mocks base method.
-func (m *MockAuthService) AddPermissionsToRole(ctx context.Context, roleID int32, req *auth.AddPermissionsToRoleRequest) (*auth.AddPermissionsToRoleResponse, error) {
+func (m *MockAuthService) AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, req *auth.AddPermissionsToRoleRequest) (*auth.AddPermissionsToRoleResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddPermissionsToRole", ctx, roleID, req)
 	ret0, _ := ret[0].(*auth.AddPermissionsToRoleResponse)
@@ -57,7 +58,7 @@ func (mr *MockAuthServiceMockRecorder) AddPermissionsToRole(ctx, roleID, req any
 }
 
 // AssignRoleToEmployee mocks base method.
-func (m *MockAuthService) AssignRoleToEmployee(ctx context.Context, employeeID int64, req *auth.AssignRoleToEmployeeParams) (*auth.AssignRoleToEmployeeApiResponse, error) {
+func (m *MockAuthService) AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, req *auth.AssignRoleToEmployeeParams) (*auth.AssignRoleToEmployeeApiResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AssignRoleToEmployee", ctx, employeeID, req)
 	ret0, _ := ret[0].(*auth.AssignRoleToEmployeeApiResponse)
@@ -72,7 +73,7 @@ func (mr *MockAuthServiceMockRecorder) AssignRoleToEmployee(ctx, employeeID, req
 }
 
 // ChangePassword mocks base method.
-func (m *MockAuthService) ChangePassword(req auth.ChangePasswordRequest, userID int64, ctx context.Context) error {
+func (m *MockAuthService) ChangePassword(req auth.ChangePasswordRequest, userID uuid.UUID, ctx context.Context) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangePassword", req, userID, ctx)
 	ret0, _ := ret[0].(error)
@@ -101,7 +102,7 @@ func (mr *MockAuthServiceMockRecorder) CreateRole(ctx, req any) *gomock.Call {
 }
 
 // EnableTwoFA mocks base method.
-func (m *MockAuthService) EnableTwoFA(req auth.Enable2FARequest, userID int64, ctx context.Context) (*auth.Enable2FAResponse, error) {
+func (m *MockAuthService) EnableTwoFA(req auth.Enable2FARequest, userID uuid.UUID, ctx context.Context) (*auth.Enable2FAResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnableTwoFA", req, userID, ctx)
 	ret0, _ := ret[0].(*auth.Enable2FAResponse)
@@ -115,8 +116,23 @@ func (mr *MockAuthServiceMockRecorder) EnableTwoFA(req, userID, ctx any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableTwoFA", reflect.TypeOf((*MockAuthService)(nil).EnableTwoFA), req, userID, ctx)
 }
 
+// GetUserRoles mocks base method.
+func (m *MockAuthService) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserRoles", ctx, userID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserRoles indicates an expected call of GetUserRoles.
+func (mr *MockAuthServiceMockRecorder) GetUserRoles(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRoles", reflect.TypeOf((*MockAuthService)(nil).GetUserRoles), ctx, userID)
+}
+
 // GrantUserPermission mocks base method.
-func (m *MockAuthService) GrantUserPermission(ctx context.Context, employeeID int64, req *auth.GrantUserPermissionsRequest) (*auth.GrantUserPermissionsResponse, error) {
+func (m *MockAuthService) GrantUserPermission(ctx context.Context, employeeID uuid.UUID, req *auth.GrantUserPermissionsRequest) (*auth.GrantUserPermissionsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GrantUserPermission", ctx, employeeID, req)
 	ret0, _ := ret[0].(*auth.GrantUserPermissionsResponse)
@@ -131,7 +147,7 @@ func (mr *MockAuthServiceMockRecorder) GrantUserPermission(ctx, employeeID, req 
 }
 
 // HasPermission mocks base method.
-func (m *MockAuthService) HasPermission(ctx context.Context, userID int64, permission string) (bool, error) {
+func (m *MockAuthService) HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HasPermission", ctx, userID, permission)
 	ret0, _ := ret[0].(bool)
@@ -161,7 +177,7 @@ func (mr *MockAuthServiceMockRecorder) ListAllPermissions(ctx any) *gomock.Call 
 }
 
 // ListAllRolePermissions mocks base method.
-func (m *MockAuthService) ListAllRolePermissions(ctx context.Context, roleID int32) ([]auth.ListAllRolePermissionsApiResponse, error) {
+func (m *MockAuthService) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]auth.ListAllRolePermissionsApiResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAllRolePermissions", ctx, roleID)
 	ret0, _ := ret[0].([]auth.ListAllRolePermissionsApiResponse)
@@ -191,7 +207,7 @@ func (mr *MockAuthServiceMockRecorder) ListRoles(ctx any) *gomock.Call {
 }
 
 // ListUserRolesAndPermissionsApi mocks base method.
-func (m *MockAuthService) ListUserRolesAndPermissionsApi(ctx context.Context, employeeID int64) (*auth.ListUserRolesAndPermissionsApiResponse, error) {
+func (m *MockAuthService) ListUserRolesAndPermissionsApi(ctx context.Context, employeeID uuid.UUID) (*auth.ListUserRolesAndPermissionsApiResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListUserRolesAndPermissionsApi", ctx, employeeID)
 	ret0, _ := ret[0].(*auth.ListUserRolesAndPermissionsApiResponse)
@@ -250,7 +266,7 @@ func (mr *MockAuthServiceMockRecorder) RefreshToken(req, ctx any) *gomock.Call {
 }
 
 // SetupTwoFA mocks base method.
-func (m *MockAuthService) SetupTwoFA(userID int64, ctx context.Context) (*auth.Setup2FAResponse, error) {
+func (m *MockAuthService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*auth.Setup2FAResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetupTwoFA", userID, ctx)
 	ret0, _ := ret[0].(*auth.Setup2FAResponse)

@@ -29,19 +29,21 @@ func (s *clientService) GetClientSender(ctx context.Context, clientID uuid.UUID)
 		return nil, err
 	}
 	response := &GetClientSenderResponse{
-		ID:           sender.ID,
-		Types:        string(sender.Types),
-		Name:         sender.Name,
-		Address:      sender.Address,
-		PostalCode:   sender.PostalCode,
-		Place:        sender.Place,
-		Land:         sender.Land,
-		Kvknumber:    sender.Kvknumber,
-		Btwnumber:    sender.Btwnumber,
-		PhoneNumber:  sender.PhoneNumber,
-		ClientNumber: sender.ClientNumber,
-		IsArchived:   sender.IsArchived,
-		Contacts:     contacts,
+		ID:                  sender.ID,
+		Types:               string(sender.Types),
+		Name:                sender.Name,
+		Street:              sender.Street,
+		HouseNumber:         sender.HouseNumber,
+		HouseNumberAddition: sender.HouseNumberAddition,
+		PostalCode:          sender.PostalCode,
+		City:                sender.City,
+		Land:                sender.Land,
+		Kvknumber:           sender.Kvknumber,
+		Btwnumber:           sender.Btwnumber,
+		PhoneNumber:         sender.PhoneNumber,
+		ClientNumber:        sender.ClientNumber,
+		IsArchived:          sender.IsArchived,
+		Contacts:            contacts,
 	}
 	return response, nil
 }

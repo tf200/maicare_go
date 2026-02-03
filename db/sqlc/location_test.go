@@ -19,14 +19,17 @@ func TestCreateOrganisation(t *testing.T) {
 		{
 			name: "successful creation with minimal fields",
 			params: CreateOrganisationParams{
-				Name:       "Test Organisation",
-				Address:    "123 Test Street",
-				PostalCode: "12345",
-				City:       "Test City",
+				Name:        "Test Organisation",
+				Street:      "Test Street",
+				HouseNumber: "123",
+				PostalCode:  "12345",
+				City:        "Test City",
 			},
 			checks: func(t *testing.T, organisation Organisation) {
 				require.Equal(t, "Test Organisation", organisation.Name)
-				require.Equal(t, "123 Test Street", organisation.Address)
+				require.Equal(t, "Test Street", organisation.Street)
+				require.Equal(t, "123", organisation.HouseNumber)
+				require.Nil(t, organisation.HouseNumberAddition)
 				require.Equal(t, "12345", organisation.PostalCode)
 				require.Equal(t, "Test City", organisation.City)
 				require.Nil(t, organisation.PhoneNumber)
@@ -38,18 +41,23 @@ func TestCreateOrganisation(t *testing.T) {
 		{
 			name: "successful creation with all fields",
 			params: CreateOrganisationParams{
-				Name:        "Full Organisation",
-				Address:     "456 Full Ave",
-				PostalCode:  "67890",
-				City:        "Full City",
-				PhoneNumber: util.StringPtr("+1234567890"),
-				Email:       util.StringPtr("full@example.com"),
-				KvkNumber:   util.StringPtr("KVK123456"),
-				BtwNumber:   util.StringPtr("BTW789012"),
+				Name:                "Full Organisation",
+				Street:              "Full Ave",
+				HouseNumber:         "456",
+				HouseNumberAddition: util.StringPtr("A"),
+				PostalCode:          "67890",
+				City:                "Full City",
+				PhoneNumber:         util.StringPtr("+1234567890"),
+				Email:               util.StringPtr("full@example.com"),
+				KvkNumber:           util.StringPtr("KVK123456"),
+				BtwNumber:           util.StringPtr("BTW789012"),
 			},
 			checks: func(t *testing.T, organisation Organisation) {
 				require.Equal(t, "Full Organisation", organisation.Name)
-				require.Equal(t, "456 Full Ave", organisation.Address)
+				require.Equal(t, "Full Ave", organisation.Street)
+				require.Equal(t, "456", organisation.HouseNumber)
+				require.NotNil(t, organisation.HouseNumberAddition)
+				require.Equal(t, "A", *organisation.HouseNumberAddition)
 				require.Equal(t, "67890", organisation.PostalCode)
 				require.Equal(t, "Full City", organisation.City)
 				require.NotNil(t, organisation.PhoneNumber)
@@ -65,15 +73,19 @@ func TestCreateOrganisation(t *testing.T) {
 		{
 			name: "successful creation with some optional fields",
 			params: CreateOrganisationParams{
-				Name:       "Partial Organisation",
-				Address:    "789 Partial St",
-				PostalCode: "13579",
-				City:       "Partial City",
-				Email:      util.StringPtr("partial@example.com"),
-				KvkNumber:  util.StringPtr("KVK111111"),
+				Name:        "Partial Organisation",
+				Street:      "Partial St",
+				HouseNumber: "789",
+				PostalCode:  "13579",
+				City:        "Partial City",
+				Email:       util.StringPtr("partial@example.com"),
+				KvkNumber:   util.StringPtr("KVK111111"),
 			},
 			checks: func(t *testing.T, organisation Organisation) {
 				require.Equal(t, "Partial Organisation", organisation.Name)
+				require.Equal(t, "Partial St", organisation.Street)
+				require.Equal(t, "789", organisation.HouseNumber)
+				require.Nil(t, organisation.HouseNumberAddition)
 				require.NotNil(t, organisation.Email)
 				require.Equal(t, "partial@example.com", *organisation.Email)
 				require.NotNil(t, organisation.KvkNumber)
@@ -114,10 +126,11 @@ func TestListOrganisations(t *testing.T) {
 				// Create multiple organisations
 				for i := 0; i < 3; i++ {
 					_, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-						Name:       util.RandomString(10),
-						Address:    util.RandomString(20),
-						PostalCode: util.RandomString(5),
-						City:       util.RandomString(10),
+						Name:        util.RandomString(10),
+						Street:      util.RandomString(20),
+						HouseNumber: util.RandomString(4),
+						PostalCode:  util.RandomString(5),
+						City:        util.RandomString(10),
 					})
 					require.NoError(t, err)
 				}
@@ -145,10 +158,11 @@ func TestListOrganisations(t *testing.T) {
 			name: "list organisations with location counts",
 			setup: func(ctx context.Context, qtx *Queries) {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-					Name:       "Org With Locations",
-					Address:    "123 Test St",
-					PostalCode: "12345",
-					City:       "Test City",
+					Name:        "Org With Locations",
+					Street:      "Test St",
+					HouseNumber: "123",
+					PostalCode:  "12345",
+					City:        "Test City",
 				})
 				require.NoError(t, err)
 
@@ -157,7 +171,10 @@ func TestListOrganisations(t *testing.T) {
 					_, err := qtx.CreateLocation(ctx, CreateLocationParams{
 						OrganisationID: org.ID,
 						Name:           util.RandomString(10),
-						Address:        util.RandomString(20),
+						Street:         util.RandomString(20),
+						HouseNumber:    util.RandomString(2),
+						PostalCode:     util.RandomString(6),
+						City:           util.RandomString(10),
 					})
 					require.NoError(t, err)
 				}
@@ -204,10 +221,11 @@ func TestGetOrganisation(t *testing.T) {
 			name: "get existing organisation by ID",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				organisation, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-					Name:       "Get Test Organisation",
-					Address:    "456 Get St",
-					PostalCode: "54321",
-					City:       "Get City",
+					Name:        "Get Test Organisation",
+					Street:      "Get St",
+					HouseNumber: "456",
+					PostalCode:  "54321",
+					City:        "Get City",
 				})
 				require.NoError(t, err)
 				return organisation.ID
@@ -231,10 +249,11 @@ func TestGetOrganisation(t *testing.T) {
 			name: "get organisation with location count",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-					Name:       "Org With Locations",
-					Address:    "789 Count St",
-					PostalCode: "98765",
-					City:       "Count City",
+					Name:        "Org With Locations",
+					Street:      "Count St",
+					HouseNumber: "789",
+					PostalCode:  "98765",
+					City:        "Count City",
 				})
 				require.NoError(t, err)
 
@@ -242,7 +261,10 @@ func TestGetOrganisation(t *testing.T) {
 				_, err = qtx.CreateLocation(ctx, CreateLocationParams{
 					OrganisationID: org.ID,
 					Name:           "Test Location",
-					Address:        "123 Location St",
+					Street:         "123 Location St",
+					HouseNumber:    "1",
+					PostalCode:     "1234AB",
+					City:           "Test City",
 				})
 				require.NoError(t, err)
 
@@ -282,10 +304,11 @@ func TestGetOrganisationCounts(t *testing.T) {
 			name: "get counts for organisation with no entities",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-					Name:       "Empty Org",
-					Address:    "123 Empty St",
-					PostalCode: "12345",
-					City:       "Empty City",
+					Name:        "Empty Org",
+					Street:      "Empty St",
+					HouseNumber: "123",
+					PostalCode:  "12345",
+					City:        "Empty City",
 				})
 				require.NoError(t, err)
 				return org.ID
@@ -301,10 +324,11 @@ func TestGetOrganisationCounts(t *testing.T) {
 			name: "get counts for organisation with locations",
 			setup: func(ctx context.Context, qtx *Queries) uuid.UUID {
 				org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-					Name:       "Org With Locations",
-					Address:    "456 Location St",
-					PostalCode: "54321",
-					City:       "Location City",
+					Name:        "Org With Locations",
+					Street:      "Location St",
+					HouseNumber: "456",
+					PostalCode:  "54321",
+					City:        "Location City",
 				})
 				require.NoError(t, err)
 
@@ -313,7 +337,10 @@ func TestGetOrganisationCounts(t *testing.T) {
 					_, err := qtx.CreateLocation(ctx, CreateLocationParams{
 						OrganisationID: org.ID,
 						Name:           util.RandomString(10),
-						Address:        util.RandomString(20),
+						Street:         util.RandomString(20),
+						HouseNumber:    util.RandomString(2),
+						PostalCode:     util.RandomString(6),
+						City:           util.RandomString(10),
 					})
 					require.NoError(t, err)
 				}
@@ -379,15 +406,17 @@ func TestUpdateOrganisation(t *testing.T) {
 			setup: func(ctx context.Context, qtx *Queries) UpdateOrganisationParams {
 				org := createRandomOrganisation(ctx, qtx)
 				return UpdateOrganisationParams{
-					ID:          org.ID,
-					Name:        util.StringPtr("Fully Updated Org"),
-					Address:     util.StringPtr("456 Updated Ave"),
-					PostalCode:  util.StringPtr("65432"),
-					City:        util.StringPtr("Updated City"),
-					PhoneNumber: util.StringPtr("+9876543210"),
-					Email:       util.StringPtr("updated@example.com"),
-					KvkNumber:   util.StringPtr("KVK999999"),
-					BtwNumber:   util.StringPtr("BTW888888"),
+					ID:                  org.ID,
+					Name:                util.StringPtr("Fully Updated Org"),
+					Street:              util.StringPtr("Updated Ave"),
+					HouseNumber:         util.StringPtr("456"),
+					HouseNumberAddition: util.StringPtr("B"),
+					PostalCode:          util.StringPtr("65432"),
+					City:                util.StringPtr("Updated City"),
+					PhoneNumber:         util.StringPtr("+9876543210"),
+					Email:               util.StringPtr("updated@example.com"),
+					KvkNumber:           util.StringPtr("KVK999999"),
+					BtwNumber:           util.StringPtr("BTW888888"),
 				}
 			},
 			checks: func(t *testing.T, err error) {
@@ -495,13 +524,19 @@ func TestCreateLocation(t *testing.T) {
 				return CreateLocationParams{
 					OrganisationID: org.ID,
 					Name:           "Test Location",
-					Address:        "123 Location St",
+					Street:         "123 Location St",
+					HouseNumber:    "1",
+					PostalCode:     "1234AB",
+					City:           "Test City",
 					Capacity:       nil,
 				}
 			},
 			checks: func(t *testing.T, location Location) {
 				require.Equal(t, "Test Location", location.Name)
-				require.Equal(t, "123 Location St", location.Address)
+				require.Equal(t, "123 Location St", location.Street)
+				require.Equal(t, "1", location.HouseNumber)
+				require.Equal(t, "1234AB", location.PostalCode)
+				require.Equal(t, "Test City", location.City)
 				require.Nil(t, location.Capacity, "capacity should be nil when not provided")
 			},
 		},
@@ -513,12 +548,16 @@ func TestCreateLocation(t *testing.T) {
 				return CreateLocationParams{
 					OrganisationID: org.ID,
 					Name:           "Location With Capacity",
-					Address:        "456 Capacity Ave",
+					Street:         "456 Capacity Ave",
+					HouseNumber:    "2",
+					PostalCode:     "5678CD",
+					City:           "Capacity City",
 					Capacity:       &capacity,
 				}
 			},
 			checks: func(t *testing.T, location Location) {
 				require.Equal(t, "Location With Capacity", location.Name)
+				require.Equal(t, "456 Capacity Ave", location.Street)
 				require.NotNil(t, location.Capacity, "capacity should not be nil")
 				require.Equal(t, int32(100), *location.Capacity, "capacity should match")
 			},
@@ -560,7 +599,10 @@ func TestListLocations(t *testing.T) {
 					_, err := qtx.CreateLocation(ctx, CreateLocationParams{
 						OrganisationID: org.ID,
 						Name:           util.RandomString(10),
-						Address:        util.RandomString(20),
+						Street:         util.RandomString(20),
+						HouseNumber:    util.RandomString(2),
+						PostalCode:     util.RandomString(6),
+						City:           util.RandomString(10),
 					})
 					require.NoError(t, err)
 				}
@@ -685,7 +727,7 @@ func TestUpdateLocation(t *testing.T) {
 				return UpdateLocationParams{
 					ID:       location.ID,
 					Name:     util.StringPtr("Fully Updated Location"),
-					Address:  util.StringPtr("789 Updated Blvd"),
+					Street:   util.StringPtr("789 Updated Blvd"),
 					Capacity: &capacity,
 				}
 			},
@@ -797,7 +839,10 @@ func TestListAllLocations(t *testing.T) {
 						_, err := qtx.CreateLocation(ctx, CreateLocationParams{
 							OrganisationID: org.ID,
 							Name:           util.RandomString(10),
-							Address:        util.RandomString(20),
+							Street:         util.RandomString(20),
+							HouseNumber:    util.RandomString(2),
+							PostalCode:     util.RandomString(6),
+							City:           util.RandomString(10),
 						})
 						require.NoError(t, err)
 					}
@@ -845,10 +890,11 @@ func TestListAllLocations(t *testing.T) {
 
 func createRandomOrganisation(ctx context.Context, qtx *Queries) Organisation {
 	org, err := qtx.CreateOrganisation(ctx, CreateOrganisationParams{
-		Name:       util.RandomString(15),
-		Address:    util.RandomString(25),
-		PostalCode: util.RandomString(6),
-		City:       util.RandomString(12),
+		Name:        util.RandomString(15),
+		Street:      util.RandomString(25),
+		HouseNumber: util.RandomString(4),
+		PostalCode:  util.RandomString(6),
+		City:        util.RandomString(12),
 	})
 	if err != nil {
 		panic("failed to create random organisation: " + err.Error())
@@ -861,7 +907,10 @@ func createRandomLocation(ctx context.Context, qtx *Queries) Location {
 	location, err := qtx.CreateLocation(ctx, CreateLocationParams{
 		OrganisationID: org.ID,
 		Name:           util.RandomString(12),
-		Address:        util.RandomString(22),
+		Street:         util.RandomString(22),
+		HouseNumber:    util.RandomString(2),
+		PostalCode:     util.RandomString(6),
+		City:           util.RandomString(10),
 		Capacity:       nil,
 	})
 	if err != nil {

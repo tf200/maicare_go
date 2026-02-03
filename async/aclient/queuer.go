@@ -18,12 +18,37 @@ const (
 	QueueLow      = "low"
 
 	// Task Type Names
-	TypeEmailDelivery        = "email:deliver"
-	TypeIncidentProcess      = "incident:process"      // Renamed for clarity
-	TypeNotificationSend     = "notification:send"     // Renamed for clarity
-	TypeAppointmentCreate    = "appointment:create"    // Renamed for clarity
-	TypeAcceptedRegistration = "accepted:registration" // Renamed for clarity
+	TypeEmailDelivery                = "email:deliver"
+	TypeIncidentProcess              = "incident:process"      // Renamed for clarity
+	TypeNotificationSend             = "notification:send"     // Renamed for clarity
+	TypeAppointmentCreate            = "appointment:create"    // Renamed for clarity
+	TypeAcceptedRegistration         = "accepted:registration" // Renamed for clarity
+	TypeProcessRegistrationFormEmail = "email:process_registration_form"
 )
+
+func (c *AsynqClient) EnqueueProcessRegistrationFormEmail(
+	ctx context.Context,
+	payload ProcessRegistrationFormEmailPayload,
+	opts ...asynq.Option,
+) error {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("EnqueueProcessRegistrationFormEmail: json.Marshal failed: %w", err)
+	}
+
+	if len(opts) == 0 {
+		opts = append(opts, asynq.Queue(QueueDefault), asynq.MaxRetry(5))
+	}
+
+	task := asynq.NewTask(TypeProcessRegistrationFormEmail, jsonPayload)
+	info, err := c.client.EnqueueContext(ctx, task, opts...)
+	if err != nil {
+		return fmt.Errorf("EnqueueProcessRegistrationFormEmail: client.EnqueueContext failed: %w", err)
+	}
+
+	log.Printf("Process Registration Form Email task enqueued: id=%s queue=%s", info.ID, info.Queue)
+	return nil
+}
 
 func (c *AsynqClient) EnqueueEmailDelivery(
 	payload EmailDeliveryPayload,

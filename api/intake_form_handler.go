@@ -26,12 +26,13 @@ func (s *Server) CreateIntakeFormApi(ctx *gin.Context) {
 		return
 	}
 
-	res, err := s.businessService.ClientService.CreateIntakeForm(ctx, &req)
+	result, err := s.businessService.ClientService.CreateIntakeForm(ctx, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
+	res := SuccessResponse(result, "Intake Form created successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

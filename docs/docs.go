@@ -608,11 +608,11 @@ const docTemplate = `{
                 }
             }
         },
-        "/attachments/upload": {
+        "/attachments/upload/confirm": {
             "post": {
-                "description": "Upload a file to the server",
+                "description": "Confirm that a file has been uploaded to the storage",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -620,21 +620,57 @@ const docTemplate = `{
                 "tags": [
                     "attachments"
                 ],
-                "summary": "Upload a file",
+                "summary": "Confirm file upload",
                 "parameters": [
                     {
-                        "type": "file",
-                        "description": "File to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
+                        "description": "Confirm Upload Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/attachment.ConfirmUploadRequest"
+                        }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-attachment_UploadHandlerResponse"
+                            "$ref": "#/definitions/api.Response-attachment_ConfirmUploadResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/attachments/upload/init": {
+            "post": {
+                "description": "Initiate a file upload to get a presigned URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "attachments"
+                ],
+                "summary": "Initiate file upload",
+                "parameters": [
+                    {
+                        "description": "Init Upload Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/attachment.InitUploadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-attachment_InitUploadResponse"
                         }
                     }
                 }
@@ -7006,6 +7042,158 @@ const docTemplate = `{
                 }
             }
         },
+        "/intake_forms/{id}/assessments": {
+            "get": {
+                "description": "List all maturity assessments for a specific intake form",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registration Form"
+                ],
+                "summary": "List Intake Maturity Assessments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListIntakeMaturityAssessmentsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_forms/{id}/initialize_assessments": {
+            "post": {
+                "description": "Create default assessments for all maturity matrix topics for this intake",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registration Form"
+                ],
+                "summary": "Initialize Intake Assessments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_InitializeIntakeAssessmentsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_forms/{id}/promote": {
+            "post": {
+                "description": "Promote an intake form and all its assessments to a full client record with a care plan",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registration Form"
+                ],
+                "summary": "Promote Intake to Client",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_PromoteIntakeToClientResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_maturity/{assessment_id}": {
+            "put": {
+                "description": "Update a maturity assessment for an intake",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registration Form"
+                ],
+                "summary": "Update Intake Maturity Assessment",
+                "parameters": [
+                    {
+                        "description": "Update Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.UpdateIntakeMaturityAssessmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_UpdateIntakeMaturityAssessmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/intake_maturity/{assessment_id}/generate_goals": {
+            "post": {
+                "description": "Generate Care Plan goals for an intake maturity assessment using AI",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registration Form"
+                ],
+                "summary": "Generate Intake Goals",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GenerateIntakeGoalsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/interventions/{intervention_id}": {
             "put": {
                 "description": "Update a care plan intervention by its ID",
@@ -8017,19 +8205,39 @@ const docTemplate = `{
         },
         "/locations": {
             "get": {
-                "description": "Get a list of all locations across all organisations",
+                "description": "Get a list of all locations across all organizations with pagination and optional search",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "organisations"
+                    "organizations"
                 ],
                 "summary": "List all locations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by location name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_organization_ListLocationsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-organization_ListLocationsResponse"
                         }
                     },
                     "500": {
@@ -8051,7 +8259,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "organisations"
+                    "organizations"
                 ],
                 "summary": "Get a location",
                 "parameters": [
@@ -8099,7 +8307,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "organisations"
+                    "organizations"
                 ],
                 "summary": "Update a location",
                 "parameters": [
@@ -8156,7 +8364,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "organisations"
+                    "organizations"
                 ],
                 "summary": "Delete a location",
                 "parameters": [
@@ -8780,345 +8988,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/organisations": {
-            "get": {
-                "description": "Get a list of all organisations",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "List all organisations",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-array_organization_ListOrganisationsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Create a new organisation",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "Create an organisation",
-                "parameters": [
-                    {
-                        "description": "Create organisation",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/organization.CreateOrganisationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-organization_CreateOrganisationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/organisations/{id}": {
-            "get": {
-                "description": "Get an organisation by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "Get an organisation",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Organisation ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-organization_GetOrganisationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update an organisation by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "Update an organisation",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Organisation ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update organisation",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/organization.UpdateOrganisationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-organization_UpdateOrganisationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete an organisation by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "Delete an organisation",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Organisation ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-organization_DeleteOrganisationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/organisations/{id}/counts": {
-            "get": {
-                "description": "Get counts of locations, clients, and employees for an organisation by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "Get organisation counts",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Organisation ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-organization_GetOrganisationCountResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
         "/organisations/{id}/locations": {
-            "get": {
-                "description": "Get a list of all locations",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "organisations"
-                ],
-                "summary": "List all locations",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Organisation ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-array_organization_ListLocationsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Create a new location",
                 "consumes": [
@@ -9128,13 +8998,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "organisations"
+                    "organizations"
                 ],
                 "summary": "Create a location",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Organisation ID",
+                        "description": "Organization ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -9177,6 +9047,384 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations": {
+            "get": {
+                "description": "Get a list of all organizations with pagination and optional name search",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "List all organizations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by organization name",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-organization_ListOrganisationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Create an organization",
+                "parameters": [
+                    {
+                        "description": "Create organization",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/organization.CreateOrganisationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-organization_CreateOrganisationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{id}": {
+            "get": {
+                "description": "Get an organization by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Get an organization",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-organization_GetOrganisationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an organization by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Update an organization",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update organization",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/organization.UpdateOrganisationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-organization_UpdateOrganisationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an organization by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Delete an organization",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-organization_DeleteOrganisationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{id}/counts": {
+            "get": {
+                "description": "Get counts of locations, clients, and employees for an organization by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Get organization counts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-organization_GetOrganisationCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations/{id}/locations": {
+            "get": {
+                "description": "Get a list of all locations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "List all locations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by location name",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-organization_ListLocationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/permissions": {
             "get": {
                 "description": "List all permissions",
@@ -9192,6 +9440,109 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-array_auth_ListAllPermissionsApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/intake-options/{token}": {
+            "get": {
+                "description": "Get intake options for a registration form via token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Intake"
+                ],
+                "summary": "Get Public Intake Options",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_PublicIntakeOptionsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/intake-options/{token}/confirm": {
+            "post": {
+                "description": "Select an intake date for a registration form via token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Intake"
+                ],
+                "summary": "Select Intake Date",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Intake Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Select Intake Date Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.SelectIntakeDateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
                         }
                     },
                     "400": {
@@ -9494,6 +9845,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/registration_form/{id}/process": {
+            "post": {
+                "description": "Process a registration form by sending intake proposals",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registration Form"
+                ],
+                "summary": "Update Registration Form Status",
+                "parameters": [
+                    {
+                        "description": "Process Registration Form Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.ProcessRegistrationFormRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/registration_form/{id}/status": {
             "post": {
                 "description": "Update the status of a registration form by ID",
@@ -9503,7 +9903,6 @@ const docTemplate = `{
                 "tags": [
                     "Registration Form"
                 ],
-                "summary": "Update Registration Form Status",
                 "parameters": [
                     {
                         "description": "Update Registration Form Status Request",
@@ -11333,40 +11732,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_organization_ListLocationsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/organization.ListLocationsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_organization_ListOrganisationsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/organization.ListOrganisationsResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-array_organization_ListShiftsByLocationIDResponse": {
             "type": "object",
             "properties": {
@@ -11392,6 +11757,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/schedule.GetMonthlySchedulesByLocationResponse"
                     }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-attachment_ConfirmUploadResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/attachment.ConfirmUploadResponse"
                 },
                 "message": {
                     "type": "string"
@@ -11429,11 +11808,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-attachment_UploadHandlerResponse": {
+        "api.Response-attachment_InitUploadResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/attachment.UploadHandlerResponse"
+                    "$ref": "#/definitions/attachment.InitUploadResponse"
                 },
                 "message": {
                     "type": "string"
@@ -12087,6 +12466,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GenerateIntakeGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GenerateIntakeGoalsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_GetAppointmentCardResponse": {
             "type": "object",
             "properties": {
@@ -12283,6 +12676,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_InitializeIntakeAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.InitializeIntakeAssessmentsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_ListClientEmergencyContactsResponse": {
             "type": "object",
             "properties": {
@@ -12302,6 +12709,34 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.ListClientsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_PromoteIntakeToClientResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.PromoteIntakeToClientResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_PublicIntakeOptionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.PublicIntakeOptionsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -12428,6 +12863,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.UpdateIncidentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateIntakeMaturityAssessmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateIntakeMaturityAssessmentResponse"
                 },
                 "message": {
                     "type": "string"
@@ -13319,6 +13768,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-clientp_ListIntakeMaturityAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListIntakeMaturityAssessmentsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-clientp_ListLocationTransferRequestsResponse": {
             "type": "object",
             "properties": {
@@ -13380,6 +13843,34 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-invoice_ListInvoicesResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-organization_ListLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-organization_ListLocationsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-organization_ListOrganisationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-organization_ListOrganisationsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -13949,6 +14440,34 @@ const docTemplate = `{
                 }
             }
         },
+        "attachment.ConfirmUploadRequest": {
+            "type": "object",
+            "required": [
+                "file_id"
+            ],
+            "properties": {
+                "file_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "attachment.ConfirmUploadResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_url": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "attachment.DeleteAttachmentResponse": {
             "type": "object",
             "properties": {
@@ -13983,20 +14502,36 @@ const docTemplate = `{
                 }
             }
         },
-        "attachment.UploadHandlerResponse": {
+        "attachment.InitUploadRequest": {
             "type": "object",
+            "required": [
+                "content_type",
+                "filename",
+                "size"
+            ],
             "properties": {
-                "created_at": {
+                "content_type": {
                     "type": "string"
                 },
-                "file_id": {
-                    "type": "string"
-                },
-                "file_url": {
+                "filename": {
                     "type": "string"
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "attachment.InitUploadResponse": {
+            "type": "object",
+            "properties": {
+                "file_id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "upload_url": {
+                    "type": "string"
                 }
             }
         },
@@ -15265,9 +15800,6 @@ const docTemplate = `{
         "clientp.Address": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "belongs_to": {
                     "type": "string"
                 },
@@ -15277,10 +15809,16 @@ const docTemplate = `{
                 "house_number": {
                     "type": "string"
                 },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "phone_number": {
                     "type": "string"
                 },
-                "zip_code": {
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -15655,6 +16193,9 @@ const docTemplate = `{
                 "location_id": {
                     "type": "string"
                 },
+                "nationality": {
+                    "type": "string"
+                },
                 "organization_id": {
                     "type": "string"
                 },
@@ -15779,6 +16320,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
+                    "type": "string"
+                },
+                "nationality": {
                     "type": "string"
                 },
                 "organization_id": {
@@ -16393,6 +16937,10 @@ const docTemplate = `{
         "clientp.CreateIntakeFormRequest": {
             "type": "object",
             "properties": {
+                "assigned_location_id": {
+                    "description": "Where client will live",
+                    "type": "string"
+                },
                 "care_type": {
                     "$ref": "#/definitions/db.IntakeCareTypeEnum"
                 },
@@ -16400,9 +16948,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "family_situation": {
-                    "type": "string"
-                },
-                "goals": {
                     "type": "string"
                 },
                 "intake_conclusion": {
@@ -16417,9 +16962,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/db.IntakeParticipantsEnum"
                     }
                 },
-                "maturity_matrix_id": {
-                    "type": "string"
-                },
                 "psychological_state": {
                     "type": "string"
                 },
@@ -16432,6 +16974,10 @@ const docTemplate = `{
                 "self_sufficiency": {
                     "type": "integer"
                 },
+                "sender_id": {
+                    "description": "Formal sender match from referrer dropdown",
+                    "type": "string"
+                },
                 "signature": {
                     "type": "string"
                 }
@@ -16440,6 +16986,9 @@ const docTemplate = `{
         "clientp.CreateIntakeFormResponse": {
             "type": "object",
             "properties": {
+                "assigned_location_id": {
+                    "type": "string"
+                },
                 "care_type": {
                     "$ref": "#/definitions/db.IntakeCareTypeEnum"
                 },
@@ -16450,9 +16999,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "family_situation": {
-                    "type": "string"
-                },
-                "goals": {
                     "type": "string"
                 },
                 "id": {
@@ -16470,9 +17016,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/db.IntakeParticipantsEnum"
                     }
                 },
-                "maturity_matrix_id": {
-                    "type": "string"
-                },
                 "psychological_state": {
                     "type": "string"
                 },
@@ -16484,6 +17027,9 @@ const docTemplate = `{
                 },
                 "self_sufficiency": {
                     "type": "integer"
+                },
+                "sender_id": {
+                    "type": "string"
                 },
                 "signature": {
                     "type": "string"
@@ -16578,6 +17124,9 @@ const docTemplate = `{
                 "application_date": {
                     "type": "string"
                 },
+                "application_reason": {
+                    "type": "string"
+                },
                 "care_ambulatory_guidance": {
                     "type": "boolean"
                 },
@@ -16596,6 +17145,9 @@ const docTemplate = `{
                 "client_city": {
                     "type": "string"
                 },
+                "client_date_of_birth": {
+                    "type": "string"
+                },
                 "client_email": {
                     "type": "string"
                 },
@@ -16605,7 +17157,16 @@ const docTemplate = `{
                 "client_gender": {
                     "type": "string"
                 },
+                "client_goals": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "client_house_number": {
+                    "type": "string"
+                },
+                "client_house_number_addition": {
                     "type": "string"
                 },
                 "client_last_name": {
@@ -16799,6 +17360,9 @@ const docTemplate = `{
                 "client_city": {
                     "type": "string"
                 },
+                "client_date_of_birth": {
+                    "type": "string"
+                },
                 "client_email": {
                     "type": "string"
                 },
@@ -16809,9 +17373,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_goals": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "client_house_number": {
+                    "type": "string"
+                },
+                "client_house_number_addition": {
                     "type": "string"
                 },
                 "client_last_name": {
@@ -17107,6 +17677,23 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.DocumentResponse": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.GenerateAppointmentCardDocumentApiResponse": {
             "type": "object",
             "properties": {
@@ -17149,6 +17736,17 @@ const docTemplate = `{
                 },
                 "incident_id": {
                     "type": "string"
+                }
+            }
+        },
+        "clientp.GenerateIntakeGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.IntakeAssessmentGoal"
+                    }
                 }
             }
         },
@@ -17371,6 +17969,9 @@ const docTemplate = `{
                 "location_name": {
                     "type": "string"
                 },
+                "nationality": {
+                    "type": "string"
+                },
                 "organization_id": {
                     "type": "string"
                 },
@@ -17564,10 +18165,10 @@ const docTemplate = `{
         "clientp.GetClientSenderResponse": {
             "type": "object",
             "properties": {
-                "address": {
+                "btwnumber": {
                     "type": "string"
                 },
-                "btwnumber": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
@@ -17583,6 +18184,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email_address": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -17603,10 +18210,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {
@@ -17890,6 +18497,9 @@ const docTemplate = `{
                 "client_city": {
                     "type": "string"
                 },
+                "client_date_of_birth": {
+                    "type": "string"
+                },
                 "client_email": {
                     "type": "string"
                 },
@@ -17900,9 +18510,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_goals": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "client_house_number": {
+                    "type": "string"
+                },
+                "client_house_number_addition": {
                     "type": "string"
                 },
                 "client_last_name": {
@@ -17924,25 +18540,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "document_action_plan": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "document_diagnosis": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "document_education_report": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "document_id_copy": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "document_psychiatric_report": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "document_referral": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "document_safety_plan": {
-                    "type": "string"
+                    "$ref": "#/definitions/clientp.DocumentResponse"
                 },
                 "education_additional_notes": {
                     "type": "string"
@@ -18004,10 +18620,25 @@ const docTemplate = `{
                 "intake_appointment_date": {
                     "type": "string"
                 },
+                "intake_appointment_location": {
+                    "type": "string"
+                },
+                "intake_form_id": {
+                    "type": "string"
+                },
+                "intake_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "processed_at": {
                     "type": "string"
                 },
                 "processed_by_employee_id": {
+                    "type": "string"
+                },
+                "processed_by_employee_name": {
                     "type": "string"
                 },
                 "referrer_email": {
@@ -18030,6 +18661,9 @@ const docTemplate = `{
                 },
                 "referrer_signature": {
                     "type": "boolean"
+                },
+                "rejection_reason": {
+                    "type": "string"
                 },
                 "risk_additional_notes": {
                     "type": "string"
@@ -18092,6 +18726,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "work_start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.InitializeIntakeAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "clientp.IntakeAssessmentGoal": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Detailed description",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Optional unique identifier",
+                    "type": "string"
+                },
+                "priority": {
+                    "description": "\"high\", \"medium\", \"low\"",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Goal title/description",
                     "type": "string"
                 }
             }
@@ -18524,6 +19187,9 @@ const docTemplate = `{
                 "location_name": {
                     "type": "string"
                 },
+                "nationality": {
+                    "type": "string"
+                },
                 "organization_id": {
                     "type": "string"
                 },
@@ -18723,6 +19389,9 @@ const docTemplate = `{
         "clientp.ListIntakeFormsResponse": {
             "type": "object",
             "properties": {
+                "assigned_location_id": {
+                    "type": "string"
+                },
                 "care_type": {
                     "$ref": "#/definitions/db.IntakeCareTypeEnum"
                 },
@@ -18744,9 +19413,6 @@ const docTemplate = `{
                 "family_situation": {
                     "type": "string"
                 },
-                "goals": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -18762,9 +19428,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/db.IntakeParticipantsEnum"
                     }
                 },
-                "maturity_matrix_id": {
-                    "type": "string"
-                },
                 "psychological_state": {
                     "type": "string"
                 },
@@ -18777,11 +19440,46 @@ const docTemplate = `{
                 "self_sufficiency": {
                     "type": "integer"
                 },
+                "sender_id": {
+                    "type": "string"
+                },
                 "signature": {
                     "type": "string"
                 },
                 "updated_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
+        "clientp.ListIntakeMaturityAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "intake_form_id": {
+                    "type": "string"
+                },
+                "maturity_matrix_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "proposed_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.IntakeAssessmentGoal"
+                    }
+                },
+                "topic_name": {
+                    "type": "string"
                 }
             }
         },
@@ -18870,16 +19568,6 @@ const docTemplate = `{
         "clientp.ListRegistrationFormsResponse": {
             "type": "object",
             "properties": {
-                "admission_type": {
-                    "description": "\"crisis_admission\" or \"regular_placement\"",
-                    "type": "string"
-                },
-                "application_date": {
-                    "type": "string"
-                },
-                "application_reason": {
-                    "type": "string"
-                },
                 "care_ambulatory_guidance": {
                     "type": "boolean"
                 },
@@ -18895,211 +19583,31 @@ const docTemplate = `{
                 "client_bsn_number": {
                     "type": "string"
                 },
-                "client_city": {
-                    "type": "string"
-                },
-                "client_email": {
-                    "type": "string"
-                },
                 "client_first_name": {
-                    "type": "string"
-                },
-                "client_gender": {
-                    "type": "string"
-                },
-                "client_goals": {
-                    "type": "string"
-                },
-                "client_house_number": {
                     "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
                 },
-                "client_nationality": {
-                    "type": "string"
-                },
-                "client_phone_number": {
-                    "type": "string"
-                },
-                "client_postal_code": {
-                    "type": "string"
-                },
-                "client_street": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "document_action_plan": {
-                    "type": "string"
-                },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
                 "form_status": {
-                    "type": "string"
-                },
-                "guardian1_email": {
-                    "type": "string"
-                },
-                "guardian1_first_name": {
-                    "type": "string"
-                },
-                "guardian1_last_name": {
-                    "type": "string"
-                },
-                "guardian1_phone_number": {
-                    "type": "string"
-                },
-                "guardian1_relationship": {
-                    "type": "string"
-                },
-                "guardian2_email": {
-                    "type": "string"
-                },
-                "guardian2_first_name": {
-                    "type": "string"
-                },
-                "guardian2_last_name": {
-                    "type": "string"
-                },
-                "guardian2_phone_number": {
-                    "type": "string"
-                },
-                "guardian2_relationship": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "intake_appointment_date": {
-                    "type": "string"
-                },
-                "processed_at": {
-                    "type": "string"
-                },
-                "processed_by_employee_id": {
-                    "type": "string"
-                },
-                "referrer_email": {
+                "intake_form_id": {
                     "type": "string"
                 },
                 "referrer_first_name": {
                     "type": "string"
                 },
-                "referrer_job_title": {
-                    "type": "string"
-                },
                 "referrer_last_name": {
                     "type": "string"
-                },
-                "referrer_organization": {
-                    "type": "string"
-                },
-                "referrer_phone_number": {
-                    "type": "string"
-                },
-                "referrer_signature": {
-                    "type": "boolean"
-                },
-                "risk_additional_notes": {
-                    "type": "string"
-                },
-                "risk_aggressive_behavior": {
-                    "type": "boolean"
                 },
                 "risk_count": {
                     "type": "integer"
                 },
-                "risk_criminal_history": {
-                    "type": "boolean"
-                },
-                "risk_day_night_rhythm": {
-                    "type": "boolean"
-                },
-                "risk_flight_behavior": {
-                    "type": "boolean"
-                },
-                "risk_other": {
-                    "type": "boolean"
-                },
-                "risk_other_description": {
-                    "type": "string"
-                },
-                "risk_psychiatric_issues": {
-                    "type": "boolean"
-                },
-                "risk_sexual_behavior": {
-                    "type": "boolean"
-                },
-                "risk_substance_abuse": {
-                    "type": "boolean"
-                },
-                "risk_suicidal_selfharm": {
-                    "type": "boolean"
-                },
-                "risk_weapon_possession": {
-                    "type": "boolean"
-                },
                 "submitted_at": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -19148,6 +19656,84 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "to_location_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ProcessRegistrationFormRequest": {
+            "type": "object",
+            "required": [
+                "admission_type",
+                "intake_appointment_location",
+                "proposed_dates"
+            ],
+            "properties": {
+                "admission_type": {
+                    "type": "string",
+                    "enum": [
+                        "crisis_admission",
+                        "regular_placement"
+                    ]
+                },
+                "intake_appointment_location": {
+                    "type": "string"
+                },
+                "proposed_dates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "clientp.PromoteIntakeToClientResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "emergency_contacts_created": {
+                    "type": "integer"
+                },
+                "intake_form_id": {
+                    "type": "string"
+                },
+                "maturity_assessments_created": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "registration_form_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.PublicIntakeOptionsResponse": {
+            "type": "object",
+            "properties": {
+                "client_first_name": {
+                    "type": "string"
+                },
+                "intake_location": {
+                    "type": "string"
+                },
+                "proposed_dates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "clientp.SelectIntakeDateRequest": {
+            "type": "object",
+            "required": [
+                "selected_date"
+            ],
+            "properties": {
+                "selected_date": {
                     "type": "string"
                 }
             }
@@ -19455,6 +20041,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
+                    "type": "string"
+                },
+                "nationality": {
                     "type": "string"
                 },
                 "organization_id": {
@@ -20144,6 +20733,61 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.UpdateIntakeMaturityAssessmentRequest": {
+            "type": "object",
+            "required": [
+                "assessment_id"
+            ],
+            "properties": {
+                "assessment_id": {
+                    "type": "string"
+                },
+                "current_level": {
+                    "description": "Optional, only update if provided",
+                    "type": "integer"
+                },
+                "notes": {
+                    "description": "Optional, only update if provided",
+                    "type": "string"
+                },
+                "proposed_goals": {
+                    "description": "Optional, only update if provided",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.IntakeAssessmentGoal"
+                    }
+                }
+            }
+        },
+        "clientp.UpdateIntakeMaturityAssessmentResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "current_level": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "intake_form_id": {
+                    "type": "string"
+                },
+                "maturity_matrix_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "proposed_goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.IntakeAssessmentGoal"
+                    }
+                }
+            }
+        },
         "clientp.UpdateProgressReportRequest": {
             "type": "object",
             "properties": {
@@ -20226,6 +20870,9 @@ const docTemplate = `{
                 "client_city": {
                     "type": "string"
                 },
+                "client_date_of_birth": {
+                    "type": "string"
+                },
                 "client_email": {
                     "type": "string"
                 },
@@ -20235,7 +20882,16 @@ const docTemplate = `{
                 "client_gender": {
                     "type": "string"
                 },
+                "client_goals": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "client_house_number": {
+                    "type": "string"
+                },
+                "client_house_number_addition": {
                     "type": "string"
                 },
                 "client_last_name": {
@@ -20429,6 +21085,9 @@ const docTemplate = `{
                 "client_city": {
                     "type": "string"
                 },
+                "client_date_of_birth": {
+                    "type": "string"
+                },
                 "client_email": {
                     "type": "string"
                 },
@@ -20439,9 +21098,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_goals": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "client_house_number": {
+                    "type": "string"
+                },
+                "client_house_number_addition": {
                     "type": "string"
                 },
                 "client_last_name": {
@@ -20651,13 +21316,17 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Amsterdam Central Station"
                 },
+                "rejection_reason": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string",
                     "enum": [
-                        "approved",
+                        "pending",
+                        "processed",
                         "rejected"
                     ],
-                    "example": "approved"
+                    "example": "processed"
                 }
             }
         },
@@ -23600,17 +24269,32 @@ const docTemplate = `{
         "organization.CreateLocationRequest": {
             "type": "object",
             "required": [
-                "address",
-                "name"
+                "city",
+                "house_number",
+                "name",
+                "postal_code",
+                "street"
             ],
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "capacity": {
                     "type": "integer"
                 },
+                "city": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23618,16 +24302,28 @@ const docTemplate = `{
         "organization.CreateLocationResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "capacity": {
                     "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23635,15 +24331,13 @@ const docTemplate = `{
         "organization.CreateOrganisationRequest": {
             "type": "object",
             "required": [
-                "address",
                 "city",
+                "house_number",
                 "name",
-                "postal_code"
+                "postal_code",
+                "street"
             ],
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "btw_number": {
                     "type": "string"
                 },
@@ -23651,6 +24345,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "kvk_number": {
@@ -23661,15 +24361,15 @@ const docTemplate = `{
                 },
                 "postal_code": {
                     "type": "string"
+                },
+                "street": {
+                    "type": "string"
                 }
             }
         },
         "organization.CreateOrganisationResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "btw_number": {
                     "type": "string"
                 },
@@ -23677,6 +24377,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -23689,6 +24395,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23746,16 +24455,28 @@ const docTemplate = `{
         "organization.GetLocationResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "capacity": {
                     "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23783,9 +24504,6 @@ const docTemplate = `{
         "organization.GetOrganisationResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "btw_number": {
                     "type": "string"
                 },
@@ -23796,6 +24514,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -23813,6 +24537,9 @@ const docTemplate = `{
                 "postal_code": {
                     "type": "string"
                 },
+                "street": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -23821,16 +24548,22 @@ const docTemplate = `{
         "organization.ListLocationsResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "available": {
                     "type": "integer"
                 },
                 "capacity": {
                     "type": "integer"
                 },
+                "city": {
+                    "type": "string"
+                },
                 "created_at": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -23842,6 +24575,12 @@ const docTemplate = `{
                 "occupied": {
                     "type": "integer"
                 },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -23850,9 +24589,6 @@ const docTemplate = `{
         "organization.ListOrganisationsResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "btw_number": {
                     "type": "string"
                 },
@@ -23860,6 +24596,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -23875,6 +24617,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23902,13 +24647,25 @@ const docTemplate = `{
         "organization.UpdateLocationRequest": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "capacity": {
                     "type": "integer"
                 },
+                "city": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23916,16 +24673,28 @@ const docTemplate = `{
         "organization.UpdateLocationResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "capacity": {
                     "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -23933,9 +24702,6 @@ const docTemplate = `{
         "organization.UpdateOrganisationRequest": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "btw_number": {
                     "type": "string"
                 },
@@ -23943,6 +24709,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "kvk_number": {
@@ -23953,15 +24725,15 @@ const docTemplate = `{
                 },
                 "postal_code": {
                     "type": "string"
+                },
+                "street": {
+                    "type": "string"
                 }
             }
         },
         "organization.UpdateOrganisationResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
                 "btw_number": {
                     "type": "string"
                 },
@@ -23969,6 +24741,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -23981,6 +24759,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 }
             }
@@ -24330,6 +25111,29 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-clientp_ListIntakeMaturityAssessmentsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListIntakeMaturityAssessmentsResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-clientp_ListLocationTransferRequestsResponse": {
             "type": "object",
             "properties": {
@@ -24441,6 +25245,52 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/invoice.ListInvoicesResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-organization_ListLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListLocationsResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-organization_ListOrganisationsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListOrganisationsResponse"
                     }
                 }
             }
@@ -25050,7 +25900,7 @@ const docTemplate = `{
                 "KVKnumber": {
                     "type": "string"
                 },
-                "address": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
@@ -25062,6 +25912,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/sender.SenderContact"
                     }
                 },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "land": {
                     "type": "string"
                 },
@@ -25071,10 +25927,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {
@@ -25097,7 +25953,7 @@ const docTemplate = `{
                 "KVKnumber": {
                     "type": "string"
                 },
-                "address": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
@@ -25112,6 +25968,12 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -25124,10 +25986,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {
@@ -25147,7 +26009,7 @@ const docTemplate = `{
                 "KVKnumber": {
                     "type": "string"
                 },
-                "address": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
@@ -25163,6 +26025,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email_address": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -25186,10 +26054,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {
@@ -25209,11 +26077,14 @@ const docTemplate = `{
                 "KVKnumber": {
                     "type": "string"
                 },
-                "address": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
                     "type": "string"
+                },
+                "clients_count": {
+                    "type": "integer"
                 },
                 "contacts": {
                     "type": "array",
@@ -25222,6 +26093,12 @@ const docTemplate = `{
                     }
                 },
                 "created_at": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
                     "type": "string"
                 },
                 "id": {
@@ -25236,10 +26113,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {
@@ -25293,7 +26170,7 @@ const docTemplate = `{
                 "KVKnumber": {
                     "type": "string"
                 },
-                "address": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
@@ -25308,6 +26185,12 @@ const docTemplate = `{
                 "email_address": {
                     "type": "string"
                 },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "is_archived": {
                     "type": "boolean"
                 },
@@ -25320,10 +26203,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {
@@ -25346,7 +26229,7 @@ const docTemplate = `{
                 "KVKnumber": {
                     "type": "string"
                 },
-                "address": {
+                "city": {
                     "type": "string"
                 },
                 "client_number": {
@@ -25364,6 +26247,12 @@ const docTemplate = `{
                 "email_address": {
                     "type": "string"
                 },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -25379,10 +26268,10 @@ const docTemplate = `{
                 "phone_number": {
                     "type": "string"
                 },
-                "place": {
+                "postal_code": {
                     "type": "string"
                 },
-                "postal_code": {
+                "street": {
                     "type": "string"
                 },
                 "types": {

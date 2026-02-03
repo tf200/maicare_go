@@ -22,14 +22,16 @@ import (
 )
 
 func createRandomOrganisation(t *testing.T) *db.Organisation {
+	addr := faker.GetRealAddress()
 	arg := db.CreateOrganisationParams{
-		Name:       util.RandomString(5),
-		Address:    faker.GetRealAddress().Address,
-		PostalCode: faker.GetRealAddress().PostalCode,
-		City:       faker.GetRealAddress().City,
-		Email:      util.StringPtr(faker.Email()),
-		KvkNumber:  util.StringPtr(faker.CCNumber()),
-		BtwNumber:  util.StringPtr(faker.CCNumber()),
+		Name:        util.RandomString(5),
+		Street:      addr.Address,
+		HouseNumber: util.RandomString(4),
+		PostalCode:  addr.PostalCode,
+		City:        addr.City,
+		Email:       util.StringPtr(faker.Email()),
+		KvkNumber:   util.StringPtr(faker.CCNumber()),
+		BtwNumber:   util.StringPtr(faker.CCNumber()),
 	}
 
 	organisation, err := testStore.CreateOrganisation(context.Background(), arg)
@@ -47,10 +49,14 @@ func createRandomOrganisation(t *testing.T) *db.Organisation {
 func createRandomLocation(t *testing.T) *db.Location {
 	organisation := createRandomOrganisation(t)
 	arg := db.CreateLocationParams{
-		OrganisationID: organisation.ID,
-		Name:           util.RandomString(5),
-		Address:        util.RandomString(8),
-		Capacity:       util.Int32Ptr(52),
+		OrganisationID:      organisation.ID,
+		Name:                util.RandomString(5),
+		Street:              util.RandomString(10),
+		HouseNumber:         util.RandomString(2),
+		HouseNumberAddition: util.StringPtr(util.RandomString(1)),
+		PostalCode:          util.RandomString(6),
+		City:                util.RandomString(10),
+		Capacity:            util.Int32Ptr(52),
 	}
 
 	location, err := testStore.CreateLocation(context.Background(), arg)
@@ -59,7 +65,10 @@ func createRandomLocation(t *testing.T) *db.Location {
 
 	// Check if the returned location matches the input
 	require.Equal(t, arg.Name, location.Name)
-	require.Equal(t, arg.Address, location.Address)
+	require.Equal(t, arg.Street, location.Street)
+	require.Equal(t, arg.HouseNumber, location.HouseNumber)
+	require.Equal(t, arg.PostalCode, location.PostalCode)
+	require.Equal(t, arg.City, location.City)
 	require.Equal(t, arg.Capacity, location.Capacity)
 
 	// Verify ID is generated
@@ -68,7 +77,7 @@ func createRandomLocation(t *testing.T) *db.Location {
 }
 
 func TestCreateLocationApi(t *testing.T) {
-	user := createRandomUser(t)
+	_, user := createRandomEmployee(t)
 	org := createRandomOrganisation(t)
 	testCases := []struct {
 		name          string
@@ -83,13 +92,16 @@ func TestCreateLocationApi(t *testing.T) {
 			},
 			buildRequest: func() (*http.Request, error) {
 				locationReq := organization.CreateLocationRequest{
-					Name:     "Test Location",
-					Address:  "Test Address",
-					Capacity: util.Int32Ptr(52),
+					Name:        "Test Location",
+					Street:      "Test Street",
+					HouseNumber: "123",
+					PostalCode:  "1234AB",
+					City:        "Test City",
+					Capacity:    util.Int32Ptr(52),
 				}
 				reqBody, err := json.Marshal(locationReq)
 				require.NoError(t, err)
-				url := fmt.Sprintf("/organisations/%d/locations", org.ID)
+				url := fmt.Sprintf("/organisations/%s/locations", org.ID)
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")

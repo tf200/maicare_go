@@ -42,9 +42,10 @@ func createRandomSender(t *testing.T) db.Sender {
 	arg := db.CreateSenderParams{
 		Types:        "main_provider",
 		Name:         faker.FirstName(),
-		Address:      util.StringPtr(faker.GetRealAddress().City),
+		Street:       util.StringPtr(faker.GetRealAddress().Address),
+		HouseNumber:  util.StringPtr("1"),
 		PostalCode:   util.StringPtr(faker.GetRealAddress().PostalCode),
-		Place:        util.StringPtr("test"),
+		City:         util.StringPtr(faker.GetRealAddress().City),
 		Land:         util.StringPtr("test"),
 		Kvknumber:    util.StringPtr("test"),
 		Btwnumber:    util.StringPtr("test"),
@@ -72,9 +73,10 @@ func createRandomSender(t *testing.T) db.Sender {
 	// Verify the fields
 	require.Equal(t, arg.Types, createdSender.Types)
 	require.Equal(t, arg.Name, createdSender.Name)
-	require.Equal(t, arg.Address, createdSender.Address)
+	require.Equal(t, arg.Street, createdSender.Street)
+	require.Equal(t, arg.HouseNumber, createdSender.HouseNumber)
 	require.Equal(t, arg.PostalCode, createdSender.PostalCode)
-	require.Equal(t, arg.Place, createdSender.Place)
+	require.Equal(t, arg.City, createdSender.City)
 	require.Equal(t, arg.Land, createdSender.Land)
 	require.Equal(t, arg.Kvknumber, createdSender.Kvknumber)
 	require.Equal(t, arg.Btwnumber, createdSender.Btwnumber)
@@ -114,9 +116,10 @@ func TestCreateSenderApi(t *testing.T) {
 				createSenderReq := sender.CreateSenderRequest{
 					Types:        "main_provider",
 					Name:         "Test Company",
-					Address:      nil,
+					Street:       util.StringPtr("Test Street"),
+					HouseNumber:  util.StringPtr("1"),
 					PostalCode:   util.StringPtr("1234 AB"),
-					Place:        util.StringPtr("Amsterdam"),
+					City:         util.StringPtr("Amsterdam"),
 					Land:         util.StringPtr("Netherlands"),
 					KVKNumber:    util.StringPtr("12345678"),
 					BTWNumber:    util.StringPtr("NL123456789B01"),
@@ -194,9 +197,10 @@ func TestCreateSenderApi(t *testing.T) {
 				createSenderReq := sender.CreateSenderRequest{
 					Types:        "main_provider",
 					Name:         "Test Company",
-					Address:      util.StringPtr("Test Street 123"),
+					Street:       util.StringPtr("Test Street"),
+					HouseNumber:  util.StringPtr("123"),
 					PostalCode:   util.StringPtr("1234 AB"),
-					Place:        util.StringPtr("Amsterdam"),
+					City:         util.StringPtr("Amsterdam"),
 					Land:         util.StringPtr("Netherlands"),
 					KVKNumber:    util.StringPtr("12345678"),
 					BTWNumber:    util.StringPtr("NL123456789B01"),
@@ -279,7 +283,7 @@ func TestCreateSenderApi(t *testing.T) {
 }
 
 func TestListSendersAPI(t *testing.T) {
-	user := createRandomUser(t)
+	_, user := createRandomEmployee(t)
 	initialCount, err := testStore.CountSenders(context.Background(), util.BoolPtr(true))
 	require.NoError(t, err)
 	numSenders := 20

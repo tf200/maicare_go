@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"maicare_go/service/attachment"
 
@@ -12,36 +11,60 @@ import (
 	"go.uber.org/zap"
 )
 
-// UploadHandler uploads a file to the server
-// @Summary Upload a file
-// @Description Upload a file to the server
+// InitUploadHandlerApi initiates a file upload
+// @Summary Initiate file upload
+// @Description Initiate a file upload to get a presigned URL
 // @Tags attachments
-// @Accept multipart/form-data
+// @Accept json
 // @Produce json
-// @Param file formData file true "File to upload"
-// @Success 201 {object} Response[attachment.UploadHandlerResponse]
-// @Router /attachments/upload [post]
-func (server *Server) UploadHandlerApi(ctx *gin.Context) {
-	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, attachment.MaxFileSize)
-	file, header, err := ctx.Request.FormFile("file")
-	if err != nil {
-		if strings.Contains(err.Error(), "request body too large") {
-			ctx.JSON(http.StatusRequestEntityTooLarge, errorResponse(fmt.Errorf("file size exceeds maximum limit of 10MB")))
-			return
-		}
+// @Param request body attachment.InitUploadRequest true "Init Upload Request"
+// @Success 200 {object} Response[attachment.InitUploadResponse]
+// @Router /attachments/upload/init [post]
+func (server *Server) InitUploadHandlerApi(ctx *gin.Context) {
+	var req attachment.InitUploadRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelError, "InitUploadHandlerApi", "Invalid request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	result, err := server.businessService.AttachmentService.UploadAttachment(ctx, file, header)
+	result, err := server.businessService.AttachmentService.InitUpload(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to upload attachment: %v", err)))
+		server.logBusinessEvent(LogLevelError, "InitUploadHandlerApi", "Failed to initiate upload", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(result, "File uploaded successfully")
+	res := SuccessResponse(result, "Upload initiated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
 
-	ctx.JSON(http.StatusCreated, res)
+// ConfirmUploadHandlerApi confirms a file upload
+// @Summary Confirm file upload
+// @Description Confirm that a file has been uploaded to the storage
+// @Tags attachments
+// @Accept json
+// @Produce json
+// @Param request body attachment.ConfirmUploadRequest true "Confirm Upload Request"
+// @Success 200 {object} Response[attachment.ConfirmUploadResponse]
+// @Router /attachments/upload/confirm [post]
+func (server *Server) ConfirmUploadHandlerApi(ctx *gin.Context) {
+	var req attachment.ConfirmUploadRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logBusinessEvent(LogLevelError, "ConfirmUploadHandlerApi", "Invalid request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.AttachmentService.ConfirmUpload(ctx, &req)
+	if err != nil {
+		server.logBusinessEvent(LogLevelError, "ConfirmUploadHandlerApi", "Failed to confirm upload", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Upload confirmed successfully")
+	ctx.JSON(http.StatusOK, res)
 }
 
 // GetAttachmentByIdApi retrieves an attachment by its ID

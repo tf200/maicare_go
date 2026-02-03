@@ -136,11 +136,12 @@ INSERT INTO care_plan_objectives (
     timeframe,
     goal_title,
     description,
+    priority,
     target_date
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
-RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at, updated_at
+RETURNING id, care_plan_id, timeframe, goal_title, description, priority, target_date, status, completion_date, completion_notes, created_at, updated_at
 `
 
 type CreateCarePlanObjectiveParams struct {
@@ -148,6 +149,7 @@ type CreateCarePlanObjectiveParams struct {
 	Timeframe   CarePlanTimeframeEnum `json:"timeframe"`
 	GoalTitle   string                `json:"goal_title"`
 	Description string                `json:"description"`
+	Priority    string                `json:"priority"`
 	TargetDate  pgtype.Date           `json:"target_date"`
 }
 
@@ -158,6 +160,7 @@ func (q *Queries) CreateCarePlanObjective(ctx context.Context, arg CreateCarePla
 		arg.Timeframe,
 		arg.GoalTitle,
 		arg.Description,
+		arg.Priority,
 		arg.TargetDate,
 	)
 	var i CarePlanObjective
@@ -167,6 +170,7 @@ func (q *Queries) CreateCarePlanObjective(ctx context.Context, arg CreateCarePla
 		&i.Timeframe,
 		&i.GoalTitle,
 		&i.Description,
+		&i.Priority,
 		&i.TargetDate,
 		&i.Status,
 		&i.CompletionDate,
@@ -1238,10 +1242,11 @@ SET
     timeframe = COALESCE($2, timeframe),
     goal_title = COALESCE($3, goal_title),
     description = COALESCE($4, description),
-    status = COALESCE($5, status), 
+    priority = COALESCE($5, priority),
+    status = COALESCE($6, status), 
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, care_plan_id, timeframe, goal_title, description, target_date, status, completion_date, completion_notes, created_at, updated_at
+RETURNING id, care_plan_id, timeframe, goal_title, description, priority, target_date, status, completion_date, completion_notes, created_at, updated_at
 `
 
 type UpdateCarePlanObjectiveParams struct {
@@ -1249,6 +1254,7 @@ type UpdateCarePlanObjectiveParams struct {
 	Timeframe   NullCarePlanTimeframeEnum       `json:"timeframe"`
 	GoalTitle   *string                         `json:"goal_title"`
 	Description *string                         `json:"description"`
+	Priority    *string                         `json:"priority"`
 	Status      NullCarePlanObjectiveStatusEnum `json:"status"`
 }
 
@@ -1258,6 +1264,7 @@ func (q *Queries) UpdateCarePlanObjective(ctx context.Context, arg UpdateCarePla
 		arg.Timeframe,
 		arg.GoalTitle,
 		arg.Description,
+		arg.Priority,
 		arg.Status,
 	)
 	var i CarePlanObjective
@@ -1267,6 +1274,7 @@ func (q *Queries) UpdateCarePlanObjective(ctx context.Context, arg UpdateCarePla
 		&i.Timeframe,
 		&i.GoalTitle,
 		&i.Description,
+		&i.Priority,
 		&i.TargetDate,
 		&i.Status,
 		&i.CompletionDate,

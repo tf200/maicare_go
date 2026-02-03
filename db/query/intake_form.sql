@@ -8,25 +8,26 @@ INSERT INTO intake_forms (
     family_situation,
     psychological_state,
     self_sufficiency,
-    maturity_matrix_id,
-    goals,
+    sender_id,
+    assigned_location_id,
     risk_assessment,
     intake_conclusion,
     intake_conclusion_notes,
+    evaluation_intervals_weeks,
     signature
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 ) RETURNING *;
-    
+
 
 
 -- name: ListIntakeForms :many
-SELECT 
+SELECT
     i.*,
     r.client_first_name,
     r.client_last_name,
     r.client_bsn_number,
-    COUNT(*) OVER() AS total_count 
+    COUNT(*) OVER() AS total_count
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
 WHERE
@@ -47,3 +48,6 @@ SELECT * FROM intake_forms
 WHERE id = $1;
 
 
+-- name: GetIntakeFormByRegistrationFormID :one
+SELECT * FROM intake_forms
+WHERE registration_form_id = $1;

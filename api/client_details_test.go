@@ -150,9 +150,9 @@ func TestCreateClientApi(t *testing.T) {
 					Addresses: []clientp.Address{
 						{
 							BelongsTo:   util.StringPtr("Test Belongs To"),
-							Address:     util.StringPtr("Test Address"),
+							Street:      util.StringPtr("Test Address"),
 							City:        util.StringPtr("Test City"),
-							ZipCode:     util.StringPtr("12345"),
+							PostalCode:  util.StringPtr("12345"),
 							PhoneNumber: util.StringPtr("1234567890"),
 						},
 					},

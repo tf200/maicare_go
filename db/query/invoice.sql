@@ -65,7 +65,11 @@ SELECT
     s.postal_code AS sender_postal_code,
     s.kvknumber AS sender_kvknumber,
     s.btwnumber AS sender_btwnumber,
-    s.address AS sender_address,
+    s.street AS sender_street,
+    s.house_number AS sender_house_number,
+    s.house_number_addition AS sender_house_number_addition,
+    s.city AS sender_city,
+    s.land AS sender_land,
     cd.first_name AS client_first_name,
     cd.last_name AS client_last_name
 FROM

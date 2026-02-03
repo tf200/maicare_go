@@ -2,9 +2,11 @@
 INSERT INTO sender (
     types,
     name,
-    address,
+    street,
+    house_number,
+    house_number_addition,
     postal_code,
-    place,
+    city,
     land,
     kvknumber,
     btwnumber,
@@ -13,7 +15,7 @@ INSERT INTO sender (
     email_address,
     contacts
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 ) RETURNING *;
 
 
@@ -49,9 +51,11 @@ WHERE (
 UPDATE sender
 SET 
     name = COALESCE(sqlc.narg('name'), name),
-    address = COALESCE(sqlc.narg('address'), address),
+    street = COALESCE(sqlc.narg('street'), street),
+    house_number = COALESCE(sqlc.narg('house_number'), house_number),
+    house_number_addition = COALESCE(sqlc.narg('house_number_addition'), house_number_addition),
     postal_code = COALESCE(sqlc.narg('postal_code'), postal_code),
-    place = COALESCE(sqlc.narg('place'), place),
+    city = COALESCE(sqlc.narg('city'), city),
     land = COALESCE(sqlc.narg('land'), land),
     kvknumber = COALESCE(sqlc.narg('kvknumber'), kvknumber),
     btwnumber = COALESCE(sqlc.narg('btwnumber'), btwnumber),

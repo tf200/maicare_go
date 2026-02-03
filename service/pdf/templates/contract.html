@@ -369,7 +369,8 @@
                 <div class="party-title">Opdrachtgever</div>
                 <div class="party-details">
                     <strong>{{ .SenderName }}</strong><br>
-                    {{ .SenderAddress }}<br>
+                    {{ .SenderStreet }} {{ .SenderHouseNumber }}<br>
+                    {{ .SenderPostalCode }} {{ .SenderCity }}<br>
                     {{ .SenderContactInfo }}
                 </div>
             </div>

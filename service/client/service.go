@@ -95,9 +95,23 @@ type ClientService interface {
 	DeleteRegistrationForm(ctx context.Context, formID uuid.UUID) error
 	UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID uuid.UUID, employeeID uuid.UUID) error
 
+	// Process Registration Form
+	ProcessRegistrationForm(ctx context.Context, req *ProcessRegistrationFormRequest, formID uuid.UUID, employeeID uuid.UUID) error
+
+	// Public Intake endpoints
+	GetPublicIntakeOptions(ctx context.Context, token string) (*PublicIntakeOptionsResponse, error)
+	SelectIntakeDate(ctx context.Context, token string, req *SelectIntakeDateRequest) error
+
 	// Intake Form
 	CreateIntakeForm(ctx context.Context, req *CreateIntakeFormRequest) (*CreateIntakeFormResponse, error)
 	ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRequest) (*pagination.Response[ListIntakeFormsResponse], error)
+
+	// Intake Maturity Assessments
+
+	GenerateIntakeGoals(ctx context.Context, req *GenerateIntakeGoalsRequest) (*GenerateIntakeGoalsResponse, error)
+
+	// Promote Intake to Client
+	PromoteIntakeToClient(ctx context.Context, req *PromoteIntakeToClientRequest) (*PromoteIntakeToClientResponse, error)
 
 	// Location Transfer
 	RequestLocationTransfer(ctx context.Context, clientID uuid.UUID, req LocationTransferRequest) error

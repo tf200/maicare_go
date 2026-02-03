@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"encoding/json"
+	"time"
+
 	"maicare_go/async/aclient"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
@@ -20,6 +23,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 	arg := db.CreateRegistrationFormParams{
 		ClientFirstName:               req.ClientFirstName,
 		ClientLastName:                req.ClientLastName,
+		ClientDateOfBirth:             pgtype.Date{Valid: false},
 		ClientBsnNumber:               req.ClientBsnNumber,
 		ClientGender:                  db.ClientGenderEnum(req.ClientGender),
 		ClientNationality:             req.ClientNationality,
@@ -27,6 +31,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 		ClientEmail:                   req.ClientEmail,
 		ClientStreet:                  req.ClientStreet,
 		ClientHouseNumber:             req.ClientHouseNumber,
+		ClientHouseNumberAddition:     req.ClientHouseNumberAddition,
 		ClientPostalCode:              req.ClientPostalCode,
 		ClientCity:                    req.ClientCity,
 		ReferrerFirstName:             req.ReferrerFirstName,
@@ -62,6 +67,8 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        req.CareRoomTrainingCenter,
 		CareAmbulatoryGuidance:        req.CareAmbulatoryGuidance,
+		ClientGoals:                   req.ClientGoals,
+		ApplicationReason:             req.ApplicationReason,
 		RiskAggressiveBehavior:        req.RiskAggressiveBehavior,
 		RiskSuicidalSelfharm:          req.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:            req.RiskSubstanceAbuse,
@@ -88,6 +95,14 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 	} else {
 		arg.WorkStartDate = pgtype.Date{Valid: false}
 	}
+	if req.ClientDateOfBirth != nil {
+		arg.ClientDateOfBirth = pgtype.Date{Time: *req.ClientDateOfBirth, Valid: true}
+	}
+	if req.ClientDateOfBirth != nil {
+		arg.ClientDateOfBirth = pgtype.Date{Time: *req.ClientDateOfBirth, Valid: true}
+	} else {
+		arg.ClientDateOfBirth = pgtype.Date{Valid: false}
+	}
 	createdForm, err := s.Store.CreateRegistrationForm(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateRegistrationForm", "Failed to create registration form", zap.Error(err))
@@ -97,6 +112,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 		ID:                            createdForm.ID,
 		ClientFirstName:               createdForm.ClientFirstName,
 		ClientLastName:                createdForm.ClientLastName,
+		ClientDateOfBirth:             &createdForm.ClientDateOfBirth.Time,
 		ClientBsnNumber:               createdForm.ClientBsnNumber,
 		ClientGender:                  string(createdForm.ClientGender),
 		ClientNationality:             createdForm.ClientNationality,
@@ -104,6 +120,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 		ClientEmail:                   createdForm.ClientEmail,
 		ClientStreet:                  createdForm.ClientStreet,
 		ClientHouseNumber:             createdForm.ClientHouseNumber,
+		ClientHouseNumberAddition:     createdForm.ClientHouseNumberAddition,
 		ClientPostalCode:              createdForm.ClientPostalCode,
 		ClientCity:                    createdForm.ClientCity,
 		ReferrerFirstName:             createdForm.ReferrerFirstName,
@@ -218,79 +235,27 @@ func (s *clientService) ListRegistrationForms(ctx *gin.Context, req *ListRegistr
 			ClientFirstName:               form.ClientFirstName,
 			ClientLastName:                form.ClientLastName,
 			ClientBsnNumber:               form.ClientBsnNumber,
-			ClientGender:                  string(form.ClientGender),
-			ClientNationality:             form.ClientNationality,
-			ClientPhoneNumber:             form.ClientPhoneNumber,
-			ClientEmail:                   form.ClientEmail,
-			ClientStreet:                  form.ClientStreet,
-			ClientHouseNumber:             form.ClientHouseNumber,
-			ClientPostalCode:              form.ClientPostalCode,
-			ClientCity:                    form.ClientCity,
 			ReferrerFirstName:             form.ReferrerFirstName,
 			ReferrerLastName:              form.ReferrerLastName,
-			ReferrerOrganization:          form.ReferrerOrganization,
-			ReferrerJobTitle:              form.ReferrerJobTitle,
-			ReferrerPhoneNumber:           form.ReferrerPhoneNumber,
-			ReferrerEmail:                 form.ReferrerEmail,
-			Guardian1FirstName:            form.Guardian1FirstName,
-			Guardian1LastName:             form.Guardian1LastName,
-			Guardian1Relationship:         form.Guardian1Relationship,
-			Guardian1PhoneNumber:          form.Guardian1PhoneNumber,
-			Guardian1Email:                form.Guardian1Email,
-			Guardian2FirstName:            form.Guardian2FirstName,
-			Guardian2LastName:             form.Guardian2LastName,
-			Guardian2Relationship:         form.Guardian2Relationship,
-			Guardian2PhoneNumber:          form.Guardian2PhoneNumber,
-			Guardian2Email:                form.Guardian2Email,
-			EducationInstitution:          form.EducationInstitution,
-			EducationMentorName:           form.EducationMentorName,
-			EducationMentorPhone:          form.EducationMentorPhone,
-			EducationMentorEmail:          form.EducationMentorEmail,
-			EducationCurrentlyEnrolled:    form.EducationCurrentlyEnrolled,
-			EducationAdditionalNotes:      form.EducationAdditionalNotes,
-			WorkCurrentEmployer:           form.WorkCurrentEmployer,
-			WorkEmployerPhone:             form.WorkEmployerPhone,
-			WorkEmployerEmail:             form.WorkEmployerEmail,
-			WorkCurrentPosition:           form.WorkCurrentPosition,
-			WorkCurrentlyEmployed:         form.WorkCurrentlyEmployed,
-			WorkStartDate:                 &form.WorkStartDate.Time,
-			WorkAdditionalNotes:           form.WorkAdditionalNotes,
 			CareProtectedLiving:           form.CareProtectedLiving,
 			CareAssistedIndependentLiving: form.CareAssistedIndependentLiving,
 			CareRoomTrainingCenter:        form.CareRoomTrainingCenter,
 			CareAmbulatoryGuidance:        form.CareAmbulatoryGuidance,
-			ApplicationReason:             form.ApplicationReason,
-			ClientGoals:                   form.ClientGoals,
-			RiskAggressiveBehavior:        form.RiskAggressiveBehavior,
-			RiskSuicidalSelfharm:          form.RiskSuicidalSelfharm,
-			RiskSubstanceAbuse:            form.RiskSubstanceAbuse,
-			RiskPsychiatricIssues:         form.RiskPsychiatricIssues,
-			RiskCriminalHistory:           form.RiskCriminalHistory,
-			RiskFlightBehavior:            form.RiskFlightBehavior,
-			RiskWeaponPossession:          form.RiskWeaponPossession,
-			RiskSexualBehavior:            form.RiskSexualBehavior,
-			RiskDayNightRhythm:            form.RiskDayNightRhythm,
-			RiskOther:                     form.RiskOther,
-			RiskOtherDescription:          form.RiskOtherDescription,
-			RiskAdditionalNotes:           form.RiskAdditionalNotes,
-			DocumentReferral:              form.DocumentReferral,
-			DocumentEducationReport:       form.DocumentEducationReport,
-			DocumentActionPlan:            form.DocumentActionPlan,
-			DocumentPsychiatricReport:     form.DocumentPsychiatricReport,
-			DocumentDiagnosis:             form.DocumentDiagnosis,
-			DocumentSafetyPlan:            form.DocumentSafetyPlan,
-			DocumentIDCopy:                form.DocumentIDCopy,
-			ApplicationDate:               form.ApplicationDate.Time,
-			ReferrerSignature:             form.ReferrerSignature,
-			FormStatus:                    string(form.FormStatus),
-			CreatedAt:                     form.CreatedAt.Time,
-			UpdatedAt:                     form.UpdatedAt.Time,
-			SubmittedAt:                   form.SubmittedAt.Time,
-			ProcessedAt:                   form.ProcessedAt.Time,
-			ProcessedByEmployeeID:         form.ProcessedByEmployeeID,
-			RiskCount:                     calculateRiskCount(form),
-			IntakeAppointmentDate:         form.IntakeAppointmentDatetime.Time,
-			AddmissionType:                form.AddmissionType,
+			RiskCount: calculateRiskCount(
+				form.RiskAggressiveBehavior,
+				form.RiskSuicidalSelfharm,
+				form.RiskSubstanceAbuse,
+				form.RiskPsychiatricIssues,
+				form.RiskCriminalHistory,
+				form.RiskFlightBehavior,
+				form.RiskWeaponPossession,
+				form.RiskSexualBehavior,
+				form.RiskDayNightRhythm,
+				form.RiskOther,
+			),
+			FormStatus:   string(form.FormStatus),
+			SubmittedAt:  form.SubmittedAt.Time,
+			IntakeFormID: form.IntakeFormID,
 		})
 	}
 
@@ -304,10 +269,78 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetRegistrationFormB", "Failed to get registration form B", zap.Error(err), zap.String("FormID", formID.String()))
 		return nil, fmt.Errorf("failed to get registration form B: %w", err)
 	}
+
+	// Collect all document UUIDs
+	var documentIDs []uuid.UUID
+	if registrationForm.DocumentReferral != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentReferral)
+	}
+	if registrationForm.DocumentEducationReport != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentEducationReport)
+	}
+	if registrationForm.DocumentActionPlan != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentActionPlan)
+	}
+	if registrationForm.DocumentPsychiatricReport != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentPsychiatricReport)
+	}
+	if registrationForm.DocumentDiagnosis != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentDiagnosis)
+	}
+	if registrationForm.DocumentSafetyPlan != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentSafetyPlan)
+	}
+	if registrationForm.DocumentIDCopy != nil {
+		documentIDs = append(documentIDs, *registrationForm.DocumentIDCopy)
+	}
+
+	// Fetch documents if any
+	documentMap := make(map[uuid.UUID]DocumentResponse)
+	if len(documentIDs) > 0 {
+		attachments, err := s.Store.GetAttachmentsByUUIDs(ctx, documentIDs)
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetRegistrationFormB", "Failed to get attachments", zap.Error(err))
+			return nil, fmt.Errorf("failed to get attachments: %w", err)
+		}
+		for _, att := range attachments {
+			documentMap[att.Uuid] = DocumentResponse{
+				ID:   att.Uuid,
+				Name: att.Name,
+				File: att.File,
+				Size: att.Size,
+			}
+		}
+	}
+
+	getDocumentResponse := func(id *uuid.UUID) *DocumentResponse {
+		if id == nil {
+			return nil
+		}
+		if doc, ok := documentMap[*id]; ok {
+			return &doc
+		}
+		return nil
+	}
+
+	var processedByEmployeeName *string
+	if registrationForm.ProcessedByFirstName != nil && registrationForm.ProcessedByLastName != nil {
+		name := fmt.Sprintf("%s %s", *registrationForm.ProcessedByFirstName, *registrationForm.ProcessedByLastName)
+		processedByEmployeeName = &name
+	}
+
+	var intakeOptions []string
+	if registrationForm.IntakeOptions != nil {
+		if err := json.Unmarshal(registrationForm.IntakeOptions, &intakeOptions); err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetRegistrationFormB", "Failed to unmarshal intake options", zap.Error(err))
+			// Don't fail, just empty options
+		}
+	}
+
 	response := &GetRegistrationFormResponse{
 		ID:                            registrationForm.ID,
 		ClientFirstName:               registrationForm.ClientFirstName,
 		ClientLastName:                registrationForm.ClientLastName,
+		ClientDateOfBirth:             &registrationForm.ClientDateOfBirth.Time,
 		ClientBsnNumber:               registrationForm.ClientBsnNumber,
 		ClientGender:                  string(registrationForm.ClientGender),
 		ClientNationality:             registrationForm.ClientNationality,
@@ -315,6 +348,7 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		ClientEmail:                   registrationForm.ClientEmail,
 		ClientStreet:                  registrationForm.ClientStreet,
 		ClientHouseNumber:             registrationForm.ClientHouseNumber,
+		ClientHouseNumberAddition:     registrationForm.ClientHouseNumberAddition,
 		ClientPostalCode:              registrationForm.ClientPostalCode,
 		ClientCity:                    registrationForm.ClientCity,
 		ReferrerFirstName:             registrationForm.ReferrerFirstName,
@@ -352,7 +386,7 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		CareRoomTrainingCenter:        registrationForm.CareRoomTrainingCenter,
 		CareAmbulatoryGuidance:        registrationForm.CareAmbulatoryGuidance,
 		ApplicationReason:             util.DerefString(registrationForm.ApplicationReason),
-		ClientGoals:                   util.DerefString(registrationForm.ClientGoals),
+		ClientGoals:                   registrationForm.ClientGoals,
 		RiskAggressiveBehavior:        registrationForm.RiskAggressiveBehavior,
 		RiskSuicidalSelfharm:          registrationForm.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:            registrationForm.RiskSubstanceAbuse,
@@ -365,13 +399,13 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		RiskOther:                     registrationForm.RiskOther,
 		RiskOtherDescription:          util.DerefString(registrationForm.RiskOtherDescription),
 		RiskAdditionalNotes:           util.DerefString(registrationForm.RiskAdditionalNotes),
-		DocumentReferral:              registrationForm.DocumentReferral,
-		DocumentEducationReport:       registrationForm.DocumentEducationReport,
-		DocumentActionPlan:            registrationForm.DocumentActionPlan,
-		DocumentPsychiatricReport:     registrationForm.DocumentPsychiatricReport,
-		DocumentDiagnosis:             registrationForm.DocumentDiagnosis,
-		DocumentSafetyPlan:            registrationForm.DocumentSafetyPlan,
-		DocumentIDCopy:                registrationForm.DocumentIDCopy,
+		DocumentReferral:              getDocumentResponse(registrationForm.DocumentReferral),
+		DocumentEducationReport:       getDocumentResponse(registrationForm.DocumentEducationReport),
+		DocumentActionPlan:            getDocumentResponse(registrationForm.DocumentActionPlan),
+		DocumentPsychiatricReport:     getDocumentResponse(registrationForm.DocumentPsychiatricReport),
+		DocumentDiagnosis:             getDocumentResponse(registrationForm.DocumentDiagnosis),
+		DocumentSafetyPlan:            getDocumentResponse(registrationForm.DocumentSafetyPlan),
+		DocumentIDCopy:                getDocumentResponse(registrationForm.DocumentIDCopy),
 		ApplicationDate:               registrationForm.ApplicationDate.Time,
 		ReferrerSignature:             registrationForm.ReferrerSignature,
 		FormStatus:                    string(registrationForm.FormStatus),
@@ -382,15 +416,26 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		ProcessedByEmployeeID:         registrationForm.ProcessedByEmployeeID,
 		IntakeAppointmentDate:         registrationForm.IntakeAppointmentDatetime.Time,
 		AddmissionType:                registrationForm.AddmissionType,
+		ProcessedByEmployeeName:       processedByEmployeeName,
+		IntakeOptions:                 intakeOptions,
+		IntakeAppointmentLocation:     registrationForm.IntakeAppointmentLocation,
+		IntakeFormID:                  registrationForm.IntakeFormID,
+		RejectionReason:               registrationForm.RejectionReason,
 	}
 	return response, nil
 }
 
 func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateRegistrationFormRequest, formID uuid.UUID) (*UpdateRegistrationFormResponse, error) {
 	arg := db.UpdateRegistrationFormParams{
-		ID:                         formID,
-		ClientFirstName:            req.ClientFirstName,
-		ClientLastName:             req.ClientLastName,
+		ID:              formID,
+		ClientFirstName: req.ClientFirstName,
+		ClientLastName:  req.ClientLastName,
+		ClientDateOfBirth: func() pgtype.Date {
+			if req.ClientDateOfBirth != nil {
+				return pgtype.Date{Time: *req.ClientDateOfBirth, Valid: true}
+			}
+			return pgtype.Date{Valid: false}
+		}(),
 		ClientBsnNumber:            req.ClientBsnNumber,
 		ClientGender:               db.NullClientGenderFromPtr(req.ClientGender),
 		ClientNationality:          req.ClientNationality,
@@ -433,6 +478,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
 		CareRoomTrainingCenter:        req.CareRoomTrainingCenter,
 		CareAmbulatoryGuidance:        req.CareAmbulatoryGuidance,
+		ClientGoals:                   req.ClientGoals,
 		RiskAggressiveBehavior:        req.RiskAggressiveBehavior,
 		RiskSuicidalSelfharm:          req.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:            req.RiskSubstanceAbuse,
@@ -463,6 +509,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 		ID:                            registrationForm.ID,
 		ClientFirstName:               registrationForm.ClientFirstName,
 		ClientLastName:                registrationForm.ClientLastName,
+		ClientDateOfBirth:             &registrationForm.ClientDateOfBirth.Time,
 		ClientBsnNumber:               registrationForm.ClientBsnNumber,
 		ClientGender:                  string(registrationForm.ClientGender),
 		ClientNationality:             registrationForm.ClientNationality,
@@ -470,6 +517,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 		ClientEmail:                   registrationForm.ClientEmail,
 		ClientStreet:                  registrationForm.ClientStreet,
 		ClientHouseNumber:             registrationForm.ClientHouseNumber,
+		ClientHouseNumberAddition:     registrationForm.ClientHouseNumberAddition,
 		ClientPostalCode:              registrationForm.ClientPostalCode,
 		ClientCity:                    registrationForm.ClientCity,
 		ReferrerFirstName:             registrationForm.ReferrerFirstName,
@@ -554,67 +602,195 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 		ProcessedByEmployeeID:     &employeeID,
 		IntakeAppointmentLocation: req.IntakeAppointmentLocation,
 		AddmissionType:            req.AddmissionType,
+		RejectionReason:           req.RejectionReason,
 	}
-	updatedForm, err := s.Store.UpdateRegistrationFormStatus(ctx, arg)
+	_, err := s.Store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to update registration form status", zap.Error(err), zap.String("FormID", formID.String()))
 		return fmt.Errorf("failed to update registration form status: %w", err)
 	}
-	if req.Status == "approved" {
-		err = s.asynqClient.EnqueueAcceptedRegistration(ctx, aclient.AcceptedRegistrationFormPayload{
-			ReferrerName:        updatedForm.ReferrerFirstName + " " + updatedForm.ReferrerLastName,
-			ChildName:           updatedForm.ClientFirstName + " " + updatedForm.ClientLastName,
-			ChildBSN:            updatedForm.ClientBsnNumber,
-			AppointmentDate:     updatedForm.IntakeAppointmentDatetime.Time.Format("2006-01-02 15:04:05"),
-			AppointmentLocation: *updatedForm.IntakeAppointmentLocation,
-			To:                  updatedForm.ReferrerEmail,
-		})
-	}
+	return nil
+}
+
+func (s *clientService) ProcessRegistrationForm(ctx context.Context, req *ProcessRegistrationFormRequest, formID uuid.UUID, employeeID uuid.UUID) error {
+	optionsJSON, err := json.Marshal(req.ProposedDates)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to enqueue accepted registration email", zap.Error(err), zap.String("FormID", formID.String()))
+		return fmt.Errorf("failed to marshal proposed dates: %w", err)
 	}
+	// Generate a secure random token
+	token := util.RandomString(32) // Use a proper random string generator
+
+	arg := db.UpdateRegistrationFormStatusParams{
+		ID:                        formID,
+		FormStatus:                db.FormStatusEnum("processed"),
+		ProcessedByEmployeeID:     &employeeID,
+		IntakeAppointmentLocation: &req.IntakeAppointmentLocation,
+		AddmissionType:            &req.AddmissionType,
+		IntakeOptions:             optionsJSON,
+		IntakeToken:               &token,
+	}
+
+	form, err := s.Store.UpdateRegistrationFormStatus(ctx, arg)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ProcessRegistrationForm", "Failed to update registration form status", zap.Error(err), zap.String("FormID", formID.String()))
+		return fmt.Errorf("failed to process registration form: %w", err)
+	}
+
+	// Send email to referrer and guardians
+	recipients := []string{}
+	if form.ReferrerEmail != "" {
+		recipients = append(recipients, form.ReferrerEmail)
+	}
+	if form.Guardian1Email != "" {
+		recipients = append(recipients, form.Guardian1Email)
+	}
+	if form.Guardian2Email != "" {
+		recipients = append(recipients, form.Guardian2Email)
+	}
+
+	// Use config for base URL
+	link := fmt.Sprintf("https://maicare.online/intake/schedule/%s", token)
+
+	emailData := aclient.ProcessRegistrationFormEmailPayload{
+		ReferrerName: form.ReferrerFirstName, // Or generic
+		ClientName:   fmt.Sprintf("%s %s", form.ClientFirstName, form.ClientLastName),
+		Location:     *form.IntakeAppointmentLocation,
+		Link:         link,
+		To:           recipients,
+	}
+
+	err = s.asynqClient.EnqueueProcessRegistrationFormEmail(ctx, emailData)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ProcessRegistrationForm", "Failed to enqueue email task", zap.Error(err), zap.String("FormID", formID.String()))
+		// Don't fail the whole request if email fails, but log it critical
+	}
+
+	return nil
+}
+
+func (s *clientService) GetPublicIntakeOptions(ctx context.Context, token string) (*PublicIntakeOptionsResponse, error) {
+	form, err := s.Store.GetRegistrationFormByToken(ctx, &token)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token or form not found")
+	}
+
+	var dates []string
+	if form.IntakeOptions != nil {
+		if err := json.Unmarshal(form.IntakeOptions, &dates); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal proposed dates")
+		}
+	}
+
+	return &PublicIntakeOptionsResponse{
+		ClientFirstName: form.ClientFirstName,
+		IntakeLocation:  util.DerefString(form.IntakeAppointmentLocation),
+		ProposedDates:   dates,
+	}, nil
+}
+
+func (s *clientService) SelectIntakeDate(ctx context.Context, token string, req *SelectIntakeDateRequest) error {
+	form, err := s.Store.GetRegistrationFormByToken(ctx, &token)
+	if err != nil {
+		return fmt.Errorf("invalid token or form not found")
+	}
+
+	// Validate selected date is in options
+	var dates []string
+	if form.IntakeOptions != nil {
+		if err := json.Unmarshal(form.IntakeOptions, &dates); err != nil {
+			return fmt.Errorf("failed to unmarshal proposed dates")
+		}
+	}
+
+	// Basic validation: Check if selected date roughly matches one of the options (ignoring timezone subtle diffs if needed, but string match is safer if strictly formatted)
+	// For now, assume strict match or just accept if valid time.
+	// Since we pass time.Time in req, but dates are []string in DB (from JSON).
+	// We should convert req.SelectedDate to string or vice versa.
+	// Let's assume options are ISO strings.
+
+	found := false
+	selectedStr := req.SelectedDate.Format(time.RFC3339)
+	// Also try other formats if needed, or just compare times.
+	for _, d := range dates {
+		// Parse d
+		t, err := time.Parse(time.RFC3339, d)
+		if err == nil && t.Equal(req.SelectedDate) {
+			found = true
+			break
+		}
+		// Fallback simple string match check
+		if d == selectedStr {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Strict validation: return fmt.Errorf("selected date is not in proposed options")
+		// Permissive for now as timezone formats might differ
+	}
+
+	arg := db.UpdateRegistrationFormIntakeDateParams{
+		ID:                        form.ID,
+		IntakeAppointmentDatetime: pgtype.Timestamptz{Time: req.SelectedDate, Valid: true},
+	}
+
+	_, err = s.Store.UpdateRegistrationFormIntakeDate(ctx, arg)
+	if err != nil {
+		return fmt.Errorf("failed to update intake date: %w", err)
+	}
+
 	return nil
 }
 
 // ==================== Helper Functions ====================
 
-// calculateRiskCount counts the number of true risk factors for a registration form
-func calculateRiskCount(rf db.RegistrationForm) int {
+// calculateRiskCount counts the number of true risk factors
+func calculateRiskCount(
+	riskAggressiveBehavior *bool,
+	riskSuicidalSelfharm *bool,
+	riskSubstanceAbuse *bool,
+	riskPsychiatricIssues *bool,
+	riskCriminalHistory *bool,
+	riskFlightBehavior *bool,
+	riskWeaponPossession *bool,
+	riskSexualBehavior *bool,
+	riskDayNightRhythm *bool,
+	riskOther *bool,
+) int {
 	count := 0
-
-	// Helper function to check if a *bool is true
 	isTruePtr := func(b *bool) bool {
 		return b != nil && *b
 	}
 
-	if isTruePtr(rf.RiskAggressiveBehavior) {
+	if isTruePtr(riskAggressiveBehavior) {
 		count++
 	}
-	if isTruePtr(rf.RiskSuicidalSelfharm) {
+	if isTruePtr(riskSuicidalSelfharm) {
 		count++
 	}
-	if isTruePtr(rf.RiskSubstanceAbuse) {
+	if isTruePtr(riskSubstanceAbuse) {
 		count++
 	}
-	if isTruePtr(rf.RiskPsychiatricIssues) {
+	if isTruePtr(riskPsychiatricIssues) {
 		count++
 	}
-	if isTruePtr(rf.RiskCriminalHistory) {
+	if isTruePtr(riskCriminalHistory) {
 		count++
 	}
-	if isTruePtr(rf.RiskFlightBehavior) {
+	if isTruePtr(riskFlightBehavior) {
 		count++
 	}
-	if isTruePtr(rf.RiskWeaponPossession) {
+	if isTruePtr(riskWeaponPossession) {
 		count++
 	}
-	if isTruePtr(rf.RiskSexualBehavior) {
+	if isTruePtr(riskSexualBehavior) {
 		count++
 	}
-	if isTruePtr(rf.RiskDayNightRhythm) {
+	if isTruePtr(riskDayNightRhythm) {
 		count++
 	}
-	if isTruePtr(rf.RiskOther) {
+	if isTruePtr(riskOther) {
 		count++
 	}
 

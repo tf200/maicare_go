@@ -55,6 +55,29 @@ type FileInfo struct {
 	MD5Hash     string
 }
 
+type InitUploadRequest struct {
+	Filename    string `json:"filename" binding:"required"`
+	ContentType string `json:"content_type" binding:"required"`
+	Size        int64  `json:"size" binding:"required"`
+}
+
+type InitUploadResponse struct {
+	UploadURL string    `json:"upload_url"`
+	FileID    uuid.UUID `json:"file_id"`
+	Key       string    `json:"key"`
+}
+
+type ConfirmUploadRequest struct {
+	FileID uuid.UUID `json:"file_id" binding:"required"`
+}
+
+type ConfirmUploadResponse struct {
+	FileURL   string    `json:"file_url"`
+	FileID    uuid.UUID `json:"file_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Size      int64     `json:"size"`
+}
+
 // UploadHandler handles file uploads
 type UploadHandlerResponse struct {
 	FileURL   string    `json:"file_url"`

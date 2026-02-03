@@ -16,6 +16,7 @@ import (
 	reflect "reflect"
 
 	gin "github.com/gin-gonic/gin"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -44,7 +45,7 @@ func (m *MockInvoiceService) EXPECT() *MockInvoiceServiceMockRecorder {
 }
 
 // CreateInvoice mocks base method.
-func (m *MockInvoiceService) CreateInvoice(ctx context.Context, req invoice.CreateInvoiceRequest, employeeID int64) (*invoice.CreateInvoiceResponse, error) {
+func (m *MockInvoiceService) CreateInvoice(ctx context.Context, req invoice.CreateInvoiceRequest, employeeID uuid.UUID) (*invoice.CreateInvoiceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateInvoice", ctx, req, employeeID)
 	ret0, _ := ret[0].(*invoice.CreateInvoiceResponse)
@@ -59,7 +60,7 @@ func (mr *MockInvoiceServiceMockRecorder) CreateInvoice(ctx, req, employeeID any
 }
 
 // CreatePayment mocks base method.
-func (m *MockInvoiceService) CreatePayment(ctx context.Context, invoiceID int64, req invoice.CreatePaymentRequest, employeeID int64) (*invoice.CreatePaymentResponse, error) {
+func (m *MockInvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID, req invoice.CreatePaymentRequest, employeeID uuid.UUID) (*invoice.CreatePaymentResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePayment", ctx, invoiceID, req, employeeID)
 	ret0, _ := ret[0].(*invoice.CreatePaymentResponse)
@@ -74,7 +75,7 @@ func (mr *MockInvoiceServiceMockRecorder) CreatePayment(ctx, invoiceID, req, emp
 }
 
 // CreditInvoice mocks base method.
-func (m *MockInvoiceService) CreditInvoice(ctx context.Context, invoiceID, employeeID int64) (*invoice.CreditInvoiceResponse, error) {
+func (m *MockInvoiceService) CreditInvoice(ctx context.Context, invoiceID, employeeID uuid.UUID) (*invoice.CreditInvoiceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreditInvoice", ctx, invoiceID, employeeID)
 	ret0, _ := ret[0].(*invoice.CreditInvoiceResponse)
@@ -89,7 +90,7 @@ func (mr *MockInvoiceServiceMockRecorder) CreditInvoice(ctx, invoiceID, employee
 }
 
 // DeleteInvoice mocks base method.
-func (m *MockInvoiceService) DeleteInvoice(ctx context.Context, invoiceID int64) error {
+func (m *MockInvoiceService) DeleteInvoice(ctx context.Context, invoiceID uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteInvoice", ctx, invoiceID)
 	ret0, _ := ret[0].(error)
@@ -103,7 +104,7 @@ func (mr *MockInvoiceServiceMockRecorder) DeleteInvoice(ctx, invoiceID any) *gom
 }
 
 // DeletePayment mocks base method.
-func (m *MockInvoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID, employeeID int64) (*invoice.DeletePaymentResponse, error) {
+func (m *MockInvoiceService) DeletePayment(ctx context.Context, invoiceID, paymentID, employeeID uuid.UUID) (*invoice.DeletePaymentResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePayment", ctx, invoiceID, paymentID, employeeID)
 	ret0, _ := ret[0].(*invoice.DeletePaymentResponse)
@@ -134,7 +135,7 @@ func (mr *MockInvoiceServiceMockRecorder) GenerateInvoice(req, ctx any) *gomock.
 }
 
 // GenerateInvoicePdf mocks base method.
-func (m *MockInvoiceService) GenerateInvoicePdf(ctx context.Context, invoiceID int64) (*invoice.GenerateInvoicePDFResponse, error) {
+func (m *MockInvoiceService) GenerateInvoicePdf(ctx context.Context, invoiceID uuid.UUID) (*invoice.GenerateInvoicePDFResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateInvoicePdf", ctx, invoiceID)
 	ret0, _ := ret[0].(*invoice.GenerateInvoicePDFResponse)
@@ -149,7 +150,7 @@ func (mr *MockInvoiceServiceMockRecorder) GenerateInvoicePdf(ctx, invoiceID any)
 }
 
 // GetInvoiceAuditLogs mocks base method.
-func (m *MockInvoiceService) GetInvoiceAuditLogs(ctx context.Context, invoiceID int64) ([]invoice.GetInvoiceAuditLogResponse, error) {
+func (m *MockInvoiceService) GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]invoice.GetInvoiceAuditLogResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetInvoiceAuditLogs", ctx, invoiceID)
 	ret0, _ := ret[0].([]invoice.GetInvoiceAuditLogResponse)
@@ -164,7 +165,7 @@ func (mr *MockInvoiceServiceMockRecorder) GetInvoiceAuditLogs(ctx, invoiceID any
 }
 
 // GetInvoiceByID mocks base method.
-func (m *MockInvoiceService) GetInvoiceByID(ctx context.Context, invoiceID int64) (*invoice.GetInvoiceByIDResponse, error) {
+func (m *MockInvoiceService) GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*invoice.GetInvoiceByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetInvoiceByID", ctx, invoiceID)
 	ret0, _ := ret[0].(*invoice.GetInvoiceByIDResponse)
@@ -194,7 +195,7 @@ func (mr *MockInvoiceServiceMockRecorder) GetInvoiceTemplateItemsApi(ctx any) *g
 }
 
 // GetPaymentByID mocks base method.
-func (m *MockInvoiceService) GetPaymentByID(ctx context.Context, paymentID int64) (*invoice.GetPaymentByIDResponse, error) {
+func (m *MockInvoiceService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*invoice.GetPaymentByIDResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPaymentByID", ctx, paymentID)
 	ret0, _ := ret[0].(*invoice.GetPaymentByIDResponse)
@@ -224,7 +225,7 @@ func (mr *MockInvoiceServiceMockRecorder) ListInvoices(ctx, req any) *gomock.Cal
 }
 
 // ListPayments mocks base method.
-func (m *MockInvoiceService) ListPayments(ctx context.Context, invoiceID int64) ([]invoice.ListPaymentsResponse, error) {
+func (m *MockInvoiceService) ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]invoice.ListPaymentsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListPayments", ctx, invoiceID)
 	ret0, _ := ret[0].([]invoice.ListPaymentsResponse)
@@ -239,7 +240,7 @@ func (mr *MockInvoiceServiceMockRecorder) ListPayments(ctx, invoiceID any) *gomo
 }
 
 // SendInvoiceReminder mocks base method.
-func (m *MockInvoiceService) SendInvoiceReminder(ctx context.Context, invoiceID int64) error {
+func (m *MockInvoiceService) SendInvoiceReminder(ctx context.Context, invoiceID uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendInvoiceReminder", ctx, invoiceID)
 	ret0, _ := ret[0].(error)
@@ -253,7 +254,7 @@ func (mr *MockInvoiceServiceMockRecorder) SendInvoiceReminder(ctx, invoiceID any
 }
 
 // UpdateInvoice mocks base method.
-func (m *MockInvoiceService) UpdateInvoice(ctx context.Context, invoiceID int64, payload invoice.UpdateInvoiceRequest, employeeID int64) (*invoice.UpdateInvoiceResponse, error) {
+func (m *MockInvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, payload invoice.UpdateInvoiceRequest, employeeID uuid.UUID) (*invoice.UpdateInvoiceResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateInvoice", ctx, invoiceID, payload, employeeID)
 	ret0, _ := ret[0].(*invoice.UpdateInvoiceResponse)
@@ -268,7 +269,7 @@ func (mr *MockInvoiceServiceMockRecorder) UpdateInvoice(ctx, invoiceID, payload,
 }
 
 // UpdatePayment mocks base method.
-func (m *MockInvoiceService) UpdatePayment(ctx context.Context, invoiceID, employeeID, paymentID int64, req invoice.UpdatePaymentRequest) (*invoice.UpdatePaymentResponse, error) {
+func (m *MockInvoiceService) UpdatePayment(ctx context.Context, invoiceID, employeeID, paymentID uuid.UUID, req invoice.UpdatePaymentRequest) (*invoice.UpdatePaymentResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePayment", ctx, invoiceID, employeeID, paymentID, req)
 	ret0, _ := ret[0].(*invoice.UpdatePaymentResponse)

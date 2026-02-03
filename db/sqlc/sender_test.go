@@ -27,9 +27,10 @@ func TestCreateSender(t *testing.T) {
 			checks: func(t *testing.T, sender Sender, params CreateSenderParams) {
 				require.Equal(t, params.Types, sender.Types)
 				require.Equal(t, params.Name, sender.Name)
-				require.Nil(t, sender.Address)
+				require.Nil(t, sender.Street)
+				require.Nil(t, sender.HouseNumber)
 				require.Nil(t, sender.PostalCode)
-				require.Nil(t, sender.Place)
+				require.Nil(t, sender.City)
 				require.Nil(t, sender.Land)
 				require.Nil(t, sender.Kvknumber)
 				require.Nil(t, sender.Btwnumber)
@@ -45,9 +46,10 @@ func TestCreateSender(t *testing.T) {
 				return CreateSenderParams{
 					Types:        SenderTypesEnumMainProvider,
 					Name:         util.RandomString(5),
-					Address:      util.StringPtr("test"),
+					Street:       util.StringPtr("test"),
+					HouseNumber:  util.StringPtr("1"),
 					PostalCode:   util.StringPtr("test"),
-					Place:        util.StringPtr("test"),
+					City:         util.StringPtr("test"),
 					Land:         util.StringPtr("test"),
 					Kvknumber:    util.StringPtr("test"),
 					Btwnumber:    util.StringPtr("test"),
@@ -60,9 +62,10 @@ func TestCreateSender(t *testing.T) {
 			checks: func(t *testing.T, sender Sender, params CreateSenderParams) {
 				require.Equal(t, params.Types, sender.Types)
 				require.Equal(t, params.Name, sender.Name)
-				require.Equal(t, params.Address, sender.Address)
+				require.Equal(t, params.Street, sender.Street)
+				require.Equal(t, params.HouseNumber, sender.HouseNumber)
 				require.Equal(t, params.PostalCode, sender.PostalCode)
-				require.Equal(t, params.Place, sender.Place)
+				require.Equal(t, params.City, sender.City)
 				require.Equal(t, params.Land, sender.Land)
 				require.Equal(t, params.Kvknumber, sender.Kvknumber)
 				require.Equal(t, params.Btwnumber, sender.Btwnumber)
@@ -413,9 +416,10 @@ func createRandomSenders(ctx context.Context, qtx *Queries) Sender {
 	arg := CreateSenderParams{
 		Types:        SenderTypesEnumHealthcareInstitution,
 		Name:         util.RandomString(5),
-		Address:      util.StringPtr("test"),
+		Street:       util.StringPtr("test"),
+		HouseNumber:  util.StringPtr("1"),
 		PostalCode:   util.StringPtr("test"),
-		Place:        util.StringPtr("test"),
+		City:         util.StringPtr("test"),
 		Land:         util.StringPtr("test"),
 		Kvknumber:    util.StringPtr("test"),
 		Btwnumber:    util.StringPtr("test"),

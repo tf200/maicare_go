@@ -16,17 +16,19 @@ import (
 )
 
 type InvoicePDFData struct {
-	ID                   uuid.UUID
-	SenderName           string
-	SenderContactPerson  string
-	SenderAddressLine1   string
-	SenderPostalCodeCity string
-	InvoiceNumber        string
-	InvoiceDate          time.Time
-	DueDate              time.Time
-	InvoiceDetails       []InvoiceDetail
-	TotalAmount          float64
-	ExtraItems           map[string]string
+	ID                  uuid.UUID
+	SenderName          string
+	SenderContactPerson string
+	SenderStreet        string
+	SenderHouseNumber   string
+	SenderPostalCode    string
+	SenderCity          string
+	InvoiceNumber       string
+	InvoiceDate         time.Time
+	DueDate             time.Time
+	InvoiceDetails      []InvoiceDetail
+	TotalAmount         float64
+	ExtraItems          map[string]string
 }
 
 type InvoiceDetail struct {

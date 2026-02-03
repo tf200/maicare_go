@@ -1,9 +1,12 @@
 package api
 
 import (
+	"errors"
+	"io"
+	"net/http"
+
 	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -21,7 +24,7 @@ import (
 // @Router /registration_form [post]
 func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 	var req clientp.CreateRegistrationFormRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
@@ -160,6 +163,106 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 }
 
 // @Summary Update Registration Form Status
+// @Description Process a registration form by sending intake proposals
+// @Tags Registration Form
+// @Produce json
+// @Param id path uuid true "Registration Form ID"
+// @Param request body clientp.ProcessRegistrationFormRequest true "Process Registration Form Request"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /registration_form/{id}/process [post]
+func (server *Server) ProcessRegistrationFormApi(ctx *gin.Context) {
+	var req clientp.ProcessRegistrationFormRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	rfId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err = server.businessService.ClientService.ProcessRegistrationForm(ctx, &req, rfId, payload.EmployeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Registration form processed and intake options sent")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Get Public Intake Options
+// @Description Get intake options for a registration form via token
+// @Tags Public Intake
+// @Produce json
+// @Param token path string true "Intake Token"
+// @Success 200 {object} Response[clientp.PublicIntakeOptionsResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /public/intake-options/{token} [get]
+func (server *Server) GetPublicIntakeOptionsApi(ctx *gin.Context) {
+	token := ctx.Param("token")
+	if token == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(http.ErrNoLocation))
+		return
+	}
+
+	response, err := server.businessService.ClientService.GetPublicIntakeOptions(ctx, token)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(response, "Intake options retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Select Intake Date
+// @Description Select an intake date for a registration form via token
+// @Tags Public Intake
+// @Produce json
+// @Param token path string true "Intake Token"
+// @Param request body clientp.SelectIntakeDateRequest true "Select Intake Date Request"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /public/intake-options/{token}/confirm [post]
+func (server *Server) SelectIntakeDateApi(ctx *gin.Context) {
+	token := ctx.Param("token")
+	if token == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(http.ErrNoLocation))
+		return
+	}
+
+	var req clientp.SelectIntakeDateRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err := server.businessService.ClientService.SelectIntakeDate(ctx, token, &req)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse[any](nil, "Intake date selected successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // @Description Update the status of a registration form by ID
 // @Tags Registration Form
 // @Produce json
@@ -196,5 +299,68 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse[any](nil, "Registration form status updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Generate Intake Goals
+// @Description Generate Care Plan goals for an intake maturity assessment using AI
+// @Tags Registration Form
+// @Accept json
+// @Produce json
+// @Param assessment_id path uuid true "Intake Assessment ID"
+// @Param request body clientp.GenerateIntakeGoalsRequest true "Request body"
+// @Success 200 {object} Response[clientp.GenerateIntakeGoalsResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_maturity/{assessment_id}/generate_goals [post]
+func (server *Server) GenerateIntakeGoalsApi(ctx *gin.Context) {
+	assessmentID, err := uuid.Parse(ctx.Param("assessment_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.GenerateIntakeGoalsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	req.IntakeAssessmentID = assessmentID
+
+	response, err := server.businessService.ClientService.GenerateIntakeGoals(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(response, "Goals generated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Promote Intake to Client
+// @Description Promote an intake form and all its assessments to a full client record with a care plan
+// @Tags Registration Form
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Success 200 {object} Response[clientp.PromoteIntakeToClientResponse]
+// @Router /intake_forms/{id}/promote [post]
+func (server *Server) PromoteIntakeToClientApi(ctx *gin.Context) {
+	intakeFormID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	req := clientp.PromoteIntakeToClientRequest{
+		IntakeFormID: intakeFormID,
+	}
+
+	response, err := server.businessService.ClientService.PromoteIntakeToClient(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(response, "Intake successfully promoted to client")
 	ctx.JSON(http.StatusOK, res)
 }

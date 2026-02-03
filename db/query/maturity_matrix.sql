@@ -121,9 +121,10 @@ INSERT INTO care_plan_objectives (
     timeframe,
     goal_title,
     description,
+    priority,
     target_date
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
@@ -157,6 +158,7 @@ SET
     timeframe = COALESCE(sqlc.narg('timeframe'), timeframe),
     goal_title = COALESCE(sqlc.narg('goal_title'), goal_title),
     description = COALESCE(sqlc.narg('description'), description),
+    priority = COALESCE(sqlc.narg('priority'), priority),
     status = COALESCE(sqlc.narg('status'), status), 
     updated_at = NOW()
 WHERE id = $1

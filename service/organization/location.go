@@ -6,26 +6,48 @@ import (
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
+	"maicare_go/pagination"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func (s *organizationService) ListOrgLocations(ctx context.Context, organizationID uuid.UUID) ([]ListLocationsResponse, error) {
-	locations, err := s.Store.ListLocations(ctx, organizationID)
+func (s *organizationService) ListOrgLocations(ctx *gin.Context, organizationID uuid.UUID, req ListLocationsRequest) (*pagination.Response[ListLocationsResponse], error) {
+	search := ""
+	if req.Search != nil {
+		search = *req.Search
+	}
+
+	params := db.ListLocationsPaginatedParams{
+		OrganisationID: organizationID,
+		Limit:          req.PageSize,
+		Offset:         (req.Page - 1) * req.PageSize,
+		Column4:        search,
+	}
+
+	locations, err := s.Store.ListLocationsPaginated(ctx, params)
+
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListOrgLocationsApi", "Failed to list locations", zap.Error(err))
 		return nil, fmt.Errorf("failed to list locations")
 	}
 
 	response := []ListLocationsResponse{}
+	var totalCount int64
 	for _, loc := range locations {
+		totalCount = loc.TotalCount
 		response = append(response, ListLocationsResponse{
-			ID:       loc.ID,
-			Name:     loc.Name,
-			Address:  loc.Address,
-			Capacity: loc.Capacity,
-			Occupied: func() int32 {
+			ID:                  loc.ID,
+			Name:                loc.Name,
+			Street:              loc.Street,
+			HouseNumber:         loc.HouseNumber,
+			HouseNumberAddition: loc.HouseNumberAddition,
+			PostalCode:          loc.PostalCode,
+			City:                loc.City,
+			Capacity:            loc.Capacity,
+			Occupied:            int32(loc.ClientCount),
+			Available: func() int32 {
 				if loc.Capacity != nil {
 					available := *loc.Capacity - int32(loc.ClientCount)
 					if available < 0 {
@@ -40,24 +62,44 @@ func (s *organizationService) ListOrgLocations(ctx context.Context, organization
 		})
 	}
 
-	return response, nil
+	paginatedResponse := pagination.NewResponse(ctx, req.Request, response, totalCount)
+	return &paginatedResponse, nil
 }
 
-func (s *organizationService) ListAllLocations(ctx context.Context) ([]ListLocationsResponse, error) {
-	locations, err := s.Store.ListAllLocations(ctx)
+func (s *organizationService) ListAllLocations(ctx *gin.Context, req ListAllLocationsRequest) (*pagination.Response[ListLocationsResponse], error) {
+	search := ""
+	if req.Search != nil {
+		search = *req.Search
+	}
+
+	params := req.GetParams()
+	locations, err := s.Store.ListAllLocationsPaginated(ctx, db.ListAllLocationsPaginatedParams{
+		Limit:   params.Limit,
+		Offset:  params.Offset,
+		Column3: search,
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllLocationsApi", "Failed to list all locations", zap.Error(err))
 		return nil, fmt.Errorf("failed to list all locations")
 	}
 
-	response := []ListLocationsResponse{}
-	for _, loc := range locations {
-		response = append(response, ListLocationsResponse{
-			ID:       loc.ID,
-			Name:     loc.Name,
-			Address:  loc.Address,
-			Capacity: loc.Capacity,
-			Occupied: int32(loc.ClientCount),
+	if len(locations) == 0 {
+		paginatedResponse := pagination.NewResponse(ctx, req.Request, []ListLocationsResponse{}, 0)
+		return &paginatedResponse, nil
+	}
+
+	response := make([]ListLocationsResponse, len(locations))
+	for i, loc := range locations {
+		response[i] = ListLocationsResponse{
+			ID:                  loc.ID,
+			Name:                loc.Name,
+			Street:              loc.Street,
+			HouseNumber:         loc.HouseNumber,
+			HouseNumberAddition: loc.HouseNumberAddition,
+			PostalCode:          loc.PostalCode,
+			City:                loc.City,
+			Capacity:            loc.Capacity,
+			Occupied:            int32(loc.ClientCount),
 			Available: func() int32 {
 				if loc.Capacity != nil {
 					available := *loc.Capacity - int32(loc.ClientCount)
@@ -68,18 +110,25 @@ func (s *organizationService) ListAllLocations(ctx context.Context) ([]ListLocat
 				}
 				return 0
 			}(),
-		})
+			CreatedAt: loc.CreatedAt.Time,
+			UpdatedAt: loc.UpdatedAt.Time,
+		}
 	}
 
-	return response, nil
+	paginatedResponse := pagination.NewResponse(ctx, req.Request, response, locations[0].TotalCount)
+	return &paginatedResponse, nil
 }
 
 func (s *organizationService) CreateLocation(ctx context.Context, organizationID uuid.UUID, req CreateLocationRequest) (*CreateLocationResponse, error) {
 	location, err := s.Store.CreateLocation(ctx, db.CreateLocationParams{
-		OrganisationID: organizationID,
-		Name:           req.Name,
-		Address:        req.Address,
-		Capacity:       req.Capacity,
+		OrganisationID:      organizationID,
+		Name:                req.Name,
+		Street:              req.Street,
+		HouseNumber:         req.HouseNumber,
+		HouseNumberAddition: req.HouseNumberAddition,
+		PostalCode:          req.PostalCode,
+		City:                req.City,
+		Capacity:            req.Capacity,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateLocationApi", "Failed to create location", zap.Error(err))
@@ -87,19 +136,27 @@ func (s *organizationService) CreateLocation(ctx context.Context, organizationID
 	}
 
 	return &CreateLocationResponse{
-		ID:       location.ID,
-		Name:     location.Name,
-		Address:  location.Address,
-		Capacity: location.Capacity,
+		ID:                  location.ID,
+		Name:                location.Name,
+		Street:              location.Street,
+		HouseNumber:         location.HouseNumber,
+		HouseNumberAddition: location.HouseNumberAddition,
+		PostalCode:          location.PostalCode,
+		City:                location.City,
+		Capacity:            location.Capacity,
 	}, nil
 }
 
 func (s *organizationService) UpdateLocation(ctx context.Context, locationID uuid.UUID, req UpdateLocationRequest) (*UpdateLocationResponse, error) {
 	location, err := s.Store.UpdateLocation(ctx, db.UpdateLocationParams{
-		Name:     req.Name,
-		Address:  req.Address,
-		Capacity: req.Capacity,
-		ID:       locationID,
+		ID:                  locationID,
+		Name:                req.Name,
+		Street:              req.Street,
+		HouseNumber:         req.HouseNumber,
+		HouseNumberAddition: req.HouseNumberAddition,
+		PostalCode:          req.PostalCode,
+		City:                req.City,
+		Capacity:            req.Capacity,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateLocationApi", "Failed to update location", zap.Error(err))
@@ -107,10 +164,14 @@ func (s *organizationService) UpdateLocation(ctx context.Context, locationID uui
 	}
 
 	return &UpdateLocationResponse{
-		ID:       location.ID,
-		Name:     location.Name,
-		Address:  location.Address,
-		Capacity: location.Capacity,
+		ID:                  location.ID,
+		Name:                location.Name,
+		Street:              location.Street,
+		HouseNumber:         location.HouseNumber,
+		HouseNumberAddition: location.HouseNumberAddition,
+		PostalCode:          location.PostalCode,
+		City:                location.City,
+		Capacity:            location.Capacity,
 	}, nil
 }
 
@@ -134,9 +195,13 @@ func (s *organizationService) GetLocationByID(ctx context.Context, locationID uu
 	}
 
 	return &GetLocationResponse{
-		ID:       location.ID,
-		Name:     location.Name,
-		Address:  location.Address,
-		Capacity: location.Capacity,
+		ID:                  location.ID,
+		Name:                location.Name,
+		Street:              location.Street,
+		HouseNumber:         location.HouseNumber,
+		HouseNumberAddition: location.HouseNumberAddition,
+		PostalCode:          location.PostalCode,
+		City:                location.City,
+		Capacity:            location.Capacity,
 	}, nil
 }

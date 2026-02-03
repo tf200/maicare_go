@@ -15,6 +15,7 @@ import (
 	"maicare_go/hub"
 	"maicare_go/logger"
 	"maicare_go/service"
+	"maicare_go/service/ai"
 	"maicare_go/token"
 
 	"maicare_go/util"
@@ -40,7 +41,7 @@ func TestMain(m *testing.M) {
 	}
 	gin.SetMode(gin.TestMode)
 
-	conn, err := pgxpool.New(context.Background(), config.DbSource)
+	conn, err := pgxpool.New(context.Background(), "postgresql://maicare:maicare@localhost:5432/maicare?sslmode=disable")
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
@@ -68,8 +69,12 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("cannot setup logger: %v", err)
 	}
+	aiService, err := ai.NewAIService("cd", "ded")
+	if err != nil {
+		log.Fatalf("cannot create ai service: %v", err)
+	}
 
-	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config, testb2Client, testGrpcClient, hubInstance, testasynqClient)
+	businessService := service.NewBusinessService(testStore, tokenMaker, logger, &config, testb2Client, testGrpcClient, hubInstance, testasynqClient, aiService)
 
 	testServer, err = NewServer(
 		hubInstance, testGrpcClient,

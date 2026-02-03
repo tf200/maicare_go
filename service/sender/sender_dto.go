@@ -17,35 +17,39 @@ type SenderContact struct {
 
 // CreateSenderRequest represents a request to create a new sender.
 type CreateSenderRequest struct {
-	Types        string          `json:"types" binding:"required,oneof=main_provider local_authority particular_party healthcare_institution"`
-	Name         string          `json:"name" binding:"required"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	KVKNumber    *string         `json:"KVKnumber"`
-	BTWNumber    *string         `json:"BTWnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	Contacts     []SenderContact `json:"contacts" binding:"dive"`
+	Types               string          `json:"types" binding:"required,oneof=main_provider local_authority particular_party healthcare_institution"`
+	Name                string          `json:"name" binding:"required"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	KVKNumber           *string         `json:"KVKnumber"`
+	BTWNumber           *string         `json:"BTWnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	Contacts            []SenderContact `json:"contacts" binding:"dive"`
 }
 
 // CreateSenderResponse represents a response to a request to create a new sender.
 type CreateSenderResponse struct {
-	ID           uuid.UUID       `json:"id"`
-	Types        string          `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	KVKNumber    *string         `json:"KVKnumber"`
-	BTWNumber    *string         `json:"BTWnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	Contacts     []SenderContact `json:"contacts"`
-	CreatedAt    string          `json:"created_at"`
-	UpdatedAt    string          `json:"updated_at"`
+	ID                  uuid.UUID       `json:"id"`
+	Types               string          `json:"types"`
+	Name                string          `json:"name"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	KVKNumber           *string         `json:"KVKnumber"`
+	BTWNumber           *string         `json:"BTWnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	Contacts            []SenderContact `json:"contacts"`
+	CreatedAt           string          `json:"created_at"`
+	UpdatedAt           string          `json:"updated_at"`
 }
 
 // GetSenderRequest represents a request to get a sender by ID.
@@ -57,20 +61,23 @@ type ListSendersRequest struct {
 
 // GetSenderResponse represents a response to a request to get a sender by ID.
 type ListSendersResponse struct {
-	ID           uuid.UUID       `json:"id"`
-	Types        string          `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	KVKNumber    *string         `json:"KVKnumber"`
-	BTWNumber    *string         `json:"BTWnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	Contacts     []SenderContact `json:"contacts"`
-	CreatedAt    string          `json:"created_at"`
-	UpdatedAt    string          `json:"updated_at"`
+	ID                  uuid.UUID       `json:"id"`
+	Types               string          `json:"types"`
+	Name                string          `json:"name"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	KVKNumber           *string         `json:"KVKnumber"`
+	BTWNumber           *string         `json:"BTWnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	ClientsCount        *int            `json:"clients_count"`
+	Contacts            []SenderContact `json:"contacts"`
+	CreatedAt           string          `json:"created_at"`
+	UpdatedAt           string          `json:"updated_at"`
 }
 
 type TemplateItem struct {
@@ -86,9 +93,11 @@ type GetSenderByIdResponse struct {
 	ID                   uuid.UUID       `json:"id"`
 	Types                string          `json:"types"`
 	Name                 string          `json:"name"`
-	Address              *string         `json:"address"`
+	Street               *string         `json:"street"`
+	HouseNumber          *string         `json:"house_number"`
+	HouseNumberAddition  *string         `json:"house_number_addition"`
 	PostalCode           *string         `json:"postal_code"`
-	Place                *string         `json:"place"`
+	City                 *string         `json:"city"`
 	Land                 *string         `json:"land"`
 	Kvknumber            *string         `json:"KVKnumber"`
 	Btwnumber            *string         `json:"BTWnumber"`
@@ -104,39 +113,43 @@ type GetSenderByIdResponse struct {
 
 // UpdateSenderRequest represents a request to update a sender.
 type UpdateSenderRequest struct {
-	Name         *string         `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	Kvknumber    *string         `json:"KVKnumber"`
-	Btwnumber    *string         `json:"BTWnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	EmailAddress *string         `json:"email_address"`
-	Contacts     []SenderContact `json:"contacts"`
-	IsArchived   *bool           `json:"is_archived"`
-	Types        *string         `json:"types" binding:"omitempty,oneof=main_provider local_authority particular_party healthcare_institution"`
+	Name                *string         `json:"name"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	Kvknumber           *string         `json:"KVKnumber"`
+	Btwnumber           *string         `json:"BTWnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	EmailAddress        *string         `json:"email_address"`
+	Contacts            []SenderContact `json:"contacts"`
+	IsArchived          *bool           `json:"is_archived"`
+	Types               *string         `json:"types" binding:"omitempty,oneof=main_provider local_authority particular_party healthcare_institution"`
 }
 
 // UpdateSenderResponse represents a response to a request to update a sender.
 type UpdateSenderResponse struct {
-	ID           uuid.UUID       `json:"id"`
-	Types        string          `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	Kvknumber    *string         `json:"KVKnumber"`
-	Btwnumber    *string         `json:"BTWnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	EmailAddress *string         `json:"email_address"`
-	Contacts     []SenderContact `json:"contacts"`
-	IsArchived   bool            `json:"is_archived"`
-	CreatedAt    string          `json:"created_at"`
-	UpdatedAt    string          `json:"updated_at"`
+	ID                  uuid.UUID       `json:"id"`
+	Types               string          `json:"types"`
+	Name                string          `json:"name"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	Kvknumber           *string         `json:"KVKnumber"`
+	Btwnumber           *string         `json:"BTWnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	EmailAddress        *string         `json:"email_address"`
+	Contacts            []SenderContact `json:"contacts"`
+	IsArchived          bool            `json:"is_archived"`
+	CreatedAt           string          `json:"created_at"`
+	UpdatedAt           string          `json:"updated_at"`
 }
 
 // CreateSenderInvoiceTemplateRequest represents a request to create a new sender invoice template.

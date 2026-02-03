@@ -36,6 +36,8 @@ type Config struct {
 	BrevoApiKey           string        `mapstructure:"BREVO_API_KEY"`
 	Environment           string        `mapstructure:"ENVIRONMENT"`
 	GrpcUrl               string        `mapstructure:"GRPC_URL"`
+	OpenRouterApiKey      string        `mapstructure:"OPEN_ROUTER_API_KEY"`
+	OpenRouterModel       string        `mapstructure:"OPEN_ROUTER_MODEL"`
 	MigrationsPath        string        `mapstructure:"MIGRATIONS_PATH"`
 	AdminEmail            string        `mapstructure:"ADMIN_EMAIL"`
 	AdminPassword         string        `mapstructure:"ADMIN_PASSWORD"`
@@ -60,6 +62,7 @@ func LoadConfig(path string) (config Config, err error) {
 		"OPEN_ROUTER_API_KEY", "SMTP_NAME", "SMTP_ADDRESS",
 		"SMTP_AUTH", "SMTP_HOST", "SMTP_PORT", "BREVO_SENDER_NAME",
 		"BREVO_SENDER_EMAIL", "BREVO_API_KEY", "ENVIRONMENT", "GRPC_URL",
+		"OPEN_ROUTER_API_KEY", "OPEN_ROUTER_MODEL",
 		"MIGRATIONS_PATH",
 	}
 

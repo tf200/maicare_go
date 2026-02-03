@@ -34,9 +34,11 @@ const createSender = `-- name: CreateSender :one
 INSERT INTO sender (
     types,
     name,
-    address,
+    street,
+    house_number,
+    house_number_addition,
     postal_code,
-    place,
+    city,
     land,
     kvknumber,
     btwnumber,
@@ -45,32 +47,36 @@ INSERT INTO sender (
     email_address,
     contacts
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-) RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+) RETURNING id, types, name, street, house_number, house_number_addition, postal_code, city, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at
 `
 
 type CreateSenderParams struct {
-	Types        SenderTypesEnum `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	Kvknumber    *string         `json:"kvknumber"`
-	Btwnumber    *string         `json:"btwnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	EmailAddress *string         `json:"email_address"`
-	Contacts     []byte          `json:"contacts"`
+	Types               SenderTypesEnum `json:"types"`
+	Name                string          `json:"name"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	Kvknumber           *string         `json:"kvknumber"`
+	Btwnumber           *string         `json:"btwnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	EmailAddress        *string         `json:"email_address"`
+	Contacts            []byte          `json:"contacts"`
 }
 
 func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sender, error) {
 	row := q.db.QueryRow(ctx, createSender,
 		arg.Types,
 		arg.Name,
-		arg.Address,
+		arg.Street,
+		arg.HouseNumber,
+		arg.HouseNumberAddition,
 		arg.PostalCode,
-		arg.Place,
+		arg.City,
 		arg.Land,
 		arg.Kvknumber,
 		arg.Btwnumber,
@@ -84,9 +90,11 @@ func (q *Queries) CreateSender(ctx context.Context, arg CreateSenderParams) (Sen
 		&i.ID,
 		&i.Types,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
-		&i.Place,
+		&i.City,
 		&i.Land,
 		&i.Kvknumber,
 		&i.Btwnumber,
@@ -137,7 +145,7 @@ func (q *Queries) DeleteSender(ctx context.Context, id uuid.UUID) error {
 }
 
 const getSenderById = `-- name: GetSenderById :one
-SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
+SELECT id, types, name, street, house_number, house_number_addition, postal_code, city, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
 WHERE id = $1 LIMIT 1
 `
 
@@ -148,9 +156,11 @@ func (q *Queries) GetSenderById(ctx context.Context, id uuid.UUID) (Sender, erro
 		&i.ID,
 		&i.Types,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
-		&i.Place,
+		&i.City,
 		&i.Land,
 		&i.Kvknumber,
 		&i.Btwnumber,
@@ -181,7 +191,7 @@ func (q *Queries) GetSenderInvoiceTemplate(ctx context.Context, id uuid.UUID) ([
 }
 
 const listSenders = `-- name: ListSenders :many
-SELECT id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
+SELECT id, types, name, street, house_number, house_number_addition, postal_code, city, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at FROM sender
 WHERE 
    (CASE WHEN $3::boolean THEN true ELSE NOT is_archived END)
    AND ($4::TEXT IS NULL OR name ILIKE '%' || $4 || '%')
@@ -214,9 +224,11 @@ func (q *Queries) ListSenders(ctx context.Context, arg ListSendersParams) ([]Sen
 			&i.ID,
 			&i.Types,
 			&i.Name,
-			&i.Address,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
 			&i.PostalCode,
-			&i.Place,
+			&i.City,
 			&i.Land,
 			&i.Kvknumber,
 			&i.Btwnumber,
@@ -243,47 +255,53 @@ const updateSender = `-- name: UpdateSender :one
 UPDATE sender
 SET 
     name = COALESCE($1, name),
-    address = COALESCE($2, address),
-    postal_code = COALESCE($3, postal_code),
-    place = COALESCE($4, place),
-    land = COALESCE($5, land),
-    kvknumber = COALESCE($6, kvknumber),
-    btwnumber = COALESCE($7, btwnumber),
-    phone_number = COALESCE($8, phone_number),
-    client_number = COALESCE($9, client_number),
-    email_address = COALESCE($10, email_address),
-    contacts = COALESCE($11::JSONB, contacts),
+    street = COALESCE($2, street),
+    house_number = COALESCE($3, house_number),
+    house_number_addition = COALESCE($4, house_number_addition),
+    postal_code = COALESCE($5, postal_code),
+    city = COALESCE($6, city),
+    land = COALESCE($7, land),
+    kvknumber = COALESCE($8, kvknumber),
+    btwnumber = COALESCE($9, btwnumber),
+    phone_number = COALESCE($10, phone_number),
+    client_number = COALESCE($11, client_number),
+    email_address = COALESCE($12, email_address),
+    contacts = COALESCE($13::JSONB, contacts),
     updated_at = NOW(),
-    is_archived = COALESCE($12, is_archived),
-    types = COALESCE($13, types)
+    is_archived = COALESCE($14, is_archived),
+    types = COALESCE($15, types)
 WHERE 
-    id = $14
-RETURNING id, types, name, address, postal_code, place, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at
+    id = $16
+RETURNING id, types, name, street, house_number, house_number_addition, postal_code, city, land, kvknumber, btwnumber, phone_number, client_number, email_address, contacts, invoice_template, is_archived, created_at, updated_at
 `
 
 type UpdateSenderParams struct {
-	Name         *string             `json:"name"`
-	Address      *string             `json:"address"`
-	PostalCode   *string             `json:"postal_code"`
-	Place        *string             `json:"place"`
-	Land         *string             `json:"land"`
-	Kvknumber    *string             `json:"kvknumber"`
-	Btwnumber    *string             `json:"btwnumber"`
-	PhoneNumber  *string             `json:"phone_number"`
-	ClientNumber *string             `json:"client_number"`
-	EmailAddress *string             `json:"email_address"`
-	Contacts     []byte              `json:"contacts"`
-	IsArchived   *bool               `json:"is_archived"`
-	Types        NullSenderTypesEnum `json:"types"`
-	ID           uuid.UUID           `json:"id"`
+	Name                *string             `json:"name"`
+	Street              *string             `json:"street"`
+	HouseNumber         *string             `json:"house_number"`
+	HouseNumberAddition *string             `json:"house_number_addition"`
+	PostalCode          *string             `json:"postal_code"`
+	City                *string             `json:"city"`
+	Land                *string             `json:"land"`
+	Kvknumber           *string             `json:"kvknumber"`
+	Btwnumber           *string             `json:"btwnumber"`
+	PhoneNumber         *string             `json:"phone_number"`
+	ClientNumber        *string             `json:"client_number"`
+	EmailAddress        *string             `json:"email_address"`
+	Contacts            []byte              `json:"contacts"`
+	IsArchived          *bool               `json:"is_archived"`
+	Types               NullSenderTypesEnum `json:"types"`
+	ID                  uuid.UUID           `json:"id"`
 }
 
 func (q *Queries) UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sender, error) {
 	row := q.db.QueryRow(ctx, updateSender,
 		arg.Name,
-		arg.Address,
+		arg.Street,
+		arg.HouseNumber,
+		arg.HouseNumberAddition,
 		arg.PostalCode,
-		arg.Place,
+		arg.City,
 		arg.Land,
 		arg.Kvknumber,
 		arg.Btwnumber,
@@ -300,9 +318,11 @@ func (q *Queries) UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sen
 		&i.ID,
 		&i.Types,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
-		&i.Place,
+		&i.City,
 		&i.Land,
 		&i.Kvknumber,
 		&i.Btwnumber,

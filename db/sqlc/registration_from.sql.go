@@ -14,7 +14,7 @@ import (
 
 const countRegistrationForms = `-- name: CountRegistrationForms :one
 SELECT COUNT(*) FROM registration_form
-WHERE 
+WHERE
     -- Form status filtering
     ($1::form_status_enum IS NULL OR form_status = $1::form_status_enum)
     -- Risk filtering
@@ -64,6 +64,7 @@ const createRegistrationForm = `-- name: CreateRegistrationForm :one
 INSERT INTO registration_form (
     client_first_name,
     client_last_name,
+    client_date_of_birth,
     client_bsn_number,
     client_gender,
     client_nationality,
@@ -107,6 +108,8 @@ INSERT INTO registration_form (
     care_assisted_independent_living,
     care_room_training_center,
     care_ambulatory_guidance,
+    application_reason,
+    client_goals,
     risk_aggressive_behavior,
     risk_suicidal_selfharm,
     risk_substance_abuse,
@@ -126,7 +129,8 @@ INSERT INTO registration_form (
     document_safety_plan,
     document_id_copy,
     application_date,
-    referrer_signature
+    referrer_signature,
+    client_house_number_addition
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19,
@@ -134,13 +138,15 @@ INSERT INTO registration_form (
     $29, $30, $31, $32, $33, $34, $35, $36, $37,
     $38, $39, $40, $41, $42, $43, $44, $45, $46,
     $47, $48, $49, $50, $51, $52, $53, $54, $55,
-    $56, $57, $58, $59, $60, $61, $62, $63, $64, $65
-) RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type
+    $56, $57, $58, $59, $60, $61, $62, $63, $64, $65,
+    $66, $67, $68, $69
+) RETURNING id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason
 `
 
 type CreateRegistrationFormParams struct {
 	ClientFirstName               string                       `json:"client_first_name"`
 	ClientLastName                string                       `json:"client_last_name"`
+	ClientDateOfBirth             pgtype.Date                  `json:"client_date_of_birth"`
 	ClientBsnNumber               string                       `json:"client_bsn_number"`
 	ClientGender                  ClientGenderEnum             `json:"client_gender"`
 	ClientNationality             string                       `json:"client_nationality"`
@@ -184,6 +190,8 @@ type CreateRegistrationFormParams struct {
 	CareAssistedIndependentLiving *bool                        `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool                        `json:"care_room_training_center"`
 	CareAmbulatoryGuidance        *bool                        `json:"care_ambulatory_guidance"`
+	ApplicationReason             *string                      `json:"application_reason"`
+	ClientGoals                   []string                     `json:"client_goals"`
 	RiskAggressiveBehavior        *bool                        `json:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm          *bool                        `json:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse            *bool                        `json:"risk_substance_abuse"`
@@ -204,12 +212,14 @@ type CreateRegistrationFormParams struct {
 	DocumentIDCopy                *uuid.UUID                   `json:"document_id_copy"`
 	ApplicationDate               pgtype.Date                  `json:"application_date"`
 	ReferrerSignature             *bool                        `json:"referrer_signature"`
+	ClientHouseNumberAddition     *string                      `json:"client_house_number_addition"`
 }
 
 func (q *Queries) CreateRegistrationForm(ctx context.Context, arg CreateRegistrationFormParams) (RegistrationForm, error) {
 	row := q.db.QueryRow(ctx, createRegistrationForm,
 		arg.ClientFirstName,
 		arg.ClientLastName,
+		arg.ClientDateOfBirth,
 		arg.ClientBsnNumber,
 		arg.ClientGender,
 		arg.ClientNationality,
@@ -253,6 +263,8 @@ func (q *Queries) CreateRegistrationForm(ctx context.Context, arg CreateRegistra
 		arg.CareAssistedIndependentLiving,
 		arg.CareRoomTrainingCenter,
 		arg.CareAmbulatoryGuidance,
+		arg.ApplicationReason,
+		arg.ClientGoals,
 		arg.RiskAggressiveBehavior,
 		arg.RiskSuicidalSelfharm,
 		arg.RiskSubstanceAbuse,
@@ -273,12 +285,14 @@ func (q *Queries) CreateRegistrationForm(ctx context.Context, arg CreateRegistra
 		arg.DocumentIDCopy,
 		arg.ApplicationDate,
 		arg.ReferrerSignature,
+		arg.ClientHouseNumberAddition,
 	)
 	var i RegistrationForm
 	err := row.Scan(
 		&i.ID,
 		&i.ClientFirstName,
 		&i.ClientLastName,
+		&i.ClientDateOfBirth,
 		&i.ClientBsnNumber,
 		&i.ClientGender,
 		&i.ClientNationality,
@@ -286,6 +300,7 @@ func (q *Queries) CreateRegistrationForm(ctx context.Context, arg CreateRegistra
 		&i.ClientEmail,
 		&i.ClientStreet,
 		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
 		&i.ClientPostalCode,
 		&i.ClientCity,
 		&i.ReferrerFirstName,
@@ -346,15 +361,17 @@ func (q *Queries) CreateRegistrationForm(ctx context.Context, arg CreateRegistra
 		&i.ApplicationDate,
 		&i.ReferrerSignature,
 		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
-		&i.Status,
 		&i.IntakeAppointmentDatetime,
 		&i.IntakeAppointmentLocation,
 		&i.AddmissionType,
+		&i.RejectionReason,
 	)
 	return i, err
 }
@@ -370,18 +387,115 @@ func (q *Queries) DeleteRegistrationForm(ctx context.Context, id uuid.UUID) erro
 }
 
 const getRegistrationForm = `-- name: GetRegistrationForm :one
-SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type FROM registration_form
-WHERE id = $1
+SELECT
+    rf.id, rf.client_first_name, rf.client_last_name, rf.client_date_of_birth, rf.client_bsn_number, rf.client_gender, rf.client_nationality, rf.client_phone_number, rf.client_email, rf.client_street, rf.client_house_number, rf.client_house_number_addition, rf.client_postal_code, rf.client_city, rf.referrer_first_name, rf.referrer_last_name, rf.referrer_organization, rf.referrer_job_title, rf.referrer_phone_number, rf.referrer_email, rf.guardian1_first_name, rf.guardian1_last_name, rf.guardian1_relationship, rf.guardian1_phone_number, rf.guardian1_email, rf.guardian2_first_name, rf.guardian2_last_name, rf.guardian2_relationship, rf.guardian2_phone_number, rf.guardian2_email, rf.education_institution, rf.education_mentor_name, rf.education_mentor_phone, rf.education_mentor_email, rf.education_currently_enrolled, rf.education_additional_notes, rf.education_level, rf.work_current_employer, rf.work_employer_phone, rf.work_employer_email, rf.work_current_position, rf.work_currently_employed, rf.work_start_date, rf.work_additional_notes, rf.care_protected_living, rf.care_assisted_independent_living, rf.care_room_training_center, rf.care_ambulatory_guidance, rf.application_reason, rf.client_goals, rf.risk_aggressive_behavior, rf.risk_suicidal_selfharm, rf.risk_substance_abuse, rf.risk_psychiatric_issues, rf.risk_criminal_history, rf.risk_flight_behavior, rf.risk_weapon_possession, rf.risk_sexual_behavior, rf.risk_day_night_rhythm, rf.risk_other, rf.risk_other_description, rf.risk_additional_notes, rf.document_referral, rf.document_education_report, rf.document_action_plan, rf.document_psychiatric_report, rf.document_diagnosis, rf.document_safety_plan, rf.document_id_copy, rf.application_date, rf.referrer_signature, rf.form_status, rf.intake_options, rf.intake_token, rf.created_at, rf.updated_at, rf.submitted_at, rf.processed_at, rf.processed_by_employee_id, rf.intake_appointment_datetime, rf.intake_appointment_location, rf.addmission_type, rf.rejection_reason,
+    ep.first_name AS processed_by_first_name,
+    ep.last_name AS processed_by_last_name,
+    iform.id AS intake_form_id
+FROM registration_form rf
+LEFT JOIN employee_profile ep ON rf.processed_by_employee_id = ep.id
+LEFT JOIN intake_forms iform ON rf.id = iform.registration_form_id
+WHERE rf.id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetRegistrationForm(ctx context.Context, id uuid.UUID) (RegistrationForm, error) {
+type GetRegistrationFormRow struct {
+	ID                            uuid.UUID                    `json:"id"`
+	ClientFirstName               string                       `json:"client_first_name"`
+	ClientLastName                string                       `json:"client_last_name"`
+	ClientDateOfBirth             pgtype.Date                  `json:"client_date_of_birth"`
+	ClientBsnNumber               string                       `json:"client_bsn_number"`
+	ClientGender                  ClientGenderEnum             `json:"client_gender"`
+	ClientNationality             string                       `json:"client_nationality"`
+	ClientPhoneNumber             string                       `json:"client_phone_number"`
+	ClientEmail                   string                       `json:"client_email"`
+	ClientStreet                  string                       `json:"client_street"`
+	ClientHouseNumber             string                       `json:"client_house_number"`
+	ClientHouseNumberAddition     *string                      `json:"client_house_number_addition"`
+	ClientPostalCode              string                       `json:"client_postal_code"`
+	ClientCity                    string                       `json:"client_city"`
+	ReferrerFirstName             string                       `json:"referrer_first_name"`
+	ReferrerLastName              string                       `json:"referrer_last_name"`
+	ReferrerOrganization          string                       `json:"referrer_organization"`
+	ReferrerJobTitle              string                       `json:"referrer_job_title"`
+	ReferrerPhoneNumber           string                       `json:"referrer_phone_number"`
+	ReferrerEmail                 string                       `json:"referrer_email"`
+	Guardian1FirstName            string                       `json:"guardian1_first_name"`
+	Guardian1LastName             string                       `json:"guardian1_last_name"`
+	Guardian1Relationship         string                       `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          string                       `json:"guardian1_phone_number"`
+	Guardian1Email                string                       `json:"guardian1_email"`
+	Guardian2FirstName            string                       `json:"guardian2_first_name"`
+	Guardian2LastName             string                       `json:"guardian2_last_name"`
+	Guardian2Relationship         string                       `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          string                       `json:"guardian2_phone_number"`
+	Guardian2Email                string                       `json:"guardian2_email"`
+	EducationInstitution          *string                      `json:"education_institution"`
+	EducationMentorName           *string                      `json:"education_mentor_name"`
+	EducationMentorPhone          *string                      `json:"education_mentor_phone"`
+	EducationMentorEmail          *string                      `json:"education_mentor_email"`
+	EducationCurrentlyEnrolled    bool                         `json:"education_currently_enrolled"`
+	EducationAdditionalNotes      *string                      `json:"education_additional_notes"`
+	EducationLevel                NullClientEducationLevelEnum `json:"education_level"`
+	WorkCurrentEmployer           *string                      `json:"work_current_employer"`
+	WorkEmployerPhone             *string                      `json:"work_employer_phone"`
+	WorkEmployerEmail             *string                      `json:"work_employer_email"`
+	WorkCurrentPosition           *string                      `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool                         `json:"work_currently_employed"`
+	WorkStartDate                 pgtype.Date                  `json:"work_start_date"`
+	WorkAdditionalNotes           *string                      `json:"work_additional_notes"`
+	CareProtectedLiving           *bool                        `json:"care_protected_living"`
+	CareAssistedIndependentLiving *bool                        `json:"care_assisted_independent_living"`
+	CareRoomTrainingCenter        *bool                        `json:"care_room_training_center"`
+	CareAmbulatoryGuidance        *bool                        `json:"care_ambulatory_guidance"`
+	ApplicationReason             *string                      `json:"application_reason"`
+	ClientGoals                   []string                     `json:"client_goals"`
+	RiskAggressiveBehavior        *bool                        `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm          *bool                        `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse            *bool                        `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues         *bool                        `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory           *bool                        `json:"risk_criminal_history"`
+	RiskFlightBehavior            *bool                        `json:"risk_flight_behavior"`
+	RiskWeaponPossession          *bool                        `json:"risk_weapon_possession"`
+	RiskSexualBehavior            *bool                        `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm            *bool                        `json:"risk_day_night_rhythm"`
+	RiskOther                     *bool                        `json:"risk_other"`
+	RiskOtherDescription          *string                      `json:"risk_other_description"`
+	RiskAdditionalNotes           *string                      `json:"risk_additional_notes"`
+	DocumentReferral              *uuid.UUID                   `json:"document_referral"`
+	DocumentEducationReport       *uuid.UUID                   `json:"document_education_report"`
+	DocumentActionPlan            *uuid.UUID                   `json:"document_action_plan"`
+	DocumentPsychiatricReport     *uuid.UUID                   `json:"document_psychiatric_report"`
+	DocumentDiagnosis             *uuid.UUID                   `json:"document_diagnosis"`
+	DocumentSafetyPlan            *uuid.UUID                   `json:"document_safety_plan"`
+	DocumentIDCopy                *uuid.UUID                   `json:"document_id_copy"`
+	ApplicationDate               pgtype.Date                  `json:"application_date"`
+	ReferrerSignature             *bool                        `json:"referrer_signature"`
+	FormStatus                    FormStatusEnum               `json:"form_status"`
+	IntakeOptions                 []byte                       `json:"intake_options"`
+	IntakeToken                   *string                      `json:"intake_token"`
+	CreatedAt                     pgtype.Timestamptz           `json:"created_at"`
+	UpdatedAt                     pgtype.Timestamptz           `json:"updated_at"`
+	SubmittedAt                   pgtype.Timestamptz           `json:"submitted_at"`
+	ProcessedAt                   pgtype.Timestamptz           `json:"processed_at"`
+	ProcessedByEmployeeID         *uuid.UUID                   `json:"processed_by_employee_id"`
+	IntakeAppointmentDatetime     pgtype.Timestamptz           `json:"intake_appointment_datetime"`
+	IntakeAppointmentLocation     *string                      `json:"intake_appointment_location"`
+	AddmissionType                *string                      `json:"addmission_type"`
+	RejectionReason               *string                      `json:"rejection_reason"`
+	ProcessedByFirstName          *string                      `json:"processed_by_first_name"`
+	ProcessedByLastName           *string                      `json:"processed_by_last_name"`
+	IntakeFormID                  *uuid.UUID                   `json:"intake_form_id"`
+}
+
+func (q *Queries) GetRegistrationForm(ctx context.Context, id uuid.UUID) (GetRegistrationFormRow, error) {
 	row := q.db.QueryRow(ctx, getRegistrationForm, id)
-	var i RegistrationForm
+	var i GetRegistrationFormRow
 	err := row.Scan(
 		&i.ID,
 		&i.ClientFirstName,
 		&i.ClientLastName,
+		&i.ClientDateOfBirth,
 		&i.ClientBsnNumber,
 		&i.ClientGender,
 		&i.ClientNationality,
@@ -389,6 +503,7 @@ func (q *Queries) GetRegistrationForm(ctx context.Context, id uuid.UUID) (Regist
 		&i.ClientEmail,
 		&i.ClientStreet,
 		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
 		&i.ClientPostalCode,
 		&i.ClientCity,
 		&i.ReferrerFirstName,
@@ -449,36 +564,142 @@ func (q *Queries) GetRegistrationForm(ctx context.Context, id uuid.UUID) (Regist
 		&i.ApplicationDate,
 		&i.ReferrerSignature,
 		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
-		&i.Status,
 		&i.IntakeAppointmentDatetime,
 		&i.IntakeAppointmentLocation,
 		&i.AddmissionType,
+		&i.RejectionReason,
+		&i.ProcessedByFirstName,
+		&i.ProcessedByLastName,
+		&i.IntakeFormID,
+	)
+	return i, err
+}
+
+const getRegistrationFormByToken = `-- name: GetRegistrationFormByToken :one
+SELECT id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason FROM registration_form
+WHERE intake_token = $1
+LIMIT 1
+`
+
+func (q *Queries) GetRegistrationFormByToken(ctx context.Context, intakeToken *string) (RegistrationForm, error) {
+	row := q.db.QueryRow(ctx, getRegistrationFormByToken, intakeToken)
+	var i RegistrationForm
+	err := row.Scan(
+		&i.ID,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientDateOfBirth,
+		&i.ClientBsnNumber,
+		&i.ClientGender,
+		&i.ClientNationality,
+		&i.ClientPhoneNumber,
+		&i.ClientEmail,
+		&i.ClientStreet,
+		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
+		&i.ClientPostalCode,
+		&i.ClientCity,
+		&i.ReferrerFirstName,
+		&i.ReferrerLastName,
+		&i.ReferrerOrganization,
+		&i.ReferrerJobTitle,
+		&i.ReferrerPhoneNumber,
+		&i.ReferrerEmail,
+		&i.Guardian1FirstName,
+		&i.Guardian1LastName,
+		&i.Guardian1Relationship,
+		&i.Guardian1PhoneNumber,
+		&i.Guardian1Email,
+		&i.Guardian2FirstName,
+		&i.Guardian2LastName,
+		&i.Guardian2Relationship,
+		&i.Guardian2PhoneNumber,
+		&i.Guardian2Email,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentEmployer,
+		&i.WorkEmployerPhone,
+		&i.WorkEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.CareProtectedLiving,
+		&i.CareAssistedIndependentLiving,
+		&i.CareRoomTrainingCenter,
+		&i.CareAmbulatoryGuidance,
+		&i.ApplicationReason,
+		&i.ClientGoals,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+		&i.DocumentReferral,
+		&i.DocumentEducationReport,
+		&i.DocumentActionPlan,
+		&i.DocumentPsychiatricReport,
+		&i.DocumentDiagnosis,
+		&i.DocumentSafetyPlan,
+		&i.DocumentIDCopy,
+		&i.ApplicationDate,
+		&i.ReferrerSignature,
+		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.ProcessedAt,
+		&i.ProcessedByEmployeeID,
+		&i.IntakeAppointmentDatetime,
+		&i.IntakeAppointmentLocation,
+		&i.AddmissionType,
+		&i.RejectionReason,
 	)
 	return i, err
 }
 
 const listRegistrationForms = `-- name: ListRegistrationForms :many
-SELECT id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type FROM registration_form
-WHERE 
+SELECT
+    rf.id, rf.client_first_name, rf.client_last_name, rf.client_date_of_birth, rf.client_bsn_number, rf.client_gender, rf.client_nationality, rf.client_phone_number, rf.client_email, rf.client_street, rf.client_house_number, rf.client_house_number_addition, rf.client_postal_code, rf.client_city, rf.referrer_first_name, rf.referrer_last_name, rf.referrer_organization, rf.referrer_job_title, rf.referrer_phone_number, rf.referrer_email, rf.guardian1_first_name, rf.guardian1_last_name, rf.guardian1_relationship, rf.guardian1_phone_number, rf.guardian1_email, rf.guardian2_first_name, rf.guardian2_last_name, rf.guardian2_relationship, rf.guardian2_phone_number, rf.guardian2_email, rf.education_institution, rf.education_mentor_name, rf.education_mentor_phone, rf.education_mentor_email, rf.education_currently_enrolled, rf.education_additional_notes, rf.education_level, rf.work_current_employer, rf.work_employer_phone, rf.work_employer_email, rf.work_current_position, rf.work_currently_employed, rf.work_start_date, rf.work_additional_notes, rf.care_protected_living, rf.care_assisted_independent_living, rf.care_room_training_center, rf.care_ambulatory_guidance, rf.application_reason, rf.client_goals, rf.risk_aggressive_behavior, rf.risk_suicidal_selfharm, rf.risk_substance_abuse, rf.risk_psychiatric_issues, rf.risk_criminal_history, rf.risk_flight_behavior, rf.risk_weapon_possession, rf.risk_sexual_behavior, rf.risk_day_night_rhythm, rf.risk_other, rf.risk_other_description, rf.risk_additional_notes, rf.document_referral, rf.document_education_report, rf.document_action_plan, rf.document_psychiatric_report, rf.document_diagnosis, rf.document_safety_plan, rf.document_id_copy, rf.application_date, rf.referrer_signature, rf.form_status, rf.intake_options, rf.intake_token, rf.created_at, rf.updated_at, rf.submitted_at, rf.processed_at, rf.processed_by_employee_id, rf.intake_appointment_datetime, rf.intake_appointment_location, rf.addmission_type, rf.rejection_reason,
+    iform.id AS intake_form_id
+FROM registration_form rf
+LEFT JOIN intake_forms iform ON rf.id = iform.registration_form_id
+WHERE
     -- Form status filtering
-    ($3::form_status_enum IS NULL OR form_status = $3::form_status_enum)
+    ($3::form_status_enum IS NULL OR rf.form_status = $3::form_status_enum)
     -- Risk filtering
-    AND ($4::BOOLEAN IS NULL OR risk_aggressive_behavior = $4)
-    AND ($5::BOOLEAN IS NULL OR risk_suicidal_selfharm = $5)
-    AND ($6::BOOLEAN IS NULL OR risk_substance_abuse = $6)
-    AND ($7::BOOLEAN IS NULL OR risk_psychiatric_issues = $7)
-    AND ($8::BOOLEAN IS NULL OR risk_criminal_history = $8)
-    AND ($9::BOOLEAN IS NULL OR risk_flight_behavior = $9)
-    AND ($10::BOOLEAN IS NULL OR risk_weapon_possession = $10)
-    AND ($11::BOOLEAN IS NULL OR risk_sexual_behavior = $11)
-    AND ($12::BOOLEAN IS NULL OR risk_day_night_rhythm = $12)
-    AND ($13::BOOLEAN IS NULL OR risk_other = $13)
-ORDER BY created_at DESC
+    AND ($4::BOOLEAN IS NULL OR rf.risk_aggressive_behavior = $4)
+    AND ($5::BOOLEAN IS NULL OR rf.risk_suicidal_selfharm = $5)
+    AND ($6::BOOLEAN IS NULL OR rf.risk_substance_abuse = $6)
+    AND ($7::BOOLEAN IS NULL OR rf.risk_psychiatric_issues = $7)
+    AND ($8::BOOLEAN IS NULL OR rf.risk_criminal_history = $8)
+    AND ($9::BOOLEAN IS NULL OR rf.risk_flight_behavior = $9)
+    AND ($10::BOOLEAN IS NULL OR rf.risk_weapon_possession = $10)
+    AND ($11::BOOLEAN IS NULL OR rf.risk_sexual_behavior = $11)
+    AND ($12::BOOLEAN IS NULL OR rf.risk_day_night_rhythm = $12)
+    AND ($13::BOOLEAN IS NULL OR rf.risk_other = $13)
+ORDER BY rf.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -498,7 +719,94 @@ type ListRegistrationFormsParams struct {
 	RiskOther              *bool              `json:"risk_other"`
 }
 
-func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistrationFormsParams) ([]RegistrationForm, error) {
+type ListRegistrationFormsRow struct {
+	ID                            uuid.UUID                    `json:"id"`
+	ClientFirstName               string                       `json:"client_first_name"`
+	ClientLastName                string                       `json:"client_last_name"`
+	ClientDateOfBirth             pgtype.Date                  `json:"client_date_of_birth"`
+	ClientBsnNumber               string                       `json:"client_bsn_number"`
+	ClientGender                  ClientGenderEnum             `json:"client_gender"`
+	ClientNationality             string                       `json:"client_nationality"`
+	ClientPhoneNumber             string                       `json:"client_phone_number"`
+	ClientEmail                   string                       `json:"client_email"`
+	ClientStreet                  string                       `json:"client_street"`
+	ClientHouseNumber             string                       `json:"client_house_number"`
+	ClientHouseNumberAddition     *string                      `json:"client_house_number_addition"`
+	ClientPostalCode              string                       `json:"client_postal_code"`
+	ClientCity                    string                       `json:"client_city"`
+	ReferrerFirstName             string                       `json:"referrer_first_name"`
+	ReferrerLastName              string                       `json:"referrer_last_name"`
+	ReferrerOrganization          string                       `json:"referrer_organization"`
+	ReferrerJobTitle              string                       `json:"referrer_job_title"`
+	ReferrerPhoneNumber           string                       `json:"referrer_phone_number"`
+	ReferrerEmail                 string                       `json:"referrer_email"`
+	Guardian1FirstName            string                       `json:"guardian1_first_name"`
+	Guardian1LastName             string                       `json:"guardian1_last_name"`
+	Guardian1Relationship         string                       `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          string                       `json:"guardian1_phone_number"`
+	Guardian1Email                string                       `json:"guardian1_email"`
+	Guardian2FirstName            string                       `json:"guardian2_first_name"`
+	Guardian2LastName             string                       `json:"guardian2_last_name"`
+	Guardian2Relationship         string                       `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          string                       `json:"guardian2_phone_number"`
+	Guardian2Email                string                       `json:"guardian2_email"`
+	EducationInstitution          *string                      `json:"education_institution"`
+	EducationMentorName           *string                      `json:"education_mentor_name"`
+	EducationMentorPhone          *string                      `json:"education_mentor_phone"`
+	EducationMentorEmail          *string                      `json:"education_mentor_email"`
+	EducationCurrentlyEnrolled    bool                         `json:"education_currently_enrolled"`
+	EducationAdditionalNotes      *string                      `json:"education_additional_notes"`
+	EducationLevel                NullClientEducationLevelEnum `json:"education_level"`
+	WorkCurrentEmployer           *string                      `json:"work_current_employer"`
+	WorkEmployerPhone             *string                      `json:"work_employer_phone"`
+	WorkEmployerEmail             *string                      `json:"work_employer_email"`
+	WorkCurrentPosition           *string                      `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool                         `json:"work_currently_employed"`
+	WorkStartDate                 pgtype.Date                  `json:"work_start_date"`
+	WorkAdditionalNotes           *string                      `json:"work_additional_notes"`
+	CareProtectedLiving           *bool                        `json:"care_protected_living"`
+	CareAssistedIndependentLiving *bool                        `json:"care_assisted_independent_living"`
+	CareRoomTrainingCenter        *bool                        `json:"care_room_training_center"`
+	CareAmbulatoryGuidance        *bool                        `json:"care_ambulatory_guidance"`
+	ApplicationReason             *string                      `json:"application_reason"`
+	ClientGoals                   []string                     `json:"client_goals"`
+	RiskAggressiveBehavior        *bool                        `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm          *bool                        `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse            *bool                        `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues         *bool                        `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory           *bool                        `json:"risk_criminal_history"`
+	RiskFlightBehavior            *bool                        `json:"risk_flight_behavior"`
+	RiskWeaponPossession          *bool                        `json:"risk_weapon_possession"`
+	RiskSexualBehavior            *bool                        `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm            *bool                        `json:"risk_day_night_rhythm"`
+	RiskOther                     *bool                        `json:"risk_other"`
+	RiskOtherDescription          *string                      `json:"risk_other_description"`
+	RiskAdditionalNotes           *string                      `json:"risk_additional_notes"`
+	DocumentReferral              *uuid.UUID                   `json:"document_referral"`
+	DocumentEducationReport       *uuid.UUID                   `json:"document_education_report"`
+	DocumentActionPlan            *uuid.UUID                   `json:"document_action_plan"`
+	DocumentPsychiatricReport     *uuid.UUID                   `json:"document_psychiatric_report"`
+	DocumentDiagnosis             *uuid.UUID                   `json:"document_diagnosis"`
+	DocumentSafetyPlan            *uuid.UUID                   `json:"document_safety_plan"`
+	DocumentIDCopy                *uuid.UUID                   `json:"document_id_copy"`
+	ApplicationDate               pgtype.Date                  `json:"application_date"`
+	ReferrerSignature             *bool                        `json:"referrer_signature"`
+	FormStatus                    FormStatusEnum               `json:"form_status"`
+	IntakeOptions                 []byte                       `json:"intake_options"`
+	IntakeToken                   *string                      `json:"intake_token"`
+	CreatedAt                     pgtype.Timestamptz           `json:"created_at"`
+	UpdatedAt                     pgtype.Timestamptz           `json:"updated_at"`
+	SubmittedAt                   pgtype.Timestamptz           `json:"submitted_at"`
+	ProcessedAt                   pgtype.Timestamptz           `json:"processed_at"`
+	ProcessedByEmployeeID         *uuid.UUID                   `json:"processed_by_employee_id"`
+	IntakeAppointmentDatetime     pgtype.Timestamptz           `json:"intake_appointment_datetime"`
+	IntakeAppointmentLocation     *string                      `json:"intake_appointment_location"`
+	AddmissionType                *string                      `json:"addmission_type"`
+	RejectionReason               *string                      `json:"rejection_reason"`
+	IntakeFormID                  *uuid.UUID                   `json:"intake_form_id"`
+}
+
+func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistrationFormsParams) ([]ListRegistrationFormsRow, error) {
 	rows, err := q.db.Query(ctx, listRegistrationForms,
 		arg.Limit,
 		arg.Offset,
@@ -518,13 +826,14 @@ func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistratio
 		return nil, err
 	}
 	defer rows.Close()
-	items := []RegistrationForm{}
+	items := []ListRegistrationFormsRow{}
 	for rows.Next() {
-		var i RegistrationForm
+		var i ListRegistrationFormsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.ClientFirstName,
 			&i.ClientLastName,
+			&i.ClientDateOfBirth,
 			&i.ClientBsnNumber,
 			&i.ClientGender,
 			&i.ClientNationality,
@@ -532,6 +841,7 @@ func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistratio
 			&i.ClientEmail,
 			&i.ClientStreet,
 			&i.ClientHouseNumber,
+			&i.ClientHouseNumberAddition,
 			&i.ClientPostalCode,
 			&i.ClientCity,
 			&i.ReferrerFirstName,
@@ -592,15 +902,18 @@ func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistratio
 			&i.ApplicationDate,
 			&i.ReferrerSignature,
 			&i.FormStatus,
+			&i.IntakeOptions,
+			&i.IntakeToken,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.SubmittedAt,
 			&i.ProcessedAt,
 			&i.ProcessedByEmployeeID,
-			&i.Status,
 			&i.IntakeAppointmentDatetime,
 			&i.IntakeAppointmentLocation,
 			&i.AddmissionType,
+			&i.RejectionReason,
+			&i.IntakeFormID,
 		); err != nil {
 			return nil, err
 		}
@@ -617,76 +930,80 @@ UPDATE registration_form
 SET
     client_first_name = COALESCE($1, client_first_name),
     client_last_name = COALESCE($2, client_last_name),
-    client_bsn_number = COALESCE($3, client_bsn_number),
-    client_gender = COALESCE($4, client_gender),
-    client_nationality = COALESCE($5, client_nationality),
-    client_phone_number = COALESCE($6, client_phone_number),
-    client_email = COALESCE($7, client_email),
-    client_street = COALESCE($8, client_street),
-    client_house_number = COALESCE($9, client_house_number),
-    client_postal_code = COALESCE($10, client_postal_code),
-    client_city = COALESCE($11, client_city),
-    referrer_first_name = COALESCE($12, referrer_first_name),  
-    referrer_last_name = COALESCE($13, referrer_last_name),
-    referrer_organization = COALESCE($14, referrer_organization),
-    referrer_job_title = COALESCE($15, referrer_job_title),
-    referrer_phone_number = COALESCE($16, referrer_phone_number),
-    referrer_email = COALESCE($17, referrer_email),
-    guardian1_first_name = COALESCE($18, guardian1_first_name),
-    guardian1_last_name = COALESCE($19, guardian1_last_name),
-    guardian1_relationship = COALESCE($20, guardian1_relationship),
-    guardian1_phone_number = COALESCE($21, guardian1_phone_number),
-    guardian1_email = COALESCE($22, guardian1_email),
-    guardian2_first_name = COALESCE($23, guardian2_first_name),
-    guardian2_last_name = COALESCE($24, guardian2_last_name),
-    guardian2_relationship = COALESCE($25, guardian2_relationship),
-    guardian2_phone_number = COALESCE($26, guardian2_phone_number),
-    guardian2_email = COALESCE($27, guardian2_email),
-    education_institution = COALESCE($28, education_institution),
-    education_mentor_name = COALESCE($29, education_mentor_name),
-    education_mentor_phone = COALESCE($30, education_mentor_phone),
-    education_mentor_email = COALESCE($31, education_mentor_email),
-    education_currently_enrolled = COALESCE($32, education_currently_enrolled),
-    education_additional_notes = COALESCE($33, education_additional_notes),
-    education_level = COALESCE($34, education_level),
-    work_current_employer = COALESCE($35, work_current_employer),
-    work_employer_phone = COALESCE($36, work_employer_phone),
-    work_employer_email = COALESCE($37, work_employer_email),
-    work_current_position = COALESCE($38, work_current_position),
-    work_currently_employed = COALESCE($39, work_currently_employed),
-    work_start_date = COALESCE($40, work_start_date),
-    work_additional_notes = COALESCE($41, work_additional_notes),
-    care_protected_living = COALESCE($42, care_protected_living),
-    care_assisted_independent_living = COALESCE($43, care_assisted_independent_living),
-    care_room_training_center = COALESCE($44, care_room_training_center),
-    care_ambulatory_guidance = COALESCE($45, care_ambulatory_guidance),
-    risk_aggressive_behavior = COALESCE($46, risk_aggressive_behavior),
-    risk_suicidal_selfharm = COALESCE($47, risk_suicidal_selfharm),
-    risk_substance_abuse = COALESCE($48, risk_substance_abuse),
-    risk_psychiatric_issues = COALESCE($49, risk_psychiatric_issues),
-    risk_criminal_history = COALESCE($50, risk_criminal_history),
-    risk_flight_behavior = COALESCE($51, risk_flight_behavior),
-    risk_weapon_possession = COALESCE($52, risk_weapon_possession),
-    risk_sexual_behavior = COALESCE($53, risk_sexual_behavior),
-    risk_day_night_rhythm = COALESCE($54, risk_day_night_rhythm),
-    risk_other = COALESCE($55, risk_other),
-    risk_other_description = COALESCE($56, risk_other_description),
-    risk_additional_notes = COALESCE($57, risk_additional_notes),
-    document_referral = COALESCE($58, document_referral),
-    document_education_report = COALESCE($59, document_education_report),
-    document_psychiatric_report = COALESCE($60, document_psychiatric_report),
-    document_diagnosis = COALESCE($61, document_diagnosis),
-    document_safety_plan = COALESCE($62, document_safety_plan),
-    document_id_copy = COALESCE($63, document_id_copy),
-    application_date = COALESCE($64, application_date),
-    referrer_signature = COALESCE($65, referrer_signature)
-WHERE id = $66
-RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type
+    client_date_of_birth = COALESCE($3, client_date_of_birth),
+    client_bsn_number = COALESCE($4, client_bsn_number),
+    client_gender = COALESCE($5, client_gender),
+    client_nationality = COALESCE($6, client_nationality),
+    client_phone_number = COALESCE($7, client_phone_number),
+    client_email = COALESCE($8, client_email),
+    client_street = COALESCE($9, client_street),
+    client_house_number = COALESCE($10, client_house_number),
+    client_house_number_addition = COALESCE($11, client_house_number_addition),
+    client_postal_code = COALESCE($12, client_postal_code),
+    client_city = COALESCE($13, client_city),
+    referrer_first_name = COALESCE($14, referrer_first_name),
+    referrer_last_name = COALESCE($15, referrer_last_name),
+    referrer_organization = COALESCE($16, referrer_organization),
+    referrer_job_title = COALESCE($17, referrer_job_title),
+    referrer_phone_number = COALESCE($18, referrer_phone_number),
+    referrer_email = COALESCE($19, referrer_email),
+    guardian1_first_name = COALESCE($20, guardian1_first_name),
+    guardian1_last_name = COALESCE($21, guardian1_last_name),
+    guardian1_relationship = COALESCE($22, guardian1_relationship),
+    guardian1_phone_number = COALESCE($23, guardian1_phone_number),
+    guardian1_email = COALESCE($24, guardian1_email),
+    guardian2_first_name = COALESCE($25, guardian2_first_name),
+    guardian2_last_name = COALESCE($26, guardian2_last_name),
+    guardian2_relationship = COALESCE($27, guardian2_relationship),
+    guardian2_phone_number = COALESCE($28, guardian2_phone_number),
+    guardian2_email = COALESCE($29, guardian2_email),
+    education_institution = COALESCE($30, education_institution),
+    education_mentor_name = COALESCE($31, education_mentor_name),
+    education_mentor_phone = COALESCE($32, education_mentor_phone),
+    education_mentor_email = COALESCE($33, education_mentor_email),
+    education_currently_enrolled = COALESCE($34, education_currently_enrolled),
+    education_additional_notes = COALESCE($35, education_additional_notes),
+    education_level = COALESCE($36, education_level),
+    work_current_employer = COALESCE($37, work_current_employer),
+    work_employer_phone = COALESCE($38, work_employer_phone),
+    work_employer_email = COALESCE($39, work_employer_email),
+    work_current_position = COALESCE($40, work_current_position),
+    work_currently_employed = COALESCE($41, work_currently_employed),
+    work_start_date = COALESCE($42, work_start_date),
+    work_additional_notes = COALESCE($43, work_additional_notes),
+    care_protected_living = COALESCE($44, care_protected_living),
+    care_assisted_independent_living = COALESCE($45, care_assisted_independent_living),
+    care_room_training_center = COALESCE($46, care_room_training_center),
+    care_ambulatory_guidance = COALESCE($47, care_ambulatory_guidance),
+    client_goals = COALESCE($48, client_goals),
+    risk_aggressive_behavior = COALESCE($49, risk_aggressive_behavior),
+    risk_suicidal_selfharm = COALESCE($50, risk_suicidal_selfharm),
+    risk_substance_abuse = COALESCE($51, risk_substance_abuse),
+    risk_psychiatric_issues = COALESCE($52, risk_psychiatric_issues),
+    risk_criminal_history = COALESCE($53, risk_criminal_history),
+    risk_flight_behavior = COALESCE($54, risk_flight_behavior),
+    risk_weapon_possession = COALESCE($55, risk_weapon_possession),
+    risk_sexual_behavior = COALESCE($56, risk_sexual_behavior),
+    risk_day_night_rhythm = COALESCE($57, risk_day_night_rhythm),
+    risk_other = COALESCE($58, risk_other),
+    risk_other_description = COALESCE($59, risk_other_description),
+    risk_additional_notes = COALESCE($60, risk_additional_notes),
+    document_referral = COALESCE($61, document_referral),
+    document_education_report = COALESCE($62, document_education_report),
+    document_psychiatric_report = COALESCE($63, document_psychiatric_report),
+    document_diagnosis = COALESCE($64, document_diagnosis),
+    document_safety_plan = COALESCE($65, document_safety_plan),
+    document_id_copy = COALESCE($66, document_id_copy),
+    application_date = COALESCE($67, application_date),
+    referrer_signature = COALESCE($68, referrer_signature)
+WHERE id = $69
+RETURNING id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason
 `
 
 type UpdateRegistrationFormParams struct {
 	ClientFirstName               *string                      `json:"client_first_name"`
 	ClientLastName                *string                      `json:"client_last_name"`
+	ClientDateOfBirth             pgtype.Date                  `json:"client_date_of_birth"`
 	ClientBsnNumber               *string                      `json:"client_bsn_number"`
 	ClientGender                  NullClientGenderEnum         `json:"client_gender"`
 	ClientNationality             *string                      `json:"client_nationality"`
@@ -694,6 +1011,7 @@ type UpdateRegistrationFormParams struct {
 	ClientEmail                   *string                      `json:"client_email"`
 	ClientStreet                  *string                      `json:"client_street"`
 	ClientHouseNumber             *string                      `json:"client_house_number"`
+	ClientHouseNumberAddition     *string                      `json:"client_house_number_addition"`
 	ClientPostalCode              *string                      `json:"client_postal_code"`
 	ClientCity                    *string                      `json:"client_city"`
 	ReferrerFirstName             *string                      `json:"referrer_first_name"`
@@ -730,6 +1048,7 @@ type UpdateRegistrationFormParams struct {
 	CareAssistedIndependentLiving *bool                        `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool                        `json:"care_room_training_center"`
 	CareAmbulatoryGuidance        *bool                        `json:"care_ambulatory_guidance"`
+	ClientGoals                   []string                     `json:"client_goals"`
 	RiskAggressiveBehavior        *bool                        `json:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm          *bool                        `json:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse            *bool                        `json:"risk_substance_abuse"`
@@ -757,6 +1076,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 	row := q.db.QueryRow(ctx, updateRegistrationForm,
 		arg.ClientFirstName,
 		arg.ClientLastName,
+		arg.ClientDateOfBirth,
 		arg.ClientBsnNumber,
 		arg.ClientGender,
 		arg.ClientNationality,
@@ -764,6 +1084,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		arg.ClientEmail,
 		arg.ClientStreet,
 		arg.ClientHouseNumber,
+		arg.ClientHouseNumberAddition,
 		arg.ClientPostalCode,
 		arg.ClientCity,
 		arg.ReferrerFirstName,
@@ -800,6 +1121,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		arg.CareAssistedIndependentLiving,
 		arg.CareRoomTrainingCenter,
 		arg.CareAmbulatoryGuidance,
+		arg.ClientGoals,
 		arg.RiskAggressiveBehavior,
 		arg.RiskSuicidalSelfharm,
 		arg.RiskSubstanceAbuse,
@@ -827,6 +1149,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		&i.ID,
 		&i.ClientFirstName,
 		&i.ClientLastName,
+		&i.ClientDateOfBirth,
 		&i.ClientBsnNumber,
 		&i.ClientGender,
 		&i.ClientNationality,
@@ -834,6 +1157,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		&i.ClientEmail,
 		&i.ClientStreet,
 		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
 		&i.ClientPostalCode,
 		&i.ClientCity,
 		&i.ReferrerFirstName,
@@ -894,15 +1218,122 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		&i.ApplicationDate,
 		&i.ReferrerSignature,
 		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
-		&i.Status,
 		&i.IntakeAppointmentDatetime,
 		&i.IntakeAppointmentLocation,
 		&i.AddmissionType,
+		&i.RejectionReason,
+	)
+	return i, err
+}
+
+const updateRegistrationFormIntakeDate = `-- name: UpdateRegistrationFormIntakeDate :one
+UPDATE registration_form
+SET
+    intake_appointment_datetime = $2,
+    intake_token = NULL -- Invalidate token after use
+WHERE id = $1
+RETURNING id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason
+`
+
+type UpdateRegistrationFormIntakeDateParams struct {
+	ID                        uuid.UUID          `json:"id"`
+	IntakeAppointmentDatetime pgtype.Timestamptz `json:"intake_appointment_datetime"`
+}
+
+func (q *Queries) UpdateRegistrationFormIntakeDate(ctx context.Context, arg UpdateRegistrationFormIntakeDateParams) (RegistrationForm, error) {
+	row := q.db.QueryRow(ctx, updateRegistrationFormIntakeDate, arg.ID, arg.IntakeAppointmentDatetime)
+	var i RegistrationForm
+	err := row.Scan(
+		&i.ID,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientDateOfBirth,
+		&i.ClientBsnNumber,
+		&i.ClientGender,
+		&i.ClientNationality,
+		&i.ClientPhoneNumber,
+		&i.ClientEmail,
+		&i.ClientStreet,
+		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
+		&i.ClientPostalCode,
+		&i.ClientCity,
+		&i.ReferrerFirstName,
+		&i.ReferrerLastName,
+		&i.ReferrerOrganization,
+		&i.ReferrerJobTitle,
+		&i.ReferrerPhoneNumber,
+		&i.ReferrerEmail,
+		&i.Guardian1FirstName,
+		&i.Guardian1LastName,
+		&i.Guardian1Relationship,
+		&i.Guardian1PhoneNumber,
+		&i.Guardian1Email,
+		&i.Guardian2FirstName,
+		&i.Guardian2LastName,
+		&i.Guardian2Relationship,
+		&i.Guardian2PhoneNumber,
+		&i.Guardian2Email,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentEmployer,
+		&i.WorkEmployerPhone,
+		&i.WorkEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.CareProtectedLiving,
+		&i.CareAssistedIndependentLiving,
+		&i.CareRoomTrainingCenter,
+		&i.CareAmbulatoryGuidance,
+		&i.ApplicationReason,
+		&i.ClientGoals,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+		&i.DocumentReferral,
+		&i.DocumentEducationReport,
+		&i.DocumentActionPlan,
+		&i.DocumentPsychiatricReport,
+		&i.DocumentDiagnosis,
+		&i.DocumentSafetyPlan,
+		&i.DocumentIDCopy,
+		&i.ApplicationDate,
+		&i.ReferrerSignature,
+		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.ProcessedAt,
+		&i.ProcessedByEmployeeID,
+		&i.IntakeAppointmentDatetime,
+		&i.IntakeAppointmentLocation,
+		&i.AddmissionType,
+		&i.RejectionReason,
 	)
 	return i, err
 }
@@ -911,23 +1342,27 @@ const updateRegistrationFormStatus = `-- name: UpdateRegistrationFormStatus :one
 UPDATE registration_form
 SET
     form_status = $2,
-    updated_at = NOW(),
     processed_by_employee_id = $3,
-    intake_appointment_datetime = $4,
-    intake_appointment_location = $5,
-    addmission_type = $6
-
+    intake_appointment_location = COALESCE($4, intake_appointment_location),
+    addmission_type = COALESCE($5, addmission_type),
+    intake_options = COALESCE($6, intake_options),
+    intake_token = COALESCE($7, intake_token),
+    rejection_reason = COALESCE($8, rejection_reason),
+    processed_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type
+RETURNING id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason
 `
 
 type UpdateRegistrationFormStatusParams struct {
-	ID                        uuid.UUID          `json:"id"`
-	FormStatus                FormStatusEnum     `json:"form_status"`
-	ProcessedByEmployeeID     *uuid.UUID         `json:"processed_by_employee_id"`
-	IntakeAppointmentDatetime pgtype.Timestamptz `json:"intake_appointment_datetime"`
-	IntakeAppointmentLocation *string            `json:"intake_appointment_location"`
-	AddmissionType            *string            `json:"addmission_type"`
+	ID                        uuid.UUID      `json:"id"`
+	FormStatus                FormStatusEnum `json:"form_status"`
+	ProcessedByEmployeeID     *uuid.UUID     `json:"processed_by_employee_id"`
+	IntakeAppointmentLocation *string        `json:"intake_appointment_location"`
+	AddmissionType            *string        `json:"addmission_type"`
+	IntakeOptions             []byte         `json:"intake_options"`
+	IntakeToken               *string        `json:"intake_token"`
+	RejectionReason           *string        `json:"rejection_reason"`
 }
 
 func (q *Queries) UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRegistrationFormStatusParams) (RegistrationForm, error) {
@@ -935,15 +1370,18 @@ func (q *Queries) UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRe
 		arg.ID,
 		arg.FormStatus,
 		arg.ProcessedByEmployeeID,
-		arg.IntakeAppointmentDatetime,
 		arg.IntakeAppointmentLocation,
 		arg.AddmissionType,
+		arg.IntakeOptions,
+		arg.IntakeToken,
+		arg.RejectionReason,
 	)
 	var i RegistrationForm
 	err := row.Scan(
 		&i.ID,
 		&i.ClientFirstName,
 		&i.ClientLastName,
+		&i.ClientDateOfBirth,
 		&i.ClientBsnNumber,
 		&i.ClientGender,
 		&i.ClientNationality,
@@ -951,6 +1389,7 @@ func (q *Queries) UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRe
 		&i.ClientEmail,
 		&i.ClientStreet,
 		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
 		&i.ClientPostalCode,
 		&i.ClientCity,
 		&i.ReferrerFirstName,
@@ -1011,15 +1450,17 @@ func (q *Queries) UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRe
 		&i.ApplicationDate,
 		&i.ReferrerSignature,
 		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.SubmittedAt,
 		&i.ProcessedAt,
 		&i.ProcessedByEmployeeID,
-		&i.Status,
 		&i.IntakeAppointmentDatetime,
 		&i.IntakeAppointmentLocation,
 		&i.AddmissionType,
+		&i.RejectionReason,
 	)
 	return i, err
 }

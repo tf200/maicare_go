@@ -284,6 +284,29 @@ func (processor *AsynqServer) ProcessRegistrationFormTask(ctx context.Context, t
 	return nil
 }
 
+func (processor *AsynqServer) ProcessProcessRegistrationFormEmailTask(ctx context.Context, t *asynq.Task) error {
+	var p aclient.ProcessRegistrationFormEmailPayload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		log.Printf("Failed to unmarshal process registration form email task payload: %v", err)
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+
+	emailData := email.ProcessRegistrationForm{
+		RecipientName: p.ReferrerName,
+		ClientName:    p.ClientName,
+		Location:      p.Location,
+		Link:          p.Link,
+	}
+
+	err := processor.brevoConf.SendProcessRegistrationForm(ctx, p.To, emailData)
+	if err != nil {
+		log.Printf("Failed to send process registration form email to %v: %v", p.To, err)
+		return fmt.Errorf("failed to send email: %v: %w", err, asynq.SkipRetry)
+	}
+
+	return nil
+}
+
 func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.Task) error {
 	contractsToBeReminded, err := c.store.ListContractsTobeReminded(ctx)
 	if err != nil {

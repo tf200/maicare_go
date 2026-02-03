@@ -194,7 +194,11 @@ SELECT
     s.postal_code AS sender_postal_code,
     s.kvknumber AS sender_kvknumber,
     s.btwnumber AS sender_btwnumber,
-    s.address AS sender_address,
+    s.street AS sender_street,
+    s.house_number AS sender_house_number,
+    s.house_number_addition AS sender_house_number_addition,
+    s.city AS sender_city,
+    s.land AS sender_land,
     cd.first_name AS client_first_name,
     cd.last_name AS client_last_name
 FROM
@@ -209,31 +213,35 @@ LIMIT 1
 `
 
 type GetInvoiceRow struct {
-	ID                uuid.UUID          `json:"id"`
-	InvoiceNumber     string             `json:"invoice_number"`
-	InvoiceSequence   int64              `json:"invoice_sequence"`
-	IssueDate         pgtype.Date        `json:"issue_date"`
-	DueDate           pgtype.Date        `json:"due_date"`
-	Status            InvoiceStatusEnum  `json:"status"`
-	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
-	OriginalInvoiceID *uuid.UUID         `json:"original_invoice_id"`
-	InvoiceDetails    []byte             `json:"invoice_details"`
-	TotalAmount       float64            `json:"total_amount"`
-	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
-	ExtraContent      []byte             `json:"extra_content"`
-	ClientID          uuid.UUID          `json:"client_id"`
-	SenderID          *uuid.UUID         `json:"sender_id"`
-	WarningCount      int32              `json:"warning_count"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	SenderName        *string            `json:"sender_name"`
-	SenderContacts    []byte             `json:"sender_contacts"`
-	SenderPostalCode  *string            `json:"sender_postal_code"`
-	SenderKvknumber   *string            `json:"sender_kvknumber"`
-	SenderBtwnumber   *string            `json:"sender_btwnumber"`
-	SenderAddress     *string            `json:"sender_address"`
-	ClientFirstName   string             `json:"client_first_name"`
-	ClientLastName    string             `json:"client_last_name"`
+	ID                        uuid.UUID          `json:"id"`
+	InvoiceNumber             string             `json:"invoice_number"`
+	InvoiceSequence           int64              `json:"invoice_sequence"`
+	IssueDate                 pgtype.Date        `json:"issue_date"`
+	DueDate                   pgtype.Date        `json:"due_date"`
+	Status                    InvoiceStatusEnum  `json:"status"`
+	InvoiceType               InvoiceTypeEnum    `json:"invoice_type"`
+	OriginalInvoiceID         *uuid.UUID         `json:"original_invoice_id"`
+	InvoiceDetails            []byte             `json:"invoice_details"`
+	TotalAmount               float64            `json:"total_amount"`
+	PdfAttachmentID           *uuid.UUID         `json:"pdf_attachment_id"`
+	ExtraContent              []byte             `json:"extra_content"`
+	ClientID                  uuid.UUID          `json:"client_id"`
+	SenderID                  *uuid.UUID         `json:"sender_id"`
+	WarningCount              int32              `json:"warning_count"`
+	UpdatedAt                 pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
+	SenderName                *string            `json:"sender_name"`
+	SenderContacts            []byte             `json:"sender_contacts"`
+	SenderPostalCode          *string            `json:"sender_postal_code"`
+	SenderKvknumber           *string            `json:"sender_kvknumber"`
+	SenderBtwnumber           *string            `json:"sender_btwnumber"`
+	SenderStreet              *string            `json:"sender_street"`
+	SenderHouseNumber         *string            `json:"sender_house_number"`
+	SenderHouseNumberAddition *string            `json:"sender_house_number_addition"`
+	SenderCity                *string            `json:"sender_city"`
+	SenderLand                *string            `json:"sender_land"`
+	ClientFirstName           string             `json:"client_first_name"`
+	ClientLastName            string             `json:"client_last_name"`
 }
 
 func (q *Queries) GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, error) {
@@ -262,7 +270,11 @@ func (q *Queries) GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, 
 		&i.SenderPostalCode,
 		&i.SenderKvknumber,
 		&i.SenderBtwnumber,
-		&i.SenderAddress,
+		&i.SenderStreet,
+		&i.SenderHouseNumber,
+		&i.SenderHouseNumberAddition,
+		&i.SenderCity,
+		&i.SenderLand,
 		&i.ClientFirstName,
 		&i.ClientLastName,
 	)

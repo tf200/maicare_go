@@ -64,6 +64,7 @@ INSERT INTO client_details (
     education_mentor_email,
     education_additional_notes,
     education_level, 
+    nationality,
     work_currently_employed,
     work_current_employer,
     work_current_employer_phone,
@@ -75,8 +76,8 @@ INSERT INTO client_details (
     living_situation_notes
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
-) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
+) RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type CreateClientDetailsParams struct {
@@ -110,6 +111,7 @@ type CreateClientDetailsParams struct {
 	EducationMentorEmail       *string                       `json:"education_mentor_email"`
 	EducationAdditionalNotes   *string                       `json:"education_additional_notes"`
 	EducationLevel             ClientEducationLevelEnum      `json:"education_level"`
+	Nationality                *string                       `json:"nationality"`
 	WorkCurrentlyEmployed      bool                          `json:"work_currently_employed"`
 	WorkCurrentEmployer        *string                       `json:"work_current_employer"`
 	WorkCurrentEmployerPhone   *string                       `json:"work_current_employer_phone"`
@@ -153,6 +155,7 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		arg.EducationMentorEmail,
 		arg.EducationAdditionalNotes,
 		arg.EducationLevel,
+		arg.Nationality,
 		arg.WorkCurrentlyEmployed,
 		arg.WorkCurrentEmployer,
 		arg.WorkCurrentEmployerPhone,
@@ -208,6 +211,7 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.WorkCurrentPosition,
 		&i.WorkStartDate,
 		&i.WorkAdditionalNotes,
+		&i.Nationality,
 		&i.LivingSituation,
 		&i.LivingSituationNotes,
 		&i.RiskAggressiveBehavior,
@@ -447,7 +451,7 @@ func (q *Queries) GetClientCounts(ctx context.Context) (GetClientCountsRow, erro
 }
 
 const getClientDetails = `-- name: GetClientDetails :one
-SELECT c.id, c.intake_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.source, c.birthplace, c.email, c.phone_number, c.organization_id, c.departement, c.gender, c.filenumber, c.profile_picture, c.infix, c.created_at, c.sender_id, c.location_id, c.departure_reason, c.departure_report, c.gps_position, c.maturity_domains, c.addresses, c.legal_measure, c.has_untaken_medications, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.living_situation, c.living_situation_notes, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
+SELECT c.id, c.intake_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.source, c.birthplace, c.email, c.phone_number, c.organization_id, c.departement, c.gender, c.filenumber, c.profile_picture, c.infix, c.created_at, c.sender_id, c.location_id, c.departure_reason, c.departure_report, c.gps_position, c.maturity_domains, c.addresses, c.legal_measure, c.has_untaken_medications, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.nationality, c.living_situation, c.living_situation_notes, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
        ep.first_name AS bsn_verified_by_first_name,
        ep.last_name AS bsn_verified_by_last_name
 FROM client_details c
@@ -499,6 +503,7 @@ type GetClientDetailsRow struct {
 	WorkCurrentPosition        *string                       `json:"work_current_position"`
 	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
 	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	Nationality                *string                       `json:"nationality"`
 	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
 	LivingSituationNotes       *string                       `json:"living_situation_notes"`
 	RiskAggressiveBehavior     *bool                         `json:"risk_aggressive_behavior"`
@@ -564,6 +569,7 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 		&i.WorkCurrentPosition,
 		&i.WorkStartDate,
 		&i.WorkAdditionalNotes,
+		&i.Nationality,
 		&i.LivingSituation,
 		&i.LivingSituationNotes,
 		&i.RiskAggressiveBehavior,
@@ -625,7 +631,7 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID uuid.U
 
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT 
-    c.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, c.created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, address, capacity, location_type, location.created_at, updated_at,
+    c.id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, c.created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, location.created_at, updated_at,
     location.name AS location_name,
     COUNT(*) OVER() AS total_count
 FROM client_details c
@@ -695,6 +701,7 @@ type ListClientDetailsRow struct {
 	WorkCurrentPosition        *string                       `json:"work_current_position"`
 	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
 	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	Nationality                *string                       `json:"nationality"`
 	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
 	LivingSituationNotes       *string                       `json:"living_situation_notes"`
 	RiskAggressiveBehavior     *bool                         `json:"risk_aggressive_behavior"`
@@ -712,7 +719,11 @@ type ListClientDetailsRow struct {
 	ID_2                       *uuid.UUID                    `json:"id_2"`
 	OrganisationID             *uuid.UUID                    `json:"organisation_id"`
 	Name                       *string                       `json:"name"`
-	Address                    *string                       `json:"address"`
+	Street                     *string                       `json:"street"`
+	HouseNumber                *string                       `json:"house_number"`
+	HouseNumberAddition        *string                       `json:"house_number_addition"`
+	PostalCode                 *string                       `json:"postal_code"`
+	City                       *string                       `json:"city"`
 	Capacity                   *int32                        `json:"capacity"`
 	LocationType               NullLocationTypeEnum          `json:"location_type"`
 	CreatedAt_2                pgtype.Timestamptz            `json:"created_at_2"`
@@ -780,6 +791,7 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.WorkCurrentPosition,
 			&i.WorkStartDate,
 			&i.WorkAdditionalNotes,
+			&i.Nationality,
 			&i.LivingSituation,
 			&i.LivingSituationNotes,
 			&i.RiskAggressiveBehavior,
@@ -797,7 +809,11 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.ID_2,
 			&i.OrganisationID,
 			&i.Name,
-			&i.Address,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
+			&i.PostalCode,
+			&i.City,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt_2,
@@ -994,7 +1010,7 @@ const setClientProfilePicture = `-- name: SetClientProfilePicture :one
 UPDATE client_details
 SET profile_picture = $2
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type SetClientProfilePictureParams struct {
@@ -1049,6 +1065,7 @@ func (q *Queries) SetClientProfilePicture(ctx context.Context, arg SetClientProf
 		&i.WorkCurrentPosition,
 		&i.WorkStartDate,
 		&i.WorkAdditionalNotes,
+		&i.Nationality,
 		&i.LivingSituation,
 		&i.LivingSituationNotes,
 		&i.RiskAggressiveBehavior,
@@ -1106,10 +1123,11 @@ SET
     work_start_date = COALESCE ($35, work_start_date),
     work_additional_notes = COALESCE ($36, work_additional_notes),
     living_situation = COALESCE ($37, living_situation),
-    living_situation_notes = COALESCE ($38, living_situation_notes)
+    living_situation_notes = COALESCE ($38, living_situation_notes),
+    nationality = COALESCE ($39, nationality)
 
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type UpdateClientDetailsParams struct {
@@ -1151,6 +1169,7 @@ type UpdateClientDetailsParams struct {
 	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
 	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
 	LivingSituationNotes       *string                       `json:"living_situation_notes"`
+	Nationality                *string                       `json:"nationality"`
 }
 
 func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetailsParams) (ClientDetail, error) {
@@ -1193,6 +1212,7 @@ func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetai
 		arg.WorkAdditionalNotes,
 		arg.LivingSituation,
 		arg.LivingSituationNotes,
+		arg.Nationality,
 	)
 	var i ClientDetail
 	err := row.Scan(
@@ -1239,6 +1259,7 @@ func (q *Queries) UpdateClientDetails(ctx context.Context, arg UpdateClientDetai
 		&i.WorkCurrentPosition,
 		&i.WorkStartDate,
 		&i.WorkAdditionalNotes,
+		&i.Nationality,
 		&i.LivingSituation,
 		&i.LivingSituationNotes,
 		&i.RiskAggressiveBehavior,
@@ -1261,7 +1282,7 @@ const updateClientStatus = `-- name: UpdateClientStatus :one
 UPDATE client_details
 SET status = $2
 WHERE id = $1
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type UpdateClientStatusParams struct {
@@ -1316,6 +1337,7 @@ func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatus
 		&i.WorkCurrentPosition,
 		&i.WorkStartDate,
 		&i.WorkAdditionalNotes,
+		&i.Nationality,
 		&i.LivingSituation,
 		&i.LivingSituationNotes,
 		&i.RiskAggressiveBehavior,

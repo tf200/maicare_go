@@ -16,6 +16,8 @@ import (
 type ObjectStorageInterface interface {
 	Upload(ctx context.Context, file multipart.File, filename string, contentType string) (string, int64, error)
 	GeneratePresignedURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
+	GeneratePresignedUploadURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
+	GetFileInfo(ctx context.Context, objectKey string) (int64, error)
 	Delete(ctx context.Context, objectKey string) error
 }
 
@@ -68,6 +70,24 @@ func (o *ObjectStorageClient) GeneratePresignedURL(ctx context.Context, objectKe
 	}
 
 	return presignedURL.String(), nil
+}
+
+func (o *ObjectStorageClient) GeneratePresignedUploadURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
+	// Generate a presigned URL for uploading (PUT)
+	presignedURL, err := o.Client.PresignedPutObject(ctx, o.Bucket, objectKey, expiry)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned upload URL: %v", err)
+	}
+
+	return presignedURL.String(), nil
+}
+
+func (o *ObjectStorageClient) GetFileInfo(ctx context.Context, objectKey string) (int64, error) {
+	objInfo, err := o.Client.StatObject(ctx, o.Bucket, objectKey, minio.StatObjectOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("failed to get file info: %v", err)
+	}
+	return objInfo.Size, nil
 }
 
 func (o *ObjectStorageClient) Delete(ctx context.Context, objectKey string) error {

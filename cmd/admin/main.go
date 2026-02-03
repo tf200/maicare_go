@@ -25,7 +25,8 @@ func seedOrganisations(ctx context.Context, store *db.Store) (*db.Organisation, 
 
 	org, err := store.CreateOrganisation(ctx, db.CreateOrganisationParams{
 		Name:        gofakeit.Company() + " Care Organization",
-		Address:     gofakeit.Street(),
+		Street:      gofakeit.Street(),
+		HouseNumber: fmt.Sprintf("%d", gofakeit.Number(1, 300)),
 		PostalCode:  gofakeit.Zip(),
 		City:        gofakeit.City(),
 		PhoneNumber: &phone,
@@ -61,10 +62,14 @@ func seedLocations(ctx context.Context, store *db.Store, organisation *db.Organi
 	}
 
 	location, err := store.CreateLocation(ctx, db.CreateLocationParams{
-		OrganisationID: organisation.ID,
-		Name:           locationName,
-		Address:        gofakeit.Street(),
-		Capacity:       &capacity,
+		OrganisationID:      organisation.ID,
+		Name:                locationName,
+		Street:              gofakeit.Street(),
+		HouseNumber:         fmt.Sprintf("%d", gofakeit.Number(1, 300)),
+		HouseNumberAddition: nil,
+		PostalCode:          gofakeit.Zip(),
+		City:                gofakeit.City(),
+		Capacity:            &capacity,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create location: %w", err)
@@ -195,7 +200,8 @@ func main() {
 		log.Fatal("ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment variables")
 	}
 	ctx := context.Background()
-	connPool, err := pgxpool.New(ctx, config.DbSource)
+	dbSource := "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
+	connPool, err := pgxpool.New(ctx, dbSource)
 	if err != nil {
 		log.Fatal("Cannot connect to db:", err)
 	}

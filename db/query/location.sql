@@ -1,7 +1,9 @@
 -- name: CreateOrganisation :one
 INSERT INTO organisations (
     name,
-    address,
+    street,
+    house_number,
+    house_number_addition,
     postal_code,
     city,
     phone_number,
@@ -9,7 +11,7 @@ INSERT INTO organisations (
     kvk_number,
     btw_number
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 ) RETURNING *;
 
 
@@ -20,6 +22,18 @@ FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
 GROUP BY o.id
 ORDER BY o.name;
+
+
+-- name: ListOrganisationsPaginated :many
+SELECT o.*,
+         COUNT(l.id) AS location_count,
+         COUNT(*) OVER() AS total_count
+FROM organisations o
+LEFT JOIN location l ON o.id = l.organisation_id
+WHERE ($3::text IS NULL OR o.name ILIKE '%' || $3 || '%')
+GROUP BY o.id
+ORDER BY o.name
+LIMIT $1 OFFSET $2;
 
 
 -- name: GetOrganisation :one
@@ -52,7 +66,9 @@ GROUP BY
 UPDATE organisations
 SET
     name = COALESCE(sqlc.narg('name'), name),
-    address = COALESCE(sqlc.narg('address'), address),
+    street = COALESCE(sqlc.narg('street'), street),
+    house_number = COALESCE(sqlc.narg('house_number'), house_number),
+    house_number_addition = COALESCE(sqlc.narg('house_number_addition'), house_number_addition),
     postal_code = COALESCE(sqlc.narg('postal_code'), postal_code),
     city = COALESCE(sqlc.narg('city'), city),
     phone_number = COALESCE(sqlc.narg('phone_number'), phone_number),
@@ -75,10 +91,14 @@ RETURNING *;
 INSERT INTO location (
     organisation_id,
     name,
-    address,
+    street,
+    house_number,
+    house_number_addition,
+    postal_code,
+    city,
     capacity
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 
@@ -91,6 +111,18 @@ LEFT JOIN client_details c ON l.id = c.location_id
 WHERE organisation_id = $1
 GROUP BY l.id;
 
+-- name: ListLocationsPaginated :many
+SELECT l.*,
+    COUNT(c.id) AS client_count,
+    COUNT(*) OVER() AS total_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+WHERE l.organisation_id = $1
+  AND ($4::text IS NULL OR l.name ILIKE '%' || $4 || '%')
+GROUP BY l.id
+ORDER BY l.name
+LIMIT $2 OFFSET $3;
+
 -- name: GetLocation :one
 SELECT * FROM location
 WHERE id = $1;
@@ -99,7 +131,11 @@ WHERE id = $1;
 UPDATE location
 SET
     name = COALESCE(sqlc.narg('name'), name),
-    address = COALESCE(sqlc.narg('address'), address),
+    street = COALESCE(sqlc.narg('street'), street),
+    house_number = COALESCE(sqlc.narg('house_number'), house_number),
+    house_number_addition = COALESCE(sqlc.narg('house_number_addition'), house_number_addition),
+    postal_code = COALESCE(sqlc.narg('postal_code'), postal_code),
+    city = COALESCE(sqlc.narg('city'), city),
     capacity = COALESCE(sqlc.narg('capacity'), capacity)
 WHERE id = $1
 RETURNING *;
@@ -119,3 +155,14 @@ FROM location l
 LEFT JOIN client_details c ON l.id = c.location_id
 GROUP BY l.id
 ORDER BY l.name;
+
+-- name: ListAllLocationsPaginated :many
+SELECT l.*,
+       COUNT(c.id) AS client_count,
+       COUNT(*) OVER() AS total_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+WHERE ($3::text IS NULL OR l.name ILIKE '%' || $3 || '%')
+GROUP BY l.id
+ORDER BY l.name
+LIMIT $1 OFFSET $2;

@@ -16,25 +16,37 @@ const createLocation = `-- name: CreateLocation :one
 INSERT INTO location (
     organisation_id,
     name,
-    address,
+    street,
+    house_number,
+    house_number_addition,
+    postal_code,
+    city,
     capacity
 ) VALUES (
-    $1, $2, $3, $4
-) RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at
 `
 
 type CreateLocationParams struct {
-	OrganisationID uuid.UUID `json:"organisation_id"`
-	Name           string    `json:"name"`
-	Address        string    `json:"address"`
-	Capacity       *int32    `json:"capacity"`
+	OrganisationID      uuid.UUID `json:"organisation_id"`
+	Name                string    `json:"name"`
+	Street              string    `json:"street"`
+	HouseNumber         string    `json:"house_number"`
+	HouseNumberAddition *string   `json:"house_number_addition"`
+	PostalCode          string    `json:"postal_code"`
+	City                string    `json:"city"`
+	Capacity            *int32    `json:"capacity"`
 }
 
 func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error) {
 	row := q.db.QueryRow(ctx, createLocation,
 		arg.OrganisationID,
 		arg.Name,
-		arg.Address,
+		arg.Street,
+		arg.HouseNumber,
+		arg.HouseNumberAddition,
+		arg.PostalCode,
+		arg.City,
 		arg.Capacity,
 	)
 	var i Location
@@ -42,7 +54,11 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 		&i.ID,
 		&i.OrganisationID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -54,7 +70,9 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 const createOrganisation = `-- name: CreateOrganisation :one
 INSERT INTO organisations (
     name,
-    address,
+    street,
+    house_number,
+    house_number_addition,
     postal_code,
     city,
     phone_number,
@@ -62,25 +80,29 @@ INSERT INTO organisations (
     kvk_number,
     btw_number
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
-) RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+) RETURNING id, name, street, house_number, house_number_addition, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
 `
 
 type CreateOrganisationParams struct {
-	Name        string  `json:"name"`
-	Address     string  `json:"address"`
-	PostalCode  string  `json:"postal_code"`
-	City        string  `json:"city"`
-	PhoneNumber *string `json:"phone_number"`
-	Email       *string `json:"email"`
-	KvkNumber   *string `json:"kvk_number"`
-	BtwNumber   *string `json:"btw_number"`
+	Name                string  `json:"name"`
+	Street              string  `json:"street"`
+	HouseNumber         string  `json:"house_number"`
+	HouseNumberAddition *string `json:"house_number_addition"`
+	PostalCode          string  `json:"postal_code"`
+	City                string  `json:"city"`
+	PhoneNumber         *string `json:"phone_number"`
+	Email               *string `json:"email"`
+	KvkNumber           *string `json:"kvk_number"`
+	BtwNumber           *string `json:"btw_number"`
 }
 
 func (q *Queries) CreateOrganisation(ctx context.Context, arg CreateOrganisationParams) (Organisation, error) {
 	row := q.db.QueryRow(ctx, createOrganisation,
 		arg.Name,
-		arg.Address,
+		arg.Street,
+		arg.HouseNumber,
+		arg.HouseNumberAddition,
 		arg.PostalCode,
 		arg.City,
 		arg.PhoneNumber,
@@ -92,7 +114,9 @@ func (q *Queries) CreateOrganisation(ctx context.Context, arg CreateOrganisation
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
 		&i.PhoneNumber,
@@ -108,7 +132,7 @@ func (q *Queries) CreateOrganisation(ctx context.Context, arg CreateOrganisation
 const deleteLocation = `-- name: DeleteLocation :one
 DELETE FROM location
 WHERE id = $1
-RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
+RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at
 `
 
 func (q *Queries) DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error) {
@@ -118,7 +142,11 @@ func (q *Queries) DeleteLocation(ctx context.Context, id uuid.UUID) (Location, e
 		&i.ID,
 		&i.OrganisationID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -130,7 +158,7 @@ func (q *Queries) DeleteLocation(ctx context.Context, id uuid.UUID) (Location, e
 const deleteOrganisation = `-- name: DeleteOrganisation :one
 DELETE FROM organisations
 WHERE id = $1
-RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
+RETURNING id, name, street, house_number, house_number_addition, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
 `
 
 func (q *Queries) DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organisation, error) {
@@ -139,7 +167,9 @@ func (q *Queries) DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organis
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
 		&i.PhoneNumber,
@@ -153,7 +183,7 @@ func (q *Queries) DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organis
 }
 
 const getLocation = `-- name: GetLocation :one
-SELECT id, organisation_id, name, address, capacity, location_type, created_at, updated_at FROM location
+SELECT id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at FROM location
 WHERE id = $1
 `
 
@@ -164,7 +194,11 @@ func (q *Queries) GetLocation(ctx context.Context, id uuid.UUID) (Location, erro
 		&i.ID,
 		&i.OrganisationID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -174,7 +208,7 @@ func (q *Queries) GetLocation(ctx context.Context, id uuid.UUID) (Location, erro
 }
 
 const getOrganisation = `-- name: GetOrganisation :one
-SELECT o.id, o.name, o.address, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
+SELECT o.id, o.name, o.street, o.house_number, o.house_number_addition, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
        COUNT(l.id) AS location_count
 FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
@@ -183,18 +217,20 @@ GROUP BY o.id
 `
 
 type GetOrganisationRow struct {
-	ID            uuid.UUID          `json:"id"`
-	Name          string             `json:"name"`
-	Address       string             `json:"address"`
-	PostalCode    string             `json:"postal_code"`
-	City          string             `json:"city"`
-	PhoneNumber   *string            `json:"phone_number"`
-	Email         *string            `json:"email"`
-	KvkNumber     *string            `json:"kvk_number"`
-	BtwNumber     *string            `json:"btw_number"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-	LocationCount int64              `json:"location_count"`
+	ID                  uuid.UUID          `json:"id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	PhoneNumber         *string            `json:"phone_number"`
+	Email               *string            `json:"email"`
+	KvkNumber           *string            `json:"kvk_number"`
+	BtwNumber           *string            `json:"btw_number"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	LocationCount       int64              `json:"location_count"`
 }
 
 func (q *Queries) GetOrganisation(ctx context.Context, id uuid.UUID) (GetOrganisationRow, error) {
@@ -203,7 +239,9 @@ func (q *Queries) GetOrganisation(ctx context.Context, id uuid.UUID) (GetOrganis
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
 		&i.PhoneNumber,
@@ -257,7 +295,7 @@ func (q *Queries) GetOrganisationCounts(ctx context.Context, id uuid.UUID) (GetO
 }
 
 const listAllLocations = `-- name: ListAllLocations :many
-SELECT l.id, l.organisation_id, l.name, l.address, l.capacity, l.location_type, l.created_at, l.updated_at,
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
        COUNT(c.id) AS client_count
 FROM location l
 LEFT JOIN client_details c ON l.id = c.location_id
@@ -266,15 +304,19 @@ ORDER BY l.name
 `
 
 type ListAllLocationsRow struct {
-	ID             uuid.UUID          `json:"id"`
-	OrganisationID uuid.UUID          `json:"organisation_id"`
-	Name           string             `json:"name"`
-	Address        string             `json:"address"`
-	Capacity       *int32             `json:"capacity"`
-	LocationType   LocationTypeEnum   `json:"location_type"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
-	ClientCount    int64              `json:"client_count"`
+	ID                  uuid.UUID          `json:"id"`
+	OrganisationID      uuid.UUID          `json:"organisation_id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	Capacity            *int32             `json:"capacity"`
+	LocationType        LocationTypeEnum   `json:"location_type"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	ClientCount         int64              `json:"client_count"`
 }
 
 func (q *Queries) ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, error) {
@@ -290,7 +332,11 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, 
 			&i.ID,
 			&i.OrganisationID,
 			&i.Name,
-			&i.Address,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
+			&i.PostalCode,
+			&i.City,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt,
@@ -307,8 +353,78 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, 
 	return items, nil
 }
 
+const listAllLocationsPaginated = `-- name: ListAllLocationsPaginated :many
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
+       COUNT(c.id) AS client_count,
+       COUNT(*) OVER() AS total_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+WHERE ($3::text IS NULL OR l.name ILIKE '%' || $3 || '%')
+GROUP BY l.id
+ORDER BY l.name
+LIMIT $1 OFFSET $2
+`
+
+type ListAllLocationsPaginatedParams struct {
+	Limit   int32  `json:"limit"`
+	Offset  int32  `json:"offset"`
+	Column3 string `json:"column_3"`
+}
+
+type ListAllLocationsPaginatedRow struct {
+	ID                  uuid.UUID          `json:"id"`
+	OrganisationID      uuid.UUID          `json:"organisation_id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	Capacity            *int32             `json:"capacity"`
+	LocationType        LocationTypeEnum   `json:"location_type"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	ClientCount         int64              `json:"client_count"`
+	TotalCount          int64              `json:"total_count"`
+}
+
+func (q *Queries) ListAllLocationsPaginated(ctx context.Context, arg ListAllLocationsPaginatedParams) ([]ListAllLocationsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listAllLocationsPaginated, arg.Limit, arg.Offset, arg.Column3)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAllLocationsPaginatedRow{}
+	for rows.Next() {
+		var i ListAllLocationsPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganisationID,
+			&i.Name,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
+			&i.PostalCode,
+			&i.City,
+			&i.Capacity,
+			&i.LocationType,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ClientCount,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listLocations = `-- name: ListLocations :many
-SELECT l.id, l.organisation_id, l.name, l.address, l.capacity, l.location_type, l.created_at, l.updated_at,
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
     COUNT(c.id) AS client_count
 FROM location l
 LEFT JOIN client_details c ON l.id = c.location_id
@@ -317,15 +433,19 @@ GROUP BY l.id
 `
 
 type ListLocationsRow struct {
-	ID             uuid.UUID          `json:"id"`
-	OrganisationID uuid.UUID          `json:"organisation_id"`
-	Name           string             `json:"name"`
-	Address        string             `json:"address"`
-	Capacity       *int32             `json:"capacity"`
-	LocationType   LocationTypeEnum   `json:"location_type"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
-	ClientCount    int64              `json:"client_count"`
+	ID                  uuid.UUID          `json:"id"`
+	OrganisationID      uuid.UUID          `json:"organisation_id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	Capacity            *int32             `json:"capacity"`
+	LocationType        LocationTypeEnum   `json:"location_type"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	ClientCount         int64              `json:"client_count"`
 }
 
 func (q *Queries) ListLocations(ctx context.Context, organisationID uuid.UUID) ([]ListLocationsRow, error) {
@@ -341,7 +461,11 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID uuid.UUID) (
 			&i.ID,
 			&i.OrganisationID,
 			&i.Name,
-			&i.Address,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
+			&i.PostalCode,
+			&i.City,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt,
@@ -358,8 +482,85 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID uuid.UUID) (
 	return items, nil
 }
 
+const listLocationsPaginated = `-- name: ListLocationsPaginated :many
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
+    COUNT(c.id) AS client_count,
+    COUNT(*) OVER() AS total_count
+FROM location l
+LEFT JOIN client_details c ON l.id = c.location_id
+WHERE l.organisation_id = $1
+  AND ($4::text IS NULL OR l.name ILIKE '%' || $4 || '%')
+GROUP BY l.id
+ORDER BY l.name
+LIMIT $2 OFFSET $3
+`
+
+type ListLocationsPaginatedParams struct {
+	OrganisationID uuid.UUID `json:"organisation_id"`
+	Limit          int32     `json:"limit"`
+	Offset         int32     `json:"offset"`
+	Column4        string    `json:"column_4"`
+}
+
+type ListLocationsPaginatedRow struct {
+	ID                  uuid.UUID          `json:"id"`
+	OrganisationID      uuid.UUID          `json:"organisation_id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	Capacity            *int32             `json:"capacity"`
+	LocationType        LocationTypeEnum   `json:"location_type"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	ClientCount         int64              `json:"client_count"`
+	TotalCount          int64              `json:"total_count"`
+}
+
+func (q *Queries) ListLocationsPaginated(ctx context.Context, arg ListLocationsPaginatedParams) ([]ListLocationsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listLocationsPaginated,
+		arg.OrganisationID,
+		arg.Limit,
+		arg.Offset,
+		arg.Column4,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListLocationsPaginatedRow{}
+	for rows.Next() {
+		var i ListLocationsPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganisationID,
+			&i.Name,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
+			&i.PostalCode,
+			&i.City,
+			&i.Capacity,
+			&i.LocationType,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ClientCount,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOrganisations = `-- name: ListOrganisations :many
-SELECT o.id, o.name, o.address, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
+SELECT o.id, o.name, o.street, o.house_number, o.house_number_addition, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
          COUNT(l.id) AS location_count
 FROM organisations o
 LEFT JOIN location l ON o.id = l.organisation_id
@@ -368,18 +569,20 @@ ORDER BY o.name
 `
 
 type ListOrganisationsRow struct {
-	ID            uuid.UUID          `json:"id"`
-	Name          string             `json:"name"`
-	Address       string             `json:"address"`
-	PostalCode    string             `json:"postal_code"`
-	City          string             `json:"city"`
-	PhoneNumber   *string            `json:"phone_number"`
-	Email         *string            `json:"email"`
-	KvkNumber     *string            `json:"kvk_number"`
-	BtwNumber     *string            `json:"btw_number"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-	LocationCount int64              `json:"location_count"`
+	ID                  uuid.UUID          `json:"id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	PhoneNumber         *string            `json:"phone_number"`
+	Email               *string            `json:"email"`
+	KvkNumber           *string            `json:"kvk_number"`
+	BtwNumber           *string            `json:"btw_number"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	LocationCount       int64              `json:"location_count"`
 }
 
 func (q *Queries) ListOrganisations(ctx context.Context) ([]ListOrganisationsRow, error) {
@@ -394,7 +597,9 @@ func (q *Queries) ListOrganisations(ctx context.Context) ([]ListOrganisationsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Address,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
 			&i.PostalCode,
 			&i.City,
 			&i.PhoneNumber,
@@ -415,28 +620,112 @@ func (q *Queries) ListOrganisations(ctx context.Context) ([]ListOrganisationsRow
 	return items, nil
 }
 
+const listOrganisationsPaginated = `-- name: ListOrganisationsPaginated :many
+SELECT o.id, o.name, o.street, o.house_number, o.house_number_addition, o.postal_code, o.city, o.phone_number, o.email, o.kvk_number, o.btw_number, o.created_at, o.updated_at,
+         COUNT(l.id) AS location_count,
+         COUNT(*) OVER() AS total_count
+FROM organisations o
+LEFT JOIN location l ON o.id = l.organisation_id
+WHERE ($3::text IS NULL OR o.name ILIKE '%' || $3 || '%')
+GROUP BY o.id
+ORDER BY o.name
+LIMIT $1 OFFSET $2
+`
+
+type ListOrganisationsPaginatedParams struct {
+	Limit   int32  `json:"limit"`
+	Offset  int32  `json:"offset"`
+	Column3 string `json:"column_3"`
+}
+
+type ListOrganisationsPaginatedRow struct {
+	ID                  uuid.UUID          `json:"id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	PhoneNumber         *string            `json:"phone_number"`
+	Email               *string            `json:"email"`
+	KvkNumber           *string            `json:"kvk_number"`
+	BtwNumber           *string            `json:"btw_number"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	LocationCount       int64              `json:"location_count"`
+	TotalCount          int64              `json:"total_count"`
+}
+
+func (q *Queries) ListOrganisationsPaginated(ctx context.Context, arg ListOrganisationsPaginatedParams) ([]ListOrganisationsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listOrganisationsPaginated, arg.Limit, arg.Offset, arg.Column3)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListOrganisationsPaginatedRow{}
+	for rows.Next() {
+		var i ListOrganisationsPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Street,
+			&i.HouseNumber,
+			&i.HouseNumberAddition,
+			&i.PostalCode,
+			&i.City,
+			&i.PhoneNumber,
+			&i.Email,
+			&i.KvkNumber,
+			&i.BtwNumber,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.LocationCount,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateLocation = `-- name: UpdateLocation :one
 UPDATE location
 SET
     name = COALESCE($2, name),
-    address = COALESCE($3, address),
-    capacity = COALESCE($4, capacity)
+    street = COALESCE($3, street),
+    house_number = COALESCE($4, house_number),
+    house_number_addition = COALESCE($5, house_number_addition),
+    postal_code = COALESCE($6, postal_code),
+    city = COALESCE($7, city),
+    capacity = COALESCE($8, capacity)
 WHERE id = $1
-RETURNING id, organisation_id, name, address, capacity, location_type, created_at, updated_at
+RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at
 `
 
 type UpdateLocationParams struct {
-	ID       uuid.UUID `json:"id"`
-	Name     *string   `json:"name"`
-	Address  *string   `json:"address"`
-	Capacity *int32    `json:"capacity"`
+	ID                  uuid.UUID `json:"id"`
+	Name                *string   `json:"name"`
+	Street              *string   `json:"street"`
+	HouseNumber         *string   `json:"house_number"`
+	HouseNumberAddition *string   `json:"house_number_addition"`
+	PostalCode          *string   `json:"postal_code"`
+	City                *string   `json:"city"`
+	Capacity            *int32    `json:"capacity"`
 }
 
 func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) (Location, error) {
 	row := q.db.QueryRow(ctx, updateLocation,
 		arg.ID,
 		arg.Name,
-		arg.Address,
+		arg.Street,
+		arg.HouseNumber,
+		arg.HouseNumberAddition,
+		arg.PostalCode,
+		arg.City,
 		arg.Capacity,
 	)
 	var i Location
@@ -444,7 +733,11 @@ func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) 
 		&i.ID,
 		&i.OrganisationID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -457,35 +750,41 @@ const updateOrganisation = `-- name: UpdateOrganisation :one
 UPDATE organisations
 SET
     name = COALESCE($2, name),
-    address = COALESCE($3, address),
-    postal_code = COALESCE($4, postal_code),
-    city = COALESCE($5, city),
-    phone_number = COALESCE($6, phone_number),
-    email = COALESCE($7, email),
-    kvk_number = COALESCE($8, kvk_number),
-    btw_number = COALESCE($9, btw_number),
+    street = COALESCE($3, street),
+    house_number = COALESCE($4, house_number),
+    house_number_addition = COALESCE($5, house_number_addition),
+    postal_code = COALESCE($6, postal_code),
+    city = COALESCE($7, city),
+    phone_number = COALESCE($8, phone_number),
+    email = COALESCE($9, email),
+    kvk_number = COALESCE($10, kvk_number),
+    btw_number = COALESCE($11, btw_number),
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, address, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
+RETURNING id, name, street, house_number, house_number_addition, postal_code, city, phone_number, email, kvk_number, btw_number, created_at, updated_at
 `
 
 type UpdateOrganisationParams struct {
-	ID          uuid.UUID `json:"id"`
-	Name        *string   `json:"name"`
-	Address     *string   `json:"address"`
-	PostalCode  *string   `json:"postal_code"`
-	City        *string   `json:"city"`
-	PhoneNumber *string   `json:"phone_number"`
-	Email       *string   `json:"email"`
-	KvkNumber   *string   `json:"kvk_number"`
-	BtwNumber   *string   `json:"btw_number"`
+	ID                  uuid.UUID `json:"id"`
+	Name                *string   `json:"name"`
+	Street              *string   `json:"street"`
+	HouseNumber         *string   `json:"house_number"`
+	HouseNumberAddition *string   `json:"house_number_addition"`
+	PostalCode          *string   `json:"postal_code"`
+	City                *string   `json:"city"`
+	PhoneNumber         *string   `json:"phone_number"`
+	Email               *string   `json:"email"`
+	KvkNumber           *string   `json:"kvk_number"`
+	BtwNumber           *string   `json:"btw_number"`
 }
 
 func (q *Queries) UpdateOrganisation(ctx context.Context, arg UpdateOrganisationParams) (Organisation, error) {
 	row := q.db.QueryRow(ctx, updateOrganisation,
 		arg.ID,
 		arg.Name,
-		arg.Address,
+		arg.Street,
+		arg.HouseNumber,
+		arg.HouseNumberAddition,
 		arg.PostalCode,
 		arg.City,
 		arg.PhoneNumber,
@@ -497,7 +796,9 @@ func (q *Queries) UpdateOrganisation(ctx context.Context, arg UpdateOrganisation
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Address,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
 		&i.PhoneNumber,

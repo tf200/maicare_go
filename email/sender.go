@@ -116,6 +116,72 @@ func (e *SmtpConf) Send(subject, body string, to []string) error {
 //go:embed templates/credentials.html
 var credentialsTemplateFS embed.FS
 
+type ProcessRegistrationForm struct {
+	RecipientName string
+	ClientName    string
+	Location      string
+	Link          string
+}
+
+//go:embed templates/process_registration_form.html
+var processRegistrationFormTemplateFS embed.FS
+
+func (b *BrevoConf) SendProcessRegistrationForm(ctx context.Context, to []string, data ProcessRegistrationForm) error {
+	if len(to) == 0 {
+		return errors.New("no recipient addresses provided")
+	}
+	if b.SenderName == "" || b.Senderemail == "" {
+		return errors.New("invalid sender configuration")
+	}
+	if b.ApiKey == "" {
+		return errors.New("invalid API key")
+	}
+
+	tmpl, err := template.ParseFS(processRegistrationFormTemplateFS, "templates/process_registration_form.html")
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML template: %w", err)
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	htmlContent := body.String()
+	sender := brevo.SendSmtpEmailSender{
+		Name:  b.SenderName,
+		Email: b.Senderemail,
+	}
+	recipients := make([]brevo.SendSmtpEmailTo, 0, len(to))
+	for _, recipient := range to {
+		recipients = append(recipients, brevo.SendSmtpEmailTo{
+			Email: recipient,
+			Name:  recipient,
+		})
+	}
+	emailContent := brevo.SendSmtpEmail{
+		Sender:      &sender,
+		To:          recipients,
+		Subject:     "Intake Planning for " + data.ClientName,
+		HtmlContent: htmlContent,
+	}
+	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	if response.StatusCode != 201 {
+		return fmt.Errorf("failed to send email, status code: %d", response.StatusCode)
+	}
+	log.Printf("Email sent to %s", to)
+	log.Printf("Response: %s", result)
+	log.Printf("Response Status Code: %d", response.StatusCode)
+	log.Printf("Response Headers: %v", response.Header)
+	log.Printf("Response Body: %s", response.Body)
+
+	return nil
+}
+
 func (b *BrevoConf) SendCredentials(ctx context.Context, to []string, data Credentials) error {
 	if len(to) == 0 {
 		return errors.New("no recipient addresses provided")

@@ -30,6 +30,7 @@ INSERT INTO client_details (
     education_mentor_email,
     education_additional_notes,
     education_level, 
+    nationality,
     work_currently_employed,
     work_current_employer,
     work_current_employer_phone,
@@ -41,7 +42,7 @@ INSERT INTO client_details (
     living_situation_notes
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
+    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
 ) RETURNING *;
 
 
@@ -132,7 +133,8 @@ SET
     work_start_date = COALESCE (sqlc.narg('work_start_date'), work_start_date),
     work_additional_notes = COALESCE (sqlc.narg('work_additional_notes'), work_additional_notes),
     living_situation = COALESCE (sqlc.narg('living_situation'), living_situation),
-    living_situation_notes = COALESCE (sqlc.narg('living_situation_notes'), living_situation_notes)
+    living_situation_notes = COALESCE (sqlc.narg('living_situation_notes'), living_situation_notes),
+    nationality = COALESCE (sqlc.narg('nationality'), nationality)
 
 WHERE id = $1
 RETURNING *;

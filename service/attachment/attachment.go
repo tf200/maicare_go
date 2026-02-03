@@ -2,15 +2,8 @@ package attachment
 
 import (
 	"context"
-	"crypto/md5"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
-	"io"
-	"mime"
-	"mime/multipart"
-	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
@@ -22,41 +15,91 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *attachmentService) UploadAttachment(ctx context.Context,
-	file multipart.File,
-	header *multipart.FileHeader,
-) (*UploadHandlerResponse, error) {
-	fileInfo, err := s.validateAndFinalizeFile(file, header)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UploadAttachment", "File validation failed", zap.Error(err))
-		return nil, err
+func (s *attachmentService) InitUpload(ctx context.Context, req *InitUploadRequest) (*InitUploadResponse, error) {
+	if req.Size > MaxFileSize {
+		return nil, fmt.Errorf("file size exceeds maximum limit of 100MB")
 	}
 
-	key, uuid := s.generateSecureKey(header.Filename, fileInfo)
-
-	objectKey, size, err := s.B2Client.Upload(ctx, file, key, fileInfo.ContentType)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UploadAttachment", "File upload failed", zap.Error(err))
-		return nil, fmt.Errorf("file upload error: %v", err)
+	category, allowed := allowedMimeTypes[req.ContentType]
+	if !allowed {
+		return nil, fmt.Errorf("unsupported file type: %s", req.ContentType)
 	}
 
+	// Calculate secure key
+	key, fileUUID := s.generateSecureKey(req.Filename, category)
+
+	// Create initial record in DB (unused)
 	arg := db.CreateAttachmentParams{
-		Uuid: uuid,
-		File: objectKey,
-		Size: int32(size),
-		Tag:  &header.Filename,
+		Uuid: fileUUID,
+		Name: req.Filename,
+		File: key,
+		Size: int32(req.Size),
+		Tag:  &req.Filename,
 	}
-	attachment, err := s.Store.CreateAttachment(ctx, arg)
+
+	_, err := s.Store.CreateAttachment(ctx, arg)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UploadAttachment", "Failed to create attachment record", zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "InitUpload", "Failed to create attachment record", zap.Error(err))
 		return nil, fmt.Errorf("failed to create attachment record: %v", err)
 	}
 
-	return &UploadHandlerResponse{
-		FileURL:   key,
-		FileID:    attachment.Uuid,
-		CreatedAt: attachment.Created.Time,
-		Size:      int64(attachment.Size),
+	// Generate presigned upload URL
+	uploadURL, err := s.B2Client.GeneratePresignedUploadURL(ctx, key, 15*time.Minute)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "InitUpload", "Failed to generate presigned upload URL", zap.Error(err))
+		return nil, fmt.Errorf("failed to generate upload URL: %v", err)
+	}
+
+	return &InitUploadResponse{
+		UploadURL: uploadURL,
+		FileID:    fileUUID,
+		Key:       key,
+	}, nil
+}
+
+func (s *attachmentService) ConfirmUpload(ctx context.Context, req *ConfirmUploadRequest) (*ConfirmUploadResponse, error) {
+	attachment, err := s.Store.GetAttachmentById(ctx, req.FileID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmUpload", "Attachment not found", zap.Error(err))
+		return nil, fmt.Errorf("attachment not found")
+	}
+
+	// Check if file exists in storage
+	size, err := s.B2Client.GetFileInfo(ctx, attachment.File)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmUpload", "File verification failed", zap.Error(err))
+		return nil, fmt.Errorf("file verification failed: %v", err)
+	}
+
+	if size == 0 {
+		return nil, fmt.Errorf("file is empty")
+	}
+
+	// Mark as used
+	updatedAttachment, err := s.Store.SetAttachmentAsUsedorUnused(ctx, db.SetAttachmentAsUsedorUnusedParams{
+		Uuid:   req.FileID,
+		IsUsed: true,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmUpload", "Failed to update attachment status", zap.Error(err))
+		return nil, fmt.Errorf("failed to confirm upload: %v", err)
+	}
+
+	// Generate download URL for response
+	url, err := s.B2Client.GeneratePresignedURL(ctx, updatedAttachment.File, 15*time.Minute)
+	if err != nil {
+		// Log error but don't fail the confirmation? Or fail?
+		// Better to return what we have, URL generation is secondary here?
+		// But response expects URL.
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmUpload", "Failed to generate download URL", zap.Error(err))
+		return nil, fmt.Errorf("failed to generate download URL")
+	}
+
+	return &ConfirmUploadResponse{
+		FileURL:   url,
+		FileID:    updatedAttachment.Uuid,
+		CreatedAt: updatedAttachment.Created.Time,
+		Size:      size,
 	}, nil
 }
 
@@ -127,84 +170,14 @@ func (s *attachmentService) DeleteAttachment(ctx context.Context, id uuid.UUID) 
 	}, nil
 }
 
-func (s *attachmentService) validateAndFinalizeFile(file multipart.File, header *multipart.FileHeader) (*FileInfo, error) {
-	if header.Size > MaxFileSize {
-		return nil, fmt.Errorf("file size exceeds maximum limit of 100MB")
-	}
-
-	if header.Size == 0 {
-		return nil, fmt.Errorf("file is empty")
-	}
-
-	buffer := make([]byte, min(512, header.Size))
-	bytesRead, err := file.Read(buffer)
-	if err != nil && err != io.EOF {
-		return nil, fmt.Errorf("error reading file: %v", err)
-	}
-
-	if _, err := file.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("error resetting file: %v", err)
-	}
-
-	detectedType := http.DetectContentType(buffer[:bytesRead])
-
-	if detectedType == "application/octet-stream" {
-		if extType := mime.TypeByExtension(filepath.Ext(header.Filename)); extType != "" {
-			detectedType = extType
-		}
-	}
-
-	category, allowed := allowedMimeTypes[detectedType]
-	if !allowed {
-		return nil, fmt.Errorf("unsupported file type: %s", detectedType)
-	}
-
-	checksum, md5Hash, err := s.generateChecksums(file)
-	if err != nil {
-		return nil, fmt.Errorf("error generating file checksums: %v", err)
-	}
-
-	return &FileInfo{
-		Size:        header.Size,
-		ContentType: detectedType,
-		Checksum:    checksum,
-		MD5Hash:     md5Hash,
-		Category:    category,
-		Extension:   filepath.Ext(header.Filename),
-	}, nil
-}
-
-func (s *attachmentService) generateChecksums(file multipart.File) (string, string, error) {
-	if _, err := file.Seek(0, 0); err != nil {
-		return "", "", fmt.Errorf("error resetting file for checksum calculation: %v", err)
-	}
-
-	hasherSHA256 := sha256.New()
-	hasherMD5 := md5.New()
-
-	multiWriter := io.MultiWriter(hasherSHA256, hasherMD5)
-	if _, err := io.Copy(multiWriter, file); err != nil {
-		return "", "", fmt.Errorf("error calculating file checksums: %v", err)
-	}
-
-	if _, err := file.Seek(0, 0); err != nil {
-		return "", "", fmt.Errorf("error resetting file after checksum calculation: %v", err)
-	}
-
-	sha256hash := hex.EncodeToString(hasherSHA256.Sum(nil))
-	md5hash := hex.EncodeToString(hasherMD5.Sum(nil))
-
-	return sha256hash, md5hash, nil
-}
-
-func (s *attachmentService) generateSecureKey(filename string, fileInfo *FileInfo) (string, uuid.UUID) {
+func (s *attachmentService) generateSecureKey(filename string, category FileCategory) (string, uuid.UUID) {
 	now := time.Now().UTC()
 
 	cleanFilename := s.sanitizeFilename(filename)
 
 	uuid := uuid.New()
 	key := fmt.Sprintf("%s/%d/%02d/%s_%s",
-		string(fileInfo.Category),
+		string(category),
 		now.Year(),
 		now.Month(),
 		uuid,

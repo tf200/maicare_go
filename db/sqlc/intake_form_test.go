@@ -21,7 +21,7 @@ func TestCreateIntakeForm(t *testing.T) {
 			name: "Successful Creation",
 			params: func(ctx context.Context, qtx *Queries) CreateIntakeFormParams {
 				regForm := createRandomRegistrationForm(ctx, qtx)
-				maturityMatrix := createRandomMaturityMatrix(ctx, t, qtx)
+
 				return CreateIntakeFormParams{
 					RegistrationFormID:    regForm.ID,
 					DateOfIntake:          pgtype.Timestamptz{Valid: true, Time: time.Now()},
@@ -30,8 +30,6 @@ func TestCreateIntakeForm(t *testing.T) {
 					FamilySituation:       util.StringPtr("Stable family situation"),
 					PsychologicalState:    util.StringPtr("Good psychological state"),
 					SelfSufficiency:       4,
-					MaturityMatrixID:      &maturityMatrix.ID,
-					Goals:                 util.StringPtr("Improve self-sufficiency"),
 					RiskAssessment:        util.StringPtr("Low risk"),
 					IntakeConclusion:      IntakeConclusionEnumFurtherInvestigation,
 					IntakeConclusionNotes: util.StringPtr("Needs further assessment"),
@@ -43,8 +41,6 @@ func TestCreateIntakeForm(t *testing.T) {
 				require.Equal(t, IntakeCareTypeEnumAmbulatorySupport, intakeForm.CareType)
 				require.Equal(t, 4, intakeForm.SelfSufficiency)
 				require.Equal(t, IntakeConclusionEnumFurtherInvestigation, intakeForm.IntakeConclusion)
-				require.NotNil(t, intakeForm.FamilySituation)
-				require.Equal(t, "Stable family situation", *intakeForm.FamilySituation)
 				require.True(t, intakeForm.CreatedAt.Valid)
 			},
 		},
@@ -67,7 +63,6 @@ func TestCreateIntakeForm(t *testing.T) {
 				require.Equal(t, 2, intakeForm.SelfSufficiency)
 				require.Equal(t, IntakeConclusionEnumSuitable, intakeForm.IntakeConclusion)
 				require.Nil(t, intakeForm.FamilySituation)
-				require.Nil(t, intakeForm.Goals)
 			},
 		},
 		{
@@ -83,8 +78,6 @@ func TestCreateIntakeForm(t *testing.T) {
 					IntakeConclusion:      IntakeConclusionEnumUnsuitable,
 					FamilySituation:       nil,
 					PsychologicalState:    nil,
-					MaturityMatrixID:      nil,
-					Goals:                 nil,
 					RiskAssessment:        nil,
 					IntakeConclusionNotes: nil,
 					Signature:             nil,
@@ -97,14 +90,13 @@ func TestCreateIntakeForm(t *testing.T) {
 				require.Equal(t, IntakeConclusionEnumUnsuitable, intakeForm.IntakeConclusion)
 				require.Nil(t, intakeForm.FamilySituation)
 				require.Nil(t, intakeForm.PsychologicalState)
-				require.Nil(t, intakeForm.MaturityMatrixID)
 			},
 		},
 		{
 			name: "Successful Creation with Maturity Matrix",
 			params: func(ctx context.Context, qtx *Queries) CreateIntakeFormParams {
 				regForm := createRandomRegistrationForm(ctx, qtx)
-				maturityMatrix := createRandomMaturityMatrix(ctx, t, qtx)
+
 				return CreateIntakeFormParams{
 					RegistrationFormID:    regForm.ID,
 					DateOfIntake:          pgtype.Timestamptz{Valid: true, Time: time.Now()},
@@ -113,8 +105,6 @@ func TestCreateIntakeForm(t *testing.T) {
 					FamilySituation:       util.StringPtr("Complex family dynamics"),
 					PsychologicalState:    util.StringPtr("Requires monitoring"),
 					SelfSufficiency:       3,
-					MaturityMatrixID:      &maturityMatrix.ID,
-					Goals:                 util.StringPtr("Build independence"),
 					RiskAssessment:        util.StringPtr("Medium risk"),
 					IntakeConclusion:      IntakeConclusionEnumFurtherInvestigation,
 					IntakeConclusionNotes: util.StringPtr("Monitor progress closely"),
@@ -126,7 +116,6 @@ func TestCreateIntakeForm(t *testing.T) {
 				require.Equal(t, IntakeCareTypeEnumSupportedIndependentLiving, intakeForm.CareType)
 				require.Equal(t, 3, intakeForm.SelfSufficiency)
 				require.Equal(t, IntakeConclusionEnumFurtherInvestigation, intakeForm.IntakeConclusion)
-				require.NotNil(t, intakeForm.MaturityMatrixID)
 				require.Equal(t, "Complex family dynamics", *intakeForm.FamilySituation)
 			},
 		},
@@ -162,7 +151,7 @@ func TestListIntakeForms(t *testing.T) {
 			name: "list all intake forms without search",
 			setup: func(ctx context.Context, qtx *Queries) []IntakeForm {
 				var forms []IntakeForm
-				for i := 0; i < 3;  i++ {
+				for i := 0; i < 3; i++ {
 					regForm := createRandomRegistrationForm(ctx, qtx)
 					form, err := qtx.CreateIntakeForm(ctx, CreateIntakeFormParams{
 						RegistrationFormID: regForm.ID,

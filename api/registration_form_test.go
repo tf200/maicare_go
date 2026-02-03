@@ -86,6 +86,8 @@ func createRandomRegistrationForm(t *testing.T) db.RegistrationForm {
 			Valid: true,
 		},
 		ReferrerSignature: util.BoolPtr(true),
+		ClientDateOfBirth: pgtype.Date{Time: time.Now().AddDate(-10, 0, 0), Valid: true},
+		ClientGoals:       []string{"Improve communication skills", "Complete education", "Find stable housing"},
 	}
 
 	registrationForm, err := testStore.CreateRegistrationForm(context.Background(), arg)
@@ -174,10 +176,12 @@ func TestCreateRegistrationFormApi(t *testing.T) {
 					DocumentIDCopy:                nil,
 					ApplicationDate:               time.Now(),
 					ReferrerSignature:             util.BoolPtr(true),
+					ClientDateOfBirth:             util.TimePtr(time.Now().AddDate(-10, 0, 0)),
+					ClientGoals:                   []string{"Learn new skills", "Build confidence", "Achieve independence"},
 				}
 				data, err := json.Marshal(rfRequest)
 				require.NoError(t, err)
-				url := "/registration_form"
+				url := "/registration_forms"
 				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
@@ -226,7 +230,7 @@ func TestListRegistrationFormsApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				url := "/registration_form?page=1&page_size=5"
+				url := "/registration_forms?page=1&page_size=5"
 				req, err := http.NewRequest(http.MethodGet, url, nil)
 				require.NoError(t, err)
 				return req, nil
@@ -324,6 +328,7 @@ func TestUpdateRegistrationFormApi(t *testing.T) {
 					ClientFirstName: util.StringPtr(faker.FirstName()),
 					ClientLastName:  util.StringPtr(faker.LastName()),
 					ClientBsnNumber: util.StringPtr("123456789"),
+					ClientGoals:     []string{"Updated goal 1", "Updated goal 2"},
 				}
 				data, err := json.Marshal(rfRequest)
 				require.NoError(t, err)

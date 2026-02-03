@@ -100,6 +100,40 @@ func (q *Queries) GetAttachmentById(ctx context.Context, argUuid uuid.UUID) (Att
 	return i, err
 }
 
+const getAttachmentsByUUIDs = `-- name: GetAttachmentsByUUIDs :many
+SELECT uuid, name, file, size, is_used, tag, updated, created FROM attachment_file
+WHERE uuid = ANY($1::uuid[])
+`
+
+func (q *Queries) GetAttachmentsByUUIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]AttachmentFile, error) {
+	rows, err := q.db.Query(ctx, getAttachmentsByUUIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AttachmentFile{}
+	for rows.Next() {
+		var i AttachmentFile
+		if err := rows.Scan(
+			&i.Uuid,
+			&i.Name,
+			&i.File,
+			&i.Size,
+			&i.IsUsed,
+			&i.Tag,
+			&i.Updated,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const setAttachmentAsUsedorUnused = `-- name: SetAttachmentAsUsedorUnused :one
 UPDATE attachment_file
 SET

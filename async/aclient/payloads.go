@@ -70,6 +70,14 @@ type AcceptedRegistrationFormPayload struct {
 	To                  string `json:"to"`
 }
 
+type ProcessRegistrationFormEmailPayload struct {
+	ReferrerName string   `json:"referrer_name"`
+	ClientName   string   `json:"client_name"`
+	Location     string   `json:"location"`
+	Link         string   `json:"link"`
+	To           []string `json:"to"`
+}
+
 type AppointmentPayload struct {
 	AppointmentTemplateID  uuid.UUID   `json:"appointment_template_id"`
 	ParticipantEmployeeIDs []uuid.UUID `json:"participant_employee_ids"`

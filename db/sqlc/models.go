@@ -983,9 +983,9 @@ func (ns NullFinancingOptionEnum) Value() (driver.Value, error) {
 type FormStatusEnum string
 
 const (
-	FormStatusEnumPending  FormStatusEnum = "pending"
-	FormStatusEnumApproved FormStatusEnum = "approved"
-	FormStatusEnumRejected FormStatusEnum = "rejected"
+	FormStatusEnumPending   FormStatusEnum = "pending"
+	FormStatusEnumProcessed FormStatusEnum = "processed"
+	FormStatusEnumRejected  FormStatusEnum = "rejected"
 )
 
 func (e *FormStatusEnum) Scan(src interface{}) error {
@@ -2168,6 +2168,7 @@ type CarePlanObjective struct {
 	Timeframe       CarePlanTimeframeEnum       `json:"timeframe"`
 	GoalTitle       string                      `json:"goal_title"`
 	Description     string                      `json:"description"`
+	Priority        string                      `json:"priority"`
 	TargetDate      pgtype.Date                 `json:"target_date"`
 	Status          CarePlanObjectiveStatusEnum `json:"status"`
 	CompletionDate  pgtype.Date                 `json:"completion_date"`
@@ -2282,6 +2283,7 @@ type ClientDetail struct {
 	WorkCurrentPosition        *string                       `json:"work_current_position"`
 	WorkStartDate              pgtype.Date                   `json:"work_start_date"`
 	WorkAdditionalNotes        *string                       `json:"work_additional_notes"`
+	Nationality                *string                       `json:"nationality"`
 	LivingSituation            NullClientLivingSituationEnum `json:"living_situation"`
 	LivingSituationNotes       *string                       `json:"living_situation_notes"`
 	RiskAggressiveBehavior     *bool                         `json:"risk_aggressive_behavior"`
@@ -2654,22 +2656,33 @@ type Incident struct {
 }
 
 type IntakeForm struct {
-	ID                    uuid.UUID                `json:"id"`
-	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
-	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType              IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation       *string                  `json:"family_situation"`
-	PsychologicalState    *string                  `json:"psychological_state"`
-	SelfSufficiency       int32                    `json:"self_sufficiency"`
-	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
-	Goals                 *string                  `json:"goals"`
-	RiskAssessment        *string                  `json:"risk_assessment"`
-	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
-	Signature             *string                  `json:"signature"`
-	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
-	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	ID                       uuid.UUID                `json:"id"`
+	RegistrationFormID       uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake             pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType                 IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants       []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation          *string                  `json:"family_situation"`
+	PsychologicalState       *string                  `json:"psychological_state"`
+	SelfSufficiency          int32                    `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID               `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID               `json:"assigned_location_id"`
+	RiskAssessment           *string                  `json:"risk_assessment"`
+	IntakeConclusion         IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string                  `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks int32                    `json:"evaluation_intervals_weeks"`
+	Signature                *string                  `json:"signature"`
+	CreatedAt                pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt                pgtype.Timestamptz       `json:"updated_at"`
+}
+
+type IntakeMaturityAssessment struct {
+	ID               uuid.UUID          `json:"id"`
+	IntakeFormID     uuid.UUID          `json:"intake_form_id"`
+	MaturityMatrixID uuid.UUID          `json:"maturity_matrix_id"`
+	CurrentLevel     int32              `json:"current_level"`
+	ProposedGoals    []byte             `json:"proposed_goals"`
+	Notes            *string            `json:"notes"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 }
 
 type Invoice struct {
@@ -2739,14 +2752,18 @@ type LevelHistory struct {
 }
 
 type Location struct {
-	ID             uuid.UUID          `json:"id"`
-	OrganisationID uuid.UUID          `json:"organisation_id"`
-	Name           string             `json:"name"`
-	Address        string             `json:"address"`
-	Capacity       *int32             `json:"capacity"`
-	LocationType   LocationTypeEnum   `json:"location_type"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ID                  uuid.UUID          `json:"id"`
+	OrganisationID      uuid.UUID          `json:"organisation_id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	Capacity            *int32             `json:"capacity"`
+	LocationType        LocationTypeEnum   `json:"location_type"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 }
 
 type LocationShift struct {
@@ -2777,17 +2794,19 @@ type Notification struct {
 }
 
 type Organisation struct {
-	ID          uuid.UUID          `json:"id"`
-	Name        string             `json:"name"`
-	Address     string             `json:"address"`
-	PostalCode  string             `json:"postal_code"`
-	City        string             `json:"city"`
-	PhoneNumber *string            `json:"phone_number"`
-	Email       *string            `json:"email"`
-	KvkNumber   *string            `json:"kvk_number"`
-	BtwNumber   *string            `json:"btw_number"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID                  uuid.UUID          `json:"id"`
+	Name                string             `json:"name"`
+	Street              string             `json:"street"`
+	HouseNumber         string             `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          string             `json:"postal_code"`
+	City                string             `json:"city"`
+	PhoneNumber         *string            `json:"phone_number"`
+	Email               *string            `json:"email"`
+	KvkNumber           *string            `json:"kvk_number"`
+	BtwNumber           *string            `json:"btw_number"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Permission struct {
@@ -2820,6 +2839,7 @@ type RegistrationForm struct {
 	ID                            uuid.UUID                    `json:"id"`
 	ClientFirstName               string                       `json:"client_first_name"`
 	ClientLastName                string                       `json:"client_last_name"`
+	ClientDateOfBirth             pgtype.Date                  `json:"client_date_of_birth"`
 	ClientBsnNumber               string                       `json:"client_bsn_number"`
 	ClientGender                  ClientGenderEnum             `json:"client_gender"`
 	ClientNationality             string                       `json:"client_nationality"`
@@ -2827,6 +2847,7 @@ type RegistrationForm struct {
 	ClientEmail                   string                       `json:"client_email"`
 	ClientStreet                  string                       `json:"client_street"`
 	ClientHouseNumber             string                       `json:"client_house_number"`
+	ClientHouseNumberAddition     *string                      `json:"client_house_number_addition"`
 	ClientPostalCode              string                       `json:"client_postal_code"`
 	ClientCity                    string                       `json:"client_city"`
 	ReferrerFirstName             string                       `json:"referrer_first_name"`
@@ -2864,7 +2885,7 @@ type RegistrationForm struct {
 	CareRoomTrainingCenter        *bool                        `json:"care_room_training_center"`
 	CareAmbulatoryGuidance        *bool                        `json:"care_ambulatory_guidance"`
 	ApplicationReason             *string                      `json:"application_reason"`
-	ClientGoals                   *string                      `json:"client_goals"`
+	ClientGoals                   []string                     `json:"client_goals"`
 	RiskAggressiveBehavior        *bool                        `json:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm          *bool                        `json:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse            *bool                        `json:"risk_substance_abuse"`
@@ -2887,15 +2908,17 @@ type RegistrationForm struct {
 	ApplicationDate               pgtype.Date                  `json:"application_date"`
 	ReferrerSignature             *bool                        `json:"referrer_signature"`
 	FormStatus                    FormStatusEnum               `json:"form_status"`
+	IntakeOptions                 []byte                       `json:"intake_options"`
+	IntakeToken                   *string                      `json:"intake_token"`
 	CreatedAt                     pgtype.Timestamptz           `json:"created_at"`
 	UpdatedAt                     pgtype.Timestamptz           `json:"updated_at"`
 	SubmittedAt                   pgtype.Timestamptz           `json:"submitted_at"`
 	ProcessedAt                   pgtype.Timestamptz           `json:"processed_at"`
 	ProcessedByEmployeeID         *uuid.UUID                   `json:"processed_by_employee_id"`
-	Status                        string                       `json:"status"`
 	IntakeAppointmentDatetime     pgtype.Timestamptz           `json:"intake_appointment_datetime"`
 	IntakeAppointmentLocation     *string                      `json:"intake_appointment_location"`
 	AddmissionType                *string                      `json:"addmission_type"`
+	RejectionReason               *string                      `json:"rejection_reason"`
 }
 
 type RiskAssessment struct {
@@ -3008,23 +3031,25 @@ type ScheduledStatusChange struct {
 }
 
 type Sender struct {
-	ID              uuid.UUID          `json:"id"`
-	Types           SenderTypesEnum    `json:"types"`
-	Name            string             `json:"name"`
-	Address         *string            `json:"address"`
-	PostalCode      *string            `json:"postal_code"`
-	Place           *string            `json:"place"`
-	Land            *string            `json:"land"`
-	Kvknumber       *string            `json:"kvknumber"`
-	Btwnumber       *string            `json:"btwnumber"`
-	PhoneNumber     *string            `json:"phone_number"`
-	ClientNumber    *string            `json:"client_number"`
-	EmailAddress    *string            `json:"email_address"`
-	Contacts        []byte             `json:"contacts"`
-	InvoiceTemplate []uuid.UUID        `json:"invoice_template"`
-	IsArchived      bool               `json:"is_archived"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ID                  uuid.UUID          `json:"id"`
+	Types               SenderTypesEnum    `json:"types"`
+	Name                string             `json:"name"`
+	Street              *string            `json:"street"`
+	HouseNumber         *string            `json:"house_number"`
+	HouseNumberAddition *string            `json:"house_number_addition"`
+	PostalCode          *string            `json:"postal_code"`
+	City                *string            `json:"city"`
+	Land                *string            `json:"land"`
+	Kvknumber           *string            `json:"kvknumber"`
+	Btwnumber           *string            `json:"btwnumber"`
+	PhoneNumber         *string            `json:"phone_number"`
+	ClientNumber        *string            `json:"client_number"`
+	EmailAddress        *string            `json:"email_address"`
+	Contacts            []byte             `json:"contacts"`
+	InvoiceTemplate     []uuid.UUID        `json:"invoice_template"`
+	IsArchived          bool               `json:"is_archived"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Session struct {

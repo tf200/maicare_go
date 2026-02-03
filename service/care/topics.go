@@ -2,6 +2,7 @@ package care
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"maicare_go/logger"
@@ -18,9 +19,19 @@ func (s *carePlanService) ListCarePlanTopics(ctx context.Context) ([]ListCarePla
 
 	reponse := []ListCarePlanTopics{}
 	for _, topic := range topics {
+		levelDescriptions := []LevelDescription{}
+		err = json.Unmarshal(topic.LevelDescription, &levelDescriptions)
+		if err := json.Unmarshal(topic.LevelDescription, &levelDescriptions); err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListCarePlanTopics",
+				"Failed to unmarshal level descriptions",
+				zap.Error(err),
+				zap.ByteString("raw", topic.LevelDescription),
+			)
+		}
 		reponse = append(reponse, ListCarePlanTopics{
-			ID:        topic.ID,
-			TopicName: topic.TopicName,
+			ID:                topic.ID,
+			TopicName:         topic.TopicName,
+			LevelDescriptions: levelDescriptions,
 		})
 	}
 

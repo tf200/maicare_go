@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS "public".sender CASCADE;
 DROP TABLE IF EXISTS "public".contact CASCADE;
 DROP TABLE IF EXISTS "public".sender_contact_relation CASCADE;
 DROP TABLE IF EXISTS "public".intake_forms CASCADE;
+DROP TABLE IF EXISTS "public".intake_maturity_assessments CASCADE;
 DROP TABLE IF EXISTS "public".client_details CASCADE;
 DROP TABLE IF EXISTS "public".client_status_history CASCADE;
 DROP TABLE IF EXISTS "public".scheduled_status_changes CASCADE;

@@ -2,6 +2,8 @@ package clientp
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
@@ -13,20 +15,31 @@ import (
 )
 
 func (s *clientService) CreateIntakeForm(ctx context.Context, req *CreateIntakeFormRequest) (*CreateIntakeFormResponse, error) {
+	// 1. Validate registration form exists and is processed
+	regForm, err := s.Store.GetRegistrationForm(ctx, req.RegistrationFormID)
+	if err != nil {
+		return nil, fmt.Errorf("registration form not found: %w", err)
+	}
+
+	if regForm.FormStatus != db.FormStatusEnumProcessed {
+		return nil, errors.New("intake can only be created for processed registration forms")
+	}
+
 	arg := db.CreateIntakeFormParams{
-		RegistrationFormID:    req.RegistrationFormID,
-		DateOfIntake:          pgtype.Timestamptz{Time: req.DateOfIntake, Valid: true},
-		CareType:              req.CareType,
-		IntakeParticipants:    req.IntakeParticipants,
-		FamilySituation:       req.FamilySituation,
-		PsychologicalState:    req.PsychologicalState,
-		SelfSufficiency:       req.SelfSufficiency,
-		MaturityMatrixID:      req.MaturityMatrixID,
-		Goals:                 req.Goals,
-		RiskAssessment:        req.RiskAssessment,
-		IntakeConclusion:      req.IntakeConclusion,
-		IntakeConclusionNotes: req.IntakeConclusionNotes,
-		Signature:             req.Signature,
+		RegistrationFormID:       req.RegistrationFormID,
+		DateOfIntake:             pgtype.Timestamptz{Time: req.DateOfIntake, Valid: true},
+		CareType:                 req.CareType,
+		IntakeParticipants:       req.IntakeParticipants,
+		FamilySituation:          req.FamilySituation,
+		PsychologicalState:       req.PsychologicalState,
+		SelfSufficiency:          req.SelfSufficiency,
+		SenderID:                 req.SenderID,
+		AssignedLocationID:       req.AssignedLocationID,
+		RiskAssessment:           req.RiskAssessment,
+		IntakeConclusion:         req.IntakeConclusion,
+		IntakeConclusionNotes:    req.IntakeConclusionNotes,
+		EvaluationIntervalsWeeks: req.EvaluationIntervalsWeeks,
+		Signature:                req.Signature,
 	}
 
 	intakeForm, err := s.Store.CreateIntakeForm(ctx, arg)
@@ -35,22 +48,23 @@ func (s *clientService) CreateIntakeForm(ctx context.Context, req *CreateIntakeF
 		return nil, err
 	}
 	res := &CreateIntakeFormResponse{
-		ID:                    intakeForm.ID,
-		RegistrationFormID:    intakeForm.RegistrationFormID,
-		DateOfIntake:          intakeForm.DateOfIntake.Time,
-		CareType:              intakeForm.CareType,
-		IntakeParticipants:    intakeForm.IntakeParticipants,
-		FamilySituation:       intakeForm.FamilySituation,
-		PsychologicalState:    intakeForm.PsychologicalState,
-		SelfSufficiency:       intakeForm.SelfSufficiency,
-		MaturityMatrixID:      intakeForm.MaturityMatrixID,
-		Goals:                 intakeForm.Goals,
-		RiskAssessment:        intakeForm.RiskAssessment,
-		IntakeConclusion:      intakeForm.IntakeConclusion,
-		IntakeConclusionNotes: intakeForm.IntakeConclusionNotes,
-		Signature:             intakeForm.Signature,
-		CreatedAt:             intakeForm.CreatedAt,
-		UpdatedAt:             intakeForm.UpdatedAt,
+		ID:                       intakeForm.ID,
+		RegistrationFormID:       intakeForm.RegistrationFormID,
+		DateOfIntake:             intakeForm.DateOfIntake.Time,
+		CareType:                 intakeForm.CareType,
+		IntakeParticipants:       intakeForm.IntakeParticipants,
+		FamilySituation:          intakeForm.FamilySituation,
+		PsychologicalState:       intakeForm.PsychologicalState,
+		SelfSufficiency:          intakeForm.SelfSufficiency,
+		SenderID:                 intakeForm.SenderID,
+		AssignedLocationID:       intakeForm.AssignedLocationID,
+		RiskAssessment:           intakeForm.RiskAssessment,
+		IntakeConclusion:         intakeForm.IntakeConclusion,
+		IntakeConclusionNotes:    intakeForm.IntakeConclusionNotes,
+		EvaluationIntervalsWeeks: intakeForm.EvaluationIntervalsWeeks,
+		Signature:                intakeForm.Signature,
+		CreatedAt:                intakeForm.CreatedAt,
+		UpdatedAt:                intakeForm.UpdatedAt,
 	}
 	return res, nil
 }
@@ -72,22 +86,26 @@ func (s *clientService) ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRe
 	items := []ListIntakeFormsResponse{}
 	for _, intakeForm := range intakeForms {
 		items = append(items, ListIntakeFormsResponse{
-			ID:                    intakeForm.ID,
-			RegistrationFormID:    intakeForm.RegistrationFormID,
-			DateOfIntake:          intakeForm.DateOfIntake.Time,
-			CareType:              intakeForm.CareType,
-			IntakeParticipants:    intakeForm.IntakeParticipants,
-			FamilySituation:       intakeForm.FamilySituation,
-			PsychologicalState:    intakeForm.PsychologicalState,
-			SelfSufficiency:       intakeForm.SelfSufficiency,
-			MaturityMatrixID:      intakeForm.MaturityMatrixID,
-			Goals:                 intakeForm.Goals,
-			RiskAssessment:        intakeForm.RiskAssessment,
-			IntakeConclusion:      intakeForm.IntakeConclusion,
-			IntakeConclusionNotes: intakeForm.IntakeConclusionNotes,
-			Signature:             intakeForm.Signature,
-			CreatedAt:             intakeForm.CreatedAt,
-			UpdatedAt:             intakeForm.UpdatedAt,
+			ID:                       intakeForm.ID,
+			RegistrationFormID:       intakeForm.RegistrationFormID,
+			DateOfIntake:             intakeForm.DateOfIntake.Time,
+			CareType:                 intakeForm.CareType,
+			IntakeParticipants:       intakeForm.IntakeParticipants,
+			FamilySituation:          intakeForm.FamilySituation,
+			PsychologicalState:       intakeForm.PsychologicalState,
+			SelfSufficiency:          intakeForm.SelfSufficiency,
+			SenderID:                 intakeForm.SenderID,
+			AssignedLocationID:       intakeForm.AssignedLocationID,
+			RiskAssessment:           intakeForm.RiskAssessment,
+			IntakeConclusion:         intakeForm.IntakeConclusion,
+			IntakeConclusionNotes:    intakeForm.IntakeConclusionNotes,
+			EvaluationIntervalsWeeks: intakeForm.EvaluationIntervalsWeeks,
+			Signature:                intakeForm.Signature,
+			CreatedAt:                intakeForm.CreatedAt,
+			UpdatedAt:                intakeForm.UpdatedAt,
+			ClientFirstName:          intakeForm.ClientFirstName,
+			ClientLastName:           intakeForm.ClientLastName,
+			ClientBsnNumber:          intakeForm.ClientBsnNumber,
 		})
 	}
 

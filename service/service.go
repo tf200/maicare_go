@@ -7,6 +7,7 @@ import (
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/logger"
+	"maicare_go/service/ai"
 	"maicare_go/service/appointment"
 	"maicare_go/service/attachment"
 	"maicare_go/service/audit"
@@ -44,8 +45,8 @@ type BusinessService struct {
 	AuditService        *audit.AuditService
 }
 
-func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface, grpcClient grpclient.GrpcClientInterface, wsHub *hub.Hub, asynqClient aclient.AsynqClientInterface) *BusinessService {
-	deps := deps.NewServiceDependencies(store, tokenMaker, logger, config, b2Client, grpcClient, wsHub)
+func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface, grpcClient grpclient.GrpcClientInterface, wsHub *hub.Hub, asynqClient aclient.AsynqClientInterface, aiService ai.AIService) *BusinessService {
+	deps := deps.NewServiceDependencies(store, tokenMaker, logger, config, b2Client, grpcClient, wsHub, aiService)
 	authService := auth.NewAuthService(deps)
 	clientService := clientp.NewClientService(deps, asynqClient)
 	employeeService := employees.NewEmployeeService(deps, asynqClient)

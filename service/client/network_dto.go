@@ -17,22 +17,24 @@ type SenderContact struct {
 
 // GetClientSenderResponse defines the request for getting a client sender
 type GetClientSenderResponse struct {
-	ID           uuid.UUID       `json:"id"`
-	Types        string          `json:"types"`
-	Name         string          `json:"name"`
-	Address      *string         `json:"address"`
-	PostalCode   *string         `json:"postal_code"`
-	Place        *string         `json:"place"`
-	Land         *string         `json:"land"`
-	Kvknumber    *string         `json:"kvknumber"`
-	Btwnumber    *string         `json:"btwnumber"`
-	PhoneNumber  *string         `json:"phone_number"`
-	ClientNumber *string         `json:"client_number"`
-	EmailAddress *string         `json:"email_address"`
-	Contacts     []SenderContact `json:"contacts"`
-	IsArchived   bool            `json:"is_archived"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
+	ID                  uuid.UUID       `json:"id"`
+	Types               string          `json:"types"`
+	Name                string          `json:"name"`
+	Street              *string         `json:"street"`
+	HouseNumber         *string         `json:"house_number"`
+	HouseNumberAddition *string         `json:"house_number_addition"`
+	PostalCode          *string         `json:"postal_code"`
+	City                *string         `json:"city"`
+	Land                *string         `json:"land"`
+	Kvknumber           *string         `json:"kvknumber"`
+	Btwnumber           *string         `json:"btwnumber"`
+	PhoneNumber         *string         `json:"phone_number"`
+	ClientNumber        *string         `json:"client_number"`
+	EmailAddress        *string         `json:"email_address"`
+	Contacts            []SenderContact `json:"contacts"`
+	IsArchived          bool            `json:"is_archived"`
+	CreatedAt           time.Time       `json:"created_at"`
+	UpdatedAt           time.Time       `json:"updated_at"`
 }
 
 // CreateClientEmergencyContactParams defines the request for creating a client emergency contact

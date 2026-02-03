@@ -334,28 +334,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-array_organization_ListLocationsResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/organization.ListLocationsResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-array_organization_ListOrganisationsResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/organization.ListOrganisationsResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-array_organization_ListShiftsByLocationIDResponse:
     properties:
       data:
@@ -373,6 +351,15 @@ definitions:
         items:
           $ref: '#/definitions/schedule.GetMonthlySchedulesByLocationResponse'
         type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-attachment_ConfirmUploadResponse:
+    properties:
+      data:
+        $ref: '#/definitions/attachment.ConfirmUploadResponse'
       message:
         type: string
       success:
@@ -396,10 +383,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-attachment_UploadHandlerResponse:
+  api.Response-attachment_InitUploadResponse:
     properties:
       data:
-        $ref: '#/definitions/attachment.UploadHandlerResponse'
+        $ref: '#/definitions/attachment.InitUploadResponse'
       message:
         type: string
       success:
@@ -819,6 +806,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GenerateIntakeGoalsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GenerateIntakeGoalsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetAppointmentCardResponse:
     properties:
       data:
@@ -945,6 +941,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_InitializeIntakeAssessmentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.InitializeIntakeAssessmentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_ListClientEmergencyContactsResponse:
     properties:
       data:
@@ -958,6 +963,24 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.ListClientsApiResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_PromoteIntakeToClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.PromoteIntakeToClientResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_PublicIntakeOptionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.PublicIntakeOptionsResponse'
       message:
         type: string
       success:
@@ -1039,6 +1062,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.UpdateIncidentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_UpdateIntakeMaturityAssessmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.UpdateIntakeMaturityAssessmentResponse'
       message:
         type: string
       success:
@@ -1611,6 +1643,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-clientp_ListIntakeMaturityAssessmentsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListIntakeMaturityAssessmentsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-clientp_ListLocationTransferRequestsResponse:
     properties:
       data:
@@ -1651,6 +1692,24 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-invoice_ListInvoicesResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-organization_ListLocationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-organization_ListLocationsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-organization_ListOrganisationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-organization_ListOrganisationsResponse'
       message:
         type: string
       success:
@@ -2028,6 +2087,24 @@ definitions:
       updated_at:
         $ref: '#/definitions/pgtype.Timestamp'
     type: object
+  attachment.ConfirmUploadRequest:
+    properties:
+      file_id:
+        type: string
+    required:
+    - file_id
+    type: object
+  attachment.ConfirmUploadResponse:
+    properties:
+      created_at:
+        type: string
+      file_id:
+        type: string
+      file_url:
+        type: string
+      size:
+        type: integer
+    type: object
   attachment.DeleteAttachmentResponse:
     properties:
       created_at:
@@ -2050,16 +2127,27 @@ definitions:
       size:
         type: integer
     type: object
-  attachment.UploadHandlerResponse:
+  attachment.InitUploadRequest:
     properties:
-      created_at:
+      content_type:
         type: string
-      file_id:
-        type: string
-      file_url:
+      filename:
         type: string
       size:
         type: integer
+    required:
+    - content_type
+    - filename
+    - size
+    type: object
+  attachment.InitUploadResponse:
+    properties:
+      file_id:
+        type: string
+      key:
+        type: string
+      upload_url:
+        type: string
     type: object
   audit.AuditRecord:
     properties:
@@ -2891,17 +2979,19 @@ definitions:
     type: object
   clientp.Address:
     properties:
-      address:
-        type: string
       belongs_to:
         type: string
       city:
         type: string
       house_number:
         type: string
+      house_number_addition:
+        type: string
       phone_number:
         type: string
-      zip_code:
+      postal_code:
+        type: string
+      street:
         type: string
     type: object
   clientp.ApproveOrRejectLocationTransferRequest:
@@ -3145,6 +3235,8 @@ definitions:
         type: string
       location_id:
         type: string
+      nationality:
+        type: string
       organization_id:
         type: string
       phone_number:
@@ -3238,6 +3330,8 @@ definitions:
       living_situation_notes:
         type: string
       location_id:
+        type: string
+      nationality:
         type: string
       organization_id:
         type: string
@@ -3652,13 +3746,14 @@ definitions:
     type: object
   clientp.CreateIntakeFormRequest:
     properties:
+      assigned_location_id:
+        description: Where client will live
+        type: string
       care_type:
         $ref: '#/definitions/db.IntakeCareTypeEnum'
       date_of_intake:
         type: string
       family_situation:
-        type: string
-      goals:
         type: string
       intake_conclusion:
         $ref: '#/definitions/db.IntakeConclusionEnum'
@@ -3668,8 +3763,6 @@ definitions:
         items:
           $ref: '#/definitions/db.IntakeParticipantsEnum'
         type: array
-      maturity_matrix_id:
-        type: string
       psychological_state:
         type: string
       registration_form_id:
@@ -3678,11 +3771,16 @@ definitions:
         type: string
       self_sufficiency:
         type: integer
+      sender_id:
+        description: Formal sender match from referrer dropdown
+        type: string
       signature:
         type: string
     type: object
   clientp.CreateIntakeFormResponse:
     properties:
+      assigned_location_id:
+        type: string
       care_type:
         $ref: '#/definitions/db.IntakeCareTypeEnum'
       created_at:
@@ -3690,8 +3788,6 @@ definitions:
       date_of_intake:
         type: string
       family_situation:
-        type: string
-      goals:
         type: string
       id:
         type: string
@@ -3703,8 +3799,6 @@ definitions:
         items:
           $ref: '#/definitions/db.IntakeParticipantsEnum'
         type: array
-      maturity_matrix_id:
-        type: string
       psychological_state:
         type: string
       registration_form_id:
@@ -3713,6 +3807,8 @@ definitions:
         type: string
       self_sufficiency:
         type: integer
+      sender_id:
+        type: string
       signature:
         type: string
       updated_at:
@@ -3779,6 +3875,8 @@ definitions:
     properties:
       application_date:
         type: string
+      application_reason:
+        type: string
       care_ambulatory_guidance:
         type: boolean
       care_assisted_independent_living:
@@ -3791,13 +3889,21 @@ definitions:
         type: string
       client_city:
         type: string
+      client_date_of_birth:
+        type: string
       client_email:
         type: string
       client_first_name:
         type: string
       client_gender:
         type: string
+      client_goals:
+        items:
+          type: string
+        type: array
       client_house_number:
+        type: string
+      client_house_number_addition:
         type: string
       client_last_name:
         type: string
@@ -3926,6 +4032,8 @@ definitions:
         type: string
       client_city:
         type: string
+      client_date_of_birth:
+        type: string
       client_email:
         type: string
       client_first_name:
@@ -3933,8 +4041,12 @@ definitions:
       client_gender:
         type: string
       client_goals:
-        type: string
+        items:
+          type: string
+        type: array
       client_house_number:
+        type: string
+      client_house_number_addition:
         type: string
       client_last_name:
         type: string
@@ -4129,6 +4241,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  clientp.DocumentResponse:
+    properties:
+      file:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   clientp.GenerateAppointmentCardDocumentApiResponse:
     properties:
       client_id:
@@ -4157,6 +4280,13 @@ definitions:
         type: string
       incident_id:
         type: string
+    type: object
+  clientp.GenerateIntakeGoalsResponse:
+    properties:
+      goals:
+        items:
+          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
+        type: array
     type: object
   clientp.GetAppointmentCardResponse:
     properties:
@@ -4303,6 +4433,8 @@ definitions:
         type: string
       location_name:
         type: string
+      nationality:
+        type: string
       organization_id:
         type: string
       phone_number:
@@ -4430,9 +4562,9 @@ definitions:
     type: object
   clientp.GetClientSenderResponse:
     properties:
-      address:
-        type: string
       btwnumber:
+        type: string
+      city:
         type: string
       client_number:
         type: string
@@ -4443,6 +4575,10 @@ definitions:
       created_at:
         type: string
       email_address:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -4456,9 +4592,9 @@ definitions:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         type: string
@@ -4646,6 +4782,8 @@ definitions:
         type: string
       client_city:
         type: string
+      client_date_of_birth:
+        type: string
       client_email:
         type: string
       client_first_name:
@@ -4653,8 +4791,12 @@ definitions:
       client_gender:
         type: string
       client_goals:
-        type: string
+        items:
+          type: string
+        type: array
       client_house_number:
+        type: string
+      client_house_number_addition:
         type: string
       client_last_name:
         type: string
@@ -4669,19 +4811,19 @@ definitions:
       created_at:
         type: string
       document_action_plan:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       document_diagnosis:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       document_education_report:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       document_id_copy:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       document_psychiatric_report:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       document_referral:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       document_safety_plan:
-        type: string
+        $ref: '#/definitions/clientp.DocumentResponse'
       education_additional_notes:
         type: string
       education_currently_enrolled:
@@ -4722,9 +4864,19 @@ definitions:
         type: string
       intake_appointment_date:
         type: string
+      intake_appointment_location:
+        type: string
+      intake_form_id:
+        type: string
+      intake_options:
+        items:
+          type: string
+        type: array
       processed_at:
         type: string
       processed_by_employee_id:
+        type: string
+      processed_by_employee_name:
         type: string
       referrer_email:
         type: string
@@ -4740,6 +4892,8 @@ definitions:
         type: string
       referrer_signature:
         type: boolean
+      rejection_reason:
+        type: string
       risk_additional_notes:
         type: string
       risk_aggressive_behavior:
@@ -4781,6 +4935,26 @@ definitions:
       work_employer_phone:
         type: string
       work_start_date:
+        type: string
+    type: object
+  clientp.InitializeIntakeAssessmentsResponse:
+    properties:
+      count:
+        type: integer
+    type: object
+  clientp.IntakeAssessmentGoal:
+    properties:
+      description:
+        description: Detailed description
+        type: string
+      id:
+        description: Optional unique identifier
+        type: string
+      priority:
+        description: '"high", "medium", "low"'
+        type: string
+      title:
+        description: Goal title/description
         type: string
     type: object
   clientp.ListAiGeneratedReportsResponse:
@@ -5066,6 +5240,8 @@ definitions:
         type: string
       location_name:
         type: string
+      nationality:
+        type: string
       organization_id:
         type: string
       phone_number:
@@ -5198,6 +5374,8 @@ definitions:
     type: object
   clientp.ListIntakeFormsResponse:
     properties:
+      assigned_location_id:
+        type: string
       care_type:
         $ref: '#/definitions/db.IntakeCareTypeEnum'
       client_bsn_number:
@@ -5212,8 +5390,6 @@ definitions:
         type: string
       family_situation:
         type: string
-      goals:
-        type: string
       id:
         type: string
       intake_conclusion:
@@ -5224,8 +5400,6 @@ definitions:
         items:
           $ref: '#/definitions/db.IntakeParticipantsEnum'
         type: array
-      maturity_matrix_id:
-        type: string
       psychological_state:
         type: string
       registration_form_id:
@@ -5234,10 +5408,33 @@ definitions:
         type: string
       self_sufficiency:
         type: integer
+      sender_id:
+        type: string
       signature:
         type: string
       updated_at:
         $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
+  clientp.ListIntakeMaturityAssessmentsResponse:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      current_level:
+        type: integer
+      id:
+        type: string
+      intake_form_id:
+        type: string
+      maturity_matrix_id:
+        type: string
+      notes:
+        type: string
+      proposed_goals:
+        items:
+          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
+        type: array
+      topic_name:
+        type: string
     type: object
   clientp.ListLocationTransferRequestsResponse:
     properties:
@@ -5295,13 +5492,6 @@ definitions:
     type: object
   clientp.ListRegistrationFormsResponse:
     properties:
-      admission_type:
-        description: '"crisis_admission" or "regular_placement"'
-        type: string
-      application_date:
-        type: string
-      application_reason:
-        type: string
       care_ambulatory_guidance:
         type: boolean
       care_assisted_independent_living:
@@ -5312,143 +5502,23 @@ definitions:
         type: boolean
       client_bsn_number:
         type: string
-      client_city:
-        type: string
-      client_email:
-        type: string
       client_first_name:
-        type: string
-      client_gender:
-        type: string
-      client_goals:
-        type: string
-      client_house_number:
         type: string
       client_last_name:
         type: string
-      client_nationality:
-        type: string
-      client_phone_number:
-        type: string
-      client_postal_code:
-        type: string
-      client_street:
-        type: string
-      created_at:
-        type: string
-      document_action_plan:
-        type: string
-      document_diagnosis:
-        type: string
-      document_education_report:
-        type: string
-      document_id_copy:
-        type: string
-      document_psychiatric_report:
-        type: string
-      document_referral:
-        type: string
-      document_safety_plan:
-        type: string
-      education_additional_notes:
-        type: string
-      education_currently_enrolled:
-        type: boolean
-      education_institution:
-        type: string
-      education_mentor_email:
-        type: string
-      education_mentor_name:
-        type: string
-      education_mentor_phone:
-        type: string
       form_status:
-        type: string
-      guardian1_email:
-        type: string
-      guardian1_first_name:
-        type: string
-      guardian1_last_name:
-        type: string
-      guardian1_phone_number:
-        type: string
-      guardian1_relationship:
-        type: string
-      guardian2_email:
-        type: string
-      guardian2_first_name:
-        type: string
-      guardian2_last_name:
-        type: string
-      guardian2_phone_number:
-        type: string
-      guardian2_relationship:
         type: string
       id:
         type: string
-      intake_appointment_date:
-        type: string
-      processed_at:
-        type: string
-      processed_by_employee_id:
-        type: string
-      referrer_email:
+      intake_form_id:
         type: string
       referrer_first_name:
         type: string
-      referrer_job_title:
-        type: string
       referrer_last_name:
         type: string
-      referrer_organization:
-        type: string
-      referrer_phone_number:
-        type: string
-      referrer_signature:
-        type: boolean
-      risk_additional_notes:
-        type: string
-      risk_aggressive_behavior:
-        type: boolean
       risk_count:
         type: integer
-      risk_criminal_history:
-        type: boolean
-      risk_day_night_rhythm:
-        type: boolean
-      risk_flight_behavior:
-        type: boolean
-      risk_other:
-        type: boolean
-      risk_other_description:
-        type: string
-      risk_psychiatric_issues:
-        type: boolean
-      risk_sexual_behavior:
-        type: boolean
-      risk_substance_abuse:
-        type: boolean
-      risk_suicidal_selfharm:
-        type: boolean
-      risk_weapon_possession:
-        type: boolean
       submitted_at:
-        type: string
-      updated_at:
-        type: string
-      work_additional_notes:
-        type: string
-      work_current_employer:
-        type: string
-      work_current_position:
-        type: string
-      work_currently_employed:
-        type: boolean
-      work_employer_email:
-        type: string
-      work_employer_phone:
-        type: string
-      work_start_date:
         type: string
     type: object
   clientp.ListStatusHistoryApiResponse:
@@ -5482,6 +5552,58 @@ definitions:
     - from_location_id
     - reason
     - to_location_id
+    type: object
+  clientp.ProcessRegistrationFormRequest:
+    properties:
+      admission_type:
+        enum:
+        - crisis_admission
+        - regular_placement
+        type: string
+      intake_appointment_location:
+        type: string
+      proposed_dates:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - admission_type
+    - intake_appointment_location
+    - proposed_dates
+    type: object
+  clientp.PromoteIntakeToClientResponse:
+    properties:
+      client_id:
+        type: string
+      emergency_contacts_created:
+        type: integer
+      intake_form_id:
+        type: string
+      maturity_assessments_created:
+        type: integer
+      message:
+        type: string
+      registration_form_id:
+        type: string
+    type: object
+  clientp.PublicIntakeOptionsResponse:
+    properties:
+      client_first_name:
+        type: string
+      intake_location:
+        type: string
+      proposed_dates:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.SelectIntakeDateRequest:
+    properties:
+      selected_date:
+        type: string
+    required:
+    - selected_date
     type: object
   clientp.SenderContact:
     properties:
@@ -5683,6 +5805,8 @@ definitions:
       living_situation_notes:
         type: string
       location_id:
+        type: string
+      nationality:
         type: string
       organization_id:
         type: string
@@ -6138,6 +6262,43 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.UpdateIntakeMaturityAssessmentRequest:
+    properties:
+      assessment_id:
+        type: string
+      current_level:
+        description: Optional, only update if provided
+        type: integer
+      notes:
+        description: Optional, only update if provided
+        type: string
+      proposed_goals:
+        description: Optional, only update if provided
+        items:
+          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
+        type: array
+    required:
+    - assessment_id
+    type: object
+  clientp.UpdateIntakeMaturityAssessmentResponse:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      current_level:
+        type: integer
+      id:
+        type: string
+      intake_form_id:
+        type: string
+      maturity_matrix_id:
+        type: string
+      notes:
+        type: string
+      proposed_goals:
+        items:
+          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
+        type: array
+    type: object
   clientp.UpdateProgressReportRequest:
     properties:
       client_id:
@@ -6192,13 +6353,21 @@ definitions:
         type: string
       client_city:
         type: string
+      client_date_of_birth:
+        type: string
       client_email:
         type: string
       client_first_name:
         type: string
       client_gender:
         type: string
+      client_goals:
+        items:
+          type: string
+        type: array
       client_house_number:
+        type: string
+      client_house_number_addition:
         type: string
       client_last_name:
         type: string
@@ -6327,6 +6496,8 @@ definitions:
         type: string
       client_city:
         type: string
+      client_date_of_birth:
+        type: string
       client_email:
         type: string
       client_first_name:
@@ -6334,8 +6505,12 @@ definitions:
       client_gender:
         type: string
       client_goals:
-        type: string
+        items:
+          type: string
+        type: array
       client_house_number:
+        type: string
+      client_house_number_addition:
         type: string
       client_last_name:
         type: string
@@ -6474,11 +6649,14 @@ definitions:
       intake_appointment_location:
         example: Amsterdam Central Station
         type: string
+      rejection_reason:
+        type: string
       status:
         enum:
-        - approved
+        - pending
+        - processed
         - rejected
-        example: approved
+        example: processed
         type: string
     required:
     - status
@@ -8457,36 +8635,57 @@ definitions:
     type: object
   organization.CreateLocationRequest:
     properties:
-      address:
-        type: string
       capacity:
         type: integer
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       name:
         type: string
+      postal_code:
+        type: string
+      street:
+        type: string
     required:
-    - address
+    - city
+    - house_number
     - name
+    - postal_code
+    - street
     type: object
   organization.CreateLocationResponse:
     properties:
-      address:
-        type: string
       capacity:
         type: integer
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       id:
         type: string
       name:
+        type: string
+      postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.CreateOrganisationRequest:
     properties:
-      address:
-        type: string
       btw_number:
         type: string
       city:
         type: string
       email:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       kvk_number:
         type: string
@@ -8494,21 +8693,26 @@ definitions:
         type: string
       postal_code:
         type: string
+      street:
+        type: string
     required:
-    - address
     - city
+    - house_number
     - name
     - postal_code
+    - street
     type: object
   organization.CreateOrganisationResponse:
     properties:
-      address:
-        type: string
       btw_number:
         type: string
       city:
         type: string
       email:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -8517,6 +8721,8 @@ definitions:
       name:
         type: string
       postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.CreateShiftApiRequest:
@@ -8553,13 +8759,21 @@ definitions:
     type: object
   organization.GetLocationResponse:
     properties:
-      address:
-        type: string
       capacity:
         type: integer
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       id:
         type: string
       name:
+        type: string
+      postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.GetOrganisationCountResponse:
@@ -8577,8 +8791,6 @@ definitions:
     type: object
   organization.GetOrganisationResponse:
     properties:
-      address:
-        type: string
       btw_number:
         type: string
       city:
@@ -8586,6 +8798,10 @@ definitions:
       created_at:
         type: string
       email:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -8597,18 +8813,24 @@ definitions:
         type: string
       postal_code:
         type: string
+      street:
+        type: string
       updated_at:
         type: string
     type: object
   organization.ListLocationsResponse:
     properties:
-      address:
-        type: string
       available:
         type: integer
       capacity:
         type: integer
+      city:
+        type: string
       created_at:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -8616,18 +8838,24 @@ definitions:
         type: string
       occupied:
         type: integer
+      postal_code:
+        type: string
+      street:
+        type: string
       updated_at:
         type: string
     type: object
   organization.ListOrganisationsResponse:
     properties:
-      address:
-        type: string
       btw_number:
         type: string
       city:
         type: string
       email:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -8638,6 +8866,8 @@ definitions:
       name:
         type: string
       postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.ListShiftsByLocationIDResponse:
@@ -8655,33 +8885,51 @@ definitions:
     type: object
   organization.UpdateLocationRequest:
     properties:
-      address:
-        type: string
       capacity:
         type: integer
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       name:
+        type: string
+      postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.UpdateLocationResponse:
     properties:
-      address:
-        type: string
       capacity:
         type: integer
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       id:
         type: string
       name:
+        type: string
+      postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.UpdateOrganisationRequest:
     properties:
-      address:
-        type: string
       btw_number:
         type: string
       city:
         type: string
       email:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       kvk_number:
         type: string
@@ -8689,16 +8937,20 @@ definitions:
         type: string
       postal_code:
         type: string
+      street:
+        type: string
     type: object
   organization.UpdateOrganisationResponse:
     properties:
-      address:
-        type: string
       btw_number:
         type: string
       city:
         type: string
       email:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -8707,6 +8959,8 @@ definitions:
       name:
         type: string
       postal_code:
+        type: string
+      street:
         type: string
     type: object
   organization.UpdateShiftApiRequest:
@@ -8934,6 +9188,21 @@ definitions:
           $ref: '#/definitions/clientp.ListIntakeFormsResponse'
         type: array
     type: object
+  pagination.Response-clientp_ListIntakeMaturityAssessmentsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListIntakeMaturityAssessmentsResponse'
+        type: array
+    type: object
   pagination.Response-clientp_ListLocationTransferRequestsResponse:
     properties:
       count:
@@ -9007,6 +9276,36 @@ definitions:
       results:
         items:
           $ref: '#/definitions/invoice.ListInvoicesResponse'
+        type: array
+    type: object
+  pagination.Response-organization_ListLocationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/organization.ListLocationsResponse'
+        type: array
+    type: object
+  pagination.Response-organization_ListOrganisationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/organization.ListOrganisationsResponse'
         type: array
     type: object
   pagination.Response-sender_ListSendersResponse:
@@ -9421,7 +9720,7 @@ definitions:
         type: string
       KVKnumber:
         type: string
-      address:
+      city:
         type: string
       client_number:
         type: string
@@ -9429,15 +9728,19 @@ definitions:
         items:
           $ref: '#/definitions/sender.SenderContact'
         type: array
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       land:
         type: string
       name:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         enum:
@@ -9456,7 +9759,7 @@ definitions:
         type: string
       KVKnumber:
         type: string
-      address:
+      city:
         type: string
       client_number:
         type: string
@@ -9466,6 +9769,10 @@ definitions:
         type: array
       created_at:
         type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       id:
         type: string
       land:
@@ -9474,9 +9781,9 @@ definitions:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         type: string
@@ -9489,7 +9796,7 @@ definitions:
         type: string
       KVKnumber:
         type: string
-      address:
+      city:
         type: string
       client_number:
         type: string
@@ -9500,6 +9807,10 @@ definitions:
       created_at:
         type: string
       email_address:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -9515,9 +9826,9 @@ definitions:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         type: string
@@ -9530,15 +9841,21 @@ definitions:
         type: string
       KVKnumber:
         type: string
-      address:
+      city:
         type: string
       client_number:
         type: string
+      clients_count:
+        type: integer
       contacts:
         items:
           $ref: '#/definitions/sender.SenderContact'
         type: array
       created_at:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
         type: string
       id:
         type: string
@@ -9548,9 +9865,9 @@ definitions:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         type: string
@@ -9585,7 +9902,7 @@ definitions:
         type: string
       KVKnumber:
         type: string
-      address:
+      city:
         type: string
       client_number:
         type: string
@@ -9595,6 +9912,10 @@ definitions:
         type: array
       email_address:
         type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       is_archived:
         type: boolean
       land:
@@ -9603,9 +9924,9 @@ definitions:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         enum:
@@ -9621,7 +9942,7 @@ definitions:
         type: string
       KVKnumber:
         type: string
-      address:
+      city:
         type: string
       client_number:
         type: string
@@ -9633,6 +9954,10 @@ definitions:
         type: string
       email_address:
         type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
       id:
         type: string
       is_archived:
@@ -9643,9 +9968,9 @@ definitions:
         type: string
       phone_number:
         type: string
-      place:
-        type: string
       postal_code:
+        type: string
+      street:
         type: string
       types:
         type: string
@@ -10103,25 +10428,48 @@ paths:
       summary: Get an attachment by ID
       tags:
       - attachments
-  /attachments/upload:
+  /attachments/upload/confirm:
     post:
       consumes:
-      - multipart/form-data
-      description: Upload a file to the server
+      - application/json
+      description: Confirm that a file has been uploaded to the storage
       parameters:
-      - description: File to upload
-        in: formData
-        name: file
+      - description: Confirm Upload Request
+        in: body
+        name: request
         required: true
-        type: file
+        schema:
+          $ref: '#/definitions/attachment.ConfirmUploadRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/api.Response-attachment_UploadHandlerResponse'
-      summary: Upload a file
+            $ref: '#/definitions/api.Response-attachment_ConfirmUploadResponse'
+      summary: Confirm file upload
+      tags:
+      - attachments
+  /attachments/upload/init:
+    post:
+      consumes:
+      - application/json
+      description: Initiate a file upload to get a presigned URL
+      parameters:
+      - description: Init Upload Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/attachment.InitUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-attachment_InitUploadResponse'
+      summary: Initiate file upload
       tags:
       - attachments
   /audit/logs:
@@ -14253,6 +14601,108 @@ paths:
       summary: Create Intake Form
       tags:
       - Intake Forms
+  /intake_forms/{id}/assessments:
+    get:
+      description: List all maturity assessments for a specific intake form
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListIntakeMaturityAssessmentsResponse'
+      summary: List Intake Maturity Assessments
+      tags:
+      - Registration Form
+  /intake_forms/{id}/initialize_assessments:
+    post:
+      description: Create default assessments for all maturity matrix topics for this
+        intake
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_InitializeIntakeAssessmentsResponse'
+      summary: Initialize Intake Assessments
+      tags:
+      - Registration Form
+  /intake_forms/{id}/promote:
+    post:
+      description: Promote an intake form and all its assessments to a full client
+        record with a care plan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_PromoteIntakeToClientResponse'
+      summary: Promote Intake to Client
+      tags:
+      - Registration Form
+  /intake_maturity/{assessment_id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a maturity assessment for an intake
+      parameters:
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.UpdateIntakeMaturityAssessmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_UpdateIntakeMaturityAssessmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Intake Maturity Assessment
+      tags:
+      - Registration Form
+  /intake_maturity/{assessment_id}/generate_goals:
+    post:
+      description: Generate Care Plan goals for an intake maturity assessment using
+        AI
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_GenerateIntakeGoalsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Generate Intake Goals
+      tags:
+      - Registration Form
   /interventions/{intervention_id}:
     delete:
       description: Delete a care plan intervention by its ID
@@ -14928,21 +15378,35 @@ paths:
       - Invoice
   /locations:
     get:
-      description: Get a list of all locations across all organisations
+      description: Get a list of all locations across all organizations with pagination
+        and optional search
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by location name
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-array_organization_ListLocationsResponse'
+            $ref: '#/definitions/api.Response-pagination_Response-organization_ListLocationsResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: List all locations
       tags:
-      - organisations
+      - organizations
   /locations/{id}:
     delete:
       consumes:
@@ -14975,7 +15439,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Delete a location
       tags:
-      - organisations
+      - organizations
     get:
       consumes:
       - application/json
@@ -15007,7 +15471,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Get a location
       tags:
-      - organisations
+      - organizations
     put:
       consumes:
       - application/json
@@ -15045,7 +15509,7 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Update a location
       tags:
-      - organisations
+      - organizations
   /locations/{id}/daily_schedules:
     get:
       description: Get all schedules for a specific location for a given day
@@ -15434,238 +15898,13 @@ paths:
       summary: Create care plan action
       tags:
       - care_plan
-  /organisations:
-    get:
-      description: Get a list of all organisations
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_organization_ListOrganisationsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List all organisations
-      tags:
-      - organisations
-    post:
-      consumes:
-      - application/json
-      description: Create a new organisation
-      parameters:
-      - description: Create organisation
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/organization.CreateOrganisationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-organization_CreateOrganisationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create an organisation
-      tags:
-      - organisations
-  /organisations/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete an organisation by ID
-      parameters:
-      - description: Organisation ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-organization_DeleteOrganisationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete an organisation
-      tags:
-      - organisations
-    get:
-      consumes:
-      - application/json
-      description: Get an organisation by ID
-      parameters:
-      - description: Organisation ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-organization_GetOrganisationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get an organisation
-      tags:
-      - organisations
-    put:
-      consumes:
-      - application/json
-      description: Update an organisation by ID
-      parameters:
-      - description: Organisation ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update organisation
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/organization.UpdateOrganisationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-organization_UpdateOrganisationResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update an organisation
-      tags:
-      - organisations
-  /organisations/{id}/counts:
-    get:
-      consumes:
-      - application/json
-      description: Get counts of locations, clients, and employees for an organisation
-        by ID
-      parameters:
-      - description: Organisation ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-organization_GetOrganisationCountResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get organisation counts
-      tags:
-      - organisations
   /organisations/{id}/locations:
-    get:
-      description: Get a list of all locations
-      parameters:
-      - description: Organisation ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_organization_ListLocationsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List all locations
-      tags:
-      - organisations
     post:
       consumes:
       - application/json
       description: Create a new location
       parameters:
-      - description: Organisation ID
+      - description: Organization ID
         in: path
         name: id
         required: true
@@ -15697,7 +15936,259 @@ paths:
             $ref: '#/definitions/api.Response-any'
       summary: Create a location
       tags:
-      - organisations
+      - organizations
+  /organizations:
+    get:
+      description: Get a list of all organizations with pagination and optional name
+        search
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by organization name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-organization_ListOrganisationsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all organizations
+      tags:
+      - organizations
+    post:
+      consumes:
+      - application/json
+      description: Create a new organization
+      parameters:
+      - description: Create organization
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/organization.CreateOrganisationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-organization_CreateOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create an organization
+      tags:
+      - organizations
+  /organizations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an organization by ID
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-organization_DeleteOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete an organization
+      tags:
+      - organizations
+    get:
+      consumes:
+      - application/json
+      description: Get an organization by ID
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-organization_GetOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get an organization
+      tags:
+      - organizations
+    put:
+      consumes:
+      - application/json
+      description: Update an organization by ID
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update organization
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/organization.UpdateOrganisationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-organization_UpdateOrganisationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update an organization
+      tags:
+      - organizations
+  /organizations/{id}/counts:
+    get:
+      consumes:
+      - application/json
+      description: Get counts of locations, clients, and employees for an organization
+        by ID
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-organization_GetOrganisationCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get organization counts
+      tags:
+      - organizations
+  /organizations/{id}/locations:
+    get:
+      description: Get a list of all locations
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Search by location name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-organization_ListLocationsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List all locations
+      tags:
+      - organizations
   /permissions:
     get:
       description: List all permissions
@@ -15723,6 +16214,74 @@ paths:
       summary: List all permissions
       tags:
       - roles
+  /public/intake-options/{token}:
+    get:
+      description: Get intake options for a registration form via token
+      parameters:
+      - description: Intake Token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_PublicIntakeOptionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Public Intake Options
+      tags:
+      - Public Intake
+  /public/intake-options/{token}/confirm:
+    post:
+      description: Select an intake date for a registration form via token
+      parameters:
+      - description: Intake Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Select Intake Date Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.SelectIntakeDateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Select Intake Date
+      tags:
+      - Public Intake
   /registration_form:
     get:
       description: List all registration forms
@@ -15908,6 +16467,38 @@ paths:
       summary: Update Registration Form
       tags:
       - Registration Form
+  /registration_form/{id}/process:
+    post:
+      description: Process a registration form by sending intake proposals
+      parameters:
+      - description: Process Registration Form Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.ProcessRegistrationFormRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Registration Form Status
+      tags:
+      - Registration Form
   /registration_form/{id}/status:
     post:
       description: Update the status of a registration form by ID
@@ -15937,7 +16528,6 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Update Registration Form Status
       tags:
       - Registration Form
   /resources/{resource_id}:

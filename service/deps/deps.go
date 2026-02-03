@@ -9,6 +9,7 @@ import (
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
 	"maicare_go/logger"
+	"maicare_go/service/ai"
 	"maicare_go/service/pdf"
 	"maicare_go/token"
 	"maicare_go/util"
@@ -20,21 +21,23 @@ type ServiceDependencies struct {
 	Logger     logger.Logger
 	Config     *util.Config
 	B2Client   bucket.ObjectStorageInterface
-	GrpcClient grpclient.GrpcClientInterface
 	WsHub      *hub.Hub
 	PDFService pdf.PdfService
+	AIService  ai.AIService
+	GrpcClient grpclient.GrpcClientInterface
 }
 
-func NewServiceDependencies(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface, grpcClient grpclient.GrpcClientInterface, wsHub *hub.Hub) *ServiceDependencies {
+func NewServiceDependencies(store *db.Store, tokenMaker token.Maker, logger logger.Logger, config *util.Config, b2Client bucket.ObjectStorageInterface, grpcClient grpclient.GrpcClientInterface, wsHub *hub.Hub, aiService ai.AIService) *ServiceDependencies {
 	return &ServiceDependencies{
 		Store:      store,
 		TokenMaker: tokenMaker,
 		Logger:     logger,
 		Config:     config,
 		B2Client:   b2Client,
-		GrpcClient: grpcClient,
 		WsHub:      wsHub,
 		PDFService: pdf.NewPdfService(b2Client),
+		AIService:  aiService,
+		GrpcClient: grpcClient,
 	}
 }
 

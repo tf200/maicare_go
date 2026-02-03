@@ -96,7 +96,7 @@ func createRandomEmployee(t *testing.T) (db.EmployeeProfile, *db.CustomUser) {
 	require.NotZero(t, employee.CreatedAt)
 
 	// Verify foreign key constraints
-	require.Equal(t, location.ID, employee.LocationID)
+	require.Equal(t, &location.ID, employee.LocationID)
 	return employee, user
 }
 

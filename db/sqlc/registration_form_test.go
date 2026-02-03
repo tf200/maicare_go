@@ -26,7 +26,7 @@ func TestCreateRegistrationForm(t *testing.T) {
 			checks: func(t *testing.T, form RegistrationForm, err error) {
 				require.NoError(t, err, "CreateRegistrationForm should not return an error")
 				require.NotZero(t, form.ID)
-				require.Equal(t, "DRAFT", string(form.FormStatus))
+				require.Equal(t, "pending", string(form.FormStatus))
 			},
 		},
 	}
@@ -391,7 +391,7 @@ func createRandomRegistrationFormParams() CreateRegistrationFormParams {
 		ClientFirstName:            util.RandomString(10),
 		ClientLastName:             util.RandomString(10),
 		ClientBsnNumber:            util.RandomString(9),
-		ClientGender:               ClientGenderEnum("MALE"),
+		ClientGender:               ClientGenderEnumMale,
 		ClientNationality:          util.RandomString(10),
 		ClientPhoneNumber:          util.RandomString(10),
 		ClientEmail:                util.RandomEmail(),
@@ -468,20 +468,19 @@ func randomBoolPtr() *bool {
 }
 
 func randomUUIDPtr() *uuid.UUID {
-	id := uuid.New()
-	return &id
+	return nil
 }
 
 func randomClientGender() NullClientGenderEnum {
 	return NullClientGenderEnum{
-		ClientGenderEnum: "MALE",
+		ClientGenderEnum: ClientGenderEnumMale,
 		Valid:            true,
 	}
 }
 
 func randomClientEducationLevel() NullClientEducationLevelEnum {
 	return NullClientEducationLevelEnum{
-		ClientEducationLevelEnum: "HIGH_SCHOOL",
+		ClientEducationLevelEnum: ClientEducationLevelEnumSecondary,
 		Valid:                    true,
 	}
 }

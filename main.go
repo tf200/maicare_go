@@ -20,6 +20,7 @@ import (
 	"maicare_go/hub"
 	"maicare_go/logger"
 	"maicare_go/service"
+	"maicare_go/service/ai"
 	"maicare_go/token"
 	"maicare_go/util"
 
@@ -55,6 +56,22 @@ func runMigrations(dbSource string, migrationsPath string) error {
 	return nil
 }
 
+func registerEnumTypes(ctx context.Context, conn *pgx.Conn) error {
+	intakeParticipants, err := conn.LoadType(ctx, "intake_participants_enum")
+	if err != nil {
+		return fmt.Errorf("failed to load intake_participants_enum: %w", err)
+	}
+	conn.TypeMap().RegisterType(intakeParticipants)
+
+	intakeParticipantsArray, err := conn.LoadType(ctx, "_intake_participants_enum")
+	if err != nil {
+		return fmt.Errorf("failed to load _intake_participants_enum: %w", err)
+	}
+	conn.TypeMap().RegisterType(intakeParticipantsArray)
+
+	return nil
+}
+
 func main() {
 	// Add context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
@@ -73,6 +90,9 @@ func main() {
 	poolConfig, err := pgxpool.ParseConfig(config.DbSource)
 	if err != nil {
 		log.Fatalf("unable to parse database config: %v", err)
+	}
+	poolConfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		return registerEnumTypes(ctx, conn)
 	}
 	// Configure connection pool settings
 	poolConfig.MaxConns = 30                      // Maximum connections
@@ -137,8 +157,14 @@ func main() {
 		log.Fatalf("cannot setup logger: %v", err)
 	}
 
+	// Init AI Service
+	aiService, err := ai.NewAIService(config.OpenRouterApiKey, config.OpenRouterModel)
+	if err != nil {
+		log.Fatalf("cannot create AI service: %v", err)
+	}
+
 	// Init the buisness service
-	businessService := service.NewBusinessService(store, tokenMaker, logger, &config, b2Client, grpcClient, hubInstance, asynqClient)
+	businessService := service.NewBusinessService(store, tokenMaker, logger, &config, b2Client, grpcClient, hubInstance, asynqClient, aiService)
 
 	if !config.Remote {
 		redisClient := redis.NewClient(&redis.Options{

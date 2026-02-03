@@ -71,6 +71,36 @@ func (mr *MockObjectStorageInterfaceMockRecorder) GeneratePresignedURL(ctx, obje
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GeneratePresignedURL", reflect.TypeOf((*MockObjectStorageInterface)(nil).GeneratePresignedURL), ctx, objectKey, expiry)
 }
 
+// GeneratePresignedUploadURL mocks base method.
+func (m *MockObjectStorageInterface) GeneratePresignedUploadURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GeneratePresignedUploadURL", ctx, objectKey, expiry)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GeneratePresignedUploadURL indicates an expected call of GeneratePresignedUploadURL.
+func (mr *MockObjectStorageInterfaceMockRecorder) GeneratePresignedUploadURL(ctx, objectKey, expiry any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GeneratePresignedUploadURL", reflect.TypeOf((*MockObjectStorageInterface)(nil).GeneratePresignedUploadURL), ctx, objectKey, expiry)
+}
+
+// GetFileInfo mocks base method.
+func (m *MockObjectStorageInterface) GetFileInfo(ctx context.Context, objectKey string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileInfo", ctx, objectKey)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileInfo indicates an expected call of GetFileInfo.
+func (mr *MockObjectStorageInterfaceMockRecorder) GetFileInfo(ctx, objectKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileInfo", reflect.TypeOf((*MockObjectStorageInterface)(nil).GetFileInfo), ctx, objectKey)
+}
+
 // Upload mocks base method.
 func (m *MockObjectStorageInterface) Upload(ctx context.Context, file multipart.File, filename, contentType string) (string, int64, error) {
 	m.ctrl.T.Helper()

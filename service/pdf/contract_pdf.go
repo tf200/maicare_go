@@ -29,9 +29,12 @@ type ContractData struct {
 	ReminderPeriod int    `json:"ReminderPeriod"` // Corresponds to {.ReminderPeriod}
 
 	// Parties
-	SenderName        string `json:"SenderName"`        // Corresponds to {.SenderName}
-	SenderAddress     string `json:"SenderAddress"`     // Corresponds to {.SenderAddress}
-	SenderContactInfo string `json:"SenderContactInfo"` // Corresponds to {.SenderContactInfo}
+	SenderName        string `json:"SenderName"`
+	SenderStreet      string `json:"SenderStreet"`
+	SenderHouseNumber string `json:"SenderHouseNumber"`
+	SenderPostalCode  string `json:"SenderPostalCode"`
+	SenderCity        string `json:"SenderCity"`
+	SenderContactInfo string `json:"SenderContactInfo"`
 
 	ClientFirstName   string `json:"ClientFirstName"`   // Corresponds to {.ClientFirstName}
 	ClientLastName    string `json:"ClientLastName"`    // Corresponds to {.ClientLastName}

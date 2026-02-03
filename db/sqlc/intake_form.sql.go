@@ -21,31 +21,33 @@ INSERT INTO intake_forms (
     family_situation,
     psychological_state,
     self_sufficiency,
-    maturity_matrix_id,
-    goals,
+    sender_id,
+    assigned_location_id,
     risk_assessment,
     intake_conclusion,
     intake_conclusion_notes,
+    evaluation_intervals_weeks,
     signature
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-) RETURNING id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, maturity_matrix_id, goals, risk_assessment, intake_conclusion, intake_conclusion_notes, signature, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+) RETURNING id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at
 `
 
 type CreateIntakeFormParams struct {
-	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
-	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType              IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation       *string                  `json:"family_situation"`
-	PsychologicalState    *string                  `json:"psychological_state"`
-	SelfSufficiency       int32                    `json:"self_sufficiency"`
-	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
-	Goals                 *string                  `json:"goals"`
-	RiskAssessment        *string                  `json:"risk_assessment"`
-	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
-	Signature             *string                  `json:"signature"`
+	RegistrationFormID       uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake             pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType                 IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants       []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation          *string                  `json:"family_situation"`
+	PsychologicalState       *string                  `json:"psychological_state"`
+	SelfSufficiency          int32                    `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID               `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID               `json:"assigned_location_id"`
+	RiskAssessment           *string                  `json:"risk_assessment"`
+	IntakeConclusion         IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string                  `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks int32                    `json:"evaluation_intervals_weeks"`
+	Signature                *string                  `json:"signature"`
 }
 
 func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error) {
@@ -57,11 +59,12 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 		arg.FamilySituation,
 		arg.PsychologicalState,
 		arg.SelfSufficiency,
-		arg.MaturityMatrixID,
-		arg.Goals,
+		arg.SenderID,
+		arg.AssignedLocationID,
 		arg.RiskAssessment,
 		arg.IntakeConclusion,
 		arg.IntakeConclusionNotes,
+		arg.EvaluationIntervalsWeeks,
 		arg.Signature,
 	)
 	var i IntakeForm
@@ -74,11 +77,12 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 		&i.FamilySituation,
 		&i.PsychologicalState,
 		&i.SelfSufficiency,
-		&i.MaturityMatrixID,
-		&i.Goals,
+		&i.SenderID,
+		&i.AssignedLocationID,
 		&i.RiskAssessment,
 		&i.IntakeConclusion,
 		&i.IntakeConclusionNotes,
+		&i.EvaluationIntervalsWeeks,
 		&i.Signature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -87,7 +91,7 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 }
 
 const getIntakeForm = `-- name: GetIntakeForm :one
-SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, maturity_matrix_id, goals, risk_assessment, intake_conclusion, intake_conclusion_notes, signature, created_at, updated_at FROM intake_forms
+SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at FROM intake_forms
 WHERE id = $1
 `
 
@@ -103,11 +107,42 @@ func (q *Queries) GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, 
 		&i.FamilySituation,
 		&i.PsychologicalState,
 		&i.SelfSufficiency,
-		&i.MaturityMatrixID,
-		&i.Goals,
+		&i.SenderID,
+		&i.AssignedLocationID,
 		&i.RiskAssessment,
 		&i.IntakeConclusion,
 		&i.IntakeConclusionNotes,
+		&i.EvaluationIntervalsWeeks,
+		&i.Signature,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getIntakeFormByRegistrationFormID = `-- name: GetIntakeFormByRegistrationFormID :one
+SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at FROM intake_forms
+WHERE registration_form_id = $1
+`
+
+func (q *Queries) GetIntakeFormByRegistrationFormID(ctx context.Context, registrationFormID uuid.UUID) (IntakeForm, error) {
+	row := q.db.QueryRow(ctx, getIntakeFormByRegistrationFormID, registrationFormID)
+	var i IntakeForm
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.SenderID,
+		&i.AssignedLocationID,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.EvaluationIntervalsWeeks,
 		&i.Signature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -116,12 +151,12 @@ func (q *Queries) GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, 
 }
 
 const listIntakeForms = `-- name: ListIntakeForms :many
-SELECT 
-    i.id, i.registration_form_id, i.date_of_intake, i.care_type, i.intake_participants, i.family_situation, i.psychological_state, i.self_sufficiency, i.maturity_matrix_id, i.goals, i.risk_assessment, i.intake_conclusion, i.intake_conclusion_notes, i.signature, i.created_at, i.updated_at,
+SELECT
+    i.id, i.registration_form_id, i.date_of_intake, i.care_type, i.intake_participants, i.family_situation, i.psychological_state, i.self_sufficiency, i.sender_id, i.assigned_location_id, i.risk_assessment, i.intake_conclusion, i.intake_conclusion_notes, i.evaluation_intervals_weeks, i.signature, i.created_at, i.updated_at,
     r.client_first_name,
     r.client_last_name,
     r.client_bsn_number,
-    COUNT(*) OVER() AS total_count 
+    COUNT(*) OVER() AS total_count
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
 WHERE
@@ -145,26 +180,27 @@ type ListIntakeFormsParams struct {
 }
 
 type ListIntakeFormsRow struct {
-	ID                    uuid.UUID                `json:"id"`
-	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
-	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType              IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation       *string                  `json:"family_situation"`
-	PsychologicalState    *string                  `json:"psychological_state"`
-	SelfSufficiency       int32                    `json:"self_sufficiency"`
-	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
-	Goals                 *string                  `json:"goals"`
-	RiskAssessment        *string                  `json:"risk_assessment"`
-	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
-	Signature             *string                  `json:"signature"`
-	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
-	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
-	ClientFirstName       string                   `json:"client_first_name"`
-	ClientLastName        string                   `json:"client_last_name"`
-	ClientBsnNumber       string                   `json:"client_bsn_number"`
-	TotalCount            int64                    `json:"total_count"`
+	ID                       uuid.UUID                `json:"id"`
+	RegistrationFormID       uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake             pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType                 IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants       []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation          *string                  `json:"family_situation"`
+	PsychologicalState       *string                  `json:"psychological_state"`
+	SelfSufficiency          int32                    `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID               `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID               `json:"assigned_location_id"`
+	RiskAssessment           *string                  `json:"risk_assessment"`
+	IntakeConclusion         IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string                  `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks int32                    `json:"evaluation_intervals_weeks"`
+	Signature                *string                  `json:"signature"`
+	CreatedAt                pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt                pgtype.Timestamptz       `json:"updated_at"`
+	ClientFirstName          string                   `json:"client_first_name"`
+	ClientLastName           string                   `json:"client_last_name"`
+	ClientBsnNumber          string                   `json:"client_bsn_number"`
+	TotalCount               int64                    `json:"total_count"`
 }
 
 func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error) {
@@ -191,11 +227,12 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 			&i.FamilySituation,
 			&i.PsychologicalState,
 			&i.SelfSufficiency,
-			&i.MaturityMatrixID,
-			&i.Goals,
+			&i.SenderID,
+			&i.AssignedLocationID,
 			&i.RiskAssessment,
 			&i.IntakeConclusion,
 			&i.IntakeConclusionNotes,
+			&i.EvaluationIntervalsWeeks,
 			&i.Signature,
 			&i.CreatedAt,
 			&i.UpdatedAt,

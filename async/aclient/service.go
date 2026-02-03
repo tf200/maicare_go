@@ -32,6 +32,10 @@ type AsynqClientInterface interface {
 		ctx context.Context,
 		payload AcceptedRegistrationFormPayload,
 		opts ...asynq.Option) error
+	EnqueueProcessRegistrationFormEmail(
+		ctx context.Context,
+		payload ProcessRegistrationFormEmailPayload,
+		opts ...asynq.Option) error
 	GetClient() *asynq.Client
 	Close() error
 }

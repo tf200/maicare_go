@@ -8,14 +8,15 @@ import (
 	"github.com/google/uuid"
 )
 
-// Address represents a client address
+// Address represents a client address - matches location table structure
 type Address struct {
-	BelongsTo   *string `json:"belongs_to"`
-	Address     *string `json:"address"`
-	City        *string `json:"city"`
-	ZipCode     *string `json:"zip_code"`
-	HouseNumber *string `json:"house_number"`
-	PhoneNumber *string `json:"phone_number"`
+	BelongsTo           *string `json:"belongs_to"`
+	Street              *string `json:"street"`
+	HouseNumber         *string `json:"house_number"`
+	HouseNumberAddition *string `json:"house_number_addition"`
+	PostalCode          *string `json:"postal_code"`
+	City                *string `json:"city"`
+	PhoneNumber         *string `json:"phone_number"`
 }
 
 // CreateClientDetailsRequest represents a request to create a new client
@@ -35,6 +36,7 @@ type CreateClientDetailsRequest struct {
 	SenderID                   *uuid.UUID `json:"sender_id" binding:"required"`
 	Infix                      *string    `json:"infix"`
 	Source                     *string    `json:"source" binding:"required"`
+	Nationality                *string    `json:"nationality"`
 	Bsn                        *string    `json:"bsn"`
 	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"` // needs to be checked
 	Addresses                  []Address  `json:"addresses"`
@@ -68,6 +70,7 @@ type CreateClientDetailsResponse struct {
 	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"` // needs to be checked
 	Source                     *string    `json:"source"`
 	Birthplace                 *string    `json:"birthplace"`
+	Nationality                *string    `json:"nationality"`
 	Email                      string     `json:"email"`
 	PhoneNumber                *string    `json:"phone_number"`
 	OrganizationID             *uuid.UUID `json:"organization_id"`
@@ -120,6 +123,7 @@ type ListClientsApiResponse struct {
 	Bsn                   *string    `json:"bsn"`
 	Source                *string    `json:"source"`
 	Birthplace            *string    `json:"birthplace"`
+	Nationality           *string    `json:"nationality"`
 	Email                 string     `json:"email"`
 	PhoneNumber           *string    `json:"phone_number"`
 	OrganizationID        *uuid.UUID `json:"organization_id"`
@@ -161,6 +165,7 @@ type GetClientApiResponse struct {
 	BsnVerifiedByLastName      *string    `json:"bsn_verified_by_last_name"`
 	Source                     *string    `json:"source"`
 	Birthplace                 *string    `json:"birthplace"`
+	Nationality                *string    `json:"nationality"`
 	Email                      string     `json:"email"`
 	PhoneNumber                *string    `json:"phone_number"`
 	OrganizationID             *uuid.UUID `json:"organization_id"`
@@ -210,6 +215,7 @@ type UpdateClientDetailsRequest struct {
 	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"`
 	Source                     *string    `json:"source"`
 	Birthplace                 *string    `json:"birthplace"`
+	Nationality                *string    `json:"nationality"`
 	Email                      *string    `json:"email"`
 	PhoneNumber                *string    `json:"phone_number"`
 	OrganizationID             *uuid.UUID `json:"organization_id"`

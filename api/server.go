@@ -132,6 +132,7 @@ func (server *Server) setupRoutes() {
 	server.setupInvoiceRoutes(baseRouter)
 	server.setupNotificationRoutes(baseRouter)
 	server.setupAuditRoutes(baseRouter)
+	server.setupIntakeFormRoutes(baseRouter)
 	// Add more route setups as needed
 
 	server.setupWebsocketRoutes(baseRouter)
@@ -185,6 +186,7 @@ func (server *Server) Shutdown(ctx context.Context) error {
 			log.Println("gRPC connection closed successfully.")
 		}
 	}
+
 	// Shutdown HTTP server concurrently
 	go func() {
 		log.Println("Shutting down HTTP server...")

@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	logger "maicare_go/logger"
 	reflect "reflect"
 
@@ -42,9 +43,9 @@ func (m *MockLogger) EXPECT() *MockLoggerMockRecorder {
 }
 
 // LogBusinessEvent mocks base method.
-func (m *MockLogger) LogBusinessEvent(level logger.LogLevel, operation, message string, fields ...zap.Field) {
+func (m *MockLogger) LogBusinessEvent(ctx context.Context, level logger.LogLevel, operation, message string, fields ...zap.Field) {
 	m.ctrl.T.Helper()
-	varargs := []any{level, operation, message}
+	varargs := []any{ctx, level, operation, message}
 	for _, a := range fields {
 		varargs = append(varargs, a)
 	}
@@ -52,8 +53,8 @@ func (m *MockLogger) LogBusinessEvent(level logger.LogLevel, operation, message 
 }
 
 // LogBusinessEvent indicates an expected call of LogBusinessEvent.
-func (mr *MockLoggerMockRecorder) LogBusinessEvent(level, operation, message any, fields ...any) *gomock.Call {
+func (mr *MockLoggerMockRecorder) LogBusinessEvent(ctx, level, operation, message any, fields ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{level, operation, message}, fields...)
+	varargs := append([]any{ctx, level, operation, message}, fields...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogBusinessEvent", reflect.TypeOf((*MockLogger)(nil).LogBusinessEvent), varargs...)
 }

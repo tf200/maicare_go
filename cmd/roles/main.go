@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -31,35 +29,6 @@ type Config struct {
 	Roles       []Role       `yaml:"roles"`
 }
 
-func loadEnvVariable(filename, key string) (string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		k := strings.TrimSpace(parts[0])
-		v := strings.TrimSpace(parts[1])
-		if k == key {
-			return v, nil
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-	return "", fmt.Errorf("key %s not found in %s", key, filename)
-}
-
 func main() {
 	configFile, err := os.ReadFile("roles/rbac_config.yaml")
 	if err != nil {
@@ -72,10 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	dbSource, err := loadEnvVariable("app.env", "DB_SOURCE")
-	if err != nil {
-		panic(err)
-	}
+	dbSource := "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
 
 	conn, err := pgx.Connect(context.Background(), dbSource)
 	if err != nil {

@@ -30,3 +30,7 @@ SET
 WHERE
     uuid = $1
 RETURNING *;
+
+-- name: GetAttachmentsByUUIDs :many
+SELECT * FROM attachment_file
+WHERE uuid = ANY($1::uuid[]);

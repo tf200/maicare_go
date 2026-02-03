@@ -368,7 +368,9 @@ VALUES
 CREATE TABLE organisations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
-    address VARCHAR(200) NOT NULL,
+    street VARCHAR(200) NOT NULL,
+    house_number VARCHAR(20) NOT NULL,
+    house_number_addition VARCHAR(20) NULL,
     postal_code VARCHAR(20) NOT NULL,
     city VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NULL,
@@ -387,7 +389,11 @@ CREATE TABLE location (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organisation_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    address VARCHAR(100) NOT NULL,
+    street VARCHAR(200) NOT NULL,
+    house_number VARCHAR(20) NOT NULL,
+    house_number_addition VARCHAR(20) NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    city VARCHAR(100) NOT NULL,
     capacity INTEGER NULL,
     location_type location_type_enum NOT NULL DEFAULT 'other',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -668,9 +674,11 @@ CREATE TABLE sender (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     types sender_types_enum NOT NULL,
     name VARCHAR(60) NOT NULL,
-    address VARCHAR(200) NULL,
+    street VARCHAR(200) NULL,
+    house_number VARCHAR(20) NULL,
+    house_number_addition VARCHAR(20) NULL,
     postal_code VARCHAR(20) NULL,
-    place VARCHAR(20) NULL,
+    city VARCHAR(100) NULL,
     land VARCHAR(20) NULL,
     kvknumber VARCHAR(20) NULL,
     btwnumber VARCHAR(20) NULL,
@@ -689,7 +697,7 @@ CREATE INDEX sender_types_idx ON sender(types);
 
 -- Registration forms
 -- Form Status ENUM
-CREATE TYPE form_status_enum AS ENUM ('pending', 'approved', 'rejected');
+CREATE TYPE form_status_enum AS ENUM ('pending', 'processed', 'rejected');
 -- Client Gender ENUM
 CREATE TYPE client_gender_enum AS ENUM ('male', 'female', 'other');
 -- Client Education Level ENUM
@@ -698,6 +706,7 @@ CREATE TABLE registration_form (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_first_name VARCHAR(255) NOT NULL,
     client_last_name VARCHAR(255) NOT NULL,
+    client_date_of_birth DATE NULL,
     client_bsn_number VARCHAR(50) NOT NULL,
     client_gender client_gender_enum NOT NULL,
     client_nationality VARCHAR(100) NOT NULL,
@@ -706,6 +715,7 @@ CREATE TABLE registration_form (
     -- Client address
     client_street VARCHAR(255) NOT NULL,
     client_house_number VARCHAR(20) NOT NULL,
+    client_house_number_addition VARCHAR(255) NULL,
     client_postal_code VARCHAR(20) NOT NULL,
     client_city VARCHAR(100) NOT NULL,
     -- Referrer details
@@ -749,7 +759,7 @@ CREATE TABLE registration_form (
     care_ambulatory_guidance BOOLEAN DEFAULT FALSE,
     -- Additional information
     application_reason TEXT,
-    client_goals TEXT,
+    client_goals TEXT[] DEFAULT '{}',
     -- Risks
     risk_aggressive_behavior BOOLEAN DEFAULT FALSE,
     risk_suicidal_selfharm BOOLEAN DEFAULT FALSE,
@@ -775,16 +785,20 @@ CREATE TABLE registration_form (
     application_date DATE,
     referrer_signature BOOLEAN DEFAULT FALSE,
     form_status form_status_enum NOT NULL DEFAULT 'pending',
+    intake_options JSONB DEFAULT '[]',
+    intake_token VARCHAR(255) UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMPTZ NULL,
     processed_at TIMESTAMPTZ NULL,
     processed_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    status TEXT NOT NULL CHECK (status IN ('new', 'in_review', 'approved', 'rejected')) DEFAULT 'new',
     intake_appointment_datetime TIMESTAMPTZ NULL,
     intake_appointment_location VARCHAR(255) NULL,
-    addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement'))
+    addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement')),
+    rejection_reason TEXT NULL
 );
+
+CREATE INDEX registration_form_intake_token_idx ON registration_form(intake_token);
 
 
 -- Care type ENUM
@@ -803,14 +817,27 @@ CREATE TABLE intake_forms (
     family_situation TEXT NULL,
     psychological_state TEXT NULL,
     self_sufficiency INT NOT NULL CHECK (self_sufficiency BETWEEN 0 AND 5),
-    maturity_matrix_id UUID NULL REFERENCES maturity_matrix(id) ON DELETE SET NULL,
-    goals TEXT NULL,
+    sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL,
+    assigned_location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL,
     risk_assessment TEXT NULL,
     intake_conclusion intake_conclusion_enum NOT NULL,
     intake_conclusion_notes TEXT NULL,
+    evaluation_intervals_weeks INT NOT NULL DEFAULT 0,
     signature TEXT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Intake maturity assessments (goals per topic)
+CREATE TABLE intake_maturity_assessments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    intake_form_id UUID NOT NULL REFERENCES intake_forms(id) ON DELETE CASCADE,
+    maturity_matrix_id UUID NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
+    current_level INT NOT NULL CHECK (current_level BETWEEN 1 AND 5),
+    proposed_goals JSONB NOT NULL DEFAULT '[]',
+    notes TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(intake_form_id, maturity_matrix_id)
 );
 
 
@@ -868,6 +895,8 @@ CREATE TABLE client_details (
     work_current_position VARCHAR(255) NULL,
     work_start_date DATE NULL,
     work_additional_notes TEXT NULL,
+    -- Nationality
+    nationality VARCHAR(100) NULL,
     -- Living situation
     living_situation client_living_situation_enum NULL DEFAULT NULL,
     living_situation_notes TEXT NULL,
@@ -1429,6 +1458,7 @@ CREATE TABLE care_plan_objectives (
     timeframe care_plan_timeframe_enum NOT NULL,
     goal_title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
+    priority VARCHAR(50) NOT NULL DEFAULT 'medium',
     target_date DATE,
     status care_plan_objective_status_enum NOT NULL DEFAULT 'not_started',
     completion_date DATE,
@@ -2078,7 +2108,7 @@ BEGIN
     EXECUTE format('CREATE POLICY coordinator_select ON %I FOR SELECT USING (is_admin() OR is_coordinator())', table_name);
     EXECUTE format('CREATE POLICY coordinator_insert ON %I FOR INSERT WITH CHECK (is_admin() OR is_coordinator())', table_name);
     EXECUTE format('CREATE POLICY coordinator_update ON %I FOR UPDATE USING (is_admin() OR is_coordinator()) WITH CHECK (is_admin() OR is_coordinator())', table_name);
-    EXECUTE format('CREATE POLICY coordinator_delete ON %I FOR DELETE USING (is_admin() OR is_assigned_coordinator(%I))', table_name, client_id_col);
+    EXECUTE format('CREATE POLICY coordinator_delete ON %I FOR DELETE USING (is_admin() OR is_assigned_coordinator(%s))', table_name, client_id_col);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -2131,9 +2161,13 @@ SELECT apply_client_rls('care_plan_reports', 'get_client_id_from_care_plan(care_
 SELECT apply_client_rls('care_plan_actions', 'get_client_id_from_objective(objective_id)');
 SELECT apply_client_rls('level_history', '(SELECT client_id FROM client_maturity_matrix_assessment WHERE id = client_maturity_matrix_assessment_id)');
 
+-- Helper to get client_id from intake_form
+CREATE OR REPLACE FUNCTION get_client_id_from_intake_form(intake_id UUID) RETURNS UUID AS $$
+    SELECT id FROM client_details WHERE intake_form_id = intake_id;
+$$ LANGUAGE sql STABLE;
+
+SELECT apply_client_rls('intake_maturity_assessments', 'get_client_id_from_intake_form(intake_form_id)');
+
 -- Clean up helper functions if desired, or keep them for future use.
 -- DROP FUNCTION apply_client_rls(TEXT, TEXT);
-
-
-
 

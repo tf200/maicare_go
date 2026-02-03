@@ -2,6 +2,7 @@
 INSERT INTO registration_form (
     client_first_name,
     client_last_name,
+    client_date_of_birth,
     client_bsn_number,
     client_gender,
     client_nationality,
@@ -45,6 +46,8 @@ INSERT INTO registration_form (
     care_assisted_independent_living,
     care_room_training_center,
     care_ambulatory_guidance,
+    application_reason,
+    client_goals,
     risk_aggressive_behavior,
     risk_suicidal_selfharm,
     risk_substance_abuse,
@@ -64,7 +67,8 @@ INSERT INTO registration_form (
     document_safety_plan,
     document_id_copy,
     application_date,
-    referrer_signature
+    referrer_signature,
+    client_house_number_addition
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19,
@@ -72,35 +76,40 @@ INSERT INTO registration_form (
     $29, $30, $31, $32, $33, $34, $35, $36, $37,
     $38, $39, $40, $41, $42, $43, $44, $45, $46,
     $47, $48, $49, $50, $51, $52, $53, $54, $55,
-    $56, $57, $58, $59, $60, $61, $62, $63, $64, $65
+    $56, $57, $58, $59, $60, $61, $62, $63, $64, $65,
+    $66, $67, $68, $69
 ) RETURNING *;
 
 
 
 
 -- name: ListRegistrationForms :many
-SELECT * FROM registration_form
-WHERE 
+SELECT
+    rf.*,
+    iform.id AS intake_form_id
+FROM registration_form rf
+LEFT JOIN intake_forms iform ON rf.id = iform.registration_form_id
+WHERE
     -- Form status filtering
-    (sqlc.narg('status')::form_status_enum IS NULL OR form_status = sqlc.narg('status')::form_status_enum)
+    (sqlc.narg('status')::form_status_enum IS NULL OR rf.form_status = sqlc.narg('status')::form_status_enum)
     -- Risk filtering
-    AND (sqlc.narg('risk_aggressive_behavior')::BOOLEAN IS NULL OR risk_aggressive_behavior = sqlc.narg('risk_aggressive_behavior'))
-    AND (sqlc.narg('risk_suicidal_selfharm')::BOOLEAN IS NULL OR risk_suicidal_selfharm = sqlc.narg('risk_suicidal_selfharm'))
-    AND (sqlc.narg('risk_substance_abuse')::BOOLEAN IS NULL OR risk_substance_abuse = sqlc.narg('risk_substance_abuse'))
-    AND (sqlc.narg('risk_psychiatric_issues')::BOOLEAN IS NULL OR risk_psychiatric_issues = sqlc.narg('risk_psychiatric_issues'))
-    AND (sqlc.narg('risk_criminal_history')::BOOLEAN IS NULL OR risk_criminal_history = sqlc.narg('risk_criminal_history'))
-    AND (sqlc.narg('risk_flight_behavior')::BOOLEAN IS NULL OR risk_flight_behavior = sqlc.narg('risk_flight_behavior'))
-    AND (sqlc.narg('risk_weapon_possession')::BOOLEAN IS NULL OR risk_weapon_possession = sqlc.narg('risk_weapon_possession'))
-    AND (sqlc.narg('risk_sexual_behavior')::BOOLEAN IS NULL OR risk_sexual_behavior = sqlc.narg('risk_sexual_behavior'))
-    AND (sqlc.narg('risk_day_night_rhythm')::BOOLEAN IS NULL OR risk_day_night_rhythm = sqlc.narg('risk_day_night_rhythm'))
-    AND (sqlc.narg('risk_other')::BOOLEAN IS NULL OR risk_other = sqlc.narg('risk_other'))
-ORDER BY created_at DESC
+    AND (sqlc.narg('risk_aggressive_behavior')::BOOLEAN IS NULL OR rf.risk_aggressive_behavior = sqlc.narg('risk_aggressive_behavior'))
+    AND (sqlc.narg('risk_suicidal_selfharm')::BOOLEAN IS NULL OR rf.risk_suicidal_selfharm = sqlc.narg('risk_suicidal_selfharm'))
+    AND (sqlc.narg('risk_substance_abuse')::BOOLEAN IS NULL OR rf.risk_substance_abuse = sqlc.narg('risk_substance_abuse'))
+    AND (sqlc.narg('risk_psychiatric_issues')::BOOLEAN IS NULL OR rf.risk_psychiatric_issues = sqlc.narg('risk_psychiatric_issues'))
+    AND (sqlc.narg('risk_criminal_history')::BOOLEAN IS NULL OR rf.risk_criminal_history = sqlc.narg('risk_criminal_history'))
+    AND (sqlc.narg('risk_flight_behavior')::BOOLEAN IS NULL OR rf.risk_flight_behavior = sqlc.narg('risk_flight_behavior'))
+    AND (sqlc.narg('risk_weapon_possession')::BOOLEAN IS NULL OR rf.risk_weapon_possession = sqlc.narg('risk_weapon_possession'))
+    AND (sqlc.narg('risk_sexual_behavior')::BOOLEAN IS NULL OR rf.risk_sexual_behavior = sqlc.narg('risk_sexual_behavior'))
+    AND (sqlc.narg('risk_day_night_rhythm')::BOOLEAN IS NULL OR rf.risk_day_night_rhythm = sqlc.narg('risk_day_night_rhythm'))
+    AND (sqlc.narg('risk_other')::BOOLEAN IS NULL OR rf.risk_other = sqlc.narg('risk_other'))
+ORDER BY rf.created_at DESC
 LIMIT $1 OFFSET $2;
 
 
 -- name: CountRegistrationForms :one
 SELECT COUNT(*) FROM registration_form
-WHERE 
+WHERE
     -- Form status filtering
     (sqlc.narg('status')::form_status_enum IS NULL OR form_status = sqlc.narg('status')::form_status_enum)
     -- Risk filtering
@@ -119,8 +128,15 @@ WHERE
 
 
 -- name: GetRegistrationForm :one
-SELECT * FROM registration_form
-WHERE id = $1
+SELECT
+    rf.*,
+    ep.first_name AS processed_by_first_name,
+    ep.last_name AS processed_by_last_name,
+    iform.id AS intake_form_id
+FROM registration_form rf
+LEFT JOIN employee_profile ep ON rf.processed_by_employee_id = ep.id
+LEFT JOIN intake_forms iform ON rf.id = iform.registration_form_id
+WHERE rf.id = $1
 LIMIT 1;
 
 -- name: UpdateRegistrationForm :one
@@ -128,6 +144,7 @@ UPDATE registration_form
 SET
     client_first_name = COALESCE(sqlc.narg('client_first_name'), client_first_name),
     client_last_name = COALESCE(sqlc.narg('client_last_name'), client_last_name),
+    client_date_of_birth = COALESCE(sqlc.narg('client_date_of_birth'), client_date_of_birth),
     client_bsn_number = COALESCE(sqlc.narg('client_bsn_number'), client_bsn_number),
     client_gender = COALESCE(sqlc.narg('client_gender'), client_gender),
     client_nationality = COALESCE(sqlc.narg('client_nationality'), client_nationality),
@@ -135,9 +152,10 @@ SET
     client_email = COALESCE(sqlc.narg('client_email'), client_email),
     client_street = COALESCE(sqlc.narg('client_street'), client_street),
     client_house_number = COALESCE(sqlc.narg('client_house_number'), client_house_number),
+    client_house_number_addition = COALESCE(sqlc.narg('client_house_number_addition'), client_house_number_addition),
     client_postal_code = COALESCE(sqlc.narg('client_postal_code'), client_postal_code),
     client_city = COALESCE(sqlc.narg('client_city'), client_city),
-    referrer_first_name = COALESCE(sqlc.narg('referrer_first_name'), referrer_first_name),  
+    referrer_first_name = COALESCE(sqlc.narg('referrer_first_name'), referrer_first_name),
     referrer_last_name = COALESCE(sqlc.narg('referrer_last_name'), referrer_last_name),
     referrer_organization = COALESCE(sqlc.narg('referrer_organization'), referrer_organization),
     referrer_job_title = COALESCE(sqlc.narg('referrer_job_title'), referrer_job_title),
@@ -171,6 +189,7 @@ SET
     care_assisted_independent_living = COALESCE(sqlc.narg('care_assisted_independent_living'), care_assisted_independent_living),
     care_room_training_center = COALESCE(sqlc.narg('care_room_training_center'), care_room_training_center),
     care_ambulatory_guidance = COALESCE(sqlc.narg('care_ambulatory_guidance'), care_ambulatory_guidance),
+    client_goals = COALESCE(sqlc.narg('client_goals'), client_goals),
     risk_aggressive_behavior = COALESCE(sqlc.narg('risk_aggressive_behavior'), risk_aggressive_behavior),
     risk_suicidal_selfharm = COALESCE(sqlc.narg('risk_suicidal_selfharm'), risk_suicidal_selfharm),
     risk_substance_abuse = COALESCE(sqlc.narg('risk_substance_abuse'), risk_substance_abuse),
@@ -204,11 +223,27 @@ WHERE id = $1;
 UPDATE registration_form
 SET
     form_status = $2,
-    updated_at = NOW(),
     processed_by_employee_id = $3,
-    intake_appointment_datetime = $4,
-    intake_appointment_location = $5,
-    addmission_type = $6
+    intake_appointment_location = COALESCE(sqlc.narg('intake_appointment_location'), intake_appointment_location),
+    addmission_type = COALESCE(sqlc.narg('addmission_type'), addmission_type),
+    intake_options = COALESCE(sqlc.narg('intake_options'), intake_options),
+    intake_token = COALESCE(sqlc.narg('intake_token'), intake_token),
+    rejection_reason = COALESCE(sqlc.narg('rejection_reason'), rejection_reason),
+    processed_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING *;
 
+
+-- name: GetRegistrationFormByToken :one
+SELECT * FROM registration_form
+WHERE intake_token = $1
+LIMIT 1;
+
+-- name: UpdateRegistrationFormIntakeDate :one
+UPDATE registration_form
+SET
+    intake_appointment_datetime = $2,
+    intake_token = NULL -- Invalidate token after use
 WHERE id = $1
 RETURNING *;

@@ -2,7 +2,6 @@ package attachment
 
 import (
 	"context"
-	"mime/multipart"
 
 	"maicare_go/service/deps"
 
@@ -10,7 +9,8 @@ import (
 )
 
 type AttachmentService interface {
-	UploadAttachment(ctx context.Context, file multipart.File, header *multipart.FileHeader) (*UploadHandlerResponse, error)
+	InitUpload(ctx context.Context, req *InitUploadRequest) (*InitUploadResponse, error)
+	ConfirmUpload(ctx context.Context, req *ConfirmUploadRequest) (*ConfirmUploadResponse, error)
 	GetAttachmentById(ctx context.Context, id uuid.UUID) (*GetAttachmentByIdResponse, error)
 	DeleteAttachment(ctx context.Context, id uuid.UUID) (*DeleteAttachmentResponse, error)
 }

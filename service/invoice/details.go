@@ -555,16 +555,18 @@ func (s *invoiceService) GenerateInvoicePdf(
 	}
 
 	pdfData := pdf.InvoicePDFData{
-		ID:                   invoiceData.ID,
-		SenderName:           util.DerefString(invoiceData.SenderName),
-		SenderContactPerson:  util.DerefString(senderContacts[0].Name),
-		SenderAddressLine1:   util.DerefString(invoiceData.SenderAddress),
-		SenderPostalCodeCity: util.DerefString(invoiceData.SenderPostalCode),
-		InvoiceNumber:        invoiceData.InvoiceNumber,
-		InvoiceDate:          invoiceData.IssueDate.Time,
-		DueDate:              invoiceData.DueDate.Time,
-		InvoiceDetails:       pdfInvoiceDetails,
-		ExtraItems:           extraItems,
+		ID:                  invoiceData.ID,
+		SenderName:          util.DerefString(invoiceData.SenderName),
+		SenderContactPerson: util.DerefString(senderContacts[0].Name),
+		SenderStreet:        util.DerefString(invoiceData.SenderStreet),
+		SenderHouseNumber:   util.DerefString(invoiceData.SenderHouseNumber),
+		SenderPostalCode:    util.DerefString(invoiceData.SenderPostalCode),
+		SenderCity:          util.DerefString(invoiceData.SenderCity),
+		InvoiceNumber:       invoiceData.InvoiceNumber,
+		InvoiceDate:         invoiceData.IssueDate.Time,
+		DueDate:             invoiceData.DueDate.Time,
+		InvoiceDetails:      pdfInvoiceDetails,
+		ExtraItems:          extraItems,
 	}
 	key, size, err := s.PDFService.GenerateAndUploadInvoicePDF(ctx, pdfData)
 	if err != nil {

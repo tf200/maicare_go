@@ -7,9 +7,9 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
-	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/logger"
 	"maicare_go/pagination"
+	"maicare_go/service/ai"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -43,27 +43,24 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 			return fmt.Errorf("failed to get details: %w", err)
 		}
 
-		generatedCarePlan, err := s.GrpcClient.GenerateCarePlan(ctx, &grpclient.PersonalizedCarePlanRequest{
-			ClientData: &grpclient.ClientData{
-				Age:              details.Age,
-				EducationLevel:   details.EducationLevel,
-				LivingSituation:  util.DerefString(details.LivingSituation),
-				DomainName:       clientAssessments.TopicName,
-				CurrentLevel:     clientAssessments.CurrentLevel,
-				LevelDescription: details.LevelDescription[req.InitialLevel-1].Description,
+		// Construct client data for AI
+		clientData := map[string]interface{}{
+			"age":               details.Age,
+			"education_level":   details.EducationLevel,
+			"living_situation":  util.DerefString(details.LivingSituation),
+			"domain_name":       clientAssessments.TopicName,
+			"current_level":     clientAssessments.CurrentLevel,
+			"level_description": details.LevelDescription[req.InitialLevel-1].Description,
+			"domain_levels": map[string]interface{}{
+				"1": details.LevelDescription[0].Description,
+				"2": details.LevelDescription[1].Description,
+				"3": details.LevelDescription[2].Description,
+				"4": details.LevelDescription[3].Description,
+				"5": details.LevelDescription[4].Description,
 			},
-			DomainDefinitions: map[string]*grpclient.DomainLevels{
-				details.TopicName: {
-					Levels: map[int32]string{
-						details.LevelDescription[0].Level: details.LevelDescription[0].Description,
-						details.LevelDescription[1].Level: details.LevelDescription[1].Description,
-						details.LevelDescription[2].Level: details.LevelDescription[2].Description,
-						details.LevelDescription[3].Level: details.LevelDescription[3].Description,
-						details.LevelDescription[4].Level: details.LevelDescription[4].Description,
-					},
-				},
-			},
-		})
+		}
+
+		generatedCarePlan, err := s.AIService.GenerateCarePlan(ctx, clientData)
 		if err != nil {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientCarePlan", "Failed to generate care plan", zap.Error(err))
 			return fmt.Errorf("failed to generate care plan: %w", err)
@@ -1033,7 +1030,7 @@ func (s *carePlanService) getDetails(
 func (s *carePlanService) insertCarePlan(
 	ctx context.Context,
 	qtx *db.Queries,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 	assessmentID uuid.UUID,
 	emplpoyeeID uuid.UUID,
 ) (carePlanID uuid.UUID, err error) {
@@ -1064,80 +1061,28 @@ func (s *carePlanService) insertCarePlanObjectives(
 	ctx context.Context,
 	qtx *db.Queries,
 	carePlanID uuid.UUID,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 ) error {
-	// short term goals
-	for _, obj := range genCarePlan.CarePlanObjectives.ShortTermGoals {
+	for _, obj := range genCarePlan.Objectives {
 		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
 			CarePlanID:  carePlanID,
-			GoalTitle:   obj.GoalTitle,
+			GoalTitle:   obj.Title,
 			Description: obj.Description,
-			Timeframe:   "short_term",
+			Timeframe:   db.CarePlanTimeframeEnum(obj.Timeframe),
 			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true},
 		})
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create short term goal", zap.Error(err))
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create objective", zap.Error(err))
 			return err
 		}
-		for i, action := range obj.SpecificActions {
+		for i, action := range obj.Actions {
 			_, err := qtx.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
 				ObjectiveID:       createdObj.ID,
 				ActionDescription: action,
 				SortOrder:         int32(i + 1),
 			})
 			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for short term goal", zap.Error(err))
-				return err
-			}
-		}
-	}
-	// Meduim term goals
-
-	for _, obj := range genCarePlan.CarePlanObjectives.MediumTermGoals {
-		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
-			CarePlanID:  carePlanID,
-			GoalTitle:   obj.GoalTitle,
-			Description: obj.Description,
-			Timeframe:   "medium_term",
-			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true},
-		})
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create medium term goal", zap.Error(err))
-			return err
-		}
-		for i, action := range obj.SpecificActions {
-			_, err := qtx.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
-				ObjectiveID:       createdObj.ID,
-				ActionDescription: action,
-				SortOrder:         int32(i + 1),
-			})
-			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for medium term goal", zap.Error(err))
-				return err
-			}
-		}
-	}
-	// Long term goals
-	for _, obj := range genCarePlan.CarePlanObjectives.LongTermGoals {
-		createdObj, err := qtx.CreateCarePlanObjective(ctx, db.CreateCarePlanObjectiveParams{
-			CarePlanID:  carePlanID,
-			GoalTitle:   obj.GoalTitle,
-			Description: obj.Description,
-			Timeframe:   "long_term",
-			TargetDate:  pgtype.Date{Time: time.Now(), Valid: true},
-		})
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create long term goal", zap.Error(err))
-			return err
-		}
-		for i, action := range obj.SpecificActions {
-			_, err := qtx.CreateCarePlanAction(ctx, db.CreateCarePlanActionParams{
-				ObjectiveID:       createdObj.ID,
-				ActionDescription: action,
-				SortOrder:         int32(i + 1),
-			})
-			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step for long term goal", zap.Error(err))
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanObjectives", "Failed to create action step", zap.Error(err))
 				return err
 			}
 		}
@@ -1149,44 +1094,19 @@ func (s *carePlanService) insertCarePlanInterventions(
 	ctx context.Context,
 	qtx *db.Queries,
 	carePlanID uuid.UUID,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 ) error {
-	for _, intervention := range genCarePlan.Interventions.DailyActivities {
+	for _, intervention := range genCarePlan.Interventions {
 		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
 			CarePlanID:              carePlanID,
-			Frequency:               "daily",
-			InterventionDescription: intervention,
+			Frequency:               db.CarePlanInterventionFrequencyEnum(intervention.Frequency),
+			InterventionDescription: intervention.Description,
 		})
 		if err != nil {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
 			return err
 		}
 	}
-
-	for _, intervention := range genCarePlan.Interventions.WeeklyActivities {
-		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
-			CarePlanID:              carePlanID,
-			Frequency:               "weekly",
-			InterventionDescription: intervention,
-		})
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
-			return err
-		}
-	}
-
-	for _, intervention := range genCarePlan.Interventions.MonthlyActivities {
-		_, err := qtx.CreateCarePlanIntervention(ctx, db.CreateCarePlanInterventionParams{
-			CarePlanID:              carePlanID,
-			Frequency:               "monthly",
-			InterventionDescription: intervention,
-		})
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanInterventions", "Failed to create care plan intervention", zap.Error(err))
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -1194,7 +1114,7 @@ func (s *carePlanService) insertCarePlanSuccessMetrics(
 	ctx context.Context,
 	qtx *db.Queries,
 	carePlanID uuid.UUID,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 ) error {
 	for _, metric := range genCarePlan.SuccessMetrics {
 		_, err := qtx.CreateCarePlanSuccessMetric(ctx, db.CreateCarePlanSuccessMetricParams{
@@ -1216,14 +1136,14 @@ func (s *carePlanService) insertCarePlanRiskFactors(
 	ctx context.Context,
 	qtx *db.Queries,
 	carePlanID uuid.UUID,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 ) error {
 	for _, risk := range genCarePlan.RiskFactors {
 		_, err := qtx.CreateCarePlanRisk(ctx, db.CreateCarePlanRiskParams{
 			CarePlanID:         carePlanID,
 			RiskDescription:    risk.Risk,
 			MitigationStrategy: risk.Mitigation,
-			RiskLevel:          db.CarePlanRiskLevelEnum(risk.RiskLevel), // Use pointer to allow NULL values
+			RiskLevel:          db.CarePlanRiskLevelEnum(risk.RiskLevel),
 		})
 		if err != nil {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "insertCarePlanRiskFactors", "Failed to create care plan risk factor", zap.Error(err))
@@ -1238,7 +1158,7 @@ func (s *carePlanService) insertCarePlanSupportNetwork(
 	ctx context.Context,
 	qtx *db.Queries,
 	carePlanID uuid.UUID,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 ) error {
 	for _, network := range genCarePlan.SupportNetwork {
 		_, err := qtx.CreateCarePlanSupportNetwork(ctx, db.CreateCarePlanSupportNetworkParams{
@@ -1259,7 +1179,7 @@ func (s *carePlanService) insertCarePlanResources(
 	ctx context.Context,
 	qtx *db.Queries,
 	carePlanID uuid.UUID,
-	genCarePlan *grpclient.PersonalizedCarePlanResponse,
+	genCarePlan *ai.CarePlanResponse,
 ) error {
 	for _, resource := range genCarePlan.ResourcesRequired {
 		_, err := qtx.CreateCarePlanResources(ctx, db.CreateCarePlanResourcesParams{

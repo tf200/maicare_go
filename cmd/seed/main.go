@@ -87,7 +87,8 @@ func seedOrganisations(ctx context.Context, store *db.Store) ([]db.Organisation,
 
 		org, err := store.CreateOrganisation(ctx, db.CreateOrganisationParams{
 			Name:        gofakeit.Company() + " Care Organization",
-			Address:     gofakeit.Street(),
+			Street:      gofakeit.Street(),
+			HouseNumber: fmt.Sprintf("%d", gofakeit.Number(1, 300)),
 			PostalCode:  gofakeit.Zip(),
 			City:        gofakeit.City(),
 			PhoneNumber: &phone,
@@ -129,10 +130,14 @@ func seedLocations(ctx context.Context, store *db.Store, organisations []db.Orga
 			}
 
 			location, err := store.CreateLocation(ctx, db.CreateLocationParams{
-				OrganisationID: org.ID,
-				Name:           locationName,
-				Address:        gofakeit.Street(),
-				Capacity:       &capacity,
+				OrganisationID:      org.ID,
+				Name:                locationName,
+				Street:              gofakeit.Street(),
+				HouseNumber:         fmt.Sprintf("%d", gofakeit.Number(1, 300)),
+				HouseNumberAddition: nil,
+				PostalCode:          gofakeit.Zip(),
+				City:                gofakeit.City(),
+				Capacity:            &capacity,
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to create location: %w", err)
