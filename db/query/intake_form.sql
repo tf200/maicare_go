@@ -23,22 +23,40 @@ INSERT INTO intake_forms (
 
 -- name: ListIntakeForms :many
 SELECT
-    i.*,
+    i.id,
+    i.registration_form_id,
+    i.care_type,
+    i.assigned_location_id,
+    i.intake_conclusion,
     r.client_first_name,
     r.client_last_name,
     r.client_bsn_number,
+    l.street AS assigned_location_street,
+    l.house_number AS assigned_location_house_number,
+    l.house_number_addition AS assigned_location_house_number_addition,
+    l.postal_code AS assigned_location_postal_code,
+    l.city AS assigned_location_city,
+    EXISTS (
+        SELECT 1
+        FROM intake_maturity_assessments ima
+        WHERE ima.intake_form_id = i.id
+    ) AS goal_assessment_done,
     COUNT(*) OVER() AS total_count
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
+LEFT JOIN location l ON i.assigned_location_id = l.id
 WHERE
-    @search::text IS NULL
-    OR @search::text = ''
-    OR r.client_first_name ILIKE '%' || @search::text || '%'
-    OR r.client_last_name ILIKE '%' || @search::text || '%'
+    (
+        @search::text IS NULL
+        OR @search::text = ''
+        OR r.client_first_name ILIKE '%' || @search::text || '%'
+        OR r.client_last_name ILIKE '%' || @search::text || '%'
+    )
+    AND (sqlc.narg('status')::intake_conclusion_enum IS NULL OR i.intake_conclusion = sqlc.narg('status')::intake_conclusion_enum)
 ORDER BY
-    CASE WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'asc' THEN created_at END ASC,
-    CASE WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'desc' THEN created_at END DESC,
-    CASE WHEN @sort_by IS NULL OR @sort_by = '' THEN id END DESC
+    CASE WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'asc' THEN i.created_at END ASC,
+    CASE WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'desc' THEN i.created_at END DESC,
+    CASE WHEN @sort_by IS NULL OR @sort_by = '' THEN i.id END DESC
 LIMIT $1 OFFSET $2;
 
 

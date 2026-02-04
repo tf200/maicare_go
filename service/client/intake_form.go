@@ -71,10 +71,18 @@ func (s *clientService) CreateIntakeForm(ctx context.Context, req *CreateIntakeF
 
 func (s *clientService) ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRequest) (*pagination.Response[ListIntakeFormsResponse], error) {
 	params := req.GetParams()
+	status := db.NullIntakeConclusionEnum{}
+	if req.Status != nil {
+		status = db.NullIntakeConclusionEnum{
+			IntakeConclusionEnum: *req.Status,
+			Valid:                true,
+		}
+	}
 	intakeForms, err := s.Store.ListIntakeForms(ctx, db.ListIntakeFormsParams{
 		Limit:     params.Limit,
 		Offset:    params.Offset,
 		Search:    util.DerefString(req.Search),
+		Status:    status,
 		SortBy:    "created_at",
 		SortOrder: util.DerefString(req.SortOrder),
 	})
@@ -85,31 +93,34 @@ func (s *clientService) ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRe
 
 	items := []ListIntakeFormsResponse{}
 	for _, intakeForm := range intakeForms {
+		var assignedLocationAddress *AssignedLocationAddress
+		if intakeForm.AssignedLocationID != nil {
+			assignedLocationAddress = &AssignedLocationAddress{
+				Street:              intakeForm.AssignedLocationStreet,
+				HouseNumber:         intakeForm.AssignedLocationHouseNumber,
+				HouseNumberAddition: intakeForm.AssignedLocationHouseNumberAddition,
+				PostalCode:          intakeForm.AssignedLocationPostalCode,
+				City:                intakeForm.AssignedLocationCity,
+			}
+		}
 		items = append(items, ListIntakeFormsResponse{
-			ID:                       intakeForm.ID,
-			RegistrationFormID:       intakeForm.RegistrationFormID,
-			DateOfIntake:             intakeForm.DateOfIntake.Time,
-			CareType:                 intakeForm.CareType,
-			IntakeParticipants:       intakeForm.IntakeParticipants,
-			FamilySituation:          intakeForm.FamilySituation,
-			PsychologicalState:       intakeForm.PsychologicalState,
-			SelfSufficiency:          intakeForm.SelfSufficiency,
-			SenderID:                 intakeForm.SenderID,
-			AssignedLocationID:       intakeForm.AssignedLocationID,
-			RiskAssessment:           intakeForm.RiskAssessment,
-			IntakeConclusion:         intakeForm.IntakeConclusion,
-			IntakeConclusionNotes:    intakeForm.IntakeConclusionNotes,
-			EvaluationIntervalsWeeks: intakeForm.EvaluationIntervalsWeeks,
-			Signature:                intakeForm.Signature,
-			CreatedAt:                intakeForm.CreatedAt,
-			UpdatedAt:                intakeForm.UpdatedAt,
-			ClientFirstName:          intakeForm.ClientFirstName,
-			ClientLastName:           intakeForm.ClientLastName,
-			ClientBsnNumber:          intakeForm.ClientBsnNumber,
+			ID:                      intakeForm.ID,
+			RegistrationFormID:      intakeForm.RegistrationFormID,
+			ClientFirstName:         intakeForm.ClientFirstName,
+			ClientLastName:          intakeForm.ClientLastName,
+			ClientBsnNumber:         intakeForm.ClientBsnNumber,
+			IntakeStatus:            intakeForm.IntakeConclusion,
+			GoalAssessmentDone:      intakeForm.GoalAssessmentDone,
+			CareType:                intakeForm.CareType,
+			AssignedLocationID:      intakeForm.AssignedLocationID,
+			AssignedLocationAddress: assignedLocationAddress,
 		})
 	}
 
-	totalCount := intakeForms[0].TotalCount
+	totalCount := int64(0)
+	if len(intakeForms) > 0 {
+		totalCount = intakeForms[0].TotalCount
+	}
 
 	paginatedRes := pagination.NewResponse(ctx, req.Request, items, totalCount)
 	return &paginatedRes, nil

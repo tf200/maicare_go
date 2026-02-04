@@ -29,7 +29,7 @@ INSERT INTO client_emergency_contact (
 ) RETURNING *;
 
 -- name: ListEmergencyContacts :many
-SELECT 
+SELECT
     ec.*,
     COUNT(*) OVER() as total_count
 FROM client_emergency_contact ec
@@ -103,7 +103,7 @@ LEFT JOIN
 
 
 -- name: ListAssignedEmployees :many
-SELECT 
+SELECT
     ae.*,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
@@ -116,7 +116,7 @@ LIMIT $2 OFFSET $3;
 
 
 -- name: GetAssignedEmployee :one
-SELECT 
+SELECT
     ae.*,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
@@ -144,7 +144,7 @@ RETURNING *;
 
 -- name: GetClientRelatedEmails :many
 WITH employee_emails AS (
-    SELECT ed.email AS employee_email
+    SELECT ed.work_email_address AS employee_email
     FROM assigned_employee ae
     JOIN employee_profile ed ON ae.employee_id = ed.id
     WHERE ae.client_id = $1

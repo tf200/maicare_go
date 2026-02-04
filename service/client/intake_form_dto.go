@@ -50,29 +50,28 @@ type CreateIntakeFormResponse struct {
 
 type ListIntakeFormsRequest struct {
 	pagination.Request
-	Search    *string `param:"search" binding:"omitempty"`
-	SortOrder *string `param:"sort_order" binding:"omitempty,oneof=asc desc"`
+	Search    *string                  `param:"search" binding:"omitempty"`
+	Status    *db.IntakeConclusionEnum `param:"status" binding:"omitempty"`
+	SortOrder *string                  `param:"sort_order" binding:"omitempty,oneof=asc desc"`
+}
+
+type AssignedLocationAddress struct {
+	Street              *string `json:"street"`
+	HouseNumber         *string `json:"house_number"`
+	HouseNumberAddition *string `json:"house_number_addition"`
+	PostalCode          *string `json:"postal_code"`
+	City                *string `json:"city"`
 }
 
 type ListIntakeFormsResponse struct {
-	ID                       uuid.UUID                   `json:"id"`
-	RegistrationFormID       uuid.UUID                   `json:"registration_form_id"`
-	DateOfIntake             time.Time                   `json:"date_of_intake"`
-	CareType                 db.IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants       []db.IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation          *string                     `json:"family_situation"`
-	PsychologicalState       *string                     `json:"psychological_state"`
-	SelfSufficiency          int32                       `json:"self_sufficiency"`
-	SenderID                 *uuid.UUID                  `json:"sender_id"`
-	AssignedLocationID       *uuid.UUID                  `json:"assigned_location_id"`
-	RiskAssessment           *string                     `json:"risk_assessment"`
-	IntakeConclusion         db.IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes    *string                     `json:"intake_conclusion_notes"`
-	EvaluationIntervalsWeeks int32                       `json:"evaluation_intervals_weeks"`
-	Signature                *string                     `json:"signature"`
-	CreatedAt                pgtype.Timestamptz          `json:"created_at"`
-	UpdatedAt                pgtype.Timestamptz          `json:"updated_at"`
-	ClientFirstName          string                      `json:"client_first_name"`
-	ClientLastName           string                      `json:"client_last_name"`
-	ClientBsnNumber          string                      `json:"client_bsn_number"`
+	ID                      uuid.UUID                `json:"id"`
+	RegistrationFormID      uuid.UUID                `json:"registration_form_id"`
+	ClientFirstName         string                   `json:"client_first_name"`
+	ClientLastName          string                   `json:"client_last_name"`
+	ClientBsnNumber         string                   `json:"client_bsn_number"`
+	IntakeStatus            db.IntakeConclusionEnum  `json:"intake_status"`
+	GoalAssessmentDone      bool                     `json:"goal_assessment_done"`
+	CareType                db.IntakeCareTypeEnum    `json:"care_type"`
+	AssignedLocationID      *uuid.UUID               `json:"assigned_location_id"`
+	AssignedLocationAddress *AssignedLocationAddress `json:"assigned_location_address"`
 }

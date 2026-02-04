@@ -152,7 +152,7 @@ func (s *ecrService) ListEmployeesByContractEndDate(ctx context.Context) ([]List
 			Department:        emp.Department,
 			EmployeeNumber:    emp.EmployeeNumber,
 			EmploymentNumber:  emp.EmploymentNumber,
-			Email:             emp.Email,
+			Email:             *emp.WorkEmailAddress,
 			ContractStartDate: emp.ContractStartDate.Time,
 			ContractEndDate:   emp.ContractEndDate.Time,
 			ContractType:      string(emp.ContractType),

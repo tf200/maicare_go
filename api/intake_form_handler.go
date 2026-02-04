@@ -42,6 +42,7 @@ func (s *Server) CreateIntakeFormApi(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param search query string false "Search term to filter intake forms"
+// @Param status query string false "Intake status (intake_conclusion) filter"
 // @Param sort_order query string false "Sort order (asc or desc)"
 // @Param page query int false "Page number for pagination"
 // @Param page_size query int false "Number of items per page for pagination"
@@ -56,11 +57,12 @@ func (s *Server) ListIntakeFormsApi(ctx *gin.Context) {
 		return
 	}
 
-	res, err := s.businessService.ClientService.ListIntakeForms(ctx, &req)
+	result, err := s.businessService.ClientService.ListIntakeForms(ctx, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
+	res := SuccessResponse(result, "Intake Forms listed successfully")
 	ctx.JSON(http.StatusOK, res)
 }

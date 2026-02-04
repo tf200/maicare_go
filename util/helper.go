@@ -60,6 +60,41 @@ func StringToPgTime(timeStr string) (pgtype.Time, error) {
 	}, nil
 }
 
+func StringToPgDate(dateStr string) (pgtype.Date, error) {
+	// Define the formats you want to support
+	layouts := []string{
+		"2006-01-02",          // ISO 8601 Date
+		"2006-01-02 15:04:05", // ISO 8601 Date Time
+		"02/01/2006",          // DD/MM/YYYY
+		"01/02/2006",          // MM/DD/YYYY
+		time.RFC3339,          // 2006-01-02T15:04:05Z07:00
+		"2006/01/02",          // Slashed YYYY/MM/DD
+		"02-Jan-2006",         // Custom Dash
+	}
+
+	var t time.Time
+	var err error
+	var parsed bool
+
+	for _, layout := range layouts {
+		t, err = time.Parse(layout, dateStr)
+		if err == nil {
+			parsed = true
+			break
+		}
+	}
+
+	if !parsed {
+		return pgtype.Date{Valid: false}, fmt.Errorf("could not parse date: %s", dateStr)
+	}
+
+	// Return as pgtype.Date (Valid: true marks it as non-null)
+	return pgtype.Date{
+		Time:  t,
+		Valid: true,
+	}, nil
+}
+
 // In your util package
 func PgTimeToString(pgTime pgtype.Time) string {
 	if !pgTime.Valid {

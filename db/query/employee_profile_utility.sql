@@ -17,7 +17,7 @@ SELECT
     id,
     first_name,
     last_name,
-    email
+    work_email_address
 FROM employee_profile
 WHERE
     first_name ILIKE '%' || @search || '%' OR

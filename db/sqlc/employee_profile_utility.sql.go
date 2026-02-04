@@ -101,7 +101,7 @@ SELECT
     id,
     first_name,
     last_name,
-    email
+    work_email_address
 FROM employee_profile
 WHERE
     first_name ILIKE '%' || $1 || '%' OR
@@ -111,10 +111,10 @@ LIMIT 10
 `
 
 type SearchEmployeesByNameOrEmailRow struct {
-	ID        uuid.UUID `json:"id"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Email     string    `json:"email"`
+	ID               uuid.UUID `json:"id"`
+	FirstName        string    `json:"first_name"`
+	LastName         string    `json:"last_name"`
+	WorkEmailAddress *string   `json:"work_email_address"`
 }
 
 func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error) {
@@ -130,7 +130,7 @@ func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, search *stri
 			&i.ID,
 			&i.FirstName,
 			&i.LastName,
-			&i.Email,
+			&i.WorkEmailAddress,
 		); err != nil {
 			return nil, err
 		}

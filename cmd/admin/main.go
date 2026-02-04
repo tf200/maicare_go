@@ -141,32 +141,28 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 	privateEmail := gofakeit.Email()
 	authPhone := gofakeit.Phone()
 	privatePhone := gofakeit.Phone()
-	workPhone := gofakeit.Phone()
 	homePhone := gofakeit.Phone()
-	isSubcontractor := false
 
 	// Random dates
 	dob := time.Now().AddDate(-rand.Intn(35)-25, -rand.Intn(12), -rand.Intn(28))
 
 	employee, err := store.CreateEmployeeProfile(ctx, db.CreateEmployeeProfileParams{
-		UserID:                    user.ID,
-		FirstName:                 gofakeit.FirstName(),
-		LastName:                  gofakeit.LastName(),
-		Position:                  &position,
-		Department:                &department,
-		EmployeeNumber:            &employeeNumber,
-		EmploymentNumber:          &employmentNumber,
-		PrivateEmailAddress:       &privateEmail,
-		Email:                     user.Email,
-		AuthenticationPhoneNumber: &authPhone,
-		PrivatePhoneNumber:        &privatePhone,
-		WorkPhoneNumber:           &workPhone,
-		DateOfBirth:               pgtype.Date{Time: dob, Valid: true},
-		HomeTelephoneNumber:       &homePhone,
-		IsSubcontractor:           &isSubcontractor,
-		Gender:                    genders[0],
-		LocationID:                &locationID,
-		ContractType:              contractTypes[0],
+		UserID:              user.ID,
+		FirstName:           gofakeit.FirstName(),
+		LastName:            gofakeit.LastName(),
+		Position:            &position,
+		Department:          &department,
+		EmployeeNumber:      &employeeNumber,
+		EmploymentNumber:    &employmentNumber,
+		PrivateEmailAddress: &privateEmail,
+		WorkEmailAddress:    &user.Email,
+		WorkPhoneNumber:     &authPhone,
+		PrivatePhoneNumber:  &privatePhone,
+		DateOfBirth:         pgtype.Date{Time: dob, Valid: true},
+		HomeTelephoneNumber: &homePhone,
+		Gender:              genders[0],
+		LocationID:          &locationID,
+		ContractType:        contractTypes[0],
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create employee profile: %w", err)

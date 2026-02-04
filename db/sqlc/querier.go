@@ -165,7 +165,7 @@ type Querier interface {
 	GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error)
 	GetClientDiagnosis(ctx context.Context, id uuid.UUID) (ClientDiagnosis, error)
 	GetClientMaturityMatrixAssessment(ctx context.Context, id uuid.UUID) (GetClientMaturityMatrixAssessmentRow, error)
-	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]string, error)
+	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]*string, error)
 	GetClientSender(ctx context.Context, id uuid.UUID) (Sender, error)
 	GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetContractAudit(ctx context.Context, contractID uuid.UUID) ([]GetContractAuditRow, error)

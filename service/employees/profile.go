@@ -34,9 +34,9 @@ func (s *employeeService) CreateEmployee(
 		return nil, fmt.Errorf("failed to hash password")
 	}
 
-	var parsedDateOfBirth time.Time
+	var parsedDateOfBirth pgtype.Date
 	if req.DateOfBirth != nil {
-		parsedDateOfBirth, err = time.Parse("2006-01-02", *req.DateOfBirth)
+		parsedDateOfBirth, err = util.StringToPgDate(*req.DateOfBirth)
 		if err != nil {
 			s.Logger.LogBusinessEvent(
 				ctx,
@@ -48,39 +48,71 @@ func (s *employeeService) CreateEmployee(
 			return nil, fmt.Errorf("invalid date of birth format")
 		}
 	}
-
-	contractType := db.EmployeeContractTypeEnumLoondienst
-	if req.IsSubcontractor != nil && *req.IsSubcontractor {
-		contractType = db.EmployeeContractTypeEnumZZP
+	var parsedContractStartDate, parsedContractEndDate pgtype.Date
+	if req.ContractStartDate != nil {
+		parsedContractStartDate, err = util.StringToPgDate(*req.ContractStartDate)
+		if err != nil {
+			s.Logger.LogBusinessEvent(
+				ctx,
+				logger.LogLevelError,
+				"CreateEmployee",
+				"Failed to parse contract start date",
+				zap.Error(err),
+			)
+			return nil, fmt.Errorf("invalid contract start date format")
+		}
 	}
+	if req.ContractEndDate != nil {
+		parsedContractEndDate, err = util.StringToPgDate(*req.ContractEndDate)
+		if err != nil {
+			s.Logger.LogBusinessEvent(
+				ctx,
+				logger.LogLevelError,
+				"CreateEmployee",
+				"Failed to parse contract end date",
+				zap.Error(err),
+			)
+			return nil, fmt.Errorf("invalid contract end date format")
+		}
+	}
+
+	contractType := db.EmployeeContractTypeEnum(req.ContractType)
 
 	employee, err := s.Store.CreateEmployeeWithAccountTx(
 		ctx,
 		db.CreateEmployeeWithAccountTxParams{
 			CreateUserParams: db.CreateUserParams{
 				Password: hashedPassword,
-				Email:    req.Email,
+				Email:    req.WorkEmailAddress,
 				IsActive: true,
 			},
 
 			CreateEmployeeParams: db.CreateEmployeeProfileParams{
-				FirstName:                 req.FirstName,
-				LastName:                  req.LastName,
-				EmployeeNumber:            req.EmployeeNumber,
-				EmploymentNumber:          req.EmploymentNumber,
-				LocationID:                req.LocationID,
-				IsSubcontractor:           req.IsSubcontractor,
-				DateOfBirth:               pgtype.Date{Time: parsedDateOfBirth, Valid: true},
-				Gender:                    db.EmployeeGenderEnum(req.Gender),
-				Email:                     req.Email,
-				PrivateEmailAddress:       req.PrivateEmailAddress,
-				AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
-				WorkPhoneNumber:           req.WorkPhoneNumber,
-				PrivatePhoneNumber:        req.PrivatePhoneNumber,
-				HomeTelephoneNumber:       req.HomeTelephoneNumber,
-				Position:                  req.Position,
-				Department:                req.Department,
-				ContractType:              contractType,
+				FirstName:           req.FirstName,
+				LastName:            req.LastName,
+				Bsn:                 req.Bsn,
+				Street:              req.Street,
+				HouseNumber:         req.HouseNumber,
+				HouseNumberAddition: req.HouseNumberAddition,
+				PostalCode:          req.PostalCode,
+				City:                req.City,
+				Position:            req.Position,
+				Department:          req.Department,
+				EmployeeNumber:      req.EmployeeNumber,
+				EmploymentNumber:    req.EmploymentNumber,
+				PrivateEmailAddress: req.PrivateEmailAddress,
+				WorkEmailAddress:    &req.WorkEmailAddress,
+				WorkPhoneNumber:     req.WorkPhoneNumber,
+				PrivatePhoneNumber:  req.PrivatePhoneNumber,
+				DateOfBirth:         parsedDateOfBirth,
+				HomeTelephoneNumber: req.HomeTelephoneNumber,
+				Gender:              db.EmployeeGenderEnum(req.Gender),
+				LocationID:          req.LocationID,
+				ContractHours:       req.ContractHours,
+				ContractType:        contractType,
+				ContractStartDate:   parsedContractStartDate,
+				ContractEndDate:     parsedContractEndDate,
+				ContractRate:        req.ContractRate,
 			},
 			RoleID: req.RoleID,
 		},
@@ -102,12 +134,11 @@ func (s *employeeService) CreateEmployee(
 		EmploymentNumber:          employee.Employee.EmploymentNumber,
 		FirstName:                 employee.Employee.FirstName,
 		LastName:                  employee.Employee.LastName,
-		IsSubcontractor:           employee.Employee.IsSubcontractor,
 		DateOfBirth:               employee.Employee.DateOfBirth.Time,
 		Gender:                    string(employee.Employee.Gender),
-		Email:                     employee.Employee.Email,
+		Email:                     *employee.Employee.WorkEmailAddress,
 		PrivateEmailAddress:       employee.Employee.PrivateEmailAddress,
-		AuthenticationPhoneNumber: employee.Employee.AuthenticationPhoneNumber,
+		AuthenticationPhoneNumber: employee.Employee.WorkPhoneNumber,
 		WorkPhoneNumber:           employee.Employee.WorkPhoneNumber,
 		PrivatePhoneNumber:        employee.Employee.PrivatePhoneNumber,
 		HomeTelephoneNumber:       employee.Employee.HomeTelephoneNumber,
@@ -139,8 +170,6 @@ func (s *employeeService) ListEmployees(
 		Offset:              params.Offset,
 		IncludeArchived:     req.IncludeArchived,
 		IncludeOutOfService: req.IncludeOutOfService,
-		Department:          req.Department,
-		Position:            req.Position,
 		LocationID:          req.LocationID,
 		Search:              req.Search,
 	})
@@ -152,8 +181,6 @@ func (s *employeeService) ListEmployees(
 	totalCount, err := s.Store.CountEmployeeProfile(ctx, db.CountEmployeeProfileParams{
 		IncludeArchived:     req.IncludeArchived,
 		IncludeOutOfService: req.IncludeOutOfService,
-		Department:          req.Department,
-		Position:            req.Position,
 		LocationID:          req.LocationID,
 	})
 	if err != nil {
@@ -165,35 +192,19 @@ func (s *employeeService) ListEmployees(
 	responseEmployees := make([]ListEmployeeResponse, len(employees))
 
 	for i, employee := range employees {
+		var contractEndDate *time.Time
+		if employee.ContractEndDate.Valid {
+			parsedDate := employee.ContractEndDate.Time
+			contractEndDate = &parsedDate
+		}
 		responseEmployees[i] = ListEmployeeResponse{
-			ID:                        employee.ID,
-			UserID:                    employee.UserID,
-			FirstName:                 employee.FirstName,
-			LastName:                  employee.LastName,
-			Position:                  employee.Position,
-			Department:                employee.Department,
-			EmployeeNumber:            employee.EmployeeNumber,
-			EmploymentNumber:          employee.EmploymentNumber,
-			PrivateEmailAddress:       employee.PrivateEmailAddress,
-			Email:                     employee.Email,
-			AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-			PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-			WorkPhoneNumber:           employee.WorkPhoneNumber,
-			DateOfBirth:               employee.DateOfBirth.Time,
-			HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-			CreatedAt:                 employee.CreatedAt.Time,
-			IsSubcontractor:           employee.IsSubcontractor,
-			Gender:                    string(employee.Gender),
-			LocationID:                employee.LocationID,
-			HasBorrowed:               employee.HasBorrowed,
-			OutOfService:              employee.OutOfService,
-			IsArchived:                employee.IsArchived,
-			ProfilePicture:            s.GenerateResponsePresignedURL(employee.ProfilePicture, ctx),
-			Age: int64(
-				time.Since(employee.DateOfBirth.Time).Hours() / 24 / 365,
-			),
-			RoleID:   employee.RoleID,
-			RoleName: employee.RoleName,
+			FirstName:       employee.FirstName,
+			LastName:        employee.LastName,
+			Bsn:             employee.Bsn,
+			ContractType:    string(employee.ContractType),
+			Department:      employee.Department,
+			LocationAddress: employee.LocationAddress,
+			ContractEndDate: contractEndDate,
 		}
 	}
 
@@ -215,9 +226,8 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	}
 
 	emp, err := s.Store.UpdateEmployeeIsSubcontractor(ctx, db.UpdateEmployeeIsSubcontractorParams{
-		ID:              employeeID,
-		IsSubcontractor: req.IsSubcontractor,
-		ContractType:    contractType,
+		ID:           employeeID,
+		ContractType: contractType,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
@@ -233,7 +243,6 @@ func (s *employeeService) UpdateEmployeeIsSubcontractor(
 	}
 	res := &UpdateEmployeeIsSubcontractorResponse{
 		ID:                emp.ID,
-		IsSubcontractor:   emp.IsSubcontractor,
 		ContractType:      string(emp.ContractType),
 		ContractHours:     emp.ContractHours,
 		ContractStartDate: emp.ContractStartDate.Time,
@@ -321,30 +330,27 @@ func (s *employeeService) GetEmployeeProfileByID(
 	}
 
 	res := &GetEmployeeProfileByIDResponse{
-		ID:                        employee.ID,
-		UserID:                    employee.UserID,
-		FirstName:                 employee.FirstName,
-		LastName:                  employee.LastName,
-		Position:                  employee.Position,
-		Department:                employee.Department,
-		EmployeeNumber:            employee.EmployeeNumber,
-		EmploymentNumber:          employee.EmploymentNumber,
-		PrivateEmailAddress:       employee.PrivateEmailAddress,
-		Email:                     employee.Email,
-		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		DateOfBirth:               employee.DateOfBirth.Time,
-		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		CreatedAt:                 employee.CreatedAt.Time,
-		IsSubcontractor:           employee.IsSubcontractor,
-		Gender:                    string(employee.Gender),
-		LocationID:                employee.LocationID,
-		HasBorrowed:               employee.HasBorrowed,
-		OutOfService:              employee.OutOfService,
-		IsArchived:                employee.IsArchived,
-		ProfilePicture:            s.GenerateResponsePresignedURL(employee.ProfilePicture, ctx),
-		IsLoggedInUser:            employee.UserID == currentUserID,
+		ID:                  employee.ID,
+		UserID:              employee.UserID,
+		FirstName:           employee.FirstName,
+		LastName:            employee.LastName,
+		Position:            employee.Position,
+		Department:          employee.Department,
+		EmployeeNumber:      employee.EmployeeNumber,
+		EmploymentNumber:    employee.EmploymentNumber,
+		PrivateEmailAddress: employee.PrivateEmailAddress,
+		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
+		WorkPhoneNumber:     employee.WorkPhoneNumber,
+		DateOfBirth:         employee.DateOfBirth.Time,
+		HomeTelephoneNumber: employee.HomeTelephoneNumber,
+		CreatedAt:           employee.CreatedAt.Time,
+		Gender:              string(employee.Gender),
+		LocationID:          employee.LocationID,
+		HasBorrowed:         employee.HasBorrowed,
+		OutOfService:        employee.OutOfService,
+		IsArchived:          employee.IsArchived,
+		ProfilePicture:      s.GenerateResponsePresignedURL(employee.ProfilePicture, ctx),
+		IsLoggedInUser:      employee.UserID == currentUserID,
 	}
 
 	s.Logger.LogBusinessEvent(
@@ -381,26 +387,23 @@ func (s *employeeService) UpdateEmployeeProfile(
 	}
 
 	employee, err := s.Store.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
-		ID:                        employeeID,
-		FirstName:                 req.FirstName,
-		LastName:                  req.LastName,
-		Position:                  req.Position,
-		Department:                req.Department,
-		EmployeeNumber:            req.EmployeeNumber,
-		EmploymentNumber:          req.EmploymentNumber,
-		PrivateEmailAddress:       req.PrivateEmailAddress,
-		Email:                     req.Email,
-		AuthenticationPhoneNumber: req.AuthenticationPhoneNumber,
-		PrivatePhoneNumber:        req.PrivatePhoneNumber,
-		WorkPhoneNumber:           req.WorkPhoneNumber,
-		DateOfBirth:               pgtype.Date{Time: parsedDate, Valid: true},
-		HomeTelephoneNumber:       req.HomeTelephoneNumber,
-		IsSubcontractor:           req.IsSubcontractor,
-		Gender:                    db.NullEmployeeGenderFromPtr(req.Gender),
-		LocationID:                req.LocationID,
-		HasBorrowed:               req.HasBorrowed,
-		OutOfService:              req.OutOfService,
-		IsArchived:                req.IsArchived,
+		ID:                  employeeID,
+		FirstName:           req.FirstName,
+		LastName:            req.LastName,
+		Position:            req.Position,
+		Department:          req.Department,
+		EmployeeNumber:      req.EmployeeNumber,
+		EmploymentNumber:    req.EmploymentNumber,
+		PrivateEmailAddress: req.PrivateEmailAddress,
+		PrivatePhoneNumber:  req.PrivatePhoneNumber,
+		WorkPhoneNumber:     req.WorkPhoneNumber,
+		DateOfBirth:         pgtype.Date{Time: parsedDate, Valid: true},
+		HomeTelephoneNumber: req.HomeTelephoneNumber,
+		Gender:              db.NullEmployeeGenderFromPtr(req.Gender),
+		LocationID:          req.LocationID,
+		HasBorrowed:         req.HasBorrowed,
+		OutOfService:        req.OutOfService,
+		IsArchived:          req.IsArchived,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(
@@ -415,28 +418,25 @@ func (s *employeeService) UpdateEmployeeProfile(
 	}
 
 	res := &UpdateEmployeeProfileResponse{
-		ID:                        employee.ID,
-		UserID:                    employee.UserID,
-		FirstName:                 employee.FirstName,
-		LastName:                  employee.LastName,
-		Position:                  employee.Position,
-		Department:                employee.Department,
-		EmployeeNumber:            employee.EmployeeNumber,
-		EmploymentNumber:          employee.EmploymentNumber,
-		PrivateEmailAddress:       employee.PrivateEmailAddress,
-		Email:                     employee.Email,
-		AuthenticationPhoneNumber: employee.AuthenticationPhoneNumber,
-		PrivatePhoneNumber:        employee.PrivatePhoneNumber,
-		WorkPhoneNumber:           employee.WorkPhoneNumber,
-		DateOfBirth:               employee.DateOfBirth.Time,
-		HomeTelephoneNumber:       employee.HomeTelephoneNumber,
-		CreatedAt:                 employee.CreatedAt.Time,
-		IsSubcontractor:           employee.IsSubcontractor,
-		Gender:                    string(employee.Gender),
-		LocationID:                employee.LocationID,
-		HasBorrowed:               employee.HasBorrowed,
-		OutOfService:              employee.OutOfService,
-		IsArchived:                employee.IsArchived,
+		ID:                  employee.ID,
+		UserID:              employee.UserID,
+		FirstName:           employee.FirstName,
+		LastName:            employee.LastName,
+		Position:            employee.Position,
+		Department:          employee.Department,
+		EmployeeNumber:      employee.EmployeeNumber,
+		EmploymentNumber:    employee.EmploymentNumber,
+		PrivateEmailAddress: employee.PrivateEmailAddress,
+		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
+		WorkPhoneNumber:     employee.WorkPhoneNumber,
+		DateOfBirth:         employee.DateOfBirth.Time,
+		HomeTelephoneNumber: employee.HomeTelephoneNumber,
+		CreatedAt:           employee.CreatedAt.Time,
+		Gender:              string(employee.Gender),
+		LocationID:          employee.LocationID,
+		HasBorrowed:         employee.HasBorrowed,
+		OutOfService:        employee.OutOfService,
+		IsArchived:          employee.IsArchived,
 	}
 
 	s.Logger.LogBusinessEvent(
@@ -554,7 +554,6 @@ func (s *employeeService) SearchEmployeesByNameOrEmail(
 			ID:        employee.ID,
 			FirstName: employee.FirstName,
 			LastName:  employee.LastName,
-			Email:     employee.Email,
 		}
 	}
 

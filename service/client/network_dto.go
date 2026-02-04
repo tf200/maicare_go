@@ -216,5 +216,5 @@ type DeleteAssignedEmployeeResponse struct {
 
 // GetClientRelatedEmailsResponse defines the response for getting client related emails
 type GetClientRelatedEmailsResponse struct {
-	Emails []string `json:"emails"`
+	Emails []*string `json:"emails"`
 }

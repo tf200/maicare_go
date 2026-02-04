@@ -152,55 +152,68 @@ func (q *Queries) GetIntakeFormByRegistrationFormID(ctx context.Context, registr
 
 const listIntakeForms = `-- name: ListIntakeForms :many
 SELECT
-    i.id, i.registration_form_id, i.date_of_intake, i.care_type, i.intake_participants, i.family_situation, i.psychological_state, i.self_sufficiency, i.sender_id, i.assigned_location_id, i.risk_assessment, i.intake_conclusion, i.intake_conclusion_notes, i.evaluation_intervals_weeks, i.signature, i.created_at, i.updated_at,
+    i.id,
+    i.registration_form_id,
+    i.care_type,
+    i.assigned_location_id,
+    i.intake_conclusion,
     r.client_first_name,
     r.client_last_name,
     r.client_bsn_number,
+    l.street AS assigned_location_street,
+    l.house_number AS assigned_location_house_number,
+    l.house_number_addition AS assigned_location_house_number_addition,
+    l.postal_code AS assigned_location_postal_code,
+    l.city AS assigned_location_city,
+    EXISTS (
+        SELECT 1
+        FROM intake_maturity_assessments ima
+        WHERE ima.intake_form_id = i.id
+    ) AS goal_assessment_done,
     COUNT(*) OVER() AS total_count
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
+LEFT JOIN location l ON i.assigned_location_id = l.id
 WHERE
-    $3::text IS NULL
-    OR $3::text = ''
-    OR r.client_first_name ILIKE '%' || $3::text || '%'
-    OR r.client_last_name ILIKE '%' || $3::text || '%'
+    (
+        $3::text IS NULL
+        OR $3::text = ''
+        OR r.client_first_name ILIKE '%' || $3::text || '%'
+        OR r.client_last_name ILIKE '%' || $3::text || '%'
+    )
+    AND ($4::intake_conclusion_enum IS NULL OR i.intake_conclusion = $4::intake_conclusion_enum)
 ORDER BY
-    CASE WHEN $4::text = 'created_at' AND $5::text = 'asc' THEN created_at END ASC,
-    CASE WHEN $4::text = 'created_at' AND $5::text = 'desc' THEN created_at END DESC,
-    CASE WHEN $4 IS NULL OR $4 = '' THEN id END DESC
+    CASE WHEN $5::text = 'created_at' AND $6::text = 'asc' THEN i.created_at END ASC,
+    CASE WHEN $5::text = 'created_at' AND $6::text = 'desc' THEN i.created_at END DESC,
+    CASE WHEN $5 IS NULL OR $5 = '' THEN i.id END DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListIntakeFormsParams struct {
-	Limit     int32  `json:"limit"`
-	Offset    int32  `json:"offset"`
-	Search    string `json:"search"`
-	SortBy    string `json:"sort_by"`
-	SortOrder string `json:"sort_order"`
+	Limit     int32                    `json:"limit"`
+	Offset    int32                    `json:"offset"`
+	Search    string                   `json:"search"`
+	Status    NullIntakeConclusionEnum `json:"status"`
+	SortBy    string                   `json:"sort_by"`
+	SortOrder string                   `json:"sort_order"`
 }
 
 type ListIntakeFormsRow struct {
-	ID                       uuid.UUID                `json:"id"`
-	RegistrationFormID       uuid.UUID                `json:"registration_form_id"`
-	DateOfIntake             pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType                 IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants       []IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation          *string                  `json:"family_situation"`
-	PsychologicalState       *string                  `json:"psychological_state"`
-	SelfSufficiency          int32                    `json:"self_sufficiency"`
-	SenderID                 *uuid.UUID               `json:"sender_id"`
-	AssignedLocationID       *uuid.UUID               `json:"assigned_location_id"`
-	RiskAssessment           *string                  `json:"risk_assessment"`
-	IntakeConclusion         IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes    *string                  `json:"intake_conclusion_notes"`
-	EvaluationIntervalsWeeks int32                    `json:"evaluation_intervals_weeks"`
-	Signature                *string                  `json:"signature"`
-	CreatedAt                pgtype.Timestamptz       `json:"created_at"`
-	UpdatedAt                pgtype.Timestamptz       `json:"updated_at"`
-	ClientFirstName          string                   `json:"client_first_name"`
-	ClientLastName           string                   `json:"client_last_name"`
-	ClientBsnNumber          string                   `json:"client_bsn_number"`
-	TotalCount               int64                    `json:"total_count"`
+	ID                                  uuid.UUID            `json:"id"`
+	RegistrationFormID                  uuid.UUID            `json:"registration_form_id"`
+	CareType                            IntakeCareTypeEnum   `json:"care_type"`
+	AssignedLocationID                  *uuid.UUID           `json:"assigned_location_id"`
+	IntakeConclusion                    IntakeConclusionEnum `json:"intake_conclusion"`
+	ClientFirstName                     string               `json:"client_first_name"`
+	ClientLastName                      string               `json:"client_last_name"`
+	ClientBsnNumber                     string               `json:"client_bsn_number"`
+	AssignedLocationStreet              *string              `json:"assigned_location_street"`
+	AssignedLocationHouseNumber         *string              `json:"assigned_location_house_number"`
+	AssignedLocationHouseNumberAddition *string              `json:"assigned_location_house_number_addition"`
+	AssignedLocationPostalCode          *string              `json:"assigned_location_postal_code"`
+	AssignedLocationCity                *string              `json:"assigned_location_city"`
+	GoalAssessmentDone                  bool                 `json:"goal_assessment_done"`
+	TotalCount                          int64                `json:"total_count"`
 }
 
 func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error) {
@@ -208,6 +221,7 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		arg.Limit,
 		arg.Offset,
 		arg.Search,
+		arg.Status,
 		arg.SortBy,
 		arg.SortOrder,
 	)
@@ -221,24 +235,18 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		if err := rows.Scan(
 			&i.ID,
 			&i.RegistrationFormID,
-			&i.DateOfIntake,
 			&i.CareType,
-			&i.IntakeParticipants,
-			&i.FamilySituation,
-			&i.PsychologicalState,
-			&i.SelfSufficiency,
-			&i.SenderID,
 			&i.AssignedLocationID,
-			&i.RiskAssessment,
 			&i.IntakeConclusion,
-			&i.IntakeConclusionNotes,
-			&i.EvaluationIntervalsWeeks,
-			&i.Signature,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 			&i.ClientFirstName,
 			&i.ClientLastName,
 			&i.ClientBsnNumber,
+			&i.AssignedLocationStreet,
+			&i.AssignedLocationHouseNumber,
+			&i.AssignedLocationHouseNumberAddition,
+			&i.AssignedLocationPostalCode,
+			&i.AssignedLocationCity,
+			&i.GoalAssessmentDone,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

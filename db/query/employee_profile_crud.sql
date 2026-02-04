@@ -3,36 +3,46 @@ INSERT INTO employee_profile (
     user_id,
     first_name,
     last_name,
+    bsn,
+    street,
+    house_number,
+    house_number_addition,
+    postal_code,
+    city,
     position,
     department,
     employee_number,
     employment_number,
     private_email_address,
-    email,
-    authentication_phone_number,
-    private_phone_number,
+    work_email_address,
     work_phone_number,
+    private_phone_number,
     date_of_birth,
     home_telephone_number,
-    is_subcontractor,
     gender,
     location_id,
-    contract_type
+    contract_hours,
+    contract_end_date,
+    contract_start_date,
+    contract_type,
+    contract_rate
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13, $14, $15, $16, $17, $18
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $22, $23, $24, $25, $26
 ) RETURNING *;
 
 -- name: ListEmployeeProfile :many
 SELECT
-    ep.*,
-    u.profile_picture as profile_picture,
-    r.id as role_id,
-    r.name as role_name
+    ep.first_name,
+    ep.last_name,
+    ep.bsn,
+    ep.contract_type,
+    ep.department,
+    ep.contract_end_date,
+    concat_ws(' ', l.street, l.house_number, l.house_number_addition, l.postal_code, l.city) AS location_address
 FROM employee_profile ep
-JOIN custom_user u ON ep.user_id = u.id
-LEFT JOIN user_roles ur ON ur.user_id = ep.user_id
-LEFT JOIN roles r ON r.id = ur.role_id
+LEFT JOIN location l ON l.id = ep.location_id
 WHERE
     (CASE
         WHEN sqlc.narg('include_archived')::boolean IS NULL THEN true
@@ -44,8 +54,6 @@ WHERE
         WHEN sqlc.narg('include_out_of_service')::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
         ELSE true
     END) AND
-    (ep.department = sqlc.narg('department') OR sqlc.narg('department') IS NULL) AND
-    (ep.position = sqlc.narg('position') OR sqlc.narg('position') IS NULL) AND
     (ep.location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
     (sqlc.narg('search')::TEXT IS NULL OR
         ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
@@ -67,8 +75,6 @@ WHERE
         WHEN sqlc.narg('include_out_of_service')::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
         ELSE true
     END) AND
-    (department = sqlc.narg('department') OR sqlc.narg('department') IS NULL) AND
-    (position = sqlc.narg('position') OR sqlc.narg('position') IS NULL) AND
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL);
 
 -- name: GetEmployeeProfileByUserID :one
@@ -113,13 +119,12 @@ SET
     employee_number = COALESCE(sqlc.narg('employee_number'), employee_number),
     employment_number = COALESCE(sqlc.narg('employment_number'), employment_number),
     private_email_address = COALESCE(sqlc.narg('private_email_address'), private_email_address),
-    email = COALESCE(sqlc.narg('email'), email),
-    authentication_phone_number = COALESCE(sqlc.narg('authentication_phone_number'), authentication_phone_number),
+    work_email_address = COALESCE(sqlc.narg('work_email_address'), work_email_address),
+    work_phone_number = COALESCE(sqlc.narg('work_phone_number'), authentication_phone_number),
     private_phone_number = COALESCE(sqlc.narg('private_phone_number'), private_phone_number),
     work_phone_number = COALESCE(sqlc.narg('work_phone_number'), work_phone_number),
     date_of_birth = COALESCE(sqlc.narg('date_of_birth'), date_of_birth),
     home_telephone_number = COALESCE(sqlc.narg('home_telephone_number'), home_telephone_number),
-    is_subcontractor = COALESCE(sqlc.narg('is_subcontractor'), is_subcontractor),
     gender = COALESCE(sqlc.narg('gender'), gender),
     location_id = COALESCE(sqlc.narg('location_id'), location_id),
     has_borrowed = COALESCE(sqlc.narg('has_borrowed'), has_borrowed),

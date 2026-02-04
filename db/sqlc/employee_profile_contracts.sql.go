@@ -21,7 +21,7 @@ SET
     contract_type = COALESCE($5, contract_type),
     contract_rate = COALESCE($6, contract_rate)
 WHERE id = $1
-RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_number_addition, postal_code, city, position, department, employee_number, employment_number, private_email_address, work_email_address, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type AddEmployeeContractDetailsParams struct {
@@ -48,19 +48,23 @@ func (q *Queries) AddEmployeeContractDetails(ctx context.Context, arg AddEmploye
 		&i.UserID,
 		&i.FirstName,
 		&i.LastName,
+		&i.Bsn,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.Position,
 		&i.Department,
 		&i.EmployeeNumber,
 		&i.EmploymentNumber,
 		&i.PrivateEmailAddress,
-		&i.Email,
-		&i.AuthenticationPhoneNumber,
+		&i.WorkEmailAddress,
 		&i.PrivatePhoneNumber,
 		&i.WorkPhoneNumber,
 		&i.DateOfBirth,
 		&i.HomeTelephoneNumber,
 		&i.CreatedAt,
-		&i.IsSubcontractor,
 		&i.Gender,
 		&i.LocationID,
 		&i.HasBorrowed,
@@ -81,8 +85,7 @@ SELECT
     contract_start_date,
     contract_end_date,
     contract_type,
-    contract_rate,
-    is_subcontractor
+    contract_rate
 FROM employee_profile
 WHERE id = $1
 `
@@ -93,7 +96,6 @@ type GetEmployeeContractDetailsRow struct {
 	ContractEndDate   pgtype.Date              `json:"contract_end_date"`
 	ContractType      EmployeeContractTypeEnum `json:"contract_type"`
 	ContractRate      *float64                 `json:"contract_rate"`
-	IsSubcontractor   *bool                    `json:"is_subcontractor"`
 }
 
 func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error) {
@@ -105,7 +107,6 @@ func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) 
 		&i.ContractEndDate,
 		&i.ContractType,
 		&i.ContractRate,
-		&i.IsSubcontractor,
 	)
 	return i, err
 }
@@ -113,39 +114,41 @@ func (q *Queries) GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) 
 const updateEmployeeIsSubcontractor = `-- name: UpdateEmployeeIsSubcontractor :one
 UPDATE employee_profile
 SET
-    is_subcontractor = $2,
-    contract_type = $3
+    contract_type = $2
 WHERE id = $1
-RETURNING id, user_id, first_name, last_name, position, department, employee_number, employment_number, private_email_address, email, authentication_phone_number, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, is_subcontractor, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_number_addition, postal_code, city, position, department, employee_number, employment_number, private_email_address, work_email_address, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, gender, location_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type UpdateEmployeeIsSubcontractorParams struct {
-	ID              uuid.UUID                `json:"id"`
-	IsSubcontractor *bool                    `json:"is_subcontractor"`
-	ContractType    EmployeeContractTypeEnum `json:"contract_type"`
+	ID           uuid.UUID                `json:"id"`
+	ContractType EmployeeContractTypeEnum `json:"contract_type"`
 }
 
 func (q *Queries) UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error) {
-	row := q.db.QueryRow(ctx, updateEmployeeIsSubcontractor, arg.ID, arg.IsSubcontractor, arg.ContractType)
+	row := q.db.QueryRow(ctx, updateEmployeeIsSubcontractor, arg.ID, arg.ContractType)
 	var i EmployeeProfile
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.FirstName,
 		&i.LastName,
+		&i.Bsn,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.Position,
 		&i.Department,
 		&i.EmployeeNumber,
 		&i.EmploymentNumber,
 		&i.PrivateEmailAddress,
-		&i.Email,
-		&i.AuthenticationPhoneNumber,
+		&i.WorkEmailAddress,
 		&i.PrivatePhoneNumber,
 		&i.WorkPhoneNumber,
 		&i.DateOfBirth,
 		&i.HomeTelephoneNumber,
 		&i.CreatedAt,
-		&i.IsSubcontractor,
 		&i.Gender,
 		&i.LocationID,
 		&i.HasBorrowed,

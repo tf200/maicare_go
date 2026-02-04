@@ -589,19 +589,23 @@ CREATE TABLE employee_profile (
     user_id UUID NOT NULL UNIQUE REFERENCES custom_user(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
+    bsn TEXT NOT NULL,
+    street TEXT NOT NULL,
+    house_number TEXT NOT NULL,
+    house_number_addition TEXT NULL,
+    postal_code TEXT NOT NULL,
+    city TEXT NOT NULL,
     position VARCHAR(100) NULL,
     department VARCHAR(100) NULL,
     employee_number VARCHAR(50) NULL,
     employment_number VARCHAR(50) NULL,
     private_email_address VARCHAR(254) NULL,
-    email VARCHAR(254) NOT NULL,
-    authentication_phone_number VARCHAR(100) NULL,
+    work_email_address VARCHAR(254) NULL,
     private_phone_number VARCHAR(100) NULL,
     work_phone_number VARCHAR(100) NULL,
     date_of_birth DATE NULL,
     home_telephone_number VARCHAR(100) NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_subcontractor BOOLEAN NULL,
     gender employee_gender_enum NOT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL,
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
@@ -2096,7 +2100,7 @@ CREATE OR REPLACE FUNCTION get_client_id_from_registration_form(reg_id UUID) RET
 $$ LANGUAGE sql STABLE;
 
 -- Function to apply policies to a table with 'client_id' (or custom column)
-CREATE OR REPLACE FUNCTION apply_client_rls(table_name TEXT, client_id_col TEXT DEFAULT 'client_id') 
+CREATE OR REPLACE FUNCTION apply_client_rls(table_name TEXT, client_id_col TEXT DEFAULT 'client_id')
 RETURNS VOID AS $$
 BEGIN
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
@@ -2104,7 +2108,7 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS coordinator_insert ON %I', table_name);
     EXECUTE format('DROP POLICY IF EXISTS coordinator_update ON %I', table_name);
     EXECUTE format('DROP POLICY IF EXISTS coordinator_delete ON %I', table_name);
-    
+
     EXECUTE format('CREATE POLICY coordinator_select ON %I FOR SELECT USING (is_admin() OR is_coordinator())', table_name);
     EXECUTE format('CREATE POLICY coordinator_insert ON %I FOR INSERT WITH CHECK (is_admin() OR is_coordinator())', table_name);
     EXECUTE format('CREATE POLICY coordinator_update ON %I FOR UPDATE USING (is_admin() OR is_coordinator()) WITH CHECK (is_admin() OR is_coordinator())', table_name);
@@ -2170,4 +2174,3 @@ SELECT apply_client_rls('intake_maturity_assessments', 'get_client_id_from_intak
 
 -- Clean up helper functions if desired, or keep them for future use.
 -- DROP FUNCTION apply_client_rls(TEXT, TEXT);
-

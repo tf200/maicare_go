@@ -74,8 +74,8 @@ func (s *clientService) GenerateIntakeGoals(ctx context.Context, req *GenerateIn
 
 	// 4. Call AI Service
 	clientGoals := ""
-	if registrationForm.ClientGoals != nil && len(registrationForm.ClientGoals) > 0 {
-		// Join the goals array into a single string
+	if len(registrationForm.ClientGoals) > 0 {
+		// We ignore the error here as it's a slice of strings/simple types
 		goalsJSON, _ := json.Marshal(registrationForm.ClientGoals)
 		clientGoals = string(goalsJSON)
 	}

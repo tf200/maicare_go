@@ -278,7 +278,7 @@ func (q *Queries) DeleteEmergencyContact(ctx context.Context, id uuid.UUID) (Cli
 }
 
 const getAssignedEmployee = `-- name: GetAssignedEmployee :one
-SELECT 
+SELECT
     ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name
@@ -316,7 +316,7 @@ func (q *Queries) GetAssignedEmployee(ctx context.Context, id uuid.UUID) (GetAss
 
 const getClientRelatedEmails = `-- name: GetClientRelatedEmails :many
 WITH employee_emails AS (
-    SELECT ed.email AS employee_email
+    SELECT ed.work_email_address AS employee_email
     FROM assigned_employee ae
     JOIN employee_profile ed ON ae.employee_id = ed.id
     WHERE ae.client_id = $1
@@ -331,15 +331,15 @@ UNION
 SELECT contact_email FROM emergency_contact_emails
 `
 
-func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]string, error) {
+func (q *Queries) GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]*string, error) {
 	rows, err := q.db.Query(ctx, getClientRelatedEmails, clientID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []string{}
+	items := []*string{}
 	for rows.Next() {
-		var employee_email string
+		var employee_email *string
 		if err := rows.Scan(&employee_email); err != nil {
 			return nil, err
 		}
@@ -417,7 +417,7 @@ const listAssignedEmployees = `-- name: ListAssignedEmployees :many
 
 
 
-SELECT 
+SELECT
     ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
@@ -479,7 +479,7 @@ func (q *Queries) ListAssignedEmployees(ctx context.Context, arg ListAssignedEmp
 }
 
 const listEmergencyContacts = `-- name: ListEmergencyContacts :many
-SELECT 
+SELECT
     ec.id, ec.client_id, ec.first_name, ec.last_name, ec.email, ec.phone_number, ec.address, ec.relationship, ec.relation_status, ec.created_at, ec.is_verified, ec.medical_reports, ec.incidents_reports, ec.goals_reports,
     COUNT(*) OVER() as total_count
 FROM client_emergency_contact ec

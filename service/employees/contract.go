@@ -84,7 +84,7 @@ func (s *employeeService) AddEmployeeContractDetails(
 
 	err = s.asynqClient.EnqueueEmailDelivery(aclient.EmailDeliveryPayload{
 		Name:         contractDetails.FirstName + " " + contractDetails.LastName,
-		To:           contractDetails.Email,
+		To:           *contractDetails.WorkEmailAddress,
 		UserEmail:    user.Email,
 		UserPassword: password,
 	}, ctx)
@@ -140,7 +140,6 @@ func (s *employeeService) GetEmployeeContractDetails(
 		ContractEndDate:   contractDetails.ContractEndDate.Time,
 		ContractType:      string(contractDetails.ContractType),
 		ContractRate:      contractDetails.ContractRate, // Optional field for contract rate
-		IsSubcontractor:   contractDetails.IsSubcontractor,
 	}
 
 	s.Logger.LogBusinessEvent(

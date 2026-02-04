@@ -10,23 +10,32 @@ import (
 
 // CreateEmployeeProfileRequest represents the request for CreateEmployeeProfileApi
 type CreateEmployeeProfileRequest struct {
-	EmployeeNumber            *string    `json:"employee_number" example:"123456"`
-	EmploymentNumber          *string    `json:"employment_number" example:"123456"`
-	LocationID                *uuid.UUID `json:"location_id" example:"1"`
-	IsSubcontractor           *bool      `json:"is_subcontractor" binding:"required" example:"false"`
-	FirstName                 string     `json:"first_name" binding:"required" example:"fara"`
-	LastName                  string     `json:"last_name" binding:"required" example:"joe"`
-	DateOfBirth               *string    `json:"date_of_birth" example:"2000-01-01"`
-	Gender                    string     `json:"gender" binding:"oneof=male female not_specified" example:"man"`
-	Email                     string     `json:"email" binding:"required,email" example:"emai@exe.com"`
-	PrivateEmailAddress       *string    `json:"private_email_address" binding:"email" example:"joe@ex.com"`
-	AuthenticationPhoneNumber *string    `json:"authentication_phone_number" example:"1234567890"`
-	WorkPhoneNumber           *string    `json:"work_phone_number" example:"1234567890"`
-	PrivatePhoneNumber        *string    `json:"private_phone_number" example:"1234567890"`
-	HomeTelephoneNumber       *string    `json:"home_telephone_number" example:"1234567890"`
-	RoleID                    uuid.UUID  `json:"role_id" binding:"required" example:"1"`
-	Position                  *string    `json:"position" example:"developer"`
-	Department                *string    `json:"department" example:"IT"`
+	EmployeeNumber      *string    `json:"employee_number" example:"123456"`
+	EmploymentNumber    *string    `json:"employment_number" example:"123456"`
+	LocationID          *uuid.UUID `json:"location_id" example:"1"`
+	FirstName           string     `json:"first_name" binding:"required" example:"fara"`
+	LastName            string     `json:"last_name" binding:"required" example:"joe"`
+	Bsn                 string     `json:"bsn" binding:"required" example:"123456789"`
+	Street              string     `json:"street" binding:"required" example:"Main St"`
+	HouseNumber         string     `json:"house_number" binding:"required" example:"10"`
+	HouseNumberAddition *string    `json:"house_number_addition" example:"A"`
+	PostalCode          string     `json:"postal_code" binding:"required" example:"1234AB"`
+	City                string     `json:"city" binding:"required" example:"Amsterdam"`
+	Position            *string    `json:"position" example:"developer"`
+	Department          *string    `json:"department" example:"IT"`
+	PrivateEmailAddress *string    `json:"private_email_address" binding:"email" example:"joe@ex.com"`
+	WorkEmailAddress    string     `json:"work_email_address" binding:"required,email" example:"email@exe.com"`
+	WorkPhoneNumber     *string    `json:"work_phone_number" example:"1234567890"`
+	PrivatePhoneNumber  *string    `json:"private_phone_number" example:"1234567890"`
+	DateOfBirth         *string    `json:"date_of_birth" example:"2000-01-01"`
+	HomeTelephoneNumber *string    `json:"home_telephone_number" example:"1234567890"`
+	Gender              string     `json:"gender" binding:"required,oneof=male female not_specified" example:"male"`
+	ContractHours       *float64   `json:"contract_hours" example:"40"`
+	ContractStartDate   *string    `json:"contract_start_date" example:"2000-01-01"`
+	ContractEndDate     *string    `json:"contract_end_date" example:"2000-01-01"`
+	ContractType        string     `json:"contract_type" binding:"required,oneof=loondienst ZZP none" example:"loondienst"`
+	ContractRate        *float64   `json:"contract_rate" example:"100.00"`
+	RoleID              uuid.UUID  `json:"role_id" binding:"required" example:"1"`
 }
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
@@ -60,40 +69,19 @@ type ListEmployeeRequest struct {
 	pagination.Request
 	IncludeArchived     *bool      `form:"is_archived"`
 	IncludeOutOfService *bool      `form:"out_of_service"`
-	Department          *string    `form:"department"`
-	Position            *string    `form:"position"`
 	LocationID          *uuid.UUID `form:"location_id"`
 	Search              *string    `form:"search"`
 }
 
 // ListEmployeeResponse represents the response for ListEmployeeProfileApi
 type ListEmployeeResponse struct {
-	ID                        uuid.UUID  `json:"id"`
-	UserID                    uuid.UUID  `json:"user_id"`
-	FirstName                 string     `json:"first_name"`
-	LastName                  string     `json:"last_name"`
-	Position                  *string    `json:"position"`
-	Department                *string    `json:"department"`
-	EmployeeNumber            *string    `json:"employee_number"`
-	EmploymentNumber          *string    `json:"employment_number"`
-	PrivateEmailAddress       *string    `json:"private_email_address"`
-	Email                     string     `json:"email"`
-	AuthenticationPhoneNumber *string    `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string    `json:"private_phone_number"`
-	WorkPhoneNumber           *string    `json:"work_phone_number"`
-	DateOfBirth               time.Time  `json:"date_of_birth"`
-	HomeTelephoneNumber       *string    `json:"home_telephone_number"`
-	CreatedAt                 time.Time  `json:"created_at"`
-	IsSubcontractor           *bool      `json:"is_subcontractor"`
-	Gender                    string     `json:"gender"`
-	LocationID                *uuid.UUID `json:"location_id"`
-	HasBorrowed               bool       `json:"has_borrowed"`
-	OutOfService              *bool      `json:"out_of_service"`
-	IsArchived                bool       `json:"is_archived"`
-	ProfilePicture            *string    `json:"profile_picture"`
-	Age                       int64      `json:"age"`
-	RoleID                    *uuid.UUID `json:"role_id"`
-	RoleName                  *string    `json:"role_name"`
+	FirstName       string     `json:"first_name"`
+	LastName        string     `json:"last_name"`
+	Bsn             string     `json:"bsn"`
+	ContractType    string     `json:"contract_type"`
+	Department      *string    `json:"department"`
+	LocationAddress string     `json:"location_address"`
+	ContractEndDate *time.Time `json:"contract_end_date"`
 }
 
 // UpdateEmployeeIsSubcontractorRequest represents the request for UpdateEmployeeIsSubcontractorApi

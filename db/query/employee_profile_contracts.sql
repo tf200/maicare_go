@@ -15,15 +15,13 @@ SELECT
     contract_start_date,
     contract_end_date,
     contract_type,
-    contract_rate,
-    is_subcontractor
+    contract_rate
 FROM employee_profile
 WHERE id = $1;
 
 -- name: UpdateEmployeeIsSubcontractor :one
 UPDATE employee_profile
 SET
-    is_subcontractor = $2,
-    contract_type = $3
+    contract_type = $2
 WHERE id = $1
 RETURNING *;
