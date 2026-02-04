@@ -25,6 +25,7 @@ INSERT INTO intake_forms (
 SELECT
     i.id,
     i.registration_form_id,
+    i.date_of_intake,
     i.care_type,
     i.assigned_location_id,
     i.intake_conclusion,
@@ -58,6 +59,29 @@ ORDER BY
     CASE WHEN @sort_by::text = 'created_at' AND @sort_order::text = 'desc' THEN i.created_at END DESC,
     CASE WHEN @sort_by IS NULL OR @sort_by = '' THEN i.id END DESC
 LIMIT $1 OFFSET $2;
+
+
+
+-- name: GetIntakeFormDetails :one
+SELECT
+    i.*,
+    r.client_first_name,
+    r.client_last_name,
+    r.client_bsn_number,
+    r.client_goals,
+    s.name AS sender_name,
+    l.name AS location_name,
+    l.street AS location_street,
+    l.house_number AS location_house_number,
+    l.house_number_addition AS location_house_number_addition,
+    l.postal_code AS location_postal_code,
+    l.city AS location_city
+FROM intake_forms i
+JOIN registration_form r ON i.registration_form_id = r.id
+LEFT JOIN sender s ON i.sender_id = s.id
+LEFT JOIN location l ON i.assigned_location_id = l.id
+WHERE i.id = $1
+LIMIT 1;
 
 
 

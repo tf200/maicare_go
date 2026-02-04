@@ -44,7 +44,6 @@ type CreateIntakeFormResponse struct {
 	IntakeConclusionNotes    *string                     `json:"intake_conclusion_notes"`
 	EvaluationIntervalsWeeks int32                       `json:"evaluation_intervals_weeks"`
 	Signature                *string                     `json:"signature"`
-	CreatedAt                pgtype.Timestamptz          `json:"created_at"`
 	UpdatedAt                pgtype.Timestamptz          `json:"updated_at"`
 }
 
@@ -66,6 +65,7 @@ type AssignedLocationAddress struct {
 type ListIntakeFormsResponse struct {
 	ID                      uuid.UUID                `json:"id"`
 	RegistrationFormID      uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake            time.Time                `json:"date_of_intake"`
 	ClientFirstName         string                   `json:"client_first_name"`
 	ClientLastName          string                   `json:"client_last_name"`
 	ClientBsnNumber         string                   `json:"client_bsn_number"`
@@ -74,4 +74,49 @@ type ListIntakeFormsResponse struct {
 	CareType                db.IntakeCareTypeEnum    `json:"care_type"`
 	AssignedLocationID      *uuid.UUID               `json:"assigned_location_id"`
 	AssignedLocationAddress *AssignedLocationAddress `json:"assigned_location_address"`
+}
+
+type IntakeFormLocationDetails struct {
+	Name                *string `json:"name"`
+	Street              *string `json:"street"`
+	HouseNumber         *string `json:"house_number"`
+	HouseNumberAddition *string `json:"house_number_addition"`
+	PostalCode          *string `json:"postal_code"`
+	City                *string `json:"city"`
+}
+
+type IntakeGoalTopic struct {
+	AssessmentID  uuid.UUID              `json:"assessment_id"`
+	TopicID       uuid.UUID              `json:"topic_id"`
+	TopicName     string                 `json:"topic_name"`
+	CurrentLevel  int32                  `json:"current_level"`
+	ProposedGoals []IntakeAssessmentGoal `json:"proposed_goals"`
+	Notes         *string                `json:"notes"`
+}
+
+type GetIntakeFormResponse struct {
+	ID                       uuid.UUID                   `json:"id"`
+	RegistrationFormID       uuid.UUID                   `json:"registration_form_id"`
+	DateOfIntake             time.Time                   `json:"date_of_intake"`
+	CareType                 db.IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants       []db.IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation          *string                     `json:"family_situation"`
+	PsychologicalState       *string                     `json:"psychological_state"`
+	SelfSufficiency          int32                       `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID                  `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID                  `json:"assigned_location_id"`
+	RiskAssessment           *string                     `json:"risk_assessment"`
+	IntakeConclusion         db.IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string                     `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks int32                       `json:"evaluation_intervals_weeks"`
+	Signature                *string                     `json:"signature"`
+	CreatedAt                pgtype.Timestamptz          `json:"created_at"`
+	UpdatedAt                pgtype.Timestamptz          `json:"updated_at"`
+	ClientFirstName          string                      `json:"client_first_name"`
+	ClientLastName           string                      `json:"client_last_name"`
+	ClientBsnNumber          string                      `json:"client_bsn_number"`
+	DesiredGoals             []string                    `json:"desired_goals"`
+	SenderName               *string                     `json:"sender_name"`
+	Location                 *IntakeFormLocationDetails  `json:"location"`
+	IntakeGoalsAssigned      []IntakeGoalTopic           `json:"intake_goals_assigned"`
 }

@@ -179,6 +179,7 @@ type Querier interface {
 	GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error)
 	GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, error)
 	GetIntakeFormByRegistrationFormID(ctx context.Context, registrationFormID uuid.UUID) (IntakeForm, error)
+	GetIntakeFormDetails(ctx context.Context, id uuid.UUID) (GetIntakeFormDetailsRow, error)
 	GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID) (GetIntakeMaturityAssessmentRow, error)
 	GetIntakeMaturityAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeMaturityAssessmentsRow, error)
 	GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, error)

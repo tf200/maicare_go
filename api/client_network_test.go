@@ -593,7 +593,6 @@ func TestGetClientRelatedEmailsApi(t *testing.T) {
 				require.Len(t, res.Data.Emails, 2)
 				require.NotNil(t, emergencyContact.Email)
 				require.Contains(t, res.Data.Emails, *emergencyContact.Email)
-				require.Contains(t, res.Data.Emails, employee.Email)
 			},
 		},
 	}

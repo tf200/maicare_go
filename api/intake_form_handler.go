@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Create Intake Form
@@ -64,5 +65,31 @@ func (s *Server) ListIntakeFormsApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(result, "Intake Forms listed successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Get Intake Form
+// @Description Retrieve an intake form by ID with related details.
+// @Tags Intake Forms
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Success 200 {object} Response[clientp.GetIntakeFormResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_forms/{id} [get]
+func (s *Server) GetIntakeFormApi(ctx *gin.Context) {
+	intakeFormID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := s.businessService.ClientService.GetIntakeForm(ctx, intakeFormID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Intake Form retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

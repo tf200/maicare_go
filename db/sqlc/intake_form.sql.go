@@ -150,10 +150,100 @@ func (q *Queries) GetIntakeFormByRegistrationFormID(ctx context.Context, registr
 	return i, err
 }
 
+const getIntakeFormDetails = `-- name: GetIntakeFormDetails :one
+SELECT
+    i.id, i.registration_form_id, i.date_of_intake, i.care_type, i.intake_participants, i.family_situation, i.psychological_state, i.self_sufficiency, i.sender_id, i.assigned_location_id, i.risk_assessment, i.intake_conclusion, i.intake_conclusion_notes, i.evaluation_intervals_weeks, i.signature, i.created_at, i.updated_at,
+    r.client_first_name,
+    r.client_last_name,
+    r.client_bsn_number,
+    r.client_goals,
+    s.name AS sender_name,
+    l.name AS location_name,
+    l.street AS location_street,
+    l.house_number AS location_house_number,
+    l.house_number_addition AS location_house_number_addition,
+    l.postal_code AS location_postal_code,
+    l.city AS location_city
+FROM intake_forms i
+JOIN registration_form r ON i.registration_form_id = r.id
+LEFT JOIN sender s ON i.sender_id = s.id
+LEFT JOIN location l ON i.assigned_location_id = l.id
+WHERE i.id = $1
+LIMIT 1
+`
+
+type GetIntakeFormDetailsRow struct {
+	ID                          uuid.UUID                `json:"id"`
+	RegistrationFormID          uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake                pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType                    IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants          []IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation             *string                  `json:"family_situation"`
+	PsychologicalState          *string                  `json:"psychological_state"`
+	SelfSufficiency             int32                    `json:"self_sufficiency"`
+	SenderID                    *uuid.UUID               `json:"sender_id"`
+	AssignedLocationID          *uuid.UUID               `json:"assigned_location_id"`
+	RiskAssessment              *string                  `json:"risk_assessment"`
+	IntakeConclusion            IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes       *string                  `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks    int32                    `json:"evaluation_intervals_weeks"`
+	Signature                   *string                  `json:"signature"`
+	CreatedAt                   pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt                   pgtype.Timestamptz       `json:"updated_at"`
+	ClientFirstName             string                   `json:"client_first_name"`
+	ClientLastName              string                   `json:"client_last_name"`
+	ClientBsnNumber             string                   `json:"client_bsn_number"`
+	ClientGoals                 []string                 `json:"client_goals"`
+	SenderName                  *string                  `json:"sender_name"`
+	LocationName                *string                  `json:"location_name"`
+	LocationStreet              *string                  `json:"location_street"`
+	LocationHouseNumber         *string                  `json:"location_house_number"`
+	LocationHouseNumberAddition *string                  `json:"location_house_number_addition"`
+	LocationPostalCode          *string                  `json:"location_postal_code"`
+	LocationCity                *string                  `json:"location_city"`
+}
+
+func (q *Queries) GetIntakeFormDetails(ctx context.Context, id uuid.UUID) (GetIntakeFormDetailsRow, error) {
+	row := q.db.QueryRow(ctx, getIntakeFormDetails, id)
+	var i GetIntakeFormDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.SenderID,
+		&i.AssignedLocationID,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.EvaluationIntervalsWeeks,
+		&i.Signature,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientBsnNumber,
+		&i.ClientGoals,
+		&i.SenderName,
+		&i.LocationName,
+		&i.LocationStreet,
+		&i.LocationHouseNumber,
+		&i.LocationHouseNumberAddition,
+		&i.LocationPostalCode,
+		&i.LocationCity,
+	)
+	return i, err
+}
+
 const listIntakeForms = `-- name: ListIntakeForms :many
 SELECT
     i.id,
     i.registration_form_id,
+    i.date_of_intake,
     i.care_type,
     i.assigned_location_id,
     i.intake_conclusion,
@@ -201,6 +291,7 @@ type ListIntakeFormsParams struct {
 type ListIntakeFormsRow struct {
 	ID                                  uuid.UUID            `json:"id"`
 	RegistrationFormID                  uuid.UUID            `json:"registration_form_id"`
+	DateOfIntake                        pgtype.Timestamptz   `json:"date_of_intake"`
 	CareType                            IntakeCareTypeEnum   `json:"care_type"`
 	AssignedLocationID                  *uuid.UUID           `json:"assigned_location_id"`
 	IntakeConclusion                    IntakeConclusionEnum `json:"intake_conclusion"`
@@ -235,6 +326,7 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		if err := rows.Scan(
 			&i.ID,
 			&i.RegistrationFormID,
+			&i.DateOfIntake,
 			&i.CareType,
 			&i.AssignedLocationID,
 			&i.IntakeConclusion,

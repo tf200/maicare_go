@@ -10,6 +10,7 @@ import (
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -63,7 +64,6 @@ func (s *clientService) CreateIntakeForm(ctx context.Context, req *CreateIntakeF
 		IntakeConclusionNotes:    intakeForm.IntakeConclusionNotes,
 		EvaluationIntervalsWeeks: intakeForm.EvaluationIntervalsWeeks,
 		Signature:                intakeForm.Signature,
-		CreatedAt:                intakeForm.CreatedAt,
 		UpdatedAt:                intakeForm.UpdatedAt,
 	}
 	return res, nil
@@ -106,6 +106,7 @@ func (s *clientService) ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRe
 		items = append(items, ListIntakeFormsResponse{
 			ID:                      intakeForm.ID,
 			RegistrationFormID:      intakeForm.RegistrationFormID,
+			DateOfIntake:            intakeForm.DateOfIntake.Time,
 			ClientFirstName:         intakeForm.ClientFirstName,
 			ClientLastName:          intakeForm.ClientLastName,
 			ClientBsnNumber:         intakeForm.ClientBsnNumber,
@@ -124,4 +125,76 @@ func (s *clientService) ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRe
 
 	paginatedRes := pagination.NewResponse(ctx, req.Request, items, totalCount)
 	return &paginatedRes, nil
+}
+
+func (s *clientService) GetIntakeForm(ctx context.Context, intakeFormID uuid.UUID) (*GetIntakeFormResponse, error) {
+	intakeForm, err := s.Store.GetIntakeFormDetails(ctx, intakeFormID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIntakeForm", "Failed to get intake form", zap.Error(err))
+		return nil, err
+	}
+
+	assessments, err := s.Store.GetIntakeMaturityAssessments(ctx, intakeFormID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIntakeForm", "Failed to get intake assessments", zap.Error(err))
+		return nil, err
+	}
+
+	intakeGoalsAssigned := make([]IntakeGoalTopic, 0, len(assessments))
+	for _, assessment := range assessments {
+		goals, err := jsonToGoals(assessment.ProposedGoals)
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIntakeForm", "Failed to parse proposed goals", zap.Error(err))
+			return nil, err
+		}
+		intakeGoalsAssigned = append(intakeGoalsAssigned, IntakeGoalTopic{
+			AssessmentID:  assessment.ID,
+			TopicID:       assessment.MaturityMatrixID,
+			TopicName:     assessment.TopicName,
+			CurrentLevel:  assessment.CurrentLevel,
+			ProposedGoals: goals,
+			Notes:         assessment.Notes,
+		})
+	}
+
+	var location *IntakeFormLocationDetails
+	if intakeForm.LocationName != nil || intakeForm.LocationStreet != nil || intakeForm.LocationHouseNumber != nil || intakeForm.LocationPostalCode != nil || intakeForm.LocationCity != nil {
+		location = &IntakeFormLocationDetails{
+			Name:                intakeForm.LocationName,
+			Street:              intakeForm.LocationStreet,
+			HouseNumber:         intakeForm.LocationHouseNumber,
+			HouseNumberAddition: intakeForm.LocationHouseNumberAddition,
+			PostalCode:          intakeForm.LocationPostalCode,
+			City:                intakeForm.LocationCity,
+		}
+	}
+
+	res := &GetIntakeFormResponse{
+		ID:                       intakeForm.ID,
+		RegistrationFormID:       intakeForm.RegistrationFormID,
+		DateOfIntake:             intakeForm.DateOfIntake.Time,
+		CareType:                 intakeForm.CareType,
+		IntakeParticipants:       intakeForm.IntakeParticipants,
+		FamilySituation:          intakeForm.FamilySituation,
+		PsychologicalState:       intakeForm.PsychologicalState,
+		SelfSufficiency:          intakeForm.SelfSufficiency,
+		SenderID:                 intakeForm.SenderID,
+		AssignedLocationID:       intakeForm.AssignedLocationID,
+		RiskAssessment:           intakeForm.RiskAssessment,
+		IntakeConclusion:         intakeForm.IntakeConclusion,
+		IntakeConclusionNotes:    intakeForm.IntakeConclusionNotes,
+		EvaluationIntervalsWeeks: intakeForm.EvaluationIntervalsWeeks,
+		Signature:                intakeForm.Signature,
+		CreatedAt:                intakeForm.CreatedAt,
+		UpdatedAt:                intakeForm.UpdatedAt,
+		ClientFirstName:          intakeForm.ClientFirstName,
+		ClientLastName:           intakeForm.ClientLastName,
+		ClientBsnNumber:          intakeForm.ClientBsnNumber,
+		DesiredGoals:             intakeForm.ClientGoals,
+		SenderName:               intakeForm.SenderName,
+		Location:                 location,
+		IntakeGoalsAssigned:      intakeGoalsAssigned,
+	}
+
+	return res, nil
 }

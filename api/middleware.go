@@ -131,7 +131,7 @@ func (s *Server) RBACMiddleware(requiredPermission string) gin.HandlerFunc {
 		// Check if role has required permission
 		hasPermission, err := s.businessService.AuthService.HasPermission(ctx, payload.UserId, requiredPermission)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(err))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 			return
 		}
 
