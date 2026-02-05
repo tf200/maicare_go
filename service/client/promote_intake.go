@@ -127,13 +127,13 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			endDate := pgtype.Date{Time: intakeForm.DateOfIntake.Time.AddDate(1, 0, 0), Valid: true}
 
 			createAssessmentParams := db.CreateClientMaturityMatrixAssessmentParams{
-				ClientID:         client.ID,
-				MaturityMatrixID: intakeAssessment.MaturityMatrixID,
-				StartDate:        pgtype.Date{Time: intakeForm.DateOfIntake.Time, Valid: true},
-				EndDate:          endDate,
-				InitialLevel:     intakeAssessment.CurrentLevel,
-				TargetLevel:      5,
-				CurrentLevel:     intakeAssessment.CurrentLevel,
+				ClientID:     client.ID,
+				TopicID:      intakeAssessment.TopicID,
+				StartDate:    pgtype.Date{Time: intakeForm.DateOfIntake.Time, Valid: true},
+				EndDate:      endDate,
+				InitialLevel: intakeAssessment.CurrentLevel,
+				TargetLevel:  5,
+				CurrentLevel: intakeAssessment.CurrentLevel,
 			}
 
 			clientAssessment, err := q.CreateClientMaturityMatrixAssessment(ctx, createAssessmentParams)

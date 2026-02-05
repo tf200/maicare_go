@@ -11,6 +11,7 @@ func (server *Server) setupIntakeFormRoutes(baseRouter *gin.RouterGroup) {
 		intakeFormGroup.POST("", server.CreateIntakeFormApi)
 		intakeFormGroup.GET("", server.ListIntakeFormsApi)
 		intakeFormGroup.GET("/:id", server.GetIntakeFormApi)
+		intakeFormGroup.PUT("/:id/goals", server.CreateIntakeFormGoalsApi)
 
 	}
 }

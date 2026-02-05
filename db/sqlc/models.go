@@ -2350,20 +2350,6 @@ type ClientLocationTransfer struct {
 	Reason             *string                          `json:"reason"`
 }
 
-type ClientMaturityMatrixAssessment struct {
-	ID                  uuid.UUID          `json:"id"`
-	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
-	StartDate           pgtype.Date        `json:"start_date"`
-	EndDate             pgtype.Date        `json:"end_date"`
-	InitialLevel        int32              `json:"initial_level"`
-	TargetLevel         int32              `json:"target_level"`
-	CurrentLevel        int32              `json:"current_level"`
-	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
-	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
-	IsActive            bool               `json:"is_active"`
-}
-
 type ClientMedication struct {
 	ID               uuid.UUID          `json:"id"`
 	DiagnosisID      *uuid.UUID         `json:"diagnosis_id"`
@@ -2388,6 +2374,20 @@ type ClientStatusHistory struct {
 	ChangedAt pgtype.Timestamptz `json:"changed_at"`
 	ChangedBy *uuid.UUID         `json:"changed_by"`
 	Reason    *string            `json:"reason"`
+}
+
+type ClientTopicAssessment struct {
+	ID                  uuid.UUID          `json:"id"`
+	ClientID            uuid.UUID          `json:"client_id"`
+	TopicID             uuid.UUID          `json:"topic_id"`
+	StartDate           pgtype.Date        `json:"start_date"`
+	EndDate             pgtype.Date        `json:"end_date"`
+	InitialLevel        int32              `json:"initial_level"`
+	TargetLevel         int32              `json:"target_level"`
+	CurrentLevel        int32              `json:"current_level"`
+	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
+	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
+	IsActive            bool               `json:"is_active"`
 }
 
 type CollaborationAgreement struct {
@@ -2679,14 +2679,14 @@ type IntakeForm struct {
 	UpdatedAt                pgtype.Timestamptz       `json:"updated_at"`
 }
 
-type IntakeMaturityAssessment struct {
-	ID               uuid.UUID          `json:"id"`
-	IntakeFormID     uuid.UUID          `json:"intake_form_id"`
-	MaturityMatrixID uuid.UUID          `json:"maturity_matrix_id"`
-	CurrentLevel     int32              `json:"current_level"`
-	ProposedGoals    []byte             `json:"proposed_goals"`
-	Notes            *string            `json:"notes"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+type IntakeTopicAssessment struct {
+	ID            uuid.UUID          `json:"id"`
+	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
+	TopicID       uuid.UUID          `json:"topic_id"`
+	CurrentLevel  int32              `json:"current_level"`
+	ProposedGoals []byte             `json:"proposed_goals"`
+	Notes         *string            `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
 type Invoice struct {
@@ -2747,12 +2747,12 @@ type InvoicePaymentHistory struct {
 }
 
 type LevelHistory struct {
-	ID                               uuid.UUID          `json:"id"`
-	ClientMaturityMatrixAssessmentID uuid.UUID          `json:"client_maturity_matrix_assessment_id"`
-	ChangeDate                       pgtype.Timestamptz `json:"change_date"`
-	OldLevel                         int32              `json:"old_level"`
-	NewLevel                         int32              `json:"new_level"`
-	Comment                          string             `json:"comment"`
+	ID                      uuid.UUID          `json:"id"`
+	ClientTopicAssessmentID uuid.UUID          `json:"client_topic_assessment_id"`
+	ChangeDate              pgtype.Timestamptz `json:"change_date"`
+	OldLevel                int32              `json:"old_level"`
+	NewLevel                int32              `json:"new_level"`
+	Comment                 string             `json:"comment"`
 }
 
 type Location struct {
@@ -2778,12 +2778,6 @@ type LocationShift struct {
 	EndTime    pgtype.Time      `json:"end_time"`
 	CreatedAt  pgtype.Timestamp `json:"created_at"`
 	UpdatedAt  pgtype.Timestamp `json:"updated_at"`
-}
-
-type MaturityMatrix struct {
-	ID               uuid.UUID `json:"id"`
-	TopicName        string    `json:"topic_name"`
-	LevelDescription []byte    `json:"level_description"`
 }
 
 type Notification struct {
@@ -3079,6 +3073,12 @@ type TemporaryFile struct {
 	ID         uuid.UUID          `json:"id"`
 	File       string             `json:"file"`
 	UploadedAt pgtype.Timestamptz `json:"uploaded_at"`
+}
+
+type Topic struct {
+	ID               uuid.UUID `json:"id"`
+	TopicName        string    `json:"topic_name"`
+	LevelDescription []byte    `json:"level_description"`
 }
 
 type UserPermission struct {

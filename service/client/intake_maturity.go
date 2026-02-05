@@ -39,7 +39,7 @@ func (s *clientService) GenerateIntakeGoals(ctx context.Context, req *GenerateIn
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIntakeGoals", "Failed to get intake assessment", zap.Error(err))
 			return nil, err
 		}
-		req.TopicID = assessment.MaturityMatrixID
+		req.TopicID = assessment.TopicID
 		req.CurrentLevel = int(assessment.CurrentLevel)
 		intakeForm, err := s.Store.GetIntakeForm(ctx, assessment.IntakeFormID)
 		if err != nil {

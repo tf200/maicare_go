@@ -394,9 +394,9 @@ func (q *Queries) CreateCarePlanSupportNetwork(ctx context.Context, arg CreateCa
 
 const createClientMaturityMatrixAssessment = `-- name: CreateClientMaturityMatrixAssessment :one
 WITH inserted AS (
-    INSERT INTO client_maturity_matrix_assessment (
+    INSERT INTO client_topic_assessment (
         client_id,
-        maturity_matrix_id,
+        topic_id,
         start_date,
         end_date,
         target_level,
@@ -405,29 +405,29 @@ WITH inserted AS (
     ) VALUES (
         $1, $2, $3, $4, $5, $6, $7
     )
-    RETURNING id, client_id, maturity_matrix_id, start_date, end_date, initial_level, target_level, current_level, care_plan_generated_at, care_plan_status, is_active
+    RETURNING id, client_id, topic_id, start_date, end_date, initial_level, target_level, current_level, care_plan_generated_at, care_plan_status, is_active
 )
 SELECT 
-    inserted.id, inserted.client_id, inserted.maturity_matrix_id, inserted.start_date, inserted.end_date, inserted.initial_level, inserted.target_level, inserted.current_level, inserted.care_plan_generated_at, inserted.care_plan_status, inserted.is_active,
-    mm.topic_name AS topic_name
+    inserted.id, inserted.client_id, inserted.topic_id, inserted.start_date, inserted.end_date, inserted.initial_level, inserted.target_level, inserted.current_level, inserted.care_plan_generated_at, inserted.care_plan_status, inserted.is_active,
+    t.topic_name AS topic_name
 FROM inserted
-JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id
+JOIN topics t ON inserted.topic_id = t.id
 `
 
 type CreateClientMaturityMatrixAssessmentParams struct {
-	ClientID         uuid.UUID   `json:"client_id"`
-	MaturityMatrixID uuid.UUID   `json:"maturity_matrix_id"`
-	StartDate        pgtype.Date `json:"start_date"`
-	EndDate          pgtype.Date `json:"end_date"`
-	TargetLevel      int32       `json:"target_level"`
-	InitialLevel     int32       `json:"initial_level"`
-	CurrentLevel     int32       `json:"current_level"`
+	ClientID     uuid.UUID   `json:"client_id"`
+	TopicID      uuid.UUID   `json:"topic_id"`
+	StartDate    pgtype.Date `json:"start_date"`
+	EndDate      pgtype.Date `json:"end_date"`
+	TargetLevel  int32       `json:"target_level"`
+	InitialLevel int32       `json:"initial_level"`
+	CurrentLevel int32       `json:"current_level"`
 }
 
 type CreateClientMaturityMatrixAssessmentRow struct {
 	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
+	TopicID             uuid.UUID          `json:"topic_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -442,7 +442,7 @@ type CreateClientMaturityMatrixAssessmentRow struct {
 func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg CreateClientMaturityMatrixAssessmentParams) (CreateClientMaturityMatrixAssessmentRow, error) {
 	row := q.db.QueryRow(ctx, createClientMaturityMatrixAssessment,
 		arg.ClientID,
-		arg.MaturityMatrixID,
+		arg.TopicID,
 		arg.StartDate,
 		arg.EndDate,
 		arg.TargetLevel,
@@ -453,7 +453,7 @@ func (q *Queries) CreateClientMaturityMatrixAssessment(ctx context.Context, arg 
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
-		&i.MaturityMatrixID,
+		&i.TopicID,
 		&i.StartDate,
 		&i.EndDate,
 		&i.InitialLevel,
@@ -685,12 +685,12 @@ SELECT
     cma.client_id,
     cma.current_level,
     cma.target_level,
-    mm.topic_name,
+    t.topic_name,
     cd.first_name,
     cd.last_name
 FROM care_plans cp
-JOIN client_maturity_matrix_assessment cma ON cp.assessment_id = cma.id
-JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+JOIN client_topic_assessment cma ON cp.assessment_id = cma.id
+JOIN topics t ON cma.topic_id = t.id
 JOIN client_details cd ON cma.client_id = cd.id
 WHERE cp.id = $1
 `
@@ -934,17 +934,17 @@ func (q *Queries) GetCarePlanSupportNetwork(ctx context.Context, carePlanID uuid
 
 const getClientMaturityMatrixAssessment = `-- name: GetClientMaturityMatrixAssessment :one
 SELECT
-    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
-    mm.topic_name AS topic_name
-FROM client_maturity_matrix_assessment cma
-JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+    cma.id, cma.client_id, cma.topic_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
+    t.topic_name AS topic_name
+FROM client_topic_assessment cma
+JOIN topics t ON cma.topic_id = t.id
 WHERE cma.id = $1
 `
 
 type GetClientMaturityMatrixAssessmentRow struct {
 	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
+	TopicID             uuid.UUID          `json:"topic_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -962,7 +962,7 @@ func (q *Queries) GetClientMaturityMatrixAssessment(ctx context.Context, id uuid
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
-		&i.MaturityMatrixID,
+		&i.TopicID,
 		&i.StartDate,
 		&i.EndDate,
 		&i.InitialLevel,
@@ -980,7 +980,7 @@ const getLevelDescription = `-- name: GetLevelDescription :one
 SELECT 
     topic_name, 
     (jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', $2::text)::jsonpath))::text as level_description 
-FROM maturity_matrix 
+FROM topics 
 WHERE id = $1
 `
 
@@ -1002,12 +1002,12 @@ func (q *Queries) GetLevelDescription(ctx context.Context, arg GetLevelDescripti
 }
 
 const getMaturityMatrix = `-- name: GetMaturityMatrix :one
-SELECT id, topic_name, level_description FROM maturity_matrix WHERE id = $1
+SELECT id, topic_name, level_description FROM topics WHERE id = $1
 `
 
-func (q *Queries) GetMaturityMatrix(ctx context.Context, id uuid.UUID) (MaturityMatrix, error) {
+func (q *Queries) GetMaturityMatrix(ctx context.Context, id uuid.UUID) (Topic, error) {
 	row := q.db.QueryRow(ctx, getMaturityMatrix, id)
-	var i MaturityMatrix
+	var i Topic
 	err := row.Scan(&i.ID, &i.TopicName, &i.LevelDescription)
 	return i, err
 }
@@ -1079,13 +1079,13 @@ func (q *Queries) ListCarePlanReports(ctx context.Context, arg ListCarePlanRepor
 
 const listClientMaturityMatrixAssessments = `-- name: ListClientMaturityMatrixAssessments :many
 SELECT
-    cma.id, cma.client_id, cma.maturity_matrix_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
-    mm.topic_name AS topic_name,
+    cma.id, cma.client_id, cma.topic_id, cma.start_date, cma.end_date, cma.initial_level, cma.target_level, cma.current_level, cma.care_plan_generated_at, cma.care_plan_status, cma.is_active,
+    t.topic_name AS topic_name,
     cp.id AS care_plan_id,
     COUNT(*) OVER() AS total_count
 
-FROM client_maturity_matrix_assessment cma
-JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+FROM client_topic_assessment cma
+JOIN topics t ON cma.topic_id = t.id
 LEFT JOIN care_plans cp ON cma.id = cp.assessment_id
 WHERE cma.client_id = $1
 ORDER BY cma.start_date DESC
@@ -1101,7 +1101,7 @@ type ListClientMaturityMatrixAssessmentsParams struct {
 type ListClientMaturityMatrixAssessmentsRow struct {
 	ID                  uuid.UUID          `json:"id"`
 	ClientID            uuid.UUID          `json:"client_id"`
-	MaturityMatrixID    uuid.UUID          `json:"maturity_matrix_id"`
+	TopicID             uuid.UUID          `json:"topic_id"`
 	StartDate           pgtype.Date        `json:"start_date"`
 	EndDate             pgtype.Date        `json:"end_date"`
 	InitialLevel        int32              `json:"initial_level"`
@@ -1127,7 +1127,7 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 		if err := rows.Scan(
 			&i.ID,
 			&i.ClientID,
-			&i.MaturityMatrixID,
+			&i.TopicID,
 			&i.StartDate,
 			&i.EndDate,
 			&i.InitialLevel,
@@ -1151,18 +1151,18 @@ func (q *Queries) ListClientMaturityMatrixAssessments(ctx context.Context, arg L
 }
 
 const listMaturityMatrix = `-- name: ListMaturityMatrix :many
-SELECT id, topic_name, level_description FROM maturity_matrix
+SELECT id, topic_name, level_description FROM topics
 `
 
-func (q *Queries) ListMaturityMatrix(ctx context.Context) ([]MaturityMatrix, error) {
+func (q *Queries) ListMaturityMatrix(ctx context.Context) ([]Topic, error) {
 	rows, err := q.db.Query(ctx, listMaturityMatrix)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []MaturityMatrix{}
+	items := []Topic{}
 	for rows.Next() {
-		var i MaturityMatrix
+		var i Topic
 		if err := rows.Scan(&i.ID, &i.TopicName, &i.LevelDescription); err != nil {
 			return nil, err
 		}

@@ -21,11 +21,12 @@ func (server *Server) setupRegistrationFormRoutes(baseRouter *gin.RouterGroup) {
 		intakeMaturityRoutes.POST("/:assessment_id/generate_goals", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.GenerateIntakeGoalsApi)
 	}
 
-	intakeFormRoutes := baseRouter.Group("/intake_forms")
-	intakeFormRoutes.Use(server.AuthMiddleware())
-	{
-		intakeFormRoutes.POST("/:id/promote", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.PromoteIntakeToClientApi)
-	}
+	// intakeFormRoutes := baseRouter.Group("/intake_forms")
+	// intakeFormRoutes.Use(server.AuthMiddleware())
+	// {
+	// 	intakeFormRoutes.POST("/:id/goals", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.CreateIntakeFormGoalsApi)
+	// 	intakeFormRoutes.POST("/:id/promote", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.PromoteIntakeToClientApi)
+	// }
 
 	publicRoutes := baseRouter.Group("/public/intake-options")
 	{

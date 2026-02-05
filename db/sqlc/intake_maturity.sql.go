@@ -13,39 +13,39 @@ import (
 )
 
 const createIntakeMaturityAssessment = `-- name: CreateIntakeMaturityAssessment :one
-INSERT INTO intake_maturity_assessments (
+INSERT INTO intake_topic_assessments (
     intake_form_id,
-    maturity_matrix_id,
+    topic_id,
     current_level,
     proposed_goals,
     notes
 ) VALUES (
     $1, $2, $3, $4, $5
 )
-RETURNING id, intake_form_id, maturity_matrix_id, current_level, proposed_goals, notes, created_at
+RETURNING id, intake_form_id, topic_id, current_level, proposed_goals, notes, created_at
 `
 
 type CreateIntakeMaturityAssessmentParams struct {
-	IntakeFormID     uuid.UUID `json:"intake_form_id"`
-	MaturityMatrixID uuid.UUID `json:"maturity_matrix_id"`
-	CurrentLevel     int32     `json:"current_level"`
-	ProposedGoals    []byte    `json:"proposed_goals"`
-	Notes            *string   `json:"notes"`
+	IntakeFormID  uuid.UUID `json:"intake_form_id"`
+	TopicID       uuid.UUID `json:"topic_id"`
+	CurrentLevel  int32     `json:"current_level"`
+	ProposedGoals []byte    `json:"proposed_goals"`
+	Notes         *string   `json:"notes"`
 }
 
-func (q *Queries) CreateIntakeMaturityAssessment(ctx context.Context, arg CreateIntakeMaturityAssessmentParams) (IntakeMaturityAssessment, error) {
+func (q *Queries) CreateIntakeMaturityAssessment(ctx context.Context, arg CreateIntakeMaturityAssessmentParams) (IntakeTopicAssessment, error) {
 	row := q.db.QueryRow(ctx, createIntakeMaturityAssessment,
 		arg.IntakeFormID,
-		arg.MaturityMatrixID,
+		arg.TopicID,
 		arg.CurrentLevel,
 		arg.ProposedGoals,
 		arg.Notes,
 	)
-	var i IntakeMaturityAssessment
+	var i IntakeTopicAssessment
 	err := row.Scan(
 		&i.ID,
 		&i.IntakeFormID,
-		&i.MaturityMatrixID,
+		&i.TopicID,
 		&i.CurrentLevel,
 		&i.ProposedGoals,
 		&i.Notes,
@@ -54,8 +54,79 @@ func (q *Queries) CreateIntakeMaturityAssessment(ctx context.Context, arg Create
 	return i, err
 }
 
+const createIntakeMaturityAssessmentsBatch = `-- name: CreateIntakeMaturityAssessmentsBatch :many
+WITH inserted AS (
+    INSERT INTO intake_topic_assessments (
+        intake_form_id,
+        topic_id,
+        current_level,
+        proposed_goals,
+        notes
+    )
+    SELECT
+        $1::uuid,
+        (item->>'topic_id')::uuid,
+        (item->>'current_level')::int,
+        COALESCE(item->'proposed_goals', '[]'::jsonb),
+        item->>'notes'
+    FROM jsonb_array_elements($2::jsonb) AS item
+    RETURNING id, intake_form_id, topic_id, current_level, proposed_goals, notes, created_at
+)
+SELECT
+    inserted.id, inserted.intake_form_id, inserted.topic_id, inserted.current_level, inserted.proposed_goals, inserted.notes, inserted.created_at,
+    t.topic_name
+FROM inserted
+JOIN topics t ON inserted.topic_id = t.id
+ORDER BY t.topic_name
+`
+
+type CreateIntakeMaturityAssessmentsBatchParams struct {
+	IntakeFormID uuid.UUID `json:"intake_form_id"`
+	Items        []byte    `json:"items"`
+}
+
+type CreateIntakeMaturityAssessmentsBatchRow struct {
+	ID            uuid.UUID          `json:"id"`
+	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
+	TopicID       uuid.UUID          `json:"topic_id"`
+	CurrentLevel  int32              `json:"current_level"`
+	ProposedGoals []byte             `json:"proposed_goals"`
+	Notes         *string            `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	TopicName     string             `json:"topic_name"`
+}
+
+func (q *Queries) CreateIntakeMaturityAssessmentsBatch(ctx context.Context, arg CreateIntakeMaturityAssessmentsBatchParams) ([]CreateIntakeMaturityAssessmentsBatchRow, error) {
+	rows, err := q.db.Query(ctx, createIntakeMaturityAssessmentsBatch, arg.IntakeFormID, arg.Items)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CreateIntakeMaturityAssessmentsBatchRow{}
+	for rows.Next() {
+		var i CreateIntakeMaturityAssessmentsBatchRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.IntakeFormID,
+			&i.TopicID,
+			&i.CurrentLevel,
+			&i.ProposedGoals,
+			&i.Notes,
+			&i.CreatedAt,
+			&i.TopicName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deleteIntakeMaturityAssessment = `-- name: DeleteIntakeMaturityAssessment :exec
-DELETE FROM intake_maturity_assessments
+DELETE FROM intake_topic_assessments
 WHERE id = $1
 `
 
@@ -66,22 +137,22 @@ func (q *Queries) DeleteIntakeMaturityAssessment(ctx context.Context, id uuid.UU
 
 const getIntakeMaturityAssessment = `-- name: GetIntakeMaturityAssessment :one
 SELECT 
-    ima.id, ima.intake_form_id, ima.maturity_matrix_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
-    mm.topic_name
-FROM intake_maturity_assessments ima
-JOIN maturity_matrix mm ON ima.maturity_matrix_id = mm.id
+    ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
+    t.topic_name
+FROM intake_topic_assessments ima
+JOIN topics t ON ima.topic_id = t.id
 WHERE ima.id = $1
 `
 
 type GetIntakeMaturityAssessmentRow struct {
-	ID               uuid.UUID          `json:"id"`
-	IntakeFormID     uuid.UUID          `json:"intake_form_id"`
-	MaturityMatrixID uuid.UUID          `json:"maturity_matrix_id"`
-	CurrentLevel     int32              `json:"current_level"`
-	ProposedGoals    []byte             `json:"proposed_goals"`
-	Notes            *string            `json:"notes"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	TopicName        string             `json:"topic_name"`
+	ID            uuid.UUID          `json:"id"`
+	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
+	TopicID       uuid.UUID          `json:"topic_id"`
+	CurrentLevel  int32              `json:"current_level"`
+	ProposedGoals []byte             `json:"proposed_goals"`
+	Notes         *string            `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	TopicName     string             `json:"topic_name"`
 }
 
 func (q *Queries) GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID) (GetIntakeMaturityAssessmentRow, error) {
@@ -90,7 +161,7 @@ func (q *Queries) GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID)
 	err := row.Scan(
 		&i.ID,
 		&i.IntakeFormID,
-		&i.MaturityMatrixID,
+		&i.TopicID,
 		&i.CurrentLevel,
 		&i.ProposedGoals,
 		&i.Notes,
@@ -102,23 +173,23 @@ func (q *Queries) GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID)
 
 const getIntakeMaturityAssessments = `-- name: GetIntakeMaturityAssessments :many
 SELECT 
-    ima.id, ima.intake_form_id, ima.maturity_matrix_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
-    mm.topic_name
-FROM intake_maturity_assessments ima
-JOIN maturity_matrix mm ON ima.maturity_matrix_id = mm.id
+    ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
+    t.topic_name
+FROM intake_topic_assessments ima
+JOIN topics t ON ima.topic_id = t.id
 WHERE ima.intake_form_id = $1
-ORDER BY mm.topic_name
+ORDER BY t.topic_name
 `
 
 type GetIntakeMaturityAssessmentsRow struct {
-	ID               uuid.UUID          `json:"id"`
-	IntakeFormID     uuid.UUID          `json:"intake_form_id"`
-	MaturityMatrixID uuid.UUID          `json:"maturity_matrix_id"`
-	CurrentLevel     int32              `json:"current_level"`
-	ProposedGoals    []byte             `json:"proposed_goals"`
-	Notes            *string            `json:"notes"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	TopicName        string             `json:"topic_name"`
+	ID            uuid.UUID          `json:"id"`
+	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
+	TopicID       uuid.UUID          `json:"topic_id"`
+	CurrentLevel  int32              `json:"current_level"`
+	ProposedGoals []byte             `json:"proposed_goals"`
+	Notes         *string            `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	TopicName     string             `json:"topic_name"`
 }
 
 func (q *Queries) GetIntakeMaturityAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeMaturityAssessmentsRow, error) {
@@ -133,7 +204,7 @@ func (q *Queries) GetIntakeMaturityAssessments(ctx context.Context, intakeFormID
 		if err := rows.Scan(
 			&i.ID,
 			&i.IntakeFormID,
-			&i.MaturityMatrixID,
+			&i.TopicID,
 			&i.CurrentLevel,
 			&i.ProposedGoals,
 			&i.Notes,
@@ -152,12 +223,12 @@ func (q *Queries) GetIntakeMaturityAssessments(ctx context.Context, intakeFormID
 
 const listIntakeMaturityAssessmentsByIntake = `-- name: ListIntakeMaturityAssessmentsByIntake :many
 SELECT 
-    ima.id, ima.intake_form_id, ima.maturity_matrix_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
-    mm.topic_name
-FROM intake_maturity_assessments ima
-JOIN maturity_matrix mm ON ima.maturity_matrix_id = mm.id
+    ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
+    t.topic_name
+FROM intake_topic_assessments ima
+JOIN topics t ON ima.topic_id = t.id
 WHERE ima.intake_form_id = $1
-ORDER BY mm.topic_name
+ORDER BY t.topic_name
 LIMIT $2 OFFSET $3
 `
 
@@ -168,14 +239,14 @@ type ListIntakeMaturityAssessmentsByIntakeParams struct {
 }
 
 type ListIntakeMaturityAssessmentsByIntakeRow struct {
-	ID               uuid.UUID          `json:"id"`
-	IntakeFormID     uuid.UUID          `json:"intake_form_id"`
-	MaturityMatrixID uuid.UUID          `json:"maturity_matrix_id"`
-	CurrentLevel     int32              `json:"current_level"`
-	ProposedGoals    []byte             `json:"proposed_goals"`
-	Notes            *string            `json:"notes"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	TopicName        string             `json:"topic_name"`
+	ID            uuid.UUID          `json:"id"`
+	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
+	TopicID       uuid.UUID          `json:"topic_id"`
+	CurrentLevel  int32              `json:"current_level"`
+	ProposedGoals []byte             `json:"proposed_goals"`
+	Notes         *string            `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	TopicName     string             `json:"topic_name"`
 }
 
 func (q *Queries) ListIntakeMaturityAssessmentsByIntake(ctx context.Context, arg ListIntakeMaturityAssessmentsByIntakeParams) ([]ListIntakeMaturityAssessmentsByIntakeRow, error) {
@@ -190,7 +261,7 @@ func (q *Queries) ListIntakeMaturityAssessmentsByIntake(ctx context.Context, arg
 		if err := rows.Scan(
 			&i.ID,
 			&i.IntakeFormID,
-			&i.MaturityMatrixID,
+			&i.TopicID,
 			&i.CurrentLevel,
 			&i.ProposedGoals,
 			&i.Notes,
@@ -208,13 +279,13 @@ func (q *Queries) ListIntakeMaturityAssessmentsByIntake(ctx context.Context, arg
 }
 
 const updateIntakeMaturityAssessment = `-- name: UpdateIntakeMaturityAssessment :one
-UPDATE intake_maturity_assessments
+UPDATE intake_topic_assessments
 SET
     current_level = COALESCE($1, current_level),
     proposed_goals = COALESCE($2, proposed_goals),
     notes = COALESCE($3, notes)
 WHERE id = $4
-RETURNING id, intake_form_id, maturity_matrix_id, current_level, proposed_goals, notes, created_at
+RETURNING id, intake_form_id, topic_id, current_level, proposed_goals, notes, created_at
 `
 
 type UpdateIntakeMaturityAssessmentParams struct {
@@ -224,18 +295,18 @@ type UpdateIntakeMaturityAssessmentParams struct {
 	ID            uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateIntakeMaturityAssessment(ctx context.Context, arg UpdateIntakeMaturityAssessmentParams) (IntakeMaturityAssessment, error) {
+func (q *Queries) UpdateIntakeMaturityAssessment(ctx context.Context, arg UpdateIntakeMaturityAssessmentParams) (IntakeTopicAssessment, error) {
 	row := q.db.QueryRow(ctx, updateIntakeMaturityAssessment,
 		arg.CurrentLevel,
 		arg.ProposedGoals,
 		arg.Notes,
 		arg.ID,
 	)
-	var i IntakeMaturityAssessment
+	var i IntakeTopicAssessment
 	err := row.Scan(
 		&i.ID,
 		&i.IntakeFormID,
-		&i.MaturityMatrixID,
+		&i.TopicID,
 		&i.CurrentLevel,
 		&i.ProposedGoals,
 		&i.Notes,

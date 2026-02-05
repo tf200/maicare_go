@@ -2,15 +2,15 @@
 -- INFRASTRUCTURE & ORGANIZATIONS
 -- ==========================================
 
--- Maturity matrix topics and levels
-CREATE TABLE maturity_matrix (
+-- topics topics and levels
+CREATE TABLE topics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     topic_name VARCHAR(255) NOT NULL,
     level_description JSONB NOT NULL DEFAULT '[]'
 );
 
--- Insert maturity matrix data
-INSERT INTO maturity_matrix (topic_name, level_description)
+-- Insert topics data
+INSERT INTO topics (topic_name, level_description)
 VALUES
     ('Finances', '[
   {
@@ -832,16 +832,16 @@ CREATE TABLE intake_forms (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Intake maturity assessments (goals per topic)
-CREATE TABLE intake_maturity_assessments (
+-- Intake topics assessments (goals per topic)
+CREATE TABLE intake_topic_assessments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     intake_form_id UUID NOT NULL REFERENCES intake_forms(id) ON DELETE CASCADE,
-    maturity_matrix_id UUID NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
+    topic_id UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
     current_level INT NOT NULL CHECK (current_level BETWEEN 1 AND 5),
     proposed_goals JSONB NOT NULL DEFAULT '[]',
     notes TEXT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(intake_form_id, maturity_matrix_id)
+    UNIQUE(intake_form_id, topic_id)
 );
 
 
@@ -1389,13 +1389,13 @@ CREATE INDEX invoice_contract_created_idx ON invoice_contract(created);
 -- ==========================================
 
 
--- Client maturity matrix assessments
+-- Client topics assessments
 -- Care plan status ENUM
 CREATE TYPE care_plan_status_enum AS ENUM ('pending', 'generated', 'approved', 'active', 'completed', 'discontinued');
-CREATE TABLE client_maturity_matrix_assessment (
+CREATE TABLE client_topic_assessment (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    maturity_matrix_id UUID NOT NULL REFERENCES maturity_matrix(id) ON DELETE CASCADE,
+    topic_id UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     initial_level INT NOT NULL CHECK (initial_level BETWEEN 1 AND 5),
@@ -1404,13 +1404,13 @@ CREATE TABLE client_maturity_matrix_assessment (
     care_plan_generated_at TIMESTAMPTZ NULL DEFAULT NULL,
     care_plan_status care_plan_status_enum NOT NULL DEFAULT 'pending',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    UNIQUE(client_id, maturity_matrix_id)
+    UNIQUE(client_id, topic_id)
 );
 
 -- Level change history
 CREATE TABLE level_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    client_maturity_matrix_assessment_id UUID NOT NULL REFERENCES client_maturity_matrix_assessment(id) ON DELETE CASCADE,
+    client_topic_assessment_id UUID NOT NULL REFERENCES client_topic_assessment(id) ON DELETE CASCADE,
     change_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_level INT NOT NULL CHECK (old_level BETWEEN 1 AND 5),
     new_level INT NOT NULL CHECK (new_level BETWEEN 1 AND 5),
@@ -1418,26 +1418,26 @@ CREATE TABLE level_history (
 );
 
 -- Trigger function for level history
-CREATE OR REPLACE FUNCTION trg_after_update_client_maturity_matrix_assessment_func()
+CREATE OR REPLACE FUNCTION trg_after_update_client_topic_assessment_func()
 RETURNS trigger AS $$
 BEGIN
     IF NEW.current_level <> OLD.current_level THEN
-        INSERT INTO level_history (client_maturity_matrix_assessment_id, old_level, new_level, comment)
+        INSERT INTO level_history (client_topic_assessment_id, old_level, new_level, comment)
         VALUES (OLD.id, OLD.current_level, NEW.current_level, 'Automatic logging of level change.');
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_after_update_client_maturity_matrix_assessment
-AFTER UPDATE ON client_maturity_matrix_assessment
+CREATE TRIGGER trg_after_update_client_topic_assessment
+AFTER UPDATE ON client_topic_assessment
 FOR EACH ROW
-EXECUTE FUNCTION trg_after_update_client_maturity_matrix_assessment_func();
+EXECUTE FUNCTION trg_after_update_client_topic_assessment_func();
 
 -- Care plans
 CREATE TABLE care_plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assessment_id UUID NOT NULL REFERENCES client_maturity_matrix_assessment(id) ON DELETE CASCADE,
+    assessment_id UUID NOT NULL REFERENCES client_topic_assessment(id) ON DELETE CASCADE,
     generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     generated_by_employee_id UUID REFERENCES employee_profile(id),
     approved_by_employee_id UUID REFERENCES employee_profile(id),
@@ -2080,7 +2080,7 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 -- Helper to get client_id from various sub-tables
 CREATE OR REPLACE FUNCTION get_client_id_from_care_plan(cp_id UUID) RETURNS UUID AS $$
-    SELECT a.client_id FROM client_maturity_matrix_assessment a JOIN care_plans cp ON cp.assessment_id = a.id WHERE cp.id = cp_id;
+    SELECT a.client_id FROM client_topic_assessment a JOIN care_plans cp ON cp.assessment_id = a.id WHERE cp.id = cp_id;
 $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION get_client_id_from_objective(obj_id UUID) RETURNS UUID AS $$
@@ -2120,7 +2120,7 @@ $$ LANGUAGE plpgsql;
 SELECT apply_client_rls('client_details', 'id');
 SELECT apply_client_rls('progress_report');
 SELECT apply_client_rls('incident');
-SELECT apply_client_rls('client_maturity_matrix_assessment');
+SELECT apply_client_rls('client_topic_assessment');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('scheduled_status_changes');
@@ -2154,7 +2154,7 @@ SELECT apply_client_rls('client_agreement', 'get_client_id_from_contract(contrac
 SELECT apply_client_rls('provision', 'get_client_id_from_contract(contract_id)');
 
 -- Care Plans and sub-tables
-SELECT apply_client_rls('care_plans', '(SELECT client_id FROM client_maturity_matrix_assessment WHERE id = assessment_id)');
+SELECT apply_client_rls('care_plans', '(SELECT client_id FROM client_topic_assessment WHERE id = assessment_id)');
 SELECT apply_client_rls('care_plan_objectives', 'get_client_id_from_care_plan(care_plan_id)');
 SELECT apply_client_rls('care_plan_interventions', 'get_client_id_from_care_plan(care_plan_id)');
 SELECT apply_client_rls('care_plan_metrics', 'get_client_id_from_care_plan(care_plan_id)');
@@ -2163,14 +2163,14 @@ SELECT apply_client_rls('care_plan_support_network', 'get_client_id_from_care_pl
 SELECT apply_client_rls('care_plan_resources', 'get_client_id_from_care_plan(care_plan_id)');
 SELECT apply_client_rls('care_plan_reports', 'get_client_id_from_care_plan(care_plan_id)');
 SELECT apply_client_rls('care_plan_actions', 'get_client_id_from_objective(objective_id)');
-SELECT apply_client_rls('level_history', '(SELECT client_id FROM client_maturity_matrix_assessment WHERE id = client_maturity_matrix_assessment_id)');
+SELECT apply_client_rls('level_history', '(SELECT client_id FROM client_topic_assessment WHERE id = client_topic_assessment_id)');
 
 -- Helper to get client_id from intake_form
 CREATE OR REPLACE FUNCTION get_client_id_from_intake_form(intake_id UUID) RETURNS UUID AS $$
     SELECT id FROM client_details WHERE intake_form_id = intake_id;
 $$ LANGUAGE sql STABLE;
 
-SELECT apply_client_rls('intake_maturity_assessments', 'get_client_id_from_intake_form(intake_form_id)');
+SELECT apply_client_rls('intake_topic_assessments', 'get_client_id_from_intake_form(intake_form_id)');
 
 -- Clean up helper functions if desired, or keep them for future use.
 -- DROP FUNCTION apply_client_rls(TEXT, TEXT);

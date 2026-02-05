@@ -2,6 +2,7 @@ package clientp
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
@@ -149,7 +150,7 @@ func (s *clientService) GetIntakeForm(ctx context.Context, intakeFormID uuid.UUI
 		}
 		intakeGoalsAssigned = append(intakeGoalsAssigned, IntakeGoalTopic{
 			AssessmentID:  assessment.ID,
-			TopicID:       assessment.MaturityMatrixID,
+			TopicID:       assessment.TopicID,
 			TopicName:     assessment.TopicName,
 			CurrentLevel:  assessment.CurrentLevel,
 			ProposedGoals: goals,
@@ -185,8 +186,8 @@ func (s *clientService) GetIntakeForm(ctx context.Context, intakeFormID uuid.UUI
 		IntakeConclusionNotes:    intakeForm.IntakeConclusionNotes,
 		EvaluationIntervalsWeeks: intakeForm.EvaluationIntervalsWeeks,
 		Signature:                intakeForm.Signature,
-		CreatedAt:                intakeForm.CreatedAt,
-		UpdatedAt:                intakeForm.UpdatedAt,
+		CreatedAt:                intakeForm.CreatedAt.Time,
+		UpdatedAt:                intakeForm.UpdatedAt.Time,
 		ClientFirstName:          intakeForm.ClientFirstName,
 		ClientLastName:           intakeForm.ClientLastName,
 		ClientBsnNumber:          intakeForm.ClientBsnNumber,
@@ -197,4 +198,46 @@ func (s *clientService) GetIntakeForm(ctx context.Context, intakeFormID uuid.UUI
 	}
 
 	return res, nil
+}
+
+func (s *clientService) CreateIntakeFormGoals(ctx context.Context, intakeFormID uuid.UUID, req *CreateIntakeFormGoalsRequest) (*CreateIntakeFormGoalsResponse, error) {
+	if len(req.Assessments) == 0 {
+		return &CreateIntakeFormGoalsResponse{Assessments: []ListIntakeMaturityAssessmentsResponse{}}, nil
+	}
+
+	itemsJSON, err := json.Marshal(req.Assessments)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIntakeFormGoals", "Failed to marshal intake goals", zap.Error(err))
+		return nil, err
+	}
+
+	rows, err := s.Store.CreateIntakeMaturityAssessmentsBatch(ctx, db.CreateIntakeMaturityAssessmentsBatchParams{
+		IntakeFormID: intakeFormID,
+		Items:        itemsJSON,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIntakeFormGoals", "Failed to create intake goals", zap.Error(err))
+		return nil, err
+	}
+
+	assessments := make([]ListIntakeMaturityAssessmentsResponse, 0, len(rows))
+	for _, row := range rows {
+		goals, err := jsonToGoals(row.ProposedGoals)
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIntakeFormGoals", "Failed to parse proposed goals", zap.Error(err))
+			return nil, err
+		}
+		assessments = append(assessments, ListIntakeMaturityAssessmentsResponse{
+			ID:            row.ID,
+			IntakeFormID:  row.IntakeFormID,
+			TopicID:       row.TopicID,
+			TopicName:     row.TopicName,
+			CurrentLevel:  row.CurrentLevel,
+			ProposedGoals: goals,
+			Notes:         row.Notes,
+			CreatedAt:     row.CreatedAt,
+		})
+	}
+
+	return &CreateIntakeFormGoalsResponse{Assessments: assessments}, nil
 }

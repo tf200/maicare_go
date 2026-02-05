@@ -22,13 +22,13 @@ func (s *carePlanService) CreateClientCarePlan(ctx context.Context, clientID, em
 	var carePlanID uuid.UUID
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
 		arg := db.CreateClientMaturityMatrixAssessmentParams{
-			ClientID:         clientID,
-			MaturityMatrixID: req.MaturityMatrixID,
-			StartDate:        pgtype.Date{Time: time.Now(), Valid: true},
-			EndDate:          pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
-			InitialLevel:     req.InitialLevel,
-			TargetLevel:      req.TargetLevel,
-			CurrentLevel:     req.InitialLevel,
+			ClientID:     clientID,
+			TopicID:      req.MaturityMatrixID,
+			StartDate:    pgtype.Date{Time: time.Now(), Valid: true},
+			EndDate:      pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
+			InitialLevel: req.InitialLevel,
+			TargetLevel:  req.TargetLevel,
+			CurrentLevel: req.InitialLevel,
 		}
 
 		clientAssessments, err := q.CreateClientMaturityMatrixAssessment(ctx, arg)

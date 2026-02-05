@@ -37,6 +37,21 @@ type InitializeIntakeAssessmentsResponse struct {
 	Count int `json:"count"`
 }
 
+type CreateIntakeFormGoalItem struct {
+	TopicID       uuid.UUID              `json:"topic_id"`
+	CurrentLevel  int32                  `json:"current_level"`
+	ProposedGoals []IntakeAssessmentGoal `json:"proposed_goals"`
+	Notes         *string                `json:"notes,omitempty"`
+}
+
+type CreateIntakeFormGoalsRequest struct {
+	Assessments []CreateIntakeFormGoalItem `json:"assessments"`
+}
+
+type CreateIntakeFormGoalsResponse struct {
+	Assessments []ListIntakeMaturityAssessmentsResponse `json:"assessments"`
+}
+
 // CreateIntakeMaturityAssessmentRequest represents a request to create a maturity assessment for an intake
 type CreateIntakeMaturityAssessmentRequest struct {
 	IntakeFormID     uuid.UUID              `json:"intake_form_id"`     // The intake this assessment belongs to
@@ -66,14 +81,14 @@ type ListIntakeMaturityAssessmentsRequest struct {
 
 // ListIntakeMaturityAssessmentsResponse represents a maturity assessment in the list response
 type ListIntakeMaturityAssessmentsResponse struct {
-	ID               uuid.UUID              `json:"id"`
-	IntakeFormID     uuid.UUID              `json:"intake_form_id"`
-	MaturityMatrixID uuid.UUID              `json:"maturity_matrix_id"`
-	TopicName        string                 `json:"topic_name"`
-	CurrentLevel     int32                  `json:"current_level"`
-	ProposedGoals    []IntakeAssessmentGoal `json:"proposed_goals"`
-	Notes            *string                `json:"notes"`
-	CreatedAt        pgtype.Timestamptz     `json:"created_at"`
+	ID            uuid.UUID              `json:"id"`
+	IntakeFormID  uuid.UUID              `json:"intake_form_id"`
+	TopicID       uuid.UUID              `json:"topic_id"`
+	TopicName     string                 `json:"topic_name"`
+	CurrentLevel  int32                  `json:"current_level"`
+	ProposedGoals []IntakeAssessmentGoal `json:"proposed_goals"`
+	Notes         *string                `json:"notes"`
+	CreatedAt     pgtype.Timestamptz     `json:"created_at"`
 }
 
 // GetIntakeMaturityAssessmentRequest represents a request to get a specific maturity assessment

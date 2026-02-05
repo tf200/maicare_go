@@ -1,27 +1,27 @@
 -- name: ListMaturityMatrix :many
-SELECT * FROM maturity_matrix;
+SELECT * FROM topics;
 
 
 
 
 -- name: GetMaturityMatrix :one
-SELECT * FROM maturity_matrix WHERE id = $1;
+SELECT * FROM topics WHERE id = $1;
 
 
 -- name: GetLevelDescription :one
 SELECT 
     topic_name, 
     (jsonb_path_query_first(level_description, format('$[*] ? (@.level == %s).description', sqlc.arg('level')::text)::jsonpath))::text as level_description 
-FROM maturity_matrix 
+FROM topics 
 WHERE id = $1;
 
 
 
 -- name: CreateClientMaturityMatrixAssessment :one
 WITH inserted AS (
-    INSERT INTO client_maturity_matrix_assessment (
+    INSERT INTO client_topic_assessment (
         client_id,
-        maturity_matrix_id,
+        topic_id,
         start_date,
         end_date,
         target_level,
@@ -34,19 +34,19 @@ WITH inserted AS (
 )
 SELECT 
     inserted.*,
-    mm.topic_name AS topic_name
+    t.topic_name AS topic_name
 FROM inserted
-JOIN maturity_matrix mm ON inserted.maturity_matrix_id = mm.id;
+JOIN topics t ON inserted.topic_id = t.id;
 
 -- name: ListClientMaturityMatrixAssessments :many
 SELECT
     cma.*,
-    mm.topic_name AS topic_name,
+    t.topic_name AS topic_name,
     cp.id AS care_plan_id,
     COUNT(*) OVER() AS total_count
 
-FROM client_maturity_matrix_assessment cma
-JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+FROM client_topic_assessment cma
+JOIN topics t ON cma.topic_id = t.id
 LEFT JOIN care_plans cp ON cma.id = cp.assessment_id
 WHERE cma.client_id = $1
 ORDER BY cma.start_date DESC
@@ -56,9 +56,9 @@ LIMIT $2 OFFSET $3;
 -- name: GetClientMaturityMatrixAssessment :one
 SELECT
     cma.*,
-    mm.topic_name AS topic_name
-FROM client_maturity_matrix_assessment cma
-JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+    t.topic_name AS topic_name
+FROM client_topic_assessment cma
+JOIN topics t ON cma.topic_id = t.id
 WHERE cma.id = $1;
 
 
@@ -90,12 +90,12 @@ SELECT
     cma.client_id,
     cma.current_level,
     cma.target_level,
-    mm.topic_name,
+    t.topic_name,
     cd.first_name,
     cd.last_name
 FROM care_plans cp
-JOIN client_maturity_matrix_assessment cma ON cp.assessment_id = cma.id
-JOIN maturity_matrix mm ON cma.maturity_matrix_id = mm.id
+JOIN client_topic_assessment cma ON cp.assessment_id = cma.id
+JOIN topics t ON cma.topic_id = t.id
 JOIN client_details cd ON cma.client_id = cd.id
 WHERE cp.id = $1;
 

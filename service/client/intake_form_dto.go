@@ -110,8 +110,8 @@ type GetIntakeFormResponse struct {
 	IntakeConclusionNotes    *string                     `json:"intake_conclusion_notes"`
 	EvaluationIntervalsWeeks int32                       `json:"evaluation_intervals_weeks"`
 	Signature                *string                     `json:"signature"`
-	CreatedAt                pgtype.Timestamptz          `json:"created_at"`
-	UpdatedAt                pgtype.Timestamptz          `json:"updated_at"`
+	CreatedAt                time.Time                   `json:"created_at"`
+	UpdatedAt                time.Time                   `json:"updated_at"`
 	ClientFirstName          string                      `json:"client_first_name"`
 	ClientLastName           string                      `json:"client_last_name"`
 	ClientBsnNumber          string                      `json:"client_bsn_number"`

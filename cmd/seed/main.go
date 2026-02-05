@@ -225,7 +225,6 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, users []db.Custo
 		employeeNumber := fmt.Sprintf("EMP%05d", i+1)
 		employmentNumber := fmt.Sprintf("EMPL%06d", i+1000)
 		privateEmail := gofakeit.Email()
-		authPhone := gofakeit.Phone()
 		privatePhone := gofakeit.Phone()
 		workPhone := gofakeit.Phone()
 		homePhone := gofakeit.Phone()
@@ -235,24 +234,22 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, users []db.Custo
 		dob := time.Now().AddDate(-rand.Intn(35)-25, -rand.Intn(12), -rand.Intn(28))
 
 		employee, err := store.CreateEmployeeProfile(ctx, db.CreateEmployeeProfileParams{
-			UserID:                    user.ID,
-			FirstName:                 gofakeit.FirstName(),
-			LastName:                  gofakeit.LastName(),
-			Position:                  &position,
-			Department:                &department,
-			EmployeeNumber:            &employeeNumber,
-			EmploymentNumber:          &employmentNumber,
-			PrivateEmailAddress:       &privateEmail,
-			Email:                     user.Email,
-			AuthenticationPhoneNumber: &authPhone,
-			PrivatePhoneNumber:        &privatePhone,
-			WorkPhoneNumber:           &workPhone,
-			DateOfBirth:               pgtype.Date{Time: dob, Valid: true},
-			HomeTelephoneNumber:       &homePhone,
-			IsSubcontractor:           &isSubcontractor,
-			Gender:                    genders[i%len(genders)],
-			LocationID:                &locationID,
-			ContractType:              contractTypes[i%len(contractTypes)],
+			UserID:              user.ID,
+			FirstName:           gofakeit.FirstName(),
+			LastName:            gofakeit.LastName(),
+			Position:            &position,
+			Department:          &department,
+			EmployeeNumber:      &employeeNumber,
+			EmploymentNumber:    &employmentNumber,
+			PrivateEmailAddress: &privateEmail,
+			WorkEmailAddress:    &user.Email,
+			PrivatePhoneNumber:  &privatePhone,
+			WorkPhoneNumber:     &workPhone,
+			DateOfBirth:         pgtype.Date{Time: dob, Valid: true},
+			HomeTelephoneNumber: &homePhone,
+			Gender:              genders[i%len(genders)],
+			LocationID:          &locationID,
+			ContractType:        contractTypes[i%len(contractTypes)],
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create employee profile: %w", err)

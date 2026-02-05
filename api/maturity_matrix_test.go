@@ -38,13 +38,13 @@ func createRandomCarePlan(t *testing.T, clientID uuid.UUID) RandomCarePlan {
 	maturityMatrix, err := testStore.ListMaturityMatrix(context.Background())
 	require.NoError(t, err)
 	clientAssessments, err := testStore.CreateClientMaturityMatrixAssessment(context.Background(), db.CreateClientMaturityMatrixAssessmentParams{
-		ClientID:         clientID,
-		MaturityMatrixID: maturityMatrix[0].ID,
-		InitialLevel:     1,
-		CurrentLevel:     1,
-		TargetLevel:      2,
-		StartDate:        pgtype.Date{Time: time.Now(), Valid: true},
-		EndDate:          pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
+		ClientID:     clientID,
+		TopicID:      maturityMatrix[0].ID,
+		InitialLevel: 1,
+		CurrentLevel: 1,
+		TargetLevel:  2,
+		StartDate:    pgtype.Date{Time: time.Now(), Valid: true},
+		EndDate:      pgtype.Date{Time: time.Now().Add(time.Hour * 24 * 365), Valid: true},
 	})
 	require.NoError(t, err)
 	mockLLmResp := CreateMockGrpcClient().CarePlanResponse

@@ -39,8 +39,8 @@ SELECT
     l.city AS assigned_location_city,
     EXISTS (
         SELECT 1
-        FROM intake_maturity_assessments ima
-        WHERE ima.intake_form_id = i.id
+        FROM intake_topic_assessments ita
+        WHERE ita.intake_form_id = i.id
     ) AS goal_assessment_done,
     COUNT(*) OVER() AS total_count
 FROM intake_forms i

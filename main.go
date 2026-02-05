@@ -116,9 +116,15 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	b2Client, err := bucket.NewObjectStorageClient(ctx, config)
-	if err != nil {
-		log.Fatalf("unable to create b2 client: %v", err)
+	var b2Client bucket.ObjectStorageInterface
+	if config.DisableBucket {
+		b2Client = bucket.NewNoopObjectStorageClient()
+		log.Println("Object storage disabled; using noop bucket client")
+	} else {
+		b2Client, err = bucket.NewObjectStorageClient(ctx, config)
+		if err != nil {
+			log.Fatalf("unable to create b2 client: %v", err)
+		}
 	}
 
 	var asynqClient aclient.AsynqClientInterface

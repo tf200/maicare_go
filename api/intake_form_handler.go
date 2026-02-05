@@ -93,3 +93,37 @@ func (s *Server) GetIntakeFormApi(ctx *gin.Context) {
 	res := SuccessResponse(result, "Intake Form retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// @Summary Create Intake Form Goals
+// @Description Batch create intake maturity assessments (goals) for an intake form.
+// @Tags Intake Forms
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Param request body clientp.CreateIntakeFormGoalsRequest true "Goals payload"
+// @Success 200 {object} Response[clientp.CreateIntakeFormGoalsResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_forms/{id}/goals [post]
+func (s *Server) CreateIntakeFormGoalsApi(ctx *gin.Context) {
+	intakeFormID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.CreateIntakeFormGoalsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	result, err := s.businessService.ClientService.CreateIntakeFormGoals(ctx, intakeFormID, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Intake Form goals created successfully")
+	ctx.JSON(http.StatusOK, res)
+}
