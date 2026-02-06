@@ -160,7 +160,7 @@ type Querier interface {
 	GetCarePlanRisks(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanRisk, error)
 	GetCarePlanSuccessMetrics(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanMetric, error)
 	GetCarePlanSupportNetwork(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanSupportNetwork, error)
-	GetClientAddresses(ctx context.Context, id uuid.UUID) ([]byte, error)
+	GetClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (ClientDetail, error)
 	GetClientContract(ctx context.Context, id uuid.UUID) (GetClientContractRow, error)
 	GetClientCounts(ctx context.Context) (GetClientCountsRow, error)
 	GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error)
@@ -302,7 +302,6 @@ type Querier interface {
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
-	SetClientProfilePicture(ctx context.Context, arg SetClientProfilePictureParams) (ClientDetail, error)
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)
 	StatusChangeCount(ctx context.Context) (int64, error)
 	TotalActiveClients(ctx context.Context) (int64, error)
@@ -320,9 +319,45 @@ type Querier interface {
 	UpdateCarePlanRisk(ctx context.Context, arg UpdateCarePlanRiskParams) (CarePlanRisk, error)
 	UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCarePlanSuccessMetricParams) (CarePlanMetric, error)
 	UpdateCarePlanSupportNetwork(ctx context.Context, arg UpdateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error)
-	UpdateClientDetails(ctx context.Context, arg UpdateClientDetailsParams) (ClientDetail, error)
 	UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error)
 	UpdateClientMedication(ctx context.Context, arg UpdateClientMedicationParams) (ClientMedication, error)
+	// -- name: UpdateClientDetails :one
+	// UPDATE client_details
+	// SET
+	//     first_name = COALESCE (sqlc.narg('first_name'), first_name),
+	//     last_name = COALESCE (sqlc.narg('last_name'), last_name),
+	//     date_of_birth = COALESCE (sqlc.narg('date_of_birth'), date_of_birth),
+	//     "identity" = COALESCE (sqlc.narg('identity'), "identity"),
+	//     bsn = COALESCE (sqlc.narg('bsn'), bsn),
+	//     bsn_verified_by = COALESCE (sqlc.narg('bsn_verified_by'), bsn_verified_by),
+	//     email = COALESCE (sqlc.narg('email'), email),
+	//     phone_number = COALESCE (sqlc.narg('phone_number'), phone_number),
+	//     gender = COALESCE (sqlc.narg('gender'), gender),
+	//     filenumber = COALESCE (sqlc.narg('filenumber'), filenumber),
+	//     sender_id = COALESCE (sqlc.narg('sender_id'), sender_id),
+	//     location_id = COALESCE (sqlc.narg('location_id'), location_id),
+	//     departure_reason = COALESCE (sqlc.narg('departure_reason'), departure_reason),
+	//     departure_report = COALESCE (sqlc.narg('departure_report'), departure_report),
+	//     legal_measure = COALESCE (sqlc.narg('legal_measure'), legal_measure),
+	//     education_currently_enrolled = COALESCE (sqlc.narg('education_currently_enrolled'), education_currently_enrolled),
+	//     education_institution = COALESCE (sqlc.narg('education_institution'), education_institution),
+	//     education_mentor_name = COALESCE (sqlc.narg('education_mentor_name'), education_mentor_name),
+	//     education_mentor_phone = COALESCE (sqlc.narg('education_mentor_phone'), education_mentor_phone),
+	//     education_mentor_email = COALESCE (sqlc.narg('education_mentor_email'), education_mentor_email),
+	//     education_additional_notes = COALESCE (sqlc.narg('education_additional_notes'), education_additional_notes),
+	//     education_level = COALESCE (sqlc.narg('education_level'), education_level),
+	//     work_currently_employed = COALESCE (sqlc.narg('work_currently_employed'), work_currently_employed),
+	//     work_current_employer = COALESCE (sqlc.narg('work_current_employer'), work_current_employer),
+	//     work_current_employer_phone = COALESCE (sqlc.narg('work_current_employer_phone'), work_current_employer_phone),
+	//     work_current_employer_email = COALESCE (sqlc.narg('work_current_employer_email'), work_current_employer_email),
+	//     work_current_position = COALESCE (sqlc.narg('work_current_position'), work_current_position),
+	//     work_start_date = COALESCE (sqlc.narg('work_start_date'), work_start_date),
+	//     work_additional_notes = COALESCE (sqlc.narg('work_additional_notes'), work_additional_notes),
+	//     living_situation = COALESCE (sqlc.narg('living_situation'), living_situation),
+	//     living_situation_notes = COALESCE (sqlc.narg('living_situation_notes'), living_situation_notes),
+	//     nationality = COALESCE (sqlc.narg('nationality'), nationality)
+	// WHERE id = $1
+	// RETURNING *;
 	UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error)
 	UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)
 	UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error)

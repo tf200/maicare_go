@@ -71,6 +71,7 @@ func (server *Server) CreateEmployeeProfileApi(ctx *gin.Context) {
 // @Param is_archived query bool false "Include archived employees"
 // @Param out_of_service query bool false "Include out of service employees"
 // @Param location_id query integer false "Filter by location ID"
+// @Param contract_type query string false "Filter by contract type (loondienst, ZZP, none)"
 // @Param search query string false "Search term for employee name or number"
 // @Success 200 {object} Response[pagination.Response[employees.ListEmployeeResponse]]
 // @Failure 400,401,404,409,500 {object} Response[any]

@@ -856,6 +856,7 @@ CREATE TYPE client_living_situation_enum AS ENUM ('home', 'foster_care', 'youth_
 CREATE TABLE client_details (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     intake_form_id UUID NULL REFERENCES intake_forms(id) ON DELETE SET NULL,
+    registration_form_id UUID NULL REFERENCES registration_form(id) ON DELETE SET NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
@@ -863,26 +864,30 @@ CREATE TABLE client_details (
     "status" client_status_enum NOT NULL DEFAULT 'On Waiting List',
     bsn VARCHAR(50) NULL,
     bsn_verified_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    source VARCHAR(100) NULL,
-    birthplace VARCHAR(100) NULL,
+    -- source VARCHAR(100) NULL, -- Not needed now: keep intake_care_type in intake stage
+    -- birthplace VARCHAR(100) NULL, -- Not needed now
     email VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NULL,
-    organization_id UUID NULL REFERENCES organisations(id) ON DELETE SET NULL,
-    departement VARCHAR(100) NULL,
+    -- organization_id UUID NULL REFERENCES organisations(id) ON DELETE SET NULL, -- Not needed now
+    -- departement VARCHAR(100) NULL, -- Not needed now
     gender client_gender_enum NOT NULL,
     filenumber VARCHAR(100) NOT NULL,
-    profile_picture VARCHAR(600) NULL,
-    infix VARCHAR(100) NULL,
+    -- profile_picture VARCHAR(600) NULL, -- Not needed now
+    -- infix VARCHAR(100) NULL, -- Not needed now
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
-    departure_reason VARCHAR(255) NULL,
-    departure_report TEXT NULL,
-    gps_position JSONB NOT NULL DEFAULT '[]',
-    maturity_domains JSONB NOT NULL DEFAULT '[]',
-    addresses JSONB NOT NULL DEFAULT '[]',
-    legal_measure VARCHAR(255) NULL,
-    has_untaken_medications BOOLEAN NOT NULL DEFAULT FALSE,
+    -- departure_reason VARCHAR(255) NULL, -- Not needed now
+    -- departure_report TEXT NULL, -- Not needed now
+    -- gps_position JSONB NOT NULL DEFAULT '[]', -- Not needed now
+    -- maturity_domains JSONB NOT NULL DEFAULT '[]', -- Not needed now
+    street VARCHAR(255) NOT NULL,
+    house_number VARCHAR(20) NOT NULL,
+    house_number_addition VARCHAR(255) NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    -- legal_measure VARCHAR(255) NULL, -- Not needed now
+    -- has_untaken_medications BOOLEAN NOT NULL DEFAULT FALSE, -- Not needed now
     -- Education
     education_currently_enrolled BOOLEAN NOT NULL DEFAULT FALSE,
     education_institution VARCHAR(255) NULL,
@@ -902,8 +907,8 @@ CREATE TABLE client_details (
     -- Nationality
     nationality VARCHAR(100) NULL,
     -- Living situation
-    living_situation client_living_situation_enum NULL DEFAULT NULL,
-    living_situation_notes TEXT NULL,
+    -- living_situation client_living_situation_enum NULL DEFAULT NULL, -- Not needed now
+    -- living_situation_notes TEXT NULL, -- Not needed now
 
     -- Risks
     risk_aggressive_behavior BOOLEAN DEFAULT FALSE,
@@ -917,11 +922,80 @@ CREATE TABLE client_details (
     risk_day_night_rhythm BOOLEAN DEFAULT FALSE,
     risk_other BOOLEAN DEFAULT FALSE,
     risk_other_description TEXT,
-    risk_additional_notes TEXT
+    risk_additional_notes TEXT,
+    UNIQUE (intake_form_id)
 );
 
 CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);
 CREATE INDEX client_details_location_id_idx ON client_details(location_id);
+CREATE INDEX client_details_registration_form_id_idx ON client_details(registration_form_id);
+
+-- Goal evaluation cadence copied from intake at promotion time.
+ALTER TABLE client_details
+ADD COLUMN goal_evaluation_interval_weeks INT NOT NULL DEFAULT 0;
+
+-- Client goals and grouped evaluations (new model)
+CREATE TYPE client_goal_priority_enum AS ENUM ('low', 'medium', 'high');
+CREATE TYPE client_goal_status_enum AS ENUM ('active', 'achieved', 'cancelled');
+CREATE TYPE client_goal_source_enum AS ENUM ('intake', 'manual', 'review_update');
+CREATE TYPE client_goal_progress_enum AS ENUM (
+    'no_progress',
+    'regression',
+    'limited_progress',
+    'good_progress',
+    'achieved',
+    'blocked'
+);
+
+CREATE TABLE client_goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    priority client_goal_priority_enum NOT NULL DEFAULT 'medium',
+    status client_goal_status_enum NOT NULL DEFAULT 'active',
+    topic_id UUID NULL REFERENCES topics(id) ON DELETE SET NULL,
+    topic_name_snapshot VARCHAR(255) NULL,
+    source client_goal_source_enum NOT NULL DEFAULT 'intake',
+    origin_intake_assessment_id UUID NULL REFERENCES intake_topic_assessments(id) ON DELETE SET NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    archived_at TIMESTAMPTZ NULL
+);
+
+CREATE INDEX client_goals_client_status_idx ON client_goals(client_id, status);
+CREATE INDEX client_goals_client_sort_order_idx ON client_goals(client_id, sort_order);
+
+CREATE TABLE client_goal_evaluations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    evaluation_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    period_start DATE NULL,
+    period_end DATE NULL,
+    evaluation_interval_weeks INT NOT NULL,
+    overall_notes TEXT NULL,
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX client_goal_evaluations_client_date_idx ON client_goal_evaluations(client_id, evaluation_date DESC);
+CREATE INDEX client_goal_evaluations_client_created_idx ON client_goal_evaluations(client_id, created_at DESC);
+
+CREATE TABLE client_goal_evaluation_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    evaluation_id UUID NOT NULL REFERENCES client_goal_evaluations(id) ON DELETE CASCADE,
+    goal_id UUID NOT NULL REFERENCES client_goals(id) ON DELETE CASCADE,
+    progress client_goal_progress_enum NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(evaluation_id, goal_id)
+);
+
+CREATE INDEX client_goal_evaluation_items_goal_created_idx ON client_goal_evaluation_items(goal_id, created_at DESC);
+CREATE INDEX client_goal_evaluation_items_evaluation_idx ON client_goal_evaluation_items(evaluation_id);
 
 -- Client status history tracking
 CREATE TABLE client_status_history (
@@ -1388,183 +1462,14 @@ CREATE INDEX invoice_contract_created_idx ON invoice_contract(created);
 -- CARE PLANS & ASSESSMENTS
 -- ==========================================
 
-
--- Client topics assessments
--- Care plan status ENUM
-CREATE TYPE care_plan_status_enum AS ENUM ('pending', 'generated', 'approved', 'active', 'completed', 'discontinued');
-CREATE TABLE client_topic_assessment (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    topic_id UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    initial_level INT NOT NULL CHECK (initial_level BETWEEN 1 AND 5),
-    target_level INT NOT NULL CHECK (target_level BETWEEN 1 AND 5),
-    current_level INT NOT NULL CHECK (current_level BETWEEN 1 AND 5),
-    care_plan_generated_at TIMESTAMPTZ NULL DEFAULT NULL,
-    care_plan_status care_plan_status_enum NOT NULL DEFAULT 'pending',
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    UNIQUE(client_id, topic_id)
-);
-
--- Level change history
-CREATE TABLE level_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    client_topic_assessment_id UUID NOT NULL REFERENCES client_topic_assessment(id) ON DELETE CASCADE,
-    change_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    old_level INT NOT NULL CHECK (old_level BETWEEN 1 AND 5),
-    new_level INT NOT NULL CHECK (new_level BETWEEN 1 AND 5),
-    comment TEXT NOT NULL
-);
-
--- Trigger function for level history
-CREATE OR REPLACE FUNCTION trg_after_update_client_topic_assessment_func()
-RETURNS trigger AS $$
-BEGIN
-    IF NEW.current_level <> OLD.current_level THEN
-        INSERT INTO level_history (client_topic_assessment_id, old_level, new_level, comment)
-        VALUES (OLD.id, OLD.current_level, NEW.current_level, 'Automatic logging of level change.');
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_after_update_client_topic_assessment
-AFTER UPDATE ON client_topic_assessment
-FOR EACH ROW
-EXECUTE FUNCTION trg_after_update_client_topic_assessment_func();
-
--- Care plans
-CREATE TABLE care_plans (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assessment_id UUID NOT NULL REFERENCES client_topic_assessment(id) ON DELETE CASCADE,
-    generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    generated_by_employee_id UUID REFERENCES employee_profile(id),
-    approved_by_employee_id UUID REFERENCES employee_profile(id),
-    approved_at TIMESTAMP,
-    status care_plan_status_enum NOT NULL DEFAULT 'generated',
-    assessment_summary TEXT NOT NULL,
-    raw_llm_response JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version INT NOT NULL DEFAULT 1,
-    UNIQUE(assessment_id)
-);
-
--- Care plan objectives
--- Timeframe ENUM
-CREATE TYPE care_plan_timeframe_enum AS ENUM ('short_term', 'medium_term', 'long_term');
--- Care plan objective status ENUM
-CREATE TYPE care_plan_objective_status_enum AS ENUM ('not_started', 'in_progress', 'completed', 'discontinued', 'draft');
-CREATE TABLE care_plan_objectives (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    timeframe care_plan_timeframe_enum NOT NULL,
-    goal_title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    priority VARCHAR(50) NOT NULL DEFAULT 'medium',
-    target_date DATE,
-    status care_plan_objective_status_enum NOT NULL DEFAULT 'not_started',
-    completion_date DATE,
-    completion_notes TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Care plan actions
-CREATE TABLE care_plan_actions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    objective_id UUID NOT NULL REFERENCES care_plan_objectives(id) ON DELETE CASCADE,
-    action_description TEXT NOT NULL,
-    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
-    completed_at TIMESTAMP,
-    completed_by_employee_id UUID REFERENCES employee_profile(id),
-    notes TEXT,
-    sort_order INT NOT NULL DEFAULT 0
-);
-
--- Care plan interventions
--- Frequency ENUM
-CREATE TYPE care_plan_intervention_frequency_enum AS ENUM ('daily', 'weekly', 'monthly');
-CREATE TABLE care_plan_interventions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    frequency care_plan_intervention_frequency_enum NOT NULL,
-    intervention_description TEXT NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    last_completed_date DATE,
-    total_completions INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Care plan metrics
-CREATE TABLE care_plan_metrics (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    metric_name VARCHAR(255) NOT NULL,
-    target_value VARCHAR(255) NOT NULL,
-    measurement_method TEXT NOT NULL,
-    current_value VARCHAR(255),
-    last_measured_date DATE,
-    is_achieved BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Care plan risks
--- Risk level ENUM
-CREATE TYPE care_plan_risk_level_enum AS ENUM ('low', 'medium', 'high');
-CREATE TABLE care_plan_risks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    risk_description TEXT NOT NULL,
-    mitigation_strategy TEXT NOT NULL,
-    risk_level care_plan_risk_level_enum NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Care plan support network
-CREATE TABLE care_plan_support_network (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    role_title VARCHAR(255) NOT NULL,
-    responsibility_description TEXT NOT NULL,
-    contact_person VARCHAR(255),
-    contact_details TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Care plan resources
-CREATE TABLE care_plan_resources (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    resource_description TEXT NOT NULL,
-    is_obtained BOOLEAN NOT NULL DEFAULT FALSE,
-    obtained_date DATE,
-    cost_estimate DECIMAL(10,2),
-    notes TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Care plan reports
--- Report type ENUM
-CREATE TYPE care_plan_report_type_enum AS ENUM ('progress', 'concern', 'achievement', 'modification');
-CREATE TABLE care_plan_reports (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    care_plan_id UUID NOT NULL REFERENCES care_plans(id) ON DELETE CASCADE,
-    report_type care_plan_report_type_enum NOT NULL,
-    report_content TEXT NOT NULL,
-    created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id),
-    is_critical BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+/*
+Deprecated (intentionally commented out):
+- client_topic_assessment
+- level_history
+- care_plans and care_plan_* tables
+- care_plan_* enums and level-history trigger
+This flow is replaced by client_goals + client_goal_evaluations.
+*/
 
 -- ==========================================
 -- INCIDENTS & REPORTING
@@ -2079,12 +1984,12 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 -- Helper to get client_id from various sub-tables
-CREATE OR REPLACE FUNCTION get_client_id_from_care_plan(cp_id UUID) RETURNS UUID AS $$
-    SELECT a.client_id FROM client_topic_assessment a JOIN care_plans cp ON cp.assessment_id = a.id WHERE cp.id = cp_id;
+CREATE OR REPLACE FUNCTION get_client_id_from_goal(goal_id UUID) RETURNS UUID AS $$
+    SELECT client_id FROM client_goals WHERE id = goal_id;
 $$ LANGUAGE sql STABLE;
 
-CREATE OR REPLACE FUNCTION get_client_id_from_objective(obj_id UUID) RETURNS UUID AS $$
-    SELECT get_client_id_from_care_plan(care_plan_id) FROM care_plan_objectives WHERE id = obj_id;
+CREATE OR REPLACE FUNCTION get_client_id_from_goal_evaluation(eval_id UUID) RETURNS UUID AS $$
+    SELECT client_id FROM client_goal_evaluations WHERE id = eval_id;
 $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION get_client_id_from_diagnosis(diag_id UUID) RETURNS UUID AS $$
@@ -2120,7 +2025,6 @@ $$ LANGUAGE plpgsql;
 SELECT apply_client_rls('client_details', 'id');
 SELECT apply_client_rls('progress_report');
 SELECT apply_client_rls('incident');
-SELECT apply_client_rls('client_topic_assessment');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('scheduled_status_changes');
@@ -2140,6 +2044,8 @@ SELECT apply_client_rls('consent_declaration');
 SELECT apply_client_rls('youth_care_intake');
 SELECT apply_client_rls('data_sharing_statement');
 SELECT apply_client_rls('framework_agreement');
+SELECT apply_client_rls('client_goals');
+SELECT apply_client_rls('client_goal_evaluations');
 
 -- Special cases for nested tables
 -- Registration and Intake
@@ -2153,17 +2059,8 @@ SELECT apply_client_rls('client_medication', 'get_client_id_from_diagnosis(diagn
 SELECT apply_client_rls('client_agreement', 'get_client_id_from_contract(contract_id)');
 SELECT apply_client_rls('provision', 'get_client_id_from_contract(contract_id)');
 
--- Care Plans and sub-tables
-SELECT apply_client_rls('care_plans', '(SELECT client_id FROM client_topic_assessment WHERE id = assessment_id)');
-SELECT apply_client_rls('care_plan_objectives', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_interventions', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_metrics', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_risks', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_support_network', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_resources', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_reports', 'get_client_id_from_care_plan(care_plan_id)');
-SELECT apply_client_rls('care_plan_actions', 'get_client_id_from_objective(objective_id)');
-SELECT apply_client_rls('level_history', '(SELECT client_id FROM client_topic_assessment WHERE id = client_topic_assessment_id)');
+-- Goal evaluations (new model)
+SELECT apply_client_rls('client_goal_evaluation_items', 'get_client_id_from_goal_evaluation(evaluation_id)');
 
 -- Helper to get client_id from intake_form
 CREATE OR REPLACE FUNCTION get_client_id_from_intake_form(intake_id UUID) RETURNS UUID AS $$

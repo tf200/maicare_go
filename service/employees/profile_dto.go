@@ -40,28 +40,26 @@ type CreateEmployeeProfileRequest struct {
 
 // CreateEmployeeProfileResponse represents the response for CreateEmployeeProfileApi
 type CreateEmployeeProfileResponse struct {
-	ID                        uuid.UUID  `json:"id"`
-	UserID                    uuid.UUID  `json:"user_id"`
-	FirstName                 string     `json:"first_name"`
-	LastName                  string     `json:"last_name"`
-	Position                  *string    `json:"position"`
-	Department                *string    `json:"department"`
-	EmployeeNumber            *string    `json:"employee_number"`
-	EmploymentNumber          *string    `json:"employment_number"`
-	PrivateEmailAddress       *string    `json:"private_email_address"`
-	Email                     string     `json:"email"`
-	AuthenticationPhoneNumber *string    `json:"authentication_phone_number"`
-	PrivatePhoneNumber        *string    `json:"private_phone_number"`
-	WorkPhoneNumber           *string    `json:"work_phone_number"`
-	DateOfBirth               time.Time  `json:"date_of_birth"`
-	HomeTelephoneNumber       *string    `json:"home_telephone_number"`
-	CreatedAt                 time.Time  `json:"created_at"`
-	IsSubcontractor           *bool      `json:"is_subcontractor"`
-	Gender                    string     `json:"gender" binding:"oneof= male female not_specified"`
-	LocationID                *uuid.UUID `json:"location_id"`
-	HasBorrowed               bool       `json:"has_borrowed"`
-	OutOfService              *bool      `json:"out_of_service"`
-	IsArchived                bool       `json:"is_archived"`
+	ID                  uuid.UUID  `json:"id"`
+	UserID              uuid.UUID  `json:"user_id"`
+	FirstName           string     `json:"first_name"`
+	LastName            string     `json:"last_name"`
+	Position            *string    `json:"position"`
+	Department          *string    `json:"department"`
+	EmployeeNumber      *string    `json:"employee_number"`
+	EmploymentNumber    *string    `json:"employment_number"`
+	PrivateEmailAddress *string    `json:"private_email_address"`
+	Email               string     `json:"email"`
+	PrivatePhoneNumber  *string    `json:"private_phone_number"`
+	WorkPhoneNumber     *string    `json:"work_phone_number"`
+	DateOfBirth         time.Time  `json:"date_of_birth"`
+	HomeTelephoneNumber *string    `json:"home_telephone_number"`
+	CreatedAt           time.Time  `json:"created_at"`
+	Gender              string     `json:"gender" binding:"oneof= male female not_specified"`
+	LocationID          *uuid.UUID `json:"location_id"`
+	HasBorrowed         bool       `json:"has_borrowed"`
+	OutOfService        *bool      `json:"out_of_service"`
+	IsArchived          bool       `json:"is_archived"`
 }
 
 // ListEmployeeRequest represents the request for ListEmployeeProfileApi
@@ -70,11 +68,13 @@ type ListEmployeeRequest struct {
 	IncludeArchived     *bool      `form:"is_archived"`
 	IncludeOutOfService *bool      `form:"out_of_service"`
 	LocationID          *uuid.UUID `form:"location_id"`
+	ContractType        *string    `form:"contract_type" binding:"omitempty,oneof=loondienst ZZP none"`
 	Search              *string    `form:"search"`
 }
 
 // ListEmployeeResponse represents the response for ListEmployeeProfileApi
 type ListEmployeeResponse struct {
+	ID              uuid.UUID  `json:"id"`
 	FirstName       string     `json:"first_name"`
 	LastName        string     `json:"last_name"`
 	Bsn             string     `json:"bsn"`

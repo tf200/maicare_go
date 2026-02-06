@@ -26,17 +26,24 @@ WHERE
         WHEN $2::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
         ELSE true
     END) AND
-    (location_id = $3 OR $3 IS NULL)
+    (location_id = $3 OR $3 IS NULL) AND
+    (contract_type = $4 OR $4 IS NULL)
 `
 
 type CountEmployeeProfileParams struct {
-	IncludeArchived     *bool      `json:"include_archived"`
-	IncludeOutOfService *bool      `json:"include_out_of_service"`
-	LocationID          *uuid.UUID `json:"location_id"`
+	IncludeArchived     *bool                        `json:"include_archived"`
+	IncludeOutOfService *bool                        `json:"include_out_of_service"`
+	LocationID          *uuid.UUID                   `json:"location_id"`
+	ContractType        NullEmployeeContractTypeEnum `json:"contract_type"`
 }
 
 func (q *Queries) CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countEmployeeProfile, arg.IncludeArchived, arg.IncludeOutOfService, arg.LocationID)
+	row := q.db.QueryRow(ctx, countEmployeeProfile,
+		arg.IncludeArchived,
+		arg.IncludeOutOfService,
+		arg.LocationID,
+		arg.ContractType,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -310,6 +317,7 @@ func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) 
 
 const listEmployeeProfile = `-- name: ListEmployeeProfile :many
 SELECT
+    ep.id,
     ep.first_name,
     ep.last_name,
     ep.bsn,
@@ -331,23 +339,26 @@ WHERE
         ELSE true
     END) AND
     (ep.location_id = $5 OR $5 IS NULL) AND
-    ($6::TEXT IS NULL OR
-        ep.first_name ILIKE '%' || $6 || '%' OR
-        ep.last_name ILIKE '%' || $6 || '%')
+    (ep.contract_type = $6 OR $6 IS NULL) AND
+    ($7::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $7 || '%' OR
+        ep.last_name ILIKE '%' || $7 || '%')
 ORDER BY ep.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListEmployeeProfileParams struct {
-	Limit               int32      `json:"limit"`
-	Offset              int32      `json:"offset"`
-	IncludeArchived     *bool      `json:"include_archived"`
-	IncludeOutOfService *bool      `json:"include_out_of_service"`
-	LocationID          *uuid.UUID `json:"location_id"`
-	Search              *string    `json:"search"`
+	Limit               int32                        `json:"limit"`
+	Offset              int32                        `json:"offset"`
+	IncludeArchived     *bool                        `json:"include_archived"`
+	IncludeOutOfService *bool                        `json:"include_out_of_service"`
+	LocationID          *uuid.UUID                   `json:"location_id"`
+	ContractType        NullEmployeeContractTypeEnum `json:"contract_type"`
+	Search              *string                      `json:"search"`
 }
 
 type ListEmployeeProfileRow struct {
+	ID              uuid.UUID                `json:"id"`
 	FirstName       string                   `json:"first_name"`
 	LastName        string                   `json:"last_name"`
 	Bsn             string                   `json:"bsn"`
@@ -364,6 +375,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 		arg.IncludeArchived,
 		arg.IncludeOutOfService,
 		arg.LocationID,
+		arg.ContractType,
 		arg.Search,
 	)
 	if err != nil {
@@ -374,6 +386,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 	for rows.Next() {
 		var i ListEmployeeProfileRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.FirstName,
 			&i.LastName,
 			&i.Bsn,

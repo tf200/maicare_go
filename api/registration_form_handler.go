@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
@@ -357,6 +358,10 @@ func (server *Server) PromoteIntakeToClientApi(ctx *gin.Context) {
 
 	response, err := server.businessService.ClientService.PromoteIntakeToClient(ctx, &req)
 	if err != nil {
+		if strings.Contains(err.Error(), "only intakes with conclusion 'suitable' can be promoted") {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}

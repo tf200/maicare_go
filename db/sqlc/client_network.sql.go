@@ -89,7 +89,7 @@ const assignSender = `-- name: AssignSender :one
 UPDATE client_details
 SET sender_id = $1
 WHERE id = $2
-RETURNING id, intake_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, source, birthplace, email, phone_number, organization_id, departement, gender, filenumber, profile_picture, infix, created_at, sender_id, location_id, departure_reason, departure_report, gps_position, maturity_domains, addresses, legal_measure, has_untaken_medications, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, living_situation, living_situation_notes, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, email, phone_number, gender, filenumber, created_at, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type AssignSenderParams struct {
@@ -103,6 +103,7 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 	err := row.Scan(
 		&i.ID,
 		&i.IntakeFormID,
+		&i.RegistrationFormID,
 		&i.FirstName,
 		&i.LastName,
 		&i.DateOfBirth,
@@ -110,26 +111,18 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
-		&i.Source,
-		&i.Birthplace,
 		&i.Email,
 		&i.PhoneNumber,
-		&i.OrganizationID,
-		&i.Departement,
 		&i.Gender,
 		&i.Filenumber,
-		&i.ProfilePicture,
-		&i.Infix,
 		&i.CreatedAt,
 		&i.SenderID,
 		&i.LocationID,
-		&i.DepartureReason,
-		&i.DepartureReport,
-		&i.GpsPosition,
-		&i.MaturityDomains,
-		&i.Addresses,
-		&i.LegalMeasure,
-		&i.HasUntakenMedications,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
 		&i.EducationCurrentlyEnrolled,
 		&i.EducationInstitution,
 		&i.EducationMentorName,
@@ -145,8 +138,6 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.WorkStartDate,
 		&i.WorkAdditionalNotes,
 		&i.Nationality,
-		&i.LivingSituation,
-		&i.LivingSituationNotes,
 		&i.RiskAggressiveBehavior,
 		&i.RiskSuicidalSelfharm,
 		&i.RiskSubstanceAbuse,

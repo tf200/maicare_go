@@ -34,6 +34,7 @@ INSERT INTO employee_profile (
 
 -- name: ListEmployeeProfile :many
 SELECT
+    ep.id,
     ep.first_name,
     ep.last_name,
     ep.bsn,
@@ -55,6 +56,7 @@ WHERE
         ELSE true
     END) AND
     (ep.location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
+    (ep.contract_type = sqlc.narg('contract_type') OR sqlc.narg('contract_type') IS NULL) AND
     (sqlc.narg('search')::TEXT IS NULL OR
         ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
         ep.last_name ILIKE '%' || sqlc.narg('search') || '%')
@@ -75,7 +77,8 @@ WHERE
         WHEN sqlc.narg('include_out_of_service')::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
         ELSE true
     END) AND
-    (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL);
+    (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
+    (contract_type = sqlc.narg('contract_type') OR sqlc.narg('contract_type') IS NULL);
 
 -- name: GetEmployeeProfileByUserID :one
 SELECT

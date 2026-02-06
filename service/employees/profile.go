@@ -129,25 +129,24 @@ func (s *employeeService) CreateEmployee(
 	}
 
 	res := &CreateEmployeeProfileResponse{
-		ID:                        employee.Employee.ID,
-		EmployeeNumber:            employee.Employee.EmployeeNumber,
-		EmploymentNumber:          employee.Employee.EmploymentNumber,
-		FirstName:                 employee.Employee.FirstName,
-		LastName:                  employee.Employee.LastName,
-		DateOfBirth:               employee.Employee.DateOfBirth.Time,
-		Gender:                    string(employee.Employee.Gender),
-		Email:                     *employee.Employee.WorkEmailAddress,
-		PrivateEmailAddress:       employee.Employee.PrivateEmailAddress,
-		AuthenticationPhoneNumber: employee.Employee.WorkPhoneNumber,
-		WorkPhoneNumber:           employee.Employee.WorkPhoneNumber,
-		PrivatePhoneNumber:        employee.Employee.PrivatePhoneNumber,
-		HomeTelephoneNumber:       employee.Employee.HomeTelephoneNumber,
-		OutOfService:              employee.Employee.OutOfService,
-		HasBorrowed:               employee.Employee.HasBorrowed,
-		UserID:                    employee.User.ID,
-		CreatedAt:                 employee.Employee.CreatedAt.Time,
-		IsArchived:                employee.Employee.IsArchived,
-		LocationID:                employee.Employee.LocationID,
+		ID:                  employee.Employee.ID,
+		EmployeeNumber:      employee.Employee.EmployeeNumber,
+		EmploymentNumber:    employee.Employee.EmploymentNumber,
+		FirstName:           employee.Employee.FirstName,
+		LastName:            employee.Employee.LastName,
+		DateOfBirth:         employee.Employee.DateOfBirth.Time,
+		Gender:              string(employee.Employee.Gender),
+		Email:               *employee.Employee.WorkEmailAddress,
+		PrivateEmailAddress: employee.Employee.PrivateEmailAddress,
+		WorkPhoneNumber:     employee.Employee.WorkPhoneNumber,
+		PrivatePhoneNumber:  employee.Employee.PrivatePhoneNumber,
+		HomeTelephoneNumber: employee.Employee.HomeTelephoneNumber,
+		OutOfService:        employee.Employee.OutOfService,
+		HasBorrowed:         employee.Employee.HasBorrowed,
+		UserID:              employee.User.ID,
+		CreatedAt:           employee.Employee.CreatedAt.Time,
+		IsArchived:          employee.Employee.IsArchived,
+		LocationID:          employee.Employee.LocationID,
 	}
 	s.Logger.LogBusinessEvent(
 		ctx,
@@ -165,12 +164,21 @@ func (s *employeeService) ListEmployees(
 	ctx *gin.Context,
 ) (*pagination.Response[ListEmployeeResponse], error) {
 	params := req.GetParams()
+	contractTypeFilter := db.NullEmployeeContractTypeEnum{}
+	if req.ContractType != nil {
+		contractTypeFilter = db.NullEmployeeContractTypeEnum{
+			EmployeeContractTypeEnum: db.EmployeeContractTypeEnum(*req.ContractType),
+			Valid:                    true,
+		}
+	}
+
 	employees, err := s.Store.ListEmployeeProfile(ctx, db.ListEmployeeProfileParams{
 		Limit:               params.Limit,
 		Offset:              params.Offset,
 		IncludeArchived:     req.IncludeArchived,
 		IncludeOutOfService: req.IncludeOutOfService,
 		LocationID:          req.LocationID,
+		ContractType:        contractTypeFilter,
 		Search:              req.Search,
 	})
 	if err != nil {
@@ -182,6 +190,7 @@ func (s *employeeService) ListEmployees(
 		IncludeArchived:     req.IncludeArchived,
 		IncludeOutOfService: req.IncludeOutOfService,
 		LocationID:          req.LocationID,
+		ContractType:        contractTypeFilter,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListEmployees",
@@ -198,6 +207,7 @@ func (s *employeeService) ListEmployees(
 			contractEndDate = &parsedDate
 		}
 		responseEmployees[i] = ListEmployeeResponse{
+			ID:              employee.ID,
 			FirstName:       employee.FirstName,
 			LastName:        employee.LastName,
 			Bsn:             employee.Bsn,

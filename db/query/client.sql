@@ -1,35 +1,31 @@
 -- name: CreateClientDetails :one
 INSERT INTO client_details (
     intake_form_id,
+    registration_form_id,
     first_name,
     last_name,
     date_of_birth,
     "identity",
     bsn,
     bsn_verified_by,
-    source,
-    birthplace,
     email,
     phone_number,
-    organization_id,
-    departement,
     gender,
     filenumber,
-    profile_picture,
-    infix,
     sender_id,
     location_id,
-    departure_reason,
-    departure_report,
-    addresses,
-    legal_measure,
+    street,
+    house_number,
+    house_number_addition,
+    postal_code,
+    city,
     education_currently_enrolled,
     education_institution,
     education_mentor_name,
     education_mentor_phone,
     education_mentor_email,
     education_additional_notes,
-    education_level, 
+    education_level,
     nationality,
     work_currently_employed,
     work_current_employer,
@@ -37,17 +33,35 @@ INSERT INTO client_details (
     work_current_employer_email,
     work_current_position,
     work_start_date,
-    work_additional_notes, 
-    living_situation,
-    living_situation_notes
+    work_additional_notes,
+    risk_aggressive_behavior,
+    risk_suicidal_selfharm,
+    risk_substance_abuse,
+    risk_psychiatric_issues,
+    risk_criminal_history,
+    risk_flight_behavior,
+    risk_weapon_possession,
+    risk_sexual_behavior,
+    risk_day_night_rhythm,
+    risk_other,
+    risk_other_description,
+    risk_additional_notes
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
-    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
+    $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44,
+    $45, $46
 ) RETURNING *;
 
 
+-- name: GetClientByIntakeFormID :one
+SELECT * FROM client_details
+WHERE intake_form_id = $1
+LIMIT 1;
+
+
 -- name: ListClientDetails :many
-SELECT 
+SELECT
     *,
     location.name AS location_name,
     COUNT(*) OVER() AS total_count
@@ -56,7 +70,7 @@ LEFT JOIN location ON c.location_id = location.id
 WHERE
     (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL) AND
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
-    (sqlc.narg('search')::TEXT IS NULL OR 
+    (sqlc.narg('search')::TEXT IS NULL OR
         first_name ILIKE '%' || sqlc.narg('search') || '%' OR
         last_name ILIKE '%' || sqlc.narg('search') || '%' OR
         filenumber ILIKE '%' || sqlc.narg('search') || '%' OR
@@ -66,7 +80,7 @@ ORDER BY c.created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: GetClientCounts :one
-SELECT 
+SELECT
     COUNT(*) AS total_clients,
     COUNT(*) FILTER (WHERE status = 'In Care') AS clients_in_care,
     COUNT(*) FILTER (WHERE status = 'On Waiting List') AS clients_on_waiting_list,
@@ -88,56 +102,46 @@ FROM client_details c
 LEFT JOIN employee_profile ep ON c.bsn_verified_by = ep.id
 WHERE c.id = $1 LIMIT 1;
 
--- name: GetClientAddresses :one
-SELECT addresses
-FROM client_details
-WHERE id = $1 LIMIT 1;
 
 
--- name: UpdateClientDetails :one
-UPDATE client_details
-SET 
-    first_name = COALESCE (sqlc.narg('first_name'), first_name),
-    last_name = COALESCE (sqlc.narg('last_name'), last_name),
-    date_of_birth = COALESCE (sqlc.narg('date_of_birth'), date_of_birth),
-    "identity" = COALESCE (sqlc.narg('identity'), "identity"),
-    bsn = COALESCE (sqlc.narg('bsn'), bsn),
-    bsn_verified_by = COALESCE (sqlc.narg('bsn_verified_by'), bsn_verified_by),
-    source = COALESCE (sqlc.narg('source'), source),
-    birthplace = COALESCE (sqlc.narg('birthplace'), birthplace),
-    email = COALESCE (sqlc.narg('email'), email),
-    phone_number = COALESCE (sqlc.narg('phone_number'), phone_number),
-    organization_id = COALESCE (sqlc.narg('organization_id'), organization_id),
-    departement = COALESCE (sqlc.narg('departement'), departement),
-    gender = COALESCE (sqlc.narg('gender'), gender),
-    filenumber = COALESCE (sqlc.narg('filenumber'), filenumber),
-    profile_picture = COALESCE (sqlc.narg('profile_picture'), profile_picture),
-    infix = COALESCE (sqlc.narg('infix'), infix),
-    sender_id = COALESCE (sqlc.narg('sender_id'), sender_id),
-    location_id = COALESCE (sqlc.narg('location_id'), location_id),
-    departure_reason = COALESCE (sqlc.narg('departure_reason'), departure_reason),
-    departure_report = COALESCE (sqlc.narg('departure_report'), departure_report),
-    legal_measure = COALESCE (sqlc.narg('legal_measure'), legal_measure),
-    education_currently_enrolled = COALESCE (sqlc.narg('education_currently_enrolled'), education_currently_enrolled),
-    education_institution = COALESCE (sqlc.narg('education_institution'), education_institution),
-    education_mentor_name = COALESCE (sqlc.narg('education_mentor_name'), education_mentor_name),
-    education_mentor_phone = COALESCE (sqlc.narg('education_mentor_phone'), education_mentor_phone),
-    education_mentor_email = COALESCE (sqlc.narg('education_mentor_email'), education_mentor_email),
-    education_additional_notes = COALESCE (sqlc.narg('education_additional_notes'), education_additional_notes),
-    education_level = COALESCE (sqlc.narg('education_level'), education_level),
-    work_currently_employed = COALESCE (sqlc.narg('work_currently_employed'), work_currently_employed),
-    work_current_employer = COALESCE (sqlc.narg('work_current_employer'), work_current_employer),
-    work_current_employer_phone = COALESCE (sqlc.narg('work_current_employer_phone'), work_current_employer_phone),
-    work_current_employer_email = COALESCE (sqlc.narg('work_current_employer_email'), work_current_employer_email),
-    work_current_position = COALESCE (sqlc.narg('work_current_position'), work_current_position),
-    work_start_date = COALESCE (sqlc.narg('work_start_date'), work_start_date),
-    work_additional_notes = COALESCE (sqlc.narg('work_additional_notes'), work_additional_notes),
-    living_situation = COALESCE (sqlc.narg('living_situation'), living_situation),
-    living_situation_notes = COALESCE (sqlc.narg('living_situation_notes'), living_situation_notes),
-    nationality = COALESCE (sqlc.narg('nationality'), nationality)
+-- -- name: UpdateClientDetails :one
+-- UPDATE client_details
+-- SET
+--     first_name = COALESCE (sqlc.narg('first_name'), first_name),
+--     last_name = COALESCE (sqlc.narg('last_name'), last_name),
+--     date_of_birth = COALESCE (sqlc.narg('date_of_birth'), date_of_birth),
+--     "identity" = COALESCE (sqlc.narg('identity'), "identity"),
+--     bsn = COALESCE (sqlc.narg('bsn'), bsn),
+--     bsn_verified_by = COALESCE (sqlc.narg('bsn_verified_by'), bsn_verified_by),
+--     email = COALESCE (sqlc.narg('email'), email),
+--     phone_number = COALESCE (sqlc.narg('phone_number'), phone_number),
+--     gender = COALESCE (sqlc.narg('gender'), gender),
+--     filenumber = COALESCE (sqlc.narg('filenumber'), filenumber),
+--     sender_id = COALESCE (sqlc.narg('sender_id'), sender_id),
+--     location_id = COALESCE (sqlc.narg('location_id'), location_id),
+--     departure_reason = COALESCE (sqlc.narg('departure_reason'), departure_reason),
+--     departure_report = COALESCE (sqlc.narg('departure_report'), departure_report),
+--     legal_measure = COALESCE (sqlc.narg('legal_measure'), legal_measure),
+--     education_currently_enrolled = COALESCE (sqlc.narg('education_currently_enrolled'), education_currently_enrolled),
+--     education_institution = COALESCE (sqlc.narg('education_institution'), education_institution),
+--     education_mentor_name = COALESCE (sqlc.narg('education_mentor_name'), education_mentor_name),
+--     education_mentor_phone = COALESCE (sqlc.narg('education_mentor_phone'), education_mentor_phone),
+--     education_mentor_email = COALESCE (sqlc.narg('education_mentor_email'), education_mentor_email),
+--     education_additional_notes = COALESCE (sqlc.narg('education_additional_notes'), education_additional_notes),
+--     education_level = COALESCE (sqlc.narg('education_level'), education_level),
+--     work_currently_employed = COALESCE (sqlc.narg('work_currently_employed'), work_currently_employed),
+--     work_current_employer = COALESCE (sqlc.narg('work_current_employer'), work_current_employer),
+--     work_current_employer_phone = COALESCE (sqlc.narg('work_current_employer_phone'), work_current_employer_phone),
+--     work_current_employer_email = COALESCE (sqlc.narg('work_current_employer_email'), work_current_employer_email),
+--     work_current_position = COALESCE (sqlc.narg('work_current_position'), work_current_position),
+--     work_start_date = COALESCE (sqlc.narg('work_start_date'), work_start_date),
+--     work_additional_notes = COALESCE (sqlc.narg('work_additional_notes'), work_additional_notes),
+--     living_situation = COALESCE (sqlc.narg('living_situation'), living_situation),
+--     living_situation_notes = COALESCE (sqlc.narg('living_situation_notes'), living_situation_notes),
+--     nationality = COALESCE (sqlc.narg('nationality'), nationality)
 
-WHERE id = $1
-RETURNING *;
+-- WHERE id = $1
+-- RETURNING *;
 
 -- name: UpdateClientStatus :one
 UPDATE client_details
@@ -172,12 +176,6 @@ INSERT INTO scheduled_status_changes (
 ) RETURNING *;
 
 
--- name: SetClientProfilePicture :one
-UPDATE client_details
-SET profile_picture = $2
-WHERE id = $1
-RETURNING *;
-
 
 -- name: CreateClientDocument :one
 INSERT INTO client_documents (
@@ -190,7 +188,7 @@ INSERT INTO client_documents (
 
 
 -- name: ListClientDocuments :many
-SELECT 
+SELECT
     cd.*,
     a.*,
     COUNT(*) OVER() AS total_count
@@ -250,7 +248,7 @@ WHERE id = $1;
 
 
 -- name: ListClientLocationTransfer :many
-SELECT 
+SELECT
     t.*,
     e.first_name AS mentor_first_name,
     e.last_name AS mentor_last_name,

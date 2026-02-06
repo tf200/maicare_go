@@ -150,7 +150,7 @@ func TestCreateEmployeeProfileApi(t *testing.T) {
 				require.NotEmpty(t, response.Data.Gender)
 				require.NotEmpty(t, response.Data.Email)
 				require.NotEmpty(t, response.Data.PrivateEmailAddress)
-				require.NotEmpty(t, response.Data.AuthenticationPhoneNumber)
+				// require.NotEmpty(t, response.Data.AuthenticationPhoneNumber)
 				require.NotEmpty(t, response.Data.WorkPhoneNumber)
 				require.NotEmpty(t, response.Data.PrivatePhoneNumber)
 				require.NotEmpty(t, response.Data.HomeTelephoneNumber)

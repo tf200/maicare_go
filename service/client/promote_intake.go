@@ -3,14 +3,18 @@ package clientp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
+
+var ErrIntakeNotSuitable = errors.New("intake conclusion is not suitable")
 
 // PromoteIntakeToClient promotes an intake form and its related data to a full client record
 func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteIntakeToClientRequest) (*PromoteIntakeToClientResponse, error) {
@@ -21,6 +25,26 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 		intakeForm, err := q.GetIntakeForm(ctx, req.IntakeFormID)
 		if err != nil {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to get intake form", zap.Error(err))
+			return err
+		}
+
+		if intakeForm.IntakeConclusion != db.IntakeConclusionEnumSuitable {
+			err := fmt.Errorf("%w: only intakes with conclusion 'suitable' can be promoted", ErrIntakeNotSuitable)
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "PromoteIntakeToClient", "Intake promotion blocked by conclusion", zap.String("IntakeFormID", req.IntakeFormID.String()), zap.String("IntakeConclusion", string(intakeForm.IntakeConclusion)))
+			return err
+		}
+
+		// Idempotency: if this intake is already promoted, return existing client.
+		existingClient, err := q.GetClientByIntakeFormID(ctx, &req.IntakeFormID)
+		if err == nil {
+			result.ClientID = existingClient.ID
+			result.IntakeFormID = req.IntakeFormID
+			result.RegistrationFormID = intakeForm.RegistrationFormID
+			result.Message = "Intake already promoted; returning existing client"
+			return nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to check existing client for intake", zap.Error(err))
 			return err
 		}
 
@@ -38,23 +62,7 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			return err
 		}
 
-		// 4. Create addresses JSON from registration form
-		addresses := []Address{
-			{
-				Street:      &registrationForm.ClientStreet,
-				HouseNumber: &registrationForm.ClientHouseNumber,
-				PostalCode:  &registrationForm.ClientPostalCode,
-				City:        &registrationForm.ClientCity,
-				PhoneNumber: &registrationForm.ClientPhoneNumber,
-			},
-		}
-		addressesJSON, err := json.Marshal(addresses)
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to marshal addresses", zap.Error(err))
-			return err
-		}
-
-		// Map gender from registration to client gender enum
+		// 4. Map gender from registration to client gender enum
 		var clientGender db.ClientGenderEnum
 		switch registrationForm.ClientGender {
 		case "male":
@@ -82,11 +90,13 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 		// 5. Create the client record
 		createClientParams := db.CreateClientDetailsParams{
 			IntakeFormID:               &req.IntakeFormID,
+			RegistrationFormID:         &intakeForm.RegistrationFormID,
 			FirstName:                  registrationForm.ClientFirstName,
 			LastName:                   registrationForm.ClientLastName,
 			DateOfBirth:                registrationForm.ClientDateOfBirth,
+			Identity:                   false,
 			Bsn:                        &registrationForm.ClientBsnNumber,
-			Source:                     &registrationForm.ReferrerOrganization,
+			BsnVerifiedBy:              nil,
 			Nationality:                &registrationForm.ClientNationality,
 			Email:                      registrationForm.ClientEmail,
 			PhoneNumber:                &registrationForm.ClientPhoneNumber,
@@ -94,7 +104,11 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			Filenumber:                 registrationForm.ClientBsnNumber,
 			SenderID:                   intakeForm.SenderID,
 			LocationID:                 intakeForm.AssignedLocationID,
-			Addresses:                  addressesJSON,
+			Street:                     registrationForm.ClientStreet,
+			HouseNumber:                registrationForm.ClientHouseNumber,
+			HouseNumberAddition:        registrationForm.ClientHouseNumberAddition,
+			PostalCode:                 registrationForm.ClientPostalCode,
+			City:                       registrationForm.ClientCity,
 			EducationCurrentlyEnrolled: registrationForm.EducationCurrentlyEnrolled,
 			EducationInstitution:       registrationForm.EducationInstitution,
 			EducationMentorName:        registrationForm.EducationMentorName,
@@ -109,10 +123,33 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			WorkCurrentPosition:        registrationForm.WorkCurrentPosition,
 			WorkStartDate:              workStartDate,
 			WorkAdditionalNotes:        registrationForm.WorkAdditionalNotes,
+			RiskAggressiveBehavior:     registrationForm.RiskAggressiveBehavior,
+			RiskSuicidalSelfharm:       registrationForm.RiskSuicidalSelfharm,
+			RiskSubstanceAbuse:         registrationForm.RiskSubstanceAbuse,
+			RiskPsychiatricIssues:      registrationForm.RiskPsychiatricIssues,
+			RiskCriminalHistory:        registrationForm.RiskCriminalHistory,
+			RiskFlightBehavior:         registrationForm.RiskFlightBehavior,
+			RiskWeaponPossession:       registrationForm.RiskWeaponPossession,
+			RiskSexualBehavior:         registrationForm.RiskSexualBehavior,
+			RiskDayNightRhythm:         registrationForm.RiskDayNightRhythm,
+			RiskOther:                  registrationForm.RiskOther,
+			RiskOtherDescription:       registrationForm.RiskOtherDescription,
+			RiskAdditionalNotes:        registrationForm.RiskAdditionalNotes,
 		}
 
 		client, err := q.CreateClientDetails(ctx, createClientParams)
 		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+				existingClient, getErr := q.GetClientByIntakeFormID(ctx, &req.IntakeFormID)
+				if getErr == nil {
+					result.ClientID = existingClient.ID
+					result.IntakeFormID = req.IntakeFormID
+					result.RegistrationFormID = intakeForm.RegistrationFormID
+					result.Message = "Intake already promoted; returning existing client"
+					return nil
+				}
+			}
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to create client", zap.Error(err))
 			return err
 		}
@@ -225,32 +262,7 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			}
 		}
 
-		// 8. Link documents from registration to client
-		documentFields := []struct {
-			attachmentID *uuid.UUID
-			label        db.ClientDocumentLabelEnum
-		}{
-			{registrationForm.DocumentReferral, db.ClientDocumentLabelEnumRegistrationForm},
-			{registrationForm.DocumentEducationReport, db.ClientDocumentLabelEnumOther},
-			{registrationForm.DocumentActionPlan, db.ClientDocumentLabelEnumOther},
-			{registrationForm.DocumentPsychiatricReport, db.ClientDocumentLabelEnumOther},
-			{registrationForm.DocumentDiagnosis, db.ClientDocumentLabelEnumOther},
-			{registrationForm.DocumentSafetyPlan, db.ClientDocumentLabelEnumOther},
-			{registrationForm.DocumentIDCopy, db.ClientDocumentLabelEnumOther},
-		}
-
-		for _, doc := range documentFields {
-			if doc.attachmentID != nil {
-				_, err := q.CreateClientDocument(ctx, db.CreateClientDocumentParams{
-					ClientID:       client.ID,
-					AttachmentUuid: doc.attachmentID,
-					Label:          doc.label,
-				})
-				if err != nil {
-					s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "PromoteIntakeToClient", "Failed to link document to client", zap.Error(err))
-				}
-			}
-		}
+		// 8. Keep intake documents in registration_form for now (no client_documents linking here).
 
 		return nil
 	})
@@ -259,6 +271,8 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 		return nil, err
 	}
 
-	result.Message = "Intake successfully promoted to client"
+	if result.Message == "" {
+		result.Message = "Intake successfully promoted to client"
+	}
 	return &result, nil
 }
